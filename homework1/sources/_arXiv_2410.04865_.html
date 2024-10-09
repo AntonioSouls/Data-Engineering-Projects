@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title>Mastering Chinese Chess AI(Xiangqi) Without Search</title>
+<!--Generated on Mon Oct  7 09:22:37 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+<link href="/static/browse/0.3.4/css/ar5iv.0.7.9.min.css" rel="stylesheet" type="text/css"/>
+<link href="/static/browse/0.3.4/css/ar5iv-fonts.0.7.9.min.css" rel="stylesheet" type="text/css"/>
+<link href="/static/browse/0.3.4/css/latexml_styles.css" rel="stylesheet" type="text/css"/>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.3/html2canvas.min.js"></script>
+<script src="/static/browse/0.3.4/js/addons_new.js"></script>
+<script src="/static/browse/0.3.4/js/feedbackOverlay.js"></script>
+<base href="/html/2410.04865v1/"/></head>
+<body>
+<nav class="ltx_page_navbar">
+</nav>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line ltx_fleqn">
+<h1 class="ltx_title ltx_title_document">Mastering Chinese Chess AI(Xiangqi) Without Search</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Juntong Lin
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">LIGHTSPEED STUDIOS, Tencent, China
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Zhichao Shu
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">LIGHTSPEED STUDIOS, Tencent, China
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yu Chen
+</span><span class="ltx_author_notes">Corresponding Author: <span class="ltx_text ltx_font_typewriter" id="1.1.1">alexychen@tencent.com</span>
+<span class="ltx_contact ltx_role_affiliation">LIGHTSPEED STUDIOS, Tencent, China
+</span></span></span>
+</div>
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p" id="2.1">We have developed a high-performance Chinese Chess AI that operates without reliance on search algorithms. This AI has demonstrated the capability to compete at a level commensurate with the top 0.1% of human players. By eliminating the search process typically associated with such systems, this AI achieves a Queries Per Second (QPS) rate that exceeds those of systems based on the Monte Carlo Tree Search (MCTS) algorithm by over a thousandfold and surpasses those based on the AlphaBeta pruning algorithm by more than a hundredfold.
+The AI training system consists of two parts: supervised learning and reinforcement learning. Supervised learning provides an initial human-like Chinese chess AI, while reinforcement learning, based on supervised learning, elevates the strength of the entire AI to a new level. Based on this training system, we carried out enough ablation experiments and discovered that 1. The same parameter amount of Transformer architecture has a higher performance than CNN on Chinese chess; 2. Possible moves of both sides as features can greatly improve the training process; 3. Selective opponent pool, compared to pure self-play training, results in a faster improvement curve and a higher strength limit. 4. Value Estimation with Cutoff(VECT) improves the original PPO algorithm training process and we will give the explanation.</p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification">keywords: </h6>Imitation Learning, Reinforcement learning, Anthropomorphism, Intensity
+</div>
+<section class="ltx_section" id="Sx1" lang="en">
+<h2 class="ltx_title ltx_title_section">Introduction</h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1">Deep reinforcement learning (RL) has seen notable success in developing autonomous agents capable of mastering a variety of tasks, from playing Atari games to solving complex real-world problems<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib1" title="">1</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib2" title="">2</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib3" title="">3</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib4" title="">4</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib5" title="">5</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib6" title="">6</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib7" title="">7</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib8" title="">8</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib9" title="">9</a>]</cite>,. In particular, its application to board games has led to milestones such as AlphaGo and AlphaZero by DeepMind<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib10" title="">10</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib11" title="">11</a>]</cite>, which defeated human champions in Go, and AlphaStar which achieved grandmaster status in the real-time strategy game StarCraft II<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib12" title="">12</a>]</cite>. These accomplishments highlight reinforcement learning’s potential to handle intricate strategic decision-making.</p>
+</div>
+<div class="ltx_para" id="Sx1.p2">
+<p class="ltx_p" id="Sx1.p2.1">Chinese Chess, also known as Xiangqi, is a strategy board game for two players that share similarities with the international chess game. It is one of the most popular board games in China and has been played for centuries, boasting a complexity and strategic depth revered by enthusiast and scholar alike. The standard Xiangqi board is a 10x9 grid, with a distinctive feature—the river—that divides the two opposing camps and impacts piece movement.</p>
+</div>
+<div class="ltx_para" id="Sx1.p3">
+<p class="ltx_p" id="Sx1.p3.1">Each player begins with a set of 16 pieces: one General (king), two Advisors, two Elephants, two Chariots, two Cannons, two Horses, and five Soldiers. The mentioned pieces each have unique movement rules, such as the Elephant’s inability to cross the river and the Cannon’s requirement of a ’screen’ piece for capture. Victory is achieved by checkmating or stalemating the opponent’s General.</p>
+</div>
+<div class="ltx_para" id="Sx1.p4">
+<p class="ltx_p" id="Sx1.p4.1">Chinese Chess invites a range of dynamic tactics and deeper strategies, with an emphasis on balance between attack and defense, and the meticulous timing of aggression. The game presents an astronomically large state space, estimated at around <math alttext="10^{50}" class="ltx_Math" display="inline" id="Sx1.p4.1.m1.1"><semantics id="Sx1.p4.1.m1.1a"><msup id="Sx1.p4.1.m1.1.1" xref="Sx1.p4.1.m1.1.1.cmml"><mn id="Sx1.p4.1.m1.1.1.2" xref="Sx1.p4.1.m1.1.1.2.cmml">10</mn><mn id="Sx1.p4.1.m1.1.1.3" xref="Sx1.p4.1.m1.1.1.3.cmml">50</mn></msup><annotation-xml encoding="MathML-Content" id="Sx1.p4.1.m1.1b"><apply id="Sx1.p4.1.m1.1.1.cmml" xref="Sx1.p4.1.m1.1.1"><csymbol cd="ambiguous" id="Sx1.p4.1.m1.1.1.1.cmml" xref="Sx1.p4.1.m1.1.1">superscript</csymbol><cn id="Sx1.p4.1.m1.1.1.2.cmml" type="integer" xref="Sx1.p4.1.m1.1.1.2">10</cn><cn id="Sx1.p4.1.m1.1.1.3.cmml" type="integer" xref="Sx1.p4.1.m1.1.1.3">50</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx1.p4.1.m1.1c">10^{50}</annotation><annotation encoding="application/x-llamapun" id="Sx1.p4.1.m1.1d">10 start_POSTSUPERSCRIPT 50 end_POSTSUPERSCRIPT</annotation></semantics></math> possible game positions. This sheer scale poses considerable challenges for AI, particularly for deterministic search algorithms that are prone to combinatorial explosion.</p>
+</div>
+<div class="ltx_para" id="Sx1.p5">
+<p class="ltx_p" id="Sx1.p5.1">Traditional Chinese Chess AI approaches have emphasized the use of alpha-beta pruning and other heuristic search methods—effective yet limited by the computational resources necessary to examine extensive game trees. Additionally, the algorithms require handcrafted evaluation functions that encapsulate human understanding of the game, which can be rigid and fail to adapt to novel situations.</p>
+</div>
+<div class="ltx_para" id="Sx1.p6">
+<p class="ltx_p" id="Sx1.p6.1">Contrasting these search approaches, reinforcement learning (RL) agents—such as those applied in recent successes with AlphaGo and AlphaZero—have demonstrated the potential to learn and adapt from gameplay experience, with minimal human-crafted heuristics. However, applying these methods to Chinese Chess AI confronts two main challenges: one is the efficient encoding of game states in a way that preserves the rich context and enables the neural network to assess board positions effectively; and the other is formulating an RL algorithm that can lean into the expansive strategic depth of the game without being explicit guidance from heuristic searches.</p>
+</div>
+<div class="ltx_para" id="Sx1.p7">
+<p class="ltx_p" id="Sx1.p7.1">Algorithms based on Monte Carlo Tree Search (MCTS)<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib13" title="">13</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib14" title="">14</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib15" title="">15</a>]</cite>, such as AlphaGo or KataGo<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib16" title="">16</a>]</cite>, typically require numerous simulations to compute the next move. For instance, KataGo simulates 800 times, necessitating at least 800 forward inferences by the neural network. It is well-known that computations involving neural networks are highly resource-intensive. As a result, the application of MCTS-based search algorithms in many real-world scenarios is not practical. Our primary contribution is an attempt to eliminate the use of MCTS, a resource-intensive algorithm, from the production process of board game AI. By optimizing other modules within the algorithmic process, we aim to develop a board game AI that can compete at the level of top human players without relying on MCTS.</p>
+</div>
+<div class="ltx_para" id="Sx1.p8">
+<p class="ltx_p" id="Sx1.p8.1">This paper addresses these challenges by leveraging the representation capabilities of Transformer architectures and designing a tailored RL algorithm that initially learns from human expert games before refining its policy through self-play. We also innovate in our treatment of opponent moves and the selection of adversarial engagements that drive diverse learning scenarios. The goal is to present an AI capable of discovering deep strategic concepts and subtle tactical motifs in Chinese Chess, ultimately revealing the emergent behaviors that arise from an RL-centric approach.</p>
+</div>
+<div class="ltx_para" id="Sx1.p9">
+<p class="ltx_p" id="Sx1.p9.1">By delving into this alternative pathway, we hope to expand the horizons for AI advancements in Chinese Chess, providing a model that could, in principle, be extended or modified for other board games and decision-making applications. The next sections will elucidate our methodology, present experimental findings, and explore how these insights can influence the broader AI and machine learning landscapes.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx2" lang="en">
+<h2 class="ltx_title ltx_title_section">Methods</h2>
+<section class="ltx_subsection" id="Sx2.SSx1">
+<h3 class="ltx_title ltx_title_subsection">Training Algorithm</h3>
+<div class="ltx_para" id="Sx2.SSx1.p1">
+<p class="ltx_p" id="Sx2.SSx1.p1.1">The development of our Chinese Chess AI revolves around a robust training algorithm that addresses the challenges associated with the game’s complex action space and strategic depth. The algorithm is divided into two primary phases as shown in Fig.(<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#Sx2.F1" title="Figure 1 ‣ Training Algorithm ‣ Methods ‣ Mastering Chinese Chess AI(Xiangqi) Without Search"><span class="ltx_text ltx_ref_tag">1</span></a>): 1. supervised learning with auxiliary tasks; 2. reinforcement learning using an opponent pool with diverse strategies.</p>
+</div>
+<figure class="ltx_figure" id="Sx2.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="337" id="Sx2.F1.g1" src="extracted/5906652/figures/scheme.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>The upper half of the image describes the framework of the training algorithm for supervised learning during the training process, which includes modules such as data cleaning, data sampling, auxiliary tasks, and so on. The lower half of the image describes the algorithmic flow of reinforcement learning during the training process, including restoring the supervised learning model, Dynamics Opponent Pool, and the PPO algorithm, among others.</figcaption>
+</figure>
+<section class="ltx_subsubsection" id="Sx2.SSx1.SSSx1">
+<h4 class="ltx_title ltx_title_subsubsection">Supervised Learning with Auxiliary Tasks</h4>
+<div class="ltx_para" id="Sx2.SSx1.SSSx1.p1">
+<p class="ltx_p" id="Sx2.SSx1.SSSx1.p1.1">During the initial phase, we utilize a large dataset of human expert games to instill the AI with a base level of competency in Chinese Chess. Based on meticulously designed sampling curves, we sample from the collected game data to obtain game states that serve as inputs for the neural network. For each game state, there is an associated move selection, which may either be a move chosen by top human players based on the current situation, or a move derived from our calculations using the alpha-beta pruning algorithm. To handle the expansive action space (90x90) more efficiently, we factorize it into two steps. The first is the selection of one of the pieces on the board (up to 16 choices, but fewer if some pieces are captured), and the second is choosing a valid move for that piece (up to 90 choices, but typically fewer based on the game’s rules and the current board state).</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx1.p2">
+<p class="ltx_p" id="Sx2.SSx1.SSSx1.p2.2"><span class="ltx_text ltx_font_bold" id="Sx2.SSx1.SSSx1.p2.2.1">Sample Curve</span>
+In the game of Chinese Chess, the distribution of samples is highly unbalanced. Specifically, the entire gameplay process can be divided into the following three stages: the opening, the middle game, and the endgame. The opening refers to the stage from the start of the game to when both sides have essentially formed their initial battle formations. The main objective during this phase is to arrange the pieces logically and develop them rapidly, particularly key offensive and defensive pieces such as chariots, horses, and cannons. During this stage, it is crucial to coordinate and protect the pieces, avoid early mistakes that could lead to the capture of important pieces, establish a solid defense, and look for vulnerabilities in the opponent’s defense. The middle game is defined as the stage where both parties have essentially completed their opening setups and begin various tactical maneuvers involving attacks, defenses, and exchanges of pieces. This stage is usually characterized by intense combat and frequent changes in the situation. The endgame refers to the stage where there are fewer pieces on the board, and both sides are contending for the final victory. This phase typically requires high computational power and precise judgment. Therefore, as the game progresses, the demand for computational accuracy increases. Consequently, we have designed the following sampling function:</p>
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="p\sim\log(a*t+b)+c" class="ltx_Math" display="block" id="Sx2.Ex1.m1.2"><semantics id="Sx2.Ex1.m1.2a"><mrow id="Sx2.Ex1.m1.2.2" xref="Sx2.Ex1.m1.2.2.cmml"><mi id="Sx2.Ex1.m1.2.2.3" xref="Sx2.Ex1.m1.2.2.3.cmml">p</mi><mo id="Sx2.Ex1.m1.2.2.2" xref="Sx2.Ex1.m1.2.2.2.cmml">∼</mo><mrow id="Sx2.Ex1.m1.2.2.1" xref="Sx2.Ex1.m1.2.2.1.cmml"><mrow id="Sx2.Ex1.m1.2.2.1.1.1" xref="Sx2.Ex1.m1.2.2.1.1.2.cmml"><mi id="Sx2.Ex1.m1.1.1" xref="Sx2.Ex1.m1.1.1.cmml">log</mi><mo id="Sx2.Ex1.m1.2.2.1.1.1a" xref="Sx2.Ex1.m1.2.2.1.1.2.cmml">⁡</mo><mrow id="Sx2.Ex1.m1.2.2.1.1.1.1" xref="Sx2.Ex1.m1.2.2.1.1.2.cmml"><mo id="Sx2.Ex1.m1.2.2.1.1.1.1.2" stretchy="false" xref="Sx2.Ex1.m1.2.2.1.1.2.cmml">(</mo><mrow id="Sx2.Ex1.m1.2.2.1.1.1.1.1" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.cmml"><mrow id="Sx2.Ex1.m1.2.2.1.1.1.1.1.2" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.cmml"><mi id="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.2" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.2.cmml">a</mi><mo id="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.1" lspace="0.222em" rspace="0.222em" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.1.cmml">∗</mo><mi id="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.3" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.3.cmml">t</mi></mrow><mo id="Sx2.Ex1.m1.2.2.1.1.1.1.1.1" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.1.cmml">+</mo><mi id="Sx2.Ex1.m1.2.2.1.1.1.1.1.3" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.3.cmml">b</mi></mrow><mo id="Sx2.Ex1.m1.2.2.1.1.1.1.3" stretchy="false" xref="Sx2.Ex1.m1.2.2.1.1.2.cmml">)</mo></mrow></mrow><mo id="Sx2.Ex1.m1.2.2.1.2" xref="Sx2.Ex1.m1.2.2.1.2.cmml">+</mo><mi id="Sx2.Ex1.m1.2.2.1.3" xref="Sx2.Ex1.m1.2.2.1.3.cmml">c</mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="Sx2.Ex1.m1.2b"><apply id="Sx2.Ex1.m1.2.2.cmml" xref="Sx2.Ex1.m1.2.2"><csymbol cd="latexml" id="Sx2.Ex1.m1.2.2.2.cmml" xref="Sx2.Ex1.m1.2.2.2">similar-to</csymbol><ci id="Sx2.Ex1.m1.2.2.3.cmml" xref="Sx2.Ex1.m1.2.2.3">𝑝</ci><apply id="Sx2.Ex1.m1.2.2.1.cmml" xref="Sx2.Ex1.m1.2.2.1"><plus id="Sx2.Ex1.m1.2.2.1.2.cmml" xref="Sx2.Ex1.m1.2.2.1.2"></plus><apply id="Sx2.Ex1.m1.2.2.1.1.2.cmml" xref="Sx2.Ex1.m1.2.2.1.1.1"><log id="Sx2.Ex1.m1.1.1.cmml" xref="Sx2.Ex1.m1.1.1"></log><apply id="Sx2.Ex1.m1.2.2.1.1.1.1.1.cmml" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1"><plus id="Sx2.Ex1.m1.2.2.1.1.1.1.1.1.cmml" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.1"></plus><apply id="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.cmml" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.2"><times id="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.1.cmml" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.1"></times><ci id="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.2.cmml" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.2">𝑎</ci><ci id="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.3.cmml" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.2.3">𝑡</ci></apply><ci id="Sx2.Ex1.m1.2.2.1.1.1.1.1.3.cmml" xref="Sx2.Ex1.m1.2.2.1.1.1.1.1.3">𝑏</ci></apply></apply><ci id="Sx2.Ex1.m1.2.2.1.3.cmml" xref="Sx2.Ex1.m1.2.2.1.3">𝑐</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.Ex1.m1.2c">p\sim\log(a*t+b)+c</annotation><annotation encoding="application/x-llamapun" id="Sx2.Ex1.m1.2d">italic_p ∼ roman_log ( italic_a ∗ italic_t + italic_b ) + italic_c</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx2.SSx1.SSSx1.p2.1">where <math alttext="t" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx1.p2.1.m1.1"><semantics id="Sx2.SSx1.SSSx1.p2.1.m1.1a"><mi id="Sx2.SSx1.SSSx1.p2.1.m1.1.1" xref="Sx2.SSx1.SSSx1.p2.1.m1.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx1.p2.1.m1.1b"><ci id="Sx2.SSx1.SSSx1.p2.1.m1.1.1.cmml" xref="Sx2.SSx1.SSSx1.p2.1.m1.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx1.p2.1.m1.1c">t</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx1.p2.1.m1.1d">italic_t</annotation></semantics></math> is the game step.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx1.p3">
+<p class="ltx_p" id="Sx2.SSx1.SSSx1.p3.1"><span class="ltx_text ltx_font_bold" id="Sx2.SSx1.SSSx1.p3.1.1">Auxiliary Task</span> We design the auxiliary task to improve the training process. The auxiliary task aims to forecast the win rate after a given move. By predicting the move’s outcome, the AI can consider not only immediate tactics but also long-term strategy implications. This is particularly useful given that different pieces have unique movement capabilities and exert varying levels of influence over the game. Hence, the AI learns not only to evaluate specific moves, but also to understand the underlying principles that dictate piece value and positional strength. Besides, a well-learned win rate predictor can be used as the initial value function for the reinforcement learning.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx1.p4">
+<p class="ltx_p" id="Sx2.SSx1.SSSx1.p4.1"><span class="ltx_text ltx_font_bold" id="Sx2.SSx1.SSSx1.p4.1.1">Feature With Rule</span>
+Chinese Chess, also known as Xiangqi, is a complex board game that often necessitates extensive computational simulations to ensure that each move made is optimal. This requirement aligns closely with the functionalities of the Monte Carlo Tree Search (MCTS) algorithm. In our research, we have embedded the rules of Chinese Chess into the feature space to enhance the AI’s comprehension of the game.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx1.p5">
+<p class="ltx_p" id="Sx2.SSx1.SSSx1.p5.1">For the input to our neural network, we include not only the current board state but also two additional categories of channels:
+1. Based on the current position, identifying which pieces can be moved and to which locations they can be moved.
+2. Based on the current position from the opponent’s perspective, identifying potential moves and their destinations.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx1.p6">
+<p class="ltx_p" id="Sx2.SSx1.SSSx1.p6.1">Our subsequent analyses clearly demonstrate that these features significantly expedite the training process of networks based on the ResNet architecture, and they contribute to a notable enhancement in overall performance.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="Sx2.SSx1.SSSx2">
+<h4 class="ltx_title ltx_title_subsubsection">Reinforcement Learning</h4>
+<div class="ltx_para" id="Sx2.SSx1.SSSx2.p1">
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p1.6">Following the supervised learning phase, we endeavor to further improve the AI’s performance and adaptability by introducing reinforcement learning (RL), which is usually described by Markov Decision Process(MDP). An agent can take some action <math alttext="a_{t}" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p1.1.m1.1"><semantics id="Sx2.SSx1.SSSx2.p1.1.m1.1a"><msub id="Sx2.SSx1.SSSx2.p1.1.m1.1.1" xref="Sx2.SSx1.SSSx2.p1.1.m1.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p1.1.m1.1.1.2" xref="Sx2.SSx1.SSSx2.p1.1.m1.1.1.2.cmml">a</mi><mi id="Sx2.SSx1.SSSx2.p1.1.m1.1.1.3" xref="Sx2.SSx1.SSSx2.p1.1.m1.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p1.1.m1.1b"><apply id="Sx2.SSx1.SSSx2.p1.1.m1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.1.m1.1.1"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p1.1.m1.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.1.m1.1.1">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p1.1.m1.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p1.1.m1.1.1.2">𝑎</ci><ci id="Sx2.SSx1.SSSx2.p1.1.m1.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p1.1.m1.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p1.1.m1.1c">a_{t}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p1.1.m1.1d">italic_a start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT</annotation></semantics></math> at time <math alttext="t" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p1.2.m2.1"><semantics id="Sx2.SSx1.SSSx2.p1.2.m2.1a"><mi id="Sx2.SSx1.SSSx2.p1.2.m2.1.1" xref="Sx2.SSx1.SSSx2.p1.2.m2.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p1.2.m2.1b"><ci id="Sx2.SSx1.SSSx2.p1.2.m2.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.2.m2.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p1.2.m2.1c">t</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p1.2.m2.1d">italic_t</annotation></semantics></math> according to the state <math alttext="s_{t}" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p1.3.m3.1"><semantics id="Sx2.SSx1.SSSx2.p1.3.m3.1a"><msub id="Sx2.SSx1.SSSx2.p1.3.m3.1.1" xref="Sx2.SSx1.SSSx2.p1.3.m3.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p1.3.m3.1.1.2" xref="Sx2.SSx1.SSSx2.p1.3.m3.1.1.2.cmml">s</mi><mi id="Sx2.SSx1.SSSx2.p1.3.m3.1.1.3" xref="Sx2.SSx1.SSSx2.p1.3.m3.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p1.3.m3.1b"><apply id="Sx2.SSx1.SSSx2.p1.3.m3.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.3.m3.1.1"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p1.3.m3.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.3.m3.1.1">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p1.3.m3.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p1.3.m3.1.1.2">𝑠</ci><ci id="Sx2.SSx1.SSSx2.p1.3.m3.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p1.3.m3.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p1.3.m3.1c">s_{t}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p1.3.m3.1d">italic_s start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT</annotation></semantics></math>, and then the environment will transfer to next state <math alttext="s_{t+1}" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p1.4.m4.1"><semantics id="Sx2.SSx1.SSSx2.p1.4.m4.1a"><msub id="Sx2.SSx1.SSSx2.p1.4.m4.1.1" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.2" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.2.cmml">s</mi><mrow id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.cmml"><mi id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.2" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.2.cmml">t</mi><mo id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.1" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.1.cmml">+</mo><mn id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.3" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.3.cmml">1</mn></mrow></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p1.4.m4.1b"><apply id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.2">𝑠</ci><apply id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3"><plus id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.1.cmml" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.1"></plus><ci id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.2.cmml" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.2">𝑡</ci><cn id="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.3.cmml" type="integer" xref="Sx2.SSx1.SSSx2.p1.4.m4.1.1.3.3">1</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p1.4.m4.1c">s_{t+1}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p1.4.m4.1d">italic_s start_POSTSUBSCRIPT italic_t + 1 end_POSTSUBSCRIPT</annotation></semantics></math> and give a reward <math alttext="r_{t}" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p1.5.m5.1"><semantics id="Sx2.SSx1.SSSx2.p1.5.m5.1a"><msub id="Sx2.SSx1.SSSx2.p1.5.m5.1.1" xref="Sx2.SSx1.SSSx2.p1.5.m5.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p1.5.m5.1.1.2" xref="Sx2.SSx1.SSSx2.p1.5.m5.1.1.2.cmml">r</mi><mi id="Sx2.SSx1.SSSx2.p1.5.m5.1.1.3" xref="Sx2.SSx1.SSSx2.p1.5.m5.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p1.5.m5.1b"><apply id="Sx2.SSx1.SSSx2.p1.5.m5.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.5.m5.1.1"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p1.5.m5.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.5.m5.1.1">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p1.5.m5.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p1.5.m5.1.1.2">𝑟</ci><ci id="Sx2.SSx1.SSSx2.p1.5.m5.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p1.5.m5.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p1.5.m5.1c">r_{t}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p1.5.m5.1d">italic_r start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT</annotation></semantics></math> to the agent, obeying the dynamics <math alttext="P(s^{\prime},r^{\prime}|s,a)" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p1.6.m6.4"><semantics id="Sx2.SSx1.SSSx2.p1.6.m6.4a"><mrow id="Sx2.SSx1.SSSx2.p1.6.m6.4.4" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.cmml"><mi id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.4" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.4.cmml">P</mi><mo id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.3" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.3.cmml">⁢</mo><mrow id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.3.cmml"><mo id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.3" stretchy="false" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.3.cmml">(</mo><msup id="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1" xref="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.2" xref="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.2.cmml">s</mi><mo id="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.3" xref="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.3.cmml">′</mo></msup><mo id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.4" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.3.cmml">,</mo><mrow id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.cmml"><msup id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.cmml"><mi id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.2" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.2.cmml">r</mi><mo id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.3" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.3.cmml">′</mo></msup><mo fence="false" id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.1" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.1.cmml">|</mo><mrow id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.3.2" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.3.1.cmml"><mi id="Sx2.SSx1.SSSx2.p1.6.m6.1.1" xref="Sx2.SSx1.SSSx2.p1.6.m6.1.1.cmml">s</mi><mo id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.3.2.1" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.3.1.cmml">,</mo><mi id="Sx2.SSx1.SSSx2.p1.6.m6.2.2" xref="Sx2.SSx1.SSSx2.p1.6.m6.2.2.cmml">a</mi></mrow></mrow><mo id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.5" stretchy="false" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.3.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p1.6.m6.4b"><apply id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4"><times id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.3.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.3"></times><ci id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.4.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.4">𝑃</ci><interval closure="open" id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.3.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2"><apply id="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1">superscript</csymbol><ci id="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.2">𝑠</ci><ci id="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.3.3.1.1.1.3">′</ci></apply><apply id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2"><csymbol cd="latexml" id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.1.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.1">conditional</csymbol><apply id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.1.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2">superscript</csymbol><ci id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.2.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.2">𝑟</ci><ci id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.3.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.2.3">′</ci></apply><list id="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.3.1.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.4.4.2.2.2.3.2"><ci id="Sx2.SSx1.SSSx2.p1.6.m6.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.1.1">𝑠</ci><ci id="Sx2.SSx1.SSSx2.p1.6.m6.2.2.cmml" xref="Sx2.SSx1.SSSx2.p1.6.m6.2.2">𝑎</ci></list></apply></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p1.6.m6.4c">P(s^{\prime},r^{\prime}|s,a)</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p1.6.m6.4d">italic_P ( italic_s start_POSTSUPERSCRIPT ′ end_POSTSUPERSCRIPT , italic_r start_POSTSUPERSCRIPT ′ end_POSTSUPERSCRIPT | italic_s , italic_a )</annotation></semantics></math>. The goal of RL is to maximize the accumulated reward along the trajectory,</p>
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="\max\sum_{n}\gamma^{n}r_{t+n}" class="ltx_Math" display="block" id="Sx2.Ex2.m1.1"><semantics id="Sx2.Ex2.m1.1a"><mrow id="Sx2.Ex2.m1.1.1" xref="Sx2.Ex2.m1.1.1.cmml"><mi id="Sx2.Ex2.m1.1.1.2" xref="Sx2.Ex2.m1.1.1.2.cmml">max</mi><mo id="Sx2.Ex2.m1.1.1.1" xref="Sx2.Ex2.m1.1.1.1.cmml">⁢</mo><mrow id="Sx2.Ex2.m1.1.1.3" xref="Sx2.Ex2.m1.1.1.3.cmml"><munder id="Sx2.Ex2.m1.1.1.3.1" xref="Sx2.Ex2.m1.1.1.3.1.cmml"><mo id="Sx2.Ex2.m1.1.1.3.1.2" movablelimits="false" xref="Sx2.Ex2.m1.1.1.3.1.2.cmml">∑</mo><mi id="Sx2.Ex2.m1.1.1.3.1.3" xref="Sx2.Ex2.m1.1.1.3.1.3.cmml">n</mi></munder><mrow id="Sx2.Ex2.m1.1.1.3.2" xref="Sx2.Ex2.m1.1.1.3.2.cmml"><msup id="Sx2.Ex2.m1.1.1.3.2.2" xref="Sx2.Ex2.m1.1.1.3.2.2.cmml"><mi id="Sx2.Ex2.m1.1.1.3.2.2.2" xref="Sx2.Ex2.m1.1.1.3.2.2.2.cmml">γ</mi><mi id="Sx2.Ex2.m1.1.1.3.2.2.3" xref="Sx2.Ex2.m1.1.1.3.2.2.3.cmml">n</mi></msup><mo id="Sx2.Ex2.m1.1.1.3.2.1" xref="Sx2.Ex2.m1.1.1.3.2.1.cmml">⁢</mo><msub id="Sx2.Ex2.m1.1.1.3.2.3" xref="Sx2.Ex2.m1.1.1.3.2.3.cmml"><mi id="Sx2.Ex2.m1.1.1.3.2.3.2" xref="Sx2.Ex2.m1.1.1.3.2.3.2.cmml">r</mi><mrow id="Sx2.Ex2.m1.1.1.3.2.3.3" xref="Sx2.Ex2.m1.1.1.3.2.3.3.cmml"><mi id="Sx2.Ex2.m1.1.1.3.2.3.3.2" xref="Sx2.Ex2.m1.1.1.3.2.3.3.2.cmml">t</mi><mo id="Sx2.Ex2.m1.1.1.3.2.3.3.1" xref="Sx2.Ex2.m1.1.1.3.2.3.3.1.cmml">+</mo><mi id="Sx2.Ex2.m1.1.1.3.2.3.3.3" xref="Sx2.Ex2.m1.1.1.3.2.3.3.3.cmml">n</mi></mrow></msub></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="Sx2.Ex2.m1.1b"><apply id="Sx2.Ex2.m1.1.1.cmml" xref="Sx2.Ex2.m1.1.1"><times id="Sx2.Ex2.m1.1.1.1.cmml" xref="Sx2.Ex2.m1.1.1.1"></times><max id="Sx2.Ex2.m1.1.1.2.cmml" xref="Sx2.Ex2.m1.1.1.2"></max><apply id="Sx2.Ex2.m1.1.1.3.cmml" xref="Sx2.Ex2.m1.1.1.3"><apply id="Sx2.Ex2.m1.1.1.3.1.cmml" xref="Sx2.Ex2.m1.1.1.3.1"><csymbol cd="ambiguous" id="Sx2.Ex2.m1.1.1.3.1.1.cmml" xref="Sx2.Ex2.m1.1.1.3.1">subscript</csymbol><sum id="Sx2.Ex2.m1.1.1.3.1.2.cmml" xref="Sx2.Ex2.m1.1.1.3.1.2"></sum><ci id="Sx2.Ex2.m1.1.1.3.1.3.cmml" xref="Sx2.Ex2.m1.1.1.3.1.3">𝑛</ci></apply><apply id="Sx2.Ex2.m1.1.1.3.2.cmml" xref="Sx2.Ex2.m1.1.1.3.2"><times id="Sx2.Ex2.m1.1.1.3.2.1.cmml" xref="Sx2.Ex2.m1.1.1.3.2.1"></times><apply id="Sx2.Ex2.m1.1.1.3.2.2.cmml" xref="Sx2.Ex2.m1.1.1.3.2.2"><csymbol cd="ambiguous" id="Sx2.Ex2.m1.1.1.3.2.2.1.cmml" xref="Sx2.Ex2.m1.1.1.3.2.2">superscript</csymbol><ci id="Sx2.Ex2.m1.1.1.3.2.2.2.cmml" xref="Sx2.Ex2.m1.1.1.3.2.2.2">𝛾</ci><ci id="Sx2.Ex2.m1.1.1.3.2.2.3.cmml" xref="Sx2.Ex2.m1.1.1.3.2.2.3">𝑛</ci></apply><apply id="Sx2.Ex2.m1.1.1.3.2.3.cmml" xref="Sx2.Ex2.m1.1.1.3.2.3"><csymbol cd="ambiguous" id="Sx2.Ex2.m1.1.1.3.2.3.1.cmml" xref="Sx2.Ex2.m1.1.1.3.2.3">subscript</csymbol><ci id="Sx2.Ex2.m1.1.1.3.2.3.2.cmml" xref="Sx2.Ex2.m1.1.1.3.2.3.2">𝑟</ci><apply id="Sx2.Ex2.m1.1.1.3.2.3.3.cmml" xref="Sx2.Ex2.m1.1.1.3.2.3.3"><plus id="Sx2.Ex2.m1.1.1.3.2.3.3.1.cmml" xref="Sx2.Ex2.m1.1.1.3.2.3.3.1"></plus><ci id="Sx2.Ex2.m1.1.1.3.2.3.3.2.cmml" xref="Sx2.Ex2.m1.1.1.3.2.3.3.2">𝑡</ci><ci id="Sx2.Ex2.m1.1.1.3.2.3.3.3.cmml" xref="Sx2.Ex2.m1.1.1.3.2.3.3.3">𝑛</ci></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.Ex2.m1.1c">\max\sum_{n}\gamma^{n}r_{t+n}</annotation><annotation encoding="application/x-llamapun" id="Sx2.Ex2.m1.1d">roman_max ∑ start_POSTSUBSCRIPT italic_n end_POSTSUBSCRIPT italic_γ start_POSTSUPERSCRIPT italic_n end_POSTSUPERSCRIPT italic_r start_POSTSUBSCRIPT italic_t + italic_n end_POSTSUBSCRIPT</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p1.7">where <math alttext="\gamma" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p1.7.m1.1"><semantics id="Sx2.SSx1.SSSx2.p1.7.m1.1a"><mi id="Sx2.SSx1.SSSx2.p1.7.m1.1.1" xref="Sx2.SSx1.SSSx2.p1.7.m1.1.1.cmml">γ</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p1.7.m1.1b"><ci id="Sx2.SSx1.SSSx2.p1.7.m1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p1.7.m1.1.1">𝛾</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p1.7.m1.1c">\gamma</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p1.7.m1.1d">italic_γ</annotation></semantics></math> is the discounted factor to guarantee the convergence of the algorithm.
+We use the Proximal Policy Optimization (PPO) algorithm<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib2" title="">2</a>]</cite>, taking into account its advantages in balancing exploration and exploitation. However, PPO’s standard application is modified to suit the deterministic and high-stakes nature of Chinese Chess.
+To address the challenges of PPO in the Chinese Chess context, we implement the following adjustments:</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx2.p2">
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p2.1"><span class="ltx_text ltx_font_bold" id="Sx2.SSx1.SSSx2.p2.1.1">Opening Strategy Diversification</span> In the opening phase of Chinese Chess, there are numerous distinct styles of initiating gameplay, ranging from defensive, to offensive, to more balanced approaches. Top-tier AI systems need to adeptly handle these various styles. To prevent the AI from settling into a suboptimal state during self-play, we have designed a concept called "Opening Strategy Diversification." This approach ensures that the AI explores a wide range of strategic possibilities, thereby enhancing its adaptability and robustness in real-game scenarios. Instead of sampling from the policy distribution, we manually curate a set of opening moves from top human players. This diversification in the opening book ensures that our AI is exposed to a variety of game commencements, encouraging a broader strategic understanding from the outset of the game.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx2.p3">
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p3.1"><span class="ltx_text ltx_font_bold" id="Sx2.SSx1.SSSx2.p3.1.1">Dynamic Opponent Pool</span> It is well recognized that employing self-play as a training method in reinforcement learning can easily lead to cyclic traps, where Model A defeats Model B, Model B defeats Model C, and Model C defeats Model A. Consequently, we have drawn inspiration from the concept of a "League," as utilized in AlphaStar, and have designed a diverse pool of opponent models that serve as opponents during self-play sessions. This pool is continuously updated based on performance metrics and stylistic evaluations, ensuring that our primary AI model is regularly challenged by a wide spectrum of strategic types. The dynamic nature of this pool promotes the emersion of a robust and versatile policy, capable of counteracting diverse strategies.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx2.p4">
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p4.2">For each game, one of the opponent models <math alttext="i" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p4.1.m1.1"><semantics id="Sx2.SSx1.SSSx2.p4.1.m1.1a"><mi id="Sx2.SSx1.SSSx2.p4.1.m1.1.1" xref="Sx2.SSx1.SSSx2.p4.1.m1.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p4.1.m1.1b"><ci id="Sx2.SSx1.SSSx2.p4.1.m1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p4.1.m1.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p4.1.m1.1c">i</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p4.1.m1.1d">italic_i</annotation></semantics></math> in the pool is chosen based on the win rate of the current training model against the opponent model <math alttext="r_{i}" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p4.2.m2.1"><semantics id="Sx2.SSx1.SSSx2.p4.2.m2.1a"><msub id="Sx2.SSx1.SSSx2.p4.2.m2.1.1" xref="Sx2.SSx1.SSSx2.p4.2.m2.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p4.2.m2.1.1.2" xref="Sx2.SSx1.SSSx2.p4.2.m2.1.1.2.cmml">r</mi><mi id="Sx2.SSx1.SSSx2.p4.2.m2.1.1.3" xref="Sx2.SSx1.SSSx2.p4.2.m2.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p4.2.m2.1b"><apply id="Sx2.SSx1.SSSx2.p4.2.m2.1.1.cmml" xref="Sx2.SSx1.SSSx2.p4.2.m2.1.1"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p4.2.m2.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p4.2.m2.1.1">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p4.2.m2.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p4.2.m2.1.1.2">𝑟</ci><ci id="Sx2.SSx1.SSSx2.p4.2.m2.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p4.2.m2.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p4.2.m2.1c">r_{i}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p4.2.m2.1d">italic_r start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT</annotation></semantics></math>. Strong opponent models (lower win rate) are more likely to be selected. The expression of sampling method is as follows:</p>
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="p^{i}_{selected}\varpropto e^{-r_{i}/\tau}" class="ltx_Math" display="block" id="Sx2.Ex3.m1.1"><semantics id="Sx2.Ex3.m1.1a"><mrow id="Sx2.Ex3.m1.1.1" xref="Sx2.Ex3.m1.1.1.cmml"><msubsup id="Sx2.Ex3.m1.1.1.2" xref="Sx2.Ex3.m1.1.1.2.cmml"><mi id="Sx2.Ex3.m1.1.1.2.2.2" xref="Sx2.Ex3.m1.1.1.2.2.2.cmml">p</mi><mrow id="Sx2.Ex3.m1.1.1.2.3" xref="Sx2.Ex3.m1.1.1.2.3.cmml"><mi id="Sx2.Ex3.m1.1.1.2.3.2" xref="Sx2.Ex3.m1.1.1.2.3.2.cmml">s</mi><mo id="Sx2.Ex3.m1.1.1.2.3.1" xref="Sx2.Ex3.m1.1.1.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex3.m1.1.1.2.3.3" xref="Sx2.Ex3.m1.1.1.2.3.3.cmml">e</mi><mo id="Sx2.Ex3.m1.1.1.2.3.1a" xref="Sx2.Ex3.m1.1.1.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex3.m1.1.1.2.3.4" xref="Sx2.Ex3.m1.1.1.2.3.4.cmml">l</mi><mo id="Sx2.Ex3.m1.1.1.2.3.1b" xref="Sx2.Ex3.m1.1.1.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex3.m1.1.1.2.3.5" xref="Sx2.Ex3.m1.1.1.2.3.5.cmml">e</mi><mo id="Sx2.Ex3.m1.1.1.2.3.1c" xref="Sx2.Ex3.m1.1.1.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex3.m1.1.1.2.3.6" xref="Sx2.Ex3.m1.1.1.2.3.6.cmml">c</mi><mo id="Sx2.Ex3.m1.1.1.2.3.1d" xref="Sx2.Ex3.m1.1.1.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex3.m1.1.1.2.3.7" xref="Sx2.Ex3.m1.1.1.2.3.7.cmml">t</mi><mo id="Sx2.Ex3.m1.1.1.2.3.1e" xref="Sx2.Ex3.m1.1.1.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex3.m1.1.1.2.3.8" xref="Sx2.Ex3.m1.1.1.2.3.8.cmml">e</mi><mo id="Sx2.Ex3.m1.1.1.2.3.1f" xref="Sx2.Ex3.m1.1.1.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex3.m1.1.1.2.3.9" xref="Sx2.Ex3.m1.1.1.2.3.9.cmml">d</mi></mrow><mi id="Sx2.Ex3.m1.1.1.2.2.3" xref="Sx2.Ex3.m1.1.1.2.2.3.cmml">i</mi></msubsup><mo id="Sx2.Ex3.m1.1.1.1" xref="Sx2.Ex3.m1.1.1.1.cmml">∝</mo><msup id="Sx2.Ex3.m1.1.1.3" xref="Sx2.Ex3.m1.1.1.3.cmml"><mi id="Sx2.Ex3.m1.1.1.3.2" xref="Sx2.Ex3.m1.1.1.3.2.cmml">e</mi><mrow id="Sx2.Ex3.m1.1.1.3.3" xref="Sx2.Ex3.m1.1.1.3.3.cmml"><mo id="Sx2.Ex3.m1.1.1.3.3a" xref="Sx2.Ex3.m1.1.1.3.3.cmml">−</mo><mrow id="Sx2.Ex3.m1.1.1.3.3.2" xref="Sx2.Ex3.m1.1.1.3.3.2.cmml"><msub id="Sx2.Ex3.m1.1.1.3.3.2.2" xref="Sx2.Ex3.m1.1.1.3.3.2.2.cmml"><mi id="Sx2.Ex3.m1.1.1.3.3.2.2.2" xref="Sx2.Ex3.m1.1.1.3.3.2.2.2.cmml">r</mi><mi id="Sx2.Ex3.m1.1.1.3.3.2.2.3" xref="Sx2.Ex3.m1.1.1.3.3.2.2.3.cmml">i</mi></msub><mo id="Sx2.Ex3.m1.1.1.3.3.2.1" xref="Sx2.Ex3.m1.1.1.3.3.2.1.cmml">/</mo><mi id="Sx2.Ex3.m1.1.1.3.3.2.3" xref="Sx2.Ex3.m1.1.1.3.3.2.3.cmml">τ</mi></mrow></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="Sx2.Ex3.m1.1b"><apply id="Sx2.Ex3.m1.1.1.cmml" xref="Sx2.Ex3.m1.1.1"><csymbol cd="latexml" id="Sx2.Ex3.m1.1.1.1.cmml" xref="Sx2.Ex3.m1.1.1.1">proportional-to</csymbol><apply id="Sx2.Ex3.m1.1.1.2.cmml" xref="Sx2.Ex3.m1.1.1.2"><csymbol cd="ambiguous" id="Sx2.Ex3.m1.1.1.2.1.cmml" xref="Sx2.Ex3.m1.1.1.2">subscript</csymbol><apply id="Sx2.Ex3.m1.1.1.2.2.cmml" xref="Sx2.Ex3.m1.1.1.2"><csymbol cd="ambiguous" id="Sx2.Ex3.m1.1.1.2.2.1.cmml" xref="Sx2.Ex3.m1.1.1.2">superscript</csymbol><ci id="Sx2.Ex3.m1.1.1.2.2.2.cmml" xref="Sx2.Ex3.m1.1.1.2.2.2">𝑝</ci><ci id="Sx2.Ex3.m1.1.1.2.2.3.cmml" xref="Sx2.Ex3.m1.1.1.2.2.3">𝑖</ci></apply><apply id="Sx2.Ex3.m1.1.1.2.3.cmml" xref="Sx2.Ex3.m1.1.1.2.3"><times id="Sx2.Ex3.m1.1.1.2.3.1.cmml" xref="Sx2.Ex3.m1.1.1.2.3.1"></times><ci id="Sx2.Ex3.m1.1.1.2.3.2.cmml" xref="Sx2.Ex3.m1.1.1.2.3.2">𝑠</ci><ci id="Sx2.Ex3.m1.1.1.2.3.3.cmml" xref="Sx2.Ex3.m1.1.1.2.3.3">𝑒</ci><ci id="Sx2.Ex3.m1.1.1.2.3.4.cmml" xref="Sx2.Ex3.m1.1.1.2.3.4">𝑙</ci><ci id="Sx2.Ex3.m1.1.1.2.3.5.cmml" xref="Sx2.Ex3.m1.1.1.2.3.5">𝑒</ci><ci id="Sx2.Ex3.m1.1.1.2.3.6.cmml" xref="Sx2.Ex3.m1.1.1.2.3.6">𝑐</ci><ci id="Sx2.Ex3.m1.1.1.2.3.7.cmml" xref="Sx2.Ex3.m1.1.1.2.3.7">𝑡</ci><ci id="Sx2.Ex3.m1.1.1.2.3.8.cmml" xref="Sx2.Ex3.m1.1.1.2.3.8">𝑒</ci><ci id="Sx2.Ex3.m1.1.1.2.3.9.cmml" xref="Sx2.Ex3.m1.1.1.2.3.9">𝑑</ci></apply></apply><apply id="Sx2.Ex3.m1.1.1.3.cmml" xref="Sx2.Ex3.m1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex3.m1.1.1.3.1.cmml" xref="Sx2.Ex3.m1.1.1.3">superscript</csymbol><ci id="Sx2.Ex3.m1.1.1.3.2.cmml" xref="Sx2.Ex3.m1.1.1.3.2">𝑒</ci><apply id="Sx2.Ex3.m1.1.1.3.3.cmml" xref="Sx2.Ex3.m1.1.1.3.3"><minus id="Sx2.Ex3.m1.1.1.3.3.1.cmml" xref="Sx2.Ex3.m1.1.1.3.3"></minus><apply id="Sx2.Ex3.m1.1.1.3.3.2.cmml" xref="Sx2.Ex3.m1.1.1.3.3.2"><divide id="Sx2.Ex3.m1.1.1.3.3.2.1.cmml" xref="Sx2.Ex3.m1.1.1.3.3.2.1"></divide><apply id="Sx2.Ex3.m1.1.1.3.3.2.2.cmml" xref="Sx2.Ex3.m1.1.1.3.3.2.2"><csymbol cd="ambiguous" id="Sx2.Ex3.m1.1.1.3.3.2.2.1.cmml" xref="Sx2.Ex3.m1.1.1.3.3.2.2">subscript</csymbol><ci id="Sx2.Ex3.m1.1.1.3.3.2.2.2.cmml" xref="Sx2.Ex3.m1.1.1.3.3.2.2.2">𝑟</ci><ci id="Sx2.Ex3.m1.1.1.3.3.2.2.3.cmml" xref="Sx2.Ex3.m1.1.1.3.3.2.2.3">𝑖</ci></apply><ci id="Sx2.Ex3.m1.1.1.3.3.2.3.cmml" xref="Sx2.Ex3.m1.1.1.3.3.2.3">𝜏</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.Ex3.m1.1c">p^{i}_{selected}\varpropto e^{-r_{i}/\tau}</annotation><annotation encoding="application/x-llamapun" id="Sx2.Ex3.m1.1d">italic_p start_POSTSUPERSCRIPT italic_i end_POSTSUPERSCRIPT start_POSTSUBSCRIPT italic_s italic_e italic_l italic_e italic_c italic_t italic_e italic_d end_POSTSUBSCRIPT ∝ italic_e start_POSTSUPERSCRIPT - italic_r start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT / italic_τ end_POSTSUPERSCRIPT</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p4.3">The opponent model pool is initialized with the recovered model from supervised learning. Current training model will be added to the opponent model pool when its’ lowest win rate against models in the pool exceeds a threshold. Moreover, to better challenge the training model, sampling temperature of the opponent model is increased (more like ArgMax) while the temperature of the training model remains unchanged.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx2.p5">
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p5.2"><span class="ltx_text ltx_font_bold" id="Sx2.SSx1.SSSx2.p5.2.1">Value Estimation with Cutoff</span>
+For PPO training, people usually use GAE(General Adavantage Estimation) to estimate the advantage function<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib17" title="">17</a>]</cite>:</p>
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="\hat{A}^{GAE}_{t}=\sum_{n=0}^{+\infty}(\gamma\lambda)^{n}\delta_{t+n}^{V}" class="ltx_Math" display="block" id="Sx2.Ex4.m1.1"><semantics id="Sx2.Ex4.m1.1a"><mrow id="Sx2.Ex4.m1.1.1" xref="Sx2.Ex4.m1.1.1.cmml"><msubsup id="Sx2.Ex4.m1.1.1.3" xref="Sx2.Ex4.m1.1.1.3.cmml"><mover accent="true" id="Sx2.Ex4.m1.1.1.3.2.2" xref="Sx2.Ex4.m1.1.1.3.2.2.cmml"><mi id="Sx2.Ex4.m1.1.1.3.2.2.2" xref="Sx2.Ex4.m1.1.1.3.2.2.2.cmml">A</mi><mo id="Sx2.Ex4.m1.1.1.3.2.2.1" xref="Sx2.Ex4.m1.1.1.3.2.2.1.cmml">^</mo></mover><mi id="Sx2.Ex4.m1.1.1.3.3" xref="Sx2.Ex4.m1.1.1.3.3.cmml">t</mi><mrow id="Sx2.Ex4.m1.1.1.3.2.3" xref="Sx2.Ex4.m1.1.1.3.2.3.cmml"><mi id="Sx2.Ex4.m1.1.1.3.2.3.2" xref="Sx2.Ex4.m1.1.1.3.2.3.2.cmml">G</mi><mo id="Sx2.Ex4.m1.1.1.3.2.3.1" xref="Sx2.Ex4.m1.1.1.3.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex4.m1.1.1.3.2.3.3" xref="Sx2.Ex4.m1.1.1.3.2.3.3.cmml">A</mi><mo id="Sx2.Ex4.m1.1.1.3.2.3.1a" xref="Sx2.Ex4.m1.1.1.3.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex4.m1.1.1.3.2.3.4" xref="Sx2.Ex4.m1.1.1.3.2.3.4.cmml">E</mi></mrow></msubsup><mo id="Sx2.Ex4.m1.1.1.2" rspace="0.111em" xref="Sx2.Ex4.m1.1.1.2.cmml">=</mo><mrow id="Sx2.Ex4.m1.1.1.1" xref="Sx2.Ex4.m1.1.1.1.cmml"><munderover id="Sx2.Ex4.m1.1.1.1.2" xref="Sx2.Ex4.m1.1.1.1.2.cmml"><mo id="Sx2.Ex4.m1.1.1.1.2.2.2" movablelimits="false" rspace="0em" xref="Sx2.Ex4.m1.1.1.1.2.2.2.cmml">∑</mo><mrow id="Sx2.Ex4.m1.1.1.1.2.2.3" xref="Sx2.Ex4.m1.1.1.1.2.2.3.cmml"><mi id="Sx2.Ex4.m1.1.1.1.2.2.3.2" xref="Sx2.Ex4.m1.1.1.1.2.2.3.2.cmml">n</mi><mo id="Sx2.Ex4.m1.1.1.1.2.2.3.1" xref="Sx2.Ex4.m1.1.1.1.2.2.3.1.cmml">=</mo><mn id="Sx2.Ex4.m1.1.1.1.2.2.3.3" xref="Sx2.Ex4.m1.1.1.1.2.2.3.3.cmml">0</mn></mrow><mrow id="Sx2.Ex4.m1.1.1.1.2.3" xref="Sx2.Ex4.m1.1.1.1.2.3.cmml"><mo id="Sx2.Ex4.m1.1.1.1.2.3a" xref="Sx2.Ex4.m1.1.1.1.2.3.cmml">+</mo><mi id="Sx2.Ex4.m1.1.1.1.2.3.2" mathvariant="normal" xref="Sx2.Ex4.m1.1.1.1.2.3.2.cmml">∞</mi></mrow></munderover><mrow id="Sx2.Ex4.m1.1.1.1.1" xref="Sx2.Ex4.m1.1.1.1.1.cmml"><msup id="Sx2.Ex4.m1.1.1.1.1.1" xref="Sx2.Ex4.m1.1.1.1.1.1.cmml"><mrow id="Sx2.Ex4.m1.1.1.1.1.1.1.1" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.cmml"><mo id="Sx2.Ex4.m1.1.1.1.1.1.1.1.2" stretchy="false" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="Sx2.Ex4.m1.1.1.1.1.1.1.1.1" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.cmml"><mi id="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.2" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.2.cmml">γ</mi><mo id="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.1" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.1.cmml">⁢</mo><mi id="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.3" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.3.cmml">λ</mi></mrow><mo id="Sx2.Ex4.m1.1.1.1.1.1.1.1.3" stretchy="false" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mi id="Sx2.Ex4.m1.1.1.1.1.1.3" xref="Sx2.Ex4.m1.1.1.1.1.1.3.cmml">n</mi></msup><mo id="Sx2.Ex4.m1.1.1.1.1.2" xref="Sx2.Ex4.m1.1.1.1.1.2.cmml">⁢</mo><msubsup id="Sx2.Ex4.m1.1.1.1.1.3" xref="Sx2.Ex4.m1.1.1.1.1.3.cmml"><mi id="Sx2.Ex4.m1.1.1.1.1.3.2.2" xref="Sx2.Ex4.m1.1.1.1.1.3.2.2.cmml">δ</mi><mrow id="Sx2.Ex4.m1.1.1.1.1.3.2.3" xref="Sx2.Ex4.m1.1.1.1.1.3.2.3.cmml"><mi id="Sx2.Ex4.m1.1.1.1.1.3.2.3.2" xref="Sx2.Ex4.m1.1.1.1.1.3.2.3.2.cmml">t</mi><mo id="Sx2.Ex4.m1.1.1.1.1.3.2.3.1" xref="Sx2.Ex4.m1.1.1.1.1.3.2.3.1.cmml">+</mo><mi id="Sx2.Ex4.m1.1.1.1.1.3.2.3.3" xref="Sx2.Ex4.m1.1.1.1.1.3.2.3.3.cmml">n</mi></mrow><mi id="Sx2.Ex4.m1.1.1.1.1.3.3" xref="Sx2.Ex4.m1.1.1.1.1.3.3.cmml">V</mi></msubsup></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="Sx2.Ex4.m1.1b"><apply id="Sx2.Ex4.m1.1.1.cmml" xref="Sx2.Ex4.m1.1.1"><eq id="Sx2.Ex4.m1.1.1.2.cmml" xref="Sx2.Ex4.m1.1.1.2"></eq><apply id="Sx2.Ex4.m1.1.1.3.cmml" xref="Sx2.Ex4.m1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex4.m1.1.1.3.1.cmml" xref="Sx2.Ex4.m1.1.1.3">subscript</csymbol><apply id="Sx2.Ex4.m1.1.1.3.2.cmml" xref="Sx2.Ex4.m1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex4.m1.1.1.3.2.1.cmml" xref="Sx2.Ex4.m1.1.1.3">superscript</csymbol><apply id="Sx2.Ex4.m1.1.1.3.2.2.cmml" xref="Sx2.Ex4.m1.1.1.3.2.2"><ci id="Sx2.Ex4.m1.1.1.3.2.2.1.cmml" xref="Sx2.Ex4.m1.1.1.3.2.2.1">^</ci><ci id="Sx2.Ex4.m1.1.1.3.2.2.2.cmml" xref="Sx2.Ex4.m1.1.1.3.2.2.2">𝐴</ci></apply><apply id="Sx2.Ex4.m1.1.1.3.2.3.cmml" xref="Sx2.Ex4.m1.1.1.3.2.3"><times id="Sx2.Ex4.m1.1.1.3.2.3.1.cmml" xref="Sx2.Ex4.m1.1.1.3.2.3.1"></times><ci id="Sx2.Ex4.m1.1.1.3.2.3.2.cmml" xref="Sx2.Ex4.m1.1.1.3.2.3.2">𝐺</ci><ci id="Sx2.Ex4.m1.1.1.3.2.3.3.cmml" xref="Sx2.Ex4.m1.1.1.3.2.3.3">𝐴</ci><ci id="Sx2.Ex4.m1.1.1.3.2.3.4.cmml" xref="Sx2.Ex4.m1.1.1.3.2.3.4">𝐸</ci></apply></apply><ci id="Sx2.Ex4.m1.1.1.3.3.cmml" xref="Sx2.Ex4.m1.1.1.3.3">𝑡</ci></apply><apply id="Sx2.Ex4.m1.1.1.1.cmml" xref="Sx2.Ex4.m1.1.1.1"><apply id="Sx2.Ex4.m1.1.1.1.2.cmml" xref="Sx2.Ex4.m1.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.Ex4.m1.1.1.1.2.1.cmml" xref="Sx2.Ex4.m1.1.1.1.2">superscript</csymbol><apply id="Sx2.Ex4.m1.1.1.1.2.2.cmml" xref="Sx2.Ex4.m1.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.Ex4.m1.1.1.1.2.2.1.cmml" xref="Sx2.Ex4.m1.1.1.1.2">subscript</csymbol><sum id="Sx2.Ex4.m1.1.1.1.2.2.2.cmml" xref="Sx2.Ex4.m1.1.1.1.2.2.2"></sum><apply id="Sx2.Ex4.m1.1.1.1.2.2.3.cmml" xref="Sx2.Ex4.m1.1.1.1.2.2.3"><eq id="Sx2.Ex4.m1.1.1.1.2.2.3.1.cmml" xref="Sx2.Ex4.m1.1.1.1.2.2.3.1"></eq><ci id="Sx2.Ex4.m1.1.1.1.2.2.3.2.cmml" xref="Sx2.Ex4.m1.1.1.1.2.2.3.2">𝑛</ci><cn id="Sx2.Ex4.m1.1.1.1.2.2.3.3.cmml" type="integer" xref="Sx2.Ex4.m1.1.1.1.2.2.3.3">0</cn></apply></apply><apply id="Sx2.Ex4.m1.1.1.1.2.3.cmml" xref="Sx2.Ex4.m1.1.1.1.2.3"><plus id="Sx2.Ex4.m1.1.1.1.2.3.1.cmml" xref="Sx2.Ex4.m1.1.1.1.2.3"></plus><infinity id="Sx2.Ex4.m1.1.1.1.2.3.2.cmml" xref="Sx2.Ex4.m1.1.1.1.2.3.2"></infinity></apply></apply><apply id="Sx2.Ex4.m1.1.1.1.1.cmml" xref="Sx2.Ex4.m1.1.1.1.1"><times id="Sx2.Ex4.m1.1.1.1.1.2.cmml" xref="Sx2.Ex4.m1.1.1.1.1.2"></times><apply id="Sx2.Ex4.m1.1.1.1.1.1.cmml" xref="Sx2.Ex4.m1.1.1.1.1.1"><csymbol cd="ambiguous" id="Sx2.Ex4.m1.1.1.1.1.1.2.cmml" xref="Sx2.Ex4.m1.1.1.1.1.1">superscript</csymbol><apply id="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1"><times id="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.1"></times><ci id="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.2.cmml" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.2">𝛾</ci><ci id="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.3.cmml" xref="Sx2.Ex4.m1.1.1.1.1.1.1.1.1.3">𝜆</ci></apply><ci id="Sx2.Ex4.m1.1.1.1.1.1.3.cmml" xref="Sx2.Ex4.m1.1.1.1.1.1.3">𝑛</ci></apply><apply id="Sx2.Ex4.m1.1.1.1.1.3.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex4.m1.1.1.1.1.3.1.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3">superscript</csymbol><apply id="Sx2.Ex4.m1.1.1.1.1.3.2.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex4.m1.1.1.1.1.3.2.1.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3">subscript</csymbol><ci id="Sx2.Ex4.m1.1.1.1.1.3.2.2.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3.2.2">𝛿</ci><apply id="Sx2.Ex4.m1.1.1.1.1.3.2.3.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3.2.3"><plus id="Sx2.Ex4.m1.1.1.1.1.3.2.3.1.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3.2.3.1"></plus><ci id="Sx2.Ex4.m1.1.1.1.1.3.2.3.2.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3.2.3.2">𝑡</ci><ci id="Sx2.Ex4.m1.1.1.1.1.3.2.3.3.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3.2.3.3">𝑛</ci></apply></apply><ci id="Sx2.Ex4.m1.1.1.1.1.3.3.cmml" xref="Sx2.Ex4.m1.1.1.1.1.3.3">𝑉</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.Ex4.m1.1c">\hat{A}^{GAE}_{t}=\sum_{n=0}^{+\infty}(\gamma\lambda)^{n}\delta_{t+n}^{V}</annotation><annotation encoding="application/x-llamapun" id="Sx2.Ex4.m1.1d">over^ start_ARG italic_A end_ARG start_POSTSUPERSCRIPT italic_G italic_A italic_E end_POSTSUPERSCRIPT start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT = ∑ start_POSTSUBSCRIPT italic_n = 0 end_POSTSUBSCRIPT start_POSTSUPERSCRIPT + ∞ end_POSTSUPERSCRIPT ( italic_γ italic_λ ) start_POSTSUPERSCRIPT italic_n end_POSTSUPERSCRIPT italic_δ start_POSTSUBSCRIPT italic_t + italic_n end_POSTSUBSCRIPT start_POSTSUPERSCRIPT italic_V end_POSTSUPERSCRIPT</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p5.1">where <math alttext="\delta_{t}^{V}=r_{t}+\gamma V(s_{t+1})-V(s_{t})" class="ltx_Math" display="inline" id="Sx2.SSx1.SSSx2.p5.1.m1.2"><semantics id="Sx2.SSx1.SSSx2.p5.1.m1.2a"><mrow id="Sx2.SSx1.SSSx2.p5.1.m1.2.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.cmml"><msubsup id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.cmml"><mi id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.2.cmml">δ</mi><mi id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.3.cmml">t</mi><mi id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.3.cmml">V</mi></msubsup><mo id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.3.cmml">=</mo><mrow id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.cmml"><mrow id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.cmml"><msub id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.cmml"><mi id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.2.cmml">r</mi><mi id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.3.cmml">t</mi></msub><mo id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.2.cmml">+</mo><mrow id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.3.cmml">γ</mi><mo id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.2.cmml">⁢</mo><mi id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.4" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.4.cmml">V</mi><mo id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.2a" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.2.cmml">⁢</mo><mrow id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.cmml"><mo id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.2" stretchy="false" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.cmml">(</mo><msub id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.2.cmml">s</mi><mrow id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.cmml"><mi id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.2.cmml">t</mi><mo id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.1" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.1.cmml">+</mo><mn id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.3.cmml">1</mn></mrow></msub><mo id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.3" stretchy="false" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow><mo id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.3.cmml">−</mo><mrow id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.cmml"><mi id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.3.cmml">V</mi><mo id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.2.cmml">⁢</mo><mrow id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.cmml"><mo id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.2" stretchy="false" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.cmml">(</mo><msub id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.cmml"><mi id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.2" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.2.cmml">s</mi><mi id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.3" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.3.cmml">t</mi></msub><mo id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.3" stretchy="false" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.cmml">)</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.SSSx2.p5.1.m1.2b"><apply id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2"><eq id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.3"></eq><apply id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4">superscript</csymbol><apply id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.2">𝛿</ci><ci id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.2.3">𝑡</ci></apply><ci id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.4.3">𝑉</ci></apply><apply id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2"><minus id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.3"></minus><apply id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1"><plus id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.2"></plus><apply id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.2">𝑟</ci><ci id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.3.3">𝑡</ci></apply><apply id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1"><times id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.2"></times><ci id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.3">𝛾</ci><ci id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.4.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.4">𝑉</ci><apply id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.2">𝑠</ci><apply id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3"><plus id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.1"></plus><ci id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.2">𝑡</ci><cn id="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.3.cmml" type="integer" xref="Sx2.SSx1.SSSx2.p5.1.m1.1.1.1.1.1.1.1.1.3.3">1</cn></apply></apply></apply></apply><apply id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2"><times id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.2"></times><ci id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.3">𝑉</ci><apply id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1"><csymbol cd="ambiguous" id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.1.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1">subscript</csymbol><ci id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.2.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.2">𝑠</ci><ci id="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.3.cmml" xref="Sx2.SSx1.SSSx2.p5.1.m1.2.2.2.2.1.1.1.3">𝑡</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.SSSx2.p5.1.m1.2c">\delta_{t}^{V}=r_{t}+\gamma V(s_{t+1})-V(s_{t})</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx1.SSSx2.p5.1.m1.2d">italic_δ start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT start_POSTSUPERSCRIPT italic_V end_POSTSUPERSCRIPT = italic_r start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT + italic_γ italic_V ( italic_s start_POSTSUBSCRIPT italic_t + 1 end_POSTSUBSCRIPT ) - italic_V ( italic_s start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT )</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx2.p6">
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p6.1">Upon analysis, we identified challenges unique to the use of the PPO algorithm in chess-like adversarial games, particularly concerning the estimation of the value function. Firstly, PPO is an on-policy algorithm that also utilizes entropy loss to balance exploration and exploitation. Consequently, it inevitably samples moves that are exceptionally good or poor during gameplay. This variability can cause the win rate to fluctuate dramatically from 0% to 100%, or vice versa, leading to significant volatility in the value function and increasing the neural network’s fitting difficulty. Moreover, this phenomenon becomes more pronounced as the game progresses and the number of sampling steps increases. From this observation, it becomes necessary to implement truncation in the trajectory processing, which is called <span class="ltx_text ltx_font_bold" id="Sx2.SSx1.SSSx2.p6.1.1">Value Estimation with Cutoff</span>(VECT).</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx2.p7">
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p7.1">The core algorithm of VECT is:</p>
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="\hat{A}^{VECT}_{t}=\sum_{n=0}^{L}(\gamma\lambda)^{n}\delta_{t+n}^{V}" class="ltx_Math" display="block" id="Sx2.Ex5.m1.1"><semantics id="Sx2.Ex5.m1.1a"><mrow id="Sx2.Ex5.m1.1.1" xref="Sx2.Ex5.m1.1.1.cmml"><msubsup id="Sx2.Ex5.m1.1.1.3" xref="Sx2.Ex5.m1.1.1.3.cmml"><mover accent="true" id="Sx2.Ex5.m1.1.1.3.2.2" xref="Sx2.Ex5.m1.1.1.3.2.2.cmml"><mi id="Sx2.Ex5.m1.1.1.3.2.2.2" xref="Sx2.Ex5.m1.1.1.3.2.2.2.cmml">A</mi><mo id="Sx2.Ex5.m1.1.1.3.2.2.1" xref="Sx2.Ex5.m1.1.1.3.2.2.1.cmml">^</mo></mover><mi id="Sx2.Ex5.m1.1.1.3.3" xref="Sx2.Ex5.m1.1.1.3.3.cmml">t</mi><mrow id="Sx2.Ex5.m1.1.1.3.2.3" xref="Sx2.Ex5.m1.1.1.3.2.3.cmml"><mi id="Sx2.Ex5.m1.1.1.3.2.3.2" xref="Sx2.Ex5.m1.1.1.3.2.3.2.cmml">V</mi><mo id="Sx2.Ex5.m1.1.1.3.2.3.1" xref="Sx2.Ex5.m1.1.1.3.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex5.m1.1.1.3.2.3.3" xref="Sx2.Ex5.m1.1.1.3.2.3.3.cmml">E</mi><mo id="Sx2.Ex5.m1.1.1.3.2.3.1a" xref="Sx2.Ex5.m1.1.1.3.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex5.m1.1.1.3.2.3.4" xref="Sx2.Ex5.m1.1.1.3.2.3.4.cmml">C</mi><mo id="Sx2.Ex5.m1.1.1.3.2.3.1b" xref="Sx2.Ex5.m1.1.1.3.2.3.1.cmml">⁢</mo><mi id="Sx2.Ex5.m1.1.1.3.2.3.5" xref="Sx2.Ex5.m1.1.1.3.2.3.5.cmml">T</mi></mrow></msubsup><mo id="Sx2.Ex5.m1.1.1.2" rspace="0.111em" xref="Sx2.Ex5.m1.1.1.2.cmml">=</mo><mrow id="Sx2.Ex5.m1.1.1.1" xref="Sx2.Ex5.m1.1.1.1.cmml"><munderover id="Sx2.Ex5.m1.1.1.1.2" xref="Sx2.Ex5.m1.1.1.1.2.cmml"><mo id="Sx2.Ex5.m1.1.1.1.2.2.2" movablelimits="false" rspace="0em" xref="Sx2.Ex5.m1.1.1.1.2.2.2.cmml">∑</mo><mrow id="Sx2.Ex5.m1.1.1.1.2.2.3" xref="Sx2.Ex5.m1.1.1.1.2.2.3.cmml"><mi id="Sx2.Ex5.m1.1.1.1.2.2.3.2" xref="Sx2.Ex5.m1.1.1.1.2.2.3.2.cmml">n</mi><mo id="Sx2.Ex5.m1.1.1.1.2.2.3.1" xref="Sx2.Ex5.m1.1.1.1.2.2.3.1.cmml">=</mo><mn id="Sx2.Ex5.m1.1.1.1.2.2.3.3" xref="Sx2.Ex5.m1.1.1.1.2.2.3.3.cmml">0</mn></mrow><mi id="Sx2.Ex5.m1.1.1.1.2.3" xref="Sx2.Ex5.m1.1.1.1.2.3.cmml">L</mi></munderover><mrow id="Sx2.Ex5.m1.1.1.1.1" xref="Sx2.Ex5.m1.1.1.1.1.cmml"><msup id="Sx2.Ex5.m1.1.1.1.1.1" xref="Sx2.Ex5.m1.1.1.1.1.1.cmml"><mrow id="Sx2.Ex5.m1.1.1.1.1.1.1.1" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.cmml"><mo id="Sx2.Ex5.m1.1.1.1.1.1.1.1.2" stretchy="false" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="Sx2.Ex5.m1.1.1.1.1.1.1.1.1" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.cmml"><mi id="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.2" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.2.cmml">γ</mi><mo id="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.1" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.1.cmml">⁢</mo><mi id="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.3" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.3.cmml">λ</mi></mrow><mo id="Sx2.Ex5.m1.1.1.1.1.1.1.1.3" stretchy="false" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mi id="Sx2.Ex5.m1.1.1.1.1.1.3" xref="Sx2.Ex5.m1.1.1.1.1.1.3.cmml">n</mi></msup><mo id="Sx2.Ex5.m1.1.1.1.1.2" xref="Sx2.Ex5.m1.1.1.1.1.2.cmml">⁢</mo><msubsup id="Sx2.Ex5.m1.1.1.1.1.3" xref="Sx2.Ex5.m1.1.1.1.1.3.cmml"><mi id="Sx2.Ex5.m1.1.1.1.1.3.2.2" xref="Sx2.Ex5.m1.1.1.1.1.3.2.2.cmml">δ</mi><mrow id="Sx2.Ex5.m1.1.1.1.1.3.2.3" xref="Sx2.Ex5.m1.1.1.1.1.3.2.3.cmml"><mi id="Sx2.Ex5.m1.1.1.1.1.3.2.3.2" xref="Sx2.Ex5.m1.1.1.1.1.3.2.3.2.cmml">t</mi><mo id="Sx2.Ex5.m1.1.1.1.1.3.2.3.1" xref="Sx2.Ex5.m1.1.1.1.1.3.2.3.1.cmml">+</mo><mi id="Sx2.Ex5.m1.1.1.1.1.3.2.3.3" xref="Sx2.Ex5.m1.1.1.1.1.3.2.3.3.cmml">n</mi></mrow><mi id="Sx2.Ex5.m1.1.1.1.1.3.3" xref="Sx2.Ex5.m1.1.1.1.1.3.3.cmml">V</mi></msubsup></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="Sx2.Ex5.m1.1b"><apply id="Sx2.Ex5.m1.1.1.cmml" xref="Sx2.Ex5.m1.1.1"><eq id="Sx2.Ex5.m1.1.1.2.cmml" xref="Sx2.Ex5.m1.1.1.2"></eq><apply id="Sx2.Ex5.m1.1.1.3.cmml" xref="Sx2.Ex5.m1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex5.m1.1.1.3.1.cmml" xref="Sx2.Ex5.m1.1.1.3">subscript</csymbol><apply id="Sx2.Ex5.m1.1.1.3.2.cmml" xref="Sx2.Ex5.m1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex5.m1.1.1.3.2.1.cmml" xref="Sx2.Ex5.m1.1.1.3">superscript</csymbol><apply id="Sx2.Ex5.m1.1.1.3.2.2.cmml" xref="Sx2.Ex5.m1.1.1.3.2.2"><ci id="Sx2.Ex5.m1.1.1.3.2.2.1.cmml" xref="Sx2.Ex5.m1.1.1.3.2.2.1">^</ci><ci id="Sx2.Ex5.m1.1.1.3.2.2.2.cmml" xref="Sx2.Ex5.m1.1.1.3.2.2.2">𝐴</ci></apply><apply id="Sx2.Ex5.m1.1.1.3.2.3.cmml" xref="Sx2.Ex5.m1.1.1.3.2.3"><times id="Sx2.Ex5.m1.1.1.3.2.3.1.cmml" xref="Sx2.Ex5.m1.1.1.3.2.3.1"></times><ci id="Sx2.Ex5.m1.1.1.3.2.3.2.cmml" xref="Sx2.Ex5.m1.1.1.3.2.3.2">𝑉</ci><ci id="Sx2.Ex5.m1.1.1.3.2.3.3.cmml" xref="Sx2.Ex5.m1.1.1.3.2.3.3">𝐸</ci><ci id="Sx2.Ex5.m1.1.1.3.2.3.4.cmml" xref="Sx2.Ex5.m1.1.1.3.2.3.4">𝐶</ci><ci id="Sx2.Ex5.m1.1.1.3.2.3.5.cmml" xref="Sx2.Ex5.m1.1.1.3.2.3.5">𝑇</ci></apply></apply><ci id="Sx2.Ex5.m1.1.1.3.3.cmml" xref="Sx2.Ex5.m1.1.1.3.3">𝑡</ci></apply><apply id="Sx2.Ex5.m1.1.1.1.cmml" xref="Sx2.Ex5.m1.1.1.1"><apply id="Sx2.Ex5.m1.1.1.1.2.cmml" xref="Sx2.Ex5.m1.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.Ex5.m1.1.1.1.2.1.cmml" xref="Sx2.Ex5.m1.1.1.1.2">superscript</csymbol><apply id="Sx2.Ex5.m1.1.1.1.2.2.cmml" xref="Sx2.Ex5.m1.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.Ex5.m1.1.1.1.2.2.1.cmml" xref="Sx2.Ex5.m1.1.1.1.2">subscript</csymbol><sum id="Sx2.Ex5.m1.1.1.1.2.2.2.cmml" xref="Sx2.Ex5.m1.1.1.1.2.2.2"></sum><apply id="Sx2.Ex5.m1.1.1.1.2.2.3.cmml" xref="Sx2.Ex5.m1.1.1.1.2.2.3"><eq id="Sx2.Ex5.m1.1.1.1.2.2.3.1.cmml" xref="Sx2.Ex5.m1.1.1.1.2.2.3.1"></eq><ci id="Sx2.Ex5.m1.1.1.1.2.2.3.2.cmml" xref="Sx2.Ex5.m1.1.1.1.2.2.3.2">𝑛</ci><cn id="Sx2.Ex5.m1.1.1.1.2.2.3.3.cmml" type="integer" xref="Sx2.Ex5.m1.1.1.1.2.2.3.3">0</cn></apply></apply><ci id="Sx2.Ex5.m1.1.1.1.2.3.cmml" xref="Sx2.Ex5.m1.1.1.1.2.3">𝐿</ci></apply><apply id="Sx2.Ex5.m1.1.1.1.1.cmml" xref="Sx2.Ex5.m1.1.1.1.1"><times id="Sx2.Ex5.m1.1.1.1.1.2.cmml" xref="Sx2.Ex5.m1.1.1.1.1.2"></times><apply id="Sx2.Ex5.m1.1.1.1.1.1.cmml" xref="Sx2.Ex5.m1.1.1.1.1.1"><csymbol cd="ambiguous" id="Sx2.Ex5.m1.1.1.1.1.1.2.cmml" xref="Sx2.Ex5.m1.1.1.1.1.1">superscript</csymbol><apply id="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1"><times id="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.1"></times><ci id="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.2.cmml" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.2">𝛾</ci><ci id="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.3.cmml" xref="Sx2.Ex5.m1.1.1.1.1.1.1.1.1.3">𝜆</ci></apply><ci id="Sx2.Ex5.m1.1.1.1.1.1.3.cmml" xref="Sx2.Ex5.m1.1.1.1.1.1.3">𝑛</ci></apply><apply id="Sx2.Ex5.m1.1.1.1.1.3.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex5.m1.1.1.1.1.3.1.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3">superscript</csymbol><apply id="Sx2.Ex5.m1.1.1.1.1.3.2.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.Ex5.m1.1.1.1.1.3.2.1.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3">subscript</csymbol><ci id="Sx2.Ex5.m1.1.1.1.1.3.2.2.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3.2.2">𝛿</ci><apply id="Sx2.Ex5.m1.1.1.1.1.3.2.3.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3.2.3"><plus id="Sx2.Ex5.m1.1.1.1.1.3.2.3.1.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3.2.3.1"></plus><ci id="Sx2.Ex5.m1.1.1.1.1.3.2.3.2.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3.2.3.2">𝑡</ci><ci id="Sx2.Ex5.m1.1.1.1.1.3.2.3.3.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3.2.3.3">𝑛</ci></apply></apply><ci id="Sx2.Ex5.m1.1.1.1.1.3.3.cmml" xref="Sx2.Ex5.m1.1.1.1.1.3.3">𝑉</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.Ex5.m1.1c">\hat{A}^{VECT}_{t}=\sum_{n=0}^{L}(\gamma\lambda)^{n}\delta_{t+n}^{V}</annotation><annotation encoding="application/x-llamapun" id="Sx2.Ex5.m1.1d">over^ start_ARG italic_A end_ARG start_POSTSUPERSCRIPT italic_V italic_E italic_C italic_T end_POSTSUPERSCRIPT start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT = ∑ start_POSTSUBSCRIPT italic_n = 0 end_POSTSUBSCRIPT start_POSTSUPERSCRIPT italic_L end_POSTSUPERSCRIPT ( italic_γ italic_λ ) start_POSTSUPERSCRIPT italic_n end_POSTSUPERSCRIPT italic_δ start_POSTSUBSCRIPT italic_t + italic_n end_POSTSUBSCRIPT start_POSTSUPERSCRIPT italic_V end_POSTSUPERSCRIPT</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.SSSx2.p8">
+<p class="ltx_p" id="Sx2.SSx1.SSSx2.p8.1">The above adjustments to the training algorithm are designed to cultivate an AI that not only grasps the objective nuances of Chinese Chess but also achieves a high level of gameplay creativity and adaptability. With these innovative algorithmic enhancements, we aim to elevate the proficiency of our AI to compete at a level indistinguishable from top human players, all in the absence of traditional, computationally demanding search algorithms like MCTS.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="Sx2.SSx2">
+<h3 class="ltx_title ltx_title_subsection">Training Data</h3>
+<div class="ltx_para" id="Sx2.SSx2.p1">
+<p class="ltx_p" id="Sx2.SSx2.p1.1">In the course of our research, we have amassed a substantial dataset from the LightSpeed and Quantum Studio’s "TianTian Xiangqi" platform. It is pertinent to note that during the data collection phase, careful measures were taken to filter out private data such as players’ personal information and game details. Only the chess game records were retained, stored in the Portable Game Notation (PGN) format, which adheres to international standards.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx2.p2">
+<p class="ltx_p" id="Sx2.SSx2.p2.1">The data collection was conducted in two distinct methods. The first method involved gathering data from the top 10 percent of players, encapsulating approximately five million records. For each game scenario, the moves selected by these elite players were specifically documented. The second method expanded the scope to include a broader spectrum of human expertise, ranging from beginners to top-level players, covering ten million game scenarios. In this approach, an agent created using the Alpha-Beta pruning algorithm annotated the moves to enhance the generalizability of the model training.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx2.p3">
+<p class="ltx_p" id="Sx2.SSx2.p3.1">Furthermore, to ensure the integrity and relevance of the data, the following rules were applied for data cleansing:
+1. Elimination of game records where the number of rounds was less than ten.
+2. Removal of games terminated due to players disconnecting, which were primarily attributed to network issues.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="Sx2.SSx3">
+<h3 class="ltx_title ltx_title_subsection">Model Architecture</h3>
+<div class="ltx_para" id="Sx2.SSx3.p1">
+<p class="ltx_p" id="Sx2.SSx3.p1.3">Conceptually, our model maps observation <math alttext="\mathbf{o}_{t}" class="ltx_Math" display="inline" id="Sx2.SSx3.p1.1.m1.1"><semantics id="Sx2.SSx3.p1.1.m1.1a"><msub id="Sx2.SSx3.p1.1.m1.1.1" xref="Sx2.SSx3.p1.1.m1.1.1.cmml"><mi id="Sx2.SSx3.p1.1.m1.1.1.2" xref="Sx2.SSx3.p1.1.m1.1.1.2.cmml">𝐨</mi><mi id="Sx2.SSx3.p1.1.m1.1.1.3" xref="Sx2.SSx3.p1.1.m1.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p1.1.m1.1b"><apply id="Sx2.SSx3.p1.1.m1.1.1.cmml" xref="Sx2.SSx3.p1.1.m1.1.1"><csymbol cd="ambiguous" id="Sx2.SSx3.p1.1.m1.1.1.1.cmml" xref="Sx2.SSx3.p1.1.m1.1.1">subscript</csymbol><ci id="Sx2.SSx3.p1.1.m1.1.1.2.cmml" xref="Sx2.SSx3.p1.1.m1.1.1.2">𝐨</ci><ci id="Sx2.SSx3.p1.1.m1.1.1.3.cmml" xref="Sx2.SSx3.p1.1.m1.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p1.1.m1.1c">\mathbf{o}_{t}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p1.1.m1.1d">bold_o start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT</annotation></semantics></math> to action <math alttext="\mathbf{a}_{t}" class="ltx_Math" display="inline" id="Sx2.SSx3.p1.2.m2.1"><semantics id="Sx2.SSx3.p1.2.m2.1a"><msub id="Sx2.SSx3.p1.2.m2.1.1" xref="Sx2.SSx3.p1.2.m2.1.1.cmml"><mi id="Sx2.SSx3.p1.2.m2.1.1.2" xref="Sx2.SSx3.p1.2.m2.1.1.2.cmml">𝐚</mi><mi id="Sx2.SSx3.p1.2.m2.1.1.3" xref="Sx2.SSx3.p1.2.m2.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p1.2.m2.1b"><apply id="Sx2.SSx3.p1.2.m2.1.1.cmml" xref="Sx2.SSx3.p1.2.m2.1.1"><csymbol cd="ambiguous" id="Sx2.SSx3.p1.2.m2.1.1.1.cmml" xref="Sx2.SSx3.p1.2.m2.1.1">subscript</csymbol><ci id="Sx2.SSx3.p1.2.m2.1.1.2.cmml" xref="Sx2.SSx3.p1.2.m2.1.1.2">𝐚</ci><ci id="Sx2.SSx3.p1.2.m2.1.1.3.cmml" xref="Sx2.SSx3.p1.2.m2.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p1.2.m2.1c">\mathbf{a}_{t}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p1.2.m2.1d">bold_a start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT</annotation></semantics></math> with a neural network backbone <math alttext="f_{\mathbf{\theta}}" class="ltx_Math" display="inline" id="Sx2.SSx3.p1.3.m3.1"><semantics id="Sx2.SSx3.p1.3.m3.1a"><msub id="Sx2.SSx3.p1.3.m3.1.1" xref="Sx2.SSx3.p1.3.m3.1.1.cmml"><mi id="Sx2.SSx3.p1.3.m3.1.1.2" xref="Sx2.SSx3.p1.3.m3.1.1.2.cmml">f</mi><mi id="Sx2.SSx3.p1.3.m3.1.1.3" xref="Sx2.SSx3.p1.3.m3.1.1.3.cmml">θ</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p1.3.m3.1b"><apply id="Sx2.SSx3.p1.3.m3.1.1.cmml" xref="Sx2.SSx3.p1.3.m3.1.1"><csymbol cd="ambiguous" id="Sx2.SSx3.p1.3.m3.1.1.1.cmml" xref="Sx2.SSx3.p1.3.m3.1.1">subscript</csymbol><ci id="Sx2.SSx3.p1.3.m3.1.1.2.cmml" xref="Sx2.SSx3.p1.3.m3.1.1.2">𝑓</ci><ci id="Sx2.SSx3.p1.3.m3.1.1.3.cmml" xref="Sx2.SSx3.p1.3.m3.1.1.3">𝜃</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p1.3.m3.1c">f_{\mathbf{\theta}}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p1.3.m3.1d">italic_f start_POSTSUBSCRIPT italic_θ end_POSTSUBSCRIPT</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx3.p2">
+<p class="ltx_p" id="Sx2.SSx3.p2.14"><span class="ltx_text ltx_font_bold" id="Sx2.SSx3.p2.14.1">The observation</span> <math alttext="\mathbf{o}_{t}" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.1.m1.1"><semantics id="Sx2.SSx3.p2.1.m1.1a"><msub id="Sx2.SSx3.p2.1.m1.1.1" xref="Sx2.SSx3.p2.1.m1.1.1.cmml"><mi id="Sx2.SSx3.p2.1.m1.1.1.2" xref="Sx2.SSx3.p2.1.m1.1.1.2.cmml">𝐨</mi><mi id="Sx2.SSx3.p2.1.m1.1.1.3" xref="Sx2.SSx3.p2.1.m1.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.1.m1.1b"><apply id="Sx2.SSx3.p2.1.m1.1.1.cmml" xref="Sx2.SSx3.p2.1.m1.1.1"><csymbol cd="ambiguous" id="Sx2.SSx3.p2.1.m1.1.1.1.cmml" xref="Sx2.SSx3.p2.1.m1.1.1">subscript</csymbol><ci id="Sx2.SSx3.p2.1.m1.1.1.2.cmml" xref="Sx2.SSx3.p2.1.m1.1.1.2">𝐨</ci><ci id="Sx2.SSx3.p2.1.m1.1.1.3.cmml" xref="Sx2.SSx3.p2.1.m1.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.1.m1.1c">\mathbf{o}_{t}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.1.m1.1d">bold_o start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT</annotation></semantics></math> is a tensor (of size <math alttext="H*W*(2*C)" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.2.m2.1"><semantics id="Sx2.SSx3.p2.2.m2.1a"><mrow id="Sx2.SSx3.p2.2.m2.1.1" xref="Sx2.SSx3.p2.2.m2.1.1.cmml"><mi id="Sx2.SSx3.p2.2.m2.1.1.3" xref="Sx2.SSx3.p2.2.m2.1.1.3.cmml">H</mi><mo id="Sx2.SSx3.p2.2.m2.1.1.2" lspace="0.222em" rspace="0.222em" xref="Sx2.SSx3.p2.2.m2.1.1.2.cmml">∗</mo><mi id="Sx2.SSx3.p2.2.m2.1.1.4" xref="Sx2.SSx3.p2.2.m2.1.1.4.cmml">W</mi><mo id="Sx2.SSx3.p2.2.m2.1.1.2a" lspace="0.222em" rspace="0.222em" xref="Sx2.SSx3.p2.2.m2.1.1.2.cmml">∗</mo><mrow id="Sx2.SSx3.p2.2.m2.1.1.1.1" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.cmml"><mo id="Sx2.SSx3.p2.2.m2.1.1.1.1.2" stretchy="false" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.cmml">(</mo><mrow id="Sx2.SSx3.p2.2.m2.1.1.1.1.1" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.cmml"><mn id="Sx2.SSx3.p2.2.m2.1.1.1.1.1.2" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.2.cmml">2</mn><mo id="Sx2.SSx3.p2.2.m2.1.1.1.1.1.1" lspace="0.222em" rspace="0.222em" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.1.cmml">∗</mo><mi id="Sx2.SSx3.p2.2.m2.1.1.1.1.1.3" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.3.cmml">C</mi></mrow><mo id="Sx2.SSx3.p2.2.m2.1.1.1.1.3" stretchy="false" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.2.m2.1b"><apply id="Sx2.SSx3.p2.2.m2.1.1.cmml" xref="Sx2.SSx3.p2.2.m2.1.1"><times id="Sx2.SSx3.p2.2.m2.1.1.2.cmml" xref="Sx2.SSx3.p2.2.m2.1.1.2"></times><ci id="Sx2.SSx3.p2.2.m2.1.1.3.cmml" xref="Sx2.SSx3.p2.2.m2.1.1.3">𝐻</ci><ci id="Sx2.SSx3.p2.2.m2.1.1.4.cmml" xref="Sx2.SSx3.p2.2.m2.1.1.4">𝑊</ci><apply id="Sx2.SSx3.p2.2.m2.1.1.1.1.1.cmml" xref="Sx2.SSx3.p2.2.m2.1.1.1.1"><times id="Sx2.SSx3.p2.2.m2.1.1.1.1.1.1.cmml" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.1"></times><cn id="Sx2.SSx3.p2.2.m2.1.1.1.1.1.2.cmml" type="integer" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.2">2</cn><ci id="Sx2.SSx3.p2.2.m2.1.1.1.1.1.3.cmml" xref="Sx2.SSx3.p2.2.m2.1.1.1.1.1.3">𝐶</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.2.m2.1c">H*W*(2*C)</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.2.m2.1d">italic_H ∗ italic_W ∗ ( 2 ∗ italic_C )</annotation></semantics></math>), including board information (of size <math alttext="H*W*C" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.3.m3.1"><semantics id="Sx2.SSx3.p2.3.m3.1a"><mrow id="Sx2.SSx3.p2.3.m3.1.1" xref="Sx2.SSx3.p2.3.m3.1.1.cmml"><mi id="Sx2.SSx3.p2.3.m3.1.1.2" xref="Sx2.SSx3.p2.3.m3.1.1.2.cmml">H</mi><mo id="Sx2.SSx3.p2.3.m3.1.1.1" lspace="0.222em" rspace="0.222em" xref="Sx2.SSx3.p2.3.m3.1.1.1.cmml">∗</mo><mi id="Sx2.SSx3.p2.3.m3.1.1.3" xref="Sx2.SSx3.p2.3.m3.1.1.3.cmml">W</mi><mo id="Sx2.SSx3.p2.3.m3.1.1.1a" lspace="0.222em" rspace="0.222em" xref="Sx2.SSx3.p2.3.m3.1.1.1.cmml">∗</mo><mi id="Sx2.SSx3.p2.3.m3.1.1.4" xref="Sx2.SSx3.p2.3.m3.1.1.4.cmml">C</mi></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.3.m3.1b"><apply id="Sx2.SSx3.p2.3.m3.1.1.cmml" xref="Sx2.SSx3.p2.3.m3.1.1"><times id="Sx2.SSx3.p2.3.m3.1.1.1.cmml" xref="Sx2.SSx3.p2.3.m3.1.1.1"></times><ci id="Sx2.SSx3.p2.3.m3.1.1.2.cmml" xref="Sx2.SSx3.p2.3.m3.1.1.2">𝐻</ci><ci id="Sx2.SSx3.p2.3.m3.1.1.3.cmml" xref="Sx2.SSx3.p2.3.m3.1.1.3">𝑊</ci><ci id="Sx2.SSx3.p2.3.m3.1.1.4.cmml" xref="Sx2.SSx3.p2.3.m3.1.1.4">𝐶</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.3.m3.1c">H*W*C</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.3.m3.1d">italic_H ∗ italic_W ∗ italic_C</annotation></semantics></math>) and (valid move information of size <math alttext="H*W*C" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.4.m4.1"><semantics id="Sx2.SSx3.p2.4.m4.1a"><mrow id="Sx2.SSx3.p2.4.m4.1.1" xref="Sx2.SSx3.p2.4.m4.1.1.cmml"><mi id="Sx2.SSx3.p2.4.m4.1.1.2" xref="Sx2.SSx3.p2.4.m4.1.1.2.cmml">H</mi><mo id="Sx2.SSx3.p2.4.m4.1.1.1" lspace="0.222em" rspace="0.222em" xref="Sx2.SSx3.p2.4.m4.1.1.1.cmml">∗</mo><mi id="Sx2.SSx3.p2.4.m4.1.1.3" xref="Sx2.SSx3.p2.4.m4.1.1.3.cmml">W</mi><mo id="Sx2.SSx3.p2.4.m4.1.1.1a" lspace="0.222em" rspace="0.222em" xref="Sx2.SSx3.p2.4.m4.1.1.1.cmml">∗</mo><mi id="Sx2.SSx3.p2.4.m4.1.1.4" xref="Sx2.SSx3.p2.4.m4.1.1.4.cmml">C</mi></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.4.m4.1b"><apply id="Sx2.SSx3.p2.4.m4.1.1.cmml" xref="Sx2.SSx3.p2.4.m4.1.1"><times id="Sx2.SSx3.p2.4.m4.1.1.1.cmml" xref="Sx2.SSx3.p2.4.m4.1.1.1"></times><ci id="Sx2.SSx3.p2.4.m4.1.1.2.cmml" xref="Sx2.SSx3.p2.4.m4.1.1.2">𝐻</ci><ci id="Sx2.SSx3.p2.4.m4.1.1.3.cmml" xref="Sx2.SSx3.p2.4.m4.1.1.3">𝑊</ci><ci id="Sx2.SSx3.p2.4.m4.1.1.4.cmml" xref="Sx2.SSx3.p2.4.m4.1.1.4">𝐶</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.4.m4.1c">H*W*C</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.4.m4.1d">italic_H ∗ italic_W ∗ italic_C</annotation></semantics></math>). <math alttext="H=10" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.5.m5.1"><semantics id="Sx2.SSx3.p2.5.m5.1a"><mrow id="Sx2.SSx3.p2.5.m5.1.1" xref="Sx2.SSx3.p2.5.m5.1.1.cmml"><mi id="Sx2.SSx3.p2.5.m5.1.1.2" xref="Sx2.SSx3.p2.5.m5.1.1.2.cmml">H</mi><mo id="Sx2.SSx3.p2.5.m5.1.1.1" xref="Sx2.SSx3.p2.5.m5.1.1.1.cmml">=</mo><mn id="Sx2.SSx3.p2.5.m5.1.1.3" xref="Sx2.SSx3.p2.5.m5.1.1.3.cmml">10</mn></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.5.m5.1b"><apply id="Sx2.SSx3.p2.5.m5.1.1.cmml" xref="Sx2.SSx3.p2.5.m5.1.1"><eq id="Sx2.SSx3.p2.5.m5.1.1.1.cmml" xref="Sx2.SSx3.p2.5.m5.1.1.1"></eq><ci id="Sx2.SSx3.p2.5.m5.1.1.2.cmml" xref="Sx2.SSx3.p2.5.m5.1.1.2">𝐻</ci><cn id="Sx2.SSx3.p2.5.m5.1.1.3.cmml" type="integer" xref="Sx2.SSx3.p2.5.m5.1.1.3">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.5.m5.1c">H=10</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.5.m5.1d">italic_H = 10</annotation></semantics></math> and <math alttext="W=9" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.6.m6.1"><semantics id="Sx2.SSx3.p2.6.m6.1a"><mrow id="Sx2.SSx3.p2.6.m6.1.1" xref="Sx2.SSx3.p2.6.m6.1.1.cmml"><mi id="Sx2.SSx3.p2.6.m6.1.1.2" xref="Sx2.SSx3.p2.6.m6.1.1.2.cmml">W</mi><mo id="Sx2.SSx3.p2.6.m6.1.1.1" xref="Sx2.SSx3.p2.6.m6.1.1.1.cmml">=</mo><mn id="Sx2.SSx3.p2.6.m6.1.1.3" xref="Sx2.SSx3.p2.6.m6.1.1.3.cmml">9</mn></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.6.m6.1b"><apply id="Sx2.SSx3.p2.6.m6.1.1.cmml" xref="Sx2.SSx3.p2.6.m6.1.1"><eq id="Sx2.SSx3.p2.6.m6.1.1.1.cmml" xref="Sx2.SSx3.p2.6.m6.1.1.1"></eq><ci id="Sx2.SSx3.p2.6.m6.1.1.2.cmml" xref="Sx2.SSx3.p2.6.m6.1.1.2">𝑊</ci><cn id="Sx2.SSx3.p2.6.m6.1.1.3.cmml" type="integer" xref="Sx2.SSx3.p2.6.m6.1.1.3">9</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.6.m6.1c">W=9</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.6.m6.1d">italic_W = 9</annotation></semantics></math> are height and width of the board, <math alttext="C=7" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.7.m7.1"><semantics id="Sx2.SSx3.p2.7.m7.1a"><mrow id="Sx2.SSx3.p2.7.m7.1.1" xref="Sx2.SSx3.p2.7.m7.1.1.cmml"><mi id="Sx2.SSx3.p2.7.m7.1.1.2" xref="Sx2.SSx3.p2.7.m7.1.1.2.cmml">C</mi><mo id="Sx2.SSx3.p2.7.m7.1.1.1" xref="Sx2.SSx3.p2.7.m7.1.1.1.cmml">=</mo><mn id="Sx2.SSx3.p2.7.m7.1.1.3" xref="Sx2.SSx3.p2.7.m7.1.1.3.cmml">7</mn></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.7.m7.1b"><apply id="Sx2.SSx3.p2.7.m7.1.1.cmml" xref="Sx2.SSx3.p2.7.m7.1.1"><eq id="Sx2.SSx3.p2.7.m7.1.1.1.cmml" xref="Sx2.SSx3.p2.7.m7.1.1.1"></eq><ci id="Sx2.SSx3.p2.7.m7.1.1.2.cmml" xref="Sx2.SSx3.p2.7.m7.1.1.2">𝐶</ci><cn id="Sx2.SSx3.p2.7.m7.1.1.3.cmml" type="integer" xref="Sx2.SSx3.p2.7.m7.1.1.3">7</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.7.m7.1c">C=7</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.7.m7.1d">italic_C = 7</annotation></semantics></math> denotes number of chess type.For board information, <math alttext="board_{ij}" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.8.m8.1"><semantics id="Sx2.SSx3.p2.8.m8.1a"><mrow id="Sx2.SSx3.p2.8.m8.1.1" xref="Sx2.SSx3.p2.8.m8.1.1.cmml"><mi id="Sx2.SSx3.p2.8.m8.1.1.2" xref="Sx2.SSx3.p2.8.m8.1.1.2.cmml">b</mi><mo id="Sx2.SSx3.p2.8.m8.1.1.1" xref="Sx2.SSx3.p2.8.m8.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.8.m8.1.1.3" xref="Sx2.SSx3.p2.8.m8.1.1.3.cmml">o</mi><mo id="Sx2.SSx3.p2.8.m8.1.1.1a" xref="Sx2.SSx3.p2.8.m8.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.8.m8.1.1.4" xref="Sx2.SSx3.p2.8.m8.1.1.4.cmml">a</mi><mo id="Sx2.SSx3.p2.8.m8.1.1.1b" xref="Sx2.SSx3.p2.8.m8.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.8.m8.1.1.5" xref="Sx2.SSx3.p2.8.m8.1.1.5.cmml">r</mi><mo id="Sx2.SSx3.p2.8.m8.1.1.1c" xref="Sx2.SSx3.p2.8.m8.1.1.1.cmml">⁢</mo><msub id="Sx2.SSx3.p2.8.m8.1.1.6" xref="Sx2.SSx3.p2.8.m8.1.1.6.cmml"><mi id="Sx2.SSx3.p2.8.m8.1.1.6.2" xref="Sx2.SSx3.p2.8.m8.1.1.6.2.cmml">d</mi><mrow id="Sx2.SSx3.p2.8.m8.1.1.6.3" xref="Sx2.SSx3.p2.8.m8.1.1.6.3.cmml"><mi id="Sx2.SSx3.p2.8.m8.1.1.6.3.2" xref="Sx2.SSx3.p2.8.m8.1.1.6.3.2.cmml">i</mi><mo id="Sx2.SSx3.p2.8.m8.1.1.6.3.1" xref="Sx2.SSx3.p2.8.m8.1.1.6.3.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.8.m8.1.1.6.3.3" xref="Sx2.SSx3.p2.8.m8.1.1.6.3.3.cmml">j</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.8.m8.1b"><apply id="Sx2.SSx3.p2.8.m8.1.1.cmml" xref="Sx2.SSx3.p2.8.m8.1.1"><times id="Sx2.SSx3.p2.8.m8.1.1.1.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.1"></times><ci id="Sx2.SSx3.p2.8.m8.1.1.2.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.2">𝑏</ci><ci id="Sx2.SSx3.p2.8.m8.1.1.3.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.3">𝑜</ci><ci id="Sx2.SSx3.p2.8.m8.1.1.4.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.4">𝑎</ci><ci id="Sx2.SSx3.p2.8.m8.1.1.5.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.5">𝑟</ci><apply id="Sx2.SSx3.p2.8.m8.1.1.6.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.6"><csymbol cd="ambiguous" id="Sx2.SSx3.p2.8.m8.1.1.6.1.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.6">subscript</csymbol><ci id="Sx2.SSx3.p2.8.m8.1.1.6.2.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.6.2">𝑑</ci><apply id="Sx2.SSx3.p2.8.m8.1.1.6.3.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.6.3"><times id="Sx2.SSx3.p2.8.m8.1.1.6.3.1.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.6.3.1"></times><ci id="Sx2.SSx3.p2.8.m8.1.1.6.3.2.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.6.3.2">𝑖</ci><ci id="Sx2.SSx3.p2.8.m8.1.1.6.3.3.cmml" xref="Sx2.SSx3.p2.8.m8.1.1.6.3.3">𝑗</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.8.m8.1c">board_{ij}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.8.m8.1d">italic_b italic_o italic_a italic_r italic_d start_POSTSUBSCRIPT italic_i italic_j end_POSTSUBSCRIPT</annotation></semantics></math> is the one-hot representation of the chess on <math alttext="i" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.9.m9.1"><semantics id="Sx2.SSx3.p2.9.m9.1a"><mi id="Sx2.SSx3.p2.9.m9.1.1" xref="Sx2.SSx3.p2.9.m9.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.9.m9.1b"><ci id="Sx2.SSx3.p2.9.m9.1.1.cmml" xref="Sx2.SSx3.p2.9.m9.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.9.m9.1c">i</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.9.m9.1d">italic_i</annotation></semantics></math>th row and <math alttext="j" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.10.m10.1"><semantics id="Sx2.SSx3.p2.10.m10.1a"><mi id="Sx2.SSx3.p2.10.m10.1.1" xref="Sx2.SSx3.p2.10.m10.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.10.m10.1b"><ci id="Sx2.SSx3.p2.10.m10.1.1.cmml" xref="Sx2.SSx3.p2.10.m10.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.10.m10.1c">j</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.10.m10.1d">italic_j</annotation></semantics></math>th column. For valid move information, <math alttext="validmove_{ijk}" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.11.m11.1"><semantics id="Sx2.SSx3.p2.11.m11.1a"><mrow id="Sx2.SSx3.p2.11.m11.1.1" xref="Sx2.SSx3.p2.11.m11.1.1.cmml"><mi id="Sx2.SSx3.p2.11.m11.1.1.2" xref="Sx2.SSx3.p2.11.m11.1.1.2.cmml">v</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.1" xref="Sx2.SSx3.p2.11.m11.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.3" xref="Sx2.SSx3.p2.11.m11.1.1.3.cmml">a</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.1a" xref="Sx2.SSx3.p2.11.m11.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.4" xref="Sx2.SSx3.p2.11.m11.1.1.4.cmml">l</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.1b" xref="Sx2.SSx3.p2.11.m11.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.5" xref="Sx2.SSx3.p2.11.m11.1.1.5.cmml">i</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.1c" xref="Sx2.SSx3.p2.11.m11.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.6" xref="Sx2.SSx3.p2.11.m11.1.1.6.cmml">d</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.1d" xref="Sx2.SSx3.p2.11.m11.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.7" xref="Sx2.SSx3.p2.11.m11.1.1.7.cmml">m</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.1e" xref="Sx2.SSx3.p2.11.m11.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.8" xref="Sx2.SSx3.p2.11.m11.1.1.8.cmml">o</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.1f" xref="Sx2.SSx3.p2.11.m11.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.9" xref="Sx2.SSx3.p2.11.m11.1.1.9.cmml">v</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.1g" xref="Sx2.SSx3.p2.11.m11.1.1.1.cmml">⁢</mo><msub id="Sx2.SSx3.p2.11.m11.1.1.10" xref="Sx2.SSx3.p2.11.m11.1.1.10.cmml"><mi id="Sx2.SSx3.p2.11.m11.1.1.10.2" xref="Sx2.SSx3.p2.11.m11.1.1.10.2.cmml">e</mi><mrow id="Sx2.SSx3.p2.11.m11.1.1.10.3" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.cmml"><mi id="Sx2.SSx3.p2.11.m11.1.1.10.3.2" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.2.cmml">i</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.10.3.1" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.10.3.3" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.3.cmml">j</mi><mo id="Sx2.SSx3.p2.11.m11.1.1.10.3.1a" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.1.cmml">⁢</mo><mi id="Sx2.SSx3.p2.11.m11.1.1.10.3.4" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.4.cmml">k</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.11.m11.1b"><apply id="Sx2.SSx3.p2.11.m11.1.1.cmml" xref="Sx2.SSx3.p2.11.m11.1.1"><times id="Sx2.SSx3.p2.11.m11.1.1.1.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.1"></times><ci id="Sx2.SSx3.p2.11.m11.1.1.2.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.2">𝑣</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.3.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.3">𝑎</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.4.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.4">𝑙</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.5.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.5">𝑖</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.6.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.6">𝑑</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.7.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.7">𝑚</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.8.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.8">𝑜</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.9.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.9">𝑣</ci><apply id="Sx2.SSx3.p2.11.m11.1.1.10.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.10"><csymbol cd="ambiguous" id="Sx2.SSx3.p2.11.m11.1.1.10.1.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.10">subscript</csymbol><ci id="Sx2.SSx3.p2.11.m11.1.1.10.2.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.10.2">𝑒</ci><apply id="Sx2.SSx3.p2.11.m11.1.1.10.3.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.10.3"><times id="Sx2.SSx3.p2.11.m11.1.1.10.3.1.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.1"></times><ci id="Sx2.SSx3.p2.11.m11.1.1.10.3.2.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.2">𝑖</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.10.3.3.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.3">𝑗</ci><ci id="Sx2.SSx3.p2.11.m11.1.1.10.3.4.cmml" xref="Sx2.SSx3.p2.11.m11.1.1.10.3.4">𝑘</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.11.m11.1c">validmove_{ijk}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.11.m11.1d">italic_v italic_a italic_l italic_i italic_d italic_m italic_o italic_v italic_e start_POSTSUBSCRIPT italic_i italic_j italic_k end_POSTSUBSCRIPT</annotation></semantics></math> is a flag indicating whether <math alttext="i" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.12.m12.1"><semantics id="Sx2.SSx3.p2.12.m12.1a"><mi id="Sx2.SSx3.p2.12.m12.1.1" xref="Sx2.SSx3.p2.12.m12.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.12.m12.1b"><ci id="Sx2.SSx3.p2.12.m12.1.1.cmml" xref="Sx2.SSx3.p2.12.m12.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.12.m12.1c">i</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.12.m12.1d">italic_i</annotation></semantics></math>th row and <math alttext="j" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.13.m13.1"><semantics id="Sx2.SSx3.p2.13.m13.1a"><mi id="Sx2.SSx3.p2.13.m13.1.1" xref="Sx2.SSx3.p2.13.m13.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.13.m13.1b"><ci id="Sx2.SSx3.p2.13.m13.1.1.cmml" xref="Sx2.SSx3.p2.13.m13.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.13.m13.1c">j</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.13.m13.1d">italic_j</annotation></semantics></math>th column can accessed by chess of type <math alttext="k" class="ltx_Math" display="inline" id="Sx2.SSx3.p2.14.m14.1"><semantics id="Sx2.SSx3.p2.14.m14.1a"><mi id="Sx2.SSx3.p2.14.m14.1.1" xref="Sx2.SSx3.p2.14.m14.1.1.cmml">k</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p2.14.m14.1b"><ci id="Sx2.SSx3.p2.14.m14.1.1.cmml" xref="Sx2.SSx3.p2.14.m14.1.1">𝑘</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p2.14.m14.1c">k</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p2.14.m14.1d">italic_k</annotation></semantics></math> in one step.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx3.p3">
+<p class="ltx_p" id="Sx2.SSx3.p3.6"><span class="ltx_text ltx_font_bold" id="Sx2.SSx3.p3.6.1">The action</span> <math alttext="\mathbf{a}_{t}" class="ltx_Math" display="inline" id="Sx2.SSx3.p3.1.m1.1"><semantics id="Sx2.SSx3.p3.1.m1.1a"><msub id="Sx2.SSx3.p3.1.m1.1.1" xref="Sx2.SSx3.p3.1.m1.1.1.cmml"><mi id="Sx2.SSx3.p3.1.m1.1.1.2" xref="Sx2.SSx3.p3.1.m1.1.1.2.cmml">𝐚</mi><mi id="Sx2.SSx3.p3.1.m1.1.1.3" xref="Sx2.SSx3.p3.1.m1.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p3.1.m1.1b"><apply id="Sx2.SSx3.p3.1.m1.1.1.cmml" xref="Sx2.SSx3.p3.1.m1.1.1"><csymbol cd="ambiguous" id="Sx2.SSx3.p3.1.m1.1.1.1.cmml" xref="Sx2.SSx3.p3.1.m1.1.1">subscript</csymbol><ci id="Sx2.SSx3.p3.1.m1.1.1.2.cmml" xref="Sx2.SSx3.p3.1.m1.1.1.2">𝐚</ci><ci id="Sx2.SSx3.p3.1.m1.1.1.3.cmml" xref="Sx2.SSx3.p3.1.m1.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p3.1.m1.1c">\mathbf{a}_{t}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p3.1.m1.1d">bold_a start_POSTSUBSCRIPT italic_t end_POSTSUBSCRIPT</annotation></semantics></math> is a one-hot representation of <math alttext="N=8100" class="ltx_Math" display="inline" id="Sx2.SSx3.p3.2.m2.1"><semantics id="Sx2.SSx3.p3.2.m2.1a"><mrow id="Sx2.SSx3.p3.2.m2.1.1" xref="Sx2.SSx3.p3.2.m2.1.1.cmml"><mi id="Sx2.SSx3.p3.2.m2.1.1.2" xref="Sx2.SSx3.p3.2.m2.1.1.2.cmml">N</mi><mo id="Sx2.SSx3.p3.2.m2.1.1.1" xref="Sx2.SSx3.p3.2.m2.1.1.1.cmml">=</mo><mn id="Sx2.SSx3.p3.2.m2.1.1.3" xref="Sx2.SSx3.p3.2.m2.1.1.3.cmml">8100</mn></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p3.2.m2.1b"><apply id="Sx2.SSx3.p3.2.m2.1.1.cmml" xref="Sx2.SSx3.p3.2.m2.1.1"><eq id="Sx2.SSx3.p3.2.m2.1.1.1.cmml" xref="Sx2.SSx3.p3.2.m2.1.1.1"></eq><ci id="Sx2.SSx3.p3.2.m2.1.1.2.cmml" xref="Sx2.SSx3.p3.2.m2.1.1.2">𝑁</ci><cn id="Sx2.SSx3.p3.2.m2.1.1.3.cmml" type="integer" xref="Sx2.SSx3.p3.2.m2.1.1.3">8100</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p3.2.m2.1c">N=8100</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p3.2.m2.1d">italic_N = 8100</annotation></semantics></math> possible moves (each move can be represented by a pair <math alttext="&lt;start,end&gt;" class="ltx_math_unparsed" display="inline" id="Sx2.SSx3.p3.3.m3.1"><semantics id="Sx2.SSx3.p3.3.m3.1a"><mrow id="Sx2.SSx3.p3.3.m3.1b"><mo id="Sx2.SSx3.p3.3.m3.1.1">&lt;</mo><mi id="Sx2.SSx3.p3.3.m3.1.2">s</mi><mi id="Sx2.SSx3.p3.3.m3.1.3">t</mi><mi id="Sx2.SSx3.p3.3.m3.1.4">a</mi><mi id="Sx2.SSx3.p3.3.m3.1.5">r</mi><mi id="Sx2.SSx3.p3.3.m3.1.6">t</mi><mo id="Sx2.SSx3.p3.3.m3.1.7">,</mo><mi id="Sx2.SSx3.p3.3.m3.1.8">e</mi><mi id="Sx2.SSx3.p3.3.m3.1.9">n</mi><mi id="Sx2.SSx3.p3.3.m3.1.10">d</mi><mo id="Sx2.SSx3.p3.3.m3.1.11">&gt;</mo></mrow><annotation encoding="application/x-tex" id="Sx2.SSx3.p3.3.m3.1c">&lt;start,end&gt;</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p3.3.m3.1d">&lt; italic_s italic_t italic_a italic_r italic_t , italic_e italic_n italic_d &gt;</annotation></semantics></math>, both <math alttext="start" class="ltx_Math" display="inline" id="Sx2.SSx3.p3.4.m4.1"><semantics id="Sx2.SSx3.p3.4.m4.1a"><mrow id="Sx2.SSx3.p3.4.m4.1.1" xref="Sx2.SSx3.p3.4.m4.1.1.cmml"><mi id="Sx2.SSx3.p3.4.m4.1.1.2" xref="Sx2.SSx3.p3.4.m4.1.1.2.cmml">s</mi><mo id="Sx2.SSx3.p3.4.m4.1.1.1" xref="Sx2.SSx3.p3.4.m4.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p3.4.m4.1.1.3" xref="Sx2.SSx3.p3.4.m4.1.1.3.cmml">t</mi><mo id="Sx2.SSx3.p3.4.m4.1.1.1a" xref="Sx2.SSx3.p3.4.m4.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p3.4.m4.1.1.4" xref="Sx2.SSx3.p3.4.m4.1.1.4.cmml">a</mi><mo id="Sx2.SSx3.p3.4.m4.1.1.1b" xref="Sx2.SSx3.p3.4.m4.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p3.4.m4.1.1.5" xref="Sx2.SSx3.p3.4.m4.1.1.5.cmml">r</mi><mo id="Sx2.SSx3.p3.4.m4.1.1.1c" xref="Sx2.SSx3.p3.4.m4.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p3.4.m4.1.1.6" xref="Sx2.SSx3.p3.4.m4.1.1.6.cmml">t</mi></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p3.4.m4.1b"><apply id="Sx2.SSx3.p3.4.m4.1.1.cmml" xref="Sx2.SSx3.p3.4.m4.1.1"><times id="Sx2.SSx3.p3.4.m4.1.1.1.cmml" xref="Sx2.SSx3.p3.4.m4.1.1.1"></times><ci id="Sx2.SSx3.p3.4.m4.1.1.2.cmml" xref="Sx2.SSx3.p3.4.m4.1.1.2">𝑠</ci><ci id="Sx2.SSx3.p3.4.m4.1.1.3.cmml" xref="Sx2.SSx3.p3.4.m4.1.1.3">𝑡</ci><ci id="Sx2.SSx3.p3.4.m4.1.1.4.cmml" xref="Sx2.SSx3.p3.4.m4.1.1.4">𝑎</ci><ci id="Sx2.SSx3.p3.4.m4.1.1.5.cmml" xref="Sx2.SSx3.p3.4.m4.1.1.5">𝑟</ci><ci id="Sx2.SSx3.p3.4.m4.1.1.6.cmml" xref="Sx2.SSx3.p3.4.m4.1.1.6">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p3.4.m4.1c">start</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p3.4.m4.1d">italic_s italic_t italic_a italic_r italic_t</annotation></semantics></math> and <math alttext="end" class="ltx_Math" display="inline" id="Sx2.SSx3.p3.5.m5.1"><semantics id="Sx2.SSx3.p3.5.m5.1a"><mrow id="Sx2.SSx3.p3.5.m5.1.1" xref="Sx2.SSx3.p3.5.m5.1.1.cmml"><mi id="Sx2.SSx3.p3.5.m5.1.1.2" xref="Sx2.SSx3.p3.5.m5.1.1.2.cmml">e</mi><mo id="Sx2.SSx3.p3.5.m5.1.1.1" xref="Sx2.SSx3.p3.5.m5.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p3.5.m5.1.1.3" xref="Sx2.SSx3.p3.5.m5.1.1.3.cmml">n</mi><mo id="Sx2.SSx3.p3.5.m5.1.1.1a" xref="Sx2.SSx3.p3.5.m5.1.1.1.cmml">⁢</mo><mi id="Sx2.SSx3.p3.5.m5.1.1.4" xref="Sx2.SSx3.p3.5.m5.1.1.4.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p3.5.m5.1b"><apply id="Sx2.SSx3.p3.5.m5.1.1.cmml" xref="Sx2.SSx3.p3.5.m5.1.1"><times id="Sx2.SSx3.p3.5.m5.1.1.1.cmml" xref="Sx2.SSx3.p3.5.m5.1.1.1"></times><ci id="Sx2.SSx3.p3.5.m5.1.1.2.cmml" xref="Sx2.SSx3.p3.5.m5.1.1.2">𝑒</ci><ci id="Sx2.SSx3.p3.5.m5.1.1.3.cmml" xref="Sx2.SSx3.p3.5.m5.1.1.3">𝑛</ci><ci id="Sx2.SSx3.p3.5.m5.1.1.4.cmml" xref="Sx2.SSx3.p3.5.m5.1.1.4">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p3.5.m5.1c">end</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p3.5.m5.1d">italic_e italic_n italic_d</annotation></semantics></math> have at most <math alttext="90" class="ltx_Math" display="inline" id="Sx2.SSx3.p3.6.m6.1"><semantics id="Sx2.SSx3.p3.6.m6.1a"><mn id="Sx2.SSx3.p3.6.m6.1.1" xref="Sx2.SSx3.p3.6.m6.1.1.cmml">90</mn><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p3.6.m6.1b"><cn id="Sx2.SSx3.p3.6.m6.1.1.cmml" type="integer" xref="Sx2.SSx3.p3.6.m6.1.1">90</cn></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p3.6.m6.1c">90</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p3.6.m6.1d">90</annotation></semantics></math> choices). Invalid moves are masked in both training and testing.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx3.p4">
+<p class="ltx_p" id="Sx2.SSx3.p4.1">As for <span class="ltx_text ltx_font_bold" id="Sx2.SSx3.p4.1.1">the neural network backbones</span> <math alttext="f_{\mathbf{\theta}}" class="ltx_Math" display="inline" id="Sx2.SSx3.p4.1.m1.1"><semantics id="Sx2.SSx3.p4.1.m1.1a"><msub id="Sx2.SSx3.p4.1.m1.1.1" xref="Sx2.SSx3.p4.1.m1.1.1.cmml"><mi id="Sx2.SSx3.p4.1.m1.1.1.2" xref="Sx2.SSx3.p4.1.m1.1.1.2.cmml">f</mi><mi id="Sx2.SSx3.p4.1.m1.1.1.3" xref="Sx2.SSx3.p4.1.m1.1.1.3.cmml">θ</mi></msub><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p4.1.m1.1b"><apply id="Sx2.SSx3.p4.1.m1.1.1.cmml" xref="Sx2.SSx3.p4.1.m1.1.1"><csymbol cd="ambiguous" id="Sx2.SSx3.p4.1.m1.1.1.1.cmml" xref="Sx2.SSx3.p4.1.m1.1.1">subscript</csymbol><ci id="Sx2.SSx3.p4.1.m1.1.1.2.cmml" xref="Sx2.SSx3.p4.1.m1.1.1.2">𝑓</ci><ci id="Sx2.SSx3.p4.1.m1.1.1.3.cmml" xref="Sx2.SSx3.p4.1.m1.1.1.3">𝜃</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p4.1.m1.1c">f_{\mathbf{\theta}}</annotation><annotation encoding="application/x-llamapun" id="Sx2.SSx3.p4.1.m1.1d">italic_f start_POSTSUBSCRIPT italic_θ end_POSTSUBSCRIPT</annotation></semantics></math>, both CNN-based and Transformer-based architectures are verified in this work<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib18" title="">18</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib19" title="">19</a>, <a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib20" title="">20</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx3.p5">
+<p class="ltx_p" id="Sx2.SSx3.p5.1">For CNN-based neural netowrk, we adopted the popular ResNet as the backbone<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib21" title="">21</a>]</cite>. The observation mentioned above can be viewed as an image and seamlessly fed to ResNet. Considering the scenario of chess, we derive a variant of the original ResNet (denoted by <span class="ltx_text ltx_font_bold" id="Sx2.SSx3.p5.1.1">mod-ResNet</span> in the following paper) by modifying the entrance process block. Concretely, conv1 is changed from conv(7x7, 64, 2) to conv(1x1, 64, 1) and the max pool is removed. The insight behind the modification is the importance and necessity of every single "pixel" in the context of chess in comparison with classic image classification task. Experiment results show that the modification brings considerable improvement in intensity.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx3.p6">
+<p class="ltx_p" id="Sx2.SSx3.p6.1">For Transformer-based, we leverage ViT, which is a transformer-based classification architecture<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib22" title="">22</a>]</cite>. For the similar motivation in mod-ResNet, we treat each "pixel" of the observation as a token instead of patching neighbouring "pixel" as default. Huge improvement in intensity is achieved in the transition from mod-ResNet to ViT. We attribute the boost to the powerful spatial relation understanding ability of transformer.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="Sx3" lang="en">
+<h2 class="ltx_title ltx_title_section">Results</h2>
+<section class="ltx_subsection" id="Sx3.SSx1">
+<h3 class="ltx_title ltx_title_subsection">MainResult</h3>
+<div class="ltx_para" id="Sx3.SSx1.p1">
+<p class="ltx_p" id="Sx3.SSx1.p1.1">In this section, we will provide a comprehensive overview of the results obtained from our algorithm. In the main results section, we intend to present the outcomes of our model when pitted against a baseline model, as well as the performance achieved in ranked matches against human opponents. Initially, the evaluation process employed a baseline AI that utilizes the AlphaBeta pruning algorithm. This rule-based AI has demonstrated a level of proficiency approximately within the top 10% percentile in human ranked competitions. We present five representative milestone results that include their performance against baseline, rankings in human ladder tournaments, and data on predictive accuracy at various stages of the training process, as shown in Table.(<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#Sx3.T1" title="Table 1 ‣ MainResult ‣ Results ‣ Mastering Chinese Chess AI(Xiangqi) Without Search"><span class="ltx_text ltx_ref_tag">1</span></a>). Initially, the nomenclature of the five models adheres to a format combining the training algorithm with the model structure. Here, ’SL’ denotes Supervised Learning, and ’RL’ indicates Reinforcement Learning. The term <span class="ltx_text ltx_font_bold" id="Sx3.SSx1.p1.1.1">modResNet</span> refers to our modified version of the ResNet model, adapted specifically for the Chinese Chess scenario, while ’ViT’ (Vision Transformer) repurposes the transformer structure commonly utilized in classical visual contexts.</p>
+</div>
+<figure class="ltx_table" id="Sx3.T1">
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="Sx3.T1.1">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="Sx3.T1.1.1.1">
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="Sx3.T1.1.1.1.1.1">ModelName</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="Sx3.T1.1.1.1.2.1">VS baseline</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T1.1.1.1.3"><span class="ltx_text ltx_font_bold" id="Sx3.T1.1.1.1.3.1">Rank in HumanLadder</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T1.1.1.1.4"><span class="ltx_text ltx_font_bold" id="Sx3.T1.1.1.1.4.1">Accuracy(First)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T1.1.1.1.5"><span class="ltx_text ltx_font_bold" id="Sx3.T1.1.1.1.5.1">Accuracy(Mid)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T1.1.1.1.6"><span class="ltx_text ltx_font_bold" id="Sx3.T1.1.1.1.6.1">Accuracy(Last)</span></td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T1.1.2.2">
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.2.2.1">Baseline</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.2.2.2">48.5%(3.12%)</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.2.2.3">Top-10%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.2.2.4">NAN</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.2.2.5">NAN</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.2.2.6">NAN</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T1.1.3.3">
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.3.3.1">SL-modResNet18</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.3.3.2">38.6%(19.8%)</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.3.3.3">NAN</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.3.3.4">60.2%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.3.3.5">47.4%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.3.3.6">43.3%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T1.1.4.4">
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.4.4.1">RL-modResNet18</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.4.4.2">52.3%(9.7%)</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.4.4.3">NAN</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.4.4.4">NAN</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.4.4.5">NAN</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.4.4.6">NAN</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T1.1.5.5">
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.5.5.1">SL-ViT</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.5.5.2">65.1%(12.8%)</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.5.5.3">Top-3%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.5.5.4">72.6%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.5.5.5">60.3%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T1.1.5.5.6">59.1%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T1.1.6.6">
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T1.1.6.6.1">RL-ViT</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T1.1.6.6.2">92.5%(2.8%)</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T1.1.6.6.3">Top-0.1%</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T1.1.6.6.4">NAN</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T1.1.6.6.5">NAN</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T1.1.6.6.6">NAN</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>The first column is category of model, which contains the training algorithm and model architecture. The second column is battle result versus baseline model, in the form of win rate(draw rate). The third column is percentile in the human rank ladder. The last three columns are the accuracy for different stage of game during the training process.</figcaption>
+</figure>
+<div class="ltx_para" id="Sx3.SSx1.p2">
+<p class="ltx_p" id="Sx3.SSx1.p2.2">Given the rules of Chinese Chess, which allow for draws at the end of matches, the results against the baseline model are expressed in terms of both win rates and draw rates, with the latter presented within parentheses. It is notable that the sampling function for model matchups is given by:</p>
+<table class="ltx_equation ltx_eqn_table" id="Sx3.Ex6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="p\sim e^{logits/\tau}" class="ltx_Math" display="block" id="Sx3.Ex6.m1.1"><semantics id="Sx3.Ex6.m1.1a"><mrow id="Sx3.Ex6.m1.1.1" xref="Sx3.Ex6.m1.1.1.cmml"><mi id="Sx3.Ex6.m1.1.1.2" xref="Sx3.Ex6.m1.1.1.2.cmml">p</mi><mo id="Sx3.Ex6.m1.1.1.1" xref="Sx3.Ex6.m1.1.1.1.cmml">∼</mo><msup id="Sx3.Ex6.m1.1.1.3" xref="Sx3.Ex6.m1.1.1.3.cmml"><mi id="Sx3.Ex6.m1.1.1.3.2" xref="Sx3.Ex6.m1.1.1.3.2.cmml">e</mi><mrow id="Sx3.Ex6.m1.1.1.3.3" xref="Sx3.Ex6.m1.1.1.3.3.cmml"><mrow id="Sx3.Ex6.m1.1.1.3.3.2" xref="Sx3.Ex6.m1.1.1.3.3.2.cmml"><mi id="Sx3.Ex6.m1.1.1.3.3.2.2" xref="Sx3.Ex6.m1.1.1.3.3.2.2.cmml">l</mi><mo id="Sx3.Ex6.m1.1.1.3.3.2.1" xref="Sx3.Ex6.m1.1.1.3.3.2.1.cmml">⁢</mo><mi id="Sx3.Ex6.m1.1.1.3.3.2.3" xref="Sx3.Ex6.m1.1.1.3.3.2.3.cmml">o</mi><mo id="Sx3.Ex6.m1.1.1.3.3.2.1a" xref="Sx3.Ex6.m1.1.1.3.3.2.1.cmml">⁢</mo><mi id="Sx3.Ex6.m1.1.1.3.3.2.4" xref="Sx3.Ex6.m1.1.1.3.3.2.4.cmml">g</mi><mo id="Sx3.Ex6.m1.1.1.3.3.2.1b" xref="Sx3.Ex6.m1.1.1.3.3.2.1.cmml">⁢</mo><mi id="Sx3.Ex6.m1.1.1.3.3.2.5" xref="Sx3.Ex6.m1.1.1.3.3.2.5.cmml">i</mi><mo id="Sx3.Ex6.m1.1.1.3.3.2.1c" xref="Sx3.Ex6.m1.1.1.3.3.2.1.cmml">⁢</mo><mi id="Sx3.Ex6.m1.1.1.3.3.2.6" xref="Sx3.Ex6.m1.1.1.3.3.2.6.cmml">t</mi><mo id="Sx3.Ex6.m1.1.1.3.3.2.1d" xref="Sx3.Ex6.m1.1.1.3.3.2.1.cmml">⁢</mo><mi id="Sx3.Ex6.m1.1.1.3.3.2.7" xref="Sx3.Ex6.m1.1.1.3.3.2.7.cmml">s</mi></mrow><mo id="Sx3.Ex6.m1.1.1.3.3.1" xref="Sx3.Ex6.m1.1.1.3.3.1.cmml">/</mo><mi id="Sx3.Ex6.m1.1.1.3.3.3" xref="Sx3.Ex6.m1.1.1.3.3.3.cmml">τ</mi></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="Sx3.Ex6.m1.1b"><apply id="Sx3.Ex6.m1.1.1.cmml" xref="Sx3.Ex6.m1.1.1"><csymbol cd="latexml" id="Sx3.Ex6.m1.1.1.1.cmml" xref="Sx3.Ex6.m1.1.1.1">similar-to</csymbol><ci id="Sx3.Ex6.m1.1.1.2.cmml" xref="Sx3.Ex6.m1.1.1.2">𝑝</ci><apply id="Sx3.Ex6.m1.1.1.3.cmml" xref="Sx3.Ex6.m1.1.1.3"><csymbol cd="ambiguous" id="Sx3.Ex6.m1.1.1.3.1.cmml" xref="Sx3.Ex6.m1.1.1.3">superscript</csymbol><ci id="Sx3.Ex6.m1.1.1.3.2.cmml" xref="Sx3.Ex6.m1.1.1.3.2">𝑒</ci><apply id="Sx3.Ex6.m1.1.1.3.3.cmml" xref="Sx3.Ex6.m1.1.1.3.3"><divide id="Sx3.Ex6.m1.1.1.3.3.1.cmml" xref="Sx3.Ex6.m1.1.1.3.3.1"></divide><apply id="Sx3.Ex6.m1.1.1.3.3.2.cmml" xref="Sx3.Ex6.m1.1.1.3.3.2"><times id="Sx3.Ex6.m1.1.1.3.3.2.1.cmml" xref="Sx3.Ex6.m1.1.1.3.3.2.1"></times><ci id="Sx3.Ex6.m1.1.1.3.3.2.2.cmml" xref="Sx3.Ex6.m1.1.1.3.3.2.2">𝑙</ci><ci id="Sx3.Ex6.m1.1.1.3.3.2.3.cmml" xref="Sx3.Ex6.m1.1.1.3.3.2.3">𝑜</ci><ci id="Sx3.Ex6.m1.1.1.3.3.2.4.cmml" xref="Sx3.Ex6.m1.1.1.3.3.2.4">𝑔</ci><ci id="Sx3.Ex6.m1.1.1.3.3.2.5.cmml" xref="Sx3.Ex6.m1.1.1.3.3.2.5">𝑖</ci><ci id="Sx3.Ex6.m1.1.1.3.3.2.6.cmml" xref="Sx3.Ex6.m1.1.1.3.3.2.6">𝑡</ci><ci id="Sx3.Ex6.m1.1.1.3.3.2.7.cmml" xref="Sx3.Ex6.m1.1.1.3.3.2.7">𝑠</ci></apply><ci id="Sx3.Ex6.m1.1.1.3.3.3.cmml" xref="Sx3.Ex6.m1.1.1.3.3.3">𝜏</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx3.Ex6.m1.1c">p\sim e^{logits/\tau}</annotation><annotation encoding="application/x-llamapun" id="Sx3.Ex6.m1.1d">italic_p ∼ italic_e start_POSTSUPERSCRIPT italic_l italic_o italic_g italic_i italic_t italic_s / italic_τ end_POSTSUPERSCRIPT</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx3.SSx1.p2.1">where <math alttext="\tau" class="ltx_Math" display="inline" id="Sx3.SSx1.p2.1.m1.1"><semantics id="Sx3.SSx1.p2.1.m1.1a"><mi id="Sx3.SSx1.p2.1.m1.1.1" xref="Sx3.SSx1.p2.1.m1.1.1.cmml">τ</mi><annotation-xml encoding="MathML-Content" id="Sx3.SSx1.p2.1.m1.1b"><ci id="Sx3.SSx1.p2.1.m1.1.1.cmml" xref="Sx3.SSx1.p2.1.m1.1.1">𝜏</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx3.SSx1.p2.1.m1.1c">\tau</annotation><annotation encoding="application/x-llamapun" id="Sx3.SSx1.p2.1.m1.1d">italic_τ</annotation></semantics></math> denotes the sampling temperature controlling the entropy of distribution. When battling against the baseline model, we set the temperature at 1 to ensure diversity in evaluation matchups. Our findings indicate that both the training methodology and model architecture optimizations significantly enhance performance. For instance, using reinforcement learning to further optimize the <span class="ltx_text ltx_font_bold" id="Sx3.SSx1.p2.1.1">modResNet18</span> architecture increased its win rate against the baseline from 38.6% to 52.3%. Similarly, for the ViT structure, reinforcement learning elevated the win rate from 65.1% under supervised learning to 92.5%. It is important to note that, due to the evaluation sampling at a temperature of 1, the true win rate of RL-ViT against the baseline is likely much higher than 92.5%, approaching 100%.</p>
+</div>
+<div class="ltx_para" id="Sx3.SSx1.p3">
+<p class="ltx_p" id="Sx3.SSx1.p3.1">Beyond confrontations with the baseline model, the ViT-based models, SL-ViT and RL-ViT, were also tested in human ladder tournaments using a sampling temperature of 5 to ensure an accurate measure of their strength. The outcomes were impressive, with SL-ViT achieving a top 3% ranking and RL-ViT reaching the top 0.1% level, nearly comparable to top professional players.</p>
+</div>
+<div class="ltx_para" id="Sx3.SSx1.p4">
+<p class="ltx_p" id="Sx3.SSx1.p4.1">Finally, the game was segmented into three phases: First, Mid, and Last. We demonstrated the impact of adjustments in the model structure on overall predictive accuracy within the supervised learning framework. The increase in ResNet size and the adoption of ViT both positively influenced overall accuracy rates.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="Sx3.SSx2">
+<h3 class="ltx_title ltx_title_subsection">Ablation Study</h3>
+<section class="ltx_subsubsection" id="Sx3.SSx2.SSSx1">
+<h4 class="ltx_title ltx_title_subsubsection">Sample Curve</h4>
+<div class="ltx_para" id="Sx3.SSx2.SSSx1.p1">
+<p class="ltx_p" id="Sx3.SSx2.SSSx1.p1.3">The distribution of samples in Chinese Chess is notably imbalanced, and there is a significant disparity in the styles of moves across different phases of the game. Consequently, it is crucial to perform necessary sampling procedures on the training samples. To address this, we designed a specific sampling curve:</p>
+<table class="ltx_equation ltx_eqn_table" id="Sx3.Ex7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="p\sim\log(\frac{t}{2T}+e^{-1})+1.5" class="ltx_Math" display="block" id="Sx3.Ex7.m1.2"><semantics id="Sx3.Ex7.m1.2a"><mrow id="Sx3.Ex7.m1.2.2" xref="Sx3.Ex7.m1.2.2.cmml"><mi id="Sx3.Ex7.m1.2.2.3" xref="Sx3.Ex7.m1.2.2.3.cmml">p</mi><mo id="Sx3.Ex7.m1.2.2.2" xref="Sx3.Ex7.m1.2.2.2.cmml">∼</mo><mrow id="Sx3.Ex7.m1.2.2.1" xref="Sx3.Ex7.m1.2.2.1.cmml"><mrow id="Sx3.Ex7.m1.2.2.1.1.1" xref="Sx3.Ex7.m1.2.2.1.1.2.cmml"><mi id="Sx3.Ex7.m1.1.1" xref="Sx3.Ex7.m1.1.1.cmml">log</mi><mo id="Sx3.Ex7.m1.2.2.1.1.1a" xref="Sx3.Ex7.m1.2.2.1.1.2.cmml">⁡</mo><mrow id="Sx3.Ex7.m1.2.2.1.1.1.1" xref="Sx3.Ex7.m1.2.2.1.1.2.cmml"><mo id="Sx3.Ex7.m1.2.2.1.1.1.1.2" stretchy="false" xref="Sx3.Ex7.m1.2.2.1.1.2.cmml">(</mo><mrow id="Sx3.Ex7.m1.2.2.1.1.1.1.1" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.cmml"><mfrac id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.cmml"><mi id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.2" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.2.cmml">t</mi><mrow id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.cmml"><mn id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.2" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.2.cmml">2</mn><mo id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.1" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.1.cmml">⁢</mo><mi id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.3" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.3.cmml">T</mi></mrow></mfrac><mo id="Sx3.Ex7.m1.2.2.1.1.1.1.1.1" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.1.cmml">+</mo><msup id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.cmml"><mi id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.2" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.2.cmml">e</mi><mrow id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3.cmml"><mo id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3a" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3.cmml">−</mo><mn id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3.2" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3.2.cmml">1</mn></mrow></msup></mrow><mo id="Sx3.Ex7.m1.2.2.1.1.1.1.3" stretchy="false" xref="Sx3.Ex7.m1.2.2.1.1.2.cmml">)</mo></mrow></mrow><mo id="Sx3.Ex7.m1.2.2.1.2" xref="Sx3.Ex7.m1.2.2.1.2.cmml">+</mo><mn id="Sx3.Ex7.m1.2.2.1.3" xref="Sx3.Ex7.m1.2.2.1.3.cmml">1.5</mn></mrow></mrow><annotation-xml encoding="MathML-Content" id="Sx3.Ex7.m1.2b"><apply id="Sx3.Ex7.m1.2.2.cmml" xref="Sx3.Ex7.m1.2.2"><csymbol cd="latexml" id="Sx3.Ex7.m1.2.2.2.cmml" xref="Sx3.Ex7.m1.2.2.2">similar-to</csymbol><ci id="Sx3.Ex7.m1.2.2.3.cmml" xref="Sx3.Ex7.m1.2.2.3">𝑝</ci><apply id="Sx3.Ex7.m1.2.2.1.cmml" xref="Sx3.Ex7.m1.2.2.1"><plus id="Sx3.Ex7.m1.2.2.1.2.cmml" xref="Sx3.Ex7.m1.2.2.1.2"></plus><apply id="Sx3.Ex7.m1.2.2.1.1.2.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1"><log id="Sx3.Ex7.m1.1.1.cmml" xref="Sx3.Ex7.m1.1.1"></log><apply id="Sx3.Ex7.m1.2.2.1.1.1.1.1.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1"><plus id="Sx3.Ex7.m1.2.2.1.1.1.1.1.1.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.1"></plus><apply id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2"><divide id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.1.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2"></divide><ci id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.2.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.2">𝑡</ci><apply id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3"><times id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.1.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.1"></times><cn id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.2.cmml" type="integer" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.2">2</cn><ci id="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.3.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.2.3.3">𝑇</ci></apply></apply><apply id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3"><csymbol cd="ambiguous" id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.1.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3">superscript</csymbol><ci id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.2.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.2">𝑒</ci><apply id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3"><minus id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3.1.cmml" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3"></minus><cn id="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3.2.cmml" type="integer" xref="Sx3.Ex7.m1.2.2.1.1.1.1.1.3.3.2">1</cn></apply></apply></apply></apply><cn id="Sx3.Ex7.m1.2.2.1.3.cmml" type="float" xref="Sx3.Ex7.m1.2.2.1.3">1.5</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx3.Ex7.m1.2c">p\sim\log(\frac{t}{2T}+e^{-1})+1.5</annotation><annotation encoding="application/x-llamapun" id="Sx3.Ex7.m1.2d">italic_p ∼ roman_log ( divide start_ARG italic_t end_ARG start_ARG 2 italic_T end_ARG + italic_e start_POSTSUPERSCRIPT - 1 end_POSTSUPERSCRIPT ) + 1.5</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx3.SSx2.SSSx1.p1.2">where <math alttext="T" class="ltx_Math" display="inline" id="Sx3.SSx2.SSSx1.p1.1.m1.1"><semantics id="Sx3.SSx2.SSSx1.p1.1.m1.1a"><mi id="Sx3.SSx2.SSSx1.p1.1.m1.1.1" xref="Sx3.SSx2.SSSx1.p1.1.m1.1.1.cmml">T</mi><annotation-xml encoding="MathML-Content" id="Sx3.SSx2.SSSx1.p1.1.m1.1b"><ci id="Sx3.SSx2.SSSx1.p1.1.m1.1.1.cmml" xref="Sx3.SSx2.SSSx1.p1.1.m1.1.1">𝑇</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx3.SSx2.SSSx1.p1.1.m1.1c">T</annotation><annotation encoding="application/x-llamapun" id="Sx3.SSx2.SSSx1.p1.1.m1.1d">italic_T</annotation></semantics></math> is the total length of one game varying with each other, <math alttext="t" class="ltx_Math" display="inline" id="Sx3.SSx2.SSSx1.p1.2.m2.1"><semantics id="Sx3.SSx2.SSSx1.p1.2.m2.1a"><mi id="Sx3.SSx2.SSSx1.p1.2.m2.1.1" xref="Sx3.SSx2.SSSx1.p1.2.m2.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="Sx3.SSx2.SSSx1.p1.2.m2.1b"><ci id="Sx3.SSx2.SSSx1.p1.2.m2.1.1.cmml" xref="Sx3.SSx2.SSSx1.p1.2.m2.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx3.SSx2.SSSx1.p1.2.m2.1c">t</annotation><annotation encoding="application/x-llamapun" id="Sx3.SSx2.SSSx1.p1.2.m2.1d">italic_t</annotation></semantics></math> is the current step of the game. This curve illustrates that as the game progresses, the selection of each move requires increasing precision. As demonstrated in Fig.(<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#Sx3.F2" title="Figure 2 ‣ Sample Curve ‣ Ablation Study ‣ Results ‣ Mastering Chinese Chess AI(Xiangqi) Without Search"><span class="ltx_text ltx_ref_tag">2</span></a>), we conducted an ablation study using the <span class="ltx_text ltx_font_bold" id="Sx3.SSx2.SSSx1.p1.2.1">modResNet18</span> model, comparing the effects of this sampling curve with uniform sampling during training. We observed that the overall prediction accuracy, particularly in the mid game and last game phases, was enhanced.</p>
+</div>
+<figure class="ltx_figure" id="Sx3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="180" id="Sx3.F2.g1" src="extracted/5906652/figures/sample_curve.png" width="299"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Comparison of accuracy for different game stages between uniform sampling and sample with curve</figcaption>
+</figure>
+</section>
+<section class="ltx_subsubsection" id="Sx3.SSx2.SSSx2">
+<h4 class="ltx_title ltx_title_subsubsection">Feature With Rule</h4>
+<div class="ltx_para" id="Sx3.SSx2.SSSx2.p1">
+<p class="ltx_p" id="Sx3.SSx2.SSSx2.p1.1">In this discussion, we explore effective feature modeling for Chinese Chess. The importance of feature modeling may be mitigated if search technologies are employed, as the agent can simulate downwards continuously, ultimately achieving a comprehensive understanding of the current situation. However, in the absence of search and simulation, it necessitates a deeper knowledge of the entire chessboard and the rules of the game on the part of the agent. To this end, we considered the following three methods of feature modeling:</p>
+<ul class="ltx_itemize" id="Sx3.I1">
+<li class="ltx_item" id="Sx3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Sx3.I1.i1.p1">
+<p class="ltx_p" id="Sx3.I1.i1.p1.1">Features composed solely of the information of the pieces on the board.</p>
+</div>
+</li>
+<li class="ltx_item" id="Sx3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Sx3.I1.i2.p1">
+<p class="ltx_p" id="Sx3.I1.i2.p1.1">Features that include the state of the board and the various move options available to the player.</p>
+</div>
+</li>
+<li class="ltx_item" id="Sx3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Sx3.I1.i3.p1">
+<p class="ltx_p" id="Sx3.I1.i3.p1.1">Features that encompass both the board information and all possible moves for both players based on the current situation.</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="Sx3.SSx2.SSSx2.p2">
+<p class="ltx_p" id="Sx3.SSx2.SSSx2.p2.1">We present the training curves for these three modeling approaches in a graph, where the horizontal axis represents training time, and the vertical axis shows the win and draw rates against a baseline, as shown in Fig.(<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#Sx3.F3" title="Figure 3 ‣ Feature With Rule ‣ Ablation Study ‣ Results ‣ Mastering Chinese Chess AI(Xiangqi) Without Search"><span class="ltx_text ltx_ref_tag">3</span></a>). From these training curves, we observe the following interesting phenomena:</p>
+<ul class="ltx_itemize" id="Sx3.I2">
+<li class="ltx_item" id="Sx3.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Sx3.I2.i1.p1">
+<p class="ltx_p" id="Sx3.I2.i1.p1.1">The inclusion of permissible moves for the player into the features significantly accelerates the training speed in the early stages. For example, to reach a win rate of 20%, purely board-based modeling requires 7 hours of training time, whereas incorporating permissible moves reduces this to 5 hours. This aligns closely with the human approach to learning chess: beyond understanding the board, coaching that includes guidance on possible moves can rapidly aid students in discovering more effective strategies.</p>
+</div>
+</li>
+<li class="ltx_item" id="Sx3.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Sx3.I2.i2.p1">
+<p class="ltx_p" id="Sx3.I2.i2.p1.1">In the mid to late stages of training, given the same amount of training time, the inclusion of the opponent’s permissible moves results in a higher win rate compared to including only the player’s own moves. This is because understanding the opponent’s countermeasures can help the agent to comprehend the current situation better, ensuring more rational decision-making in the given context.</p>
+</div>
+</li>
+</ul>
+<p class="ltx_p" id="Sx3.SSx2.SSSx2.p2.2">These observations highlight the significant impact of nuanced feature modeling on the performance and efficiency of AI agents in strategic games like Chinese Chess.</p>
+</div>
+<figure class="ltx_figure" id="Sx3.F3">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" height="84" id="Sx3.F3.g1" src="extracted/5906652/figures/base_shd.png" width="538"/></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" height="84" id="Sx3.F3.g2" src="extracted/5906652/figures/ally_shd.png" width="538"/></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" height="83" id="Sx3.F3.g3" src="extracted/5906652/figures/oppo_shd.png" width="538"/></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Win(Draw) rate for modResNet18 versus baseline with different features. From top to bottom, feature contains game board state, ally valid moves, enemy valid moves step by step</figcaption>
+</figure>
+</section>
+<section class="ltx_subsubsection" id="Sx3.SSx2.SSSx3">
+<h4 class="ltx_title ltx_title_subsubsection">Model Architecture</h4>
+<div class="ltx_para" id="Sx3.SSx2.SSSx3.p1">
+<p class="ltx_p" id="Sx3.SSx2.SSSx3.p1.1">For board games such as Chinese Chess, the state of the board can be naturally represented in a format similar to a 2D image, denoted as <math alttext="(H,W,C)" class="ltx_Math" display="inline" id="Sx3.SSx2.SSSx3.p1.1.m1.3"><semantics id="Sx3.SSx2.SSSx3.p1.1.m1.3a"><mrow id="Sx3.SSx2.SSSx3.p1.1.m1.3.4.2" xref="Sx3.SSx2.SSSx3.p1.1.m1.3.4.1.cmml"><mo id="Sx3.SSx2.SSSx3.p1.1.m1.3.4.2.1" stretchy="false" xref="Sx3.SSx2.SSSx3.p1.1.m1.3.4.1.cmml">(</mo><mi id="Sx3.SSx2.SSSx3.p1.1.m1.1.1" xref="Sx3.SSx2.SSSx3.p1.1.m1.1.1.cmml">H</mi><mo id="Sx3.SSx2.SSSx3.p1.1.m1.3.4.2.2" xref="Sx3.SSx2.SSSx3.p1.1.m1.3.4.1.cmml">,</mo><mi id="Sx3.SSx2.SSSx3.p1.1.m1.2.2" xref="Sx3.SSx2.SSSx3.p1.1.m1.2.2.cmml">W</mi><mo id="Sx3.SSx2.SSSx3.p1.1.m1.3.4.2.3" xref="Sx3.SSx2.SSSx3.p1.1.m1.3.4.1.cmml">,</mo><mi id="Sx3.SSx2.SSSx3.p1.1.m1.3.3" xref="Sx3.SSx2.SSSx3.p1.1.m1.3.3.cmml">C</mi><mo id="Sx3.SSx2.SSSx3.p1.1.m1.3.4.2.4" stretchy="false" xref="Sx3.SSx2.SSSx3.p1.1.m1.3.4.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="Sx3.SSx2.SSSx3.p1.1.m1.3b"><vector id="Sx3.SSx2.SSSx3.p1.1.m1.3.4.1.cmml" xref="Sx3.SSx2.SSSx3.p1.1.m1.3.4.2"><ci id="Sx3.SSx2.SSSx3.p1.1.m1.1.1.cmml" xref="Sx3.SSx2.SSSx3.p1.1.m1.1.1">𝐻</ci><ci id="Sx3.SSx2.SSSx3.p1.1.m1.2.2.cmml" xref="Sx3.SSx2.SSSx3.p1.1.m1.2.2">𝑊</ci><ci id="Sx3.SSx2.SSSx3.p1.1.m1.3.3.cmml" xref="Sx3.SSx2.SSSx3.p1.1.m1.3.3">𝐶</ci></vector></annotation-xml><annotation encoding="application/x-tex" id="Sx3.SSx2.SSSx3.p1.1.m1.3c">(H,W,C)</annotation><annotation encoding="application/x-llamapun" id="Sx3.SSx2.SSSx3.p1.1.m1.3d">( italic_H , italic_W , italic_C )</annotation></semantics></math>, where each channel can represent different types of chess pieces or other information. ResNet, a model originally designed for image processing, can potentially handle such types of encoded information well. However, during our training process, we discovered that directly utilizing ResNet yielded very poor results. Upon deconstructing the ResNet architecture, we identified two processing techniques that are suitable for image scenarios but inappropriate for board game scenarios:</p>
+<ul class="ltx_itemize" id="Sx3.I3">
+<li class="ltx_item" id="Sx3.I3.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Sx3.I3.i1.p1">
+<p class="ltx_p" id="Sx3.I3.i1.p1.1">A larger kernel size, where a default of (7x7) is typically used.</p>
+</div>
+</li>
+<li class="ltx_item" id="Sx3.I3.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Sx3.I3.i2.p1">
+<p class="ltx_p" id="Sx3.I3.i2.p1.1">Max pooling.</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="Sx3.SSx2.SSSx3.p2">
+<p class="ltx_p" id="Sx3.SSx2.SSSx3.p2.1">These information processing techniques in the context of image handling can be understood as helping the model to capture key features in an image while discarding and merging minor details. Clearly, this approach is not suitable for handling board game information where every piece of information about each chess piece is crucial and does not require merging. Consequently, we modified the traditional ResNet by removing the max pooling and reducing the kernel size to 1x1. The overall experimental results are shown in the Table.(<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#Sx3.T2" title="Table 2 ‣ Model Architecture ‣ Ablation Study ‣ Results ‣ Mastering Chinese Chess AI(Xiangqi) Without Search"><span class="ltx_text ltx_ref_tag">2</span></a>). From these experimental observations, it is evident that both the performance against the baseline model and the prediction accuracy have significantly improved.</p>
+</div>
+<div class="ltx_para" id="Sx3.SSx2.SSSx3.p3">
+<p class="ltx_p" id="Sx3.SSx2.SSSx3.p3.1">Naturally, derivative structures based on Convolutional Neural Networks (CNNs) often exhibit limitations in processing board game information, specifically in their inability to effectively discern which areas of the board are more critical and which are less so at any given moment. It is well-known that architectures based on Transformers, which rely on underlying attention mechanisms, can adeptly describe the varying degrees of urgency across different regions of the battlefield. In this regard, we employed the Vision Transformer (ViT) network architecture to handle this image-like board information. From the data presented in the Table.(<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#Sx3.T2" title="Table 2 ‣ Model Architecture ‣ Ablation Study ‣ Results ‣ Mastering Chinese Chess AI(Xiangqi) Without Search"><span class="ltx_text ltx_ref_tag">2</span></a>), it is evident that under the same parameter conditions, ViT significantly enhances overall performance. Notably, there is an approximate 50% increase in accuracy during the latter stages of the game. Additionally, when competing against the baseline model, the overall win rate improved from 38.6% to 65.1%.</p>
+</div>
+<figure class="ltx_table" id="Sx3.T2">
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="Sx3.T2.1">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="Sx3.T2.1.2.1">
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T2.1.2.1.1"><span class="ltx_text ltx_font_bold" id="Sx3.T2.1.2.1.1.1">Model Description</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T2.1.2.1.2"><span class="ltx_text ltx_font_bold" id="Sx3.T2.1.2.1.2.1">VS baseline</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T2.1.2.1.3"><span class="ltx_text ltx_font_bold" id="Sx3.T2.1.2.1.3.1">Accuracy(First)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T2.1.2.1.4"><span class="ltx_text ltx_font_bold" id="Sx3.T2.1.2.1.4.1">Accuracy(Mid)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T2.1.2.1.5"><span class="ltx_text ltx_font_bold" id="Sx3.T2.1.2.1.5.1">Accuracy(Last)</span></td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.1.3.2">
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.3.2.1">modResNet18</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.3.2.2">38.6%(19.8%)</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.3.2.3">60.2%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.3.2.4">47.4%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.3.2.5">43.3%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.1.4.3">
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.4.3.1">ResNet18</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.4.3.2">1.9%(2.1%)</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.4.3.3">57.5%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.4.3.4">39.8%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.4.3.5">42.9%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.1.5.4">
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.5.4.1">ResNet18 without pooling</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.5.4.2">2.1%(2.5%)</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.5.4.3">57.4%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.5.4.4">45.2%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.5.4.5">43.1%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.1.1">
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.1.1">ResNet18 with kernel <math alttext="1\times 1" class="ltx_Math" display="inline" id="Sx3.T2.1.1.1.m1.1"><semantics id="Sx3.T2.1.1.1.m1.1a"><mrow id="Sx3.T2.1.1.1.m1.1.1" xref="Sx3.T2.1.1.1.m1.1.1.cmml"><mn id="Sx3.T2.1.1.1.m1.1.1.2" xref="Sx3.T2.1.1.1.m1.1.1.2.cmml">1</mn><mo id="Sx3.T2.1.1.1.m1.1.1.1" lspace="0.222em" rspace="0.222em" xref="Sx3.T2.1.1.1.m1.1.1.1.cmml">×</mo><mn id="Sx3.T2.1.1.1.m1.1.1.3" xref="Sx3.T2.1.1.1.m1.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="Sx3.T2.1.1.1.m1.1b"><apply id="Sx3.T2.1.1.1.m1.1.1.cmml" xref="Sx3.T2.1.1.1.m1.1.1"><times id="Sx3.T2.1.1.1.m1.1.1.1.cmml" xref="Sx3.T2.1.1.1.m1.1.1.1"></times><cn id="Sx3.T2.1.1.1.m1.1.1.2.cmml" type="integer" xref="Sx3.T2.1.1.1.m1.1.1.2">1</cn><cn id="Sx3.T2.1.1.1.m1.1.1.3.cmml" type="integer" xref="Sx3.T2.1.1.1.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx3.T2.1.1.1.m1.1c">1\times 1</annotation><annotation encoding="application/x-llamapun" id="Sx3.T2.1.1.1.m1.1d">1 × 1</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.1.2">0.1%(2.5%)</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.1.3">54.1%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.1.4">35.7%</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.1.1.5">38.0%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.1.6.5">
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T2.1.6.5.1">ViT</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T2.1.6.5.2">65.1%(12.8%)</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T2.1.6.5.3">72.6%</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T2.1.6.5.4">60.3%</td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="Sx3.T2.1.6.5.5">59.1%</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>ablation study for model architecture</figcaption>
+</figure>
+</section>
+<section class="ltx_subsubsection" id="Sx3.SSx2.SSSx4">
+<h4 class="ltx_title ltx_title_subsubsection">DOP and VECT</h4>
+<div class="ltx_para" id="Sx3.SSx2.SSSx4.p1">
+<p class="ltx_p" id="Sx3.SSx2.SSSx4.p1.1">In this section, we will compare the impact of two predominant methods on the effectiveness of the reinforcement learning training process: DOP and VECT. For adversarial games in general, iterative self-improvement can be achieved through self-play in the reinforcement training process. However, this approach has inherent drawbacks: 1. The opponent model lacks diversity; 2. During the training process, the agent gradually forgets previously learned strategies and methods for countering specific strategies. To mitigate these issues, we employ the DOP method. As evidenced in Table X, the incorporation of DOP has enhanced our overall training outcomes, elevating the win rate against the baseline model from 84% to 92.5%.</p>
+</div>
+<div class="ltx_para" id="Sx3.SSx2.SSSx4.p2">
+<p class="ltx_p" id="Sx3.SSx2.SSSx4.p2.1">During the reinforcement learning phase, we initially employed the Generalized Advantage Estimation (GAE) algorithm inherent to the PPO, setting both gamma and lambda to 1. Under these settings, the value function primarily predicts the ultimate win rate of the match, leaning towards using the final outcome as its supervisory signal. However, as indicated in the Table.(<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#Sx3.T4" title="Table 4 ‣ DOP and VECT ‣ Ablation Study ‣ Results ‣ Mastering Chinese Chess AI(Xiangqi) Without Search"><span class="ltx_text ltx_ref_tag">4</span></a>), this configuration does not facilitate effective training in reinforcement learning; the training process tends to crash, with the win rate against the baseline model drastically dropping from 65% to approximately 10%. Instead, we use VECT method to estimate the value function, we can find that the win rate is improved from 65% to 92.5%, which makes great progress.</p>
+</div>
+<div class="ltx_logical-block ltx_minipage ltx_align_middle" id="Sx3.SSx2.SSSx4.1" style="width:195.1pt;">
+<div class="ltx_para" id="Sx3.SSx2.SSSx4.1.p1">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="Sx3.SSx2.SSSx4.1.p1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="Sx3.SSx2.SSSx4.1.p1.1.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.1.p1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="Sx3.SSx2.SSSx4.1.p1.1.1.1.1.1">Training Algorithm</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.1.p1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="Sx3.SSx2.SSSx4.1.p1.1.1.1.2.1">VS baseline</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="Sx3.SSx2.SSSx4.1.p1.1.2.1">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.1.p1.1.2.1.1">Self play</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.1.p1.1.2.1.2">84.0%(5.6%)</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.SSx2.SSSx4.1.p1.1.3.2">
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.1.p1.1.3.2.1">DOP</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.1.p1.1.3.2.2">92.5%(2.8%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="ltx_table ltx_align_center" id="Sx3.T3">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 3: </span>This table compares the win(draw) rate versus baseline for different training strategy. The first row uses self play, which always select the newest model as the opponent, The second row uses a dynamics opponent pool, which is sampled when choosing opponent model.</figcaption>
+</figure>
+</div>
+<div class="ltx_logical-block ltx_minipage ltx_align_middle" id="Sx3.SSx2.SSSx4.2" style="width:195.1pt;">
+<div class="ltx_para" id="Sx3.SSx2.SSSx4.2.p1">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="Sx3.SSx2.SSSx4.2.p1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="Sx3.SSx2.SSSx4.2.p1.1.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.2.p1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="Sx3.SSx2.SSSx4.2.p1.1.1.1.1.1">Training Algorithm</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.2.p1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="Sx3.SSx2.SSSx4.2.p1.1.1.1.2.1">VS baseline</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="Sx3.SSx2.SSSx4.2.p1.1.2.1">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.2.p1.1.2.1.1">GAE</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.2.p1.1.2.1.2">10.2%(1.5%)</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.SSx2.SSSx4.2.p1.1.3.2">
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.2.p1.1.3.2.1">VECT</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" id="Sx3.SSx2.SSSx4.2.p1.1.3.2.2">92.5%(2.8%)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="ltx_table ltx_align_center" id="Sx3.T4">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 4: </span>This table compares two value estimation method of RL training for Chinese Chess. The first row uses the classical algorithm GAE. The second row uses a novel method called VECT, which is the improved version of GAE</figcaption>
+</figure>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="Sx4" lang="en">
+<h2 class="ltx_title ltx_title_section">Discussion</h2>
+<div class="ltx_para" id="Sx4.p1">
+<p class="ltx_p" id="Sx4.p1.1">The development and validation of our Chinese Chess AI without search have led to several compelling findings with implications for both reinforcement learning (RL) methods and real-world applications. Here, we discuss the key insights from this research and their potential broader impact.</p>
+</div>
+<div class="ltx_para" id="Sx4.p2">
+<p class="ltx_p" id="Sx4.p2.1">Also, we find the work<cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="https://arxiv.org/html/2410.04865v1#bib.bib23" title="">23</a>]</cite> studying the Chess AI(not Chinese Chess) without search. However, the main contribution of this work focus on the supervised learning and relevant results.</p>
+</div>
+<div class="ltx_para" id="Sx4.p3">
+<p class="ltx_p" id="Sx4.p3.1">Our results contribute to the growing literature that illuminates the versatility and effectiveness of Transformer architectures. Notably, the performance improvement observed when transitioning from a CNN-based model to a Transformer-based model underscores the superior spatial relation understanding that Transformers offer. This outcome reinforces the idea that attention mechanisms are well-suited to tasks requiring the contextual processing of input features, suggesting that Transformers could have wider applicability in the domain of games with complex strategic elements and perhaps beyond—into areas such as robotics and autonomous systems.
+</p>
+</div>
+<div class="ltx_para" id="Sx4.p4">
+<p class="ltx_p" id="Sx4.p4.1">The enhancement of the AI’s feature set with rules-based information significantly accelerated and improved the learning process. This underscores the importance of deep domain knowledge when designing input representations for learning models. While this work focused on Chinese Chess, there is potential to extend such feature engineering methods to other domains where expert knowledge can guide the representation of state spaces to aid learning algorithms.</p>
+</div>
+<div class="ltx_para" id="Sx4.p5">
+<p class="ltx_p" id="Sx4.p5.1">Our method of diversifying opponent strategies in the training phase highlights the limitations of traditional self-play methods and points to the need for more sophisticated training regimens. The concept of using a dynamic pool of opponents may serve as a blueprint for developing RL agents in other adversarial settings, where the strategic depth of the task benefits from exposure to a variety of strategies.</p>
+</div>
+<div class="ltx_para" id="Sx4.p6">
+<p class="ltx_p" id="Sx4.p6.1">The introduction of the VECT method in the RL phase provides a robust and stable method for evaluating value functions in turn-based game scenarios, particularly in situations where the overall rewards vary significantly. This is extremely beneficial for learning and developing chess AI, as it helps the AI system to more accurately predict the long-term benefits of its actions, thereby enabling it to make better decisions.</p>
+</div>
+<div class="ltx_para" id="Sx4.p7">
+<p class="ltx_p" id="Sx4.p7.1">Our findings have notable implications for the future of game AI development. By demonstrating the potential to reach high levels of performance without reliance on search algorithms, we pave the way for more lightweight and adaptable AIs in resource-constrained environments. This approach may be especially relevant for developing AIs for real-world applications where computational resources are limited or where low-latency decisions are crucial. The confluence of high performance and reduced computational demands makes for a compelling case for rethinking traditional approaches to game AI development and, by extension, decision-making systems in broader contexts.</p>
+</div>
+<div class="ltx_para" id="Sx4.p8">
+<p class="ltx_p" id="Sx4.p8.1">Though our results are promising, several limitations need to be addressed in future work. Most notably, our methods were applied in the context of a deterministic and perfect information game—Chinese Chess. As such, the applicability of our techniques to games or scenarios with elements of randomness or imperfect information remains to be demonstrated. Additionally, the AI’s performance, while impressive, may still benefit from further refinements in architectural design, training algorithms, and feature engineering.</p>
+</div>
+<div class="ltx_para" id="Sx4.p9">
+<p class="ltx_p" id="Sx4.p9.1">In conclusion, this research contributes valuable insights into the reinforcement learning landscape and champions methods that could have implications for decision-making systems in general. As we look to future applications and extensions of our work, the blend of RL strategies, model architectures, and feature representations established herein will undoubtedly inform and inspire ongoing developments in AI.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx5" lang="en">
+<h2 class="ltx_title ltx_title_section">Acknowledgements</h2>
+<div class="ltx_para" id="Sx5.p1">
+<p class="ltx_p" id="Sx5.p1.1">We thank Tencent Lightspeed studios for opportunity to do research on Chinese Chess.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx6" lang="en">
+<h2 class="ltx_title ltx_title_section">Author Contributions</h2>
+<div class="ltx_para" id="Sx6.p1">
+<p class="ltx_p" id="Sx6.p1.1">Yu Chen and Zhichao Shu set up the whole project for studying Chinese Chess without search. Yu Chen and Juntong Lin designed and implemented the algorithm architecture, evaluation system and wrote the paper. Yu Chen also evaluated the agent in the human ladder rank.</p>
+</div>
+</section>
+<section class="ltx_section" id="Sx7" lang="en">
+<h2 class="ltx_title ltx_title_section">Author Information</h2>
+<div class="ltx_para" id="Sx7.p1">
+<p class="ltx_p" id="Sx7.p1.1">The authors have disclosed no financial conflicts of interest. Feedback on the online version of the article is encouraged. For correspondence and inquiries regarding materials, please contact alexychen@tencent.com.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib" lang="en">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Schulman, J., Levine, S., Abbeel, P., Jordan, M. &amp; Moritz, P.
+
+</span>
+<span class="ltx_bibblock">Trust region policy optimization.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib1.1.1">International conference on machine learning</em>, 1889–1897 (PMLR, 2015).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Schulman, J., Wolski, F., Dhariwal, P., Radford, A. &amp; Klimov, O.
+
+</span>
+<span class="ltx_bibblock">Proximal policy optimization algorithms.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib2.1.1"><span class="ltx_ERROR undefined" id="bib.bib2.1.1.1">\JournalTitle</span>arXiv preprint arXiv:1707.06347</em> (2017).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Ye, D. <em class="ltx_emph ltx_font_italic" id="bib.bib3.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Towards playing full moba games with deep reinforcement learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib3.2.1"><span class="ltx_ERROR undefined" id="bib.bib3.2.1.1">\JournalTitle</span>Advances in Neural Information Processing Systems</em> <span class="ltx_text ltx_font_bold" id="bib.bib3.3.2">33</span>, 621–632 (2020).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Sutton, R. S. &amp; Barto, A. G.
+
+</span>
+<span class="ltx_bibblock">Reinforcement learning: An introduction.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib4.1.1"><span class="ltx_ERROR undefined" id="bib.bib4.1.1.1">\JournalTitle</span>Robotica</em> <span class="ltx_text ltx_font_bold" id="bib.bib4.2.2">17</span>, 229–235 (1999).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Mnih, V. <em class="ltx_emph ltx_font_italic" id="bib.bib5.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Human-level control through deep reinforcement learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib5.2.1"><span class="ltx_ERROR undefined" id="bib.bib5.2.1.1">\JournalTitle</span>nature</em> <span class="ltx_text ltx_font_bold" id="bib.bib5.3.2">518</span>, 529–533 (2015).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Lillicrap, T. P. <em class="ltx_emph ltx_font_italic" id="bib.bib6.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Continuous control with deep reinforcement learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib6.2.1"><span class="ltx_ERROR undefined" id="bib.bib6.2.1.1">\JournalTitle</span>arXiv preprint arXiv:1509.02971</em> (2015).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Mnih, V. <em class="ltx_emph ltx_font_italic" id="bib.bib7.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Playing atari with deep reinforcement learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib7.2.1"><span class="ltx_ERROR undefined" id="bib.bib7.2.1.1">\JournalTitle</span>arXiv preprint arXiv:1312.5602</em> (2013).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Hasselt, H.
+
+</span>
+<span class="ltx_bibblock">Double q-learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib8.1.1"><span class="ltx_ERROR undefined" id="bib.bib8.1.1.1">\JournalTitle</span>Advances in neural information processing systems</em> <span class="ltx_text ltx_font_bold" id="bib.bib8.2.2">23</span> (2010).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Jaderberg, M. <em class="ltx_emph ltx_font_italic" id="bib.bib9.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Human-level performance in 3d multiplayer games with population-based reinforcement learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib9.2.1"><span class="ltx_ERROR undefined" id="bib.bib9.2.1.1">\JournalTitle</span>Science</em> <span class="ltx_text ltx_font_bold" id="bib.bib9.3.2">364</span>, 859–865 (2019).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib10">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Silver, D. <em class="ltx_emph ltx_font_italic" id="bib.bib10.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Mastering the game of go with deep neural networks and tree search.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib10.2.1"><span class="ltx_ERROR undefined" id="bib.bib10.2.1.1">\JournalTitle</span>nature</em> <span class="ltx_text ltx_font_bold" id="bib.bib10.3.2">529</span>, 484–489 (2016).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib11">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Silver, D. <em class="ltx_emph ltx_font_italic" id="bib.bib11.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Mastering the game of go without human knowledge.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib11.2.1"><span class="ltx_ERROR undefined" id="bib.bib11.2.1.1">\JournalTitle</span>nature</em> <span class="ltx_text ltx_font_bold" id="bib.bib11.3.2">550</span>, 354–359 (2017).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib12">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Vinyals, O. <em class="ltx_emph ltx_font_italic" id="bib.bib12.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Grandmaster level in starcraft ii using multi-agent reinforcement learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib12.2.1"><span class="ltx_ERROR undefined" id="bib.bib12.2.1.1">\JournalTitle</span>nature</em> <span class="ltx_text ltx_font_bold" id="bib.bib12.3.2">575</span>, 350–354 (2019).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib13">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Coulom, R.
+
+</span>
+<span class="ltx_bibblock">Efficient selectivity and backup operators in monte-carlo tree search.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib13.1.1">International conference on computers and games</em>, 72–83 (Springer, 2006).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib14">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Kocsis, L. &amp; Szepesvári, C.
+
+</span>
+<span class="ltx_bibblock">Bandit based monte-carlo planning.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib14.1.1">European conference on machine learning</em>, 282–293 (Springer, 2006).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib15">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Browne, C. B. <em class="ltx_emph ltx_font_italic" id="bib.bib15.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">A survey of monte carlo tree search methods.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib15.2.1"><span class="ltx_ERROR undefined" id="bib.bib15.2.1.1">\JournalTitle</span>IEEE Transactions on Computational Intelligence and AI in games</em> <span class="ltx_text ltx_font_bold" id="bib.bib15.3.2">4</span>, 1–43 (2012).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib16">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Wu, D. J.
+
+</span>
+<span class="ltx_bibblock">Accelerating self-play learning in go.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib16.1.1"><span class="ltx_ERROR undefined" id="bib.bib16.1.1.1">\JournalTitle</span>arXiv preprint arXiv:1902.10565</em> (2019).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib17">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Schulman, J., Moritz, P., Levine, S., Jordan, M. &amp; Abbeel, P.
+
+</span>
+<span class="ltx_bibblock">High-dimensional continuous control using generalized advantage estimation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib17.1.1"><span class="ltx_ERROR undefined" id="bib.bib17.1.1.1">\JournalTitle</span>arXiv preprint arXiv:1506.02438</em> (2015).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib18">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Krizhevsky, A., Sutskever, I. &amp; Hinton, G. E.
+
+</span>
+<span class="ltx_bibblock">Imagenet classification with deep convolutional neural networks.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib18.1.1"><span class="ltx_ERROR undefined" id="bib.bib18.1.1.1">\JournalTitle</span>Advances in neural information processing systems</em> <span class="ltx_text ltx_font_bold" id="bib.bib18.2.2">25</span> (2012).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib19">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+LeCun, Y., Bengio, Y. <em class="ltx_emph ltx_font_italic" id="bib.bib19.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Convolutional networks for images, speech, and time series.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib19.2.1"><span class="ltx_ERROR undefined" id="bib.bib19.2.1.1">\JournalTitle</span>The handbook of brain theory and neural networks</em> <span class="ltx_text ltx_font_bold" id="bib.bib19.3.2">3361</span>, 1995 (1995).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib20">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Ioffe, S. &amp; Szegedy, C.
+
+</span>
+<span class="ltx_bibblock">Batch normalization: Accelerating deep network training by reducing internal covariate shift.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib20.1.1">International conference on machine learning</em>, 448–456 (pmlr, 2015).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib21">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+He, K., Zhang, X., Ren, S. &amp; Sun, J.
+
+</span>
+<span class="ltx_bibblock">Deep residual learning for image recognition.
+
+</span>
+<span class="ltx_bibblock">In <em class="ltx_emph ltx_font_italic" id="bib.bib21.1.1">Proceedings of the IEEE conference on computer vision and pattern recognition</em>, 770–778 (2016).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib22">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Dosovitskiy, A. <em class="ltx_emph ltx_font_italic" id="bib.bib22.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">An image is worth 16x16 words: Transformers for image recognition at scale.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib22.2.1"><span class="ltx_ERROR undefined" id="bib.bib22.2.1.1">\JournalTitle</span>arXiv preprint arXiv:2010.11929</em> (2020).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib23">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+Ruoss, A. <em class="ltx_emph ltx_font_italic" id="bib.bib23.1.1">et al.</em>
+</span>
+<span class="ltx_bibblock">Grandmaster-level chess without search.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib23.2.1"><span class="ltx_ERROR undefined" id="bib.bib23.2.1.1">\JournalTitle</span>arXiv preprint arXiv:2402.04494</em> (2024).
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<footer class="ltx_page_footer">
+<div class="ltx_page_logo">Generated  on Mon Oct  7 09:22:37 2024 by <a class="ltx_LaTeXML_logo" href="http://dlmf.nist.gov/LaTeXML/"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img alt="Mascot Sammy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/></a>
+</div></footer>
+</div>
+</body>
+</html>
