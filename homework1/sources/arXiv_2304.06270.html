@@ -1,0 +1,423 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2304.06270] Gamifying Math Education using Object Detection</title><meta property="og:description" content="Manipulatives used in the right way help improve mathematical concepts leading to better learning outcomes. In this paper, we present a phygital (physical + digital) curriculum inspired teaching system for kids aged 5-…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Gamifying Math Education using Object Detection">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Gamifying Math Education using Object Detection">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2304.06270">
+
+<!--Generated on Thu Feb 29 12:16:10 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Gamifying Math Education using Object Detection</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yueqiu Sun 
+<br class="ltx_break">Tangible Play
+<br class="ltx_break">Palo Alto, CA 94306 
+<br class="ltx_break"><span id="id1.1.id1" class="ltx_text ltx_font_typewriter">yueqiu@tangibleplay.com</span> 
+<br class="ltx_break">Rohitkrishna Nambiar 
+<br class="ltx_break">Tangible Play 
+<br class="ltx_break">Palo Alto, CA 94306 
+<br class="ltx_break"><span id="id2.2.id2" class="ltx_text ltx_font_typewriter">rohit@tangibleplay.com</span> 
+<br class="ltx_break">Vivek Vidyasagaran 
+<br class="ltx_break">Tangible Play 
+<br class="ltx_break">Palo Alto, CA 94306 
+<br class="ltx_break"><span id="id3.3.id3" class="ltx_text ltx_font_typewriter">vivek@tangibleplay.com</span> 
+<br class="ltx_break">
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id4.id1" class="ltx_p">Manipulatives used in the right way help improve mathematical concepts leading to better learning outcomes. In this paper, we present a phygital (physical + digital) curriculum inspired teaching system for kids aged 5-8 to learn geometry using shape tile manipulatives. Combining smaller shapes to form larger ones is an important skill kids learn early on which requires shape tiles to be placed close to each other in the play area. This introduces a challenge of oriented object detection for densely packed objects with arbitrary orientations. Leveraging simulated data for neural network training and light-weight mobile architectures, we enable our system to understand user interactions and provide real-time audiovisual feedback. Experimental results show that our network runs real-time with high precision/recall on consumer devices, thereby providing a consistent and enjoyable learning experience.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Manipulatives are objects used to represent abstract concepts explicitly and concretely [12, 19, 20, 21, 22]. They have been used to teach math at all grade levels for a while now [3]. In a comparative study [7] with first grade students, we see that the use of tangible manipulatives increases action possibilities which led to a positive impact in children’s mathematical abilities. Using manipulatives not only improves mathematical concepts but also helps students construct their own mathematical understanding thereby providing a richer learning experience [5]. However, manipulatives on their own have very little meaning and provide maximum benefit when paired with teacher guidance in a comprehensive and well planned setting [18]. This is also not scalable outside of a school environment.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">AR based solutions such as <span id="S1.p2.1.1" class="ltx_text ltx_font_italic">ARMath</span> [6] present a mobile AR platform that recognizes everyday objects and turns them into manipulatives. Mixed reality learning systems [8, 9, 11] combine manipulatives with virtual feedback. However, issues such as difficult hand-eye coordination and device stability limit the practical use of AR based methods. By combining physical manipulatives with a digital game using reflective artificial intelligence technology (RAIT) [1], we present a hands-on play-based learning system for teaching mathematics to kids. Our setup seen in Fig. <a href="#S2.F2" title="Figure 2 ‣ 2 Setup ‣ Gamifying Math Education using Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> consists of a user tablet mounted on a base, an angled mirror called reflector, and shape tile manipulatives. RAIT through the reflector enables the front camera of the device to <span id="S1.p2.1.2" class="ltx_text ltx_font_italic">"see"</span> the table surface as the user interacts with the manipulatives.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">In this work, we focus on teaching geometry to grades 1-2 through a digital game using shape tile (e.g., semicircle, triangle, square) manipulatives. The core objective of the game is to create food ingredients from geometric shapes for digital characters. Some of the geometric skills that we cover are to identify and name shapes, to compose and partition shapes and to reason with shapes and their attributes. As an example, shape composition for a mushroom ingredient can be seen in Fig. <a href="#S2.F2" title="Figure 2 ‣ 2 Setup ‣ Gamifying Math Education using Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. To provide feedback through the game, we need to detect the 2D pose of the shape tiles placed close to each other. Further, to scale to users across the globe, the system has to run real-time seamlessly on user devices from inexpensive low-end tablets to high-end ones. Our contributions are three part. First, we present a phygital system for learning geometry using shape tile manipulatives for grades 1-2. Second, we introduce a synthetic data generation system for neural network training and third, our proposed oriented object detection network addresses the aforementioned challenges with high precision/recall thereby providing an engaging, consistent and enjoyable learning experience.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Setup</h2>
+
+<figure id="S2.F2" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S2.F2.1" class="ltx_figure ltx_figure_panel ltx_parbox ltx_align_middle" style="width:208.1pt;"><img src="/html/2304.06270/assets/setup.png" id="S2.F2.1.g1" class="ltx_graphics ltx_img_landscape" width="269" height="200" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Phygital setup with a user device, a reflector and base. The forward facing camera is able to see the manipulatives placed on the tabletop due to the angled mirror inside the reflector.</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S2.F2.2" class="ltx_figure ltx_figure_panel ltx_parbox ltx_align_middle" style="width:208.1pt;"><img src="/html/2304.06270/assets/manipulatives2.jpg" id="S2.F2.2.g1" class="ltx_graphics ltx_img_square" width="180" height="200" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Shape tile manipulatives placed on a playmat. Smaller tiles are combined to form larger shapes. ex. two dark-green quarter circles and two red right angle triangles can be placed together to form a mushroom ingredient. </figcaption>
+</figure>
+</div>
+</div>
+</figure>
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">The hardware setup consists of a user device, a base, an angled mirror called reflector, and shape tile manipulatives. The device is mounted on the base and the reflector is placed on top of the front facing camera enabling the device to capture the tabletop play area as depicted in Fig. <a href="#S2.F2" title="Figure 2 ‣ 2 Setup ‣ Gamifying Math Education using Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. The manipulatives themselves are designed to be simple and relatively inexpensive. They are made from cardboard and do not have any electronic or magnetic components. Their appearance is designed to match the theme of the game thereby avoiding any obvious visual markers or codes which provides a cohesive user experience. We use the terms tiles and manipulatives interchangeably throughout the paper.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Method</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">Apart from the physical manipulatives, our system consists of a digital game and a computer vision module. A typical user flow begins with the digital game character asking the user to build an ingredient using geometric shape tiles. Kids interact with the system by placing and moving the tiles on the play area. Our unique hardware setup enables us to compute an accurate bird’s-eye view (BEV) image used in our CV pipeline. The game through the CV module predicts the <span id="S3.p1.1.1" class="ltx_text ltx_font_italic">id</span>, <span id="S3.p1.1.2" class="ltx_text ltx_font_italic">location</span>, and <span id="S3.p1.1.3" class="ltx_text ltx_font_italic">orientation</span> of the manipulatives and provides audiovisual feedback to the user based on certain rules. For example, in Fig.  <a href="#S2.F2" title="Figure 2 ‣ 2 Setup ‣ Gamifying Math Education using Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, the stem of the mushroom ingredient can be built using two green rectangle tiles or two red right angled triangles. In the following, we will elaborate on the data problem and the architecture used for on-device object detection with orientation prediction.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Data Scarcity</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">Our product is fully COPPA compliant, and that means we don’t collect images from our customers. However, we do have the ability to collect limited data from beta testing and by using the system ourselves, but this in most cases isn’t enough for our network training efforts. To tackle this challenge, we use data augmentation along with synthetic data generated using 3D models of our manipulatives in a Unity game engine [23]. We use a custom built synthetic data generation system that takes images of the manipulatives, generates 3D meshes as they would look in real life, and places them in different configurations on a virtual tabletop. We vary each scene using different camera parameters and lighting conditions as shown in Fig. <a href="#S3.F3" title="Figure 3 ‣ 3.1 Data Scarcity ‣ 3 Method ‣ Gamifying Math Education using Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>. This enables large amounts of annotated data to be generated for pre-training making the model robust to difficult conditions in the real world.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2304.06270/assets/simulateddata.png" id="S3.F3.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="144" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2304.06270/assets/simulateddata2.png" id="S3.F3.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="144" height="105" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2304.06270/assets/simulateddata3.png" id="S3.F3.g3" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="144" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2304.06270/assets/simulateddata4.png" id="S3.F3.g4" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="144" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Simulated data generation using Unity Perception SDK [24] pipeline. We primarily vary tile and scene configurations.</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Network Architecture</h3>
+
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2304.06270/assets/network2.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="161" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Network Architecture</figcaption>
+</figure>
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">To provide a smooth and prompt user experience, we need to run network inference on-device in real-time. This constraint requires us to build lightweight neural networks which are time and memory efficient. Our network is based on the SSD [15] object detection architecture with MobileNet [13] backbone as shown in Fig. <a href="#S3.F4" title="Figure 4 ‣ 3.2 Network Architecture ‣ 3 Method ‣ Gamifying Math Education using Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>. The outputs from the MobileNet backbone are fed to two classification heads and one regression head to predict object class, orientation class and the bounding box offsets. We will discuss more details in the following sections and in the appendix.</p>
+</div>
+<section id="S3.SS2.SSS0.Px1" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">Classification head:</h4>
+
+<div id="S3.SS2.SSS0.Px1.p1" class="ltx_para">
+<p id="S3.SS2.SSS0.Px1.p1.1" class="ltx_p">The classification head takes the output produced by the backbone network at different scales and outputs the classification score for each object class. The confidence is obtained using a softmax operation and the loss is computed using focal loss [16].</p>
+</div>
+</section>
+<section id="S3.SS2.SSS0.Px2" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">Orientation head:</h4>
+
+<div id="S3.SS2.SSS0.Px2.p1" class="ltx_para">
+<p id="S3.SS2.SSS0.Px2.p1.6" class="ltx_p">Composition of shapes ie. using smaller shape tiles to form a larger shape is a key skill we focus on in this game. For this, apart from detecting the location of the tiles, we also need to detect orientation with high accuracy. To predict continuous orientation of objects in the range <math id="S3.SS2.SSS0.Px2.p1.1.m1.1" class="ltx_Math" alttext="0-360^{\circ}" display="inline"><semantics id="S3.SS2.SSS0.Px2.p1.1.m1.1a"><mrow id="S3.SS2.SSS0.Px2.p1.1.m1.1.1" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.cmml"><mn id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.2" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.2.cmml">0</mn><mo id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.1" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.1.cmml">−</mo><msup id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.cmml"><mn id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.2" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.2.cmml">360</mn><mo id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.3" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS0.Px2.p1.1.m1.1b"><apply id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1"><minus id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.1"></minus><cn type="integer" id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.2.cmml" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.2">0</cn><apply id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.cmml" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.1.cmml" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3">superscript</csymbol><cn type="integer" id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.2.cmml" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.2">360</cn><compose id="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.3.cmml" xref="S3.SS2.SSS0.Px2.p1.1.m1.1.1.3.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS0.Px2.p1.1.m1.1c">0-360^{\circ}</annotation></semantics></math>, we cannot directly perform regression because of its discontinuity in the representation space. We discretize the <math id="S3.SS2.SSS0.Px2.p1.2.m2.1" class="ltx_Math" alttext="0-360^{\circ}" display="inline"><semantics id="S3.SS2.SSS0.Px2.p1.2.m2.1a"><mrow id="S3.SS2.SSS0.Px2.p1.2.m2.1.1" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.cmml"><mn id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.2" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.2.cmml">0</mn><mo id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.1" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.1.cmml">−</mo><msup id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.cmml"><mn id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.2" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.2.cmml">360</mn><mo id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.3" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS0.Px2.p1.2.m2.1b"><apply id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1"><minus id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.1"></minus><cn type="integer" id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.2.cmml" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.2">0</cn><apply id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.cmml" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.1.cmml" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3">superscript</csymbol><cn type="integer" id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.2.cmml" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.2">360</cn><compose id="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.3.cmml" xref="S3.SS2.SSS0.Px2.p1.2.m2.1.1.3.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS0.Px2.p1.2.m2.1c">0-360^{\circ}</annotation></semantics></math> range into <math id="S3.SS2.SSS0.Px2.p1.3.m3.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S3.SS2.SSS0.Px2.p1.3.m3.1a"><mi id="S3.SS2.SSS0.Px2.p1.3.m3.1.1" xref="S3.SS2.SSS0.Px2.p1.3.m3.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS0.Px2.p1.3.m3.1b"><ci id="S3.SS2.SSS0.Px2.p1.3.m3.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.3.m3.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS0.Px2.p1.3.m3.1c">N</annotation></semantics></math> unique orientations which are <math id="S3.SS2.SSS0.Px2.p1.4.m4.1" class="ltx_Math" alttext="G=360/N" display="inline"><semantics id="S3.SS2.SSS0.Px2.p1.4.m4.1a"><mrow id="S3.SS2.SSS0.Px2.p1.4.m4.1.1" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.cmml"><mi id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.2" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.2.cmml">G</mi><mo id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.1" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.1.cmml">=</mo><mrow id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.cmml"><mn id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.2" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.2.cmml">360</mn><mo id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.1" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.1.cmml">/</mo><mi id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.3" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.3.cmml">N</mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS0.Px2.p1.4.m4.1b"><apply id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1"><eq id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.1"></eq><ci id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.2.cmml" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.2">𝐺</ci><apply id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.cmml" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3"><divide id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.1.cmml" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.1"></divide><cn type="integer" id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.2.cmml" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.2">360</cn><ci id="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.3.cmml" xref="S3.SS2.SSS0.Px2.p1.4.m4.1.1.3.3">𝑁</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS0.Px2.p1.4.m4.1c">G=360/N</annotation></semantics></math> degrees apart and convert the continuous prediction task into an N-class classification task [14]. Each training sample is assigned one of the <math id="S3.SS2.SSS0.Px2.p1.5.m5.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S3.SS2.SSS0.Px2.p1.5.m5.1a"><mi id="S3.SS2.SSS0.Px2.p1.5.m5.1.1" xref="S3.SS2.SSS0.Px2.p1.5.m5.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS0.Px2.p1.5.m5.1b"><ci id="S3.SS2.SSS0.Px2.p1.5.m5.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.5.m5.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS0.Px2.p1.5.m5.1c">N</annotation></semantics></math> class labels based on its proximity to the discretized orientation bin. We set <math id="S3.SS2.SSS0.Px2.p1.6.m6.1" class="ltx_Math" alttext="N=48" display="inline"><semantics id="S3.SS2.SSS0.Px2.p1.6.m6.1a"><mrow id="S3.SS2.SSS0.Px2.p1.6.m6.1.1" xref="S3.SS2.SSS0.Px2.p1.6.m6.1.1.cmml"><mi id="S3.SS2.SSS0.Px2.p1.6.m6.1.1.2" xref="S3.SS2.SSS0.Px2.p1.6.m6.1.1.2.cmml">N</mi><mo id="S3.SS2.SSS0.Px2.p1.6.m6.1.1.1" xref="S3.SS2.SSS0.Px2.p1.6.m6.1.1.1.cmml">=</mo><mn id="S3.SS2.SSS0.Px2.p1.6.m6.1.1.3" xref="S3.SS2.SSS0.Px2.p1.6.m6.1.1.3.cmml">48</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS0.Px2.p1.6.m6.1b"><apply id="S3.SS2.SSS0.Px2.p1.6.m6.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.6.m6.1.1"><eq id="S3.SS2.SSS0.Px2.p1.6.m6.1.1.1.cmml" xref="S3.SS2.SSS0.Px2.p1.6.m6.1.1.1"></eq><ci id="S3.SS2.SSS0.Px2.p1.6.m6.1.1.2.cmml" xref="S3.SS2.SSS0.Px2.p1.6.m6.1.1.2">𝑁</ci><cn type="integer" id="S3.SS2.SSS0.Px2.p1.6.m6.1.1.3.cmml" xref="S3.SS2.SSS0.Px2.p1.6.m6.1.1.3">48</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS0.Px2.p1.6.m6.1c">N=48</annotation></semantics></math>, where the orientation head outputs a confidence score for each class. The loss is calculated using focal loss. A potential downside of this approach is the loss of information introduced by the discretization step. However, we find this approach more stable in practice compared to a regression based approach.</p>
+</div>
+</section>
+<section id="S3.SS2.SSS0.Px3" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">Regression head:</h4>
+
+<div id="S3.SS2.SSS0.Px3.p1" class="ltx_para">
+<p id="S3.SS2.SSS0.Px3.p1.1" class="ltx_p">The regression head also takes the output produced by MobileNet backbone at difference scales and outputs the prediction regression offsets for each bounding box.</p>
+</div>
+</section>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Experimentation and Results</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We evaluate the performance of our models on both the F-score and inference time as both are crucial for a smooth user experience. For the backbone network, we experiment with MobileNet and VGG architecture. Within models of the same backbone, version 1 is wider compared to version 2 (see architecture in Appendix A). For training, we use negative sampling ratio as 1 and set the optimizer to ADAM with learning rate as 0.0003. The models are pre-trained on 15,000 simulation images and fine-tuned on 5800 real world images. Roughly 20% of the real images from Beta testing volunteers are used for hyperparameter tuning.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Detection results using difference models</figcaption>
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">Model</th>
+<th id="S4.T1.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">Recall</th>
+<th id="S4.T1.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">Precision</th>
+<th id="S4.T1.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">F-score</th>
+<th id="S4.T1.1.1.1.5" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">Inference time(ms)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.2.1" class="ltx_tr">
+<td id="S4.T1.1.2.1.1" class="ltx_td ltx_align_left ltx_border_t">Mobilenet Backbone 1</td>
+<td id="S4.T1.1.2.1.2" class="ltx_td ltx_align_left ltx_border_t">99.04</td>
+<td id="S4.T1.1.2.1.3" class="ltx_td ltx_align_left ltx_border_t">99.57</td>
+<td id="S4.T1.1.2.1.4" class="ltx_td ltx_align_left ltx_border_t">99.30</td>
+<td id="S4.T1.1.2.1.5" class="ltx_td ltx_align_left ltx_border_t">22.25</td>
+</tr>
+<tr id="S4.T1.1.3.2" class="ltx_tr">
+<td id="S4.T1.1.3.2.1" class="ltx_td ltx_align_left">Mobilenet Backbone 2</td>
+<td id="S4.T1.1.3.2.2" class="ltx_td ltx_align_left">99.57</td>
+<td id="S4.T1.1.3.2.3" class="ltx_td ltx_align_left">98.83</td>
+<td id="S4.T1.1.3.2.4" class="ltx_td ltx_align_left">99.20</td>
+<td id="S4.T1.1.3.2.5" class="ltx_td ltx_align_left">10.81</td>
+</tr>
+<tr id="S4.T1.1.4.3" class="ltx_tr">
+<td id="S4.T1.1.4.3.1" class="ltx_td ltx_align_left">VGG Backbone 1</td>
+<td id="S4.T1.1.4.3.2" class="ltx_td ltx_align_left">98.83</td>
+<td id="S4.T1.1.4.3.3" class="ltx_td ltx_align_left">99.46</td>
+<td id="S4.T1.1.4.3.4" class="ltx_td ltx_align_left">99.14</td>
+<td id="S4.T1.1.4.3.5" class="ltx_td ltx_align_left">66.86</td>
+</tr>
+<tr id="S4.T1.1.5.4" class="ltx_tr">
+<td id="S4.T1.1.5.4.1" class="ltx_td ltx_align_left ltx_border_bb">VGG Backbone 2</td>
+<td id="S4.T1.1.5.4.2" class="ltx_td ltx_align_left ltx_border_bb">99.36</td>
+<td id="S4.T1.1.5.4.3" class="ltx_td ltx_align_left ltx_border_bb">97.99</td>
+<td id="S4.T1.1.5.4.4" class="ltx_td ltx_align_left ltx_border_bb">98.67</td>
+<td id="S4.T1.1.5.4.5" class="ltx_td ltx_align_left ltx_border_bb">17.83</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">During forward pass, the network predictions are passed through decode layers that consists of non-maximum suppression and an output layer that maps network outputs to individual vertices of the shape polygons. The precision/recall and F-score metrics are obtained using the test set consisting of images captured from play sessions with different users in different environment conditions. The predicted vertices are matched to the ground-truth vertices to obtain the above metrics. From Table <a href="#S4.T1" title="Table 1 ‣ 4 Experimentation and Results ‣ Gamifying Math Education using Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, we see that models with MobileNet backbone achieve a better F-score compared to the models with VGG backbone while running with a much shorter inference time. We show model predictions mapped to shape polygons drawn on a few images from the test set in Fig.  <a href="#S4.F5" title="Figure 5 ‣ 4 Experimentation and Results ‣ Gamifying Math Education using Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="S4.F5.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2304.06270/assets/tp1.jpg" id="S4.F5.1.g1" class="ltx_graphics ltx_img_square" width="144" height="167" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="S4.F5.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2304.06270/assets/tp2.jpg" id="S4.F5.2.g1" class="ltx_graphics ltx_img_square" width="144" height="168" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="S4.F5.3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2304.06270/assets/fn1.jpg" id="S4.F5.3.g1" class="ltx_graphics ltx_img_square" width="144" height="167" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="S4.F5.4" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2304.06270/assets/fn2.jpg" id="S4.F5.4.g1" class="ltx_graphics ltx_img_square" width="144" height="168" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Model predictions mapped to shape polygons on test set. In images (a) and (b) we see that all the tiles are correctly detected whereas (c) and (d) have missed detections.</figcaption>
+</figure>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusion</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">By bridging the gap between a digital game and tangible interactions with shape tile manipulatives through reflective AI, we introduce a novel way of interaction for kids to engage and learn geometry while having fun. We presented a light-weight neural network for dense oriented object detection that supports real-time performance on a wide range of consumer tablets. Using synthetic data, we generate random shape compositions that are difficult to obtain in real images making the network more robust to real-world variations. By adopting a game-centric approach, we keep the experience non-repetitive and engaging for kids. For future work, we would like to cover different skills such as addition, subtraction, measurement and counting, etc.</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">Acknowledgments and Disclosure of Funding</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">We thank everyone at Osmo/Tangible Play that was involved with the design and development of the hardware manipulatives and digital game as well as the user research studies. We thank Anoop Rajagopal, Nrupatunga and Heidy Maldonado for their initial feedback.</p>
+</div>
+</section>
+<section id="Sx2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">References</h2>
+
+<div id="Sx2.p1" class="ltx_para">
+<p id="Sx2.p1.1" class="ltx_p"><span id="Sx2.p1.1.1" class="ltx_text" style="font-size:90%;">[1] Osmo – Award-Winning Educational Games System for iPad. https://www.playosmo.com/  (Accessed on 09/20/2021)</span></p>
+</div>
+<div id="Sx2.p2" class="ltx_para">
+<p id="Sx2.p2.1" class="ltx_p"><span id="Sx2.p2.1.1" class="ltx_text" style="font-size:90%;">[2] D’angelo, F., &amp; Iliev, N. (2012). Teaching Mathematics to Young Children through the Use of Concrete and Virtual Manipulatives. <span id="Sx2.p2.1.1.1" class="ltx_text ltx_font_italic">Online Submission</span>.</span></p>
+</div>
+<div id="Sx2.p3" class="ltx_para">
+<p id="Sx2.p3.1" class="ltx_p"><span id="Sx2.p3.1.1" class="ltx_text" style="font-size:90%;">[3] Boggan, M., Harper, S., &amp; Whitmire, A. (2010). Using Manipulatives to Teach Elementary Mathematics. <span id="Sx2.p3.1.1.1" class="ltx_text ltx_font_italic">Journal of Instructional Pedagogies</span>, 3.</span></p>
+</div>
+<div id="Sx2.p4" class="ltx_para">
+<p id="Sx2.p4.1" class="ltx_p"><span id="Sx2.p4.1.1" class="ltx_text" style="font-size:90%;">[4] Kosko, K. W., &amp; Wilkins, J. L. (2010). Mathematical communication and its relation to the frequency of manipulative use. <span id="Sx2.p4.1.1.1" class="ltx_text ltx_font_italic">International Electronic Journal of Mathematics Education</span>, 5(2), 79-90.</span></p>
+</div>
+<div id="Sx2.p5" class="ltx_para">
+<p id="Sx2.p5.1" class="ltx_p"><span id="Sx2.p5.1.1" class="ltx_text" style="font-size:90%;">[5] Cockett, A., &amp; Kilgour, P. W. (2015). Mathematical manipulatives: Creating an environment for understanding, efficiency, engagement, and enjoyment. <span id="Sx2.p5.1.1.1" class="ltx_text ltx_font_italic">Teach Collection of Christian Education</span>, 1(1), 5.</span></p>
+</div>
+<div id="Sx2.p6" class="ltx_para">
+<p id="Sx2.p6.1" class="ltx_p"><span id="Sx2.p6.1.1" class="ltx_text" style="font-size:90%;">[6] Kang, S., Shokeen, E., Byrne, V. L., Norooz, L., Bonsignore, E., Williams-Pierce, C., &amp; Froehlich, J. E. (2020, April). ARMath: augmenting everyday life with math learning. In <span id="Sx2.p6.1.1.1" class="ltx_text ltx_font_italic">Proceedings of the 2020 CHI Conference on Human Factors in Computing Systems</span> (pp. 1-15).</span></p>
+</div>
+<div id="Sx2.p7" class="ltx_para">
+<p id="Sx2.p7.1" class="ltx_p"><span id="Sx2.p7.1.1" class="ltx_text" style="font-size:90%;">[7] Pires, A. C., González Perilli, F., Bakała, E., Fleisher, B., Sansone, G., &amp; Marichal, S. (2019, September). Building blocks of mathematical learning: Virtual and tangible manipulatives lead to different strategies in number composition. In <span id="Sx2.p7.1.1.1" class="ltx_text ltx_font_italic">Frontiers in Education</span> (Vol. 4, p. 81). Frontiers.</span></p>
+</div>
+<div id="Sx2.p8" class="ltx_para">
+<p id="Sx2.p8.1" class="ltx_p"><span id="Sx2.p8.1.1" class="ltx_text" style="font-size:90%;">[8] Marichal, S., Rosales, A., Perilli, F. G., Pires, A. C., Bakala, E., Sansone, G., &amp; Blat, J. (2017, September). Ceta: designing mixed-reality tangible interaction to enhance mathematical learning. In <span id="Sx2.p8.1.1.1" class="ltx_text ltx_font_italic">Proceedings of the 19th International Conference on Human-Computer Interaction with Mobile Devices and Services</span> (pp. 1-13).</span></p>
+</div>
+<div id="Sx2.p9" class="ltx_para">
+<p id="Sx2.p9.1" class="ltx_p"><span id="Sx2.p9.1.1" class="ltx_text" style="font-size:90%;">[9] Almukadi, W., &amp; Stephane, A. L. (2015, November). BlackBlocks: tangible interactive system for children to learn 3-letter words and basic math. In <span id="Sx2.p9.1.1.1" class="ltx_text ltx_font_italic">Proceedings of the 2015 International Conference on Interactive Tabletops &amp; Surfaces</span> (pp. 421-424).</span></p>
+</div>
+<div id="Sx2.p10" class="ltx_para">
+<p id="Sx2.p10.1" class="ltx_p"><span id="Sx2.p10.1.1" class="ltx_text" style="font-size:90%;">[10] Scarlatos, L. L. (2006). Tangible math. <span id="Sx2.p10.1.1.1" class="ltx_text ltx_font_italic">Interactive Technology and Smart Education</span>.</span></p>
+</div>
+<div id="Sx2.p11" class="ltx_para">
+<p id="Sx2.p11.1" class="ltx_p"><span id="Sx2.p11.1.1" class="ltx_text" style="font-size:90%;">[11] Scarlatos, L. L., Dushkina, Y., &amp; Landy, S. (1999, May). TICLE: A tangible interface for collaborative learning environments. In <span id="Sx2.p11.1.1.1" class="ltx_text ltx_font_italic">CHI’99 Extended Abstracts on Human Factors in Computing Systems</span> (pp. 260-261).</span></p>
+</div>
+<div id="Sx2.p12" class="ltx_para">
+<p id="Sx2.p12.1" class="ltx_p"><span id="Sx2.p12.1.1" class="ltx_text" style="font-size:90%;">[12] Moyer, P. S. (2001). Are we having fun yet? How teachers use manipulatives to teach mathematics. <span id="Sx2.p12.1.1.1" class="ltx_text ltx_font_italic">Educational Studies in mathematics</span>, 47(2), 175-197.</span></p>
+</div>
+<div id="Sx2.p13" class="ltx_para">
+<p id="Sx2.p13.1" class="ltx_p"><span id="Sx2.p13.1.1" class="ltx_text" style="font-size:90%;">[13] Howard, A. G., Zhu, M., Chen, B., Kalenichenko, D., Wang, W., Weyand, T., … &amp; Adam, H. (2017). Mobilenets: Efficient convolutional neural networks for mobile vision applications. <span id="Sx2.p13.1.1.1" class="ltx_text ltx_font_italic">arXiv preprint arXiv:1704.04861</span>.</span></p>
+</div>
+<div id="Sx2.p14" class="ltx_para">
+<p id="Sx2.p14.1" class="ltx_p"><span id="Sx2.p14.1.1" class="ltx_text" style="font-size:90%;">[14] Hara, K., Vemulapalli, R., &amp; Chellappa, R. (2017). Designing deep convolutional neural networks for continuous object orientation estimation. arXiv preprint <span id="Sx2.p14.1.1.1" class="ltx_text ltx_font_italic">arXiv:1702.01499</span>.</span></p>
+</div>
+<div id="Sx2.p15" class="ltx_para">
+<p id="Sx2.p15.1" class="ltx_p"><span id="Sx2.p15.1.1" class="ltx_text" style="font-size:90%;">[15] Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C. Y., &amp; Berg, A. C. (2016, October). SSD: Single shot multibox detector. <span id="Sx2.p15.1.1.1" class="ltx_text ltx_font_italic">In European conference on computer vision</span> (pp. 21-37). Springer, Cham.</span></p>
+</div>
+<div id="Sx2.p16" class="ltx_para">
+<p id="Sx2.p16.1" class="ltx_p"><span id="Sx2.p16.1.1" class="ltx_text" style="font-size:90%;">[16] Lin, T. Y., Goyal, P., Girshick, R., He, K., &amp; Dollár, P. (2017). Focal loss for dense object detection. <span id="Sx2.p16.1.1.1" class="ltx_text ltx_font_italic">In Proceedings of the IEEE international conference on computer vision</span> (pp. 2980-2988).</span></p>
+</div>
+<div id="Sx2.p17" class="ltx_para">
+<p id="Sx2.p17.1" class="ltx_p"><span id="Sx2.p17.1.1" class="ltx_text" style="font-size:90%;">[17] Barron, J. T. (2019). A general and adaptive robust loss function. <span id="Sx2.p17.1.1.1" class="ltx_text ltx_font_italic">In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span> (pp. 4331-4339).</span></p>
+</div>
+<div id="Sx2.p18" class="ltx_para">
+<p id="Sx2.p18.1" class="ltx_p"><span id="Sx2.p18.1.1" class="ltx_text" style="font-size:90%;">[18] Laski, E. V., Jor’dan, J. R., Daoust, C., &amp; Murray, A. K. (2015). What makes mathematics manipulatives effective? Lessons from cognitive science and Montessori education. <span id="Sx2.p18.1.1.1" class="ltx_text ltx_font_italic">SAGE Open</span>, 5(2), 2158244015589588.</span></p>
+</div>
+<div id="Sx2.p19" class="ltx_para">
+<p id="Sx2.p19.1" class="ltx_p"><span id="Sx2.p19.1.1" class="ltx_text" style="font-size:90%;">[19] Zuckerman, O. (2010). Designing digital objects for learning: lessons from Froebel and Montessori. <span id="Sx2.p19.1.1.1" class="ltx_text ltx_font_italic">International Journal of Arts and Technology</span>, 3(1), 124-135.</span></p>
+</div>
+<div id="Sx2.p20" class="ltx_para">
+<p id="Sx2.p20.1" class="ltx_p"><span id="Sx2.p20.1.1" class="ltx_text" style="font-size:90%;">[20] Horn, M. S. (2018). Tangible interaction and cultural forms: Supporting learning in informal environments. <span id="Sx2.p20.1.1.1" class="ltx_text ltx_font_italic">Journal of the Learning Sciences</span>, 27(4), 632-665.</span></p>
+</div>
+<div id="Sx2.p21" class="ltx_para">
+<p id="Sx2.p21.1" class="ltx_p"><span id="Sx2.p21.1.1" class="ltx_text" style="font-size:90%;">[21] Horn, M. S., Crouser, R. J., &amp; Bers, M. U. (2012). Tangible interaction and learning: the case for a hybrid approach. <span id="Sx2.p21.1.1.1" class="ltx_text ltx_font_italic">Personal and Ubiquitous Computing</span>, 16(4), 379-389.</span></p>
+</div>
+<div id="Sx2.p22" class="ltx_para">
+<p id="Sx2.p22.1" class="ltx_p"><span id="Sx2.p22.1.1" class="ltx_text" style="font-size:90%;">[22] Brosterman, N. (1997). <span id="Sx2.p22.1.1.1" class="ltx_text ltx_font_italic">Inventing Kindergarten</span> (1st ed.). Harry N. Abrams.</span></p>
+</div>
+<div id="Sx2.p23" class="ltx_para">
+<p id="Sx2.p23.1" class="ltx_p"><span id="Sx2.p23.1.1" class="ltx_text" style="font-size:90%;">[23] Unity Game Engine - www.unity.com. (Accessed on 10/06/2021)</span></p>
+</div>
+<div id="Sx2.p24" class="ltx_para">
+<p id="Sx2.p24.1" class="ltx_p"><span id="Sx2.p24.1.1" class="ltx_text" style="font-size:90%;">[24] Unity Perception SDK -  https://github.com/Unity-Technologies/com.unity.perception </span></p>
+</div>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2304.06269" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2304.06270" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2304.06270">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2304.06270" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2304.06272" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Thu Feb 29 12:16:10 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

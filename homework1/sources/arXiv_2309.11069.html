@@ -1,0 +1,960 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2309.11069] Dynamic Tiling: A Model-Agnostic, Adaptive, Scalable, and Inference-Data-Centric Approach for Efficient and Accurate Small Object Detection</title><meta property="og:description" content="We introduce Dynamic Tiling, a model-agnostic, adaptive, and scalable approach for small object detection, anchored in our inference-data-centric philosophy. Dynamic Tiling starts with non-overlapping tiles for initial…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dynamic Tiling: A Model-Agnostic, Adaptive, Scalable, and Inference-Data-Centric Approach for Efficient and Accurate Small Object Detection">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Dynamic Tiling: A Model-Agnostic, Adaptive, Scalable, and Inference-Data-Centric Approach for Efficient and Accurate Small Object Detection">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2309.11069">
+
+<!--Generated on Wed Feb 28 04:58:21 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<!--Document created on 1.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Dynamic Tiling: A Model-Agnostic, Adaptive, Scalable, and Inference-Data-Centric Approach for Efficient and Accurate Small Object Detection</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Son The Nguyen<sup id="id6.4.id1" class="ltx_sup">1</sup>, Theja Tulabandhula<sup id="id7.5.id2" class="ltx_sup">1</sup>, Duy Nguyen<sup id="id8.6.id3" class="ltx_sup">2</sup>
+</span></span>
+</div>
+<div class="ltx_dates">(<sup id="id9.id1" class="ltx_sup">1</sup>University of Illinois at Chicago,
+<sup id="id10.id2" class="ltx_sup">2</sup>AI Affinity LLC
+<br class="ltx_break">)</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id11.id1" class="ltx_p">We introduce Dynamic Tiling, a model-agnostic, adaptive, and scalable approach for small object detection, anchored in our inference-data-centric philosophy. Dynamic Tiling starts with non-overlapping tiles for initial detections and utilizes dynamic overlapping rates along with a tile minimizer. This dual approach effectively resolves fragmented objects, improves detection accuracy, and minimizes computational overhead by reducing the number of forward passes through the object detection model. Adaptable to a variety of operational environments, our method negates the need for laborious recalibration. Additionally, our large-small filtering mechanism boosts the detection quality across a range of object sizes. Overall, Dynamic Tiling outperforms existing model-agnostic uniform cropping methods, setting new benchmarks for efficiency and accuracy.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Off-the-shelf deep learning-based object detection models often struggle to detect extremely small objects that are significantly smaller than the overall image size. To tackle this problem, previous studies have proposed various solutions such as modifying network architectures with scale-aware or attention mechanisms, artificially increasing image resolution using super-resolution techniques, or performing density cropping using additional annotations or auxiliary learning architectures <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx4" title="" class="ltx_ref">19</a>]</cite>. However, these methods can be resource-intensive, time-consuming, and practically complex; which may hamper the broader adoption of this technology.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">We argue that small object detection, particularly the handling of prediction data during inference, embodies a unique inference-data-centric challenge. This perspective diverges from the more generalized view of data-centric AI, which predominantly emphasizes refining and curating training datasets while maintaining a consistent approach in model architectures, hyperparameters, and training pipelines. However, we posit that a holistic data-centric approach should encompass the entire lifecycle of a model. Beyond just training, passive or imprecise handling of data during both development and, crucially, during the inference stage can introduce systematic data errors or inefficiencies. Simply put, an overemphasis on training data quality, without a corresponding focus on data handling during model development and inference, may undermine the effectiveness of the entire system. Consequently, a comprehensive approach that prioritizes accurate data representation throughout both development and inference is essential to realize truly impactful object detection models.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Tiling, or uniform cropping, emerges as a promising inference-data-centric approach for small object detection. During inference, this technique uniformly breaks down images into smaller patches, each subjected to independent object detection. These separate detections are later combined using Non-Maximum Suppression (NMS) to present a holistic detection collection of the entire image. Fixed overlaps are commonly utilized during tiling to ensure that objects on the borderlines of these patches are effectively captured by adjacent tiles. Full image inference can also be employed with the smaller patches using NMS to detect larger objects. Tiling increases the relative pixel coverage of smaller objects compared to simply using the original image as input to the model. It allows models to fully harness the source image’s resolution, despite the constraints of limited GPU memory. Although this strategy has been critiqued for inefficiency due to performing detection on overlapping and empty patches, it is more straightforward compared to many alternatives and has seen widespread adoption because it can be used only in the inference phase. The only adjustment made during training to accommodate tiling better is in the data augmentation process. Consequently, object detectors that utilize tiling can demonstrate excellent performance in the immediate detection of small objects with minimal modifications.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">While current methodologies lay a foundational approach, there exists an avenue for optimization to heighten their practicality. The limitations of a one-size-fits-all strategy become evident when uniformly applying an overlapping rate across all patches, as it inadequately caters to the diverse characteristics of objects of different sizes and different environments. Additionally, relying solely on NMS for blindly merging detections from different tiles often falls short, especially when faced with edge cases of irregularly shaped objects. Challenges are further compounded when large objects span multiple patches, resulting in fragmentation and subsequent detection inaccuracies. This becomes especially problematic for classes with closely resembling features, such as cars and trucks. The existing non-class-agnostic NMS, even when applied to both patches and full image predictions, struggles to address this.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">In response to these challenges, we introduce Dynamic Tiling, a flexible and adaptive tiling solution specifically tailored for small object detection during inference. Our method is built on the notion of dynamic overlapping rates, which are informed by initial detections from non-overlapping patches. This unique approach not only rectifies fragmented objects but also optimizes computational efficiency by selectively applying overlapping only when necessary.</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p"><span id="S1.p6.1.1" class="ltx_text ltx_font_bold">The key contributions of our work can be summarized as follows:</span></p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p"><span id="S1.I1.i1.p1.1.1" class="ltx_text ltx_font_bold">Dynamic Overlapping Rates:</span> By leveraging detections from initial non-overlapping patches, our dynamic overlapping rates offer a more effective way to resolve fragmented objects. This results in increased detection accuracy across a range of conditions.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p"><span id="S1.I1.i2.p1.1.1" class="ltx_text ltx_font_bold">Reduced Computational Overhead:</span> Dynamic Tiling reduces the number of forward passes through the object detection model by aggregating overlapping patches, leading to faster inference times without compromising detection quality.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p"><span id="S1.I1.i3.p1.1.1" class="ltx_text ltx_font_bold">Adaptability and Scalability:</span> Our method easily adapts to various operational environments, eliminating the need for laborious recalibration and ensuring seamless integration into existing pipelines.</p>
+</div>
+</li>
+<li id="S1.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i4.p1" class="ltx_para">
+<p id="S1.I1.i4.p1.1" class="ltx_p"><span id="S1.I1.i4.p1.1.1" class="ltx_text ltx_font_bold">Large-Small Filtering Mechanism:</span> Our large-small filtering mechanism consolidates detections from multiple patches as well as the entire image, enhancing the quality of object detection for both small and large objects.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<div id="S2.p1" class="ltx_para ltx_noindent">
+<p id="S2.p1.1" class="ltx_p"><span id="S2.p1.1.1" class="ltx_text ltx_font_bold ltx_font_italic">Learning-based object detection:</span>
+In recent years, learning-based object detection techniques have gained widespread use across various applications. These techniques can be broadly classified into two primary categories: two-stage detectors and single-stage detectors. Two-stage detectors, such as Fast R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx7" title="" class="ltx_ref">22</a>]</cite>, Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx12" title="" class="ltx_ref">27</a>]</cite>, and Cascade R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx2" title="" class="ltx_ref">17</a>]</cite>, involve an initial proposal stage that is subsequently refined. This process makes them slower but often yields more accurate results. In contrast, single-stage detectors, such as SSD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx11" title="" class="ltx_ref">26</a>]</cite>, YOLO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx8" title="" class="ltx_ref">23</a>]</cite>, and RetinaNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx9" title="" class="ltx_ref">24</a>]</cite>, bypass the proposal stage to directly predict object locations, resulting in faster, albeit less accurate, detection.</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p">Recently, anchor-free detectors like FCOS <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx13" title="" class="ltx_ref">28</a>]</cite>, VFNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx15" title="" class="ltx_ref">30</a>]</cite>, TOOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx6" title="" class="ltx_ref">21</a>]</cite>, and the more recent Yolov8 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx8" title="" class="ltx_ref">23</a>]</cite> have begun to garner attention. These models remove the need for predefined anchor boxes and strive to strike a balance between detection speed and accuracy. We undertake an empirical study using the anchor-free one-stage YOLOv8m detectors.</p>
+</div>
+<div id="S2.p3" class="ltx_para ltx_noindent">
+<p id="S2.p3.1" class="ltx_p"><span id="S2.p3.1.1" class="ltx_text ltx_font_bold ltx_font_italic">Tiling-based solutions to small object detection:</span> To address the challenge of small object detection, some prior studies have manipulated data during inference by dividing images into smaller patches, a process known as tiling.</p>
+</div>
+<div id="S2.p4" class="ltx_para">
+<p id="S2.p4.1" class="ltx_p">For instance, DarkHelp for YOLOv4 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx3" title="" class="ltx_ref">18</a>]</cite> allows users to define a fixed tiling dimension (e.g., 3x2, 5x3). If detected objects are located near the "dividing line" (the boundary between two tiles) and the bounding boxes are approximately of similar size, these are likely parts of the same object split across two tiles. Consequently, they are "merged" into a single entity. However, this method can lead to incorrect detections at the boundaries. For example, two separate objects located adjacently and sharing similar sizes could be incorrectly merged. Similarly, if a single irregular object is divided into large and small boxes, these might not be recognized as belonging to the same entity.</p>
+</div>
+<div id="S2.p5" class="ltx_para">
+<p id="S2.p5.1" class="ltx_p">The predefined dimension with overlapping tiling method <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx14" title="" class="ltx_ref">29</a>]</cite> requires users to define a fixed tiling dimension and an overlap threshold (e.g., 25%, 50%). However, using a fixed overlap with a specific number of tiles necessitates an increase in tile size, which could potentially decrease pixel coverage for small objects.</p>
+</div>
+<div id="S2.p6" class="ltx_para">
+<p id="S2.p6.1" class="ltx_p">SAHI <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx1" title="" class="ltx_ref">16</a>]</cite>, a seminal paper in the tiling approach, employs a user-specified patch size (e.g., <math id="S2.p6.1.m1.1" class="ltx_Math" alttext="640\times 640" display="inline"><semantics id="S2.p6.1.m1.1a"><mrow id="S2.p6.1.m1.1.1" xref="S2.p6.1.m1.1.1.cmml"><mn id="S2.p6.1.m1.1.1.2" xref="S2.p6.1.m1.1.1.2.cmml">640</mn><mo lspace="0.222em" rspace="0.222em" id="S2.p6.1.m1.1.1.1" xref="S2.p6.1.m1.1.1.1.cmml">×</mo><mn id="S2.p6.1.m1.1.1.3" xref="S2.p6.1.m1.1.1.3.cmml">640</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p6.1.m1.1b"><apply id="S2.p6.1.m1.1.1.cmml" xref="S2.p6.1.m1.1.1"><times id="S2.p6.1.m1.1.1.1.cmml" xref="S2.p6.1.m1.1.1.1"></times><cn type="integer" id="S2.p6.1.m1.1.1.2.cmml" xref="S2.p6.1.m1.1.1.2">640</cn><cn type="integer" id="S2.p6.1.m1.1.1.3.cmml" xref="S2.p6.1.m1.1.1.3">640</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p6.1.m1.1c">640\times 640</annotation></semantics></math>) and an overlap threshold that is applied across the entire image. One challenge with this approach is the potential need for adjustments or the addition of extra patches to cover areas that remain when the image dimensions and stride do not align perfectly. Moreover, although SAHI can be applied solely during inference, the original paper utilizes up-scaling for both training and inference. This design choice may not fully reveal the actual performance capabilities of SAHI. In contrast, our method maintains the resolution at the tile size for both training and inference, enabling us to isolate the effects of our Dynamic Tiling approach. Remarkably, even under these constraints, our Dynamic Tiling approach still achieves performance metrics that surpass those reported for SAHI in their original publication.</p>
+</div>
+<div id="S2.p7" class="ltx_para">
+<p id="S2.p7.1" class="ltx_p">Moreover, adapting current tiling methods like DarkHelp, the predefined dimension with overlapping tiling, or SAHI to new environments presents yet another challenge: the necessity for recalibration of overlap thresholds. These existing methods rely on user-specified or predetermined tiling dimensions and overlap percentages, which may not translate well when applied to different data distributions or object scales. The need to fine-tune these parameters for each new setting significantly hampers the scalability and generalizability of such approaches. For instance, what works for urban scenes with large, well-defined objects may fall short when applied to natural environments where objects can be smaller and more irregularly shaped. In contrast, our Dynamic Tiling approach is designed to adapt seamlessly across various conditions, reducing the need for laborious and time-consuming recalibration, and thereby offering a more robust and versatile solution.</p>
+</div>
+<div id="S2.p8" class="ltx_para">
+<p id="S2.p8.1" class="ltx_p">Building on these points, our Dynamic Tiling pipeline, rooted in our inference-data-centric philosophy, serves as a paradigm shift in object detection methodologies. Unlike traditional methods that lock users into labor-intensive recalibration cycles when adapting to new settings, our system’s adaptive nature streamlines this process. By performing inference on non-overlapping tiles and generating and merging dynamic patches only when necessary, we not only minimize computational overhead, heighten detection accuracy, but also ensure accurate object detection across a myriad of operational environments. This ability to self-adjust according to the data at hand also makes our approach uniquely scalable and generalizable, setting a new standard in the field of small object detection. Additionally, the incorporation of an object size filter enhances the quality of object detection for both small and large objects, offering a comprehensive solution that meets a broad range of detection needs.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Proposed approach</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">We propose a novel Dynamic Tiling strategy, as illustrated in Figure <a href="#S3.F1" title="Figure 1 ‣ 3 Proposed approach ‣ Dynamic Tiling: A Model-Agnostic, Adaptive, Scalable, and Inference-Data-Centric Approach for Efficient and Accurate Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, that is centered around two key components. First, we uniformly divide an image into a predefined number of non-overlapping tiles and perform inference on them. Then, we used the predictions as guidance to generate supplementary dynamic patches on-demand to correct any potentially fragmented bounding boxes.</p>
+</div>
+<figure id="S3.F1" class="ltx_figure"><img src="/html/2309.11069/assets/dynamictilingdesign.png" id="S3.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="1920" height="982" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Dynamic Tiling Procedure.</figcaption>
+</figure>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.3" class="ltx_p">We start with an input image of dimensions <math id="S3.p2.1.m1.1" class="ltx_Math" alttext="W\times H" display="inline"><semantics id="S3.p2.1.m1.1a"><mrow id="S3.p2.1.m1.1.1" xref="S3.p2.1.m1.1.1.cmml"><mi id="S3.p2.1.m1.1.1.2" xref="S3.p2.1.m1.1.1.2.cmml">W</mi><mo lspace="0.222em" rspace="0.222em" id="S3.p2.1.m1.1.1.1" xref="S3.p2.1.m1.1.1.1.cmml">×</mo><mi id="S3.p2.1.m1.1.1.3" xref="S3.p2.1.m1.1.1.3.cmml">H</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.1.m1.1b"><apply id="S3.p2.1.m1.1.1.cmml" xref="S3.p2.1.m1.1.1"><times id="S3.p2.1.m1.1.1.1.cmml" xref="S3.p2.1.m1.1.1.1"></times><ci id="S3.p2.1.m1.1.1.2.cmml" xref="S3.p2.1.m1.1.1.2">𝑊</ci><ci id="S3.p2.1.m1.1.1.3.cmml" xref="S3.p2.1.m1.1.1.3">𝐻</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.1.m1.1c">W\times H</annotation></semantics></math> and divide it into <math id="S3.p2.2.m2.1" class="ltx_Math" alttext="N\times M" display="inline"><semantics id="S3.p2.2.m2.1a"><mrow id="S3.p2.2.m2.1.1" xref="S3.p2.2.m2.1.1.cmml"><mi id="S3.p2.2.m2.1.1.2" xref="S3.p2.2.m2.1.1.2.cmml">N</mi><mo lspace="0.222em" rspace="0.222em" id="S3.p2.2.m2.1.1.1" xref="S3.p2.2.m2.1.1.1.cmml">×</mo><mi id="S3.p2.2.m2.1.1.3" xref="S3.p2.2.m2.1.1.3.cmml">M</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.2.m2.1b"><apply id="S3.p2.2.m2.1.1.cmml" xref="S3.p2.2.m2.1.1"><times id="S3.p2.2.m2.1.1.1.cmml" xref="S3.p2.2.m2.1.1.1"></times><ci id="S3.p2.2.m2.1.1.2.cmml" xref="S3.p2.2.m2.1.1.2">𝑁</ci><ci id="S3.p2.2.m2.1.1.3.cmml" xref="S3.p2.2.m2.1.1.3">𝑀</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.2.m2.1c">N\times M</annotation></semantics></math> non-overlapping patches. The dimensions of each patch are <math id="S3.p2.3.m3.1" class="ltx_Math" alttext="\frac{W}{N}\times\frac{H}{M}" display="inline"><semantics id="S3.p2.3.m3.1a"><mrow id="S3.p2.3.m3.1.1" xref="S3.p2.3.m3.1.1.cmml"><mfrac id="S3.p2.3.m3.1.1.2" xref="S3.p2.3.m3.1.1.2.cmml"><mi id="S3.p2.3.m3.1.1.2.2" xref="S3.p2.3.m3.1.1.2.2.cmml">W</mi><mi id="S3.p2.3.m3.1.1.2.3" xref="S3.p2.3.m3.1.1.2.3.cmml">N</mi></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.p2.3.m3.1.1.1" xref="S3.p2.3.m3.1.1.1.cmml">×</mo><mfrac id="S3.p2.3.m3.1.1.3" xref="S3.p2.3.m3.1.1.3.cmml"><mi id="S3.p2.3.m3.1.1.3.2" xref="S3.p2.3.m3.1.1.3.2.cmml">H</mi><mi id="S3.p2.3.m3.1.1.3.3" xref="S3.p2.3.m3.1.1.3.3.cmml">M</mi></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.3.m3.1b"><apply id="S3.p2.3.m3.1.1.cmml" xref="S3.p2.3.m3.1.1"><times id="S3.p2.3.m3.1.1.1.cmml" xref="S3.p2.3.m3.1.1.1"></times><apply id="S3.p2.3.m3.1.1.2.cmml" xref="S3.p2.3.m3.1.1.2"><divide id="S3.p2.3.m3.1.1.2.1.cmml" xref="S3.p2.3.m3.1.1.2"></divide><ci id="S3.p2.3.m3.1.1.2.2.cmml" xref="S3.p2.3.m3.1.1.2.2">𝑊</ci><ci id="S3.p2.3.m3.1.1.2.3.cmml" xref="S3.p2.3.m3.1.1.2.3">𝑁</ci></apply><apply id="S3.p2.3.m3.1.1.3.cmml" xref="S3.p2.3.m3.1.1.3"><divide id="S3.p2.3.m3.1.1.3.1.cmml" xref="S3.p2.3.m3.1.1.3"></divide><ci id="S3.p2.3.m3.1.1.3.2.cmml" xref="S3.p2.3.m3.1.1.3.2">𝐻</ci><ci id="S3.p2.3.m3.1.1.3.3.cmml" xref="S3.p2.3.m3.1.1.3.3">𝑀</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.3.m3.1c">\frac{W}{N}\times\frac{H}{M}</annotation></semantics></math>. These patches are processed in a single batch through our object detection model to generate initial bounding box predictions efficiently.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">After that, we classify each bounding box prediction based on its proximity to the boundaries of its respective patch. The categories are:</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<ul id="S3.I1" class="ltx_itemize">
+<li id="S3.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i1.p1" class="ltx_para">
+<p id="S3.I1.i1.p1.1" class="ltx_p"><span id="S3.I1.i1.p1.1.1" class="ltx_text ltx_font_bold">Near-Edge</span> (<span id="S3.I1.i1.p1.1.2" class="ltx_text ltx_font_italic">near_edge</span>): Located close to an edge but not a corner.</p>
+</div>
+</li>
+<li id="S3.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i2.p1" class="ltx_para">
+<p id="S3.I1.i2.p1.1" class="ltx_p"><span id="S3.I1.i2.p1.1.1" class="ltx_text ltx_font_bold">Near-Corner</span> (<span id="S3.I1.i2.p1.1.2" class="ltx_text ltx_font_italic">near_corner</span>): Adjacent to a corner.</p>
+</div>
+</li>
+<li id="S3.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i3.p1" class="ltx_para">
+<p id="S3.I1.i3.p1.1" class="ltx_p"><span id="S3.I1.i3.p1.1.1" class="ltx_text ltx_font_bold">Central</span> (<span id="S3.I1.i3.p1.1.2" class="ltx_text ltx_font_italic">central</span>): Positioned away from both edges and corners.</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S3.p5" class="ltx_para">
+<p id="S3.p5.6" class="ltx_p">We introduce a threshold distance metric, calculated as <math id="S3.p5.1.m1.1" class="ltx_Math" alttext="x\%\times(W\text{ or}H)" display="inline"><semantics id="S3.p5.1.m1.1a"><mrow id="S3.p5.1.m1.1.1" xref="S3.p5.1.m1.1.1.cmml"><mrow id="S3.p5.1.m1.1.1.3" xref="S3.p5.1.m1.1.1.3.cmml"><mi id="S3.p5.1.m1.1.1.3.2" xref="S3.p5.1.m1.1.1.3.2.cmml">x</mi><mo rspace="0.055em" id="S3.p5.1.m1.1.1.3.1" xref="S3.p5.1.m1.1.1.3.1.cmml">%</mo></mrow><mo rspace="0.222em" id="S3.p5.1.m1.1.1.2" xref="S3.p5.1.m1.1.1.2.cmml">×</mo><mrow id="S3.p5.1.m1.1.1.1.1" xref="S3.p5.1.m1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.p5.1.m1.1.1.1.1.2" xref="S3.p5.1.m1.1.1.1.1.1.cmml">(</mo><mrow id="S3.p5.1.m1.1.1.1.1.1" xref="S3.p5.1.m1.1.1.1.1.1.cmml"><mi id="S3.p5.1.m1.1.1.1.1.1.2" xref="S3.p5.1.m1.1.1.1.1.1.2.cmml">W</mi><mo lspace="0em" rspace="0em" id="S3.p5.1.m1.1.1.1.1.1.1" xref="S3.p5.1.m1.1.1.1.1.1.1.cmml">​</mo><mtext id="S3.p5.1.m1.1.1.1.1.1.3" xref="S3.p5.1.m1.1.1.1.1.1.3a.cmml"> or</mtext><mo lspace="0em" rspace="0em" id="S3.p5.1.m1.1.1.1.1.1.1a" xref="S3.p5.1.m1.1.1.1.1.1.1.cmml">​</mo><mi id="S3.p5.1.m1.1.1.1.1.1.4" xref="S3.p5.1.m1.1.1.1.1.1.4.cmml">H</mi></mrow><mo stretchy="false" id="S3.p5.1.m1.1.1.1.1.3" xref="S3.p5.1.m1.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p5.1.m1.1b"><apply id="S3.p5.1.m1.1.1.cmml" xref="S3.p5.1.m1.1.1"><times id="S3.p5.1.m1.1.1.2.cmml" xref="S3.p5.1.m1.1.1.2"></times><apply id="S3.p5.1.m1.1.1.3.cmml" xref="S3.p5.1.m1.1.1.3"><csymbol cd="latexml" id="S3.p5.1.m1.1.1.3.1.cmml" xref="S3.p5.1.m1.1.1.3.1">percent</csymbol><ci id="S3.p5.1.m1.1.1.3.2.cmml" xref="S3.p5.1.m1.1.1.3.2">𝑥</ci></apply><apply id="S3.p5.1.m1.1.1.1.1.1.cmml" xref="S3.p5.1.m1.1.1.1.1"><times id="S3.p5.1.m1.1.1.1.1.1.1.cmml" xref="S3.p5.1.m1.1.1.1.1.1.1"></times><ci id="S3.p5.1.m1.1.1.1.1.1.2.cmml" xref="S3.p5.1.m1.1.1.1.1.1.2">𝑊</ci><ci id="S3.p5.1.m1.1.1.1.1.1.3a.cmml" xref="S3.p5.1.m1.1.1.1.1.1.3"><mtext id="S3.p5.1.m1.1.1.1.1.1.3.cmml" xref="S3.p5.1.m1.1.1.1.1.1.3"> or</mtext></ci><ci id="S3.p5.1.m1.1.1.1.1.1.4.cmml" xref="S3.p5.1.m1.1.1.1.1.1.4">𝐻</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p5.1.m1.1c">x\%\times(W\text{ or}H)</annotation></semantics></math>, where <math id="S3.p5.2.m2.1" class="ltx_Math" alttext="x\%" display="inline"><semantics id="S3.p5.2.m2.1a"><mrow id="S3.p5.2.m2.1.1" xref="S3.p5.2.m2.1.1.cmml"><mi id="S3.p5.2.m2.1.1.2" xref="S3.p5.2.m2.1.1.2.cmml">x</mi><mo id="S3.p5.2.m2.1.1.1" xref="S3.p5.2.m2.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.p5.2.m2.1b"><apply id="S3.p5.2.m2.1.1.cmml" xref="S3.p5.2.m2.1.1"><csymbol cd="latexml" id="S3.p5.2.m2.1.1.1.cmml" xref="S3.p5.2.m2.1.1.1">percent</csymbol><ci id="S3.p5.2.m2.1.1.2.cmml" xref="S3.p5.2.m2.1.1.2">𝑥</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p5.2.m2.1c">x\%</annotation></semantics></math> is a small percentage, which we set to 2%. Predictions within this threshold of a single edge of a tile are classified as <span id="S3.p5.6.1" class="ltx_text ltx_font_bold">Near-Edge</span>, while those within this threshold of two edges (corner) are classified as <span id="S3.p5.6.2" class="ltx_text ltx_font_bold">Near-Corner</span>. Both <span id="S3.p5.6.3" class="ltx_text ltx_font_bold">Near-Edge</span> and <span id="S3.p5.6.4" class="ltx_text ltx_font_bold">Near-Corner</span> boxes are considered likely to be fragmented and are collectively represented as <math id="S3.p5.3.m3.2" class="ltx_Math" alttext="\text{Pred}(i,j)" display="inline"><semantics id="S3.p5.3.m3.2a"><mrow id="S3.p5.3.m3.2.3" xref="S3.p5.3.m3.2.3.cmml"><mtext id="S3.p5.3.m3.2.3.2" xref="S3.p5.3.m3.2.3.2a.cmml">Pred</mtext><mo lspace="0em" rspace="0em" id="S3.p5.3.m3.2.3.1" xref="S3.p5.3.m3.2.3.1.cmml">​</mo><mrow id="S3.p5.3.m3.2.3.3.2" xref="S3.p5.3.m3.2.3.3.1.cmml"><mo stretchy="false" id="S3.p5.3.m3.2.3.3.2.1" xref="S3.p5.3.m3.2.3.3.1.cmml">(</mo><mi id="S3.p5.3.m3.1.1" xref="S3.p5.3.m3.1.1.cmml">i</mi><mo id="S3.p5.3.m3.2.3.3.2.2" xref="S3.p5.3.m3.2.3.3.1.cmml">,</mo><mi id="S3.p5.3.m3.2.2" xref="S3.p5.3.m3.2.2.cmml">j</mi><mo stretchy="false" id="S3.p5.3.m3.2.3.3.2.3" xref="S3.p5.3.m3.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p5.3.m3.2b"><apply id="S3.p5.3.m3.2.3.cmml" xref="S3.p5.3.m3.2.3"><times id="S3.p5.3.m3.2.3.1.cmml" xref="S3.p5.3.m3.2.3.1"></times><ci id="S3.p5.3.m3.2.3.2a.cmml" xref="S3.p5.3.m3.2.3.2"><mtext id="S3.p5.3.m3.2.3.2.cmml" xref="S3.p5.3.m3.2.3.2">Pred</mtext></ci><interval closure="open" id="S3.p5.3.m3.2.3.3.1.cmml" xref="S3.p5.3.m3.2.3.3.2"><ci id="S3.p5.3.m3.1.1.cmml" xref="S3.p5.3.m3.1.1">𝑖</ci><ci id="S3.p5.3.m3.2.2.cmml" xref="S3.p5.3.m3.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p5.3.m3.2c">\text{Pred}(i,j)</annotation></semantics></math> for adjacent patches <math id="S3.p5.4.m4.1" class="ltx_Math" alttext="P_{i}" display="inline"><semantics id="S3.p5.4.m4.1a"><msub id="S3.p5.4.m4.1.1" xref="S3.p5.4.m4.1.1.cmml"><mi id="S3.p5.4.m4.1.1.2" xref="S3.p5.4.m4.1.1.2.cmml">P</mi><mi id="S3.p5.4.m4.1.1.3" xref="S3.p5.4.m4.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p5.4.m4.1b"><apply id="S3.p5.4.m4.1.1.cmml" xref="S3.p5.4.m4.1.1"><csymbol cd="ambiguous" id="S3.p5.4.m4.1.1.1.cmml" xref="S3.p5.4.m4.1.1">subscript</csymbol><ci id="S3.p5.4.m4.1.1.2.cmml" xref="S3.p5.4.m4.1.1.2">𝑃</ci><ci id="S3.p5.4.m4.1.1.3.cmml" xref="S3.p5.4.m4.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p5.4.m4.1c">P_{i}</annotation></semantics></math> and <math id="S3.p5.5.m5.1" class="ltx_Math" alttext="P_{j}" display="inline"><semantics id="S3.p5.5.m5.1a"><msub id="S3.p5.5.m5.1.1" xref="S3.p5.5.m5.1.1.cmml"><mi id="S3.p5.5.m5.1.1.2" xref="S3.p5.5.m5.1.1.2.cmml">P</mi><mi id="S3.p5.5.m5.1.1.3" xref="S3.p5.5.m5.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p5.5.m5.1b"><apply id="S3.p5.5.m5.1.1.cmml" xref="S3.p5.5.m5.1.1"><csymbol cd="ambiguous" id="S3.p5.5.m5.1.1.1.cmml" xref="S3.p5.5.m5.1.1">subscript</csymbol><ci id="S3.p5.5.m5.1.1.2.cmml" xref="S3.p5.5.m5.1.1.2">𝑃</ci><ci id="S3.p5.5.m5.1.1.3.cmml" xref="S3.p5.5.m5.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p5.5.m5.1c">P_{j}</annotation></semantics></math> that share a boundary <math id="S3.p5.6.m6.2" class="ltx_Math" alttext="E(i,j)" display="inline"><semantics id="S3.p5.6.m6.2a"><mrow id="S3.p5.6.m6.2.3" xref="S3.p5.6.m6.2.3.cmml"><mi id="S3.p5.6.m6.2.3.2" xref="S3.p5.6.m6.2.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S3.p5.6.m6.2.3.1" xref="S3.p5.6.m6.2.3.1.cmml">​</mo><mrow id="S3.p5.6.m6.2.3.3.2" xref="S3.p5.6.m6.2.3.3.1.cmml"><mo stretchy="false" id="S3.p5.6.m6.2.3.3.2.1" xref="S3.p5.6.m6.2.3.3.1.cmml">(</mo><mi id="S3.p5.6.m6.1.1" xref="S3.p5.6.m6.1.1.cmml">i</mi><mo id="S3.p5.6.m6.2.3.3.2.2" xref="S3.p5.6.m6.2.3.3.1.cmml">,</mo><mi id="S3.p5.6.m6.2.2" xref="S3.p5.6.m6.2.2.cmml">j</mi><mo stretchy="false" id="S3.p5.6.m6.2.3.3.2.3" xref="S3.p5.6.m6.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p5.6.m6.2b"><apply id="S3.p5.6.m6.2.3.cmml" xref="S3.p5.6.m6.2.3"><times id="S3.p5.6.m6.2.3.1.cmml" xref="S3.p5.6.m6.2.3.1"></times><ci id="S3.p5.6.m6.2.3.2.cmml" xref="S3.p5.6.m6.2.3.2">𝐸</ci><interval closure="open" id="S3.p5.6.m6.2.3.3.1.cmml" xref="S3.p5.6.m6.2.3.3.2"><ci id="S3.p5.6.m6.1.1.cmml" xref="S3.p5.6.m6.1.1">𝑖</ci><ci id="S3.p5.6.m6.2.2.cmml" xref="S3.p5.6.m6.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p5.6.m6.2c">E(i,j)</annotation></semantics></math>. Predictions that do not meet these criteria are categorized as <span id="S3.p5.6.5" class="ltx_text ltx_font_bold">Central</span> and are directly included in our final prediction set.</p>
+</div>
+<div id="S3.p6" class="ltx_para">
+<p id="S3.p6.2" class="ltx_p">We then utilize <span id="S3.p6.2.1" class="ltx_text ltx_font_bold">Near-Edge</span> or <span id="S3.p6.2.2" class="ltx_text ltx_font_bold">Near-Corner</span> predictions to recover the full bounding box predictions by creating dynamic tiles or we called it Dynamic Patch Proposal. Based on the nature of the shared boundary <math id="S3.p6.1.m1.2" class="ltx_Math" alttext="E(i,j)" display="inline"><semantics id="S3.p6.1.m1.2a"><mrow id="S3.p6.1.m1.2.3" xref="S3.p6.1.m1.2.3.cmml"><mi id="S3.p6.1.m1.2.3.2" xref="S3.p6.1.m1.2.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S3.p6.1.m1.2.3.1" xref="S3.p6.1.m1.2.3.1.cmml">​</mo><mrow id="S3.p6.1.m1.2.3.3.2" xref="S3.p6.1.m1.2.3.3.1.cmml"><mo stretchy="false" id="S3.p6.1.m1.2.3.3.2.1" xref="S3.p6.1.m1.2.3.3.1.cmml">(</mo><mi id="S3.p6.1.m1.1.1" xref="S3.p6.1.m1.1.1.cmml">i</mi><mo id="S3.p6.1.m1.2.3.3.2.2" xref="S3.p6.1.m1.2.3.3.1.cmml">,</mo><mi id="S3.p6.1.m1.2.2" xref="S3.p6.1.m1.2.2.cmml">j</mi><mo stretchy="false" id="S3.p6.1.m1.2.3.3.2.3" xref="S3.p6.1.m1.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p6.1.m1.2b"><apply id="S3.p6.1.m1.2.3.cmml" xref="S3.p6.1.m1.2.3"><times id="S3.p6.1.m1.2.3.1.cmml" xref="S3.p6.1.m1.2.3.1"></times><ci id="S3.p6.1.m1.2.3.2.cmml" xref="S3.p6.1.m1.2.3.2">𝐸</ci><interval closure="open" id="S3.p6.1.m1.2.3.3.1.cmml" xref="S3.p6.1.m1.2.3.3.2"><ci id="S3.p6.1.m1.1.1.cmml" xref="S3.p6.1.m1.1.1">𝑖</ci><ci id="S3.p6.1.m1.2.2.cmml" xref="S3.p6.1.m1.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p6.1.m1.2c">E(i,j)</annotation></semantics></math>, we formulate dynamic tiles <math id="S3.p6.2.m2.2" class="ltx_Math" alttext="D(i,j)" display="inline"><semantics id="S3.p6.2.m2.2a"><mrow id="S3.p6.2.m2.2.3" xref="S3.p6.2.m2.2.3.cmml"><mi id="S3.p6.2.m2.2.3.2" xref="S3.p6.2.m2.2.3.2.cmml">D</mi><mo lspace="0em" rspace="0em" id="S3.p6.2.m2.2.3.1" xref="S3.p6.2.m2.2.3.1.cmml">​</mo><mrow id="S3.p6.2.m2.2.3.3.2" xref="S3.p6.2.m2.2.3.3.1.cmml"><mo stretchy="false" id="S3.p6.2.m2.2.3.3.2.1" xref="S3.p6.2.m2.2.3.3.1.cmml">(</mo><mi id="S3.p6.2.m2.1.1" xref="S3.p6.2.m2.1.1.cmml">i</mi><mo id="S3.p6.2.m2.2.3.3.2.2" xref="S3.p6.2.m2.2.3.3.1.cmml">,</mo><mi id="S3.p6.2.m2.2.2" xref="S3.p6.2.m2.2.2.cmml">j</mi><mo stretchy="false" id="S3.p6.2.m2.2.3.3.2.3" xref="S3.p6.2.m2.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p6.2.m2.2b"><apply id="S3.p6.2.m2.2.3.cmml" xref="S3.p6.2.m2.2.3"><times id="S3.p6.2.m2.2.3.1.cmml" xref="S3.p6.2.m2.2.3.1"></times><ci id="S3.p6.2.m2.2.3.2.cmml" xref="S3.p6.2.m2.2.3.2">𝐷</ci><interval closure="open" id="S3.p6.2.m2.2.3.3.1.cmml" xref="S3.p6.2.m2.2.3.3.2"><ci id="S3.p6.2.m2.1.1.cmml" xref="S3.p6.2.m2.1.1">𝑖</ci><ci id="S3.p6.2.m2.2.2.cmml" xref="S3.p6.2.m2.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p6.2.m2.2c">D(i,j)</annotation></semantics></math>:</p>
+</div>
+<div id="S3.p7" class="ltx_para">
+<ul id="S3.I2" class="ltx_itemize">
+<li id="S3.I2.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I2.i1.p1" class="ltx_para">
+<p id="S3.I2.i1.p1.10" class="ltx_p"><span id="S3.I2.i1.p1.10.1" class="ltx_text ltx_font_bold">Common Edge</span>: <math id="S3.I2.i1.p1.1.m1.2" class="ltx_Math" alttext="D(i,j)" display="inline"><semantics id="S3.I2.i1.p1.1.m1.2a"><mrow id="S3.I2.i1.p1.1.m1.2.3" xref="S3.I2.i1.p1.1.m1.2.3.cmml"><mi id="S3.I2.i1.p1.1.m1.2.3.2" xref="S3.I2.i1.p1.1.m1.2.3.2.cmml">D</mi><mo lspace="0em" rspace="0em" id="S3.I2.i1.p1.1.m1.2.3.1" xref="S3.I2.i1.p1.1.m1.2.3.1.cmml">​</mo><mrow id="S3.I2.i1.p1.1.m1.2.3.3.2" xref="S3.I2.i1.p1.1.m1.2.3.3.1.cmml"><mo stretchy="false" id="S3.I2.i1.p1.1.m1.2.3.3.2.1" xref="S3.I2.i1.p1.1.m1.2.3.3.1.cmml">(</mo><mi id="S3.I2.i1.p1.1.m1.1.1" xref="S3.I2.i1.p1.1.m1.1.1.cmml">i</mi><mo id="S3.I2.i1.p1.1.m1.2.3.3.2.2" xref="S3.I2.i1.p1.1.m1.2.3.3.1.cmml">,</mo><mi id="S3.I2.i1.p1.1.m1.2.2" xref="S3.I2.i1.p1.1.m1.2.2.cmml">j</mi><mo stretchy="false" id="S3.I2.i1.p1.1.m1.2.3.3.2.3" xref="S3.I2.i1.p1.1.m1.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.1.m1.2b"><apply id="S3.I2.i1.p1.1.m1.2.3.cmml" xref="S3.I2.i1.p1.1.m1.2.3"><times id="S3.I2.i1.p1.1.m1.2.3.1.cmml" xref="S3.I2.i1.p1.1.m1.2.3.1"></times><ci id="S3.I2.i1.p1.1.m1.2.3.2.cmml" xref="S3.I2.i1.p1.1.m1.2.3.2">𝐷</ci><interval closure="open" id="S3.I2.i1.p1.1.m1.2.3.3.1.cmml" xref="S3.I2.i1.p1.1.m1.2.3.3.2"><ci id="S3.I2.i1.p1.1.m1.1.1.cmml" xref="S3.I2.i1.p1.1.m1.1.1">𝑖</ci><ci id="S3.I2.i1.p1.1.m1.2.2.cmml" xref="S3.I2.i1.p1.1.m1.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.1.m1.2c">D(i,j)</annotation></semantics></math> features two parallel sides aligned with <math id="S3.I2.i1.p1.2.m2.2" class="ltx_Math" alttext="E(i,j)" display="inline"><semantics id="S3.I2.i1.p1.2.m2.2a"><mrow id="S3.I2.i1.p1.2.m2.2.3" xref="S3.I2.i1.p1.2.m2.2.3.cmml"><mi id="S3.I2.i1.p1.2.m2.2.3.2" xref="S3.I2.i1.p1.2.m2.2.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S3.I2.i1.p1.2.m2.2.3.1" xref="S3.I2.i1.p1.2.m2.2.3.1.cmml">​</mo><mrow id="S3.I2.i1.p1.2.m2.2.3.3.2" xref="S3.I2.i1.p1.2.m2.2.3.3.1.cmml"><mo stretchy="false" id="S3.I2.i1.p1.2.m2.2.3.3.2.1" xref="S3.I2.i1.p1.2.m2.2.3.3.1.cmml">(</mo><mi id="S3.I2.i1.p1.2.m2.1.1" xref="S3.I2.i1.p1.2.m2.1.1.cmml">i</mi><mo id="S3.I2.i1.p1.2.m2.2.3.3.2.2" xref="S3.I2.i1.p1.2.m2.2.3.3.1.cmml">,</mo><mi id="S3.I2.i1.p1.2.m2.2.2" xref="S3.I2.i1.p1.2.m2.2.2.cmml">j</mi><mo stretchy="false" id="S3.I2.i1.p1.2.m2.2.3.3.2.3" xref="S3.I2.i1.p1.2.m2.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.2.m2.2b"><apply id="S3.I2.i1.p1.2.m2.2.3.cmml" xref="S3.I2.i1.p1.2.m2.2.3"><times id="S3.I2.i1.p1.2.m2.2.3.1.cmml" xref="S3.I2.i1.p1.2.m2.2.3.1"></times><ci id="S3.I2.i1.p1.2.m2.2.3.2.cmml" xref="S3.I2.i1.p1.2.m2.2.3.2">𝐸</ci><interval closure="open" id="S3.I2.i1.p1.2.m2.2.3.3.1.cmml" xref="S3.I2.i1.p1.2.m2.2.3.3.2"><ci id="S3.I2.i1.p1.2.m2.1.1.cmml" xref="S3.I2.i1.p1.2.m2.1.1">𝑖</ci><ci id="S3.I2.i1.p1.2.m2.2.2.cmml" xref="S3.I2.i1.p1.2.m2.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.2.m2.2c">E(i,j)</annotation></semantics></math>, and its perpendicular sides are determined by <math id="S3.I2.i1.p1.3.m3.2" class="ltx_Math" alttext="\text{Pred}(i,j)" display="inline"><semantics id="S3.I2.i1.p1.3.m3.2a"><mrow id="S3.I2.i1.p1.3.m3.2.3" xref="S3.I2.i1.p1.3.m3.2.3.cmml"><mtext id="S3.I2.i1.p1.3.m3.2.3.2" xref="S3.I2.i1.p1.3.m3.2.3.2a.cmml">Pred</mtext><mo lspace="0em" rspace="0em" id="S3.I2.i1.p1.3.m3.2.3.1" xref="S3.I2.i1.p1.3.m3.2.3.1.cmml">​</mo><mrow id="S3.I2.i1.p1.3.m3.2.3.3.2" xref="S3.I2.i1.p1.3.m3.2.3.3.1.cmml"><mo stretchy="false" id="S3.I2.i1.p1.3.m3.2.3.3.2.1" xref="S3.I2.i1.p1.3.m3.2.3.3.1.cmml">(</mo><mi id="S3.I2.i1.p1.3.m3.1.1" xref="S3.I2.i1.p1.3.m3.1.1.cmml">i</mi><mo id="S3.I2.i1.p1.3.m3.2.3.3.2.2" xref="S3.I2.i1.p1.3.m3.2.3.3.1.cmml">,</mo><mi id="S3.I2.i1.p1.3.m3.2.2" xref="S3.I2.i1.p1.3.m3.2.2.cmml">j</mi><mo stretchy="false" id="S3.I2.i1.p1.3.m3.2.3.3.2.3" xref="S3.I2.i1.p1.3.m3.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.3.m3.2b"><apply id="S3.I2.i1.p1.3.m3.2.3.cmml" xref="S3.I2.i1.p1.3.m3.2.3"><times id="S3.I2.i1.p1.3.m3.2.3.1.cmml" xref="S3.I2.i1.p1.3.m3.2.3.1"></times><ci id="S3.I2.i1.p1.3.m3.2.3.2a.cmml" xref="S3.I2.i1.p1.3.m3.2.3.2"><mtext id="S3.I2.i1.p1.3.m3.2.3.2.cmml" xref="S3.I2.i1.p1.3.m3.2.3.2">Pred</mtext></ci><interval closure="open" id="S3.I2.i1.p1.3.m3.2.3.3.1.cmml" xref="S3.I2.i1.p1.3.m3.2.3.3.2"><ci id="S3.I2.i1.p1.3.m3.1.1.cmml" xref="S3.I2.i1.p1.3.m3.1.1">𝑖</ci><ci id="S3.I2.i1.p1.3.m3.2.2.cmml" xref="S3.I2.i1.p1.3.m3.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.3.m3.2c">\text{Pred}(i,j)</annotation></semantics></math>. The maximum size that <math id="S3.I2.i1.p1.4.m4.2" class="ltx_Math" alttext="D(i,j)" display="inline"><semantics id="S3.I2.i1.p1.4.m4.2a"><mrow id="S3.I2.i1.p1.4.m4.2.3" xref="S3.I2.i1.p1.4.m4.2.3.cmml"><mi id="S3.I2.i1.p1.4.m4.2.3.2" xref="S3.I2.i1.p1.4.m4.2.3.2.cmml">D</mi><mo lspace="0em" rspace="0em" id="S3.I2.i1.p1.4.m4.2.3.1" xref="S3.I2.i1.p1.4.m4.2.3.1.cmml">​</mo><mrow id="S3.I2.i1.p1.4.m4.2.3.3.2" xref="S3.I2.i1.p1.4.m4.2.3.3.1.cmml"><mo stretchy="false" id="S3.I2.i1.p1.4.m4.2.3.3.2.1" xref="S3.I2.i1.p1.4.m4.2.3.3.1.cmml">(</mo><mi id="S3.I2.i1.p1.4.m4.1.1" xref="S3.I2.i1.p1.4.m4.1.1.cmml">i</mi><mo id="S3.I2.i1.p1.4.m4.2.3.3.2.2" xref="S3.I2.i1.p1.4.m4.2.3.3.1.cmml">,</mo><mi id="S3.I2.i1.p1.4.m4.2.2" xref="S3.I2.i1.p1.4.m4.2.2.cmml">j</mi><mo stretchy="false" id="S3.I2.i1.p1.4.m4.2.3.3.2.3" xref="S3.I2.i1.p1.4.m4.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.4.m4.2b"><apply id="S3.I2.i1.p1.4.m4.2.3.cmml" xref="S3.I2.i1.p1.4.m4.2.3"><times id="S3.I2.i1.p1.4.m4.2.3.1.cmml" xref="S3.I2.i1.p1.4.m4.2.3.1"></times><ci id="S3.I2.i1.p1.4.m4.2.3.2.cmml" xref="S3.I2.i1.p1.4.m4.2.3.2">𝐷</ci><interval closure="open" id="S3.I2.i1.p1.4.m4.2.3.3.1.cmml" xref="S3.I2.i1.p1.4.m4.2.3.3.2"><ci id="S3.I2.i1.p1.4.m4.1.1.cmml" xref="S3.I2.i1.p1.4.m4.1.1">𝑖</ci><ci id="S3.I2.i1.p1.4.m4.2.2.cmml" xref="S3.I2.i1.p1.4.m4.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.4.m4.2c">D(i,j)</annotation></semantics></math> can archive is <math id="S3.I2.i1.p1.5.m5.1" class="ltx_Math" alttext="\frac{W}{N}\times\frac{H}{M}" display="inline"><semantics id="S3.I2.i1.p1.5.m5.1a"><mrow id="S3.I2.i1.p1.5.m5.1.1" xref="S3.I2.i1.p1.5.m5.1.1.cmml"><mfrac id="S3.I2.i1.p1.5.m5.1.1.2" xref="S3.I2.i1.p1.5.m5.1.1.2.cmml"><mi id="S3.I2.i1.p1.5.m5.1.1.2.2" xref="S3.I2.i1.p1.5.m5.1.1.2.2.cmml">W</mi><mi id="S3.I2.i1.p1.5.m5.1.1.2.3" xref="S3.I2.i1.p1.5.m5.1.1.2.3.cmml">N</mi></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.I2.i1.p1.5.m5.1.1.1" xref="S3.I2.i1.p1.5.m5.1.1.1.cmml">×</mo><mfrac id="S3.I2.i1.p1.5.m5.1.1.3" xref="S3.I2.i1.p1.5.m5.1.1.3.cmml"><mi id="S3.I2.i1.p1.5.m5.1.1.3.2" xref="S3.I2.i1.p1.5.m5.1.1.3.2.cmml">H</mi><mi id="S3.I2.i1.p1.5.m5.1.1.3.3" xref="S3.I2.i1.p1.5.m5.1.1.3.3.cmml">M</mi></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.5.m5.1b"><apply id="S3.I2.i1.p1.5.m5.1.1.cmml" xref="S3.I2.i1.p1.5.m5.1.1"><times id="S3.I2.i1.p1.5.m5.1.1.1.cmml" xref="S3.I2.i1.p1.5.m5.1.1.1"></times><apply id="S3.I2.i1.p1.5.m5.1.1.2.cmml" xref="S3.I2.i1.p1.5.m5.1.1.2"><divide id="S3.I2.i1.p1.5.m5.1.1.2.1.cmml" xref="S3.I2.i1.p1.5.m5.1.1.2"></divide><ci id="S3.I2.i1.p1.5.m5.1.1.2.2.cmml" xref="S3.I2.i1.p1.5.m5.1.1.2.2">𝑊</ci><ci id="S3.I2.i1.p1.5.m5.1.1.2.3.cmml" xref="S3.I2.i1.p1.5.m5.1.1.2.3">𝑁</ci></apply><apply id="S3.I2.i1.p1.5.m5.1.1.3.cmml" xref="S3.I2.i1.p1.5.m5.1.1.3"><divide id="S3.I2.i1.p1.5.m5.1.1.3.1.cmml" xref="S3.I2.i1.p1.5.m5.1.1.3"></divide><ci id="S3.I2.i1.p1.5.m5.1.1.3.2.cmml" xref="S3.I2.i1.p1.5.m5.1.1.3.2">𝐻</ci><ci id="S3.I2.i1.p1.5.m5.1.1.3.3.cmml" xref="S3.I2.i1.p1.5.m5.1.1.3.3">𝑀</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.5.m5.1c">\frac{W}{N}\times\frac{H}{M}</annotation></semantics></math> with <math id="S3.I2.i1.p1.6.m6.2" class="ltx_Math" alttext="E(i,j)" display="inline"><semantics id="S3.I2.i1.p1.6.m6.2a"><mrow id="S3.I2.i1.p1.6.m6.2.3" xref="S3.I2.i1.p1.6.m6.2.3.cmml"><mi id="S3.I2.i1.p1.6.m6.2.3.2" xref="S3.I2.i1.p1.6.m6.2.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S3.I2.i1.p1.6.m6.2.3.1" xref="S3.I2.i1.p1.6.m6.2.3.1.cmml">​</mo><mrow id="S3.I2.i1.p1.6.m6.2.3.3.2" xref="S3.I2.i1.p1.6.m6.2.3.3.1.cmml"><mo stretchy="false" id="S3.I2.i1.p1.6.m6.2.3.3.2.1" xref="S3.I2.i1.p1.6.m6.2.3.3.1.cmml">(</mo><mi id="S3.I2.i1.p1.6.m6.1.1" xref="S3.I2.i1.p1.6.m6.1.1.cmml">i</mi><mo id="S3.I2.i1.p1.6.m6.2.3.3.2.2" xref="S3.I2.i1.p1.6.m6.2.3.3.1.cmml">,</mo><mi id="S3.I2.i1.p1.6.m6.2.2" xref="S3.I2.i1.p1.6.m6.2.2.cmml">j</mi><mo stretchy="false" id="S3.I2.i1.p1.6.m6.2.3.3.2.3" xref="S3.I2.i1.p1.6.m6.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.6.m6.2b"><apply id="S3.I2.i1.p1.6.m6.2.3.cmml" xref="S3.I2.i1.p1.6.m6.2.3"><times id="S3.I2.i1.p1.6.m6.2.3.1.cmml" xref="S3.I2.i1.p1.6.m6.2.3.1"></times><ci id="S3.I2.i1.p1.6.m6.2.3.2.cmml" xref="S3.I2.i1.p1.6.m6.2.3.2">𝐸</ci><interval closure="open" id="S3.I2.i1.p1.6.m6.2.3.3.1.cmml" xref="S3.I2.i1.p1.6.m6.2.3.3.2"><ci id="S3.I2.i1.p1.6.m6.1.1.cmml" xref="S3.I2.i1.p1.6.m6.1.1">𝑖</ci><ci id="S3.I2.i1.p1.6.m6.2.2.cmml" xref="S3.I2.i1.p1.6.m6.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.6.m6.2c">E(i,j)</annotation></semantics></math> as its axis of symmetry. However, if <math id="S3.I2.i1.p1.7.m7.2" class="ltx_Math" alttext="\text{Pred}(i,j)" display="inline"><semantics id="S3.I2.i1.p1.7.m7.2a"><mrow id="S3.I2.i1.p1.7.m7.2.3" xref="S3.I2.i1.p1.7.m7.2.3.cmml"><mtext id="S3.I2.i1.p1.7.m7.2.3.2" xref="S3.I2.i1.p1.7.m7.2.3.2a.cmml">Pred</mtext><mo lspace="0em" rspace="0em" id="S3.I2.i1.p1.7.m7.2.3.1" xref="S3.I2.i1.p1.7.m7.2.3.1.cmml">​</mo><mrow id="S3.I2.i1.p1.7.m7.2.3.3.2" xref="S3.I2.i1.p1.7.m7.2.3.3.1.cmml"><mo stretchy="false" id="S3.I2.i1.p1.7.m7.2.3.3.2.1" xref="S3.I2.i1.p1.7.m7.2.3.3.1.cmml">(</mo><mi id="S3.I2.i1.p1.7.m7.1.1" xref="S3.I2.i1.p1.7.m7.1.1.cmml">i</mi><mo id="S3.I2.i1.p1.7.m7.2.3.3.2.2" xref="S3.I2.i1.p1.7.m7.2.3.3.1.cmml">,</mo><mi id="S3.I2.i1.p1.7.m7.2.2" xref="S3.I2.i1.p1.7.m7.2.2.cmml">j</mi><mo stretchy="false" id="S3.I2.i1.p1.7.m7.2.3.3.2.3" xref="S3.I2.i1.p1.7.m7.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.7.m7.2b"><apply id="S3.I2.i1.p1.7.m7.2.3.cmml" xref="S3.I2.i1.p1.7.m7.2.3"><times id="S3.I2.i1.p1.7.m7.2.3.1.cmml" xref="S3.I2.i1.p1.7.m7.2.3.1"></times><ci id="S3.I2.i1.p1.7.m7.2.3.2a.cmml" xref="S3.I2.i1.p1.7.m7.2.3.2"><mtext id="S3.I2.i1.p1.7.m7.2.3.2.cmml" xref="S3.I2.i1.p1.7.m7.2.3.2">Pred</mtext></ci><interval closure="open" id="S3.I2.i1.p1.7.m7.2.3.3.1.cmml" xref="S3.I2.i1.p1.7.m7.2.3.3.2"><ci id="S3.I2.i1.p1.7.m7.1.1.cmml" xref="S3.I2.i1.p1.7.m7.1.1">𝑖</ci><ci id="S3.I2.i1.p1.7.m7.2.2.cmml" xref="S3.I2.i1.p1.7.m7.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.7.m7.2c">\text{Pred}(i,j)</annotation></semantics></math> appears only in <math id="S3.I2.i1.p1.8.m8.1" class="ltx_Math" alttext="P_{i}" display="inline"><semantics id="S3.I2.i1.p1.8.m8.1a"><msub id="S3.I2.i1.p1.8.m8.1.1" xref="S3.I2.i1.p1.8.m8.1.1.cmml"><mi id="S3.I2.i1.p1.8.m8.1.1.2" xref="S3.I2.i1.p1.8.m8.1.1.2.cmml">P</mi><mi id="S3.I2.i1.p1.8.m8.1.1.3" xref="S3.I2.i1.p1.8.m8.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.8.m8.1b"><apply id="S3.I2.i1.p1.8.m8.1.1.cmml" xref="S3.I2.i1.p1.8.m8.1.1"><csymbol cd="ambiguous" id="S3.I2.i1.p1.8.m8.1.1.1.cmml" xref="S3.I2.i1.p1.8.m8.1.1">subscript</csymbol><ci id="S3.I2.i1.p1.8.m8.1.1.2.cmml" xref="S3.I2.i1.p1.8.m8.1.1.2">𝑃</ci><ci id="S3.I2.i1.p1.8.m8.1.1.3.cmml" xref="S3.I2.i1.p1.8.m8.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.8.m8.1c">P_{i}</annotation></semantics></math> and not in <math id="S3.I2.i1.p1.9.m9.1" class="ltx_Math" alttext="P_{j}" display="inline"><semantics id="S3.I2.i1.p1.9.m9.1a"><msub id="S3.I2.i1.p1.9.m9.1.1" xref="S3.I2.i1.p1.9.m9.1.1.cmml"><mi id="S3.I2.i1.p1.9.m9.1.1.2" xref="S3.I2.i1.p1.9.m9.1.1.2.cmml">P</mi><mi id="S3.I2.i1.p1.9.m9.1.1.3" xref="S3.I2.i1.p1.9.m9.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.9.m9.1b"><apply id="S3.I2.i1.p1.9.m9.1.1.cmml" xref="S3.I2.i1.p1.9.m9.1.1"><csymbol cd="ambiguous" id="S3.I2.i1.p1.9.m9.1.1.1.cmml" xref="S3.I2.i1.p1.9.m9.1.1">subscript</csymbol><ci id="S3.I2.i1.p1.9.m9.1.1.2.cmml" xref="S3.I2.i1.p1.9.m9.1.1.2">𝑃</ci><ci id="S3.I2.i1.p1.9.m9.1.1.3.cmml" xref="S3.I2.i1.p1.9.m9.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.9.m9.1c">P_{j}</annotation></semantics></math>, the tile is expanded to cover 50% of the dimensions of <math id="S3.I2.i1.p1.10.m10.1" class="ltx_Math" alttext="P_{j}" display="inline"><semantics id="S3.I2.i1.p1.10.m10.1a"><msub id="S3.I2.i1.p1.10.m10.1.1" xref="S3.I2.i1.p1.10.m10.1.1.cmml"><mi id="S3.I2.i1.p1.10.m10.1.1.2" xref="S3.I2.i1.p1.10.m10.1.1.2.cmml">P</mi><mi id="S3.I2.i1.p1.10.m10.1.1.3" xref="S3.I2.i1.p1.10.m10.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S3.I2.i1.p1.10.m10.1b"><apply id="S3.I2.i1.p1.10.m10.1.1.cmml" xref="S3.I2.i1.p1.10.m10.1.1"><csymbol cd="ambiguous" id="S3.I2.i1.p1.10.m10.1.1.1.cmml" xref="S3.I2.i1.p1.10.m10.1.1">subscript</csymbol><ci id="S3.I2.i1.p1.10.m10.1.1.2.cmml" xref="S3.I2.i1.p1.10.m10.1.1.2">𝑃</ci><ci id="S3.I2.i1.p1.10.m10.1.1.3.cmml" xref="S3.I2.i1.p1.10.m10.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i1.p1.10.m10.1c">P_{j}</annotation></semantics></math>.</p>
+</div>
+</li>
+<li id="S3.I2.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I2.i2.p1" class="ltx_para">
+<p id="S3.I2.i2.p1.3" class="ltx_p"><span id="S3.I2.i2.p1.3.1" class="ltx_text ltx_font_bold">Common Corner</span>: <math id="S3.I2.i2.p1.1.m1.2" class="ltx_Math" alttext="D(i,j)" display="inline"><semantics id="S3.I2.i2.p1.1.m1.2a"><mrow id="S3.I2.i2.p1.1.m1.2.3" xref="S3.I2.i2.p1.1.m1.2.3.cmml"><mi id="S3.I2.i2.p1.1.m1.2.3.2" xref="S3.I2.i2.p1.1.m1.2.3.2.cmml">D</mi><mo lspace="0em" rspace="0em" id="S3.I2.i2.p1.1.m1.2.3.1" xref="S3.I2.i2.p1.1.m1.2.3.1.cmml">​</mo><mrow id="S3.I2.i2.p1.1.m1.2.3.3.2" xref="S3.I2.i2.p1.1.m1.2.3.3.1.cmml"><mo stretchy="false" id="S3.I2.i2.p1.1.m1.2.3.3.2.1" xref="S3.I2.i2.p1.1.m1.2.3.3.1.cmml">(</mo><mi id="S3.I2.i2.p1.1.m1.1.1" xref="S3.I2.i2.p1.1.m1.1.1.cmml">i</mi><mo id="S3.I2.i2.p1.1.m1.2.3.3.2.2" xref="S3.I2.i2.p1.1.m1.2.3.3.1.cmml">,</mo><mi id="S3.I2.i2.p1.1.m1.2.2" xref="S3.I2.i2.p1.1.m1.2.2.cmml">j</mi><mo stretchy="false" id="S3.I2.i2.p1.1.m1.2.3.3.2.3" xref="S3.I2.i2.p1.1.m1.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i2.p1.1.m1.2b"><apply id="S3.I2.i2.p1.1.m1.2.3.cmml" xref="S3.I2.i2.p1.1.m1.2.3"><times id="S3.I2.i2.p1.1.m1.2.3.1.cmml" xref="S3.I2.i2.p1.1.m1.2.3.1"></times><ci id="S3.I2.i2.p1.1.m1.2.3.2.cmml" xref="S3.I2.i2.p1.1.m1.2.3.2">𝐷</ci><interval closure="open" id="S3.I2.i2.p1.1.m1.2.3.3.1.cmml" xref="S3.I2.i2.p1.1.m1.2.3.3.2"><ci id="S3.I2.i2.p1.1.m1.1.1.cmml" xref="S3.I2.i2.p1.1.m1.1.1">𝑖</ci><ci id="S3.I2.i2.p1.1.m1.2.2.cmml" xref="S3.I2.i2.p1.1.m1.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i2.p1.1.m1.2c">D(i,j)</annotation></semantics></math> is designed to be symmetrical around <math id="S3.I2.i2.p1.2.m2.2" class="ltx_Math" alttext="E(i,j)" display="inline"><semantics id="S3.I2.i2.p1.2.m2.2a"><mrow id="S3.I2.i2.p1.2.m2.2.3" xref="S3.I2.i2.p1.2.m2.2.3.cmml"><mi id="S3.I2.i2.p1.2.m2.2.3.2" xref="S3.I2.i2.p1.2.m2.2.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S3.I2.i2.p1.2.m2.2.3.1" xref="S3.I2.i2.p1.2.m2.2.3.1.cmml">​</mo><mrow id="S3.I2.i2.p1.2.m2.2.3.3.2" xref="S3.I2.i2.p1.2.m2.2.3.3.1.cmml"><mo stretchy="false" id="S3.I2.i2.p1.2.m2.2.3.3.2.1" xref="S3.I2.i2.p1.2.m2.2.3.3.1.cmml">(</mo><mi id="S3.I2.i2.p1.2.m2.1.1" xref="S3.I2.i2.p1.2.m2.1.1.cmml">i</mi><mo id="S3.I2.i2.p1.2.m2.2.3.3.2.2" xref="S3.I2.i2.p1.2.m2.2.3.3.1.cmml">,</mo><mi id="S3.I2.i2.p1.2.m2.2.2" xref="S3.I2.i2.p1.2.m2.2.2.cmml">j</mi><mo stretchy="false" id="S3.I2.i2.p1.2.m2.2.3.3.2.3" xref="S3.I2.i2.p1.2.m2.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i2.p1.2.m2.2b"><apply id="S3.I2.i2.p1.2.m2.2.3.cmml" xref="S3.I2.i2.p1.2.m2.2.3"><times id="S3.I2.i2.p1.2.m2.2.3.1.cmml" xref="S3.I2.i2.p1.2.m2.2.3.1"></times><ci id="S3.I2.i2.p1.2.m2.2.3.2.cmml" xref="S3.I2.i2.p1.2.m2.2.3.2">𝐸</ci><interval closure="open" id="S3.I2.i2.p1.2.m2.2.3.3.1.cmml" xref="S3.I2.i2.p1.2.m2.2.3.3.2"><ci id="S3.I2.i2.p1.2.m2.1.1.cmml" xref="S3.I2.i2.p1.2.m2.1.1">𝑖</ci><ci id="S3.I2.i2.p1.2.m2.2.2.cmml" xref="S3.I2.i2.p1.2.m2.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i2.p1.2.m2.2c">E(i,j)</annotation></semantics></math>. The size of this tile is <math id="S3.I2.i2.p1.3.m3.1" class="ltx_Math" alttext="\frac{W}{N}\times\frac{H}{M}" display="inline"><semantics id="S3.I2.i2.p1.3.m3.1a"><mrow id="S3.I2.i2.p1.3.m3.1.1" xref="S3.I2.i2.p1.3.m3.1.1.cmml"><mfrac id="S3.I2.i2.p1.3.m3.1.1.2" xref="S3.I2.i2.p1.3.m3.1.1.2.cmml"><mi id="S3.I2.i2.p1.3.m3.1.1.2.2" xref="S3.I2.i2.p1.3.m3.1.1.2.2.cmml">W</mi><mi id="S3.I2.i2.p1.3.m3.1.1.2.3" xref="S3.I2.i2.p1.3.m3.1.1.2.3.cmml">N</mi></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.I2.i2.p1.3.m3.1.1.1" xref="S3.I2.i2.p1.3.m3.1.1.1.cmml">×</mo><mfrac id="S3.I2.i2.p1.3.m3.1.1.3" xref="S3.I2.i2.p1.3.m3.1.1.3.cmml"><mi id="S3.I2.i2.p1.3.m3.1.1.3.2" xref="S3.I2.i2.p1.3.m3.1.1.3.2.cmml">H</mi><mi id="S3.I2.i2.p1.3.m3.1.1.3.3" xref="S3.I2.i2.p1.3.m3.1.1.3.3.cmml">M</mi></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i2.p1.3.m3.1b"><apply id="S3.I2.i2.p1.3.m3.1.1.cmml" xref="S3.I2.i2.p1.3.m3.1.1"><times id="S3.I2.i2.p1.3.m3.1.1.1.cmml" xref="S3.I2.i2.p1.3.m3.1.1.1"></times><apply id="S3.I2.i2.p1.3.m3.1.1.2.cmml" xref="S3.I2.i2.p1.3.m3.1.1.2"><divide id="S3.I2.i2.p1.3.m3.1.1.2.1.cmml" xref="S3.I2.i2.p1.3.m3.1.1.2"></divide><ci id="S3.I2.i2.p1.3.m3.1.1.2.2.cmml" xref="S3.I2.i2.p1.3.m3.1.1.2.2">𝑊</ci><ci id="S3.I2.i2.p1.3.m3.1.1.2.3.cmml" xref="S3.I2.i2.p1.3.m3.1.1.2.3">𝑁</ci></apply><apply id="S3.I2.i2.p1.3.m3.1.1.3.cmml" xref="S3.I2.i2.p1.3.m3.1.1.3"><divide id="S3.I2.i2.p1.3.m3.1.1.3.1.cmml" xref="S3.I2.i2.p1.3.m3.1.1.3"></divide><ci id="S3.I2.i2.p1.3.m3.1.1.3.2.cmml" xref="S3.I2.i2.p1.3.m3.1.1.3.2">𝐻</ci><ci id="S3.I2.i2.p1.3.m3.1.1.3.3.cmml" xref="S3.I2.i2.p1.3.m3.1.1.3.3">𝑀</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i2.p1.3.m3.1c">\frac{W}{N}\times\frac{H}{M}</annotation></semantics></math>, consistent with the dimensions of the original non-overlapping patches.</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S3.p8" class="ltx_para">
+<p id="S3.p8.2" class="ltx_p">After constructing these dynamic tiles, they serve as new regions for the model to predict non-fragmented bounding boxes. These are also processed in batch for computational efficiency. <math id="S3.p8.1.m1.2" class="ltx_Math" alttext="\text{Pred}(i,j)" display="inline"><semantics id="S3.p8.1.m1.2a"><mrow id="S3.p8.1.m1.2.3" xref="S3.p8.1.m1.2.3.cmml"><mtext id="S3.p8.1.m1.2.3.2" xref="S3.p8.1.m1.2.3.2a.cmml">Pred</mtext><mo lspace="0em" rspace="0em" id="S3.p8.1.m1.2.3.1" xref="S3.p8.1.m1.2.3.1.cmml">​</mo><mrow id="S3.p8.1.m1.2.3.3.2" xref="S3.p8.1.m1.2.3.3.1.cmml"><mo stretchy="false" id="S3.p8.1.m1.2.3.3.2.1" xref="S3.p8.1.m1.2.3.3.1.cmml">(</mo><mi id="S3.p8.1.m1.1.1" xref="S3.p8.1.m1.1.1.cmml">i</mi><mo id="S3.p8.1.m1.2.3.3.2.2" xref="S3.p8.1.m1.2.3.3.1.cmml">,</mo><mi id="S3.p8.1.m1.2.2" xref="S3.p8.1.m1.2.2.cmml">j</mi><mo stretchy="false" id="S3.p8.1.m1.2.3.3.2.3" xref="S3.p8.1.m1.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p8.1.m1.2b"><apply id="S3.p8.1.m1.2.3.cmml" xref="S3.p8.1.m1.2.3"><times id="S3.p8.1.m1.2.3.1.cmml" xref="S3.p8.1.m1.2.3.1"></times><ci id="S3.p8.1.m1.2.3.2a.cmml" xref="S3.p8.1.m1.2.3.2"><mtext id="S3.p8.1.m1.2.3.2.cmml" xref="S3.p8.1.m1.2.3.2">Pred</mtext></ci><interval closure="open" id="S3.p8.1.m1.2.3.3.1.cmml" xref="S3.p8.1.m1.2.3.3.2"><ci id="S3.p8.1.m1.1.1.cmml" xref="S3.p8.1.m1.1.1">𝑖</ci><ci id="S3.p8.1.m1.2.2.cmml" xref="S3.p8.1.m1.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.1.m1.2c">\text{Pred}(i,j)</annotation></semantics></math> predictions are discarded and replaced by the predictions of the dynamic tiles that are of that are near or crossing <math id="S3.p8.2.m2.2" class="ltx_Math" alttext="E(i,j)" display="inline"><semantics id="S3.p8.2.m2.2a"><mrow id="S3.p8.2.m2.2.3" xref="S3.p8.2.m2.2.3.cmml"><mi id="S3.p8.2.m2.2.3.2" xref="S3.p8.2.m2.2.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S3.p8.2.m2.2.3.1" xref="S3.p8.2.m2.2.3.1.cmml">​</mo><mrow id="S3.p8.2.m2.2.3.3.2" xref="S3.p8.2.m2.2.3.3.1.cmml"><mo stretchy="false" id="S3.p8.2.m2.2.3.3.2.1" xref="S3.p8.2.m2.2.3.3.1.cmml">(</mo><mi id="S3.p8.2.m2.1.1" xref="S3.p8.2.m2.1.1.cmml">i</mi><mo id="S3.p8.2.m2.2.3.3.2.2" xref="S3.p8.2.m2.2.3.3.1.cmml">,</mo><mi id="S3.p8.2.m2.2.2" xref="S3.p8.2.m2.2.2.cmml">j</mi><mo stretchy="false" id="S3.p8.2.m2.2.3.3.2.3" xref="S3.p8.2.m2.2.3.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p8.2.m2.2b"><apply id="S3.p8.2.m2.2.3.cmml" xref="S3.p8.2.m2.2.3"><times id="S3.p8.2.m2.2.3.1.cmml" xref="S3.p8.2.m2.2.3.1"></times><ci id="S3.p8.2.m2.2.3.2.cmml" xref="S3.p8.2.m2.2.3.2">𝐸</ci><interval closure="open" id="S3.p8.2.m2.2.3.3.1.cmml" xref="S3.p8.2.m2.2.3.3.2"><ci id="S3.p8.2.m2.1.1.cmml" xref="S3.p8.2.m2.1.1">𝑖</ci><ci id="S3.p8.2.m2.2.2.cmml" xref="S3.p8.2.m2.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.2.m2.2c">E(i,j)</annotation></semantics></math>.</p>
+</div>
+<div id="S3.p9" class="ltx_para">
+<p id="S3.p9.1" class="ltx_p">Our Tile Minimizer strategy then aggregates these dynamically generated tiles into fewer composite images with the size of <math id="S3.p9.1.m1.1" class="ltx_Math" alttext="\frac{W}{N}\times\frac{H}{M}" display="inline"><semantics id="S3.p9.1.m1.1a"><mrow id="S3.p9.1.m1.1.1" xref="S3.p9.1.m1.1.1.cmml"><mfrac id="S3.p9.1.m1.1.1.2" xref="S3.p9.1.m1.1.1.2.cmml"><mi id="S3.p9.1.m1.1.1.2.2" xref="S3.p9.1.m1.1.1.2.2.cmml">W</mi><mi id="S3.p9.1.m1.1.1.2.3" xref="S3.p9.1.m1.1.1.2.3.cmml">N</mi></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.p9.1.m1.1.1.1" xref="S3.p9.1.m1.1.1.1.cmml">×</mo><mfrac id="S3.p9.1.m1.1.1.3" xref="S3.p9.1.m1.1.1.3.cmml"><mi id="S3.p9.1.m1.1.1.3.2" xref="S3.p9.1.m1.1.1.3.2.cmml">H</mi><mi id="S3.p9.1.m1.1.1.3.3" xref="S3.p9.1.m1.1.1.3.3.cmml">M</mi></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S3.p9.1.m1.1b"><apply id="S3.p9.1.m1.1.1.cmml" xref="S3.p9.1.m1.1.1"><times id="S3.p9.1.m1.1.1.1.cmml" xref="S3.p9.1.m1.1.1.1"></times><apply id="S3.p9.1.m1.1.1.2.cmml" xref="S3.p9.1.m1.1.1.2"><divide id="S3.p9.1.m1.1.1.2.1.cmml" xref="S3.p9.1.m1.1.1.2"></divide><ci id="S3.p9.1.m1.1.1.2.2.cmml" xref="S3.p9.1.m1.1.1.2.2">𝑊</ci><ci id="S3.p9.1.m1.1.1.2.3.cmml" xref="S3.p9.1.m1.1.1.2.3">𝑁</ci></apply><apply id="S3.p9.1.m1.1.1.3.cmml" xref="S3.p9.1.m1.1.1.3"><divide id="S3.p9.1.m1.1.1.3.1.cmml" xref="S3.p9.1.m1.1.1.3"></divide><ci id="S3.p9.1.m1.1.1.3.2.cmml" xref="S3.p9.1.m1.1.1.3.2">𝐻</ci><ci id="S3.p9.1.m1.1.1.3.3.cmml" xref="S3.p9.1.m1.1.1.3.3">𝑀</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p9.1.m1.1c">\frac{W}{N}\times\frac{H}{M}</annotation></semantics></math>. This process reduces the number of forward passes through the model, further enhancing computational efficiency.</p>
+</div>
+<div id="S3.p10" class="ltx_para">
+<p id="S3.p10.5" class="ltx_p">Finally, we introduce a size-based filtering mechanism to enhance the precision of the object detection results. This strategy is especially beneficial when the image contains larger objects that share similar features, such as cars and vans. If individual tiles capture only small portions of these objects, the model may find it challenging to distinguish between them, leading to potential misclassification. This issue could, in turn, undermine the effectiveness of post-processing techniques like NMS. To address this, we define a size threshold <math id="S3.p10.1.m1.1" class="ltx_Math" alttext="\theta" display="inline"><semantics id="S3.p10.1.m1.1a"><mi id="S3.p10.1.m1.1.1" xref="S3.p10.1.m1.1.1.cmml">θ</mi><annotation-xml encoding="MathML-Content" id="S3.p10.1.m1.1b"><ci id="S3.p10.1.m1.1.1.cmml" xref="S3.p10.1.m1.1.1">𝜃</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.1.m1.1c">\theta</annotation></semantics></math>, calculated as <math id="S3.p10.2.m2.1" class="ltx_Math" alttext="\alpha\times(W\times H)" display="inline"><semantics id="S3.p10.2.m2.1a"><mrow id="S3.p10.2.m2.1.1" xref="S3.p10.2.m2.1.1.cmml"><mi id="S3.p10.2.m2.1.1.3" xref="S3.p10.2.m2.1.1.3.cmml">α</mi><mo lspace="0.222em" rspace="0.222em" id="S3.p10.2.m2.1.1.2" xref="S3.p10.2.m2.1.1.2.cmml">×</mo><mrow id="S3.p10.2.m2.1.1.1.1" xref="S3.p10.2.m2.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.p10.2.m2.1.1.1.1.2" xref="S3.p10.2.m2.1.1.1.1.1.cmml">(</mo><mrow id="S3.p10.2.m2.1.1.1.1.1" xref="S3.p10.2.m2.1.1.1.1.1.cmml"><mi id="S3.p10.2.m2.1.1.1.1.1.2" xref="S3.p10.2.m2.1.1.1.1.1.2.cmml">W</mi><mo lspace="0.222em" rspace="0.222em" id="S3.p10.2.m2.1.1.1.1.1.1" xref="S3.p10.2.m2.1.1.1.1.1.1.cmml">×</mo><mi id="S3.p10.2.m2.1.1.1.1.1.3" xref="S3.p10.2.m2.1.1.1.1.1.3.cmml">H</mi></mrow><mo stretchy="false" id="S3.p10.2.m2.1.1.1.1.3" xref="S3.p10.2.m2.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p10.2.m2.1b"><apply id="S3.p10.2.m2.1.1.cmml" xref="S3.p10.2.m2.1.1"><times id="S3.p10.2.m2.1.1.2.cmml" xref="S3.p10.2.m2.1.1.2"></times><ci id="S3.p10.2.m2.1.1.3.cmml" xref="S3.p10.2.m2.1.1.3">𝛼</ci><apply id="S3.p10.2.m2.1.1.1.1.1.cmml" xref="S3.p10.2.m2.1.1.1.1"><times id="S3.p10.2.m2.1.1.1.1.1.1.cmml" xref="S3.p10.2.m2.1.1.1.1.1.1"></times><ci id="S3.p10.2.m2.1.1.1.1.1.2.cmml" xref="S3.p10.2.m2.1.1.1.1.1.2">𝑊</ci><ci id="S3.p10.2.m2.1.1.1.1.1.3.cmml" xref="S3.p10.2.m2.1.1.1.1.1.3">𝐻</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.2.m2.1c">\alpha\times(W\times H)</annotation></semantics></math>, where <math id="S3.p10.3.m3.1" class="ltx_Math" alttext="\alpha" display="inline"><semantics id="S3.p10.3.m3.1a"><mi id="S3.p10.3.m3.1.1" xref="S3.p10.3.m3.1.1.cmml">α</mi><annotation-xml encoding="MathML-Content" id="S3.p10.3.m3.1b"><ci id="S3.p10.3.m3.1.1.cmml" xref="S3.p10.3.m3.1.1">𝛼</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.3.m3.1c">\alpha</annotation></semantics></math> is a predefined constant between 0 and 1. For downscaled, full-sized images, we include only those predictions larger than <math id="S3.p10.4.m4.1" class="ltx_Math" alttext="\theta" display="inline"><semantics id="S3.p10.4.m4.1a"><mi id="S3.p10.4.m4.1.1" xref="S3.p10.4.m4.1.1.cmml">θ</mi><annotation-xml encoding="MathML-Content" id="S3.p10.4.m4.1b"><ci id="S3.p10.4.m4.1.1.cmml" xref="S3.p10.4.m4.1.1">𝜃</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.4.m4.1c">\theta</annotation></semantics></math> in the final output. Conversely, for dynamic tiles, only predictions smaller than <math id="S3.p10.5.m5.1" class="ltx_Math" alttext="\theta" display="inline"><semantics id="S3.p10.5.m5.1a"><mi id="S3.p10.5.m5.1.1" xref="S3.p10.5.m5.1.1.cmml">θ</mi><annotation-xml encoding="MathML-Content" id="S3.p10.5.m5.1b"><ci id="S3.p10.5.m5.1.1.cmml" xref="S3.p10.5.m5.1.1">𝜃</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.5.m5.1c">\theta</annotation></semantics></math> are deemed valid. Our underlying hypothesis for this approach is that larger objects are more readily identified when viewed within a broader context, whereas smaller objects benefit from a more localized perspective for accurate detection.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Experiments</h2>
+
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Datasets</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">Our method’s efficacy is assessed using the VisDrone 2019 dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx5" title="" class="ltx_ref">20</a>]</cite>, a benchmark widely recognized in the field of small object detection. The dataset is an extensive collection of 10,209 images, divided into 6,471 images for training, 548 for validation, 1610 for public testing (providing ground truth), and 1580 for challenge testing (not providing ground truth). The dataset boasts a diverse set of scenarios, detailed with bounding box annotations and labels for 10 object categories: pedestrian, person, car, van, bus, truck, motor, bicycle, awning-tricycle, and tricycle. The imagery presents a mix of both urban and rural environments, captured under varying lighting and weather conditions, from multiple viewpoints, and showcasing an assortment of objects per image. This wide-ranging representation positions it as an optimal benchmark for testing the performance of small object detection methodologies.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Training setup</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.8" class="ltx_p">We utilize dual NVIDIA TITAN X GPUs, each equipped with 12 GB of memory. We finetune the pre-trained YOLOv8m model with 71 epochs, choosing not to freeze any layers for flexibility. All images in the dataset are resized to dimensions of <math id="S4.SS2.p1.1.m1.1" class="ltx_Math" alttext="1920\times 1080" display="inline"><semantics id="S4.SS2.p1.1.m1.1a"><mrow id="S4.SS2.p1.1.m1.1.1" xref="S4.SS2.p1.1.m1.1.1.cmml"><mn id="S4.SS2.p1.1.m1.1.1.2" xref="S4.SS2.p1.1.m1.1.1.2.cmml">1920</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS2.p1.1.m1.1.1.1" xref="S4.SS2.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS2.p1.1.m1.1.1.3" xref="S4.SS2.p1.1.m1.1.1.3.cmml">1080</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.1.m1.1b"><apply id="S4.SS2.p1.1.m1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1"><times id="S4.SS2.p1.1.m1.1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS2.p1.1.m1.1.1.2.cmml" xref="S4.SS2.p1.1.m1.1.1.2">1920</cn><cn type="integer" id="S4.SS2.p1.1.m1.1.1.3.cmml" xref="S4.SS2.p1.1.m1.1.1.3">1080</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.1.m1.1c">1920\times 1080</annotation></semantics></math>. In the training set, we generate 6 tiles of size <math id="S4.SS2.p1.2.m2.1" class="ltx_Math" alttext="640\times 640" display="inline"><semantics id="S4.SS2.p1.2.m2.1a"><mrow id="S4.SS2.p1.2.m2.1.1" xref="S4.SS2.p1.2.m2.1.1.cmml"><mn id="S4.SS2.p1.2.m2.1.1.2" xref="S4.SS2.p1.2.m2.1.1.2.cmml">640</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS2.p1.2.m2.1.1.1" xref="S4.SS2.p1.2.m2.1.1.1.cmml">×</mo><mn id="S4.SS2.p1.2.m2.1.1.3" xref="S4.SS2.p1.2.m2.1.1.3.cmml">640</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.2.m2.1b"><apply id="S4.SS2.p1.2.m2.1.1.cmml" xref="S4.SS2.p1.2.m2.1.1"><times id="S4.SS2.p1.2.m2.1.1.1.cmml" xref="S4.SS2.p1.2.m2.1.1.1"></times><cn type="integer" id="S4.SS2.p1.2.m2.1.1.2.cmml" xref="S4.SS2.p1.2.m2.1.1.2">640</cn><cn type="integer" id="S4.SS2.p1.2.m2.1.1.3.cmml" xref="S4.SS2.p1.2.m2.1.1.3">640</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.2.m2.1c">640\times 640</annotation></semantics></math> from each full-size image. This is achieved by cropping the original image into <math id="S4.SS2.p1.3.m3.1" class="ltx_Math" alttext="3\times 2" display="inline"><semantics id="S4.SS2.p1.3.m3.1a"><mrow id="S4.SS2.p1.3.m3.1.1" xref="S4.SS2.p1.3.m3.1.1.cmml"><mn id="S4.SS2.p1.3.m3.1.1.2" xref="S4.SS2.p1.3.m3.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS2.p1.3.m3.1.1.1" xref="S4.SS2.p1.3.m3.1.1.1.cmml">×</mo><mn id="S4.SS2.p1.3.m3.1.1.3" xref="S4.SS2.p1.3.m3.1.1.3.cmml">2</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.3.m3.1b"><apply id="S4.SS2.p1.3.m3.1.1.cmml" xref="S4.SS2.p1.3.m3.1.1"><times id="S4.SS2.p1.3.m3.1.1.1.cmml" xref="S4.SS2.p1.3.m3.1.1.1"></times><cn type="integer" id="S4.SS2.p1.3.m3.1.1.2.cmml" xref="S4.SS2.p1.3.m3.1.1.2">3</cn><cn type="integer" id="S4.SS2.p1.3.m3.1.1.3.cmml" xref="S4.SS2.p1.3.m3.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.3.m3.1c">3\times 2</annotation></semantics></math> non-overlapping patches. We also resize the original image to <math id="S4.SS2.p1.4.m4.1" class="ltx_Math" alttext="640\times 640" display="inline"><semantics id="S4.SS2.p1.4.m4.1a"><mrow id="S4.SS2.p1.4.m4.1.1" xref="S4.SS2.p1.4.m4.1.1.cmml"><mn id="S4.SS2.p1.4.m4.1.1.2" xref="S4.SS2.p1.4.m4.1.1.2.cmml">640</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS2.p1.4.m4.1.1.1" xref="S4.SS2.p1.4.m4.1.1.1.cmml">×</mo><mn id="S4.SS2.p1.4.m4.1.1.3" xref="S4.SS2.p1.4.m4.1.1.3.cmml">640</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.4.m4.1b"><apply id="S4.SS2.p1.4.m4.1.1.cmml" xref="S4.SS2.p1.4.m4.1.1"><times id="S4.SS2.p1.4.m4.1.1.1.cmml" xref="S4.SS2.p1.4.m4.1.1.1"></times><cn type="integer" id="S4.SS2.p1.4.m4.1.1.2.cmml" xref="S4.SS2.p1.4.m4.1.1.2">640</cn><cn type="integer" id="S4.SS2.p1.4.m4.1.1.3.cmml" xref="S4.SS2.p1.4.m4.1.1.3">640</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.4.m4.1c">640\times 640</annotation></semantics></math> and put it together with the non-overlapping patches for training. Mosaic augmentation is consistently applied throughout our training process until the last 10 epochs. Additionally, we utilize MixUp augmentation with a probability of <math id="S4.SS2.p1.5.m5.1" class="ltx_Math" alttext="20\%" display="inline"><semantics id="S4.SS2.p1.5.m5.1a"><mrow id="S4.SS2.p1.5.m5.1.1" xref="S4.SS2.p1.5.m5.1.1.cmml"><mn id="S4.SS2.p1.5.m5.1.1.2" xref="S4.SS2.p1.5.m5.1.1.2.cmml">20</mn><mo id="S4.SS2.p1.5.m5.1.1.1" xref="S4.SS2.p1.5.m5.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.5.m5.1b"><apply id="S4.SS2.p1.5.m5.1.1.cmml" xref="S4.SS2.p1.5.m5.1.1"><csymbol cd="latexml" id="S4.SS2.p1.5.m5.1.1.1.cmml" xref="S4.SS2.p1.5.m5.1.1.1">percent</csymbol><cn type="integer" id="S4.SS2.p1.5.m5.1.1.2.cmml" xref="S4.SS2.p1.5.m5.1.1.2">20</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.5.m5.1c">20\%</annotation></semantics></math> and scale-up/down with a scaling factor ranging from <math id="S4.SS2.p1.6.m6.1" class="ltx_Math" alttext="-20\%" display="inline"><semantics id="S4.SS2.p1.6.m6.1a"><mrow id="S4.SS2.p1.6.m6.1.1" xref="S4.SS2.p1.6.m6.1.1.cmml"><mo id="S4.SS2.p1.6.m6.1.1a" xref="S4.SS2.p1.6.m6.1.1.cmml">−</mo><mrow id="S4.SS2.p1.6.m6.1.1.2" xref="S4.SS2.p1.6.m6.1.1.2.cmml"><mn id="S4.SS2.p1.6.m6.1.1.2.2" xref="S4.SS2.p1.6.m6.1.1.2.2.cmml">20</mn><mo id="S4.SS2.p1.6.m6.1.1.2.1" xref="S4.SS2.p1.6.m6.1.1.2.1.cmml">%</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.6.m6.1b"><apply id="S4.SS2.p1.6.m6.1.1.cmml" xref="S4.SS2.p1.6.m6.1.1"><minus id="S4.SS2.p1.6.m6.1.1.1.cmml" xref="S4.SS2.p1.6.m6.1.1"></minus><apply id="S4.SS2.p1.6.m6.1.1.2.cmml" xref="S4.SS2.p1.6.m6.1.1.2"><csymbol cd="latexml" id="S4.SS2.p1.6.m6.1.1.2.1.cmml" xref="S4.SS2.p1.6.m6.1.1.2.1">percent</csymbol><cn type="integer" id="S4.SS2.p1.6.m6.1.1.2.2.cmml" xref="S4.SS2.p1.6.m6.1.1.2.2">20</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.6.m6.1c">-20\%</annotation></semantics></math> to <math id="S4.SS2.p1.7.m7.1" class="ltx_Math" alttext="20\%" display="inline"><semantics id="S4.SS2.p1.7.m7.1a"><mrow id="S4.SS2.p1.7.m7.1.1" xref="S4.SS2.p1.7.m7.1.1.cmml"><mn id="S4.SS2.p1.7.m7.1.1.2" xref="S4.SS2.p1.7.m7.1.1.2.cmml">20</mn><mo id="S4.SS2.p1.7.m7.1.1.1" xref="S4.SS2.p1.7.m7.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.7.m7.1b"><apply id="S4.SS2.p1.7.m7.1.1.cmml" xref="S4.SS2.p1.7.m7.1.1"><csymbol cd="latexml" id="S4.SS2.p1.7.m7.1.1.1.cmml" xref="S4.SS2.p1.7.m7.1.1.1">percent</csymbol><cn type="integer" id="S4.SS2.p1.7.m7.1.1.2.cmml" xref="S4.SS2.p1.7.m7.1.1.2">20</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.7.m7.1c">20\%</annotation></semantics></math>, as methods to diversify and enhance our training samples. For optimization during the training process, we employ the SGD optimizer, starting with an initial learning rate of <math id="S4.SS2.p1.8.m8.1" class="ltx_Math" alttext="0.01" display="inline"><semantics id="S4.SS2.p1.8.m8.1a"><mn id="S4.SS2.p1.8.m8.1.1" xref="S4.SS2.p1.8.m8.1.1.cmml">0.01</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.8.m8.1b"><cn type="float" id="S4.SS2.p1.8.m8.1.1.cmml" xref="S4.SS2.p1.8.m8.1.1">0.01</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.8.m8.1c">0.01</annotation></semantics></math>, momentum of 0.937 and weight decay of 0.0005.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Results</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">During inference, which is conducted on a single NVIDIA TITAN X GPU, we employ a <math id="S4.SS3.p1.1.m1.1" class="ltx_Math" alttext="3\times 2" display="inline"><semantics id="S4.SS3.p1.1.m1.1a"><mrow id="S4.SS3.p1.1.m1.1.1" xref="S4.SS3.p1.1.m1.1.1.cmml"><mn id="S4.SS3.p1.1.m1.1.1.2" xref="S4.SS3.p1.1.m1.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS3.p1.1.m1.1.1.1" xref="S4.SS3.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS3.p1.1.m1.1.1.3" xref="S4.SS3.p1.1.m1.1.1.3.cmml">2</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.1.m1.1b"><apply id="S4.SS3.p1.1.m1.1.1.cmml" xref="S4.SS3.p1.1.m1.1.1"><times id="S4.SS3.p1.1.m1.1.1.1.cmml" xref="S4.SS3.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS3.p1.1.m1.1.1.2.cmml" xref="S4.SS3.p1.1.m1.1.1.2">3</cn><cn type="integer" id="S4.SS3.p1.1.m1.1.1.3.cmml" xref="S4.SS3.p1.1.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.1.m1.1c">3\times 2</annotation></semantics></math> non-overlapping tiling grid as our initial tile size. Our method demonstrates high accuracy and efficiency in detecting small objects, substantiated by the illustrative results in figure <a href="#S4.F2" title="Figure 2 ‣ 4.3 Results ‣ 4 Experiments ‣ Dynamic Tiling: A Model-Agnostic, Adaptive, Scalable, and Inference-Data-Centric Approach for Efficient and Accurate Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. Intriguingly, our approach proves so effective that it even identifies unlabeled objects—a common occurrence given the challenge of labeling small, densely packed items. This situation contributes to a decrease in mean average precision (mAP), affecting both our method and previous works.</p>
+</div>
+<figure id="S4.F2" class="ltx_figure"><img src="/html/2309.11069/assets/qualitative2.png" id="S4.F2.g1" class="ltx_graphics ltx_centering ltx_img_square" width="1300" height="1442" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>An illustrative result of our adaptive tiling process. The top left shows the original image, while the top right presents the ground truth. The bottom left demonstrates the result of inference when only using the original image. The bottom right displays the result of inference when utilizing our Dynamic Tiling method.</figcaption>
+</figure>
+<div id="S4.SS3.p2" class="ltx_para">
+<p id="S4.SS3.p2.1" class="ltx_p">Table <a href="#S4.T1" title="Table 1 ‣ 4.3 Results ‣ 4 Experiments ‣ Dynamic Tiling: A Model-Agnostic, Adaptive, Scalable, and Inference-Data-Centric Approach for Efficient and Accurate Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> provides a quantitative comparison of our method against earlier model-agnostic uniform cropping methods, presenting average inference times and standard deviations, mAP@50, mAP@50-95, mAP@50s (small-size box), mAP@50m (medium-size box), and mAP@50l (large-size box) following the Coco evaluation protocol <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx10" title="" class="ltx_ref">25</a>]</cite>. The maximum number of detections allowed per image is 1000. We measure the efficiency of our approach by determining the average time it takes to predict one image. To provide a clearer understanding of these metrics, we present the details used for their calculations.</p>
+<ul id="S4.I1" class="ltx_itemize">
+<li id="S4.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i1.p1" class="ltx_para">
+<p id="S4.I1.i1.p1.4" class="ltx_p"><span id="S4.I1.i1.p1.4.1" class="ltx_text ltx_font_bold">Average Inference Time:</span> Calculated as the total time taken for inference divided by the number of images:</p>
+<table id="S4.Ex1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.Ex1.m1.1" class="ltx_Math" alttext="t_{\text{avg}}=\frac{1}{N}\sum_{i=1}^{N}t_{i}" display="block"><semantics id="S4.Ex1.m1.1a"><mrow id="S4.Ex1.m1.1.1" xref="S4.Ex1.m1.1.1.cmml"><msub id="S4.Ex1.m1.1.1.2" xref="S4.Ex1.m1.1.1.2.cmml"><mi id="S4.Ex1.m1.1.1.2.2" xref="S4.Ex1.m1.1.1.2.2.cmml">t</mi><mtext id="S4.Ex1.m1.1.1.2.3" xref="S4.Ex1.m1.1.1.2.3a.cmml">avg</mtext></msub><mo id="S4.Ex1.m1.1.1.1" xref="S4.Ex1.m1.1.1.1.cmml">=</mo><mrow id="S4.Ex1.m1.1.1.3" xref="S4.Ex1.m1.1.1.3.cmml"><mfrac id="S4.Ex1.m1.1.1.3.2" xref="S4.Ex1.m1.1.1.3.2.cmml"><mn id="S4.Ex1.m1.1.1.3.2.2" xref="S4.Ex1.m1.1.1.3.2.2.cmml">1</mn><mi id="S4.Ex1.m1.1.1.3.2.3" xref="S4.Ex1.m1.1.1.3.2.3.cmml">N</mi></mfrac><mo lspace="0em" rspace="0em" id="S4.Ex1.m1.1.1.3.1" xref="S4.Ex1.m1.1.1.3.1.cmml">​</mo><mrow id="S4.Ex1.m1.1.1.3.3" xref="S4.Ex1.m1.1.1.3.3.cmml"><munderover id="S4.Ex1.m1.1.1.3.3.1" xref="S4.Ex1.m1.1.1.3.3.1.cmml"><mo movablelimits="false" id="S4.Ex1.m1.1.1.3.3.1.2.2" xref="S4.Ex1.m1.1.1.3.3.1.2.2.cmml">∑</mo><mrow id="S4.Ex1.m1.1.1.3.3.1.2.3" xref="S4.Ex1.m1.1.1.3.3.1.2.3.cmml"><mi id="S4.Ex1.m1.1.1.3.3.1.2.3.2" xref="S4.Ex1.m1.1.1.3.3.1.2.3.2.cmml">i</mi><mo id="S4.Ex1.m1.1.1.3.3.1.2.3.1" xref="S4.Ex1.m1.1.1.3.3.1.2.3.1.cmml">=</mo><mn id="S4.Ex1.m1.1.1.3.3.1.2.3.3" xref="S4.Ex1.m1.1.1.3.3.1.2.3.3.cmml">1</mn></mrow><mi id="S4.Ex1.m1.1.1.3.3.1.3" xref="S4.Ex1.m1.1.1.3.3.1.3.cmml">N</mi></munderover><msub id="S4.Ex1.m1.1.1.3.3.2" xref="S4.Ex1.m1.1.1.3.3.2.cmml"><mi id="S4.Ex1.m1.1.1.3.3.2.2" xref="S4.Ex1.m1.1.1.3.3.2.2.cmml">t</mi><mi id="S4.Ex1.m1.1.1.3.3.2.3" xref="S4.Ex1.m1.1.1.3.3.2.3.cmml">i</mi></msub></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.Ex1.m1.1b"><apply id="S4.Ex1.m1.1.1.cmml" xref="S4.Ex1.m1.1.1"><eq id="S4.Ex1.m1.1.1.1.cmml" xref="S4.Ex1.m1.1.1.1"></eq><apply id="S4.Ex1.m1.1.1.2.cmml" xref="S4.Ex1.m1.1.1.2"><csymbol cd="ambiguous" id="S4.Ex1.m1.1.1.2.1.cmml" xref="S4.Ex1.m1.1.1.2">subscript</csymbol><ci id="S4.Ex1.m1.1.1.2.2.cmml" xref="S4.Ex1.m1.1.1.2.2">𝑡</ci><ci id="S4.Ex1.m1.1.1.2.3a.cmml" xref="S4.Ex1.m1.1.1.2.3"><mtext mathsize="70%" id="S4.Ex1.m1.1.1.2.3.cmml" xref="S4.Ex1.m1.1.1.2.3">avg</mtext></ci></apply><apply id="S4.Ex1.m1.1.1.3.cmml" xref="S4.Ex1.m1.1.1.3"><times id="S4.Ex1.m1.1.1.3.1.cmml" xref="S4.Ex1.m1.1.1.3.1"></times><apply id="S4.Ex1.m1.1.1.3.2.cmml" xref="S4.Ex1.m1.1.1.3.2"><divide id="S4.Ex1.m1.1.1.3.2.1.cmml" xref="S4.Ex1.m1.1.1.3.2"></divide><cn type="integer" id="S4.Ex1.m1.1.1.3.2.2.cmml" xref="S4.Ex1.m1.1.1.3.2.2">1</cn><ci id="S4.Ex1.m1.1.1.3.2.3.cmml" xref="S4.Ex1.m1.1.1.3.2.3">𝑁</ci></apply><apply id="S4.Ex1.m1.1.1.3.3.cmml" xref="S4.Ex1.m1.1.1.3.3"><apply id="S4.Ex1.m1.1.1.3.3.1.cmml" xref="S4.Ex1.m1.1.1.3.3.1"><csymbol cd="ambiguous" id="S4.Ex1.m1.1.1.3.3.1.1.cmml" xref="S4.Ex1.m1.1.1.3.3.1">superscript</csymbol><apply id="S4.Ex1.m1.1.1.3.3.1.2.cmml" xref="S4.Ex1.m1.1.1.3.3.1"><csymbol cd="ambiguous" id="S4.Ex1.m1.1.1.3.3.1.2.1.cmml" xref="S4.Ex1.m1.1.1.3.3.1">subscript</csymbol><sum id="S4.Ex1.m1.1.1.3.3.1.2.2.cmml" xref="S4.Ex1.m1.1.1.3.3.1.2.2"></sum><apply id="S4.Ex1.m1.1.1.3.3.1.2.3.cmml" xref="S4.Ex1.m1.1.1.3.3.1.2.3"><eq id="S4.Ex1.m1.1.1.3.3.1.2.3.1.cmml" xref="S4.Ex1.m1.1.1.3.3.1.2.3.1"></eq><ci id="S4.Ex1.m1.1.1.3.3.1.2.3.2.cmml" xref="S4.Ex1.m1.1.1.3.3.1.2.3.2">𝑖</ci><cn type="integer" id="S4.Ex1.m1.1.1.3.3.1.2.3.3.cmml" xref="S4.Ex1.m1.1.1.3.3.1.2.3.3">1</cn></apply></apply><ci id="S4.Ex1.m1.1.1.3.3.1.3.cmml" xref="S4.Ex1.m1.1.1.3.3.1.3">𝑁</ci></apply><apply id="S4.Ex1.m1.1.1.3.3.2.cmml" xref="S4.Ex1.m1.1.1.3.3.2"><csymbol cd="ambiguous" id="S4.Ex1.m1.1.1.3.3.2.1.cmml" xref="S4.Ex1.m1.1.1.3.3.2">subscript</csymbol><ci id="S4.Ex1.m1.1.1.3.3.2.2.cmml" xref="S4.Ex1.m1.1.1.3.3.2.2">𝑡</ci><ci id="S4.Ex1.m1.1.1.3.3.2.3.cmml" xref="S4.Ex1.m1.1.1.3.3.2.3">𝑖</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.Ex1.m1.1c">t_{\text{avg}}=\frac{1}{N}\sum_{i=1}^{N}t_{i}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p id="S4.I1.i1.p1.3" class="ltx_p">where <math id="S4.I1.i1.p1.1.m1.1" class="ltx_Math" alttext="t_{i}" display="inline"><semantics id="S4.I1.i1.p1.1.m1.1a"><msub id="S4.I1.i1.p1.1.m1.1.1" xref="S4.I1.i1.p1.1.m1.1.1.cmml"><mi id="S4.I1.i1.p1.1.m1.1.1.2" xref="S4.I1.i1.p1.1.m1.1.1.2.cmml">t</mi><mi id="S4.I1.i1.p1.1.m1.1.1.3" xref="S4.I1.i1.p1.1.m1.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S4.I1.i1.p1.1.m1.1b"><apply id="S4.I1.i1.p1.1.m1.1.1.cmml" xref="S4.I1.i1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S4.I1.i1.p1.1.m1.1.1.1.cmml" xref="S4.I1.i1.p1.1.m1.1.1">subscript</csymbol><ci id="S4.I1.i1.p1.1.m1.1.1.2.cmml" xref="S4.I1.i1.p1.1.m1.1.1.2">𝑡</ci><ci id="S4.I1.i1.p1.1.m1.1.1.3.cmml" xref="S4.I1.i1.p1.1.m1.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i1.p1.1.m1.1c">t_{i}</annotation></semantics></math> is the time taken for the <math id="S4.I1.i1.p1.2.m2.1" class="ltx_Math" alttext="i^{\text{th}}" display="inline"><semantics id="S4.I1.i1.p1.2.m2.1a"><msup id="S4.I1.i1.p1.2.m2.1.1" xref="S4.I1.i1.p1.2.m2.1.1.cmml"><mi id="S4.I1.i1.p1.2.m2.1.1.2" xref="S4.I1.i1.p1.2.m2.1.1.2.cmml">i</mi><mtext id="S4.I1.i1.p1.2.m2.1.1.3" xref="S4.I1.i1.p1.2.m2.1.1.3a.cmml">th</mtext></msup><annotation-xml encoding="MathML-Content" id="S4.I1.i1.p1.2.m2.1b"><apply id="S4.I1.i1.p1.2.m2.1.1.cmml" xref="S4.I1.i1.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S4.I1.i1.p1.2.m2.1.1.1.cmml" xref="S4.I1.i1.p1.2.m2.1.1">superscript</csymbol><ci id="S4.I1.i1.p1.2.m2.1.1.2.cmml" xref="S4.I1.i1.p1.2.m2.1.1.2">𝑖</ci><ci id="S4.I1.i1.p1.2.m2.1.1.3a.cmml" xref="S4.I1.i1.p1.2.m2.1.1.3"><mtext mathsize="70%" id="S4.I1.i1.p1.2.m2.1.1.3.cmml" xref="S4.I1.i1.p1.2.m2.1.1.3">th</mtext></ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i1.p1.2.m2.1c">i^{\text{th}}</annotation></semantics></math> image, and <math id="S4.I1.i1.p1.3.m3.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S4.I1.i1.p1.3.m3.1a"><mi id="S4.I1.i1.p1.3.m3.1.1" xref="S4.I1.i1.p1.3.m3.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S4.I1.i1.p1.3.m3.1b"><ci id="S4.I1.i1.p1.3.m3.1.1.cmml" xref="S4.I1.i1.p1.3.m3.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i1.p1.3.m3.1c">N</annotation></semantics></math> is the total number of images.</p>
+</div>
+</li>
+<li id="S4.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i2.p1" class="ltx_para">
+<p id="S4.I1.i2.p1.1" class="ltx_p"><span id="S4.I1.i2.p1.1.1" class="ltx_text ltx_font_bold">Standard Deviation of Inference Time:</span> Calculated using the formula,</p>
+<table id="S4.Ex2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.Ex2.m1.1" class="ltx_Math" alttext="\sigma=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(t_{i}-t_{\text{avg}})^{2}}" display="block"><semantics id="S4.Ex2.m1.1a"><mrow id="S4.Ex2.m1.1.2" xref="S4.Ex2.m1.1.2.cmml"><mi id="S4.Ex2.m1.1.2.2" xref="S4.Ex2.m1.1.2.2.cmml">σ</mi><mo id="S4.Ex2.m1.1.2.1" xref="S4.Ex2.m1.1.2.1.cmml">=</mo><msqrt id="S4.Ex2.m1.1.1" xref="S4.Ex2.m1.1.1.cmml"><mrow id="S4.Ex2.m1.1.1.1" xref="S4.Ex2.m1.1.1.1.cmml"><mfrac id="S4.Ex2.m1.1.1.1.3" xref="S4.Ex2.m1.1.1.1.3.cmml"><mn id="S4.Ex2.m1.1.1.1.3.2" xref="S4.Ex2.m1.1.1.1.3.2.cmml">1</mn><mi id="S4.Ex2.m1.1.1.1.3.3" xref="S4.Ex2.m1.1.1.1.3.3.cmml">N</mi></mfrac><mo lspace="0em" rspace="0em" id="S4.Ex2.m1.1.1.1.2" xref="S4.Ex2.m1.1.1.1.2.cmml">​</mo><mrow id="S4.Ex2.m1.1.1.1.1" xref="S4.Ex2.m1.1.1.1.1.cmml"><munderover id="S4.Ex2.m1.1.1.1.1.2" xref="S4.Ex2.m1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S4.Ex2.m1.1.1.1.1.2.2.2" xref="S4.Ex2.m1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S4.Ex2.m1.1.1.1.1.2.2.3" xref="S4.Ex2.m1.1.1.1.1.2.2.3.cmml"><mi id="S4.Ex2.m1.1.1.1.1.2.2.3.2" xref="S4.Ex2.m1.1.1.1.1.2.2.3.2.cmml">i</mi><mo id="S4.Ex2.m1.1.1.1.1.2.2.3.1" xref="S4.Ex2.m1.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S4.Ex2.m1.1.1.1.1.2.2.3.3" xref="S4.Ex2.m1.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S4.Ex2.m1.1.1.1.1.2.3" xref="S4.Ex2.m1.1.1.1.1.2.3.cmml">N</mi></munderover><msup id="S4.Ex2.m1.1.1.1.1.1" xref="S4.Ex2.m1.1.1.1.1.1.cmml"><mrow id="S4.Ex2.m1.1.1.1.1.1.1.1" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S4.Ex2.m1.1.1.1.1.1.1.1.2" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S4.Ex2.m1.1.1.1.1.1.1.1.1" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.cmml"><msub id="S4.Ex2.m1.1.1.1.1.1.1.1.1.2" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.2" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.2.cmml">t</mi><mi id="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.3" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.3.cmml">i</mi></msub><mo id="S4.Ex2.m1.1.1.1.1.1.1.1.1.1" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S4.Ex2.m1.1.1.1.1.1.1.1.1.3" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.cmml"><mi id="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.2" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.2.cmml">t</mi><mtext id="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.3" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.3a.cmml">avg</mtext></msub></mrow><mo stretchy="false" id="S4.Ex2.m1.1.1.1.1.1.1.1.3" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mn id="S4.Ex2.m1.1.1.1.1.1.3" xref="S4.Ex2.m1.1.1.1.1.1.3.cmml">2</mn></msup></mrow></mrow></msqrt></mrow><annotation-xml encoding="MathML-Content" id="S4.Ex2.m1.1b"><apply id="S4.Ex2.m1.1.2.cmml" xref="S4.Ex2.m1.1.2"><eq id="S4.Ex2.m1.1.2.1.cmml" xref="S4.Ex2.m1.1.2.1"></eq><ci id="S4.Ex2.m1.1.2.2.cmml" xref="S4.Ex2.m1.1.2.2">𝜎</ci><apply id="S4.Ex2.m1.1.1.cmml" xref="S4.Ex2.m1.1.1"><root id="S4.Ex2.m1.1.1a.cmml" xref="S4.Ex2.m1.1.1"></root><apply id="S4.Ex2.m1.1.1.1.cmml" xref="S4.Ex2.m1.1.1.1"><times id="S4.Ex2.m1.1.1.1.2.cmml" xref="S4.Ex2.m1.1.1.1.2"></times><apply id="S4.Ex2.m1.1.1.1.3.cmml" xref="S4.Ex2.m1.1.1.1.3"><divide id="S4.Ex2.m1.1.1.1.3.1.cmml" xref="S4.Ex2.m1.1.1.1.3"></divide><cn type="integer" id="S4.Ex2.m1.1.1.1.3.2.cmml" xref="S4.Ex2.m1.1.1.1.3.2">1</cn><ci id="S4.Ex2.m1.1.1.1.3.3.cmml" xref="S4.Ex2.m1.1.1.1.3.3">𝑁</ci></apply><apply id="S4.Ex2.m1.1.1.1.1.cmml" xref="S4.Ex2.m1.1.1.1.1"><apply id="S4.Ex2.m1.1.1.1.1.2.cmml" xref="S4.Ex2.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.Ex2.m1.1.1.1.1.2.1.cmml" xref="S4.Ex2.m1.1.1.1.1.2">superscript</csymbol><apply id="S4.Ex2.m1.1.1.1.1.2.2.cmml" xref="S4.Ex2.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.Ex2.m1.1.1.1.1.2.2.1.cmml" xref="S4.Ex2.m1.1.1.1.1.2">subscript</csymbol><sum id="S4.Ex2.m1.1.1.1.1.2.2.2.cmml" xref="S4.Ex2.m1.1.1.1.1.2.2.2"></sum><apply id="S4.Ex2.m1.1.1.1.1.2.2.3.cmml" xref="S4.Ex2.m1.1.1.1.1.2.2.3"><eq id="S4.Ex2.m1.1.1.1.1.2.2.3.1.cmml" xref="S4.Ex2.m1.1.1.1.1.2.2.3.1"></eq><ci id="S4.Ex2.m1.1.1.1.1.2.2.3.2.cmml" xref="S4.Ex2.m1.1.1.1.1.2.2.3.2">𝑖</ci><cn type="integer" id="S4.Ex2.m1.1.1.1.1.2.2.3.3.cmml" xref="S4.Ex2.m1.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S4.Ex2.m1.1.1.1.1.2.3.cmml" xref="S4.Ex2.m1.1.1.1.1.2.3">𝑁</ci></apply><apply id="S4.Ex2.m1.1.1.1.1.1.cmml" xref="S4.Ex2.m1.1.1.1.1.1"><csymbol cd="ambiguous" id="S4.Ex2.m1.1.1.1.1.1.2.cmml" xref="S4.Ex2.m1.1.1.1.1.1">superscript</csymbol><apply id="S4.Ex2.m1.1.1.1.1.1.1.1.1.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1"><minus id="S4.Ex2.m1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.1"></minus><apply id="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.2">𝑡</ci><ci id="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.2.3">𝑖</ci></apply><apply id="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.2">𝑡</ci><ci id="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.3a.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.3"><mtext mathsize="70%" id="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S4.Ex2.m1.1.1.1.1.1.1.1.1.3.3">avg</mtext></ci></apply></apply><cn type="integer" id="S4.Ex2.m1.1.1.1.1.1.3.cmml" xref="S4.Ex2.m1.1.1.1.1.1.3">2</cn></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.Ex2.m1.1c">\sigma=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(t_{i}-t_{\text{avg}})^{2}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+</div>
+</li>
+<li id="S4.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i3.p1" class="ltx_para">
+<p id="S4.I1.i3.p1.5" class="ltx_p"><span id="S4.I1.i3.p1.5.1" class="ltx_text ltx_font_bold">mAP@50:</span> Mean Average Precision calculated at an Intersection over Union (IoU) threshold of 0.5 serves as a robust metric for object detection efficacy.</p>
+<table id="S4.Ex3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.Ex3.m1.2" class="ltx_Math" alttext="\text{mAP@50}=\frac{1}{Q}\sum_{q=1}^{Q}\frac{\text{TP}_{q}}{\text{TP}_{q}+\text{FP}_{q}}\quad(\text{subject~{}to~{}IoU}\geq 0.5)" display="block"><semantics id="S4.Ex3.m1.2a"><mrow id="S4.Ex3.m1.2.2" xref="S4.Ex3.m1.2.2.cmml"><mtext id="S4.Ex3.m1.2.2.4" xref="S4.Ex3.m1.2.2.4a.cmml">mAP@50</mtext><mo id="S4.Ex3.m1.2.2.3" xref="S4.Ex3.m1.2.2.3.cmml">=</mo><mrow id="S4.Ex3.m1.2.2.2.2" xref="S4.Ex3.m1.2.2.2.3.cmml"><mrow id="S4.Ex3.m1.1.1.1.1.1" xref="S4.Ex3.m1.1.1.1.1.1.cmml"><mfrac id="S4.Ex3.m1.1.1.1.1.1.2" xref="S4.Ex3.m1.1.1.1.1.1.2.cmml"><mn id="S4.Ex3.m1.1.1.1.1.1.2.2" xref="S4.Ex3.m1.1.1.1.1.1.2.2.cmml">1</mn><mi id="S4.Ex3.m1.1.1.1.1.1.2.3" xref="S4.Ex3.m1.1.1.1.1.1.2.3.cmml">Q</mi></mfrac><mo lspace="0em" rspace="0em" id="S4.Ex3.m1.1.1.1.1.1.1" xref="S4.Ex3.m1.1.1.1.1.1.1.cmml">​</mo><mrow id="S4.Ex3.m1.1.1.1.1.1.3" xref="S4.Ex3.m1.1.1.1.1.1.3.cmml"><munderover id="S4.Ex3.m1.1.1.1.1.1.3.1" xref="S4.Ex3.m1.1.1.1.1.1.3.1.cmml"><mo movablelimits="false" id="S4.Ex3.m1.1.1.1.1.1.3.1.2.2" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.2.cmml">∑</mo><mrow id="S4.Ex3.m1.1.1.1.1.1.3.1.2.3" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.cmml"><mi id="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.2" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.2.cmml">q</mi><mo id="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.1" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.1.cmml">=</mo><mn id="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.3" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.3.cmml">1</mn></mrow><mi id="S4.Ex3.m1.1.1.1.1.1.3.1.3" xref="S4.Ex3.m1.1.1.1.1.1.3.1.3.cmml">Q</mi></munderover><mfrac id="S4.Ex3.m1.1.1.1.1.1.3.2" xref="S4.Ex3.m1.1.1.1.1.1.3.2.cmml"><msub id="S4.Ex3.m1.1.1.1.1.1.3.2.2" xref="S4.Ex3.m1.1.1.1.1.1.3.2.2.cmml"><mtext id="S4.Ex3.m1.1.1.1.1.1.3.2.2.2" xref="S4.Ex3.m1.1.1.1.1.1.3.2.2.2a.cmml">TP</mtext><mi id="S4.Ex3.m1.1.1.1.1.1.3.2.2.3" xref="S4.Ex3.m1.1.1.1.1.1.3.2.2.3.cmml">q</mi></msub><mrow id="S4.Ex3.m1.1.1.1.1.1.3.2.3" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.cmml"><msub id="S4.Ex3.m1.1.1.1.1.1.3.2.3.2" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.cmml"><mtext id="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.2" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.2a.cmml">TP</mtext><mi id="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.3" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.3.cmml">q</mi></msub><mo id="S4.Ex3.m1.1.1.1.1.1.3.2.3.1" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.1.cmml">+</mo><msub id="S4.Ex3.m1.1.1.1.1.1.3.2.3.3" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.cmml"><mtext id="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.2" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.2a.cmml">FP</mtext><mi id="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.3" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.3.cmml">q</mi></msub></mrow></mfrac></mrow></mrow><mspace width="1em" id="S4.Ex3.m1.2.2.2.2.3" xref="S4.Ex3.m1.2.2.2.3.cmml"></mspace><mrow id="S4.Ex3.m1.2.2.2.2.2.1" xref="S4.Ex3.m1.2.2.2.2.2.1.1.cmml"><mo stretchy="false" id="S4.Ex3.m1.2.2.2.2.2.1.2" xref="S4.Ex3.m1.2.2.2.2.2.1.1.cmml">(</mo><mrow id="S4.Ex3.m1.2.2.2.2.2.1.1" xref="S4.Ex3.m1.2.2.2.2.2.1.1.cmml"><mtext id="S4.Ex3.m1.2.2.2.2.2.1.1.2" xref="S4.Ex3.m1.2.2.2.2.2.1.1.2a.cmml">subject to IoU</mtext><mo id="S4.Ex3.m1.2.2.2.2.2.1.1.1" xref="S4.Ex3.m1.2.2.2.2.2.1.1.1.cmml">≥</mo><mn id="S4.Ex3.m1.2.2.2.2.2.1.1.3" xref="S4.Ex3.m1.2.2.2.2.2.1.1.3.cmml">0.5</mn></mrow><mo stretchy="false" id="S4.Ex3.m1.2.2.2.2.2.1.3" xref="S4.Ex3.m1.2.2.2.2.2.1.1.cmml">)</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.Ex3.m1.2b"><apply id="S4.Ex3.m1.2.2.cmml" xref="S4.Ex3.m1.2.2"><eq id="S4.Ex3.m1.2.2.3.cmml" xref="S4.Ex3.m1.2.2.3"></eq><ci id="S4.Ex3.m1.2.2.4a.cmml" xref="S4.Ex3.m1.2.2.4"><mtext id="S4.Ex3.m1.2.2.4.cmml" xref="S4.Ex3.m1.2.2.4">mAP@50</mtext></ci><list id="S4.Ex3.m1.2.2.2.3.cmml" xref="S4.Ex3.m1.2.2.2.2"><apply id="S4.Ex3.m1.1.1.1.1.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1"><times id="S4.Ex3.m1.1.1.1.1.1.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.1"></times><apply id="S4.Ex3.m1.1.1.1.1.1.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.2"><divide id="S4.Ex3.m1.1.1.1.1.1.2.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.2"></divide><cn type="integer" id="S4.Ex3.m1.1.1.1.1.1.2.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.2.2">1</cn><ci id="S4.Ex3.m1.1.1.1.1.1.2.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.2.3">𝑄</ci></apply><apply id="S4.Ex3.m1.1.1.1.1.1.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3"><apply id="S4.Ex3.m1.1.1.1.1.1.3.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1"><csymbol cd="ambiguous" id="S4.Ex3.m1.1.1.1.1.1.3.1.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1">superscript</csymbol><apply id="S4.Ex3.m1.1.1.1.1.1.3.1.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1"><csymbol cd="ambiguous" id="S4.Ex3.m1.1.1.1.1.1.3.1.2.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1">subscript</csymbol><sum id="S4.Ex3.m1.1.1.1.1.1.3.1.2.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.2"></sum><apply id="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.3"><eq id="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.1"></eq><ci id="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.2">𝑞</ci><cn type="integer" id="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1.2.3.3">1</cn></apply></apply><ci id="S4.Ex3.m1.1.1.1.1.1.3.1.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.1.3">𝑄</ci></apply><apply id="S4.Ex3.m1.1.1.1.1.1.3.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2"><divide id="S4.Ex3.m1.1.1.1.1.1.3.2.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2"></divide><apply id="S4.Ex3.m1.1.1.1.1.1.3.2.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.2"><csymbol cd="ambiguous" id="S4.Ex3.m1.1.1.1.1.1.3.2.2.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.2">subscript</csymbol><ci id="S4.Ex3.m1.1.1.1.1.1.3.2.2.2a.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.2.2"><mtext id="S4.Ex3.m1.1.1.1.1.1.3.2.2.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.2.2">TP</mtext></ci><ci id="S4.Ex3.m1.1.1.1.1.1.3.2.2.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.2.3">𝑞</ci></apply><apply id="S4.Ex3.m1.1.1.1.1.1.3.2.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3"><plus id="S4.Ex3.m1.1.1.1.1.1.3.2.3.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.1"></plus><apply id="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.2"><csymbol cd="ambiguous" id="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.2">subscript</csymbol><ci id="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.2a.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.2"><mtext id="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.2">TP</mtext></ci><ci id="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.2.3">𝑞</ci></apply><apply id="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.3"><csymbol cd="ambiguous" id="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.1.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.3">subscript</csymbol><ci id="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.2a.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.2"><mtext id="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.2.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.2">FP</mtext></ci><ci id="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.3.cmml" xref="S4.Ex3.m1.1.1.1.1.1.3.2.3.3.3">𝑞</ci></apply></apply></apply></apply></apply><apply id="S4.Ex3.m1.2.2.2.2.2.1.1.cmml" xref="S4.Ex3.m1.2.2.2.2.2.1"><geq id="S4.Ex3.m1.2.2.2.2.2.1.1.1.cmml" xref="S4.Ex3.m1.2.2.2.2.2.1.1.1"></geq><ci id="S4.Ex3.m1.2.2.2.2.2.1.1.2a.cmml" xref="S4.Ex3.m1.2.2.2.2.2.1.1.2"><mtext id="S4.Ex3.m1.2.2.2.2.2.1.1.2.cmml" xref="S4.Ex3.m1.2.2.2.2.2.1.1.2">subject to IoU</mtext></ci><cn type="float" id="S4.Ex3.m1.2.2.2.2.2.1.1.3.cmml" xref="S4.Ex3.m1.2.2.2.2.2.1.1.3">0.5</cn></apply></list></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.Ex3.m1.2c">\text{mAP@50}=\frac{1}{Q}\sum_{q=1}^{Q}\frac{\text{TP}_{q}}{\text{TP}_{q}+\text{FP}_{q}}\quad(\text{subject~{}to~{}IoU}\geq 0.5)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p id="S4.I1.i3.p1.4" class="ltx_p">where <math id="S4.I1.i3.p1.1.m1.1" class="ltx_Math" alttext="\text{TP}_{q}" display="inline"><semantics id="S4.I1.i3.p1.1.m1.1a"><msub id="S4.I1.i3.p1.1.m1.1.1" xref="S4.I1.i3.p1.1.m1.1.1.cmml"><mtext id="S4.I1.i3.p1.1.m1.1.1.2" xref="S4.I1.i3.p1.1.m1.1.1.2a.cmml">TP</mtext><mi id="S4.I1.i3.p1.1.m1.1.1.3" xref="S4.I1.i3.p1.1.m1.1.1.3.cmml">q</mi></msub><annotation-xml encoding="MathML-Content" id="S4.I1.i3.p1.1.m1.1b"><apply id="S4.I1.i3.p1.1.m1.1.1.cmml" xref="S4.I1.i3.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S4.I1.i3.p1.1.m1.1.1.1.cmml" xref="S4.I1.i3.p1.1.m1.1.1">subscript</csymbol><ci id="S4.I1.i3.p1.1.m1.1.1.2a.cmml" xref="S4.I1.i3.p1.1.m1.1.1.2"><mtext id="S4.I1.i3.p1.1.m1.1.1.2.cmml" xref="S4.I1.i3.p1.1.m1.1.1.2">TP</mtext></ci><ci id="S4.I1.i3.p1.1.m1.1.1.3.cmml" xref="S4.I1.i3.p1.1.m1.1.1.3">𝑞</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i3.p1.1.m1.1c">\text{TP}_{q}</annotation></semantics></math> is the number of True Positives, <math id="S4.I1.i3.p1.2.m2.1" class="ltx_Math" alttext="\text{FP}_{q}" display="inline"><semantics id="S4.I1.i3.p1.2.m2.1a"><msub id="S4.I1.i3.p1.2.m2.1.1" xref="S4.I1.i3.p1.2.m2.1.1.cmml"><mtext id="S4.I1.i3.p1.2.m2.1.1.2" xref="S4.I1.i3.p1.2.m2.1.1.2a.cmml">FP</mtext><mi id="S4.I1.i3.p1.2.m2.1.1.3" xref="S4.I1.i3.p1.2.m2.1.1.3.cmml">q</mi></msub><annotation-xml encoding="MathML-Content" id="S4.I1.i3.p1.2.m2.1b"><apply id="S4.I1.i3.p1.2.m2.1.1.cmml" xref="S4.I1.i3.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S4.I1.i3.p1.2.m2.1.1.1.cmml" xref="S4.I1.i3.p1.2.m2.1.1">subscript</csymbol><ci id="S4.I1.i3.p1.2.m2.1.1.2a.cmml" xref="S4.I1.i3.p1.2.m2.1.1.2"><mtext id="S4.I1.i3.p1.2.m2.1.1.2.cmml" xref="S4.I1.i3.p1.2.m2.1.1.2">FP</mtext></ci><ci id="S4.I1.i3.p1.2.m2.1.1.3.cmml" xref="S4.I1.i3.p1.2.m2.1.1.3">𝑞</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i3.p1.2.m2.1c">\text{FP}_{q}</annotation></semantics></math> is the number of False Positives, and <math id="S4.I1.i3.p1.3.m3.1" class="ltx_Math" alttext="Q" display="inline"><semantics id="S4.I1.i3.p1.3.m3.1a"><mi id="S4.I1.i3.p1.3.m3.1.1" xref="S4.I1.i3.p1.3.m3.1.1.cmml">Q</mi><annotation-xml encoding="MathML-Content" id="S4.I1.i3.p1.3.m3.1b"><ci id="S4.I1.i3.p1.3.m3.1.1.cmml" xref="S4.I1.i3.p1.3.m3.1.1">𝑄</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i3.p1.3.m3.1c">Q</annotation></semantics></math> is the total number of queries, for detections with IoU <math id="S4.I1.i3.p1.4.m4.1" class="ltx_Math" alttext="\geq 0.5" display="inline"><semantics id="S4.I1.i3.p1.4.m4.1a"><mrow id="S4.I1.i3.p1.4.m4.1.1" xref="S4.I1.i3.p1.4.m4.1.1.cmml"><mi id="S4.I1.i3.p1.4.m4.1.1.2" xref="S4.I1.i3.p1.4.m4.1.1.2.cmml"></mi><mo id="S4.I1.i3.p1.4.m4.1.1.1" xref="S4.I1.i3.p1.4.m4.1.1.1.cmml">≥</mo><mn id="S4.I1.i3.p1.4.m4.1.1.3" xref="S4.I1.i3.p1.4.m4.1.1.3.cmml">0.5</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.I1.i3.p1.4.m4.1b"><apply id="S4.I1.i3.p1.4.m4.1.1.cmml" xref="S4.I1.i3.p1.4.m4.1.1"><geq id="S4.I1.i3.p1.4.m4.1.1.1.cmml" xref="S4.I1.i3.p1.4.m4.1.1.1"></geq><csymbol cd="latexml" id="S4.I1.i3.p1.4.m4.1.1.2.cmml" xref="S4.I1.i3.p1.4.m4.1.1.2">absent</csymbol><cn type="float" id="S4.I1.i3.p1.4.m4.1.1.3.cmml" xref="S4.I1.i3.p1.4.m4.1.1.3">0.5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i3.p1.4.m4.1c">\geq 0.5</annotation></semantics></math> with ground truth.</p>
+</div>
+</li>
+<li id="S4.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i4.p1" class="ltx_para">
+<p id="S4.I1.i4.p1.1" class="ltx_p"><span id="S4.I1.i4.p1.1.1" class="ltx_text ltx_font_bold">mAP@50:95:</span> This is the average mAP calculated at different IoU thresholds from 0.5 to 0.95 with a step size of 0.05.</p>
+</div>
+</li>
+<li id="S4.I1.i5" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i5.p1" class="ltx_para">
+<p id="S4.I1.i5.p1.4" class="ltx_p"><span id="S4.I1.i5.p1.4.1" class="ltx_text ltx_font_bold">mAP@50s, mAP@50m, and mAP@50l:</span> These are the mAP calculated at an IoU of 0.5 but specifically for objects with areas less than <math id="S4.I1.i5.p1.1.m1.1" class="ltx_Math" alttext="32^{2}" display="inline"><semantics id="S4.I1.i5.p1.1.m1.1a"><msup id="S4.I1.i5.p1.1.m1.1.1" xref="S4.I1.i5.p1.1.m1.1.1.cmml"><mn id="S4.I1.i5.p1.1.m1.1.1.2" xref="S4.I1.i5.p1.1.m1.1.1.2.cmml">32</mn><mn id="S4.I1.i5.p1.1.m1.1.1.3" xref="S4.I1.i5.p1.1.m1.1.1.3.cmml">2</mn></msup><annotation-xml encoding="MathML-Content" id="S4.I1.i5.p1.1.m1.1b"><apply id="S4.I1.i5.p1.1.m1.1.1.cmml" xref="S4.I1.i5.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S4.I1.i5.p1.1.m1.1.1.1.cmml" xref="S4.I1.i5.p1.1.m1.1.1">superscript</csymbol><cn type="integer" id="S4.I1.i5.p1.1.m1.1.1.2.cmml" xref="S4.I1.i5.p1.1.m1.1.1.2">32</cn><cn type="integer" id="S4.I1.i5.p1.1.m1.1.1.3.cmml" xref="S4.I1.i5.p1.1.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i5.p1.1.m1.1c">32^{2}</annotation></semantics></math> for small, between <math id="S4.I1.i5.p1.2.m2.1" class="ltx_Math" alttext="32^{2}" display="inline"><semantics id="S4.I1.i5.p1.2.m2.1a"><msup id="S4.I1.i5.p1.2.m2.1.1" xref="S4.I1.i5.p1.2.m2.1.1.cmml"><mn id="S4.I1.i5.p1.2.m2.1.1.2" xref="S4.I1.i5.p1.2.m2.1.1.2.cmml">32</mn><mn id="S4.I1.i5.p1.2.m2.1.1.3" xref="S4.I1.i5.p1.2.m2.1.1.3.cmml">2</mn></msup><annotation-xml encoding="MathML-Content" id="S4.I1.i5.p1.2.m2.1b"><apply id="S4.I1.i5.p1.2.m2.1.1.cmml" xref="S4.I1.i5.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S4.I1.i5.p1.2.m2.1.1.1.cmml" xref="S4.I1.i5.p1.2.m2.1.1">superscript</csymbol><cn type="integer" id="S4.I1.i5.p1.2.m2.1.1.2.cmml" xref="S4.I1.i5.p1.2.m2.1.1.2">32</cn><cn type="integer" id="S4.I1.i5.p1.2.m2.1.1.3.cmml" xref="S4.I1.i5.p1.2.m2.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i5.p1.2.m2.1c">32^{2}</annotation></semantics></math> and <math id="S4.I1.i5.p1.3.m3.1" class="ltx_Math" alttext="96^{2}" display="inline"><semantics id="S4.I1.i5.p1.3.m3.1a"><msup id="S4.I1.i5.p1.3.m3.1.1" xref="S4.I1.i5.p1.3.m3.1.1.cmml"><mn id="S4.I1.i5.p1.3.m3.1.1.2" xref="S4.I1.i5.p1.3.m3.1.1.2.cmml">96</mn><mn id="S4.I1.i5.p1.3.m3.1.1.3" xref="S4.I1.i5.p1.3.m3.1.1.3.cmml">2</mn></msup><annotation-xml encoding="MathML-Content" id="S4.I1.i5.p1.3.m3.1b"><apply id="S4.I1.i5.p1.3.m3.1.1.cmml" xref="S4.I1.i5.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S4.I1.i5.p1.3.m3.1.1.1.cmml" xref="S4.I1.i5.p1.3.m3.1.1">superscript</csymbol><cn type="integer" id="S4.I1.i5.p1.3.m3.1.1.2.cmml" xref="S4.I1.i5.p1.3.m3.1.1.2">96</cn><cn type="integer" id="S4.I1.i5.p1.3.m3.1.1.3.cmml" xref="S4.I1.i5.p1.3.m3.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i5.p1.3.m3.1c">96^{2}</annotation></semantics></math> for medium, and greater than <math id="S4.I1.i5.p1.4.m4.1" class="ltx_Math" alttext="96^{2}" display="inline"><semantics id="S4.I1.i5.p1.4.m4.1a"><msup id="S4.I1.i5.p1.4.m4.1.1" xref="S4.I1.i5.p1.4.m4.1.1.cmml"><mn id="S4.I1.i5.p1.4.m4.1.1.2" xref="S4.I1.i5.p1.4.m4.1.1.2.cmml">96</mn><mn id="S4.I1.i5.p1.4.m4.1.1.3" xref="S4.I1.i5.p1.4.m4.1.1.3.cmml">2</mn></msup><annotation-xml encoding="MathML-Content" id="S4.I1.i5.p1.4.m4.1b"><apply id="S4.I1.i5.p1.4.m4.1.1.cmml" xref="S4.I1.i5.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S4.I1.i5.p1.4.m4.1.1.1.cmml" xref="S4.I1.i5.p1.4.m4.1.1">superscript</csymbol><cn type="integer" id="S4.I1.i5.p1.4.m4.1.1.2.cmml" xref="S4.I1.i5.p1.4.m4.1.1.2">96</cn><cn type="integer" id="S4.I1.i5.p1.4.m4.1.1.3.cmml" xref="S4.I1.i5.p1.4.m4.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.I1.i5.p1.4.m4.1c">96^{2}</annotation></semantics></math> for large respectively.</p>
+</div>
+</li>
+</ul>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Comparison of proposed and competing methods on the VisDrone 2019 test set <cite class="ltx_cite ltx_citemacro_cite">[<a href="#biba.bibx5" title="" class="ltx_ref">20</a>]</cite>. FI stands for Full-image Inference. TTA stands for Test-time Augmentation.</figcaption>
+<div id="S4.T1.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:171pt;vertical-align:-0.5pt;"><span class="ltx_transformed_inner" style="transform:translate(-195.1pt,76.7pt) scale(0.52636,0.52636) ;">
+<p id="S4.T1.1.1" class="ltx_p"><span id="S4.T1.1.1.1" class="ltx_text">
+<span id="S4.T1.1.1.1.1" class="ltx_inline-block ltx_transformed_outer" style="width:823.8pt;height:325pt;vertical-align:-1.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<span id="S4.T1.1.1.1.1.1" class="ltx_p"><span id="S4.T1.1.1.1.1.1.1" class="ltx_text">
+
+<span id="S4.T1.1.1.1.1.1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<span class="ltx_thead">
+<span id="S4.T1.1.1.1.1.1.1.1.1.1" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">Model type</span>
+<span id="S4.T1.1.1.1.1.1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_8">VisDrone 2019 test set</span></span>
+</span>
+<span class="ltx_tbody">
+<span id="S4.T1.1.1.1.1.1.1.1.2.1" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.1" class="ltx_td"></span>
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Model size</span>
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Avg. Inference Time</span>
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">STD</span>
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">mAP@0.5</span>
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">mAP@0.5:0.95</span>
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">mAP@0.5s</span>
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">mAP@0.5m</span>
+<span id="S4.T1.1.1.1.1.1.1.1.2.1.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">mAP@0.5l</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.1" class="ltx_td ltx_align_left ltx_border_t">YOLOv8m + FI</span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.2" class="ltx_td ltx_align_center ltx_border_t">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.3" class="ltx_td ltx_align_center ltx_border_t">0.017</span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.4" class="ltx_td ltx_align_center ltx_border_t">0.059</span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.5" class="ltx_td ltx_align_center ltx_border_t">26.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.6" class="ltx_td ltx_align_center ltx_border_t">16.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.7" class="ltx_td ltx_align_center ltx_border_t">9.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.8" class="ltx_td ltx_align_center ltx_border_t">39.7</span>
+<span id="S4.T1.1.1.1.1.1.1.1.3.2.9" class="ltx_td ltx_align_center ltx_border_t">54.3</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.1" class="ltx_td ltx_align_left">YOLOv8m + FI + TTA</span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.3" class="ltx_td ltx_align_center">0.031</span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.4" class="ltx_td ltx_align_center">0.006</span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.5" class="ltx_td ltx_align_center">27.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.6" class="ltx_td ltx_align_center">17.2</span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.7" class="ltx_td ltx_align_center">10.3</span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.8" class="ltx_td ltx_align_center">40.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.4.3.9" class="ltx_td ltx_align_center">58.3</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.1" class="ltx_td ltx_align_left">YOLOv8m + Darkhelp</span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.3" class="ltx_td ltx_align_center">0.22</span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.4" class="ltx_td ltx_align_center">0.373</span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.5" class="ltx_td ltx_align_center">39.5</span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.6" class="ltx_td ltx_align_center">23.1</span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.7" class="ltx_td ltx_align_center">26</span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.8" class="ltx_td ltx_align_center">50.9</span>
+<span id="S4.T1.1.1.1.1.1.1.1.5.4.9" class="ltx_td ltx_align_center">49.8</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.1" class="ltx_td ltx_align_left">YOLOv8m + Darkhelp + TTA</span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.3" class="ltx_td ltx_align_center">0.313</span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.4" class="ltx_td ltx_align_center">0.427</span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.5" class="ltx_td ltx_align_center">41.6</span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.6" class="ltx_td ltx_align_center">24.3</span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.7" class="ltx_td ltx_align_center">27.5</span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.8" class="ltx_td ltx_align_center">53.3</span>
+<span id="S4.T1.1.1.1.1.1.1.1.6.5.9" class="ltx_td ltx_align_center">57.5</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.1" class="ltx_td ltx_align_left">YOLOv8m + PowerTiling + FI</span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.3" class="ltx_td ltx_align_center">0.135</span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.4" class="ltx_td ltx_align_center">0.036</span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.5" class="ltx_td ltx_align_center">39.6</span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.6" class="ltx_td ltx_align_center">23.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.7" class="ltx_td ltx_align_center">24.3</span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.8" class="ltx_td ltx_align_center">52.4</span>
+<span id="S4.T1.1.1.1.1.1.1.1.7.6.9" class="ltx_td ltx_align_center">58.3</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.1" class="ltx_td ltx_align_left">YOLOv8m + PowerTiling + FI + TTA</span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.3" class="ltx_td ltx_align_center">0.24</span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.4" class="ltx_td ltx_align_center">0.04</span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.5" class="ltx_td ltx_align_center">40.4</span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.6" class="ltx_td ltx_align_center">24.2</span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.7" class="ltx_td ltx_align_center">24.9</span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.8" class="ltx_td ltx_align_center">53.5</span>
+<span id="S4.T1.1.1.1.1.1.1.1.8.7.9" class="ltx_td ltx_align_center">61</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.1" class="ltx_td ltx_align_left">YOLOv8m + SAHI</span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.3" class="ltx_td ltx_align_center">0.264</span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.4" class="ltx_td ltx_align_center">0.011</span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.5" class="ltx_td ltx_align_center">39.5</span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.6" class="ltx_td ltx_align_center">24</span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.7" class="ltx_td ltx_align_center">25.4</span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.8" class="ltx_td ltx_align_center">51.1</span>
+<span id="S4.T1.1.1.1.1.1.1.1.9.8.9" class="ltx_td ltx_align_center">52.1</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.1" class="ltx_td ltx_align_left">YOLOv8m + SAHI + TTA</span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.3" class="ltx_td ltx_align_center">0.447</span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.4" class="ltx_td ltx_align_center">0.018</span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.5" class="ltx_td ltx_align_center">41.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.6" class="ltx_td ltx_align_center">24.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.7" class="ltx_td ltx_align_center">26.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.8" class="ltx_td ltx_align_center">53.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.10.9.9" class="ltx_td ltx_align_center">59.4</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.1" class="ltx_td ltx_align_left">YOLOv8m + SAHI + FI</span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.3" class="ltx_td ltx_align_center">0.305</span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.4" class="ltx_td ltx_align_center">0.015</span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.5" class="ltx_td ltx_align_center">40.2</span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.6" class="ltx_td ltx_align_center">23.9</span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.7" class="ltx_td ltx_align_center">25.6</span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.8" class="ltx_td ltx_align_center">52.1</span>
+<span id="S4.T1.1.1.1.1.1.1.1.11.10.9" class="ltx_td ltx_align_center">58.6</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.1" class="ltx_td ltx_align_left">YOLOv8m + SAHI + FI + TTA</span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.3" class="ltx_td ltx_align_center">0.503</span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.4" class="ltx_td ltx_align_center">0.022</span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.5" class="ltx_td ltx_align_center">41.6</span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.6" class="ltx_td ltx_align_center">24.7</span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.7" class="ltx_td ltx_align_center">26.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.8" class="ltx_td ltx_align_center">53.9</span>
+<span id="S4.T1.1.1.1.1.1.1.1.12.11.9" class="ltx_td ltx_align_center">61.8</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.1" class="ltx_td ltx_align_left">YOLOv8m + Dynamic Tiling (Ours)</span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.3" class="ltx_td ltx_align_center">0.126</span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.4" class="ltx_td ltx_align_center">0.029</span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.5" class="ltx_td ltx_align_center">41.4</span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.6" class="ltx_td ltx_align_center">24.7</span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.7" class="ltx_td ltx_align_center">27.7</span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.8" class="ltx_td ltx_align_center">53.2</span>
+<span id="S4.T1.1.1.1.1.1.1.1.13.12.9" class="ltx_td ltx_align_center">53.9</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.1" class="ltx_td ltx_align_left">YOLOv8m + Dynamic Tiling (Ours) + TTA</span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.3" class="ltx_td ltx_align_center">0.16</span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.4" class="ltx_td ltx_align_center">0.040</span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.5" class="ltx_td ltx_align_center">43.5</span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.6" class="ltx_td ltx_align_center">26.0</span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.7" class="ltx_td ltx_align_center">28.6</span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.8" class="ltx_td ltx_align_center">55.7</span>
+<span id="S4.T1.1.1.1.1.1.1.1.14.13.9" class="ltx_td ltx_align_center">61.3</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.1" class="ltx_td ltx_align_left">YOLOv8m + Dynamic Tiling (Ours) + FI</span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.3" class="ltx_td ltx_align_center">0.160</span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.4" class="ltx_td ltx_align_center">0.032</span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.5" class="ltx_td ltx_align_center">43.8</span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.6" class="ltx_td ltx_align_center">26.1</span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.7" class="ltx_td ltx_align_center">29.9</span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.8" class="ltx_td ltx_align_center">55.6</span>
+<span id="S4.T1.1.1.1.1.1.1.1.15.14.9" class="ltx_td ltx_align_center">55.1</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.1" class="ltx_td ltx_align_left">YOLOv8m + Dynamic Tiling (Ours) + FI + TTA</span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.3" class="ltx_td ltx_align_center">0.333</span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.4" class="ltx_td ltx_align_center">0.061</span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.5" class="ltx_td ltx_align_center">45.6</span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.6" class="ltx_td ltx_align_center">27.1</span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.7" class="ltx_td ltx_align_center">31.3</span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.8" class="ltx_td ltx_align_center">57.7</span>
+<span id="S4.T1.1.1.1.1.1.1.1.16.15.9" class="ltx_td ltx_align_center">60.7</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.1" class="ltx_td ltx_align_left">YOLOv8m + Dynamic Tiling (Ours) + FI + Tile Minimizer</span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.2" class="ltx_td ltx_align_center">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.3" class="ltx_td ltx_align_center"><span id="S4.T1.1.1.1.1.1.1.1.17.16.3.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">0.148</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.4" class="ltx_td ltx_align_center">0.025</span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.5" class="ltx_td ltx_align_center"><span id="S4.T1.1.1.1.1.1.1.1.17.16.5.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">43.8</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.6" class="ltx_td ltx_align_center"><span id="S4.T1.1.1.1.1.1.1.1.17.16.6.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">26</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.7" class="ltx_td ltx_align_center"><span id="S4.T1.1.1.1.1.1.1.1.17.16.7.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">29.9</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.1.1.1.1.1.1.17.16.8.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">55.4</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.17.16.9" class="ltx_td ltx_align_center"><span id="S4.T1.1.1.1.1.1.1.1.17.16.9.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">54.9</span></span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17" class="ltx_tr">
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.1" class="ltx_td ltx_align_left ltx_border_bb">YOLOv8m + Dynamic Tiling (Ours) + FI + Tile Minimizer + TTA</span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.2" class="ltx_td ltx_align_center ltx_border_bb">640</span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.3" class="ltx_td ltx_align_center ltx_border_bb"><span id="S4.T1.1.1.1.1.1.1.1.18.17.3.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">0.301</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.4" class="ltx_td ltx_align_center ltx_border_bb">0.047</span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.5" class="ltx_td ltx_align_center ltx_border_bb"><span id="S4.T1.1.1.1.1.1.1.1.18.17.5.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">45.5</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.6" class="ltx_td ltx_align_center ltx_border_bb"><span id="S4.T1.1.1.1.1.1.1.1.18.17.6.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">27</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.7" class="ltx_td ltx_align_center ltx_border_bb"><span id="S4.T1.1.1.1.1.1.1.1.18.17.7.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">31.2</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.8" class="ltx_td ltx_align_center ltx_border_bb"><span id="S4.T1.1.1.1.1.1.1.1.18.17.8.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">57.5</span></span>
+<span id="S4.T1.1.1.1.1.1.1.1.18.17.9" class="ltx_td ltx_align_center ltx_border_bb"><span id="S4.T1.1.1.1.1.1.1.1.18.17.9.1" class="ltx_text ltx_font_bold" style="color:#0000FF;">60.3</span></span></span>
+</span>
+</span></span></span>
+</span></span></span></p>
+</span></div>
+</figure>
+<div id="S4.SS3.p3" class="ltx_para">
+<p id="S4.SS3.p3.1" class="ltx_p">Our approach, exemplified by our best configuration "YOLOv8m + Dynamic Tiling (Ours) + FI + Tile Minimizer + TTA," has set new standards in the domain of model-agnostic small object detection, as evidenced by its outstanding performance across various evaluation metrics. Specifically, our best configuration achieves a mAP@0.5 score of 45.5 and a mAP@0.5:0.95 score of 27. The inclusion of Full-Image Inference (FI) allows our model to take into account global contextual information when detecting objects, thereby improving accuracy. Its incorporation into our best configuration contributes significantly to the elevated mAP scores, especially when detecting both large and small objects in complex scenes. When compared to "YOLOv8m + SAHI + FI + TTA," which had a mAP@0.5 of 41.6 and a mAP@0.5:0.95 of 24.7, our best configuration shows a relative improvement of 9.4% and 9.3% in these metrics, respectively. This level of performance suggests that our approach, instantiated by Dynamic Tiling, offers a superior balance of precision and recall across a range of object sizes and IoU thresholds. Furthermore, the significant gains in our best configuration can be primarily attributed to its proficiency in detecting small objects, where it achieves a mAP@0.5s of 31.2. In comparison to other methods such as "YOLOv8m + SAHI + FI + TTA," "YOLOv8m + PowerTiling + FI + TTA," and "YOLOv8m + Darkhelp + TTA," our best configuration shows a relative improvement in mAP@0.5s of 16.4%, 25.3%, and 13.5%, respectively.</p>
+</div>
+<div id="S4.SS3.p4" class="ltx_para">
+<p id="S4.SS3.p4.1" class="ltx_p">It’s important to note that there appears to be a trade-off between inference time and performance in our best configuration. While TTA enhances the mAP@0.5 score from 43.8 to 45.6, it more than doubles the average inference time from 0.160 to 0.333 seconds. However, Tile Minimizer, a feature in our best configuration, allows us to maintain high accuracy—comparable to configurations without Tile Minimizer—while notably reducing inference times. Specifically, the average inference time is brought down to 0.148 seconds, representing an improvement of 7.5% over the 0.160-second TTA-exclusive configuration, and to 0.301 seconds, representing an improvement of 9.6% over the 0.333-second TTA-inclusive configuration. Moreover, when compared to other previous methods, our best configuration consistently outperforms them in terms of inference time. Together with its outperformance in mAP metrics, this offers a more balanced solution for practical applications. Therefore, both our approach and our best configuration distinguish themselves by achieving remarkable accuracy while maintaining computational efficiency.</p>
+</div>
+<div id="S4.SS3.p5" class="ltx_para">
+<p id="S4.SS3.p5.1" class="ltx_p">These collective findings unequivocally validate the efficacy of both our approach and our best configuration in establishing new benchmarks in model-agnostic small object detection in terms of computational efficiency and overall accuracy.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusion</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">Existing tiling methods confront critical limitations such as difficulties in detecting objects of varying sizes and extended inference times. To address these challenges, we introduce Dynamic Tiling. This innovative method, rooted in our inference-data-centric paradigm, diverges from traditional techniques that mainly focus on neural network architectures and optimization strategies.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">Our premier configuration, "YOLOv8m + Dynamic Tiling (Ours) + FI + Tile Minimizer + TTA," sets new benchmarks across multiple evaluation metrics, including mAP@0.5, mAP@0.5:0.95, and particularly mAP@0.5s for small object detection. Notably, our approach significantly increases detection accuracy through the use of dynamic overlapping rates, which enable the effective rectification of fragmented objects. In addition to improved accuracy, Dynamic Tiling reduces inference time by minimizing the number of forward passes needed through the object detection model and avoiding unnecessary overlapping in patches. This reduction in computational overhead strikes a unique balance between efficiency and performance, making our approach particularly suited for real-time applications.</p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p">What sets our method apart is its unparalleled adaptability. Dynamic Tiling eliminates the need for laborious recalibration, offering seamless integration into existing pipelines across a wide range of operational environments. This exceptional adaptability is further augmented by a large-small filtering mechanism that effectively consolidates detections from both patches and full images, enhancing the detection quality for objects of all sizes.</p>
+</div>
+<div id="S5.p4" class="ltx_para">
+<p id="S5.p4.1" class="ltx_p">Given these advantages, Dynamic Tiling does not merely find immediate applicability but also serves as a catalyst for revolutionary advancements in the fields of real-time small object detection and spatial computing, both of which require a delicate balance of computational power and accuracy. Through our focus on inference-data-centricity, we anticipate that Dynamic Tiling will establish a new paradigm, acting as a cornerstone for future innovations and setting unprecedented standards in object detection.</p>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bibx1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">Fatih Cagatay Akyon, Sinan Onur Altinuc and Alptekin Temizel
+</span>
+<span class="ltx_bibblock">“Slicing Aided Hyper Inference and Fine-Tuning for Small Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx1.1.1" class="ltx_emph ltx_font_italic">2022 IEEE International Conference on Image Processing (ICIP)</em>
+</span>
+<span class="ltx_bibblock">IEEE, 2022
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/icip46576.2022.9897990" title="" class="ltx_ref ltx_href">10.1109/icip46576.2022.9897990</a>
+</span>
+</li>
+<li id="bib.bibx2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">Zhaowei Cai and Nuno Vasconcelos
+</span>
+<span class="ltx_bibblock">“Cascade R-CNN: Delving Into High Quality Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx2.1.1" class="ltx_emph ltx_font_italic">2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, 2018, pp. 6154–6162
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/CVPR.2018.00644" title="" class="ltx_ref ltx_href">10.1109/CVPR.2018.00644</a>
+</span>
+</li>
+<li id="bib.bibx3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">Stéphane Charette, Erik Reed,  olokos and Bruce Huang
+</span>
+<span class="ltx_bibblock">“Stephanecharette/DarkHelp: C++ Wrapper Library for darknet”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx3.1.1" class="ltx_emph ltx_font_italic">GitHub</em>, 2023
+</span>
+<span class="ltx_bibblock">URL: <a target="_blank" href="https://github.com/stephanecharette/DarkHelp" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/stephanecharette/DarkHelp</a>
+</span>
+</li>
+<li id="bib.bibx4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">Guang Chen et al.
+</span>
+<span class="ltx_bibblock">“A Survey of the Four Pillars for Small Object Detection: Multiscale Representation, Contextual Information, Super-Resolution, and Region Proposal”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx4.1.1" class="ltx_emph ltx_font_italic">IEEE Transactions on Systems, Man, and Cybernetics: Systems</em> <span id="bib.bibx4.2.2" class="ltx_text ltx_font_bold">52.2</span>, 2022, pp. 936–953
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/TSMC.2020.3005231" title="" class="ltx_ref ltx_href">10.1109/TSMC.2020.3005231</a>
+</span>
+</li>
+<li id="bib.bibx5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">Dawei Du et al.
+</span>
+<span class="ltx_bibblock">“VisDrone-DET2019: The Vision Meets Drone Object Detection in Image Challenge Results”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx5.1.1" class="ltx_emph ltx_font_italic">2019 IEEE/CVF International Conference on Computer Vision Workshop (ICCVW)</em>, 2019, pp. 213–226
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCVW.2019.00030" title="" class="ltx_ref ltx_href">10.1109/ICCVW.2019.00030</a>
+</span>
+</li>
+<li id="bib.bibx6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">C. Feng et al.
+</span>
+<span class="ltx_bibblock">“TOOD: Task-aligned One-stage Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx6.1.1" class="ltx_emph ltx_font_italic">2021 IEEE/CVF International Conference on Computer Vision (ICCV)</em>
+</span>
+<span class="ltx_bibblock">Los Alamitos, CA, USA: IEEE Computer Society, 2021, pp. 3490–3499
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCV48922.2021.00349" title="" class="ltx_ref ltx_href">10.1109/ICCV48922.2021.00349</a>
+</span>
+</li>
+<li id="bib.bibx7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">Ross Girshick
+</span>
+<span class="ltx_bibblock">“Fast R-CNN”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx7.1.1" class="ltx_emph ltx_font_italic">2015 IEEE International Conference on Computer Vision (ICCV)</em>, 2015, pp. 1440–1448
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCV.2015.169" title="" class="ltx_ref ltx_href">10.1109/ICCV.2015.169</a>
+</span>
+</li>
+<li id="bib.bibx8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">Glenn Jocher, Ayush Chaurasia and Jing Qiu
+</span>
+<span class="ltx_bibblock">“YOLO by Ultralytics”, 2023
+</span>
+<span class="ltx_bibblock">URL: <a target="_blank" href="https://github.com/ultralytics/ultralytics" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/ultralytics/ultralytics</a>
+</span>
+</li>
+<li id="bib.bibx9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">Tsung-Yi Lin et al.
+</span>
+<span class="ltx_bibblock">“Microsoft COCO: Common Objects in Context”
+</span>
+<span class="ltx_bibblock">arXiv, 2014
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.48550/ARXIV.1405.0312" title="" class="ltx_ref ltx_href">10.48550/ARXIV.1405.0312</a>
+</span>
+</li>
+<li id="bib.bibx10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">Tsung-Yi Lin et al.
+</span>
+<span class="ltx_bibblock">“Focal Loss for Dense Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx10.1.1" class="ltx_emph ltx_font_italic">2017 IEEE International Conference on Computer Vision (ICCV)</em>, 2017, pp. 2999–3007
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCV.2017.324" title="" class="ltx_ref ltx_href">10.1109/ICCV.2017.324</a>
+</span>
+</li>
+<li id="bib.bibx11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">Wei Liu et al.
+</span>
+<span class="ltx_bibblock">“SSD: Single Shot MultiBox Detector”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx11.1.1" class="ltx_emph ltx_font_italic">Computer Vision – ECCV 2016</em>
+</span>
+<span class="ltx_bibblock">Cham: Springer International Publishing, 2016, pp. 21–37
+</span>
+</li>
+<li id="bib.bibx12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">Shaoqing Ren, Kaiming He, Ross Girshick and Jian Sun
+</span>
+<span class="ltx_bibblock">“Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx12.1.1" class="ltx_emph ltx_font_italic">Advances in Neural Information Processing Systems</em> <span id="bib.bibx12.2.2" class="ltx_text ltx_font_bold">28</span>
+</span>
+<span class="ltx_bibblock">Curran Associates, Inc., 2015
+</span>
+<span class="ltx_bibblock">URL: <a target="_blank" href="https://proceedings.neurips.cc/paper_files/paper/2015/file/14bfa6bb14875e45bba028a21ed38046-Paper.pdf" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://proceedings.neurips.cc/paper_files/paper/2015/file/14bfa6bb14875e45bba028a21ed38046-Paper.pdf</a>
+</span>
+</li>
+<li id="bib.bibx13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">Zhi Tian, Chunhua Shen, Hao Chen and Tong He
+</span>
+<span class="ltx_bibblock">“FCOS: Fully Convolutional One-Stage Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx13.1.1" class="ltx_emph ltx_font_italic">2019 IEEE/CVF International Conference on Computer Vision (ICCV)</em>, 2019, pp. 9626–9635
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCV.2019.00972" title="" class="ltx_ref ltx_href">10.1109/ICCV.2019.00972</a>
+</span>
+</li>
+<li id="bib.bibx14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">F. Ünel, Burak O. Özkalayci and Cevahir Çiğla
+</span>
+<span class="ltx_bibblock">“The Power of Tiling for Small Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx14.1.1" class="ltx_emph ltx_font_italic">2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)</em>, 2019, pp. 582–591
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/CVPRW.2019.00084" title="" class="ltx_ref ltx_href">10.1109/CVPRW.2019.00084</a>
+</span>
+</li>
+<li id="bib.bibx15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">Haoyang Zhang, Ying Wang, Feras Dayoub and Niko Sunderhauf
+</span>
+<span class="ltx_bibblock">“VarifocalNet: An IoU-aware Dense Object Detector”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx15.1.1" class="ltx_emph ltx_font_italic">2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>, 2020, pp. 8510–8519
+</span>
+</li>
+</ul>
+</section>
+<section id="biba" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="biba.bibx1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">Fatih Cagatay Akyon, Sinan Onur Altinuc and Alptekin Temizel
+</span>
+<span class="ltx_bibblock">“Slicing Aided Hyper Inference and Fine-Tuning for Small Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx1.1.1" class="ltx_emph ltx_font_italic">2022 IEEE International Conference on Image Processing (ICIP)</em>
+</span>
+<span class="ltx_bibblock">IEEE, 2022
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/icip46576.2022.9897990" title="" class="ltx_ref ltx_href">10.1109/icip46576.2022.9897990</a>
+</span>
+</li>
+<li id="biba.bibx2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">Zhaowei Cai and Nuno Vasconcelos
+</span>
+<span class="ltx_bibblock">“Cascade R-CNN: Delving Into High Quality Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx2.1.1" class="ltx_emph ltx_font_italic">2018 IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, 2018, pp. 6154–6162
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/CVPR.2018.00644" title="" class="ltx_ref ltx_href">10.1109/CVPR.2018.00644</a>
+</span>
+</li>
+<li id="biba.bibx3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">Stéphane Charette, Erik Reed,  olokos and Bruce Huang
+</span>
+<span class="ltx_bibblock">“Stephanecharette/DarkHelp: C++ Wrapper Library for darknet”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx3.1.1" class="ltx_emph ltx_font_italic">GitHub</em>, 2023
+</span>
+<span class="ltx_bibblock">URL: <a target="_blank" href="https://github.com/stephanecharette/DarkHelp" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/stephanecharette/DarkHelp</a>
+</span>
+</li>
+<li id="biba.bibx4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">Guang Chen et al.
+</span>
+<span class="ltx_bibblock">“A Survey of the Four Pillars for Small Object Detection: Multiscale Representation, Contextual Information, Super-Resolution, and Region Proposal”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx4.1.1" class="ltx_emph ltx_font_italic">IEEE Transactions on Systems, Man, and Cybernetics: Systems</em> <span id="biba.bibx4.2.2" class="ltx_text ltx_font_bold">52.2</span>, 2022, pp. 936–953
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/TSMC.2020.3005231" title="" class="ltx_ref ltx_href">10.1109/TSMC.2020.3005231</a>
+</span>
+</li>
+<li id="biba.bibx5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">Dawei Du et al.
+</span>
+<span class="ltx_bibblock">“VisDrone-DET2019: The Vision Meets Drone Object Detection in Image Challenge Results”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx5.1.1" class="ltx_emph ltx_font_italic">2019 IEEE/CVF International Conference on Computer Vision Workshop (ICCVW)</em>, 2019, pp. 213–226
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCVW.2019.00030" title="" class="ltx_ref ltx_href">10.1109/ICCVW.2019.00030</a>
+</span>
+</li>
+<li id="biba.bibx6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">C. Feng et al.
+</span>
+<span class="ltx_bibblock">“TOOD: Task-aligned One-stage Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx6.1.1" class="ltx_emph ltx_font_italic">2021 IEEE/CVF International Conference on Computer Vision (ICCV)</em>
+</span>
+<span class="ltx_bibblock">Los Alamitos, CA, USA: IEEE Computer Society, 2021, pp. 3490–3499
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCV48922.2021.00349" title="" class="ltx_ref ltx_href">10.1109/ICCV48922.2021.00349</a>
+</span>
+</li>
+<li id="biba.bibx7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">Ross Girshick
+</span>
+<span class="ltx_bibblock">“Fast R-CNN”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx7.1.1" class="ltx_emph ltx_font_italic">2015 IEEE International Conference on Computer Vision (ICCV)</em>, 2015, pp. 1440–1448
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCV.2015.169" title="" class="ltx_ref ltx_href">10.1109/ICCV.2015.169</a>
+</span>
+</li>
+<li id="biba.bibx8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">Glenn Jocher, Ayush Chaurasia and Jing Qiu
+</span>
+<span class="ltx_bibblock">“YOLO by Ultralytics”, 2023
+</span>
+<span class="ltx_bibblock">URL: <a target="_blank" href="https://github.com/ultralytics/ultralytics" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/ultralytics/ultralytics</a>
+</span>
+</li>
+<li id="biba.bibx9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">Tsung-Yi Lin et al.
+</span>
+<span class="ltx_bibblock">“Focal Loss for Dense Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx9.1.1" class="ltx_emph ltx_font_italic">2017 IEEE International Conference on Computer Vision (ICCV)</em>, 2017, pp. 2999–3007
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCV.2017.324" title="" class="ltx_ref ltx_href">10.1109/ICCV.2017.324</a>
+</span>
+</li>
+<li id="biba.bibx10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">Tsung-Yi Lin et al.
+</span>
+<span class="ltx_bibblock">“Microsoft COCO: Common Objects in Context”
+</span>
+<span class="ltx_bibblock">arXiv, 2014
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.48550/ARXIV.1405.0312" title="" class="ltx_ref ltx_href">10.48550/ARXIV.1405.0312</a>
+</span>
+</li>
+<li id="biba.bibx11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">Wei Liu et al.
+</span>
+<span class="ltx_bibblock">“SSD: Single Shot MultiBox Detector”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx11.1.1" class="ltx_emph ltx_font_italic">Computer Vision – ECCV 2016</em>
+</span>
+<span class="ltx_bibblock">Cham: Springer International Publishing, 2016, pp. 21–37
+</span>
+</li>
+<li id="biba.bibx12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">Shaoqing Ren, Kaiming He, Ross Girshick and Jian Sun
+</span>
+<span class="ltx_bibblock">“Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx12.1.1" class="ltx_emph ltx_font_italic">Advances in Neural Information Processing Systems</em> <span id="biba.bibx12.2.2" class="ltx_text ltx_font_bold">28</span>
+</span>
+<span class="ltx_bibblock">Curran Associates, Inc., 2015
+</span>
+<span class="ltx_bibblock">URL: <a target="_blank" href="https://proceedings.neurips.cc/paper_files/paper/2015/file/14bfa6bb14875e45bba028a21ed38046-Paper.pdf" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://proceedings.neurips.cc/paper_files/paper/2015/file/14bfa6bb14875e45bba028a21ed38046-Paper.pdf</a>
+</span>
+</li>
+<li id="biba.bibx13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">Zhi Tian, Chunhua Shen, Hao Chen and Tong He
+</span>
+<span class="ltx_bibblock">“FCOS: Fully Convolutional One-Stage Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx13.1.1" class="ltx_emph ltx_font_italic">2019 IEEE/CVF International Conference on Computer Vision (ICCV)</em>, 2019, pp. 9626–9635
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/ICCV.2019.00972" title="" class="ltx_ref ltx_href">10.1109/ICCV.2019.00972</a>
+</span>
+</li>
+<li id="biba.bibx14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">F. Ünel, Burak O. Özkalayci and Cevahir Çiğla
+</span>
+<span class="ltx_bibblock">“The Power of Tiling for Small Object Detection”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx14.1.1" class="ltx_emph ltx_font_italic">2019 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)</em>, 2019, pp. 582–591
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/CVPRW.2019.00084" title="" class="ltx_ref ltx_href">10.1109/CVPRW.2019.00084</a>
+</span>
+</li>
+<li id="biba.bibx15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">Haoyang Zhang, Ying Wang, Feras Dayoub and Niko Sunderhauf
+</span>
+<span class="ltx_bibblock">“VarifocalNet: An IoU-aware Dense Object Detector”
+</span>
+<span class="ltx_bibblock">In <em id="biba.bibx15.1.1" class="ltx_emph ltx_font_italic">2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>, 2020, pp. 8510–8519
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2309.11068" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2309.11069" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2309.11069">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2309.11069" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2309.11070" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Feb 28 04:58:21 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

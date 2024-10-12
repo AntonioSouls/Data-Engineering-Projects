@@ -5,7 +5,7 @@ import re
 
 
 # URL della pagina con la lista dei paper da scaricare (da modificare più volte il valore di filestart alla fine del link per consentire la visualizzazione di 300 articoli distribuiti su pagine consecutive diverse)
-list_page_url = "https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=Object+Detection&terms-0-field=title&classification-computer_science=y&classification-physics_archives=all&classification-include_cross_list=include&date-filter_by=all_dates&date-year=&date-from_date=&date-to_date=&date-date_type=submitted_date&abstracts=show&size=200&order=-announced_date_first&start=1400"
+list_page_url = "https://arxiv.org/search/advanced?advanced=&terms-0-operator=AND&terms-0-term=Object+Detection&terms-0-field=title&classification-computer_science=y&classification-physics_archives=all&classification-include_cross_list=include&date-filter_by=all_dates&date-year=&date-from_date=&date-to_date=&date-date_type=submitted_date&abstracts=show&size=200&order=-announced_date_first&start=1400" #800,1200,1400
 
 # Crea una cartella per salvare gli articoli HTML
 os.makedirs('homework1/sources', exist_ok=True)
@@ -52,8 +52,11 @@ if response.status_code == 200:
             html_content = paper_response.text
             if contains_table(html_content):
                 html_path = f"homework1/sources/{paper_title}.html"
+                readme_path = f"homework1/README.md"
                 with open(html_path, 'w', encoding='utf-8') as f:
                     f.write(html_content)
+                with open(readme_path,'a') as file:
+                    file.write(f"- {paper_url}\n")
                 print(f"Downloaded: {paper_title}\n")
 
 else:

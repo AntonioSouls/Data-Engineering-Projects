@@ -1,0 +1,919 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2309.16393] HIC-YOLOv5: Improved YOLOv5 For Small Object Detection</title><meta property="og:description" content="Small object detection has been a challenging problem in the field of object detection. There has been some works that proposes improvements for this task, such as adding several attention blocks or changing the whole …">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HIC-YOLOv5: Improved YOLOv5 For Small Object Detection">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="HIC-YOLOv5: Improved YOLOv5 For Small Object Detection">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2309.16393">
+
+<!--Generated on Wed Feb 28 14:19:07 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document" style="font-size:173%;">HIC-YOLOv5: Improved YOLOv5 For Small Object Detection
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"><span id="id4.2.id1" class="ltx_text ltx_font_bold">Shiyi Tang, Shu Zhang, Yini Fang</span> 
+<br class="ltx_break">Heriot-Watt University, Ocean University of China, Hong Kong University of Science and Technology
+<br class="ltx_break"><span id="id5.3.id2" class="ltx_text ltx_font_italic">st2015@hw.ac.uk, zhangshu@ouc.edu.cn, yfangba@connect.ust.hk</span>
+</span><span class="ltx_author_notes">*This work was not supported by any organization<sup id="id6.4.id1" class="ltx_sup"><span id="id6.4.id1.1" class="ltx_text ltx_font_italic">1</span></sup>Shiyi Tang Author majors in Computer Science, Ocean University of China &amp; Heriot-Watt University
+<span id="id7.5.id2" class="ltx_text ltx_font_typewriter" style="font-size:90%;">st2015@hw.ac.uk</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id3.2" class="ltx_p">Small object detection has been a challenging problem in the field of object detection. There has been some works that proposes improvements for this task, such as adding several attention blocks or changing the whole structure of feature fusion networks. However, the computation cost of these models is large, which makes deploying a real-time object detection system unfeasible, while leaving room for improvement. To this end, an improved YOLOv5 model: HIC-YOLOv5 is proposed to address the aforementioned problems. Firstly, an additional prediction head specific to small objects is added to provide a higher-resolution feature map for better prediction. Secondly, an involution block is adopted between the backbone and neck to increase channel information of the feature map. Moreover, an attention mechanism named CBAM is applied at the end of the backbone, thus not only decreasing the computation cost compared with previous works but also emphasizing the important information in both channel and spatial domain. Our result shows that HIC-YOLOv5 has improved mAP@[.5:.95] by 6.42<math id="id2.1.m1.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="id2.1.m1.1a"><mo id="id2.1.m1.1.1" xref="id2.1.m1.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="id2.1.m1.1b"><csymbol cd="latexml" id="id2.1.m1.1.1.cmml" xref="id2.1.m1.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="id2.1.m1.1c">\%</annotation></semantics></math> and mAP@0.5 by 9.38<math id="id3.2.m2.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="id3.2.m2.1a"><mo id="id3.2.m2.1.1" xref="id3.2.m2.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="id3.2.m2.1b"><csymbol cd="latexml" id="id3.2.m2.1.1.cmml" xref="id3.2.m2.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="id3.2.m2.1c">\%</annotation></semantics></math> on VisDrone-2019-DET dataset.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">INTRODUCTION</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Object detection algorithm has been widely applied to smart systems of Unmanned Aerial Vehicles (UAVs), such as pedestrian detection and vehicle detection. It automates the analysis process of the photos taken by UAVs. However, the biggest issue of such applications lies in detecting small objects, as most of the objects in the photos become smaller from a higher altitude. This fact poses negative effects on the accuracy of object detection, including target occlusion, low target density, and dramatic changes in light.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">You Only Look Once (YOLO)<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, a one-stage object detection algorithm, is dominating UAV systems due to its low latency and high accuracy. It takes an image as input and outputs the information of the objects in one stage. The lightweight model can achieve real-time object detection in UAV systems. However, it still has drawbacks in UAV scenarios with a large number of small objects. To address this issue, there have been previous works to improve the performance of small object detection. Some works <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> improves the whole structure of the feature fusion network of YOLOv5. Other works<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> add several attention blocks in the backbone. However, the computation cost is large among the previous methods and there is still improvement space of the performance.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.2" class="ltx_p">In this paper, we propose an improved YOLOv5 algorithm: HIC-YOLOv5 (Head, Involution and CBAM-YOLOv5) for small object detection, with better performance and less computation cost. We first add an additional prediction head—Small Object Detection Head (SODH) dedicated to detecting small objects from feature maps with a higher resolution. The features of tiny and small objects are more easily extracted when the resolution of the feature map increases. Secondly, we add a Channel feature fusion with involution (CFFI) between the backbone and the neck enhance the channel information, thereby improving overall performance. In this way, the performance is improved with more information transmitted to the deep network. Finally, we apply a lightweight Convolutional Block Attention Module (CBAM) at the end of the backbone, which not only has a lower computation cost than <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> but also improves the total performance by emphasizing important channel and spatial features. The experiment result shows that our HIC-YOLOv5 has improved the performance of YOLOv5 on VisDrone dataset by 6.42<math id="S1.p3.1.m1.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S1.p3.1.m1.1a"><mo id="S1.p3.1.m1.1.1" xref="S1.p3.1.m1.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S1.p3.1.m1.1b"><csymbol cd="latexml" id="S1.p3.1.m1.1.1.cmml" xref="S1.p3.1.m1.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S1.p3.1.m1.1c">\%</annotation></semantics></math>(mAP@[.5:.95]) and 9.38<math id="S1.p3.2.m2.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S1.p3.2.m2.1a"><mo id="S1.p3.2.m2.1.1" xref="S1.p3.2.m2.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S1.p3.2.m2.1b"><csymbol cd="latexml" id="S1.p3.2.m2.1.1.cmml" xref="S1.p3.2.m2.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S1.p3.2.m2.1c">\%</annotation></semantics></math>(mAP@0.5).</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Our main contributions can be summarized as follows:</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">The additional prediction head is designed especially for small objects. It detects objects in higher-resolution feature maps, which contain more information about tiny and small objects.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">An involution block is added as a bridge between the backbone and neck to increase the channel information of the feature maps.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">CBAM is applied at the end of the backbone, thus more essential channel and spatial information is extracted while the redundant ones are ignored.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">RELATED WORKS</span>
+</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS1.4.1.1" class="ltx_text">II-A</span> </span><span id="S2.SS1.5.2" class="ltx_text ltx_font_italic">Object Detection Primer</span>
+</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">The main purpose of object detection is to locate and classify objects in images, in the form of bounding boxes and confidence scores labeled on the objects. There are two types of object detection pipelines: two-stage and one-stage detectors. The two-stage detectors (e.g., R-CNN<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, SPP-net<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, Fast R-CNN<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> and FPN<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>) first generate region proposals, and then apply object classification and height and width regression. The one-stage detectors (e.g., YOLO series and SSD<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>) use a deep learning model, which directly takes an image as input and outputs bounding box coordinates and class probabilities.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">Among all the YOLO series, YOLOv5 is the most suitable algorithm for real-time object detection due to its promising performance and excellent computational efficiency. There have been several versions of YOLOv5, with the same main structure but a few differences on some small modules. In this paper, we choose to use YOLOv5-6.0 as our experimental algorithm. The main structure of YOLOv5-6.0 are shown in Fig. <a href="#S2.F1" title="Figure 1 ‣ II-A Object Detection Primer ‣ II RELATED WORKS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<figure id="S2.F1" class="ltx_figure"><img src="/html/2309.16393/assets/default-yolov5.png" id="S2.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="343" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Structure of YOLOv5-6.0.</figcaption>
+</figure>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.1" class="ltx_p">The backbone of YOLOv5 firstly extracts features from the input image and generates different sizes of feature maps. These feature maps are then fused with the feature maps in the neck. Finally, three different feature maps generated from the neck are sent to the prediction head. The detailed information is described as follows:</p>
+</div>
+<div id="S2.SS1.p4" class="ltx_para">
+<p id="S2.SS1.p4.1" class="ltx_p">The backbone includes several Conv, CSPDarkNet53 (C3), and SPPF modules. The Conv module adopts Conv2d, Batch Normalization, and SiLU activation function. C3, which is based on the CSPNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, is the main module to learn the residual features. It includes two branches: one branch adopts three Conv modules and several Bottlenecks, and another branch only uses one Conv module. The two branches are finally concatenated together and fed into the next modules. SPPF modules are added at the end of the backbone, which is an improved type of Spatial Pyramid Pooling (SPP)<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. It replaces the large-sized pooling kernels with several cascaded small-sized pooling kernels, aiming to increase the computation speed while maintaining the original function of integrating feature maps of different receptive fields to enrich the expression ability of features.</p>
+</div>
+<div id="S2.SS1.p5" class="ltx_para">
+<p id="S2.SS1.p5.1" class="ltx_p">The neck of YOLOv5 draws on the structure of the Feature Pyramid Network (FPN) and Path Aggregation Network (PANet). The structure of FPN and PANet in YOLOv5 are shown in Fig. <a href="#S2.F2" title="Figure 2 ‣ II-A Object Detection Primer ‣ II RELATED WORKS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. FPN mainly consists of two paths: Bottom-up and Top-down. Bottom-Up path responds to the backbone of YOLOv5, which gradually decreases the size of the feature map to increase the semantic information. Top-down path takes the smallest feature map generated by Bottom-up path as input and gradually increases the size of the feature map using an upsample, thus increasing the semantic information of low-level features. Finally, feature maps with the same size in the two paths are laterally connected together to increase the semantic representation on multiple scales. PANet adds a Bottom-up path based on FPN. Therefore, the position information at the low level can also be transmitted to the deep level, thus enhancing the positioning ability at multiple scales.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2309.16393/assets/fpn-panet.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="202" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>FPN and PANet structure in YOLOv5.</figcaption>
+</figure>
+<div id="S2.SS1.p6" class="ltx_para">
+<p id="S2.SS1.p6.4" class="ltx_p">There are totally 3 prediction heads in YOLOv5, which aims to detect three sizes (80 <math id="S2.SS1.p6.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S2.SS1.p6.1.m1.1a"><mo id="S2.SS1.p6.1.m1.1.1" xref="S2.SS1.p6.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S2.SS1.p6.1.m1.1b"><times id="S2.SS1.p6.1.m1.1.1.cmml" xref="S2.SS1.p6.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p6.1.m1.1c">\times</annotation></semantics></math> 80, 40 <math id="S2.SS1.p6.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S2.SS1.p6.2.m2.1a"><mo id="S2.SS1.p6.2.m2.1.1" xref="S2.SS1.p6.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S2.SS1.p6.2.m2.1b"><times id="S2.SS1.p6.2.m2.1.1.cmml" xref="S2.SS1.p6.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p6.2.m2.1c">\times</annotation></semantics></math> 40, 20 <math id="S2.SS1.p6.3.m3.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S2.SS1.p6.3.m3.1a"><mo id="S2.SS1.p6.3.m3.1.1" xref="S2.SS1.p6.3.m3.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S2.SS1.p6.3.m3.1b"><times id="S2.SS1.p6.3.m3.1.1.cmml" xref="S2.SS1.p6.3.m3.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p6.3.m3.1c">\times</annotation></semantics></math> 20) of objects respectively: large, medium and small, where the image resolution is 640 <math id="S2.SS1.p6.4.m4.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S2.SS1.p6.4.m4.1a"><mo id="S2.SS1.p6.4.m4.1.1" xref="S2.SS1.p6.4.m4.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S2.SS1.p6.4.m4.1b"><times id="S2.SS1.p6.4.m4.1.1.cmml" xref="S2.SS1.p6.4.m4.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p6.4.m4.1c">\times</annotation></semantics></math> 640. The prediction heads divide grids on these three feature maps according to the dimensions of the feature maps. Then, three groups of anchors with different aspect ratios for each grid on each feature map are set to generate candidate bounding boxes. Finally, Non-Maximum Suppression (NMS) is applied to discard the overlapping bounding boxes and output the final bounding boxes, which include the locations and sizes of the boxes, and the confidence scores of the objects.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS2.4.1.1" class="ltx_text">II-B</span> </span><span id="S2.SS2.5.2" class="ltx_text ltx_font_italic">Previous Works on Small Object Detection</span>
+</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">There have been numerous prior efforts aimed at enhancing the detection performance of small objects. Certain studies have focused on optimizing the overall architecture of the neck component within YOLOv5. For instance, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> replaces the PANet in YOLOv5 with a weighted bidirectional feature pyramid Mul-BiFPN and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> introduces a new feature fusion method PB-FPN to the neck of YOLOv5. However, both methods choose to change the entire structure of neck to achieve better feature fusion, which result in larger computation cost. Instead, we introduce a lightweight involution block between the backbone and the neck, aiming to improve the performance of PANet in the neck of YOLOv5 with less computation cost and higher accuracy. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> introduces a spatio-temporal interaction module, which applies recursive gated convolution to make greater spatial interaction, but causes channel information loss because of 1 <math id="S2.SS2.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S2.SS2.p1.1.m1.1a"><mo id="S2.SS2.p1.1.m1.1.1" xref="S2.SS2.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S2.SS2.p1.1.m1.1b"><times id="S2.SS2.p1.1.m1.1.1.cmml" xref="S2.SS2.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p1.1.m1.1c">\times</annotation></semantics></math> 1 convolution layers. In our structure, the involution block can effectively address this problem. Moreover, some works try to apply attention mechanisms<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>. Attention mechanisms have been widely applied in the field of computer vision, which learns to emphasize essential parts and ignore the unimportant ones in an image. There are various types of attention mechanisms, such as channel attention, spatial attention, temporal attention, and branch attention. There have been previous works that integrate transformer layers into YOLOv5. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> adds a transformer layer at the end of the backbone. However, it requires large computation costs and is difficult to train the model when the input image size is large. Compared with these methods, we add a lightweight CBAM block at the end of the backbone, which aims to use less computation cost and focus more on essential information when extracting features.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">METHODOLOGY</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">The structure of HIC-YOLOv5 is shown in Fig. <a href="#S3.F3" title="Figure 3 ‣ III METHODOLOGY ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>. Original YOLOv5 consists of 3 sections: backbone for feature extraction, neck for feature fusion, and 3 prediction heads. Based on the default model, we propose three modifications: 1) we add an additional prediction head to detect layers with high-resolution feature maps for small and tiny objects specifically; 2) an Involution block is adopted at the beginning of the neck to improve the performance of PANet; 3) we incorporate the Convolutional Block Attention Module (CBAM) into the backbone network.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2309.16393/assets/HIC-yolov5.png" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="349" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Structure of HIC-YOLOv5.</figcaption>
+</figure>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS1.4.1.1" class="ltx_text">III-A</span> </span><span id="S3.SS1.5.2" class="ltx_text ltx_font_italic">Convolutional Block Attention Module(CBAM)</span>
+</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.2" class="ltx_p">Previous works add CBAM into the Neck block when generating feature pyramids. However, the parameters and computing cost increase because some feature maps connected with CBAM have large sizes. Moreover, the model is difficult to train due to the large amount of parameters. Hence, we adopt CBAM in the Backbone network with the purpose of highlighting significant features when extracting features in the backbone, rather than generating feature pyramids in the neck. Moreover, the feature map size as the input of CBAM is only 20 <math id="S3.SS1.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p1.1.m1.1a"><mo id="S3.SS1.p1.1.m1.1.1" xref="S3.SS1.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.1.m1.1b"><times id="S3.SS1.p1.1.m1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.1.m1.1c">\times</annotation></semantics></math> 20 which is 32 times smaller than the 640 <math id="S3.SS1.p1.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p1.2.m2.1a"><mo id="S3.SS1.p1.2.m2.1.1" xref="S3.SS1.p1.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.2.m2.1b"><times id="S3.SS1.p1.2.m2.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.2.m2.1c">\times</annotation></semantics></math> 640 full image so that the computing cost will not be large.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">CBAM is an effective model based on attention mechanism, which can be conveniently integrated into CNN architectures. It consists of 2 blocks: Channel Attention Module and Spatial Attention Module, as shown in Fig. <a href="#S3.F4" title="Figure 4 ‣ III-A Convolutional Block Attention Module(CBAM) ‣ III METHODOLOGY ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>. The two modules respectively generate a channel and a spatial attention map, which are then multiplied with the input feature map to facilitate adaptive feature refinement. Therefore, the meaningful features along both channel and spatial axes are emphasized, while the redundant ones are suppressed. The Channel Attention Module performs global Max-pooling and Average-pooling for feature maps on different channels and then executes element-wise summation and sigmoid activation. The Spatial Attention Module performs a global Max-pooling and Average-pooling for Values of pixels in the same position on different feature maps and then concatenates the two feature maps, followed by a Conv2d operation and sigmoid activation.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2309.16393/assets/cbam.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="419" height="134" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Structure of CBAM<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>.</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS2.4.1.1" class="ltx_text">III-B</span> </span><span id="S3.SS2.5.2" class="ltx_text ltx_font_italic">Channel Feature Fusion with Involution (CFFI)</span>
+</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">The neck of YOLOv5 adopts PANet, which introduces the bottom-up path augmentation structure on the basis of FPN. The corresponding structure of FPN and bottom-up path augmentation in YOLOv5 is shown in Fig. <a href="#S2.F2" title="Figure 2 ‣ II-A Object Detection Primer ‣ II RELATED WORKS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. Particularly, FPN has great ability to detect small and tiny targets by fusing features of high and low layers so as to obtain high resolution and strong semantics features. However, a 1 <math id="S3.SS2.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS2.p1.1.m1.1a"><mo id="S3.SS2.p1.1.m1.1.1" xref="S3.SS2.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.1.m1.1b"><times id="S3.SS2.p1.1.m1.1.1.cmml" xref="S3.SS2.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.1.m1.1c">\times</annotation></semantics></math> 1 convolution is adopted to reduce the number of channels at the beginning of the neck in original YOLOv5, where the calculation efficiency is significantly improved, but the channel information is also reduced, leading to poor performance of PANet. Inspired by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>, we add an Involution block between the backbone and the neck. The channel information is improved and shared, resulting in the reduction of information loss during the initial phases of FPN. As a result, this improvement contributes to the enhanced performance of FPN, particularly benefiting the detection of objects with smaller sizes. Moreover, it is emphasized that Involution has better adaptation to various visual patterns in terms of different spatial positions.<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite></p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.8" class="ltx_p">The structure of Involution is illustrated in Fig. <a href="#S3.F5" title="Figure 5 ‣ III-B Channel Feature Fusion with Involution (CFFI) ‣ III METHODOLOGY ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>. Involution kernels, represented as <math id="S3.SS2.p2.1.m1.1" class="ltx_Math" alttext="\mathcal{H}\in\mathbb{R}^{H\times W\times K\times K\times G}" display="inline"><semantics id="S3.SS2.p2.1.m1.1a"><mrow id="S3.SS2.p2.1.m1.1.1" xref="S3.SS2.p2.1.m1.1.1.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.SS2.p2.1.m1.1.1.2" xref="S3.SS2.p2.1.m1.1.1.2.cmml">ℋ</mi><mo id="S3.SS2.p2.1.m1.1.1.1" xref="S3.SS2.p2.1.m1.1.1.1.cmml">∈</mo><msup id="S3.SS2.p2.1.m1.1.1.3" xref="S3.SS2.p2.1.m1.1.1.3.cmml"><mi id="S3.SS2.p2.1.m1.1.1.3.2" xref="S3.SS2.p2.1.m1.1.1.3.2.cmml">ℝ</mi><mrow id="S3.SS2.p2.1.m1.1.1.3.3" xref="S3.SS2.p2.1.m1.1.1.3.3.cmml"><mi id="S3.SS2.p2.1.m1.1.1.3.3.2" xref="S3.SS2.p2.1.m1.1.1.3.3.2.cmml">H</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.1.m1.1.1.3.3.1" xref="S3.SS2.p2.1.m1.1.1.3.3.1.cmml">×</mo><mi id="S3.SS2.p2.1.m1.1.1.3.3.3" xref="S3.SS2.p2.1.m1.1.1.3.3.3.cmml">W</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.1.m1.1.1.3.3.1a" xref="S3.SS2.p2.1.m1.1.1.3.3.1.cmml">×</mo><mi id="S3.SS2.p2.1.m1.1.1.3.3.4" xref="S3.SS2.p2.1.m1.1.1.3.3.4.cmml">K</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.1.m1.1.1.3.3.1b" xref="S3.SS2.p2.1.m1.1.1.3.3.1.cmml">×</mo><mi id="S3.SS2.p2.1.m1.1.1.3.3.5" xref="S3.SS2.p2.1.m1.1.1.3.3.5.cmml">K</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.1.m1.1.1.3.3.1c" xref="S3.SS2.p2.1.m1.1.1.3.3.1.cmml">×</mo><mi id="S3.SS2.p2.1.m1.1.1.3.3.6" xref="S3.SS2.p2.1.m1.1.1.3.3.6.cmml">G</mi></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.1.m1.1b"><apply id="S3.SS2.p2.1.m1.1.1.cmml" xref="S3.SS2.p2.1.m1.1.1"><in id="S3.SS2.p2.1.m1.1.1.1.cmml" xref="S3.SS2.p2.1.m1.1.1.1"></in><ci id="S3.SS2.p2.1.m1.1.1.2.cmml" xref="S3.SS2.p2.1.m1.1.1.2">ℋ</ci><apply id="S3.SS2.p2.1.m1.1.1.3.cmml" xref="S3.SS2.p2.1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.p2.1.m1.1.1.3.1.cmml" xref="S3.SS2.p2.1.m1.1.1.3">superscript</csymbol><ci id="S3.SS2.p2.1.m1.1.1.3.2.cmml" xref="S3.SS2.p2.1.m1.1.1.3.2">ℝ</ci><apply id="S3.SS2.p2.1.m1.1.1.3.3.cmml" xref="S3.SS2.p2.1.m1.1.1.3.3"><times id="S3.SS2.p2.1.m1.1.1.3.3.1.cmml" xref="S3.SS2.p2.1.m1.1.1.3.3.1"></times><ci id="S3.SS2.p2.1.m1.1.1.3.3.2.cmml" xref="S3.SS2.p2.1.m1.1.1.3.3.2">𝐻</ci><ci id="S3.SS2.p2.1.m1.1.1.3.3.3.cmml" xref="S3.SS2.p2.1.m1.1.1.3.3.3">𝑊</ci><ci id="S3.SS2.p2.1.m1.1.1.3.3.4.cmml" xref="S3.SS2.p2.1.m1.1.1.3.3.4">𝐾</ci><ci id="S3.SS2.p2.1.m1.1.1.3.3.5.cmml" xref="S3.SS2.p2.1.m1.1.1.3.3.5">𝐾</ci><ci id="S3.SS2.p2.1.m1.1.1.3.3.6.cmml" xref="S3.SS2.p2.1.m1.1.1.3.3.6">𝐺</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.1.m1.1c">\mathcal{H}\in\mathbb{R}^{H\times W\times K\times K\times G}</annotation></semantics></math>, are designed to incorporate transformations that exhibit inverse attributes in both the spatial and channel domains, where <math id="S3.SS2.p2.2.m2.1" class="ltx_Math" alttext="H" display="inline"><semantics id="S3.SS2.p2.2.m2.1a"><mi id="S3.SS2.p2.2.m2.1.1" xref="S3.SS2.p2.2.m2.1.1.cmml">H</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.2.m2.1b"><ci id="S3.SS2.p2.2.m2.1.1.cmml" xref="S3.SS2.p2.2.m2.1.1">𝐻</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.2.m2.1c">H</annotation></semantics></math> and <math id="S3.SS2.p2.3.m3.1" class="ltx_Math" alttext="W" display="inline"><semantics id="S3.SS2.p2.3.m3.1a"><mi id="S3.SS2.p2.3.m3.1.1" xref="S3.SS2.p2.3.m3.1.1.cmml">W</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.3.m3.1b"><ci id="S3.SS2.p2.3.m3.1.1.cmml" xref="S3.SS2.p2.3.m3.1.1">𝑊</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.3.m3.1c">W</annotation></semantics></math> represents the height and width of the feature map, <math id="S3.SS2.p2.4.m4.1" class="ltx_Math" alttext="K" display="inline"><semantics id="S3.SS2.p2.4.m4.1a"><mi id="S3.SS2.p2.4.m4.1.1" xref="S3.SS2.p2.4.m4.1.1.cmml">K</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.4.m4.1b"><ci id="S3.SS2.p2.4.m4.1.1.cmml" xref="S3.SS2.p2.4.m4.1.1">𝐾</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.4.m4.1c">K</annotation></semantics></math> is the kernel size and <math id="S3.SS2.p2.5.m5.1" class="ltx_Math" alttext="G" display="inline"><semantics id="S3.SS2.p2.5.m5.1a"><mi id="S3.SS2.p2.5.m5.1.1" xref="S3.SS2.p2.5.m5.1.1.cmml">G</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.5.m5.1b"><ci id="S3.SS2.p2.5.m5.1.1.cmml" xref="S3.SS2.p2.5.m5.1.1">𝐺</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.5.m5.1c">G</annotation></semantics></math> represents the number of groups, where each group shares the same involution kernel. Particularly, a specific involution kernel, denoted as <math id="S3.SS2.p2.6.m6.11" class="ltx_Math" alttext="\mathcal{H}_{i,j,\cdot,\cdot,g}\in\mathbb{R}^{K\times K},g=1,2,...,G" display="inline"><semantics id="S3.SS2.p2.6.m6.11a"><mrow id="S3.SS2.p2.6.m6.11.11.2" xref="S3.SS2.p2.6.m6.11.11.3.cmml"><mrow id="S3.SS2.p2.6.m6.10.10.1.1" xref="S3.SS2.p2.6.m6.10.10.1.1.cmml"><msub id="S3.SS2.p2.6.m6.10.10.1.1.2" xref="S3.SS2.p2.6.m6.10.10.1.1.2.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.SS2.p2.6.m6.10.10.1.1.2.2" xref="S3.SS2.p2.6.m6.10.10.1.1.2.2.cmml">ℋ</mi><mrow id="S3.SS2.p2.6.m6.5.5.5.7" xref="S3.SS2.p2.6.m6.5.5.5.6.cmml"><mi id="S3.SS2.p2.6.m6.1.1.1.1" xref="S3.SS2.p2.6.m6.1.1.1.1.cmml">i</mi><mo id="S3.SS2.p2.6.m6.5.5.5.7.1" xref="S3.SS2.p2.6.m6.5.5.5.6.cmml">,</mo><mi id="S3.SS2.p2.6.m6.2.2.2.2" xref="S3.SS2.p2.6.m6.2.2.2.2.cmml">j</mi><mo rspace="0em" id="S3.SS2.p2.6.m6.5.5.5.7.2" xref="S3.SS2.p2.6.m6.5.5.5.6.cmml">,</mo><mo lspace="0em" rspace="0em" id="S3.SS2.p2.6.m6.3.3.3.3" xref="S3.SS2.p2.6.m6.3.3.3.3.cmml">⋅</mo><mo rspace="0em" id="S3.SS2.p2.6.m6.5.5.5.7.3" xref="S3.SS2.p2.6.m6.5.5.5.6.cmml">,</mo><mo lspace="0em" rspace="0em" id="S3.SS2.p2.6.m6.4.4.4.4" xref="S3.SS2.p2.6.m6.4.4.4.4.cmml">⋅</mo><mo id="S3.SS2.p2.6.m6.5.5.5.7.4" xref="S3.SS2.p2.6.m6.5.5.5.6.cmml">,</mo><mi id="S3.SS2.p2.6.m6.5.5.5.5" xref="S3.SS2.p2.6.m6.5.5.5.5.cmml">g</mi></mrow></msub><mo id="S3.SS2.p2.6.m6.10.10.1.1.1" xref="S3.SS2.p2.6.m6.10.10.1.1.1.cmml">∈</mo><msup id="S3.SS2.p2.6.m6.10.10.1.1.3" xref="S3.SS2.p2.6.m6.10.10.1.1.3.cmml"><mi id="S3.SS2.p2.6.m6.10.10.1.1.3.2" xref="S3.SS2.p2.6.m6.10.10.1.1.3.2.cmml">ℝ</mi><mrow id="S3.SS2.p2.6.m6.10.10.1.1.3.3" xref="S3.SS2.p2.6.m6.10.10.1.1.3.3.cmml"><mi id="S3.SS2.p2.6.m6.10.10.1.1.3.3.2" xref="S3.SS2.p2.6.m6.10.10.1.1.3.3.2.cmml">K</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.6.m6.10.10.1.1.3.3.1" xref="S3.SS2.p2.6.m6.10.10.1.1.3.3.1.cmml">×</mo><mi id="S3.SS2.p2.6.m6.10.10.1.1.3.3.3" xref="S3.SS2.p2.6.m6.10.10.1.1.3.3.3.cmml">K</mi></mrow></msup></mrow><mo id="S3.SS2.p2.6.m6.11.11.2.3" xref="S3.SS2.p2.6.m6.11.11.3a.cmml">,</mo><mrow id="S3.SS2.p2.6.m6.11.11.2.2" xref="S3.SS2.p2.6.m6.11.11.2.2.cmml"><mi id="S3.SS2.p2.6.m6.11.11.2.2.2" xref="S3.SS2.p2.6.m6.11.11.2.2.2.cmml">g</mi><mo id="S3.SS2.p2.6.m6.11.11.2.2.1" xref="S3.SS2.p2.6.m6.11.11.2.2.1.cmml">=</mo><mrow id="S3.SS2.p2.6.m6.11.11.2.2.3.2" xref="S3.SS2.p2.6.m6.11.11.2.2.3.1.cmml"><mn id="S3.SS2.p2.6.m6.6.6" xref="S3.SS2.p2.6.m6.6.6.cmml">1</mn><mo id="S3.SS2.p2.6.m6.11.11.2.2.3.2.1" xref="S3.SS2.p2.6.m6.11.11.2.2.3.1.cmml">,</mo><mn id="S3.SS2.p2.6.m6.7.7" xref="S3.SS2.p2.6.m6.7.7.cmml">2</mn><mo id="S3.SS2.p2.6.m6.11.11.2.2.3.2.2" xref="S3.SS2.p2.6.m6.11.11.2.2.3.1.cmml">,</mo><mi mathvariant="normal" id="S3.SS2.p2.6.m6.8.8" xref="S3.SS2.p2.6.m6.8.8.cmml">…</mi><mo id="S3.SS2.p2.6.m6.11.11.2.2.3.2.3" xref="S3.SS2.p2.6.m6.11.11.2.2.3.1.cmml">,</mo><mi id="S3.SS2.p2.6.m6.9.9" xref="S3.SS2.p2.6.m6.9.9.cmml">G</mi></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.6.m6.11b"><apply id="S3.SS2.p2.6.m6.11.11.3.cmml" xref="S3.SS2.p2.6.m6.11.11.2"><csymbol cd="ambiguous" id="S3.SS2.p2.6.m6.11.11.3a.cmml" xref="S3.SS2.p2.6.m6.11.11.2.3">formulae-sequence</csymbol><apply id="S3.SS2.p2.6.m6.10.10.1.1.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1"><in id="S3.SS2.p2.6.m6.10.10.1.1.1.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.1"></in><apply id="S3.SS2.p2.6.m6.10.10.1.1.2.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.2"><csymbol cd="ambiguous" id="S3.SS2.p2.6.m6.10.10.1.1.2.1.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.2">subscript</csymbol><ci id="S3.SS2.p2.6.m6.10.10.1.1.2.2.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.2.2">ℋ</ci><list id="S3.SS2.p2.6.m6.5.5.5.6.cmml" xref="S3.SS2.p2.6.m6.5.5.5.7"><ci id="S3.SS2.p2.6.m6.1.1.1.1.cmml" xref="S3.SS2.p2.6.m6.1.1.1.1">𝑖</ci><ci id="S3.SS2.p2.6.m6.2.2.2.2.cmml" xref="S3.SS2.p2.6.m6.2.2.2.2">𝑗</ci><ci id="S3.SS2.p2.6.m6.3.3.3.3.cmml" xref="S3.SS2.p2.6.m6.3.3.3.3">⋅</ci><ci id="S3.SS2.p2.6.m6.4.4.4.4.cmml" xref="S3.SS2.p2.6.m6.4.4.4.4">⋅</ci><ci id="S3.SS2.p2.6.m6.5.5.5.5.cmml" xref="S3.SS2.p2.6.m6.5.5.5.5">𝑔</ci></list></apply><apply id="S3.SS2.p2.6.m6.10.10.1.1.3.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.p2.6.m6.10.10.1.1.3.1.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.3">superscript</csymbol><ci id="S3.SS2.p2.6.m6.10.10.1.1.3.2.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.3.2">ℝ</ci><apply id="S3.SS2.p2.6.m6.10.10.1.1.3.3.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.3.3"><times id="S3.SS2.p2.6.m6.10.10.1.1.3.3.1.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.3.3.1"></times><ci id="S3.SS2.p2.6.m6.10.10.1.1.3.3.2.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.3.3.2">𝐾</ci><ci id="S3.SS2.p2.6.m6.10.10.1.1.3.3.3.cmml" xref="S3.SS2.p2.6.m6.10.10.1.1.3.3.3">𝐾</ci></apply></apply></apply><apply id="S3.SS2.p2.6.m6.11.11.2.2.cmml" xref="S3.SS2.p2.6.m6.11.11.2.2"><eq id="S3.SS2.p2.6.m6.11.11.2.2.1.cmml" xref="S3.SS2.p2.6.m6.11.11.2.2.1"></eq><ci id="S3.SS2.p2.6.m6.11.11.2.2.2.cmml" xref="S3.SS2.p2.6.m6.11.11.2.2.2">𝑔</ci><list id="S3.SS2.p2.6.m6.11.11.2.2.3.1.cmml" xref="S3.SS2.p2.6.m6.11.11.2.2.3.2"><cn type="integer" id="S3.SS2.p2.6.m6.6.6.cmml" xref="S3.SS2.p2.6.m6.6.6">1</cn><cn type="integer" id="S3.SS2.p2.6.m6.7.7.cmml" xref="S3.SS2.p2.6.m6.7.7">2</cn><ci id="S3.SS2.p2.6.m6.8.8.cmml" xref="S3.SS2.p2.6.m6.8.8">…</ci><ci id="S3.SS2.p2.6.m6.9.9.cmml" xref="S3.SS2.p2.6.m6.9.9">𝐺</ci></list></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.6.m6.11c">\mathcal{H}_{i,j,\cdot,\cdot,g}\in\mathbb{R}^{K\times K},g=1,2,...,G</annotation></semantics></math>, is designed for the pixel <math id="S3.SS2.p2.7.m7.2" class="ltx_Math" alttext="\mathbf{X}_{i,j}\in\mathbb{R}^{C}" display="inline"><semantics id="S3.SS2.p2.7.m7.2a"><mrow id="S3.SS2.p2.7.m7.2.3" xref="S3.SS2.p2.7.m7.2.3.cmml"><msub id="S3.SS2.p2.7.m7.2.3.2" xref="S3.SS2.p2.7.m7.2.3.2.cmml"><mi id="S3.SS2.p2.7.m7.2.3.2.2" xref="S3.SS2.p2.7.m7.2.3.2.2.cmml">𝐗</mi><mrow id="S3.SS2.p2.7.m7.2.2.2.4" xref="S3.SS2.p2.7.m7.2.2.2.3.cmml"><mi id="S3.SS2.p2.7.m7.1.1.1.1" xref="S3.SS2.p2.7.m7.1.1.1.1.cmml">i</mi><mo id="S3.SS2.p2.7.m7.2.2.2.4.1" xref="S3.SS2.p2.7.m7.2.2.2.3.cmml">,</mo><mi id="S3.SS2.p2.7.m7.2.2.2.2" xref="S3.SS2.p2.7.m7.2.2.2.2.cmml">j</mi></mrow></msub><mo id="S3.SS2.p2.7.m7.2.3.1" xref="S3.SS2.p2.7.m7.2.3.1.cmml">∈</mo><msup id="S3.SS2.p2.7.m7.2.3.3" xref="S3.SS2.p2.7.m7.2.3.3.cmml"><mi id="S3.SS2.p2.7.m7.2.3.3.2" xref="S3.SS2.p2.7.m7.2.3.3.2.cmml">ℝ</mi><mi id="S3.SS2.p2.7.m7.2.3.3.3" xref="S3.SS2.p2.7.m7.2.3.3.3.cmml">C</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.7.m7.2b"><apply id="S3.SS2.p2.7.m7.2.3.cmml" xref="S3.SS2.p2.7.m7.2.3"><in id="S3.SS2.p2.7.m7.2.3.1.cmml" xref="S3.SS2.p2.7.m7.2.3.1"></in><apply id="S3.SS2.p2.7.m7.2.3.2.cmml" xref="S3.SS2.p2.7.m7.2.3.2"><csymbol cd="ambiguous" id="S3.SS2.p2.7.m7.2.3.2.1.cmml" xref="S3.SS2.p2.7.m7.2.3.2">subscript</csymbol><ci id="S3.SS2.p2.7.m7.2.3.2.2.cmml" xref="S3.SS2.p2.7.m7.2.3.2.2">𝐗</ci><list id="S3.SS2.p2.7.m7.2.2.2.3.cmml" xref="S3.SS2.p2.7.m7.2.2.2.4"><ci id="S3.SS2.p2.7.m7.1.1.1.1.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1">𝑖</ci><ci id="S3.SS2.p2.7.m7.2.2.2.2.cmml" xref="S3.SS2.p2.7.m7.2.2.2.2">𝑗</ci></list></apply><apply id="S3.SS2.p2.7.m7.2.3.3.cmml" xref="S3.SS2.p2.7.m7.2.3.3"><csymbol cd="ambiguous" id="S3.SS2.p2.7.m7.2.3.3.1.cmml" xref="S3.SS2.p2.7.m7.2.3.3">superscript</csymbol><ci id="S3.SS2.p2.7.m7.2.3.3.2.cmml" xref="S3.SS2.p2.7.m7.2.3.3.2">ℝ</ci><ci id="S3.SS2.p2.7.m7.2.3.3.3.cmml" xref="S3.SS2.p2.7.m7.2.3.3.3">𝐶</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.7.m7.2c">\mathbf{X}_{i,j}\in\mathbb{R}^{C}</annotation></semantics></math> (the subscript of C is omitted for brevity), while being shared across the channels. Finally, the output feature map of involution <math id="S3.SS2.p2.8.m8.3" class="ltx_Math" alttext="\mathbf{Y}_{i,j,k}" display="inline"><semantics id="S3.SS2.p2.8.m8.3a"><msub id="S3.SS2.p2.8.m8.3.4" xref="S3.SS2.p2.8.m8.3.4.cmml"><mi id="S3.SS2.p2.8.m8.3.4.2" xref="S3.SS2.p2.8.m8.3.4.2.cmml">𝐘</mi><mrow id="S3.SS2.p2.8.m8.3.3.3.5" xref="S3.SS2.p2.8.m8.3.3.3.4.cmml"><mi id="S3.SS2.p2.8.m8.1.1.1.1" xref="S3.SS2.p2.8.m8.1.1.1.1.cmml">i</mi><mo id="S3.SS2.p2.8.m8.3.3.3.5.1" xref="S3.SS2.p2.8.m8.3.3.3.4.cmml">,</mo><mi id="S3.SS2.p2.8.m8.2.2.2.2" xref="S3.SS2.p2.8.m8.2.2.2.2.cmml">j</mi><mo id="S3.SS2.p2.8.m8.3.3.3.5.2" xref="S3.SS2.p2.8.m8.3.3.3.4.cmml">,</mo><mi id="S3.SS2.p2.8.m8.3.3.3.3" xref="S3.SS2.p2.8.m8.3.3.3.3.cmml">k</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.8.m8.3b"><apply id="S3.SS2.p2.8.m8.3.4.cmml" xref="S3.SS2.p2.8.m8.3.4"><csymbol cd="ambiguous" id="S3.SS2.p2.8.m8.3.4.1.cmml" xref="S3.SS2.p2.8.m8.3.4">subscript</csymbol><ci id="S3.SS2.p2.8.m8.3.4.2.cmml" xref="S3.SS2.p2.8.m8.3.4.2">𝐘</ci><list id="S3.SS2.p2.8.m8.3.3.3.4.cmml" xref="S3.SS2.p2.8.m8.3.3.3.5"><ci id="S3.SS2.p2.8.m8.1.1.1.1.cmml" xref="S3.SS2.p2.8.m8.1.1.1.1">𝑖</ci><ci id="S3.SS2.p2.8.m8.2.2.2.2.cmml" xref="S3.SS2.p2.8.m8.2.2.2.2">𝑗</ci><ci id="S3.SS2.p2.8.m8.3.3.3.3.cmml" xref="S3.SS2.p2.8.m8.3.3.3.3">𝑘</ci></list></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.8.m8.3c">\mathbf{Y}_{i,j,k}</annotation></semantics></math>, is obtained as follows:</p>
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1.13" class="ltx_Math" alttext="\mathbf{Y}_{i,j,k}=\sum_{(u,v)\in\Delta_{K}}\mathcal{H}_{i,j,u+\lfloor K/2\rfloor,v+\lfloor K/2\rfloor,\lceil kG/C\rceil}\mathbf{X}_{i+u,j+v,k}" display="block"><semantics id="S3.E1.m1.13a"><mrow id="S3.E1.m1.13.14" xref="S3.E1.m1.13.14.cmml"><msub id="S3.E1.m1.13.14.2" xref="S3.E1.m1.13.14.2.cmml"><mi id="S3.E1.m1.13.14.2.2" xref="S3.E1.m1.13.14.2.2.cmml">𝐘</mi><mrow id="S3.E1.m1.3.3.3.5" xref="S3.E1.m1.3.3.3.4.cmml"><mi id="S3.E1.m1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.cmml">i</mi><mo id="S3.E1.m1.3.3.3.5.1" xref="S3.E1.m1.3.3.3.4.cmml">,</mo><mi id="S3.E1.m1.2.2.2.2" xref="S3.E1.m1.2.2.2.2.cmml">j</mi><mo id="S3.E1.m1.3.3.3.5.2" xref="S3.E1.m1.3.3.3.4.cmml">,</mo><mi id="S3.E1.m1.3.3.3.3" xref="S3.E1.m1.3.3.3.3.cmml">k</mi></mrow></msub><mo rspace="0.111em" id="S3.E1.m1.13.14.1" xref="S3.E1.m1.13.14.1.cmml">=</mo><mrow id="S3.E1.m1.13.14.3" xref="S3.E1.m1.13.14.3.cmml"><munder id="S3.E1.m1.13.14.3.1" xref="S3.E1.m1.13.14.3.1.cmml"><mo movablelimits="false" id="S3.E1.m1.13.14.3.1.2" xref="S3.E1.m1.13.14.3.1.2.cmml">∑</mo><mrow id="S3.E1.m1.5.5.2" xref="S3.E1.m1.5.5.2.cmml"><mrow id="S3.E1.m1.5.5.2.4.2" xref="S3.E1.m1.5.5.2.4.1.cmml"><mo stretchy="false" id="S3.E1.m1.5.5.2.4.2.1" xref="S3.E1.m1.5.5.2.4.1.cmml">(</mo><mi id="S3.E1.m1.4.4.1.1" xref="S3.E1.m1.4.4.1.1.cmml">u</mi><mo id="S3.E1.m1.5.5.2.4.2.2" xref="S3.E1.m1.5.5.2.4.1.cmml">,</mo><mi id="S3.E1.m1.5.5.2.2" xref="S3.E1.m1.5.5.2.2.cmml">v</mi><mo stretchy="false" id="S3.E1.m1.5.5.2.4.2.3" xref="S3.E1.m1.5.5.2.4.1.cmml">)</mo></mrow><mo id="S3.E1.m1.5.5.2.3" xref="S3.E1.m1.5.5.2.3.cmml">∈</mo><msub id="S3.E1.m1.5.5.2.5" xref="S3.E1.m1.5.5.2.5.cmml"><mi mathvariant="normal" id="S3.E1.m1.5.5.2.5.2" xref="S3.E1.m1.5.5.2.5.2.cmml">Δ</mi><mi id="S3.E1.m1.5.5.2.5.3" xref="S3.E1.m1.5.5.2.5.3.cmml">K</mi></msub></mrow></munder><mrow id="S3.E1.m1.13.14.3.2" xref="S3.E1.m1.13.14.3.2.cmml"><msub id="S3.E1.m1.13.14.3.2.2" xref="S3.E1.m1.13.14.3.2.2.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.E1.m1.13.14.3.2.2.2" xref="S3.E1.m1.13.14.3.2.2.2.cmml">ℋ</mi><mrow id="S3.E1.m1.10.10.5.5" xref="S3.E1.m1.10.10.5.6.cmml"><mi id="S3.E1.m1.6.6.1.1" xref="S3.E1.m1.6.6.1.1.cmml">i</mi><mo id="S3.E1.m1.10.10.5.5.4" xref="S3.E1.m1.10.10.5.6.cmml">,</mo><mi id="S3.E1.m1.7.7.2.2" xref="S3.E1.m1.7.7.2.2.cmml">j</mi><mo id="S3.E1.m1.10.10.5.5.5" xref="S3.E1.m1.10.10.5.6.cmml">,</mo><mrow id="S3.E1.m1.8.8.3.3.1" xref="S3.E1.m1.8.8.3.3.1.cmml"><mi id="S3.E1.m1.8.8.3.3.1.3" xref="S3.E1.m1.8.8.3.3.1.3.cmml">u</mi><mo id="S3.E1.m1.8.8.3.3.1.2" xref="S3.E1.m1.8.8.3.3.1.2.cmml">+</mo><mrow id="S3.E1.m1.8.8.3.3.1.1.1" xref="S3.E1.m1.8.8.3.3.1.1.2.cmml"><mo stretchy="false" id="S3.E1.m1.8.8.3.3.1.1.1.2" xref="S3.E1.m1.8.8.3.3.1.1.2.1.cmml">⌊</mo><mrow id="S3.E1.m1.8.8.3.3.1.1.1.1" xref="S3.E1.m1.8.8.3.3.1.1.1.1.cmml"><mi id="S3.E1.m1.8.8.3.3.1.1.1.1.2" xref="S3.E1.m1.8.8.3.3.1.1.1.1.2.cmml">K</mi><mo id="S3.E1.m1.8.8.3.3.1.1.1.1.1" xref="S3.E1.m1.8.8.3.3.1.1.1.1.1.cmml">/</mo><mn id="S3.E1.m1.8.8.3.3.1.1.1.1.3" xref="S3.E1.m1.8.8.3.3.1.1.1.1.3.cmml">2</mn></mrow><mo stretchy="false" id="S3.E1.m1.8.8.3.3.1.1.1.3" xref="S3.E1.m1.8.8.3.3.1.1.2.1.cmml">⌋</mo></mrow></mrow><mo id="S3.E1.m1.10.10.5.5.6" xref="S3.E1.m1.10.10.5.6.cmml">,</mo><mrow id="S3.E1.m1.9.9.4.4.2" xref="S3.E1.m1.9.9.4.4.2.cmml"><mi id="S3.E1.m1.9.9.4.4.2.3" xref="S3.E1.m1.9.9.4.4.2.3.cmml">v</mi><mo id="S3.E1.m1.9.9.4.4.2.2" xref="S3.E1.m1.9.9.4.4.2.2.cmml">+</mo><mrow id="S3.E1.m1.9.9.4.4.2.1.1" xref="S3.E1.m1.9.9.4.4.2.1.2.cmml"><mo stretchy="false" id="S3.E1.m1.9.9.4.4.2.1.1.2" xref="S3.E1.m1.9.9.4.4.2.1.2.1.cmml">⌊</mo><mrow id="S3.E1.m1.9.9.4.4.2.1.1.1" xref="S3.E1.m1.9.9.4.4.2.1.1.1.cmml"><mi id="S3.E1.m1.9.9.4.4.2.1.1.1.2" xref="S3.E1.m1.9.9.4.4.2.1.1.1.2.cmml">K</mi><mo id="S3.E1.m1.9.9.4.4.2.1.1.1.1" xref="S3.E1.m1.9.9.4.4.2.1.1.1.1.cmml">/</mo><mn id="S3.E1.m1.9.9.4.4.2.1.1.1.3" xref="S3.E1.m1.9.9.4.4.2.1.1.1.3.cmml">2</mn></mrow><mo stretchy="false" id="S3.E1.m1.9.9.4.4.2.1.1.3" xref="S3.E1.m1.9.9.4.4.2.1.2.1.cmml">⌋</mo></mrow></mrow><mo id="S3.E1.m1.10.10.5.5.7" xref="S3.E1.m1.10.10.5.6.cmml">,</mo><mrow id="S3.E1.m1.10.10.5.5.3.1" xref="S3.E1.m1.10.10.5.5.3.2.cmml"><mo stretchy="false" id="S3.E1.m1.10.10.5.5.3.1.2" xref="S3.E1.m1.10.10.5.5.3.2.1.cmml">⌈</mo><mrow id="S3.E1.m1.10.10.5.5.3.1.1" xref="S3.E1.m1.10.10.5.5.3.1.1.cmml"><mrow id="S3.E1.m1.10.10.5.5.3.1.1.2" xref="S3.E1.m1.10.10.5.5.3.1.1.2.cmml"><mi id="S3.E1.m1.10.10.5.5.3.1.1.2.2" xref="S3.E1.m1.10.10.5.5.3.1.1.2.2.cmml">k</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.10.10.5.5.3.1.1.2.1" xref="S3.E1.m1.10.10.5.5.3.1.1.2.1.cmml">​</mo><mi id="S3.E1.m1.10.10.5.5.3.1.1.2.3" xref="S3.E1.m1.10.10.5.5.3.1.1.2.3.cmml">G</mi></mrow><mo id="S3.E1.m1.10.10.5.5.3.1.1.1" xref="S3.E1.m1.10.10.5.5.3.1.1.1.cmml">/</mo><mi id="S3.E1.m1.10.10.5.5.3.1.1.3" xref="S3.E1.m1.10.10.5.5.3.1.1.3.cmml">C</mi></mrow><mo stretchy="false" id="S3.E1.m1.10.10.5.5.3.1.3" xref="S3.E1.m1.10.10.5.5.3.2.1.cmml">⌉</mo></mrow></mrow></msub><mo lspace="0em" rspace="0em" id="S3.E1.m1.13.14.3.2.1" xref="S3.E1.m1.13.14.3.2.1.cmml">​</mo><msub id="S3.E1.m1.13.14.3.2.3" xref="S3.E1.m1.13.14.3.2.3.cmml"><mi id="S3.E1.m1.13.14.3.2.3.2" xref="S3.E1.m1.13.14.3.2.3.2.cmml">𝐗</mi><mrow id="S3.E1.m1.13.13.3.3" xref="S3.E1.m1.13.13.3.4.cmml"><mrow id="S3.E1.m1.12.12.2.2.1" xref="S3.E1.m1.12.12.2.2.1.cmml"><mi id="S3.E1.m1.12.12.2.2.1.2" xref="S3.E1.m1.12.12.2.2.1.2.cmml">i</mi><mo id="S3.E1.m1.12.12.2.2.1.1" xref="S3.E1.m1.12.12.2.2.1.1.cmml">+</mo><mi id="S3.E1.m1.12.12.2.2.1.3" xref="S3.E1.m1.12.12.2.2.1.3.cmml">u</mi></mrow><mo id="S3.E1.m1.13.13.3.3.3" xref="S3.E1.m1.13.13.3.4.cmml">,</mo><mrow id="S3.E1.m1.13.13.3.3.2" xref="S3.E1.m1.13.13.3.3.2.cmml"><mi id="S3.E1.m1.13.13.3.3.2.2" xref="S3.E1.m1.13.13.3.3.2.2.cmml">j</mi><mo id="S3.E1.m1.13.13.3.3.2.1" xref="S3.E1.m1.13.13.3.3.2.1.cmml">+</mo><mi id="S3.E1.m1.13.13.3.3.2.3" xref="S3.E1.m1.13.13.3.3.2.3.cmml">v</mi></mrow><mo id="S3.E1.m1.13.13.3.3.4" xref="S3.E1.m1.13.13.3.4.cmml">,</mo><mi id="S3.E1.m1.11.11.1.1" xref="S3.E1.m1.11.11.1.1.cmml">k</mi></mrow></msub></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.13b"><apply id="S3.E1.m1.13.14.cmml" xref="S3.E1.m1.13.14"><eq id="S3.E1.m1.13.14.1.cmml" xref="S3.E1.m1.13.14.1"></eq><apply id="S3.E1.m1.13.14.2.cmml" xref="S3.E1.m1.13.14.2"><csymbol cd="ambiguous" id="S3.E1.m1.13.14.2.1.cmml" xref="S3.E1.m1.13.14.2">subscript</csymbol><ci id="S3.E1.m1.13.14.2.2.cmml" xref="S3.E1.m1.13.14.2.2">𝐘</ci><list id="S3.E1.m1.3.3.3.4.cmml" xref="S3.E1.m1.3.3.3.5"><ci id="S3.E1.m1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1">𝑖</ci><ci id="S3.E1.m1.2.2.2.2.cmml" xref="S3.E1.m1.2.2.2.2">𝑗</ci><ci id="S3.E1.m1.3.3.3.3.cmml" xref="S3.E1.m1.3.3.3.3">𝑘</ci></list></apply><apply id="S3.E1.m1.13.14.3.cmml" xref="S3.E1.m1.13.14.3"><apply id="S3.E1.m1.13.14.3.1.cmml" xref="S3.E1.m1.13.14.3.1"><csymbol cd="ambiguous" id="S3.E1.m1.13.14.3.1.1.cmml" xref="S3.E1.m1.13.14.3.1">subscript</csymbol><sum id="S3.E1.m1.13.14.3.1.2.cmml" xref="S3.E1.m1.13.14.3.1.2"></sum><apply id="S3.E1.m1.5.5.2.cmml" xref="S3.E1.m1.5.5.2"><in id="S3.E1.m1.5.5.2.3.cmml" xref="S3.E1.m1.5.5.2.3"></in><interval closure="open" id="S3.E1.m1.5.5.2.4.1.cmml" xref="S3.E1.m1.5.5.2.4.2"><ci id="S3.E1.m1.4.4.1.1.cmml" xref="S3.E1.m1.4.4.1.1">𝑢</ci><ci id="S3.E1.m1.5.5.2.2.cmml" xref="S3.E1.m1.5.5.2.2">𝑣</ci></interval><apply id="S3.E1.m1.5.5.2.5.cmml" xref="S3.E1.m1.5.5.2.5"><csymbol cd="ambiguous" id="S3.E1.m1.5.5.2.5.1.cmml" xref="S3.E1.m1.5.5.2.5">subscript</csymbol><ci id="S3.E1.m1.5.5.2.5.2.cmml" xref="S3.E1.m1.5.5.2.5.2">Δ</ci><ci id="S3.E1.m1.5.5.2.5.3.cmml" xref="S3.E1.m1.5.5.2.5.3">𝐾</ci></apply></apply></apply><apply id="S3.E1.m1.13.14.3.2.cmml" xref="S3.E1.m1.13.14.3.2"><times id="S3.E1.m1.13.14.3.2.1.cmml" xref="S3.E1.m1.13.14.3.2.1"></times><apply id="S3.E1.m1.13.14.3.2.2.cmml" xref="S3.E1.m1.13.14.3.2.2"><csymbol cd="ambiguous" id="S3.E1.m1.13.14.3.2.2.1.cmml" xref="S3.E1.m1.13.14.3.2.2">subscript</csymbol><ci id="S3.E1.m1.13.14.3.2.2.2.cmml" xref="S3.E1.m1.13.14.3.2.2.2">ℋ</ci><list id="S3.E1.m1.10.10.5.6.cmml" xref="S3.E1.m1.10.10.5.5"><ci id="S3.E1.m1.6.6.1.1.cmml" xref="S3.E1.m1.6.6.1.1">𝑖</ci><ci id="S3.E1.m1.7.7.2.2.cmml" xref="S3.E1.m1.7.7.2.2">𝑗</ci><apply id="S3.E1.m1.8.8.3.3.1.cmml" xref="S3.E1.m1.8.8.3.3.1"><plus id="S3.E1.m1.8.8.3.3.1.2.cmml" xref="S3.E1.m1.8.8.3.3.1.2"></plus><ci id="S3.E1.m1.8.8.3.3.1.3.cmml" xref="S3.E1.m1.8.8.3.3.1.3">𝑢</ci><apply id="S3.E1.m1.8.8.3.3.1.1.2.cmml" xref="S3.E1.m1.8.8.3.3.1.1.1"><floor id="S3.E1.m1.8.8.3.3.1.1.2.1.cmml" xref="S3.E1.m1.8.8.3.3.1.1.1.2"></floor><apply id="S3.E1.m1.8.8.3.3.1.1.1.1.cmml" xref="S3.E1.m1.8.8.3.3.1.1.1.1"><divide id="S3.E1.m1.8.8.3.3.1.1.1.1.1.cmml" xref="S3.E1.m1.8.8.3.3.1.1.1.1.1"></divide><ci id="S3.E1.m1.8.8.3.3.1.1.1.1.2.cmml" xref="S3.E1.m1.8.8.3.3.1.1.1.1.2">𝐾</ci><cn type="integer" id="S3.E1.m1.8.8.3.3.1.1.1.1.3.cmml" xref="S3.E1.m1.8.8.3.3.1.1.1.1.3">2</cn></apply></apply></apply><apply id="S3.E1.m1.9.9.4.4.2.cmml" xref="S3.E1.m1.9.9.4.4.2"><plus id="S3.E1.m1.9.9.4.4.2.2.cmml" xref="S3.E1.m1.9.9.4.4.2.2"></plus><ci id="S3.E1.m1.9.9.4.4.2.3.cmml" xref="S3.E1.m1.9.9.4.4.2.3">𝑣</ci><apply id="S3.E1.m1.9.9.4.4.2.1.2.cmml" xref="S3.E1.m1.9.9.4.4.2.1.1"><floor id="S3.E1.m1.9.9.4.4.2.1.2.1.cmml" xref="S3.E1.m1.9.9.4.4.2.1.1.2"></floor><apply id="S3.E1.m1.9.9.4.4.2.1.1.1.cmml" xref="S3.E1.m1.9.9.4.4.2.1.1.1"><divide id="S3.E1.m1.9.9.4.4.2.1.1.1.1.cmml" xref="S3.E1.m1.9.9.4.4.2.1.1.1.1"></divide><ci id="S3.E1.m1.9.9.4.4.2.1.1.1.2.cmml" xref="S3.E1.m1.9.9.4.4.2.1.1.1.2">𝐾</ci><cn type="integer" id="S3.E1.m1.9.9.4.4.2.1.1.1.3.cmml" xref="S3.E1.m1.9.9.4.4.2.1.1.1.3">2</cn></apply></apply></apply><apply id="S3.E1.m1.10.10.5.5.3.2.cmml" xref="S3.E1.m1.10.10.5.5.3.1"><ceiling id="S3.E1.m1.10.10.5.5.3.2.1.cmml" xref="S3.E1.m1.10.10.5.5.3.1.2"></ceiling><apply id="S3.E1.m1.10.10.5.5.3.1.1.cmml" xref="S3.E1.m1.10.10.5.5.3.1.1"><divide id="S3.E1.m1.10.10.5.5.3.1.1.1.cmml" xref="S3.E1.m1.10.10.5.5.3.1.1.1"></divide><apply id="S3.E1.m1.10.10.5.5.3.1.1.2.cmml" xref="S3.E1.m1.10.10.5.5.3.1.1.2"><times id="S3.E1.m1.10.10.5.5.3.1.1.2.1.cmml" xref="S3.E1.m1.10.10.5.5.3.1.1.2.1"></times><ci id="S3.E1.m1.10.10.5.5.3.1.1.2.2.cmml" xref="S3.E1.m1.10.10.5.5.3.1.1.2.2">𝑘</ci><ci id="S3.E1.m1.10.10.5.5.3.1.1.2.3.cmml" xref="S3.E1.m1.10.10.5.5.3.1.1.2.3">𝐺</ci></apply><ci id="S3.E1.m1.10.10.5.5.3.1.1.3.cmml" xref="S3.E1.m1.10.10.5.5.3.1.1.3">𝐶</ci></apply></apply></list></apply><apply id="S3.E1.m1.13.14.3.2.3.cmml" xref="S3.E1.m1.13.14.3.2.3"><csymbol cd="ambiguous" id="S3.E1.m1.13.14.3.2.3.1.cmml" xref="S3.E1.m1.13.14.3.2.3">subscript</csymbol><ci id="S3.E1.m1.13.14.3.2.3.2.cmml" xref="S3.E1.m1.13.14.3.2.3.2">𝐗</ci><list id="S3.E1.m1.13.13.3.4.cmml" xref="S3.E1.m1.13.13.3.3"><apply id="S3.E1.m1.12.12.2.2.1.cmml" xref="S3.E1.m1.12.12.2.2.1"><plus id="S3.E1.m1.12.12.2.2.1.1.cmml" xref="S3.E1.m1.12.12.2.2.1.1"></plus><ci id="S3.E1.m1.12.12.2.2.1.2.cmml" xref="S3.E1.m1.12.12.2.2.1.2">𝑖</ci><ci id="S3.E1.m1.12.12.2.2.1.3.cmml" xref="S3.E1.m1.12.12.2.2.1.3">𝑢</ci></apply><apply id="S3.E1.m1.13.13.3.3.2.cmml" xref="S3.E1.m1.13.13.3.3.2"><plus id="S3.E1.m1.13.13.3.3.2.1.cmml" xref="S3.E1.m1.13.13.3.3.2.1"></plus><ci id="S3.E1.m1.13.13.3.3.2.2.cmml" xref="S3.E1.m1.13.13.3.3.2.2">𝑗</ci><ci id="S3.E1.m1.13.13.3.3.2.3.cmml" xref="S3.E1.m1.13.13.3.3.2.3">𝑣</ci></apply><ci id="S3.E1.m1.11.11.1.1.cmml" xref="S3.E1.m1.11.11.1.1">𝑘</ci></list></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.13c">\mathbf{Y}_{i,j,k}=\sum_{(u,v)\in\Delta_{K}}\mathcal{H}_{i,j,u+\lfloor K/2\rfloor,v+\lfloor K/2\rfloor,\lceil kG/C\rceil}\mathbf{X}_{i+u,j+v,k}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS2.p2.9" class="ltx_p">Therefore, the information contained in the channel dimension of a single pixel is implicitly dispersed to its spatial vicinity, which is useful to obtain the enriched receptive field information.</p>
+</div>
+<figure id="S3.F5" class="ltx_figure"><img src="/html/2309.16393/assets/involution.png" id="S3.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="359" height="191" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Structure of Involution block<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>.</figcaption>
+</figure>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS3.4.1.1" class="ltx_text">III-C</span> </span><span id="S3.SS3.5.2" class="ltx_text ltx_font_italic">Prediction Head</span>
+</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.4" class="ltx_p">The different resolutions (80 <math id="S3.SS3.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS3.p1.1.m1.1a"><mo id="S3.SS3.p1.1.m1.1.1" xref="S3.SS3.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.1.m1.1b"><times id="S3.SS3.p1.1.m1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.1.m1.1c">\times</annotation></semantics></math> 80, 40 <math id="S3.SS3.p1.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS3.p1.2.m2.1a"><mo id="S3.SS3.p1.2.m2.1.1" xref="S3.SS3.p1.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.2.m2.1b"><times id="S3.SS3.p1.2.m2.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.2.m2.1c">\times</annotation></semantics></math> 40, and 20 <math id="S3.SS3.p1.3.m3.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS3.p1.3.m3.1a"><mo id="S3.SS3.p1.3.m3.1.1" xref="S3.SS3.p1.3.m3.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.3.m3.1b"><times id="S3.SS3.p1.3.m3.1.1.cmml" xref="S3.SS3.p1.3.m3.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.3.m3.1c">\times</annotation></semantics></math> 20) of 3 prediction heads in YOLOv5 make a great contribution to the detection ability in various application scenarios, but also make it difficult to detect small and tiny objects. The reason why the performance of YOLOv5 on tiny object detection is poor is that the features of tiny objects which only contain few pixels are likely to be ignored. Although convolutional blocks play an important role in extracting the features from feature maps, they also reduce the resolution of feature maps when the depth of the network increases, thus the features of the tiny object are difficult to extract. In order to solve this issue and inspired by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, we propose an additional prediction head—Small Object Detection Head (SODH), which aims to detect feature maps with larger resolution (160 <math id="S3.SS3.p1.4.m4.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS3.p1.4.m4.1a"><mo id="S3.SS3.p1.4.m4.1.1" xref="S3.SS3.p1.4.m4.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.4.m4.1b"><times id="S3.SS3.p1.4.m4.1.1.cmml" xref="S3.SS3.p1.4.m4.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.4.m4.1c">\times</annotation></semantics></math> 160). It becomes increasingly effortless to extract features from small and minuscule objects.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.1" class="ltx_p">Each prediction head takes the feature extracted and fused by backbone and neck as input, and finally outputs a vector, which consists of the regression bounding box (coordinate and size), the confidence of the object’s border and the class of the object. Before generating the final bounding boxes, we generate anchors to form the candidate bounding boxes. These anchors are generated by k-means according to the dataset and are defined in 3 different scales for the 3 prediction heads, adapting to small, middle and large objects respectively. Anchors of the additional prediction head are also generated by k-means.</p>
+</div>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS4.4.1.1" class="ltx_text">III-D</span> </span><span id="S3.SS4.5.2" class="ltx_text ltx_font_italic">Loss Function</span>
+</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.1" class="ltx_p">The loss function of HIC-YOLOv5 consists of three sections: objectness, bounding box and class probability, which can be represented as follows:</p>
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E2.m1.1" class="ltx_Math" alttext="\operatorname{Loss}=\alpha\operatorname{Loss}_{obj}+\beta\text{ Loss }_{box}+\gamma\operatorname{Loss}_{cls}" display="block"><semantics id="S3.E2.m1.1a"><mrow id="S3.E2.m1.1.1" xref="S3.E2.m1.1.1.cmml"><mi id="S3.E2.m1.1.1.2" xref="S3.E2.m1.1.1.2.cmml">Loss</mi><mo id="S3.E2.m1.1.1.1" xref="S3.E2.m1.1.1.1.cmml">=</mo><mrow id="S3.E2.m1.1.1.3" xref="S3.E2.m1.1.1.3.cmml"><mrow id="S3.E2.m1.1.1.3.2" xref="S3.E2.m1.1.1.3.2.cmml"><mi id="S3.E2.m1.1.1.3.2.2" xref="S3.E2.m1.1.1.3.2.2.cmml">α</mi><mo lspace="0.167em" rspace="0em" id="S3.E2.m1.1.1.3.2.1" xref="S3.E2.m1.1.1.3.2.1.cmml">​</mo><msub id="S3.E2.m1.1.1.3.2.3" xref="S3.E2.m1.1.1.3.2.3.cmml"><mi id="S3.E2.m1.1.1.3.2.3.2" xref="S3.E2.m1.1.1.3.2.3.2.cmml">Loss</mi><mrow id="S3.E2.m1.1.1.3.2.3.3" xref="S3.E2.m1.1.1.3.2.3.3.cmml"><mi id="S3.E2.m1.1.1.3.2.3.3.2" xref="S3.E2.m1.1.1.3.2.3.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.3.2.3.3.1" xref="S3.E2.m1.1.1.3.2.3.3.1.cmml">​</mo><mi id="S3.E2.m1.1.1.3.2.3.3.3" xref="S3.E2.m1.1.1.3.2.3.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.3.2.3.3.1a" xref="S3.E2.m1.1.1.3.2.3.3.1.cmml">​</mo><mi id="S3.E2.m1.1.1.3.2.3.3.4" xref="S3.E2.m1.1.1.3.2.3.3.4.cmml">j</mi></mrow></msub></mrow><mo lspace="0em" id="S3.E2.m1.1.1.3.1" xref="S3.E2.m1.1.1.3.1.cmml">+</mo><mrow id="S3.E2.m1.1.1.3.3" xref="S3.E2.m1.1.1.3.3.cmml"><mi id="S3.E2.m1.1.1.3.3.2" xref="S3.E2.m1.1.1.3.3.2.cmml">β</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.3.3.1" xref="S3.E2.m1.1.1.3.3.1.cmml">​</mo><msub id="S3.E2.m1.1.1.3.3.3" xref="S3.E2.m1.1.1.3.3.3.cmml"><mtext id="S3.E2.m1.1.1.3.3.3.2" xref="S3.E2.m1.1.1.3.3.3.2a.cmml"> Loss </mtext><mrow id="S3.E2.m1.1.1.3.3.3.3" xref="S3.E2.m1.1.1.3.3.3.3.cmml"><mi id="S3.E2.m1.1.1.3.3.3.3.2" xref="S3.E2.m1.1.1.3.3.3.3.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.3.3.3.3.1" xref="S3.E2.m1.1.1.3.3.3.3.1.cmml">​</mo><mi id="S3.E2.m1.1.1.3.3.3.3.3" xref="S3.E2.m1.1.1.3.3.3.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.3.3.3.3.1a" xref="S3.E2.m1.1.1.3.3.3.3.1.cmml">​</mo><mi id="S3.E2.m1.1.1.3.3.3.3.4" xref="S3.E2.m1.1.1.3.3.3.3.4.cmml">x</mi></mrow></msub></mrow><mo id="S3.E2.m1.1.1.3.1a" xref="S3.E2.m1.1.1.3.1.cmml">+</mo><mrow id="S3.E2.m1.1.1.3.4" xref="S3.E2.m1.1.1.3.4.cmml"><mi id="S3.E2.m1.1.1.3.4.2" xref="S3.E2.m1.1.1.3.4.2.cmml">γ</mi><mo lspace="0.167em" rspace="0em" id="S3.E2.m1.1.1.3.4.1" xref="S3.E2.m1.1.1.3.4.1.cmml">​</mo><msub id="S3.E2.m1.1.1.3.4.3" xref="S3.E2.m1.1.1.3.4.3.cmml"><mi id="S3.E2.m1.1.1.3.4.3.2" xref="S3.E2.m1.1.1.3.4.3.2.cmml">Loss</mi><mrow id="S3.E2.m1.1.1.3.4.3.3" xref="S3.E2.m1.1.1.3.4.3.3.cmml"><mi id="S3.E2.m1.1.1.3.4.3.3.2" xref="S3.E2.m1.1.1.3.4.3.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.3.4.3.3.1" xref="S3.E2.m1.1.1.3.4.3.3.1.cmml">​</mo><mi id="S3.E2.m1.1.1.3.4.3.3.3" xref="S3.E2.m1.1.1.3.4.3.3.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.3.4.3.3.1a" xref="S3.E2.m1.1.1.3.4.3.3.1.cmml">​</mo><mi id="S3.E2.m1.1.1.3.4.3.3.4" xref="S3.E2.m1.1.1.3.4.3.3.4.cmml">s</mi></mrow></msub></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E2.m1.1b"><apply id="S3.E2.m1.1.1.cmml" xref="S3.E2.m1.1.1"><eq id="S3.E2.m1.1.1.1.cmml" xref="S3.E2.m1.1.1.1"></eq><ci id="S3.E2.m1.1.1.2.cmml" xref="S3.E2.m1.1.1.2">Loss</ci><apply id="S3.E2.m1.1.1.3.cmml" xref="S3.E2.m1.1.1.3"><plus id="S3.E2.m1.1.1.3.1.cmml" xref="S3.E2.m1.1.1.3.1"></plus><apply id="S3.E2.m1.1.1.3.2.cmml" xref="S3.E2.m1.1.1.3.2"><times id="S3.E2.m1.1.1.3.2.1.cmml" xref="S3.E2.m1.1.1.3.2.1"></times><ci id="S3.E2.m1.1.1.3.2.2.cmml" xref="S3.E2.m1.1.1.3.2.2">𝛼</ci><apply id="S3.E2.m1.1.1.3.2.3.cmml" xref="S3.E2.m1.1.1.3.2.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.3.2.3.1.cmml" xref="S3.E2.m1.1.1.3.2.3">subscript</csymbol><ci id="S3.E2.m1.1.1.3.2.3.2.cmml" xref="S3.E2.m1.1.1.3.2.3.2">Loss</ci><apply id="S3.E2.m1.1.1.3.2.3.3.cmml" xref="S3.E2.m1.1.1.3.2.3.3"><times id="S3.E2.m1.1.1.3.2.3.3.1.cmml" xref="S3.E2.m1.1.1.3.2.3.3.1"></times><ci id="S3.E2.m1.1.1.3.2.3.3.2.cmml" xref="S3.E2.m1.1.1.3.2.3.3.2">𝑜</ci><ci id="S3.E2.m1.1.1.3.2.3.3.3.cmml" xref="S3.E2.m1.1.1.3.2.3.3.3">𝑏</ci><ci id="S3.E2.m1.1.1.3.2.3.3.4.cmml" xref="S3.E2.m1.1.1.3.2.3.3.4">𝑗</ci></apply></apply></apply><apply id="S3.E2.m1.1.1.3.3.cmml" xref="S3.E2.m1.1.1.3.3"><times id="S3.E2.m1.1.1.3.3.1.cmml" xref="S3.E2.m1.1.1.3.3.1"></times><ci id="S3.E2.m1.1.1.3.3.2.cmml" xref="S3.E2.m1.1.1.3.3.2">𝛽</ci><apply id="S3.E2.m1.1.1.3.3.3.cmml" xref="S3.E2.m1.1.1.3.3.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.3.3.3.1.cmml" xref="S3.E2.m1.1.1.3.3.3">subscript</csymbol><ci id="S3.E2.m1.1.1.3.3.3.2a.cmml" xref="S3.E2.m1.1.1.3.3.3.2"><mtext id="S3.E2.m1.1.1.3.3.3.2.cmml" xref="S3.E2.m1.1.1.3.3.3.2"> Loss </mtext></ci><apply id="S3.E2.m1.1.1.3.3.3.3.cmml" xref="S3.E2.m1.1.1.3.3.3.3"><times id="S3.E2.m1.1.1.3.3.3.3.1.cmml" xref="S3.E2.m1.1.1.3.3.3.3.1"></times><ci id="S3.E2.m1.1.1.3.3.3.3.2.cmml" xref="S3.E2.m1.1.1.3.3.3.3.2">𝑏</ci><ci id="S3.E2.m1.1.1.3.3.3.3.3.cmml" xref="S3.E2.m1.1.1.3.3.3.3.3">𝑜</ci><ci id="S3.E2.m1.1.1.3.3.3.3.4.cmml" xref="S3.E2.m1.1.1.3.3.3.3.4">𝑥</ci></apply></apply></apply><apply id="S3.E2.m1.1.1.3.4.cmml" xref="S3.E2.m1.1.1.3.4"><times id="S3.E2.m1.1.1.3.4.1.cmml" xref="S3.E2.m1.1.1.3.4.1"></times><ci id="S3.E2.m1.1.1.3.4.2.cmml" xref="S3.E2.m1.1.1.3.4.2">𝛾</ci><apply id="S3.E2.m1.1.1.3.4.3.cmml" xref="S3.E2.m1.1.1.3.4.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.3.4.3.1.cmml" xref="S3.E2.m1.1.1.3.4.3">subscript</csymbol><ci id="S3.E2.m1.1.1.3.4.3.2.cmml" xref="S3.E2.m1.1.1.3.4.3.2">Loss</ci><apply id="S3.E2.m1.1.1.3.4.3.3.cmml" xref="S3.E2.m1.1.1.3.4.3.3"><times id="S3.E2.m1.1.1.3.4.3.3.1.cmml" xref="S3.E2.m1.1.1.3.4.3.3.1"></times><ci id="S3.E2.m1.1.1.3.4.3.3.2.cmml" xref="S3.E2.m1.1.1.3.4.3.3.2">𝑐</ci><ci id="S3.E2.m1.1.1.3.4.3.3.3.cmml" xref="S3.E2.m1.1.1.3.4.3.3.3">𝑙</ci><ci id="S3.E2.m1.1.1.3.4.3.3.4.cmml" xref="S3.E2.m1.1.1.3.4.3.3.4">𝑠</ci></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m1.1c">\operatorname{Loss}=\alpha\operatorname{Loss}_{obj}+\beta\text{ Loss }_{box}+\gamma\operatorname{Loss}_{cls}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.1" class="ltx_p">We use binary cross entropy loss for both objectness and class probability, and CIoU loss <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> for bounding box regression.</p>
+</div>
+</section>
+<section id="S3.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS5.4.1.1" class="ltx_text">III-E</span> </span><span id="S3.SS5.5.2" class="ltx_text ltx_font_italic">Data Augmentation</span>
+</h3>
+
+<div id="S3.SS5.p1" class="ltx_para">
+<p id="S3.SS5.p1.1" class="ltx_p">Data augmentation is an essential technique to enhance the robustness of the model. In YOLOv5, it includes Mosaic, Copy paste, Random affine, MixUp, HSV augmentation and Cutout. Except that, we found that many small people and cars are in the center of a picture Visdrone2019. Therefore we add extra center cropping to the data augmentation techniques mentioned above..</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">EXPERIMENTAL RESULTS</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">The experiments were conducted on the VisDrone2019 dataset, and the obtained experimental results demonstrate that our proposed YOLOv5 exhibits excellent performance in terms of detection accuracy.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.4.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.5.2" class="ltx_text ltx_font_italic">Experimental Setting</span>
+</h3>
+
+<section id="S4.SS1.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS1.SSS1.4.1.1" class="ltx_text">IV-A</span>1 </span>Experimental Equipment</h4>
+
+<div id="S4.SS1.SSS1.p1" class="ltx_para">
+<p id="S4.SS1.SSS1.p1.1" class="ltx_p">In this experiment, the CPU is 15 vCPU Intel® X Platinum 8358P CPU @ 2.60GHz, the GPU is NVIDIA A40 with 48 GB of Graphics memory. The algorithm is implemented by PyTorch, using CUDA 11.6 to operation acceleration.</p>
+</div>
+</section>
+<section id="S4.SS1.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS1.SSS2.4.1.1" class="ltx_text">IV-A</span>2 </span>Dataset</h4>
+
+<div id="S4.SS1.SSS2.p1" class="ltx_para">
+<p id="S4.SS1.SSS2.p1.1" class="ltx_p">The dataset used in this experiment is VisDrone2019, which is a comprehensive benchmark facilitating the integration of drone technology and visual perception. VisDrone2019 was collected by the AISKYEYE team at Lab of Machine Learning and Data Mining, Tianjin University, China. It comprises 288 video clips consisting of 261,908 frames and 10,209 static images captured by diverse drone-mounted cameras across different locations separated by thousands of kilometers in China, environments containing both urban and rural, objects including pedestrians, vehicles, bicycles etc., and densities from sparse to crowded scenes. Notably, this dataset was acquired using multiple drone platforms with varying models under different scenarios as well as weather and lighting conditions. The dataset is divided into a training set, a validation set and a testing set, with 6471, 548, 1610 images respectively.</p>
+</div>
+<div id="S4.SS1.SSS2.p2" class="ltx_para">
+<p id="S4.SS1.SSS2.p2.1" class="ltx_p">The detailed information of the dataset is visualized in Fig <a href="#S4.F6" title="Figure 6 ‣ IV-A2 Dataset ‣ IV-A Experimental Setting ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>. There are totally 10 classes in this dataset (pedestrian, people, bicycle, car, van, truck, tricycle, awning-tricycle, bus, and motor) as shown in <a href="#S4.F6.sf1" title="In Figure 6 ‣ IV-A2 Dataset ‣ IV-A Experimental Setting ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6a</span></a>. Specifically, it can be observed from the <a href="#S4.F6.sf3" title="In Figure 6 ‣ IV-A2 Dataset ‣ IV-A Experimental Setting ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6c</span></a> and <a href="#S4.T1" title="TABLE I ‣ IV-A2 Dataset ‣ IV-A Experimental Setting ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a> that 75<math id="S4.SS1.SSS2.p2.1.m1.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS1.SSS2.p2.1.m1.1a"><mo id="S4.SS1.SSS2.p2.1.m1.1.1" xref="S4.SS1.SSS2.p2.1.m1.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS1.SSS2.p2.1.m1.1b"><csymbol cd="latexml" id="S4.SS1.SSS2.p2.1.m1.1.1.cmml" xref="S4.SS1.SSS2.p2.1.m1.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.SSS2.p2.1.m1.1c">\%</annotation></semantics></math> objects are 0.001 times smaller than the image size, indicating the large number of small and tiny objects. Moreover, the label locations <a href="#S4.F6.sf2" title="In Figure 6 ‣ IV-A2 Dataset ‣ IV-A Experimental Setting ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6b</span></a> indicates that many objects locate in the center of the pictures, which represents the necessity of center-crop data augmentation.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Area of objects</figcaption>
+<div id="S4.T1.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:173.4pt;height:19pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-77.8pt,8.5pt) scale(0.527188343275255,0.527188343275255) ;">
+<table id="S4.T1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t">mean</th>
+<th id="S4.T1.1.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t">std</th>
+<th id="S4.T1.1.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t">min</th>
+<th id="S4.T1.1.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">25%</th>
+<th id="S4.T1.1.1.1.1.5" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">50%</th>
+<th id="S4.T1.1.1.1.1.6" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">75%</th>
+<th id="S4.T1.1.1.1.1.7" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">max</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.1.2.1" class="ltx_tr">
+<th id="S4.T1.1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r ltx_border_t">0.001535</th>
+<th id="S4.T1.1.1.2.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_r ltx_border_t">0.003852</th>
+<th id="S4.T1.1.1.2.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_r ltx_border_t">0</th>
+<td id="S4.T1.1.1.2.1.4" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.00017</td>
+<td id="S4.T1.1.1.2.1.5" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.000462</td>
+<td id="S4.T1.1.1.2.1.6" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.001342</td>
+<td id="S4.T1.1.1.2.1.7" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.302962</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<figure id="S4.F6" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F6.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2309.16393/assets/instances.jpg" id="S4.F6.sf1.g1" class="ltx_graphics ltx_img_square" width="120" height="136" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(a) </span>Instances. Information of 10 classes in VisDrone-2019.</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F6.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2309.16393/assets/locations.png" id="S4.F6.sf2.g1" class="ltx_graphics ltx_img_square" width="120" height="110" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(b) </span>Locations. The locations of objects in an image, whose height and width are assumed to be 1.</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F6.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2309.16393/assets/histogram.png" id="S4.F6.sf3.g1" class="ltx_graphics ltx_img_square" width="168" height="143" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(c) </span>Distribution. The distribution of object areas in VisDrone-2019.</figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Dataset.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.4.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.5.2" class="ltx_text ltx_font_italic">Hyperparemter Settings</span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">In order to accelerate the training speed, the input image size is set to be 640 <math id="S4.SS2.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S4.SS2.p1.1.m1.1a"><mo id="S4.SS2.p1.1.m1.1.1" xref="S4.SS2.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.1.m1.1b"><times id="S4.SS2.p1.1.m1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.1.m1.1c">\times</annotation></semantics></math> 640. We set the batch size to be 128 and training epoch to be 300. We use early stopping strategy to avoid over-fitting, where the patience is set to 15. We use Adam as the optimizer, with an initial learning rate of 0.001. Other detailed parameters are listed in Table <a href="#S4.T2" title="TABLE II ‣ IV-B Hyperparemter Settings ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>. The weights of the loss function are set to be 0.5 (object), 0.05 (box) and 0.25 (class) respectively.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">There are mainly 5 models in YOLOv5, including YOLOv5n, YOLOv5s, YOLOv5m, YOLOv5l, YOLOv5x. The depth and width of the models increase in sequence while other structures stay the same. The larger the model, the more precise the result. However, in order to accelerate the training speed, we choose to use YOLOv5s during the experiment, with a depth and width of 0.33 and 0.50 respectively.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p">Data augmentation applied in YOLOv5 contains Mosaic, Copy paste, Random affine, MixUp, HSV augmentation and Cutout as listed in Table <a href="#S4.T2" title="TABLE II ‣ IV-B Hyperparemter Settings ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>. We also adopt center crop during this experiment. The height and width of center crop is set to be half of the original image size. It has been observed that center crop is able to improve the overall performance of the model.</p>
+</div>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE II: </span>Parameter Settings.</figcaption>
+<div id="S4.T2.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:173.4pt;height:18.2pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-85.3pt,8.9pt) scale(0.504241659521673,0.504241659521673) ;">
+<table id="S4.T2.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T2.1.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t">hsv_h</th>
+<th id="S4.T2.1.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">hsv_s</th>
+<th id="S4.T2.1.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">hsv_v</th>
+<th id="S4.T2.1.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">degrees</th>
+<th id="S4.T2.1.1.1.1.5" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">scale</th>
+<th id="S4.T2.1.1.1.1.6" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">mosaic</th>
+<th id="S4.T2.1.1.1.1.7" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">mixup</th>
+<th id="S4.T2.1.1.1.1.8" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">copy_paste</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.1.2.1" class="ltx_tr">
+<td id="S4.T2.1.1.2.1.1" class="ltx_td ltx_align_left ltx_border_b ltx_border_l ltx_border_r ltx_border_t">0.4</td>
+<td id="S4.T2.1.1.2.1.2" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.3</td>
+<td id="S4.T2.1.1.2.1.3" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.5</td>
+<td id="S4.T2.1.1.2.1.4" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.2</td>
+<td id="S4.T2.1.1.2.1.5" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.4</td>
+<td id="S4.T2.1.1.2.1.6" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">1</td>
+<td id="S4.T2.1.1.2.1.7" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.2</td>
+<td id="S4.T2.1.1.2.1.8" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">0.1</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<div id="S4.SS2.p4" class="ltx_para">
+<p id="S4.SS2.p4.1" class="ltx_p">Some default anchors are predefined for coco data sets. Before the training starts, annotation details in the dataset will be examined automatically and the most suitable recall rate for the default anchor will be computed. If the optimal recall rate equals or exceeds 0.98, it is not necessary to update the anchor frame. However, YOLOv5 will recalculate the anchors if the optimal recall rate falls below 0.98. During this experiment, 4 groups of anchors of 4 prediction heads are listed in Table<a href="#S4.T3" title="TABLE III ‣ IV-B Hyperparemter Settings ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">III</span></a>. Each group is applied for different sizes of feature maps. Specifically, there are 3 pairs of anchors in each group for a single ground truth. Therefore, the overall number of anchors is 4 <math id="S4.SS2.p4.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S4.SS2.p4.1.m1.1a"><mo id="S4.SS2.p4.1.m1.1.1" xref="S4.SS2.p4.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S4.SS2.p4.1.m1.1b"><times id="S4.SS2.p4.1.m1.1.1.cmml" xref="S4.SS2.p4.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p4.1.m1.1c">\times</annotation></semantics></math> 3=12.</p>
+</div>
+<figure id="S4.T3" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE III: </span>Anchor sizes for prediction heads of HIC-YOLOv5.</figcaption>
+<div id="S4.T3.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:173.4pt;height:51.4pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-65.2pt,19.3pt) scale(0.570803379571251,0.570803379571251) ;">
+<table id="S4.T3.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T3.1.1.1.1" class="ltx_tr">
+<th id="S4.T3.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t">Detection head</th>
+<th id="S4.T3.1.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">Anchor frame size</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T3.1.1.2.1" class="ltx_tr">
+<td id="S4.T3.1.1.2.1.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Tiny</td>
+<td id="S4.T3.1.1.2.1.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">[2.9434,4.0435], [3.8626,8.5592], [6.8534, 5.9391]</td>
+</tr>
+<tr id="S4.T3.1.1.3.2" class="ltx_tr">
+<td id="S4.T3.1.1.3.2.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Small</td>
+<td id="S4.T3.1.1.3.2.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">[10,13], [16,30], [33,23]</td>
+</tr>
+<tr id="S4.T3.1.1.4.3" class="ltx_tr">
+<td id="S4.T3.1.1.4.3.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Medium</td>
+<td id="S4.T3.1.1.4.3.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">[30,61], [62,45], [59,119]</td>
+</tr>
+<tr id="S4.T3.1.1.5.4" class="ltx_tr">
+<td id="S4.T3.1.1.5.4.1" class="ltx_td ltx_align_left ltx_border_b ltx_border_l ltx_border_r ltx_border_t">Large</td>
+<td id="S4.T3.1.1.5.4.2" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">[116,90], [156,198], [373,326]</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS3.4.1.1" class="ltx_text">IV-C</span> </span><span id="S4.SS3.5.2" class="ltx_text ltx_font_italic">Evaluation criterion</span>
+</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">The common criteria used to evaluate the performance of an object detection algorithm include IoU, Precision, Recall and mAP. The detailed definitions are listed below.</p>
+</div>
+<section id="S4.SS3.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS1.4.1.1" class="ltx_text">IV-C</span>1 </span>IoU</h4>
+
+<div id="S4.SS3.SSS1.p1" class="ltx_para">
+<p id="S4.SS3.SSS1.p1.1" class="ltx_p">The Intersection over Union (IoU) is calculated by taking the overlap area between the predicted region (A) and the actual ground truth (B) and dividing it by the combined area of the two. The formula can be expressed as</p>
+<table id="S4.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E3.m1.1" class="ltx_Math" alttext="IoU=\frac{A\bigcap B}{A\bigcup B}" display="block"><semantics id="S4.E3.m1.1a"><mrow id="S4.E3.m1.1.1" xref="S4.E3.m1.1.1.cmml"><mrow id="S4.E3.m1.1.1.2" xref="S4.E3.m1.1.1.2.cmml"><mi id="S4.E3.m1.1.1.2.2" xref="S4.E3.m1.1.1.2.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E3.m1.1.1.2.1" xref="S4.E3.m1.1.1.2.1.cmml">​</mo><mi id="S4.E3.m1.1.1.2.3" xref="S4.E3.m1.1.1.2.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S4.E3.m1.1.1.2.1a" xref="S4.E3.m1.1.1.2.1.cmml">​</mo><mi id="S4.E3.m1.1.1.2.4" xref="S4.E3.m1.1.1.2.4.cmml">U</mi></mrow><mo id="S4.E3.m1.1.1.1" xref="S4.E3.m1.1.1.1.cmml">=</mo><mfrac id="S4.E3.m1.1.1.3" xref="S4.E3.m1.1.1.3.cmml"><mrow id="S4.E3.m1.1.1.3.2" xref="S4.E3.m1.1.1.3.2.cmml"><mi id="S4.E3.m1.1.1.3.2.2" xref="S4.E3.m1.1.1.3.2.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.E3.m1.1.1.3.2.1" xref="S4.E3.m1.1.1.3.2.1.cmml">​</mo><mrow id="S4.E3.m1.1.1.3.2.3" xref="S4.E3.m1.1.1.3.2.3.cmml"><mo id="S4.E3.m1.1.1.3.2.3.1" xref="S4.E3.m1.1.1.3.2.3.1.cmml">⋂</mo><mi id="S4.E3.m1.1.1.3.2.3.2" xref="S4.E3.m1.1.1.3.2.3.2.cmml">B</mi></mrow></mrow><mrow id="S4.E3.m1.1.1.3.3" xref="S4.E3.m1.1.1.3.3.cmml"><mi id="S4.E3.m1.1.1.3.3.2" xref="S4.E3.m1.1.1.3.3.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.E3.m1.1.1.3.3.1" xref="S4.E3.m1.1.1.3.3.1.cmml">​</mo><mrow id="S4.E3.m1.1.1.3.3.3" xref="S4.E3.m1.1.1.3.3.3.cmml"><mo id="S4.E3.m1.1.1.3.3.3.1" xref="S4.E3.m1.1.1.3.3.3.1.cmml">⋃</mo><mi id="S4.E3.m1.1.1.3.3.3.2" xref="S4.E3.m1.1.1.3.3.3.2.cmml">B</mi></mrow></mrow></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S4.E3.m1.1b"><apply id="S4.E3.m1.1.1.cmml" xref="S4.E3.m1.1.1"><eq id="S4.E3.m1.1.1.1.cmml" xref="S4.E3.m1.1.1.1"></eq><apply id="S4.E3.m1.1.1.2.cmml" xref="S4.E3.m1.1.1.2"><times id="S4.E3.m1.1.1.2.1.cmml" xref="S4.E3.m1.1.1.2.1"></times><ci id="S4.E3.m1.1.1.2.2.cmml" xref="S4.E3.m1.1.1.2.2">𝐼</ci><ci id="S4.E3.m1.1.1.2.3.cmml" xref="S4.E3.m1.1.1.2.3">𝑜</ci><ci id="S4.E3.m1.1.1.2.4.cmml" xref="S4.E3.m1.1.1.2.4">𝑈</ci></apply><apply id="S4.E3.m1.1.1.3.cmml" xref="S4.E3.m1.1.1.3"><divide id="S4.E3.m1.1.1.3.1.cmml" xref="S4.E3.m1.1.1.3"></divide><apply id="S4.E3.m1.1.1.3.2.cmml" xref="S4.E3.m1.1.1.3.2"><times id="S4.E3.m1.1.1.3.2.1.cmml" xref="S4.E3.m1.1.1.3.2.1"></times><ci id="S4.E3.m1.1.1.3.2.2.cmml" xref="S4.E3.m1.1.1.3.2.2">𝐴</ci><apply id="S4.E3.m1.1.1.3.2.3.cmml" xref="S4.E3.m1.1.1.3.2.3"><intersect id="S4.E3.m1.1.1.3.2.3.1.cmml" xref="S4.E3.m1.1.1.3.2.3.1"></intersect><ci id="S4.E3.m1.1.1.3.2.3.2.cmml" xref="S4.E3.m1.1.1.3.2.3.2">𝐵</ci></apply></apply><apply id="S4.E3.m1.1.1.3.3.cmml" xref="S4.E3.m1.1.1.3.3"><times id="S4.E3.m1.1.1.3.3.1.cmml" xref="S4.E3.m1.1.1.3.3.1"></times><ci id="S4.E3.m1.1.1.3.3.2.cmml" xref="S4.E3.m1.1.1.3.3.2">𝐴</ci><apply id="S4.E3.m1.1.1.3.3.3.cmml" xref="S4.E3.m1.1.1.3.3.3"><union id="S4.E3.m1.1.1.3.3.3.1.cmml" xref="S4.E3.m1.1.1.3.3.3.1"></union><ci id="S4.E3.m1.1.1.3.3.3.2.cmml" xref="S4.E3.m1.1.1.3.3.3.2">𝐵</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E3.m1.1c">IoU=\frac{A\bigcap B}{A\bigcup B}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S4.SS3.SSS1.p2" class="ltx_para">
+<p id="S4.SS3.SSS1.p2.1" class="ltx_p">The value of IoU ranges from 0 to 1. The larger the value, the more precise the model. Particularly, a lower numerator value indicates that the prediction failed to accurately predict the ground truth region. On the other hand, a higher denominator value indicates a larger predicted region, resulting in a lower IoU value.</p>
+</div>
+</section>
+<section id="S4.SS3.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS2.4.1.1" class="ltx_text">IV-C</span>2 </span>Precision</h4>
+
+<div id="S4.SS3.SSS2.p1" class="ltx_para">
+<p id="S4.SS3.SSS2.p1.1" class="ltx_p">Precision represents the proportion of samples predicted correctly in the set of samples predicted positively. It can be expressed as</p>
+<table id="S4.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E4.m1.1" class="ltx_Math" alttext="\text{ Precision }=\frac{\text{ True positives }}{\text{ True positives }+\text{ False positives }}" display="block"><semantics id="S4.E4.m1.1a"><mrow id="S4.E4.m1.1.1" xref="S4.E4.m1.1.1.cmml"><mtext id="S4.E4.m1.1.1.2" xref="S4.E4.m1.1.1.2a.cmml"> Precision </mtext><mo id="S4.E4.m1.1.1.1" xref="S4.E4.m1.1.1.1.cmml">=</mo><mfrac id="S4.E4.m1.1.1.3" xref="S4.E4.m1.1.1.3.cmml"><mtext id="S4.E4.m1.1.1.3.2" xref="S4.E4.m1.1.1.3.2a.cmml"> True positives </mtext><mrow id="S4.E4.m1.1.1.3.3" xref="S4.E4.m1.1.1.3.3.cmml"><mtext id="S4.E4.m1.1.1.3.3.2" xref="S4.E4.m1.1.1.3.3.2a.cmml"> True positives </mtext><mo id="S4.E4.m1.1.1.3.3.1" xref="S4.E4.m1.1.1.3.3.1.cmml">+</mo><mtext id="S4.E4.m1.1.1.3.3.3" xref="S4.E4.m1.1.1.3.3.3a.cmml"> False positives </mtext></mrow></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S4.E4.m1.1b"><apply id="S4.E4.m1.1.1.cmml" xref="S4.E4.m1.1.1"><eq id="S4.E4.m1.1.1.1.cmml" xref="S4.E4.m1.1.1.1"></eq><ci id="S4.E4.m1.1.1.2a.cmml" xref="S4.E4.m1.1.1.2"><mtext id="S4.E4.m1.1.1.2.cmml" xref="S4.E4.m1.1.1.2"> Precision </mtext></ci><apply id="S4.E4.m1.1.1.3.cmml" xref="S4.E4.m1.1.1.3"><divide id="S4.E4.m1.1.1.3.1.cmml" xref="S4.E4.m1.1.1.3"></divide><ci id="S4.E4.m1.1.1.3.2a.cmml" xref="S4.E4.m1.1.1.3.2"><mtext id="S4.E4.m1.1.1.3.2.cmml" xref="S4.E4.m1.1.1.3.2"> True positives </mtext></ci><apply id="S4.E4.m1.1.1.3.3.cmml" xref="S4.E4.m1.1.1.3.3"><plus id="S4.E4.m1.1.1.3.3.1.cmml" xref="S4.E4.m1.1.1.3.3.1"></plus><ci id="S4.E4.m1.1.1.3.3.2a.cmml" xref="S4.E4.m1.1.1.3.3.2"><mtext id="S4.E4.m1.1.1.3.3.2.cmml" xref="S4.E4.m1.1.1.3.3.2"> True positives </mtext></ci><ci id="S4.E4.m1.1.1.3.3.3a.cmml" xref="S4.E4.m1.1.1.3.3.3"><mtext id="S4.E4.m1.1.1.3.3.3.cmml" xref="S4.E4.m1.1.1.3.3.3"> False positives </mtext></ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E4.m1.1c">\text{ Precision }=\frac{\text{ True positives }}{\text{ True positives }+\text{ False positives }}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section id="S4.SS3.SSS3" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS3.4.1.1" class="ltx_text">IV-C</span>3 </span>Recall</h4>
+
+<div id="S4.SS3.SSS3.p1" class="ltx_para">
+<p id="S4.SS3.SSS3.p1.1" class="ltx_p">Recall represents the proportion of samples that are actually positive and predicted to be correct. It can be expressed as</p>
+<table id="S4.E5" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E5.m1.1" class="ltx_Math" alttext="\text{ Recall }=\frac{\text{ True positives }}{\text{ True positives }+\text{ False negatives }}" display="block"><semantics id="S4.E5.m1.1a"><mrow id="S4.E5.m1.1.1" xref="S4.E5.m1.1.1.cmml"><mtext id="S4.E5.m1.1.1.2" xref="S4.E5.m1.1.1.2a.cmml"> Recall </mtext><mo id="S4.E5.m1.1.1.1" xref="S4.E5.m1.1.1.1.cmml">=</mo><mfrac id="S4.E5.m1.1.1.3" xref="S4.E5.m1.1.1.3.cmml"><mtext id="S4.E5.m1.1.1.3.2" xref="S4.E5.m1.1.1.3.2a.cmml"> True positives </mtext><mrow id="S4.E5.m1.1.1.3.3" xref="S4.E5.m1.1.1.3.3.cmml"><mtext id="S4.E5.m1.1.1.3.3.2" xref="S4.E5.m1.1.1.3.3.2a.cmml"> True positives </mtext><mo id="S4.E5.m1.1.1.3.3.1" xref="S4.E5.m1.1.1.3.3.1.cmml">+</mo><mtext id="S4.E5.m1.1.1.3.3.3" xref="S4.E5.m1.1.1.3.3.3a.cmml"> False negatives </mtext></mrow></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S4.E5.m1.1b"><apply id="S4.E5.m1.1.1.cmml" xref="S4.E5.m1.1.1"><eq id="S4.E5.m1.1.1.1.cmml" xref="S4.E5.m1.1.1.1"></eq><ci id="S4.E5.m1.1.1.2a.cmml" xref="S4.E5.m1.1.1.2"><mtext id="S4.E5.m1.1.1.2.cmml" xref="S4.E5.m1.1.1.2"> Recall </mtext></ci><apply id="S4.E5.m1.1.1.3.cmml" xref="S4.E5.m1.1.1.3"><divide id="S4.E5.m1.1.1.3.1.cmml" xref="S4.E5.m1.1.1.3"></divide><ci id="S4.E5.m1.1.1.3.2a.cmml" xref="S4.E5.m1.1.1.3.2"><mtext id="S4.E5.m1.1.1.3.2.cmml" xref="S4.E5.m1.1.1.3.2"> True positives </mtext></ci><apply id="S4.E5.m1.1.1.3.3.cmml" xref="S4.E5.m1.1.1.3.3"><plus id="S4.E5.m1.1.1.3.3.1.cmml" xref="S4.E5.m1.1.1.3.3.1"></plus><ci id="S4.E5.m1.1.1.3.3.2a.cmml" xref="S4.E5.m1.1.1.3.3.2"><mtext id="S4.E5.m1.1.1.3.3.2.cmml" xref="S4.E5.m1.1.1.3.3.2"> True positives </mtext></ci><ci id="S4.E5.m1.1.1.3.3.3a.cmml" xref="S4.E5.m1.1.1.3.3.3"><mtext id="S4.E5.m1.1.1.3.3.3.cmml" xref="S4.E5.m1.1.1.3.3.3"> False negatives </mtext></ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E5.m1.1c">\text{ Recall }=\frac{\text{ True positives }}{\text{ True positives }+\text{ False negatives }}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section id="S4.SS3.SSS4" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS4.4.1.1" class="ltx_text">IV-C</span>4 </span>mAP</h4>
+
+<div id="S4.SS3.SSS4.p1" class="ltx_para">
+<p id="S4.SS3.SSS4.p1.1" class="ltx_p">The Average Precision (AP) is a measure of the Precision scores at different thresholds along the Precision-Recall (PR) curve, and is calculated as a weighted mean. Mean Average Precision (mAP) is the mean values of the AP for all classes. Specifically, mAP@0.5 represents the mAP when IoU is 0.5, mAP@[.5:.95] is the mean mAP when IoU ranges from 0.5 to 0.95.</p>
+</div>
+</section>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS4.4.1.1" class="ltx_text">IV-D</span> </span><span id="S4.SS4.5.2" class="ltx_text ltx_font_italic">Experimental Results</span>
+</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.1" class="ltx_p">In the conducted experiment, the VisDrone-2019 dataset was utilized to assess the performance of the improved model. After comparing the experimental outcomes between YOLOv5s and the improved algorithm, it can be inferred that our algorithm outperforms YOLOv5s in detecting small targets.</p>
+</div>
+<figure id="S4.T4" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE IV: </span>Comparison of algorithms on VisDrone2019 dataset.</figcaption>
+<table id="S4.T4.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T4.1.1.1" class="ltx_tr">
+<th id="S4.T4.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t">Method</th>
+<th id="S4.T4.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">Dataset</th>
+<th id="S4.T4.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">mAP@.5</th>
+<th id="S4.T4.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">mAP@[.5:.95]</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T4.1.2.1" class="ltx_tr">
+<td id="S4.T4.1.2.1.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">YOLOv5</td>
+<td id="S4.T4.1.2.1.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Test</td>
+<td id="S4.T4.1.2.1.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">27.57</td>
+<td id="S4.T4.1.2.1.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">14.43</td>
+</tr>
+<tr id="S4.T4.1.3.2" class="ltx_tr">
+<td id="S4.T4.1.3.2.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Shang et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>
+</td>
+<td id="S4.T4.1.3.2.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Test</td>
+<td id="S4.T4.1.3.2.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">36.4</td>
+<td id="S4.T4.1.3.2.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">20.1</td>
+</tr>
+<tr id="S4.T4.1.4.3" class="ltx_tr">
+<td id="S4.T4.1.4.3.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Liu et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>
+</td>
+<td id="S4.T4.1.4.3.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Test</td>
+<td id="S4.T4.1.4.3.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">35.3</td>
+<td id="S4.T4.1.4.3.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">20</td>
+</tr>
+<tr id="S4.T4.1.5.4" class="ltx_tr">
+<td id="S4.T4.1.5.4.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Liu et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>
+</td>
+<td id="S4.T4.1.5.4.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Test</td>
+<td id="S4.T4.1.5.4.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">34.3</td>
+<td id="S4.T4.1.5.4.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">18.2</td>
+</tr>
+<tr id="S4.T4.1.6.5" class="ltx_tr">
+<td id="S4.T4.1.6.5.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Ding et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>
+</td>
+<td id="S4.T4.1.6.5.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Val</td>
+<td id="S4.T4.1.6.5.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">42.9</td>
+<td id="S4.T4.1.6.5.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">24.6</td>
+</tr>
+<tr id="S4.T4.1.7.6" class="ltx_tr">
+<td id="S4.T4.1.7.6.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">HIC-YOLOv5</td>
+<td id="S4.T4.1.7.6.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Test</td>
+<td id="S4.T4.1.7.6.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">36.95</td>
+<td id="S4.T4.1.7.6.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">20.85</td>
+</tr>
+<tr id="S4.T4.1.8.7" class="ltx_tr">
+<td id="S4.T4.1.8.7.1" class="ltx_td ltx_align_left ltx_border_b ltx_border_l ltx_border_r ltx_border_t">HIC-YOLOv5</td>
+<td id="S4.T4.1.8.7.2" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">Val</td>
+<td id="S4.T4.1.8.7.3" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">44.31</td>
+<td id="S4.T4.1.8.7.4" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">25.95</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS4.p2" class="ltx_para">
+<p id="S4.SS4.p2.4" class="ltx_p">From Table <a href="#S4.T4" title="TABLE IV ‣ IV-D Experimental Results ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a>, we can see that compared with the YOLOv5s model, the mAP@[.5:.95] has been improved by 6.42<math id="S4.SS4.p2.1.m1.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS4.p2.1.m1.1a"><mo id="S4.SS4.p2.1.m1.1.1" xref="S4.SS4.p2.1.m1.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS4.p2.1.m1.1b"><csymbol cd="latexml" id="S4.SS4.p2.1.m1.1.1.cmml" xref="S4.SS4.p2.1.m1.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p2.1.m1.1c">\%</annotation></semantics></math> and mAP@0.5 has been improved by 9.38<math id="S4.SS4.p2.2.m2.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS4.p2.2.m2.1a"><mo id="S4.SS4.p2.2.m2.1.1" xref="S4.SS4.p2.2.m2.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS4.p2.2.m2.1b"><csymbol cd="latexml" id="S4.SS4.p2.2.m2.1.1.cmml" xref="S4.SS4.p2.2.m2.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p2.2.m2.1c">\%</annotation></semantics></math>. Precision and Recall has been improved by 10.29<math id="S4.SS4.p2.3.m3.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS4.p2.3.m3.1a"><mo id="S4.SS4.p2.3.m3.1.1" xref="S4.SS4.p2.3.m3.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS4.p2.3.m3.1b"><csymbol cd="latexml" id="S4.SS4.p2.3.m3.1.1.cmml" xref="S4.SS4.p2.3.m3.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p2.3.m3.1c">\%</annotation></semantics></math> and 6.97<math id="S4.SS4.p2.4.m4.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS4.p2.4.m4.1a"><mo id="S4.SS4.p2.4.m4.1.1" xref="S4.SS4.p2.4.m4.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS4.p2.4.m4.1b"><csymbol cd="latexml" id="S4.SS4.p2.4.m4.1.1.cmml" xref="S4.SS4.p2.4.m4.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p2.4.m4.1c">\%</annotation></semantics></math> respectively. The small object detection head greatly helps to retain the features of small objects. Additionally, Involution effectively amplifies the channel information, while the CBAM block selectively emphasizes crucial features during their extraction within the backbone. The detection effect between YOLOv5s and HIC-YOLOv5 is shown in Fig <a href="#S4.F7" title="Figure 7 ‣ IV-D Experimental Results ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>. It visually indicates that more small objects can be detected when using the improved method.</p>
+</div>
+<figure id="S4.F7" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F7.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2309.16393/assets/before2.jpg" id="S4.F7.sf1.g1" class="ltx_graphics ltx_img_square" width="120" height="113" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(a) </span>YOLOv5</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F7.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2309.16393/assets/after2.jpg" id="S4.F7.sf2.g1" class="ltx_graphics ltx_img_square" width="120" height="111" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(b) </span>HIC-YOLOv5</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F7.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2309.16393/assets/legend.png" id="S4.F7.sf3.g1" class="ltx_graphics ltx_img_landscape" width="120" height="55" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(c) </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Comparison of detection effect between YOLOv5s and HIC-YOLOv5.</figcaption>
+</figure>
+<div id="S4.SS4.p3" class="ltx_para">
+<p id="S4.SS4.p3.1" class="ltx_p">We also compared our improved model with other algorithms tested on VisDrone2019. The results are shown in Table <a href="#S4.T4" title="TABLE IV ‣ IV-D Experimental Results ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a>. It can be seen that our proposed model has greater performance compared to other detection models. For instance, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> applies recursive gated convolution to make greater spatial interaction, but it can lead to the loss of channel information due to 1 <math id="S4.SS4.p3.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S4.SS4.p3.1.m1.1a"><mo id="S4.SS4.p3.1.m1.1.1" xref="S4.SS4.p3.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S4.SS4.p3.1.m1.1b"><times id="S4.SS4.p3.1.m1.1.1.cmml" xref="S4.SS4.p3.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p3.1.m1.1c">\times</annotation></semantics></math> 1 convolution layers. Compared with <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, we adopt involution block to enhance the channel information of PANet, thus improving the performance of small object detection. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> adds a transformer layer at the end of the backbone, which has the shortcoming of large computation cost. Instead, we apply a lightweight CBAM block, which decreases the training time and computational cost. The number of layers, parameters and gradients of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> and YOLOv5+CBAM are listed in TABLE <a href="#S4.T5" title="TABLE V ‣ IV-D Experimental Results ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">V</span></a>. The mAP is incomparable since <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> uses another different dataset.</p>
+</div>
+<figure id="S4.T5" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE V: </span>Computational comparison of Wang et al.<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> and YOLOv5+CBAM.</figcaption>
+<table id="S4.T5.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T5.1.1.1" class="ltx_tr">
+<th id="S4.T5.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Model</th>
+<th id="S4.T5.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">Layers</th>
+<th id="S4.T5.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">Parameters</th>
+<th id="S4.T5.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t">Gradients</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T5.1.2.1" class="ltx_tr">
+<th id="S4.T5.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Wang et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>
+</th>
+<td id="S4.T5.1.2.1.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">297</td>
+<td id="S4.T5.1.2.1.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">14580167</td>
+<td id="S4.T5.1.2.1.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">14580167</td>
+</tr>
+<tr id="S4.T5.1.3.2" class="ltx_tr">
+<th id="S4.T5.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r ltx_border_t">YOLOv5+cbam</th>
+<td id="S4.T5.1.3.2.2" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">289</td>
+<td id="S4.T5.1.3.2.3" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">8391641</td>
+<td id="S4.T5.1.3.2.4" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">8391641</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S4.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS5.4.1.1" class="ltx_text">IV-E</span> </span><span id="S4.SS5.5.2" class="ltx_text ltx_font_italic">Ablation Study</span>
+</h3>
+
+<div id="S4.SS5.p1" class="ltx_para">
+<p id="S4.SS5.p1.6" class="ltx_p">We conducted several experiments to study the effect of three modifications: additional prediction head, involution block and CBAM. The results of ablation study are shown in Table<a href="#S4.T6" title="TABLE VI ‣ IV-E Ablation Study ‣ IV EXPERIMENTAL RESULTS ‣ HIC-YOLOv5: Improved YOLOv5 For Small Object Detection" class="ltx_ref"><span class="ltx_text ltx_ref_tag">VI</span></a>. It can be observed that the fourth prediction head makes best contribution to the performance of the model, which improved mAP@.5 and mAP@[.5:.95] by 8.31<math id="S4.SS5.p1.1.m1.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS5.p1.1.m1.1a"><mo id="S4.SS5.p1.1.m1.1.1" xref="S4.SS5.p1.1.m1.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.1.m1.1b"><csymbol cd="latexml" id="S4.SS5.p1.1.m1.1.1.cmml" xref="S4.SS5.p1.1.m1.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.1.m1.1c">\%</annotation></semantics></math> and 5.51<math id="S4.SS5.p1.2.m2.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS5.p1.2.m2.1a"><mo id="S4.SS5.p1.2.m2.1.1" xref="S4.SS5.p1.2.m2.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.2.m2.1b"><csymbol cd="latexml" id="S4.SS5.p1.2.m2.1.1.cmml" xref="S4.SS5.p1.2.m2.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.2.m2.1c">\%</annotation></semantics></math> respectively. Instead, the single block of CBAM and Involution could not improve the model without the help of fourth prediction head. We speculate that it is because there are so many small objects in VisDrone2019 dataset that the single block of CBAM and Involution can not perform well if these small objects can not be detected first. Based on adding the fourth prediction head, the involution block also has great improvement on the model, with 0.66<math id="S4.SS5.p1.3.m3.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS5.p1.3.m3.1a"><mo id="S4.SS5.p1.3.m3.1.1" xref="S4.SS5.p1.3.m3.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.3.m3.1b"><csymbol cd="latexml" id="S4.SS5.p1.3.m3.1.1.cmml" xref="S4.SS5.p1.3.m3.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.3.m3.1c">\%</annotation></semantics></math> and 0.57<math id="S4.SS5.p1.4.m4.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS5.p1.4.m4.1a"><mo id="S4.SS5.p1.4.m4.1.1" xref="S4.SS5.p1.4.m4.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.4.m4.1b"><csymbol cd="latexml" id="S4.SS5.p1.4.m4.1.1.cmml" xref="S4.SS5.p1.4.m4.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.4.m4.1c">\%</annotation></semantics></math> increase of mAP@.5 and mAP@[.5:.95]. Additionally, mAP@.5 and mAP@[.5:.95] are improved by 0.41<math id="S4.SS5.p1.5.m5.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS5.p1.5.m5.1a"><mo id="S4.SS5.p1.5.m5.1.1" xref="S4.SS5.p1.5.m5.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.5.m5.1b"><csymbol cd="latexml" id="S4.SS5.p1.5.m5.1.1.cmml" xref="S4.SS5.p1.5.m5.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.5.m5.1c">\%</annotation></semantics></math> and 0.34<math id="S4.SS5.p1.6.m6.1" class="ltx_Math" alttext="\%" display="inline"><semantics id="S4.SS5.p1.6.m6.1a"><mo id="S4.SS5.p1.6.m6.1.1" xref="S4.SS5.p1.6.m6.1.1.cmml">%</mo><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.6.m6.1b"><csymbol cd="latexml" id="S4.SS5.p1.6.m6.1.1.cmml" xref="S4.SS5.p1.6.m6.1.1">percent</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.6.m6.1c">\%</annotation></semantics></math> respectively.</p>
+</div>
+<figure id="S4.T6" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE VI: </span>Ablation study.</figcaption>
+<div id="S4.T6.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:173.4pt;height:76pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-77.5pt,34.0pt) scale(0.528035398475101,0.528035398475101) ;">
+<table id="S4.T6.1.1" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T6.1.1.1.1" class="ltx_tr">
+<td id="S4.T6.1.1.1.1.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Model</td>
+<td id="S4.T6.1.1.1.1.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">P</td>
+<td id="S4.T6.1.1.1.1.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">R</td>
+<td id="S4.T6.1.1.1.1.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">mAP@.5</td>
+<td id="S4.T6.1.1.1.1.5" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">mAP@[.5:.95]</td>
+</tr>
+<tr id="S4.T6.1.1.2.2" class="ltx_tr">
+<td id="S4.T6.1.1.2.2.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Baseline</td>
+<td id="S4.T6.1.1.2.2.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">37.59</td>
+<td id="S4.T6.1.1.2.2.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">31.52</td>
+<td id="S4.T6.1.1.2.2.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">27.57</td>
+<td id="S4.T6.1.1.2.2.5" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">14.43</td>
+</tr>
+<tr id="S4.T6.1.1.3.3" class="ltx_tr">
+<td id="S4.T6.1.1.3.3.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">+SODH</td>
+<td id="S4.T6.1.1.3.3.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">46.18</td>
+<td id="S4.T6.1.1.3.3.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">37.89</td>
+<td id="S4.T6.1.1.3.3.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">35.88</td>
+<td id="S4.T6.1.1.3.3.5" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">19.94</td>
+</tr>
+<tr id="S4.T6.1.1.4.4" class="ltx_tr">
+<td id="S4.T6.1.1.4.4.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">+cbam</td>
+<td id="S4.T6.1.1.4.4.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">36.13</td>
+<td id="S4.T6.1.1.4.4.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">28.16</td>
+<td id="S4.T6.1.1.4.4.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">24.2</td>
+<td id="S4.T6.1.1.4.4.5" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">11.92</td>
+</tr>
+<tr id="S4.T6.1.1.5.5" class="ltx_tr">
+<td id="S4.T6.1.1.5.5.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">+involution</td>
+<td id="S4.T6.1.1.5.5.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">35.49</td>
+<td id="S4.T6.1.1.5.5.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">31.13</td>
+<td id="S4.T6.1.1.5.5.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">26.76</td>
+<td id="S4.T6.1.1.5.5.5" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">13.8</td>
+</tr>
+<tr id="S4.T6.1.1.6.6" class="ltx_tr">
+<td id="S4.T6.1.1.6.6.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">+SODH+cbam</td>
+<td id="S4.T6.1.1.6.6.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">44.5</td>
+<td id="S4.T6.1.1.6.6.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">35.35</td>
+<td id="S4.T6.1.1.6.6.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">34.53</td>
+<td id="S4.T6.1.1.6.6.5" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">19.03</td>
+</tr>
+<tr id="S4.T6.1.1.7.7" class="ltx_tr">
+<td id="S4.T6.1.1.7.7.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">+SODH+involution</td>
+<td id="S4.T6.1.1.7.7.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">46.48</td>
+<td id="S4.T6.1.1.7.7.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">37.91</td>
+<td id="S4.T6.1.1.7.7.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">36.54</td>
+<td id="S4.T6.1.1.7.7.5" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">20.51</td>
+</tr>
+<tr id="S4.T6.1.1.8.8" class="ltx_tr">
+<td id="S4.T6.1.1.8.8.1" class="ltx_td ltx_align_left ltx_border_b ltx_border_l ltx_border_r ltx_border_t">+SODH+involution+cbam</td>
+<td id="S4.T6.1.1.8.8.2" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">47.88</td>
+<td id="S4.T6.1.1.8.8.3" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">38.49</td>
+<td id="S4.T6.1.1.8.8.4" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">36.95</td>
+<td id="S4.T6.1.1.8.8.5" class="ltx_td ltx_align_left ltx_border_b ltx_border_r ltx_border_t">20.85</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">CONCLUSIONS</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this paper, an improved YOLOv5 algorithm HIC-YOLOv5 has been proposed, aiming to improve the performance of small and tiny object detection. There are three main contributions in this paper and the experimental results has proved the effectiveness of our methodology. Firstly, an additional prediction head for small objects is added so that the higher-resolution feature maps could be directly used to detect small targets. Secondly, we adopt an involution block between the backbone and neck, thus increasing channel information of the feature map. Furthermore, we also apply an attention mechanism named CBAM at the end of the backbone to decrease the computation cost and emphasize the important information in both channel and spatial domain. Additionally, data augmentation such as center crop is also applied apart from the original data augmentation methods in YOLOv5. Therefore, the improved YOLOv5 is able to increase the accuracy of detecting small and tiny objects.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+R. B. Girshick, J. Donahue, T. Darrell, and J. Malik, “Rich feature hierarchies for accurate object detection and semantic segmentation,” <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">CoRR</em>, vol. abs/1311.2524, 2013. [Online]. Available: http://arxiv.org/abs/1311.2524
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+K. He, X. Zhang, S. Ren, and J. Sun, “Spatial pyramid pooling in deep convolutional networks for visual recognition,” <em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">CoRR</em>, vol. abs/1406.4729, 2014. [Online]. Available: http://arxiv.org/abs/1406.4729
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+R. B. Girshick, “Fast R-CNN,” <em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic">CoRR</em>, vol. abs/1504.08083, 2015. [Online]. Available: http://arxiv.org/abs/1504.08083
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+T. Lin, P. Dollár, R. B. Girshick, K. He, B. Hariharan, and S. J. Belongie, “Feature pyramid networks for object detection,” <em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">CoRR</em>, vol. abs/1612.03144, 2016. [Online]. Available: http://arxiv.org/abs/1612.03144
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+J. Shang, J. Wang, S. Liu, C. Wang, and B. Zheng, “Small target detection algorithm for uav aerial photography based on improved yolov5s,” <em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">Electronics</em>, 2023.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+H. Liu, X. Duan, H. Lou, J. Gu, H. Chen, and L. Bi, “Improved gbs-yolov5 algorithm based on yolov5 applied to uav intelligent traffic,” <em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">Scientific Reports</em>, vol. 13, no. 1, p. 9577, Jun 2023. [Online]. Available: https://doi.org/10.1038/s41598-023-36781-2
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+H. Liu, F. Sun, J. J. Gu, and L. Deng, “Sf-yolov5: A lightweight small object detection algorithm based on improved feature fusion mode,” <em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">Sensors</em>, vol. 22, no. 5817, 2022.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+K. Ding, X. Li, W. Guo, and L. Wu, “Improved object detection algorithm for drone-captured dataset based on yolov5,” in <em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">2022 2nd International Conference on Consumer Electronics and Computer Engineering (ICCECE)</em>, 2022, pp. 895–899.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+J. Shang, J. Wang, S. Liu, C. Wang, and B. Zheng, “Small target detection algorithm for uav aerial photography based on improved yolov5s,” <em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">Electronics</em>, 2023.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+J. An, M. D. Putro, A. Priadana, and K.-H. Jo, “Improved yolov5 network with cbam for object detection vision drone,” in <em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">2023 IEEE International Conference on Industrial Technology (ICIT)</em>, 2023, pp. 1–6.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+A. Wang, T. Peng, H. Cao, Y. Xu, X. Wei, and B. Cui, “Tia-yolov5: An improved yolov5 network for real-time detection of crop and weed in the field,” <em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic">Frontiers in Plant Science</em>, vol. 13, 2022. [Online]. Available: https://www.frontiersin.org/articles/10.3389/fpls.2022.1091655
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+X. Zhu, S. Lyu, X. Wang, and Q. Zhao, “Tph-yolov5: Improved yolov5 based on transformer prediction head for object detection on drone-captured scenarios,” 2021.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+D. Li, J. Hu, C. Wang, X. Li, Q. She, L. Zhu, T. Zhang, and Q. Chen, “Involution: Inverting the inherence of convolution for visual recognition,” 2021.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+S. Woo, J. Park, J.-Y. Lee, and I. S. Kweon, “Cbam: Convolutional block attention module,” 2018.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+J. Redmon, S. Divvala, R. Girshick, and A. Farhadi, “You only look once: Unified, real-time object detection,” 2016.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+W. Liu, D. Anguelov, D. Erhan, C. Szegedy, S. Reed, C.-Y. Fu, and A. C. Berg, “SSD: Single shot MultiBox detector,” in <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">Computer Vision – ECCV 2016</em>.   Springer International Publishing, 2016, pp. 21–37. [Online].
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+C.-Y. Wang, H.-Y. M. Liao, I.-H. Yeh, Y.-H. Wu, P.-Y. Chen, and J.-W. Hsieh, “Cspnet: A new backbone that can enhance learning capability of cnn,” 2019.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+K. He, X. Zhang, S. Ren, and J. Sun, “Spatial pyramid pooling in deep convolutional networks for visual recognition,” in <em id="bib.bib18.1.1" class="ltx_emph ltx_font_italic">Computer Vision – ECCV 2014</em>.   Springer International Publishing, 2014, pp. 346–361. [Online].
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, J. Uszkoreit, and N. Houlsby, “An image is worth 16x16 words: Transformers for image recognition at scale,” 2021.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Z. Zheng, P. Wang, D. Ren, W. Liu, R. Ye, Q. Hu, and W. Zuo, “Enhancing geometric factors in model learning and inference for object detection and instance segmentation,” 2021.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2309.16392" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2309.16393" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2309.16393">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2309.16393" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2309.16394" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Feb 28 14:19:07 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

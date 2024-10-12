@@ -1,0 +1,966 @@
+<!DOCTYPE html><html lang="en-GB">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2309.06199] SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION</title><meta property="og:description" content="3D object detection using LiDAR point clouds is a fundamental task in the fields of computer vision, robotics, and autonomous driving. However, existing 3D detectors heavily rely on annotated datasets, which are both t…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2309.06199">
+
+<!--Generated on Wed Feb 28 06:43:02 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<!--Document created on  %**** ISPRSguidelines˙authors˙fullpaper.tex Line 50 **** .-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line" lang="en-GB">
+<div id="p1" class="ltx_para">
+<span id="p1.1" class="ltx_ERROR undefined">\commission</span>
+<p id="p1.2" class="ltx_p">XX, YY <span id="p1.2.1" class="ltx_ERROR undefined">\workinggroup</span>XX/YY <span id="p1.2.2" class="ltx_ERROR undefined">\icwg</span></p>
+</div>
+<h1 class="ltx_title ltx_title_document">SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Yiming Shan<sup id="id1.1.id1" class="ltx_sup">1<span id="footnotex1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span>Equal contribution</span></span></span></sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"> Yan Xia<sup id="id2.1.id1" class="ltx_sup">1, 2 <span id="footnotex2" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span>Equal contribution</span></span></span></sup>
+</span><span class="ltx_author_notes">Corresponding author</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"> Yuhong Chen<sup id="id3.1.id1" class="ltx_sup">1</sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"> Daniel Cremers<sup id="id4.1.id1" class="ltx_sup">1,2</sup>
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_address"><sup id="id5.2.id1" class="ltx_sup">1 </sup>Technical University of Munich, Germany
+<br class="ltx_break"><sup id="id6.3.id2" class="ltx_sup">2 </sup>Munich Center for Machine Learning (MCML), Germany
+<br class="ltx_break">(yiming.shan, yan.xia, yuhong.chen, cremers)@tum.de
+
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id7.id1" class="ltx_p"><span id="id7.id1.1" class="ltx_text">3D object detection using LiDAR point clouds is a fundamental task in the fields of computer vision, robotics, and autonomous driving. However, existing 3D detectors heavily rely on annotated datasets, which are both time-consuming and prone to errors during the process of labeling 3D bounding boxes. In this paper, we propose a Scene Completion Pre-training (SCP) method to enhance the performance of 3D object detectors with less labeled data. SCP offers three key advantages: (1) Improved initialization of the point cloud model. By completing the scene point clouds, SCP effectively captures the spatial and semantic relationships among objects within urban environments. (2) Elimination of the need for additional datasets. SCP serves as a valuable auxiliary network that does not impose any additional efforts or data requirements on the 3D detectors. (3) Reduction of the amount of labeled data for detection. With the help of SCP, the existing state-of-the-art 3D detectors can achieve comparable performance while only relying on 20% labeled data.</span></p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification">keywords: </h6>
+<span id="id8.id1" class="ltx_text">LiDAR Point Clouds, 3D Object Detection, Pre-training, Scene Completion, Autonomous Driving</span>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">3D object detection using LiDAR point clouds is a key task in the domains of computer vision <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite>, robotics <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx26" title="" class="ltx_ref">Zhou and Tuzel, 2018</a>]</cite>, and autonomous driving <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx24" title="" class="ltx_ref">Yan et al., 2018</a>]</cite>. In contrast to 2D images, point clouds obtained through mobile laser scanning (MLS) offer accurate 3D geometric properties and depth insights <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx20" title="" class="ltx_ref">Xia et al., 2021c</a>]</cite>, endowing them with superior resilience for object detection under diverse illumination conditions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Xia et al., 2023b</a>]</cite>. Over the past few years, numerous learning-based 3D detection techniques have exhibited remarkable performance by leveraging extensive supervised training on large annotated datasets. Nevertheless, the annotation of point clouds presents a substantial challenge due to (1) inherent incompleteness and occlusion, which render the identification of points ambiguous <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx7" title="" class="ltx_ref">Li et al., 2023</a>]</cite>; and (2) the time-consuming and error-prone nature of labeling individual points or delineating 3D bounding boxes <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx14" title="" class="ltx_ref">Wang et al., 2021</a>]</cite>.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">A possible solution is to learn 3D model initialization using an unsupervised pre-training way and then fine-tune the models with small labeled data. A recent line of pre-training works based on generative adversarial networks (GANs) is proposed.  <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx9" title="" class="ltx_ref">Sauder and Sievers, 2019</a>]</cite> proposes to learn the rearrangement of the point clouds by predicting the original voxel location of each point. However, this approach is incapable of handling rotated and translated point clouds effectively due to the permutation variability exhibited in their voxel representations. Furthermore, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx10" title="" class="ltx_ref">Sharma and Kaul, 2020</a>]</cite> explores to classify each point into the assigned partitions based on cover trees. However, it ignores the semantically contiguous regions(e.g., airplane wings, car tires). In addition, PointContrast <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx22" title="" class="ltx_ref">Xie et al., 2020</a>]</cite> leverages established point-wise correspondences between various views of a complete 3D scene to pre-train weights for point clouds. However, this approach may not be suitable for dynamic urban environments. Recently, a novel approach has been proposed to learn model initialization by completing the 3D shape of single objects <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx14" title="" class="ltx_ref">Wang et al., 2021</a>]</cite>. This method demonstrates notable advancements in various downstream tasks, such as object classification and segmentation, by effectively completing individual objects. However, it overlooks the significance of both spatial and semantic relationships among objects, which are crucial considerations for successful 3D detection tasks in complex urban environments.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">To tackle this problem, we propose a novel Scene Completion Pre-training network, named SCP, aiming to learn a robust model initialization for 3D object detection from single LiDAR scans. Our SCP involves training a voxel-based scene completion network consisting of a feature encoder and a decoder. The encoder utilizes a Transformer-based 3D backbone <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite> to efficiently extract informative features from the raw point clouds. Concurrently, the decoder incorporates an anisotropic convolution (AIC) module <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx6" title="" class="ltx_ref">Li et al., 2020</a>]</cite>, which dynamically adapts the receptive fields for different voxels.
+By completing the scene point cloud, our method accurately learns the spatial and semantic relationships among the objects. This enables the pre-training model to serve as an effective model initialization when employed as the 3D backbone in a 3D detection network. Furthermore, a small labeled data is introduced to fine-tune the 3D detection network.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">To summarize, the main contributions of this work are:</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">We propose a voxel-based Scene Completion Pre-training network, called SCP, which purely applies to LiDAR point clouds. With the help of the carefully designed encoder and decoder, SCP provides a robust model initialization for the next detection network, encoding the spatial and semantic relationships within urban environments.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">We conduct extensive experiments on the KITTI 3D detection benchmark <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx4" title="" class="ltx_ref">Geiger et al., 2013</a>]</cite> to demonstrate the effectiveness of our SCP. Notably, the existing state-of-the-art methods with SCP yield comparable performance while relying on 20% labeled data.</p>
+</div>
+</li>
+</ul>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2309.06199/assets/x1.png" id="S1.F1.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="922" height="199" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Overview of our SCP.
+Step 1: An encoder-decoder scene completion model is designed to complete the raw point cloud.
+Step 2: Pre-training model weights from step 1 are used for the following 3D detection task.
+</figcaption>
+</figure>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">In this section, we give a brief literature review of 3D object detection and scene completion, respectively.</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p"><span id="S2.p2.1.1" class="ltx_text ltx_font_bold">3D object detection.</span> Early 3D object detection works <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx12" title="" class="ltx_ref">Shi et al., 2019</a>, <a href="#bib.bibx25" title="" class="ltx_ref">Yang et al., 2020</a>, <a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>, <a href="#bib.bibx26" title="" class="ltx_ref">Zhou and Tuzel, 2018</a>, <a href="#bib.bibx24" title="" class="ltx_ref">Yan et al., 2018</a>, <a href="#bib.bibx11" title="" class="ltx_ref">Shi et al., 2020</a>, <a href="#bib.bibx17" title="" class="ltx_ref">Xia et al., 2023b</a>]</cite> can be broadly categorized into two main methods: the point-based and the voxel-based detectors. The point-based approaches focus on directly capturing features and predicting 3D bounding boxes from the raw points.
+PointRCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx12" title="" class="ltx_ref">Shi et al., 2019</a>]</cite> extracts features from the foreground points and derives the corresponding 3D bounding box. 3DSSD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx25" title="" class="ltx_ref">Yang et al., 2020</a>]</cite> removes the FP layer and refinement module to reduce computational complexity and proposes a new fusion sampling strategy that yields improved results using fewer representative points.
+VoTr <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite> introduces a voxel transformer-based 3D detection backbone, presenting an alternative solution to the task of 3D object detection.
+The voxel-based approach in 3D object detection involves transforming the large and non-structured point cloud data into voxels, which enables efficient feature extraction and saves computational time.
+VoxelNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx26" title="" class="ltx_ref">Zhou and Tuzel, 2018</a>]</cite> and SECOND <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx24" title="" class="ltx_ref">Yan et al., 2018</a>]</cite>, for instance, partition the points into voxels and utilize 3D sparse convolution to extract features.
+Subsequently, they employ the Region Proposal Network (RPN) to obtain 3D bounding boxes.
+On the other hand, PV-RCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx11" title="" class="ltx_ref">Shi et al., 2020</a>]</cite> combines the strengths of both approaches.
+It leverages multi-scale techniques to generate high-quality proposals from voxel-based methods while also incorporating fine-grained local information from point-based methods.
+Recently, DMT <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Xia et al., 2023b</a>]</cite> explores motion prior knowledge to generate accurate 3D positions and rotation.</p>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.1" class="ltx_p"><span id="S2.p3.1.1" class="ltx_text ltx_font_bold">3D scene completion.</span> Early works on 3D completion mainly focus on single objects <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx18" title="" class="ltx_ref">Xia et al., 2021a</a>, <a href="#bib.bibx15" title="" class="ltx_ref">Wang et al., 2022</a>, <a href="#bib.bibx20" title="" class="ltx_ref">Xia et al., 2021c</a>]</cite>. Comparably, completing the whole scene poses greater challenges since the scene point cloud is large-scale and has many objects with various densities. The pioneering work by Song<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">Song et al., 2017</a>]</cite> explores the depth maps for 3D scene completion and leverages the scene information derived from the depth map for semantic segmentation. Scene completion and semantic segmentation are closely intertwined tasks, and jointly processing them can yield mutual performance improvements. JS3C <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx23" title="" class="ltx_ref">Yan et al., 2021</a>]</cite> introduces the Point-Voxel Interaction (PVI) module to enhance knowledge fusion between the semantic segmentation and semantic scene completion tasks. This module facilitates interaction between incomplete local geometries in point clouds and complete global structures in voxels, enabling a more comprehensive understanding of the scene. AICNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx6" title="" class="ltx_ref">Li et al., 2020</a>]</cite> proposes a novel anisotropic convolution, which decomposes a 3D convolution into three consecutive 1D convolutions. S3CNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx3" title="" class="ltx_ref">Cheng et al., 2021</a>]</cite> tackles the challenge of large-scale environments by incorporating sparsity considerations and leveraging a sparse convolution-based neural network. Recently, SCPNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Xia et al., 2023c</a>]</cite> introduces a novel knowledge distillation objective termed as Dense-to-Sparse Knowledge Distillation (DSKD).</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Method</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">The overview of our SCP for 3D object detection can be divided into two stages, as illustrated in Fig. <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+In the first step (scene completion pre-training), we employ an encode-decode model to effectively complete the partial scene point clouds. This involves leveraging available data to predict and generate the missing parts of the point cloud, resulting in a more comprehensive representation of the scene.
+In the second step (3D object detection), we utilize the learned weights from the scene completion pre-training model as an initialization for the 3D detectors. By transferring the knowledge acquired during the scene completion, we establish a strong spatial and semantic relationship of objects, leading to improved detection performance and efficiency, especially in the case of smaller labeled data.</p>
+</div>
+<section id="S3.SS0.SSS0.Px1" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">Scene completion pre-training</h4>
+
+<div id="S3.SS0.SSS0.Px1.p1" class="ltx_para">
+<p id="S3.SS0.SSS0.Px1.p1.1" class="ltx_p">Next, we provide a detailed pipeline of SCP in Fig. <a href="#S3.F2" title="Figure 2 ‣ Scene completion pre-training ‣ 3 Method ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+This section is divided into four stages: voxelization, encoder, decoder, and prediction.</p>
+</div>
+<figure id="S3.F2" class="ltx_figure"><img src="/html/2309.06199/assets/x2.png" id="S3.F2.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="456" height="119" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>The pipeline of scene completion network.
+The encoder is a Transformer-based backbone and the decoder includes an AIC module and three convolutional layers.</figcaption>
+</figure>
+<div id="S3.SS0.SSS0.Px1.p2" class="ltx_para">
+<p id="S3.SS0.SSS0.Px1.p2.1" class="ltx_p"><span id="S3.SS0.SSS0.Px1.p2.1.1" class="ltx_text ltx_font_bold">a) Voxelization.</span> The raw point cloud is initially transformed into structured voxels, which serve to facilitate the subsequent feature extraction process.</p>
+</div>
+<div id="S3.SS0.SSS0.Px1.p3" class="ltx_para">
+<p id="S3.SS0.SSS0.Px1.p3.1" class="ltx_p"><span id="S3.SS0.SSS0.Px1.p3.1.1" class="ltx_text ltx_font_bold">b) Encoder.</span>
+We use a transformer-based 3D backbone network to extract features from voxels.
+The architecture of the 3D backbone is the same as VoTr <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite>, as illustrated in Fig. <a href="#S3.F3" title="Figure 3 ‣ Scene completion pre-training ‣ 3 Method ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+The voxel undergoes a sequence of three ”VoTr Block” layers. Each block layer consists of one sparse voxel module and two submanifold voxel modules. As the voxel passes through each block layer, its features are effectively extracted, and the voxel is downsampled three times.
+In these voxels, both non-empty voxels and empty voxels are present. The submanifold voxel modules are designed to handle the non-empty voxels and utilize self-attention mechanisms <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx19" title="" class="ltx_ref">Xia et al., 2021b</a>, <a href="#bib.bibx16" title="" class="ltx_ref">Xia et al., 2023a</a>]</cite> to effectively extract features from them. On the other hand, the sparse voxel modules are specifically designed for empty voxels, allowing them to perform feature extraction on these regions.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2309.06199/assets/x3.png" id="S3.F3.1.g1" class="ltx_graphics ltx_centering ltx_img_square" width="300" height="300" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>The architecture of the 3D backbone network. It consists of three VoTr blocks, each layer containing two different self-attention modules.</figcaption>
+</figure>
+<div id="S3.SS0.SSS0.Px1.p4" class="ltx_para">
+<p id="S3.SS0.SSS0.Px1.p4.4" class="ltx_p"><span id="S3.SS0.SSS0.Px1.p4.4.1" class="ltx_text ltx_font_bold">c) Decoder.</span>
+Subsequently, the features obtained from the encoder are fed into the decoder, which includes Anisotropic Convolutional Networks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx6" title="" class="ltx_ref">Li et al., 2020</a>]</cite> and three layers of 3D convolution.
+Instead of employing traditional 3D convolution directly, the AIC model decomposes the 3D convolution into three separate operations, each corresponding to one dimension (<math id="S3.SS0.SSS0.Px1.p4.1.m1.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S3.SS0.SSS0.Px1.p4.1.m1.1a"><mi id="S3.SS0.SSS0.Px1.p4.1.m1.1.1" xref="S3.SS0.SSS0.Px1.p4.1.m1.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S3.SS0.SSS0.Px1.p4.1.m1.1b"><ci id="S3.SS0.SSS0.Px1.p4.1.m1.1.1.cmml" xref="S3.SS0.SSS0.Px1.p4.1.m1.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS0.SSS0.Px1.p4.1.m1.1c">x</annotation></semantics></math>, <math id="S3.SS0.SSS0.Px1.p4.2.m2.1" class="ltx_Math" alttext="y" display="inline"><semantics id="S3.SS0.SSS0.Px1.p4.2.m2.1a"><mi id="S3.SS0.SSS0.Px1.p4.2.m2.1.1" xref="S3.SS0.SSS0.Px1.p4.2.m2.1.1.cmml">y</mi><annotation-xml encoding="MathML-Content" id="S3.SS0.SSS0.Px1.p4.2.m2.1b"><ci id="S3.SS0.SSS0.Px1.p4.2.m2.1.1.cmml" xref="S3.SS0.SSS0.Px1.p4.2.m2.1.1">𝑦</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS0.SSS0.Px1.p4.2.m2.1c">y</annotation></semantics></math>, <math id="S3.SS0.SSS0.Px1.p4.3.m3.1" class="ltx_Math" alttext="z" display="inline"><semantics id="S3.SS0.SSS0.Px1.p4.3.m3.1a"><mi id="S3.SS0.SSS0.Px1.p4.3.m3.1.1" xref="S3.SS0.SSS0.Px1.p4.3.m3.1.1.cmml">z</mi><annotation-xml encoding="MathML-Content" id="S3.SS0.SSS0.Px1.p4.3.m3.1b"><ci id="S3.SS0.SSS0.Px1.p4.3.m3.1.1.cmml" xref="S3.SS0.SSS0.Px1.p4.3.m3.1.1">𝑧</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS0.SSS0.Px1.p4.3.m3.1c">z</annotation></semantics></math>). Within each dimension, three 1D convolutions are inserted based on modulation factors, represented by a <math id="S3.SS0.SSS0.Px1.p4.4.m4.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S3.SS0.SSS0.Px1.p4.4.m4.1a"><mrow id="S3.SS0.SSS0.Px1.p4.4.m4.1.1" xref="S3.SS0.SSS0.Px1.p4.4.m4.1.1.cmml"><mn id="S3.SS0.SSS0.Px1.p4.4.m4.1.1.2" xref="S3.SS0.SSS0.Px1.p4.4.m4.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS0.SSS0.Px1.p4.4.m4.1.1.1" xref="S3.SS0.SSS0.Px1.p4.4.m4.1.1.1.cmml">×</mo><mn id="S3.SS0.SSS0.Px1.p4.4.m4.1.1.3" xref="S3.SS0.SSS0.Px1.p4.4.m4.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS0.SSS0.Px1.p4.4.m4.1b"><apply id="S3.SS0.SSS0.Px1.p4.4.m4.1.1.cmml" xref="S3.SS0.SSS0.Px1.p4.4.m4.1.1"><times id="S3.SS0.SSS0.Px1.p4.4.m4.1.1.1.cmml" xref="S3.SS0.SSS0.Px1.p4.4.m4.1.1.1"></times><cn type="integer" id="S3.SS0.SSS0.Px1.p4.4.m4.1.1.2.cmml" xref="S3.SS0.SSS0.Px1.p4.4.m4.1.1.2">3</cn><cn type="integer" id="S3.SS0.SSS0.Px1.p4.4.m4.1.1.3.cmml" xref="S3.SS0.SSS0.Px1.p4.4.m4.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS0.SSS0.Px1.p4.4.m4.1c">3\times 3</annotation></semantics></math> matrix. The modulation factors matrix contains information about nine different weights in X, Y, and Z three different dimensions (K_x1, K_x2… K_z3).
+These modulation factors are all positive, and the sum of each row(dimension) equals one.
+By utilizing distinct convolution kernels and sizes for each 1D convolution, the AIC model enables improved incorporation of geometric information and provides enhanced flexibility. Ultimately enhancing the performance of the model.</p>
+</div>
+<div id="S3.SS0.SSS0.Px1.p5" class="ltx_para">
+<p id="S3.SS0.SSS0.Px1.p5.1" class="ltx_p"><span id="S3.SS0.SSS0.Px1.p5.1.1" class="ltx_text ltx_font_bold">d) Prediction.</span> The completion predictions obtained from this pipeline represent a comprehensive and coherent depiction of the entire scene, effectively filling in the gaps and providing a more holistic representation of the raw data.</p>
+</div>
+</section>
+<section id="S3.SS0.SSS0.Px2" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">3D object detection.</h4>
+
+<div id="S3.SS0.SSS0.Px2.p1" class="ltx_para">
+<p id="S3.SS0.SSS0.Px2.p1.1" class="ltx_p">In the first step, we acquired well-performing pre-training weights, which are then utilized to aid in 3D detector <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite>. The pipeline of the detector VoTr is shown in Fig. <a href="#S3.F4" title="Figure 4 ‣ 3D object detection. ‣ 3 Method ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.
+This knowledge transfer enables the utilization of valuable insights gained from scene completion to improve the accuracy and reliability of 3D detection results.
+In the initial step, the raw point cloud data undergoes voxelization, converting them into the structured voxel representation. These voxelized data are then fed into the 3D backbone, which is the same in the scene completion.
+The extracted features are then projected onto a bird’s-eye view (BEV) map to generate 3D proposals, followed by the utilization of a 2D backbone and a detection head for further processing.
+By leveraging the learned knowledge from scene completion, the pre-training weights gain a deeper understanding of the scene, resulting in improved accuracy and reliability in the 3D detection results.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2309.06199/assets/x4.png" id="S3.F4.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="456" height="94" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>The pipeline of the 3D detector VoTr. VoTr mainly contains voxelization, 3D backbone, BEV map, 2D backbone, and detection head modules.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Experiments</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">This section first provides a comprehensive description of the datasets used for both the pre-training and fine-tuning detection stages. Subsequently, we present and discuss the detection results, shedding light on the performance and effectiveness of our SCP.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Datasets</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p"><span id="S4.SS1.p1.1.1" class="ltx_text ltx_font_bold">SemanticKITTI dataset.</span> We utilize SemanticKITTI <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx1" title="" class="ltx_ref">Behley et al., 2019</a>]</cite> as the pre-training dataset. SemanticKITTI is a pioneering real-world outdoor benchmark specifically designed for 3D semantic scene completion. The dataset consists of volumetric representations of the 3D scenes, with dimensions of <math id="S4.SS1.p1.1.m1.1" class="ltx_Math" alttext="256\times 256\times 32" display="inline"><semantics id="S4.SS1.p1.1.m1.1a"><mrow id="S4.SS1.p1.1.m1.1.1" xref="S4.SS1.p1.1.m1.1.1.cmml"><mn id="S4.SS1.p1.1.m1.1.1.2" xref="S4.SS1.p1.1.m1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p1.1.m1.1.1.1" xref="S4.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS1.p1.1.m1.1.1.3" xref="S4.SS1.p1.1.m1.1.1.3.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p1.1.m1.1.1.1a" xref="S4.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS1.p1.1.m1.1.1.4" xref="S4.SS1.p1.1.m1.1.1.4.cmml">32</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.1.m1.1b"><apply id="S4.SS1.p1.1.m1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1"><times id="S4.SS1.p1.1.m1.1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS1.p1.1.m1.1.1.2.cmml" xref="S4.SS1.p1.1.m1.1.1.2">256</cn><cn type="integer" id="S4.SS1.p1.1.m1.1.1.3.cmml" xref="S4.SS1.p1.1.m1.1.1.3">256</cn><cn type="integer" id="S4.SS1.p1.1.m1.1.1.4.cmml" xref="S4.SS1.p1.1.m1.1.1.4">32</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.1.m1.1c">256\times 256\times 32</annotation></semantics></math> voxels. Empty voxels, which do not contain any points, are labeled accordingly. For our training phase, we utilize a total of 19,130 pairs of input and target voxel grids, while reserving 815 pairs for validation purposes.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.1" class="ltx_p"><span id="S4.SS1.p2.1.1" class="ltx_text ltx_font_bold">KITTI detection benchmark.</span>
+To evaluate the effectiveness of our SCP in 3D object detection, we use the KITTI benchmark <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx4" title="" class="ltx_ref">Geiger et al., 2013</a>]</cite>, which comprises 7,481 samples for training and 7,518 for testing. Following VoTr <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite>, the training dataset is further subdivided into 3,712 samples for training data and 3,769 samples for validation data <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx2" title="" class="ltx_ref">Chen et al., 2015</a>]</cite>.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Evaluation metric </h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">Following <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx5" title="" class="ltx_ref">Hossin and Sulaiman, 2015</a>]</cite>, we first employ the Intersection over Union (IoU) metric for the 3D scene completion. In 3D object detection, we then use the Average Precision (AP) with 11 recall points (AP11) for performance assessment.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p"><span id="S4.SS2.p2.1.1" class="ltx_text ltx_font_bold">Intersection over union (IoU).</span>
+IoU is a metric used to measure the overlap between a model’s predictions and the ground truth. It quantifies the degree of alignment between the two sets. An IoU of 0 indicates no overlap, meaning there is no intersection between the predicted regions and the ground truth. Conversely, an IoU of 1 represents a complete overlap, where the predicted regions perfectly match the ground truth. In practice, a larger IoU indicates better algorithm performance. The IoU is calculated as follows:</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para ltx_noindent">
+<table id="S4.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E1.m1.1" class="ltx_Math" alttext="IoU=\frac{TP}{TP+FP+FN}," display="block"><semantics id="S4.E1.m1.1a"><mrow id="S4.E1.m1.1.1.1" xref="S4.E1.m1.1.1.1.1.cmml"><mrow id="S4.E1.m1.1.1.1.1" xref="S4.E1.m1.1.1.1.1.cmml"><mrow id="S4.E1.m1.1.1.1.1.2" xref="S4.E1.m1.1.1.1.1.2.cmml"><mi id="S4.E1.m1.1.1.1.1.2.2" xref="S4.E1.m1.1.1.1.1.2.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.1.1.2.1" xref="S4.E1.m1.1.1.1.1.2.1.cmml">​</mo><mi id="S4.E1.m1.1.1.1.1.2.3" xref="S4.E1.m1.1.1.1.1.2.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.1.1.2.1a" xref="S4.E1.m1.1.1.1.1.2.1.cmml">​</mo><mi id="S4.E1.m1.1.1.1.1.2.4" xref="S4.E1.m1.1.1.1.1.2.4.cmml">U</mi></mrow><mo id="S4.E1.m1.1.1.1.1.1" xref="S4.E1.m1.1.1.1.1.1.cmml">=</mo><mfrac id="S4.E1.m1.1.1.1.1.3" xref="S4.E1.m1.1.1.1.1.3.cmml"><mrow id="S4.E1.m1.1.1.1.1.3.2" xref="S4.E1.m1.1.1.1.1.3.2.cmml"><mi id="S4.E1.m1.1.1.1.1.3.2.2" xref="S4.E1.m1.1.1.1.1.3.2.2.cmml">T</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.1.1.3.2.1" xref="S4.E1.m1.1.1.1.1.3.2.1.cmml">​</mo><mi id="S4.E1.m1.1.1.1.1.3.2.3" xref="S4.E1.m1.1.1.1.1.3.2.3.cmml">P</mi></mrow><mrow id="S4.E1.m1.1.1.1.1.3.3" xref="S4.E1.m1.1.1.1.1.3.3.cmml"><mrow id="S4.E1.m1.1.1.1.1.3.3.2" xref="S4.E1.m1.1.1.1.1.3.3.2.cmml"><mi id="S4.E1.m1.1.1.1.1.3.3.2.2" xref="S4.E1.m1.1.1.1.1.3.3.2.2.cmml">T</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.1.1.3.3.2.1" xref="S4.E1.m1.1.1.1.1.3.3.2.1.cmml">​</mo><mi id="S4.E1.m1.1.1.1.1.3.3.2.3" xref="S4.E1.m1.1.1.1.1.3.3.2.3.cmml">P</mi></mrow><mo id="S4.E1.m1.1.1.1.1.3.3.1" xref="S4.E1.m1.1.1.1.1.3.3.1.cmml">+</mo><mrow id="S4.E1.m1.1.1.1.1.3.3.3" xref="S4.E1.m1.1.1.1.1.3.3.3.cmml"><mi id="S4.E1.m1.1.1.1.1.3.3.3.2" xref="S4.E1.m1.1.1.1.1.3.3.3.2.cmml">F</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.1.1.3.3.3.1" xref="S4.E1.m1.1.1.1.1.3.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.1.1.3.3.3.3" xref="S4.E1.m1.1.1.1.1.3.3.3.3.cmml">P</mi></mrow><mo id="S4.E1.m1.1.1.1.1.3.3.1a" xref="S4.E1.m1.1.1.1.1.3.3.1.cmml">+</mo><mrow id="S4.E1.m1.1.1.1.1.3.3.4" xref="S4.E1.m1.1.1.1.1.3.3.4.cmml"><mi id="S4.E1.m1.1.1.1.1.3.3.4.2" xref="S4.E1.m1.1.1.1.1.3.3.4.2.cmml">F</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.1.1.3.3.4.1" xref="S4.E1.m1.1.1.1.1.3.3.4.1.cmml">​</mo><mi id="S4.E1.m1.1.1.1.1.3.3.4.3" xref="S4.E1.m1.1.1.1.1.3.3.4.3.cmml">N</mi></mrow></mrow></mfrac></mrow><mo id="S4.E1.m1.1.1.1.2" xref="S4.E1.m1.1.1.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.E1.m1.1b"><apply id="S4.E1.m1.1.1.1.1.cmml" xref="S4.E1.m1.1.1.1"><eq id="S4.E1.m1.1.1.1.1.1.cmml" xref="S4.E1.m1.1.1.1.1.1"></eq><apply id="S4.E1.m1.1.1.1.1.2.cmml" xref="S4.E1.m1.1.1.1.1.2"><times id="S4.E1.m1.1.1.1.1.2.1.cmml" xref="S4.E1.m1.1.1.1.1.2.1"></times><ci id="S4.E1.m1.1.1.1.1.2.2.cmml" xref="S4.E1.m1.1.1.1.1.2.2">𝐼</ci><ci id="S4.E1.m1.1.1.1.1.2.3.cmml" xref="S4.E1.m1.1.1.1.1.2.3">𝑜</ci><ci id="S4.E1.m1.1.1.1.1.2.4.cmml" xref="S4.E1.m1.1.1.1.1.2.4">𝑈</ci></apply><apply id="S4.E1.m1.1.1.1.1.3.cmml" xref="S4.E1.m1.1.1.1.1.3"><divide id="S4.E1.m1.1.1.1.1.3.1.cmml" xref="S4.E1.m1.1.1.1.1.3"></divide><apply id="S4.E1.m1.1.1.1.1.3.2.cmml" xref="S4.E1.m1.1.1.1.1.3.2"><times id="S4.E1.m1.1.1.1.1.3.2.1.cmml" xref="S4.E1.m1.1.1.1.1.3.2.1"></times><ci id="S4.E1.m1.1.1.1.1.3.2.2.cmml" xref="S4.E1.m1.1.1.1.1.3.2.2">𝑇</ci><ci id="S4.E1.m1.1.1.1.1.3.2.3.cmml" xref="S4.E1.m1.1.1.1.1.3.2.3">𝑃</ci></apply><apply id="S4.E1.m1.1.1.1.1.3.3.cmml" xref="S4.E1.m1.1.1.1.1.3.3"><plus id="S4.E1.m1.1.1.1.1.3.3.1.cmml" xref="S4.E1.m1.1.1.1.1.3.3.1"></plus><apply id="S4.E1.m1.1.1.1.1.3.3.2.cmml" xref="S4.E1.m1.1.1.1.1.3.3.2"><times id="S4.E1.m1.1.1.1.1.3.3.2.1.cmml" xref="S4.E1.m1.1.1.1.1.3.3.2.1"></times><ci id="S4.E1.m1.1.1.1.1.3.3.2.2.cmml" xref="S4.E1.m1.1.1.1.1.3.3.2.2">𝑇</ci><ci id="S4.E1.m1.1.1.1.1.3.3.2.3.cmml" xref="S4.E1.m1.1.1.1.1.3.3.2.3">𝑃</ci></apply><apply id="S4.E1.m1.1.1.1.1.3.3.3.cmml" xref="S4.E1.m1.1.1.1.1.3.3.3"><times id="S4.E1.m1.1.1.1.1.3.3.3.1.cmml" xref="S4.E1.m1.1.1.1.1.3.3.3.1"></times><ci id="S4.E1.m1.1.1.1.1.3.3.3.2.cmml" xref="S4.E1.m1.1.1.1.1.3.3.3.2">𝐹</ci><ci id="S4.E1.m1.1.1.1.1.3.3.3.3.cmml" xref="S4.E1.m1.1.1.1.1.3.3.3.3">𝑃</ci></apply><apply id="S4.E1.m1.1.1.1.1.3.3.4.cmml" xref="S4.E1.m1.1.1.1.1.3.3.4"><times id="S4.E1.m1.1.1.1.1.3.3.4.1.cmml" xref="S4.E1.m1.1.1.1.1.3.3.4.1"></times><ci id="S4.E1.m1.1.1.1.1.3.3.4.2.cmml" xref="S4.E1.m1.1.1.1.1.3.3.4.2">𝐹</ci><ci id="S4.E1.m1.1.1.1.1.3.3.4.3.cmml" xref="S4.E1.m1.1.1.1.1.3.3.4.3">𝑁</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E1.m1.1c">IoU=\frac{TP}{TP+FP+FN},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S4.SS2.p3.1" class="ltx_p">where TP (True Positive) denotes the correct prediction of the ground truth. FP (False Positive) denotes incorrectly predicting an object that is not in the ground truth, and FN (False Negative) denotes the ground truth not being predicted.</p>
+</div>
+<div id="S4.SS2.p4" class="ltx_para">
+<p id="S4.SS2.p4.2" class="ltx_p"><span id="S4.SS2.p4.2.1" class="ltx_text ltx_font_bold">Average precision 11(AP11).</span>
+The Average Precision (AP) is computed by integrating the Precision-Recall (PR) curve. To approximate the PR curve, the 11-point interpolation method is commonly employed.
+In the 11-point interpolation, the Precision-Recall curve is sampled at 11 equally spaced recall levels between 0 and 1. The formula for AP11 is as follows:</p>
+<table id="S4.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E2.m1.6" class="ltx_Math" alttext="AP_{11}=\frac{1}{11}\sum_{R\in\{0,0.1,\ldots,0.9,1\}}P_{\text{interp}}(R)" display="block"><semantics id="S4.E2.m1.6a"><mrow id="S4.E2.m1.6.7" xref="S4.E2.m1.6.7.cmml"><mrow id="S4.E2.m1.6.7.2" xref="S4.E2.m1.6.7.2.cmml"><mi id="S4.E2.m1.6.7.2.2" xref="S4.E2.m1.6.7.2.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.6.7.2.1" xref="S4.E2.m1.6.7.2.1.cmml">​</mo><msub id="S4.E2.m1.6.7.2.3" xref="S4.E2.m1.6.7.2.3.cmml"><mi id="S4.E2.m1.6.7.2.3.2" xref="S4.E2.m1.6.7.2.3.2.cmml">P</mi><mn id="S4.E2.m1.6.7.2.3.3" xref="S4.E2.m1.6.7.2.3.3.cmml">11</mn></msub></mrow><mo id="S4.E2.m1.6.7.1" xref="S4.E2.m1.6.7.1.cmml">=</mo><mrow id="S4.E2.m1.6.7.3" xref="S4.E2.m1.6.7.3.cmml"><mfrac id="S4.E2.m1.6.7.3.2" xref="S4.E2.m1.6.7.3.2.cmml"><mn id="S4.E2.m1.6.7.3.2.2" xref="S4.E2.m1.6.7.3.2.2.cmml">1</mn><mn id="S4.E2.m1.6.7.3.2.3" xref="S4.E2.m1.6.7.3.2.3.cmml">11</mn></mfrac><mo lspace="0em" rspace="0em" id="S4.E2.m1.6.7.3.1" xref="S4.E2.m1.6.7.3.1.cmml">​</mo><mrow id="S4.E2.m1.6.7.3.3" xref="S4.E2.m1.6.7.3.3.cmml"><munder id="S4.E2.m1.6.7.3.3.1" xref="S4.E2.m1.6.7.3.3.1.cmml"><mo movablelimits="false" id="S4.E2.m1.6.7.3.3.1.2" xref="S4.E2.m1.6.7.3.3.1.2.cmml">∑</mo><mrow id="S4.E2.m1.5.5.5" xref="S4.E2.m1.5.5.5.cmml"><mi id="S4.E2.m1.5.5.5.7" xref="S4.E2.m1.5.5.5.7.cmml">R</mi><mo id="S4.E2.m1.5.5.5.6" xref="S4.E2.m1.5.5.5.6.cmml">∈</mo><mrow id="S4.E2.m1.5.5.5.8.2" xref="S4.E2.m1.5.5.5.8.1.cmml"><mo stretchy="false" id="S4.E2.m1.5.5.5.8.2.1" xref="S4.E2.m1.5.5.5.8.1.cmml">{</mo><mn id="S4.E2.m1.1.1.1.1" xref="S4.E2.m1.1.1.1.1.cmml">0</mn><mo id="S4.E2.m1.5.5.5.8.2.2" xref="S4.E2.m1.5.5.5.8.1.cmml">,</mo><mn id="S4.E2.m1.2.2.2.2" xref="S4.E2.m1.2.2.2.2.cmml">0.1</mn><mo id="S4.E2.m1.5.5.5.8.2.3" xref="S4.E2.m1.5.5.5.8.1.cmml">,</mo><mi mathvariant="normal" id="S4.E2.m1.3.3.3.3" xref="S4.E2.m1.3.3.3.3.cmml">…</mi><mo id="S4.E2.m1.5.5.5.8.2.4" xref="S4.E2.m1.5.5.5.8.1.cmml">,</mo><mn id="S4.E2.m1.4.4.4.4" xref="S4.E2.m1.4.4.4.4.cmml">0.9</mn><mo id="S4.E2.m1.5.5.5.8.2.5" xref="S4.E2.m1.5.5.5.8.1.cmml">,</mo><mn id="S4.E2.m1.5.5.5.5" xref="S4.E2.m1.5.5.5.5.cmml">1</mn><mo stretchy="false" id="S4.E2.m1.5.5.5.8.2.6" xref="S4.E2.m1.5.5.5.8.1.cmml">}</mo></mrow></mrow></munder><mrow id="S4.E2.m1.6.7.3.3.2" xref="S4.E2.m1.6.7.3.3.2.cmml"><msub id="S4.E2.m1.6.7.3.3.2.2" xref="S4.E2.m1.6.7.3.3.2.2.cmml"><mi id="S4.E2.m1.6.7.3.3.2.2.2" xref="S4.E2.m1.6.7.3.3.2.2.2.cmml">P</mi><mtext id="S4.E2.m1.6.7.3.3.2.2.3" xref="S4.E2.m1.6.7.3.3.2.2.3a.cmml">interp</mtext></msub><mo lspace="0em" rspace="0em" id="S4.E2.m1.6.7.3.3.2.1" xref="S4.E2.m1.6.7.3.3.2.1.cmml">​</mo><mrow id="S4.E2.m1.6.7.3.3.2.3.2" xref="S4.E2.m1.6.7.3.3.2.cmml"><mo stretchy="false" id="S4.E2.m1.6.7.3.3.2.3.2.1" xref="S4.E2.m1.6.7.3.3.2.cmml">(</mo><mi id="S4.E2.m1.6.6" xref="S4.E2.m1.6.6.cmml">R</mi><mo stretchy="false" id="S4.E2.m1.6.7.3.3.2.3.2.2" xref="S4.E2.m1.6.7.3.3.2.cmml">)</mo></mrow></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E2.m1.6b"><apply id="S4.E2.m1.6.7.cmml" xref="S4.E2.m1.6.7"><eq id="S4.E2.m1.6.7.1.cmml" xref="S4.E2.m1.6.7.1"></eq><apply id="S4.E2.m1.6.7.2.cmml" xref="S4.E2.m1.6.7.2"><times id="S4.E2.m1.6.7.2.1.cmml" xref="S4.E2.m1.6.7.2.1"></times><ci id="S4.E2.m1.6.7.2.2.cmml" xref="S4.E2.m1.6.7.2.2">𝐴</ci><apply id="S4.E2.m1.6.7.2.3.cmml" xref="S4.E2.m1.6.7.2.3"><csymbol cd="ambiguous" id="S4.E2.m1.6.7.2.3.1.cmml" xref="S4.E2.m1.6.7.2.3">subscript</csymbol><ci id="S4.E2.m1.6.7.2.3.2.cmml" xref="S4.E2.m1.6.7.2.3.2">𝑃</ci><cn type="integer" id="S4.E2.m1.6.7.2.3.3.cmml" xref="S4.E2.m1.6.7.2.3.3">11</cn></apply></apply><apply id="S4.E2.m1.6.7.3.cmml" xref="S4.E2.m1.6.7.3"><times id="S4.E2.m1.6.7.3.1.cmml" xref="S4.E2.m1.6.7.3.1"></times><apply id="S4.E2.m1.6.7.3.2.cmml" xref="S4.E2.m1.6.7.3.2"><divide id="S4.E2.m1.6.7.3.2.1.cmml" xref="S4.E2.m1.6.7.3.2"></divide><cn type="integer" id="S4.E2.m1.6.7.3.2.2.cmml" xref="S4.E2.m1.6.7.3.2.2">1</cn><cn type="integer" id="S4.E2.m1.6.7.3.2.3.cmml" xref="S4.E2.m1.6.7.3.2.3">11</cn></apply><apply id="S4.E2.m1.6.7.3.3.cmml" xref="S4.E2.m1.6.7.3.3"><apply id="S4.E2.m1.6.7.3.3.1.cmml" xref="S4.E2.m1.6.7.3.3.1"><csymbol cd="ambiguous" id="S4.E2.m1.6.7.3.3.1.1.cmml" xref="S4.E2.m1.6.7.3.3.1">subscript</csymbol><sum id="S4.E2.m1.6.7.3.3.1.2.cmml" xref="S4.E2.m1.6.7.3.3.1.2"></sum><apply id="S4.E2.m1.5.5.5.cmml" xref="S4.E2.m1.5.5.5"><in id="S4.E2.m1.5.5.5.6.cmml" xref="S4.E2.m1.5.5.5.6"></in><ci id="S4.E2.m1.5.5.5.7.cmml" xref="S4.E2.m1.5.5.5.7">𝑅</ci><set id="S4.E2.m1.5.5.5.8.1.cmml" xref="S4.E2.m1.5.5.5.8.2"><cn type="integer" id="S4.E2.m1.1.1.1.1.cmml" xref="S4.E2.m1.1.1.1.1">0</cn><cn type="float" id="S4.E2.m1.2.2.2.2.cmml" xref="S4.E2.m1.2.2.2.2">0.1</cn><ci id="S4.E2.m1.3.3.3.3.cmml" xref="S4.E2.m1.3.3.3.3">…</ci><cn type="float" id="S4.E2.m1.4.4.4.4.cmml" xref="S4.E2.m1.4.4.4.4">0.9</cn><cn type="integer" id="S4.E2.m1.5.5.5.5.cmml" xref="S4.E2.m1.5.5.5.5">1</cn></set></apply></apply><apply id="S4.E2.m1.6.7.3.3.2.cmml" xref="S4.E2.m1.6.7.3.3.2"><times id="S4.E2.m1.6.7.3.3.2.1.cmml" xref="S4.E2.m1.6.7.3.3.2.1"></times><apply id="S4.E2.m1.6.7.3.3.2.2.cmml" xref="S4.E2.m1.6.7.3.3.2.2"><csymbol cd="ambiguous" id="S4.E2.m1.6.7.3.3.2.2.1.cmml" xref="S4.E2.m1.6.7.3.3.2.2">subscript</csymbol><ci id="S4.E2.m1.6.7.3.3.2.2.2.cmml" xref="S4.E2.m1.6.7.3.3.2.2.2">𝑃</ci><ci id="S4.E2.m1.6.7.3.3.2.2.3a.cmml" xref="S4.E2.m1.6.7.3.3.2.2.3"><mtext mathsize="70%" id="S4.E2.m1.6.7.3.3.2.2.3.cmml" xref="S4.E2.m1.6.7.3.3.2.2.3">interp</mtext></ci></apply><ci id="S4.E2.m1.6.6.cmml" xref="S4.E2.m1.6.6">𝑅</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E2.m1.6c">AP_{11}=\frac{1}{11}\sum_{R\in\{0,0.1,\ldots,0.9,1\}}P_{\text{interp}}(R)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S4.SS2.p4.1" class="ltx_p">where <math id="S4.SS2.p4.1.m1.1" class="ltx_Math" alttext="P_{\text{interp}}(R)" display="inline"><semantics id="S4.SS2.p4.1.m1.1a"><mrow id="S4.SS2.p4.1.m1.1.2" xref="S4.SS2.p4.1.m1.1.2.cmml"><msub id="S4.SS2.p4.1.m1.1.2.2" xref="S4.SS2.p4.1.m1.1.2.2.cmml"><mi id="S4.SS2.p4.1.m1.1.2.2.2" xref="S4.SS2.p4.1.m1.1.2.2.2.cmml">P</mi><mtext id="S4.SS2.p4.1.m1.1.2.2.3" xref="S4.SS2.p4.1.m1.1.2.2.3a.cmml">interp</mtext></msub><mo lspace="0em" rspace="0em" id="S4.SS2.p4.1.m1.1.2.1" xref="S4.SS2.p4.1.m1.1.2.1.cmml">​</mo><mrow id="S4.SS2.p4.1.m1.1.2.3.2" xref="S4.SS2.p4.1.m1.1.2.cmml"><mo stretchy="false" id="S4.SS2.p4.1.m1.1.2.3.2.1" xref="S4.SS2.p4.1.m1.1.2.cmml">(</mo><mi id="S4.SS2.p4.1.m1.1.1" xref="S4.SS2.p4.1.m1.1.1.cmml">R</mi><mo stretchy="false" id="S4.SS2.p4.1.m1.1.2.3.2.2" xref="S4.SS2.p4.1.m1.1.2.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p4.1.m1.1b"><apply id="S4.SS2.p4.1.m1.1.2.cmml" xref="S4.SS2.p4.1.m1.1.2"><times id="S4.SS2.p4.1.m1.1.2.1.cmml" xref="S4.SS2.p4.1.m1.1.2.1"></times><apply id="S4.SS2.p4.1.m1.1.2.2.cmml" xref="S4.SS2.p4.1.m1.1.2.2"><csymbol cd="ambiguous" id="S4.SS2.p4.1.m1.1.2.2.1.cmml" xref="S4.SS2.p4.1.m1.1.2.2">subscript</csymbol><ci id="S4.SS2.p4.1.m1.1.2.2.2.cmml" xref="S4.SS2.p4.1.m1.1.2.2.2">𝑃</ci><ci id="S4.SS2.p4.1.m1.1.2.2.3a.cmml" xref="S4.SS2.p4.1.m1.1.2.2.3"><mtext mathsize="70%" id="S4.SS2.p4.1.m1.1.2.2.3.cmml" xref="S4.SS2.p4.1.m1.1.2.2.3">interp</mtext></ci></apply><ci id="S4.SS2.p4.1.m1.1.1.cmml" xref="S4.SS2.p4.1.m1.1.1">𝑅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p4.1.m1.1c">P_{\text{interp}}(R)</annotation></semantics></math> is the maximum precision for recall greater than R (Recall).</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Scene completion pre-training </h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">The raw point cloud serves as input and is fed into our SCP. Notably, only 20% of the training data is sampled from the overall training set for training the SCP. Through this step, we obtain the pre-training model for scene completion.
+As depicted in Fig. <a href="#S4.F5" title="Figure 5 ‣ 4.3 Scene completion pre-training ‣ 4 Experiments ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, it is evident that after pre-training the complementary network, the original data is effectively completed and generates a more holistic representation of the scene.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure"><img src="/html/2309.06199/assets/compare_with_road.png" id="S4.F5.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="592" height="218" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>The comparison before and after the scene completion.</figcaption>
+</figure>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span>3D object detection</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.1" class="ltx_p">During this stage, the objective is to train and optimize the components of the detection network that complement the fully trained 3D backbone.
+The pre-training weights in the scene completion provide a solid starting point and enable efficient transfer of prior knowledge. By building upon the already well-performing 3D backbone part, we can concentrate on refining and fine-tuning the other components of the detection network.
+To evaluate the effectiveness of our SCP, we employ the entire validation dataset and compare it with the fully trained 3D detectors.
+</p>
+</div>
+</section>
+<section id="S4.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.5 </span>Implementation details</h3>
+
+<div id="S4.SS5.p1" class="ltx_para">
+<p id="S4.SS5.p1.1" class="ltx_p">The pre-training scene completion module employed the Adam optimizer with a batch size of 3 and an initial learning rate of 0.001. The learning rate dynamically changed during training based on the number of training rounds. The training process utilized 20% of the SemanticKITTI dataset, with approximately 50 epochs of training conducted.
+Regarding the 3D detection module, the Adam-one cycle optimizer was employed with a batch size of 6 for SCP-SSD and 3 for SCP-TSD. The learning rate was set to 0.003. The SCP-SSD model was trained for 100 epochs, while the SCP-TSD model was trained for 80 epochs.
+All experiments and training processes were conducted on GPUs, specifically using hardware such as the Quadro RTX 8000 and NVIDIA A40. These GPUs offer high-performance computing capabilities and possess a substantial memory capacity of 48GB.</p>
+</div>
+</section>
+<section id="S4.SS6" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.6 </span>Results</h3>
+
+<div id="S4.SS6.p1" class="ltx_para">
+<p id="S4.SS6.p1.1" class="ltx_p">We conduct a comparative analysis by assembling our SCP and the state-of-the-art 3D detector VoTr <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite>. To ensure a fair comparison, we adopt the same evaluation metrics, following <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite>.
+Table. <a href="#S4.T2" title="Table 2 ‣ 3D object detection. ‣ 4.6 Results ‣ 4 Experiments ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> presents the AP11 achieved by each method on the KITTI validation split for the car category.
+Table. <a href="#S4.T1" title="Table 1 ‣ 3D scene completion. ‣ 4.6 Results ‣ 4 Experiments ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> illustrates the results of scene completion.
+Despite the utilization of a relatively small amount (20%) of training data, our SCP exhibits remarkable performance in object detection tasks. It is worth highlighting that our method achieves detection results that are remarkably close to those obtained through full data training, even surpassing the performance of full-data training.</p>
+</div>
+<section id="S4.SS6.SSS0.Px1" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">3D scene completion.</h4>
+
+<div id="S4.SS6.SSS0.Px1.p1" class="ltx_para">
+<p id="S4.SS6.SSS0.Px1.p1.1" class="ltx_p">In this study, we utilized only 20% of the SemanticKITTI dataset for training the completion network.
+The completion results obtained in our experiments ranged from 47.39% to 54.58%. These results reflect the effectiveness of our completion network in generating accurate and reliable scene completions.
+Notably, our pre-training model, which underwent rigorous training and optimization, yielded the highest completion result of <span id="S4.SS6.SSS0.Px1.p1.1.1" class="ltx_text ltx_font_bold">54.58%</span>.
+The training results of the scene completion network are shown in Fig. <a href="#S4.T1" title="Table 1 ‣ 3D scene completion. ‣ 4.6 Results ‣ 4 Experiments ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>The IoU results of 3D scene completion in different training epochs.</figcaption>
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">Training rounds</th>
+<td id="S4.T1.1.1.1.2" class="ltx_td ltx_align_left">IoU(%)</td>
+</tr>
+<tr id="S4.T1.1.2.2" class="ltx_tr">
+<th id="S4.T1.1.2.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">epochs=10</th>
+<td id="S4.T1.1.2.2.2" class="ltx_td ltx_align_left">51.67</td>
+</tr>
+<tr id="S4.T1.1.3.3" class="ltx_tr">
+<th id="S4.T1.1.3.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">epochs=20</th>
+<td id="S4.T1.1.3.3.2" class="ltx_td ltx_align_left">52.11</td>
+</tr>
+<tr id="S4.T1.1.4.4" class="ltx_tr">
+<th id="S4.T1.1.4.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">epochs=30</th>
+<td id="S4.T1.1.4.4.2" class="ltx_td ltx_align_left">53.79</td>
+</tr>
+<tr id="S4.T1.1.5.5" class="ltx_tr">
+<th id="S4.T1.1.5.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">epochs=40</th>
+<td id="S4.T1.1.5.5.2" class="ltx_td ltx_align_left">54.14</td>
+</tr>
+<tr id="S4.T1.1.6.6" class="ltx_tr">
+<th id="S4.T1.1.6.6.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">epochs=50</th>
+<td id="S4.T1.1.6.6.2" class="ltx_td ltx_align_left">54.48</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S4.SS6.SSS0.Px2" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">3D object detection.</h4>
+
+<div id="S4.SS6.SSS0.Px2.p1" class="ltx_para">
+<p id="S4.SS6.SSS0.Px2.p1.1" class="ltx_p">In this experiment, we focus on training the VoTr-SCP model using a significantly reduced amount of training data. Specifically, we utilized only 20% of the available data for training purposes. This deliberate reduction in training data allowed us to investigate the model’s performance under resource-constrained scenarios and assess its ability to leverage limited data effectively. The results are presented in Table. <a href="#S4.T2" title="Table 2 ‣ 3D object detection. ‣ 4.6 Results ‣ 4 Experiments ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+Remarkably, the reduction in training data does not lead to a significant degradation in the detection performance of the VoTr-SCP model. Despite utilizing a smaller amount of training data, our approach maintains a highly effective detection performance that is comparable to, and in some cases even surpasses, the results obtained through full data training. Here, we have only calculated the detection results on the car category.</p>
+</div>
+<div id="S4.SS6.SSS0.Px2.p2" class="ltx_para">
+<p id="S4.SS6.SSS0.Px2.p2.1" class="ltx_p">Specifically, our SCP demonstrates notable improvements in the easy car class, elevating the performance from 89.04 to <span id="S4.SS6.SSS0.Px2.p2.1.1" class="ltx_text ltx_font_bold">89.10</span> compared to VoTr-TSD. This finding highlights the effectiveness of our approach in enhancing the detection results. Additionally, we provide a visualization of a scene completion result in Fig. <a href="#S4.F6" title="Figure 6 ‣ 3D object detection. ‣ 4.6 Results ‣ 4 Experiments ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.</p>
+</div>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Comparisons on the KITTI with AP11 for the car category (20% training data).</figcaption>
+<table id="S4.T2.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<td id="S4.T2.1.1.1.1" class="ltx_td ltx_align_center">Methods</td>
+<td id="S4.T2.1.1.1.2" class="ltx_td ltx_align_left">AP11(%)</td>
+<td id="S4.T2.1.1.1.3" class="ltx_td"></td>
+<td id="S4.T2.1.1.1.4" class="ltx_td"></td>
+</tr>
+<tr id="S4.T2.1.2.2" class="ltx_tr">
+<td id="S4.T2.1.2.2.1" class="ltx_td"></td>
+<td id="S4.T2.1.2.2.2" class="ltx_td ltx_align_left">Easy</td>
+<td id="S4.T2.1.2.2.3" class="ltx_td ltx_align_left">Mod</td>
+<td id="S4.T2.1.2.2.4" class="ltx_td ltx_align_center">Hard</td>
+</tr>
+<tr id="S4.T2.1.3.3" class="ltx_tr">
+<td id="S4.T2.1.3.3.1" class="ltx_td ltx_align_center">VoTr-SSD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite>
+</td>
+<td id="S4.T2.1.3.3.2" class="ltx_td ltx_align_left">87.86</td>
+<td id="S4.T2.1.3.3.3" class="ltx_td ltx_align_left">78.27</td>
+<td id="S4.T2.1.3.3.4" class="ltx_td ltx_align_center">76.93</td>
+</tr>
+<tr id="S4.T2.1.4.4" class="ltx_tr">
+<td id="S4.T2.1.4.4.1" class="ltx_td ltx_align_center">VoTr-SSD-SCP (Ours)</td>
+<td id="S4.T2.1.4.4.2" class="ltx_td ltx_align_left">86.86</td>
+<td id="S4.T2.1.4.4.3" class="ltx_td ltx_align_left">75.75</td>
+<td id="S4.T2.1.4.4.4" class="ltx_td ltx_align_center">68.79</td>
+</tr>
+<tr id="S4.T2.1.5.5" class="ltx_tr">
+<td id="S4.T2.1.5.5.1" class="ltx_td ltx_align_center">VoTr-TSD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Mao et al., 2021</a>]</cite>
+</td>
+<td id="S4.T2.1.5.5.2" class="ltx_td ltx_align_left">89.04</td>
+<td id="S4.T2.1.5.5.3" class="ltx_td ltx_align_left">84.04</td>
+<td id="S4.T2.1.5.5.4" class="ltx_td ltx_align_center">78.68</td>
+</tr>
+<tr id="S4.T2.1.6.6" class="ltx_tr">
+<td id="S4.T2.1.6.6.1" class="ltx_td ltx_align_center">VoTr-TSD-SCP (Ours)</td>
+<td id="S4.T2.1.6.6.2" class="ltx_td ltx_align_left"><span id="S4.T2.1.6.6.2.1" class="ltx_text ltx_font_bold">89.10</span></td>
+<td id="S4.T2.1.6.6.3" class="ltx_td ltx_align_left">78.78</td>
+<td id="S4.T2.1.6.6.4" class="ltx_td ltx_align_center">78.04</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2309.06199/assets/x5.png" id="S4.F6.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="368" height="239" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Visualization of the example results. Due to the existence of some points similar to cars in the target area, VoTr incorrectly identified the wall as a car (the green bounding box), whereas our SCP can help to reduce these errors.
+</figcaption>
+</figure>
+</section>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Discussions</h2>
+
+<section id="S5.SS0.SSS0.Px1" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">Different labeled data volumes.</h4>
+
+<div id="S5.SS0.SSS0.Px1.p1" class="ltx_para">
+<p id="S5.SS0.SSS0.Px1.p1.1" class="ltx_p">To comprehensively assess the influence of the pre-training model on the detection performance under different amounts of labeled data, we carried out experiments utilizing varying fractions of the training set. Specifically, we conducted experiments using four different fractions: 10%, 20%, 30%, and 40% of the total training set.</p>
+</div>
+<div id="S5.SS0.SSS0.Px1.p2" class="ltx_para">
+<p id="S5.SS0.SSS0.Px1.p2.1" class="ltx_p">The results of these experiments are presented in Table. <a href="#S5.T3" title="Table 3 ‣ Different labeled data volumes. ‣ 5 Discussions ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> and Table. <a href="#S5.T4" title="Table 4 ‣ Different labeled data volumes. ‣ 5 Discussions ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>. It is evident from the tables that as the volume of data increases, the performance of the models improves.
+Notably, our experimental results highlight the robustness and efficacy of our model, even when trained with very small amounts of data. At data volumes as low as 10% and 20% of the training set, our model consistently achieved commendable results.</p>
+</div>
+<figure id="S5.T3" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Comparisons on different data volume with VoTr-SSD-SCP (IoU=51.6) for the car category.</figcaption>
+<table id="S5.T3.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T3.1.1.1" class="ltx_tr">
+<td id="S5.T3.1.1.1.1" class="ltx_td ltx_align_center">Data Volume</td>
+<td id="S5.T3.1.1.1.2" class="ltx_td ltx_align_left">AP11(%)</td>
+<td id="S5.T3.1.1.1.3" class="ltx_td"></td>
+<td id="S5.T3.1.1.1.4" class="ltx_td"></td>
+</tr>
+<tr id="S5.T3.1.2.2" class="ltx_tr">
+<td id="S5.T3.1.2.2.1" class="ltx_td"></td>
+<td id="S5.T3.1.2.2.2" class="ltx_td ltx_align_left">Easy</td>
+<td id="S5.T3.1.2.2.3" class="ltx_td ltx_align_left">Mod</td>
+<td id="S5.T3.1.2.2.4" class="ltx_td ltx_align_center">Hard</td>
+</tr>
+<tr id="S5.T3.1.3.3" class="ltx_tr">
+<td id="S5.T3.1.3.3.1" class="ltx_td ltx_align_center">10%</td>
+<td id="S5.T3.1.3.3.2" class="ltx_td ltx_align_left">85.34</td>
+<td id="S5.T3.1.3.3.3" class="ltx_td ltx_align_left">71.89</td>
+<td id="S5.T3.1.3.3.4" class="ltx_td ltx_align_center">67.85</td>
+</tr>
+<tr id="S5.T3.1.4.4" class="ltx_tr">
+<td id="S5.T3.1.4.4.1" class="ltx_td ltx_align_center">20%</td>
+<td id="S5.T3.1.4.4.2" class="ltx_td ltx_align_left">85.91</td>
+<td id="S5.T3.1.4.4.3" class="ltx_td ltx_align_left">72.36</td>
+<td id="S5.T3.1.4.4.4" class="ltx_td ltx_align_center">68.25</td>
+</tr>
+<tr id="S5.T3.1.5.5" class="ltx_tr">
+<td id="S5.T3.1.5.5.1" class="ltx_td ltx_align_center">30%</td>
+<td id="S5.T3.1.5.5.2" class="ltx_td ltx_align_left">86.43</td>
+<td id="S5.T3.1.5.5.3" class="ltx_td ltx_align_left">74.43</td>
+<td id="S5.T3.1.5.5.4" class="ltx_td ltx_align_center">68.28</td>
+</tr>
+<tr id="S5.T3.1.6.6" class="ltx_tr">
+<td id="S5.T3.1.6.6.1" class="ltx_td ltx_align_center">40%</td>
+<td id="S5.T3.1.6.6.2" class="ltx_td ltx_align_left"><span id="S5.T3.1.6.6.2.1" class="ltx_text ltx_font_bold">86.79</span></td>
+<td id="S5.T3.1.6.6.3" class="ltx_td ltx_align_left"><span id="S5.T3.1.6.6.3.1" class="ltx_text ltx_font_bold">76.02</span></td>
+<td id="S5.T3.1.6.6.4" class="ltx_td ltx_align_center"><span id="S5.T3.1.6.6.4.1" class="ltx_text ltx_font_bold">72.01</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S5.T4" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Comparisons on different data volume with VoTr-TSD-SCP (IoU=54.1) for the car category.</figcaption>
+<table id="S5.T4.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T4.1.1.1" class="ltx_tr">
+<td id="S5.T4.1.1.1.1" class="ltx_td ltx_align_center">Data Volume</td>
+<td id="S5.T4.1.1.1.2" class="ltx_td ltx_align_left">AP11(%)</td>
+<td id="S5.T4.1.1.1.3" class="ltx_td"></td>
+<td id="S5.T4.1.1.1.4" class="ltx_td"></td>
+</tr>
+<tr id="S5.T4.1.2.2" class="ltx_tr">
+<td id="S5.T4.1.2.2.1" class="ltx_td"></td>
+<td id="S5.T4.1.2.2.2" class="ltx_td ltx_align_left">Easy</td>
+<td id="S5.T4.1.2.2.3" class="ltx_td ltx_align_left">Mod</td>
+<td id="S5.T4.1.2.2.4" class="ltx_td ltx_align_center">Hard</td>
+</tr>
+<tr id="S5.T4.1.3.3" class="ltx_tr">
+<td id="S5.T4.1.3.3.1" class="ltx_td ltx_align_center">10%</td>
+<td id="S5.T4.1.3.3.2" class="ltx_td ltx_align_left">88.11</td>
+<td id="S5.T4.1.3.3.3" class="ltx_td ltx_align_left">77.90</td>
+<td id="S5.T4.1.3.3.4" class="ltx_td ltx_align_center">76.84</td>
+</tr>
+<tr id="S5.T4.1.4.4" class="ltx_tr">
+<td id="S5.T4.1.4.4.1" class="ltx_td ltx_align_center">20%</td>
+<td id="S5.T4.1.4.4.2" class="ltx_td ltx_align_left"><span id="S5.T4.1.4.4.2.1" class="ltx_text ltx_font_bold">89.10</span></td>
+<td id="S5.T4.1.4.4.3" class="ltx_td ltx_align_left">78.78</td>
+<td id="S5.T4.1.4.4.4" class="ltx_td ltx_align_center">78.04</td>
+</tr>
+<tr id="S5.T4.1.5.5" class="ltx_tr">
+<td id="S5.T4.1.5.5.1" class="ltx_td ltx_align_center">30%</td>
+<td id="S5.T4.1.5.5.2" class="ltx_td ltx_align_left">88.50</td>
+<td id="S5.T4.1.5.5.3" class="ltx_td ltx_align_left">78.43</td>
+<td id="S5.T4.1.5.5.4" class="ltx_td ltx_align_center">77.67</td>
+</tr>
+<tr id="S5.T4.1.6.6" class="ltx_tr">
+<td id="S5.T4.1.6.6.1" class="ltx_td ltx_align_center">40%</td>
+<td id="S5.T4.1.6.6.2" class="ltx_td ltx_align_left">89.06</td>
+<td id="S5.T4.1.6.6.3" class="ltx_td ltx_align_left"><span id="S5.T4.1.6.6.3.1" class="ltx_text ltx_font_bold">78.95</span></td>
+<td id="S5.T4.1.6.6.4" class="ltx_td ltx_align_center"><span id="S5.T4.1.6.6.4.1" class="ltx_text ltx_font_bold">78.44</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S5.SS0.SSS0.Px2" class="ltx_paragraph">
+<h4 class="ltx_title ltx_title_paragraph">Different completion effects.</h4>
+
+<div id="S5.SS0.SSS0.Px2.p1" class="ltx_para">
+<p id="S5.SS0.SSS0.Px2.p1.1" class="ltx_p">To investigate the influence of scene completions on the 3D detection performance, we conducted an in-depth analysis by selecting two different completion results with varying intersection over union (IoU). Specifically, we chose one completion result with an IoU of 51.6% and another with an IoU of 54.1%. We then compared the performance of these completion results across different volume datasets.
+Table.<a href="#S5.T5" title="Table 5 ‣ Different completion effects. ‣ 5 Discussions ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> and Table.<a href="#S5.T6" title="Table 6 ‣ Different completion effects. ‣ 5 Discussions ‣ SCP: SCENE COMPLETION PRE-TRAINING FOR 3D OBJECT DETECTION" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> demonstrate that different scene completion results yield varying effects on 3D detection for the VoTr-SSD-SCP and VoTr-TSD-SCP frameworks, respectively. Notably, when utilizing the completion results with better performance (IoU=54.1%), the detection results show significant improvements on the 10% and 20% datasets.
+We thus get two conclusions: (1) Accurate and reliable scene completions play a critical role in improving the overall detection performance, particularly in scenarios with very limited data. (2) As the completion achieves better results, it becomes increasingly beneficial for 3D object detection.</p>
+</div>
+<figure id="S5.T5" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Comparisons on different IoU with VoTr-SSD-SCP for the car category.</figcaption>
+<table id="S5.T5.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T5.1.1.1" class="ltx_tr">
+<td id="S5.T5.1.1.1.1" class="ltx_td ltx_align_center">Completion Results</td>
+<td id="S5.T5.1.1.1.2" class="ltx_td ltx_align_left">AP11(%)</td>
+<td id="S5.T5.1.1.1.3" class="ltx_td"></td>
+<td id="S5.T5.1.1.1.4" class="ltx_td"></td>
+</tr>
+<tr id="S5.T5.1.2.2" class="ltx_tr">
+<td id="S5.T5.1.2.2.1" class="ltx_td"></td>
+<td id="S5.T5.1.2.2.2" class="ltx_td ltx_align_left">Easy</td>
+<td id="S5.T5.1.2.2.3" class="ltx_td ltx_align_left">Mod</td>
+<td id="S5.T5.1.2.2.4" class="ltx_td ltx_align_center">Hard</td>
+</tr>
+<tr id="S5.T5.1.3.3" class="ltx_tr">
+<td id="S5.T5.1.3.3.1" class="ltx_td ltx_align_center">IoU=51.6(10%)</td>
+<td id="S5.T5.1.3.3.2" class="ltx_td ltx_align_left">85.34</td>
+<td id="S5.T5.1.3.3.3" class="ltx_td ltx_align_left">71.89</td>
+<td id="S5.T5.1.3.3.4" class="ltx_td ltx_align_center"><span id="S5.T5.1.3.3.4.1" class="ltx_text ltx_font_bold">67.85</span></td>
+</tr>
+<tr id="S5.T5.1.4.4" class="ltx_tr">
+<td id="S5.T5.1.4.4.1" class="ltx_td ltx_align_center">IoU=54.1(10%)</td>
+<td id="S5.T5.1.4.4.2" class="ltx_td ltx_align_left"><span id="S5.T5.1.4.4.2.1" class="ltx_text ltx_font_bold">85.73</span></td>
+<td id="S5.T5.1.4.4.3" class="ltx_td ltx_align_left"><span id="S5.T5.1.4.4.3.1" class="ltx_text ltx_font_bold">72.63</span></td>
+<td id="S5.T5.1.4.4.4" class="ltx_td ltx_align_center">67.38</td>
+</tr>
+<tr id="S5.T5.1.5.5" class="ltx_tr">
+<td id="S5.T5.1.5.5.1" class="ltx_td ltx_align_center">IoU=51.6(20%)</td>
+<td id="S5.T5.1.5.5.2" class="ltx_td ltx_align_left">85.91</td>
+<td id="S5.T5.1.5.5.3" class="ltx_td ltx_align_left">72.36</td>
+<td id="S5.T5.1.5.5.4" class="ltx_td ltx_align_center">68.25</td>
+</tr>
+<tr id="S5.T5.1.6.6" class="ltx_tr">
+<td id="S5.T5.1.6.6.1" class="ltx_td ltx_align_center">IoU=54.1(20%)</td>
+<td id="S5.T5.1.6.6.2" class="ltx_td ltx_align_left"><span id="S5.T5.1.6.6.2.1" class="ltx_text ltx_font_bold">86.86</span></td>
+<td id="S5.T5.1.6.6.3" class="ltx_td ltx_align_left"><span id="S5.T5.1.6.6.3.1" class="ltx_text ltx_font_bold">75.75</span></td>
+<td id="S5.T5.1.6.6.4" class="ltx_td ltx_align_center"><span id="S5.T5.1.6.6.4.1" class="ltx_text ltx_font_bold">68.79</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S5.T6" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 6: </span>Comparisons on different IoU with VoTr-TSD-SCP for the car category.</figcaption>
+<table id="S5.T6.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T6.1.1.1" class="ltx_tr">
+<td id="S5.T6.1.1.1.1" class="ltx_td ltx_align_center">Completion Results</td>
+<td id="S5.T6.1.1.1.2" class="ltx_td ltx_align_left">AP11(%)</td>
+<td id="S5.T6.1.1.1.3" class="ltx_td"></td>
+<td id="S5.T6.1.1.1.4" class="ltx_td"></td>
+</tr>
+<tr id="S5.T6.1.2.2" class="ltx_tr">
+<td id="S5.T6.1.2.2.1" class="ltx_td"></td>
+<td id="S5.T6.1.2.2.2" class="ltx_td ltx_align_left">Easy</td>
+<td id="S5.T6.1.2.2.3" class="ltx_td ltx_align_left">Mod</td>
+<td id="S5.T6.1.2.2.4" class="ltx_td ltx_align_center">Hard</td>
+</tr>
+<tr id="S5.T6.1.3.3" class="ltx_tr">
+<td id="S5.T6.1.3.3.1" class="ltx_td ltx_align_center">IoU=51.6(10%)</td>
+<td id="S5.T6.1.3.3.2" class="ltx_td ltx_align_left"><span id="S5.T6.1.3.3.2.1" class="ltx_text ltx_font_bold">88.23</span></td>
+<td id="S5.T6.1.3.3.3" class="ltx_td ltx_align_left"><span id="S5.T6.1.3.3.3.1" class="ltx_text ltx_font_bold">77.95</span></td>
+<td id="S5.T6.1.3.3.4" class="ltx_td ltx_align_center">76.81</td>
+</tr>
+<tr id="S5.T6.1.4.4" class="ltx_tr">
+<td id="S5.T6.1.4.4.1" class="ltx_td ltx_align_center">IoU=54.1(10%)</td>
+<td id="S5.T6.1.4.4.2" class="ltx_td ltx_align_left">88.11</td>
+<td id="S5.T6.1.4.4.3" class="ltx_td ltx_align_left">77.90</td>
+<td id="S5.T6.1.4.4.4" class="ltx_td ltx_align_center"><span id="S5.T6.1.4.4.4.1" class="ltx_text ltx_font_bold">76.84</span></td>
+</tr>
+<tr id="S5.T6.1.5.5" class="ltx_tr">
+<td id="S5.T6.1.5.5.1" class="ltx_td ltx_align_center">IoU=51.6(20%)</td>
+<td id="S5.T6.1.5.5.2" class="ltx_td ltx_align_left">88.43</td>
+<td id="S5.T6.1.5.5.3" class="ltx_td ltx_align_left">78.43</td>
+<td id="S5.T6.1.5.5.4" class="ltx_td ltx_align_center">77.57</td>
+</tr>
+<tr id="S5.T6.1.6.6" class="ltx_tr">
+<td id="S5.T6.1.6.6.1" class="ltx_td ltx_align_center">IoU=54.1(20%)</td>
+<td id="S5.T6.1.6.6.2" class="ltx_td ltx_align_left"><span id="S5.T6.1.6.6.2.1" class="ltx_text ltx_font_bold">89.10</span></td>
+<td id="S5.T6.1.6.6.3" class="ltx_td ltx_align_left"><span id="S5.T6.1.6.6.3.1" class="ltx_text ltx_font_bold">78.78</span></td>
+<td id="S5.T6.1.6.6.4" class="ltx_td ltx_align_center"><span id="S5.T6.1.6.6.4.1" class="ltx_text ltx_font_bold">78.04</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>Conclusions</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">In this paper, we propose SCP, a novel scene completion pre-training network for 3D object detection. We have demonstrated that scene completion can learn a model initialization to help the 3D detectors only trained on a small amount of dataset. Experiments indicate that the quality of the scene completion has a positive correlation with the effectiveness of object detection. In the future, we hope to explore the scene completion pre-training into more downstream tasks, for example, 3D semantic segmentations and 3D forecasting.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bibx1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Behley et al., 2019]</span>
+<span class="ltx_bibblock">
+Behley, J., Garbade, M., Milioto, A., Quenzel, J., Behnke, S., Stachniss, C.,
+Gall, J., 2019.
+SemanticKITTI: A Dataset for Semantic Scene Understanding of LiDAR
+Sequences.
+<em id="bib.bibx1.1.1" class="ltx_emph ltx_font_italic">Proc. of the IEEE/CVF International Conf. on Computer Vision (ICCV)</em>.
+
+</span>
+</li>
+<li id="bib.bibx2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Chen et al., 2015]</span>
+<span class="ltx_bibblock">
+Chen, X., Kundu, K., Zhu, Y., Berneshawi, A. G., Ma, H., Fidler, S., Urtasun,
+R., 2015.
+3d object proposals for accurate object class detection.
+<span id="bib.bibx2.1.1" class="ltx_text ltx_font_italic">Advances in neural information processing systems</span>, 28.
+
+</span>
+</li>
+<li id="bib.bibx3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Cheng et al., 2021]</span>
+<span class="ltx_bibblock">
+Cheng, R., Agia, C., Ren, Y., Li, X., Bingbing, L., 2021.
+S3cnet: A sparse semantic scene completion network for lidar point clouds.
+<em id="bib.bibx3.1.1" class="ltx_emph ltx_font_italic">Conference on Robot Learning</em>, PMLR, 2148–2161.
+
+</span>
+</li>
+<li id="bib.bibx4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Geiger et al., 2013]</span>
+<span class="ltx_bibblock">
+Geiger, A., Lenz, P., Stiller, C., Urtasun, R., 2013.
+Vision meets robotics: The kitti dataset.
+<span id="bib.bibx4.1.1" class="ltx_text ltx_font_italic">The International Journal of Robotics Research</span>, 32(11), 1231–1237.
+
+</span>
+</li>
+<li id="bib.bibx5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Hossin and Sulaiman, 2015]</span>
+<span class="ltx_bibblock">
+Hossin, M., Sulaiman, M. N., 2015.
+A review on evaluation metrics for data classification evaluations.
+<span id="bib.bibx5.1.1" class="ltx_text ltx_font_italic">International journal of data mining &amp; knowledge management process</span>,
+5(2), 1.
+
+</span>
+</li>
+<li id="bib.bibx6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Li et al., 2020]</span>
+<span class="ltx_bibblock">
+Li, J., Han, K., Wang, P., Liu, Y., Yuan, X., 2020.
+Anisotropic convolutional networks for 3d semantic scene completion.
+<em id="bib.bibx6.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern
+Recognition</em>, 3351–3359.
+
+</span>
+</li>
+<li id="bib.bibx7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Li et al., 2023]</span>
+<span class="ltx_bibblock">
+Li, X., Liu, Y., Xia, Y., Lakshminarasimhan, V., Cao, H., Zhang, F., Stilla,
+U., Knoll, A., 2023.
+Fast and deterministic (3+ 1) DOF point set registration with gravity prior.
+<span id="bib.bibx7.1.1" class="ltx_text ltx_font_italic">ISPRS Journal of Photogrammetry and Remote Sensing</span>, 199, 118–132.
+
+</span>
+</li>
+<li id="bib.bibx8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Mao et al., 2021]</span>
+<span class="ltx_bibblock">
+Mao, J., Xue, Y., Niu, M., Bai, H., Feng, J., Liang, X., Xu, H., Xu, C., 2021.
+Voxel transformer for 3d object detection.
+<em id="bib.bibx8.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF International Conference on Computer
+Vision</em>, 3164–3173.
+
+</span>
+</li>
+<li id="bib.bibx9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Sauder and Sievers, 2019]</span>
+<span class="ltx_bibblock">
+Sauder, J., Sievers, B., 2019.
+Self-supervised deep learning on point clouds by reconstructing space.
+<span id="bib.bibx9.1.1" class="ltx_text ltx_font_italic">Advances in Neural Information Processing Systems</span>, 32.
+
+</span>
+</li>
+<li id="bib.bibx10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Sharma and Kaul, 2020]</span>
+<span class="ltx_bibblock">
+Sharma, C., Kaul, M., 2020.
+Self-supervised few-shot learning on point clouds.
+<span id="bib.bibx10.1.1" class="ltx_text ltx_font_italic">Advances in Neural Information Processing Systems</span>, 33, 7212–7221.
+
+</span>
+</li>
+<li id="bib.bibx11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Shi et al., 2020]</span>
+<span class="ltx_bibblock">
+Shi, S., Guo, C., Jiang, L., Wang, Z., Shi, J., Wang, X., Li, H., 2020.
+Pv-rcnn: Point-voxel feature set abstraction for 3d object detection.
+<em id="bib.bibx11.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision and pattern
+recognition</em>, 10529–10538.
+
+</span>
+</li>
+<li id="bib.bibx12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Shi et al., 2019]</span>
+<span class="ltx_bibblock">
+Shi, S., Wang, X., Li, H., 2019.
+Pointrcnn: 3d object proposal generation and detection from point cloud.
+<em id="bib.bibx12.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision and pattern
+recognition</em>, 770–779.
+
+</span>
+</li>
+<li id="bib.bibx13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Song et al., 2017]</span>
+<span class="ltx_bibblock">
+Song, S., Yu, F., Zeng, A., Chang, A. X., Savva, M., Funkhouser, T., 2017.
+Semantic scene completion from a single depth image.
+<em id="bib.bibx13.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and pattern
+recognition</em>, 1746–1754.
+
+</span>
+</li>
+<li id="bib.bibx14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Wang et al., 2021]</span>
+<span class="ltx_bibblock">
+Wang, H., Liu, Q., Yue, X., Lasenby, J., Kusner, M. J., 2021.
+Unsupervised point cloud pre-training via occlusion completion.
+<em id="bib.bibx14.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF international conference on computer
+vision</em>, 9782–9792.
+
+</span>
+</li>
+<li id="bib.bibx15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Wang et al., 2022]</span>
+<span class="ltx_bibblock">
+Wang, Y., Tan, D. J., Navab, N., Tombari, F., 2022.
+Learning local displacements for point cloud completion.
+<em id="bib.bibx15.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision and pattern
+recognition</em>, 1568–1577.
+
+</span>
+</li>
+<li id="bib.bibx16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Xia et al., 2023a]</span>
+<span class="ltx_bibblock">
+Xia, Y., Gladkova, M., Wang, R., Li, Q., Stilla, U., Henriques, J. F., Cremers,
+D., 2023a.
+Casspr: Cross attention single scan place recognition.
+<em id="bib.bibx16.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF International Conference on Computer Vision
+(ICCV)</em>, IEEE.
+
+</span>
+</li>
+<li id="bib.bibx17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Xia et al., 2023b]</span>
+<span class="ltx_bibblock">
+Xia, Y., Wu, Q., Li, W., Chan, A. B., Stilla, U., 2023b.
+A Lightweight and Detector-Free 3D Single Object Tracker on Point Clouds.
+<span id="bib.bibx17.1.1" class="ltx_text ltx_font_italic">IEEE Transactions on Intelligent Transportation Systems</span>.
+
+</span>
+</li>
+<li id="bib.bibx18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Xia et al., 2021a]</span>
+<span class="ltx_bibblock">
+Xia, Y., Xia, Y., Li, W., Song, R., Cao, K., Stilla, U., 2021a.
+Asfm-net: Asymmetrical siamese feature matching network for point completion.
+<em id="bib.bibx18.1.1" class="ltx_emph ltx_font_italic">Proceedings of the 29th ACM international conference on multimedia</em>,
+1938–1947.
+
+</span>
+</li>
+<li id="bib.bibx19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Xia et al., 2021b]</span>
+<span class="ltx_bibblock">
+Xia, Y., Xu, Y., Li, S., Wang, R., Du, J., Cremers, D., Stilla, U., 2021b.
+Soe-net: A self-attention and orientation encoding network for point cloud
+based place recognition.
+<em id="bib.bibx19.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on computer vision and pattern
+recognition</em>, 11348–11357.
+
+</span>
+</li>
+<li id="bib.bibx20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Xia et al., 2021c]</span>
+<span class="ltx_bibblock">
+Xia, Y., Xu, Y., Wang, C., Stilla, U., 2021c.
+VPC-Net: Completion of 3D vehicles from MLS point clouds.
+<span id="bib.bibx20.1.1" class="ltx_text ltx_font_italic">ISPRS Journal of Photogrammetry and Remote Sensing</span>, 174, 166–181.
+
+</span>
+</li>
+<li id="bib.bibx21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Xia et al., 2023c]</span>
+<span class="ltx_bibblock">
+Xia, Z., Liu, Y., Li, X., Zhu, X., Ma, Y., Li, Y., Hou, Y., Qiao, Y., 2023c.
+Scpnet: Semantic scene completion on point cloud.
+<em id="bib.bibx21.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern
+Recognition</em>, 17642–17651.
+
+</span>
+</li>
+<li id="bib.bibx22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Xie et al., 2020]</span>
+<span class="ltx_bibblock">
+Xie, S., Gu, J., Guo, D., Qi, C. R., Guibas, L., Litany, O., 2020.
+Pointcontrast: Unsupervised pre-training for 3d point cloud understanding.
+<em id="bib.bibx22.1.1" class="ltx_emph ltx_font_italic">Computer Vision–ECCV 2020: 16th European Conference, Glasgow, UK,
+August 23–28, 2020, Proceedings, Part III 16</em>, Springer, 574–591.
+
+</span>
+</li>
+<li id="bib.bibx23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Yan et al., 2021]</span>
+<span class="ltx_bibblock">
+Yan, X., Gao, J., Li, J., Zhang, R., Li, Z., Huang, R., Cui, S., 2021.
+Sparse single sweep lidar point cloud segmentation via learning contextual
+shape priors from scene completion.
+<em id="bib.bibx23.1.1" class="ltx_emph ltx_font_italic">Proceedings of the AAAI Conference on Artificial Intelligence</em>,
+ 35number 4, 3101–3109.
+
+</span>
+</li>
+<li id="bib.bibx24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Yan et al., 2018]</span>
+<span class="ltx_bibblock">
+Yan, Y., Mao, Y., Li, B., 2018.
+Second: Sparsely embedded convolutional detection.
+<span id="bib.bibx24.1.1" class="ltx_text ltx_font_italic">Sensors</span>, 18(10), 3337.
+
+</span>
+</li>
+<li id="bib.bibx25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Yang et al., 2020]</span>
+<span class="ltx_bibblock">
+Yang, Z., Sun, Y., Liu, S., Jia, J., 2020.
+3dssd: Point-based 3d single stage object detector.
+<em id="bib.bibx25.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision and pattern
+recognition</em>, 11040–11048.
+
+</span>
+</li>
+<li id="bib.bibx26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[Zhou and Tuzel, 2018]</span>
+<span class="ltx_bibblock">
+Zhou, Y., Tuzel, O., 2018.
+Voxelnet: End-to-end learning for point cloud based 3d object detection.
+<em id="bib.bibx26.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and pattern
+recognition</em>, 4490–4499.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2309.06198" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2309.06199" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2309.06199">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2309.06199" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2309.06200" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Feb 28 06:43:02 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>
