@@ -1,0 +1,1599 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2308.05234] Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving</title><meta property="og:description" content="Environmental perception is a key element of autonomous driving because the information received from the perception module influences core driving decisions.
+An outstanding challenge in real-time perception for autono…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2308.05234">
+
+<!--Generated on Wed Feb 28 13:23:25 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_fleqn">
+<h1 class="ltx_title ltx_title_document">Leveraging the Edge and Cloud for V2X-Based Real-Time
+<br class="ltx_break">Object Detection in Autonomous Driving</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Faisal Hawlader, François Robinet and Raphaël Frank
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">Environmental perception is a key element of autonomous driving because the information received from the perception module influences core driving decisions.
+An outstanding challenge in real-time perception for autonomous driving lies in finding the best trade-off between detection quality and latency.
+Major constraints on both computation and power have to be taken into account for real-time perception in autonomous vehicles.
+Larger object detection models tend to produce the best results, but are also slower at runtime.
+Since the most accurate detectors cannot run in real-time locally, we investigate the possibility of offloading computation to edge and cloud platforms, which are less resource-constrained.
+We create a synthetic dataset to train object detection models and evaluate different offloading strategies.
+Using real hardware and network simulations, we compare different trade-offs between prediction quality and end-to-end delay.
+Since sending raw frames over the network implies additional transmission delays, we also explore the use of JPEG and H.265 compression at varying qualities and measure their impact on prediction metrics.
+We show that models with adequate compression can be run in real-time on the cloud while outperforming local detection performance.</p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification">keywords: </h6>
+V2X; Object detection; Latency optimization; Edge computing; Cloud computing;
+
+</div>
+<span id="id1" class="ltx_note ltx_note_frontmatter ltx_role_journal"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type">journal: </span>Computer Communications</span></span></span>
+<div id="p1" class="ltx_para">
+<span id="p1.1" class="ltx_ERROR undefined">\affiliation</span>
+<p id="p1.2" class="ltx_p">organization=Interdisciplinary Centre
+for Security, Reliability, and Trust (SnT),addressline=University of Luxembourg,
+postcode=L-1855 ,
+country=Luxembourg</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">One of the core challenges in autonomous driving is to reliably and accurately perceive the environment around the vehicle.
+Perception is crucial to ensure safe driving because the information received from this task influences the core driving decision which determines how the vehicle should plan its path.
+However, perception requires processing a large amount of sensor data (<span id="S1.p1.1.1" class="ltx_text ltx_font_italic">e.g.</span> camera, LiDAR, radar) in real-time. At the same time, the hardware embedded in vehicles is constrained by both cost and power consumption. Running all detection tasks locally can therefore require sacrifices on perception quality, in favour of real-time operation.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">In this work, we focus on visual perception using a front-facing camera. The position and class of objects in the scene is needed to plan collision-free paths in autonomous driving and should be available in real-time. We follow the existing literature and aim to perform object detection at a rate of 20Hz <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. We investigate different variants of the YOLOv5 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> detection model, which offer different detection qualities at different inference times. As illustrated in Table <a href="#S2.T1" title="Table 1 ‣ 2.1 V2I communication ‣ 2 Related work ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, larger models generally perform better. However, higher performance comes at the cost of increased computational requirements. Due to the limited computing resources and power available in the car, running larger models can prove difficult.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">One alternative is to offload some computations where resources are available. Compute capabilities are less limited on <span title="" class="ltx_glossaryref">Multi-access Edge Computing (MEC)</span> platforms <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>, and the best hardware is available in the cloud. Offloading some perception computation to the cloud can be appropriate in some situations. However, data offloading to <span title="" class="ltx_glossaryref">MEC</span> or cloud adds some additional transmission latency, which might not be acceptable for time-sensitive applications. With the promise of new 5G technologies supported by C-V2X <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, data offloading is an interesting option to complement local perception in autonomous driving.
+In our experiments, we used the Simu5G <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> network simulator, leveraging the capabilities of Cellular Vehicle-to-Everything (C-V2X) communication. It’s worth noting that we specifically used release 16 of the standard.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">In order to reduce transmission delays associated with streaming raw frames over the network, we explore the use of H.265, a video compression that exploits the temporal relationships between frames <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, and JPEG, a widely used method for image compression <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>.
+We evaluate these at varying qualities and measure their impact on detection quality.
+We investigate the integration of H.265 and JPEG streaming with edge and cloud platforms for real-time perception tasks. By leveraging the computational capabilities of these platforms, we demonstrate how the proposed streaming solutions can be seamlessly integrated into the object detection pipeline, maximizing detection quality while minimizing latency.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">In this work, we explore data offloading strategies for remote object detection on edge and cloud devices. We aim to evaluate these strategies on their detection quality, as well as their compliance with end-to-end latency requirements using a realistic model of the communication channel.
+We are making the following contributions to the use of edge and cloud technology for real-time perception in autonomous vehicles:</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">We create a synthetic dataset to train an object detection model and evaluate the proposed offloading strategies.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">We investigate the transfer of camera frames and their processing on edge or cloud platforms. Using real hardware and network simulations, we compare different trade-offs between prediction quality and end-to-end delay.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">We demonstrate a comprehensive framework that integrates H.265 and JPEG streaming using edge and cloud platforms for C-V2X based real-time object detection in autonomous driving. This solution addresses the challenge of transmitting camera sensor data with minimal latency while maintaining high-quality object detection.</p>
+</div>
+</li>
+</ul>
+<p id="S1.p5.2" class="ltx_p">The rest of the paper is organised as follows. In Section <a href="#S2" title="2 Related work ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, we review the related literature.
+In Section <a href="#S3" title="3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, we describe the hardware used, our network simulation settings, and the training and evaluation of our object detectors.
+Section <a href="#S4" title="4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> presents the experimental results and discusses the different offloading trade-offs.
+Finally, in Section <a href="#S5" title="5 Conclusion and Future Work ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> we conclude this work with an outline of our contributions and a discussion of future work directions.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related work</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>V2I communication</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">According to studies <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>, autonomous vehicles typically leverage vehicle-to-infrastructure (V2I) communication technology that allows the vehicles to offload the task of sensor data processing to a dedicated server.
+The server could be placed on the edge using the 5G MEC <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> or in a cloud with higher computational resources <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>. V2I communications are carried out using the upload / download path <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>. The autonomous car offloads the task to an edge or cloud server that performs computations and sends the results back to the car.
+In this use case, the local device performs only mandatory pre-processing tasks, such as compression / encoding <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>.</p>
+</div>
+<figure id="S2.T1" class="ltx_table">
+<div id="S2.T1.2" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:281.9pt;height:178.9pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(37.4pt,-23.7pt) scale(1.36122860403083,1.36122860403083) ;">
+<table id="S2.T1.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S2.T1.2.1.1" class="ltx_tr">
+<td id="S2.T1.2.1.1.1" class="ltx_td"></td>
+<td id="S2.T1.2.1.1.2" class="ltx_td ltx_align_center" colspan="3"><span id="S2.T1.2.1.1.2.1" class="ltx_text ltx_font_bold">Model Size</span></td>
+</tr>
+<tr id="S2.T1.2.1.2" class="ltx_tr">
+<td id="S2.T1.2.1.2.1" class="ltx_td"></td>
+<td id="S2.T1.2.1.2.2" class="ltx_td ltx_align_center ltx_border_t">Small</td>
+<td id="S2.T1.2.1.2.3" class="ltx_td ltx_align_center ltx_border_t">Large</td>
+<td id="S2.T1.2.1.2.4" class="ltx_td ltx_align_center ltx_border_t">
+<span id="S2.T1.2.1.2.4.1" class="ltx_text"></span> <span id="S2.T1.2.1.2.4.2" class="ltx_text">
+<span id="S2.T1.2.1.2.4.2.1" class="ltx_tabular ltx_align_middle">
+<span id="S2.T1.2.1.2.4.2.1.1" class="ltx_tr">
+<span id="S2.T1.2.1.2.4.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Large</span></span>
+<span id="S2.T1.2.1.2.4.2.1.2" class="ltx_tr">
+<span id="S2.T1.2.1.2.4.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">(high-res)</span></span>
+</span></span><span id="S2.T1.2.1.2.4.3" class="ltx_text"></span></td>
+</tr>
+<tr id="S2.T1.2.1.3" class="ltx_tr">
+<td id="S2.T1.2.1.3.1" class="ltx_td ltx_align_left ltx_border_t">All (mAP)</td>
+<td id="S2.T1.2.1.3.2" class="ltx_td ltx_align_center ltx_border_t">0.64</td>
+<td id="S2.T1.2.1.3.3" class="ltx_td ltx_align_center ltx_border_t">0.66</td>
+<td id="S2.T1.2.1.3.4" class="ltx_td ltx_align_center ltx_border_t">0.85</td>
+</tr>
+<tr id="S2.T1.2.1.4" class="ltx_tr">
+<td id="S2.T1.2.1.4.1" class="ltx_td ltx_align_left">Pedestrian</td>
+<td id="S2.T1.2.1.4.2" class="ltx_td ltx_align_center">0.30</td>
+<td id="S2.T1.2.1.4.3" class="ltx_td ltx_align_center">0.36</td>
+<td id="S2.T1.2.1.4.4" class="ltx_td ltx_align_center">0.81</td>
+</tr>
+<tr id="S2.T1.2.1.5" class="ltx_tr">
+<td id="S2.T1.2.1.5.1" class="ltx_td ltx_align_left">Traffic light</td>
+<td id="S2.T1.2.1.5.2" class="ltx_td ltx_align_center">0.80</td>
+<td id="S2.T1.2.1.5.3" class="ltx_td ltx_align_center">0.82</td>
+<td id="S2.T1.2.1.5.4" class="ltx_td ltx_align_center">0.86</td>
+</tr>
+<tr id="S2.T1.2.1.6" class="ltx_tr">
+<td id="S2.T1.2.1.6.1" class="ltx_td ltx_align_left ltx_border_bb">Vehicle</td>
+<td id="S2.T1.2.1.6.2" class="ltx_td ltx_align_center ltx_border_bb">0.79</td>
+<td id="S2.T1.2.1.6.3" class="ltx_td ltx_align_center ltx_border_bb">0.81</td>
+<td id="S2.T1.2.1.6.4" class="ltx_td ltx_align_center ltx_border_bb">0.89</td>
+</tr>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S2.T1.3.1.1" class="ltx_text" style="font-size:90%;">Table 1</span>: </span><span id="S2.T1.4.2" class="ltx_text" style="font-size:90%;">Average Precision results for different model variants (AP@50). Model variants are detailed in Section <a href="#S3.SS1" title="3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.1</span></a></span></figcaption>
+</figure>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">Offloading sensor data to the cloud through V2I adds additional transmission latency <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>.
+According to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, this communication latency could be reduced using MEC, which requires a low transmission delay compared to the cloud.
+However, edge devices are also subject to limited resources that could limit application needs.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Object detection and impact of compression</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p"><span id="S2.SS2.p1.1.1" class="ltx_text ltx_font_bold">Object detection:</span>
+Pioneering work in object detection has used hand-crafted procedures to extract features from raw images, before using them as inputs to one or more object detectors. Popular examples include the Viola-Jones face detector based on Haar-like features <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, or the Histogram-of-Gradient detector <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>. Recent years have seen the emergence of two families of detectors based on deep neural networks: two-stage and single-stage models. Two-stage detectors first roughly identify regions that are likely to contain an object, before filtering and refining these object proposals with a trained model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>. Although two-stage models achieve impressive accuracy, their computational complexity makes real-time operation a challenge. To remedy this, the SSD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> and YOLO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> family of models propose combining region proposal and refinement into a single operation. In YOLO, input frames are divided into cells and a set of bounding boxes are predicted for each cell. The YOLO detector can be trained end-to-end using a loss function that accounts for bounding box accuracy, objectness probabilities, and class assignments. Our work leverages YOLOv5 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, a refined variant of the original YOLO method.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p"><span id="S2.SS2.p2.1.1" class="ltx_text ltx_font_bold">Impact of compression on detection:</span> To enable faster data transmission for cloud inference, we study the impact of H.265 (video) and JPEG (image) compression on detection performance, for varying qualities. Existing work has shown that JPEG compression negatively affects the performance of models trained on uncompressed frames <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>, <a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>. In the case of object detection, this effect is particularly noticeable at lower compression qualities. Performances deteriorate rapidly for moderate to heavy compression <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>. However, H.265 has recently gained significant attention because it offers superior video compression compared to its predecessor, making it an attractive choice for sensor data streaming.
+Although H.265 offers improved compression efficiency, high-quality video streams may still require significant bandwidth for transmission. Bandwidth limitations in edge-to-cloud communication or V2X networks may impact real-time streaming performance and object detection quality. Minimizing latency while maintaining the benefits of H.265 or JPEG compression poses a challenge that needs to be addressed.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Perception using C-V2X communication</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">Leveraging the advancements of 5G technologies, particularly edge and cloud computing, there is potential for C-V2X technology to be increasingly adopted and experimented <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>.
+However, widespread application of C-V2X remained mostly in the experimental phase, with larger-scale deployments expected to follow as the 5G infrastructure continues to evolve and mature.
+C-V2X qualifies to support advanced applications <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>, <a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>, such as collective perception <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>. Processing of perception sensor data using the onboard vehicle computer might not always be an option due to the limited computational power <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>. However, collective perception using the V2X service allows cars to potentially offload sensory data to edge and cloud for resource-intensive computations <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>. Perception data processing in <span title="" class="ltx_glossaryref">MEC</span> or the cloud appears to be a viable option for autonomous driving, which has been the subject of many studies <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>. However, the perception of surrounding objects requires real-time detection, which demands rapid processing and low latency. This cannot be arbitrarily achieved, as it is heavily dependent on where the data is processed. In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>, <a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>, different sensor data offloading strategies have been presented, ranging from raw data offloading to partially or completely processed data offloading to save network resources. However, their approach emphasises data communication to reduce transmission overhead without evaluating the impact on perception quality. In principle, offloading raw sensor data is excellent for perception accuracy <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>, but could increase transmission costs <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>. However, offloading compressed data can save network resources, but it might degrade detection quality <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>. To the best of our knowledge, the literature does not yet provide a study of the trade-off between detection quality and end-to-end processing.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Methodology</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">This section describes our initial efforts toward estimating the end-to-end delay of real-time object detection.
+Following existing work, our objective is to perform object detection at a rate of 20Hz without degrading the detection quality <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>.
+In this context, the end-to-end delay heavily depends on where we perform the computation.
+If the car chooses to offload the data to an edge/cloud, it must exchange the raw data, which V2X technologies may not support due to bandwidth constraints <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Motivation &amp; Hardware</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">The limited computing resources and energy consumption make it difficult to detect objects in the car.
+Therefore, the computations are offloaded where the resources are available.
+However, reaching high detection quality and decreasing the inference delay remain challenging <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>.
+To better understand the problem and solve it, we performed a series of experiments on actual hardware setups.
+The hardware configurations are shown in Table <a href="#S3.T2" title="Table 2 ‣ 3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, where local represents the onboard device of an autonomous car that has limited processing power. However, the compute capabilities are less constrained on edge platforms, and the very best hardware is available in the cloud. This choice is made based on existing research <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>.</p>
+</div>
+<figure id="S3.T2" class="ltx_table">
+<div id="S3.T2.3.3" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:424.9pt;height:237pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(51.1pt,-28.5pt) scale(1.31675161560589,1.31675161560589) ;">
+<table id="S3.T2.3.3.3" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T2.3.3.3.4" class="ltx_tr">
+<td id="S3.T2.3.3.3.4.1" class="ltx_td ltx_align_left ltx_border_tt"><span id="S3.T2.3.3.3.4.1.1" class="ltx_text ltx_font_bold">Platform</span></td>
+<td id="S3.T2.3.3.3.4.2" class="ltx_td ltx_align_left ltx_border_tt"><span id="S3.T2.3.3.3.4.2.1" class="ltx_text ltx_font_bold">Scenario / Model</span></td>
+<td id="S3.T2.3.3.3.4.3" class="ltx_td ltx_align_left ltx_border_tt"><span id="S3.T2.3.3.3.4.3.1" class="ltx_text ltx_font_bold">Hardware configuration</span></td>
+</tr>
+<tr id="S3.T2.3.3.3.5" class="ltx_tr">
+<td id="S3.T2.3.3.3.5.1" class="ltx_td ltx_align_left ltx_border_t">Local</td>
+<td id="S3.T2.3.3.3.5.2" class="ltx_td ltx_align_left ltx_border_t">YOLOv5 small</td>
+<td id="S3.T2.3.3.3.5.3" class="ltx_td ltx_align_left ltx_border_t">NVIDIA Jetson Xavier NX SoC</td>
+</tr>
+<tr id="S3.T2.1.1.1.1" class="ltx_tr">
+<td id="S3.T2.1.1.1.1.1" class="ltx_td ltx_align_left">(<math id="S3.T2.1.1.1.1.1.m1.1" class="ltx_Math" alttext="\approx" display="inline"><semantics id="S3.T2.1.1.1.1.1.m1.1a"><mo id="S3.T2.1.1.1.1.1.m1.1.1" xref="S3.T2.1.1.1.1.1.m1.1.1.cmml">≈</mo><annotation-xml encoding="MathML-Content" id="S3.T2.1.1.1.1.1.m1.1b"><approx id="S3.T2.1.1.1.1.1.m1.1.1.cmml" xref="S3.T2.1.1.1.1.1.m1.1.1"></approx></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.1.1.1.1.1.m1.1c">\approx</annotation></semantics></math>20W)</td>
+<td id="S3.T2.1.1.1.1.2" class="ltx_td ltx_align_left">157 layers, 7M params</td>
+<td id="S3.T2.1.1.1.1.3" class="ltx_td ltx_align_left">Volta GPU, 384 CUDA cores</td>
+</tr>
+<tr id="S3.T2.3.3.3.6" class="ltx_tr">
+<td id="S3.T2.3.3.3.6.1" class="ltx_td"></td>
+<td id="S3.T2.3.3.3.6.2" class="ltx_td ltx_align_left">640x640 Resolution</td>
+<td id="S3.T2.3.3.3.6.3" class="ltx_td ltx_align_left">Carmel ARMv8.2 CPU@1.9GHz</td>
+</tr>
+<tr id="S3.T2.3.3.3.7" class="ltx_tr">
+<td id="S3.T2.3.3.3.7.1" class="ltx_td ltx_align_left ltx_border_t">Edge</td>
+<td id="S3.T2.3.3.3.7.2" class="ltx_td ltx_align_left ltx_border_t">YOLOv5 large</td>
+<td id="S3.T2.3.3.3.7.3" class="ltx_td ltx_align_left ltx_border_t">Laptop with GeForce GTX 1650</td>
+</tr>
+<tr id="S3.T2.2.2.2.2" class="ltx_tr">
+<td id="S3.T2.2.2.2.2.1" class="ltx_td ltx_align_left">(<math id="S3.T2.2.2.2.2.1.m1.1" class="ltx_Math" alttext="\approx" display="inline"><semantics id="S3.T2.2.2.2.2.1.m1.1a"><mo id="S3.T2.2.2.2.2.1.m1.1.1" xref="S3.T2.2.2.2.2.1.m1.1.1.cmml">≈</mo><annotation-xml encoding="MathML-Content" id="S3.T2.2.2.2.2.1.m1.1b"><approx id="S3.T2.2.2.2.2.1.m1.1.1.cmml" xref="S3.T2.2.2.2.2.1.m1.1.1"></approx></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.2.2.2.2.1.m1.1c">\approx</annotation></semantics></math>100W)</td>
+<td id="S3.T2.2.2.2.2.2" class="ltx_td ltx_align_left">267 layers, 46M params</td>
+<td id="S3.T2.2.2.2.2.3" class="ltx_td ltx_align_left">Turing GPU, 896 CUDA cores</td>
+</tr>
+<tr id="S3.T2.3.3.3.8" class="ltx_tr">
+<td id="S3.T2.3.3.3.8.1" class="ltx_td"></td>
+<td id="S3.T2.3.3.3.8.2" class="ltx_td ltx_align_left">640x640 Resolution</td>
+<td id="S3.T2.3.3.3.8.3" class="ltx_td ltx_align_left">Intel i9-9980HK @2.4GHz</td>
+</tr>
+<tr id="S3.T2.3.3.3.9" class="ltx_tr">
+<td id="S3.T2.3.3.3.9.1" class="ltx_td ltx_align_left ltx_border_t">Cloud</td>
+<td id="S3.T2.3.3.3.9.2" class="ltx_td ltx_align_left ltx_border_t">YOLOv5 large high-res</td>
+<td id="S3.T2.3.3.3.9.3" class="ltx_td ltx_align_left ltx_border_t">HPC node with Tesla V100</td>
+</tr>
+<tr id="S3.T2.3.3.3.3" class="ltx_tr">
+<td id="S3.T2.3.3.3.3.1" class="ltx_td ltx_align_left">(<math id="S3.T2.3.3.3.3.1.m1.1" class="ltx_Math" alttext="\approx" display="inline"><semantics id="S3.T2.3.3.3.3.1.m1.1a"><mo id="S3.T2.3.3.3.3.1.m1.1.1" xref="S3.T2.3.3.3.3.1.m1.1.1.cmml">≈</mo><annotation-xml encoding="MathML-Content" id="S3.T2.3.3.3.3.1.m1.1b"><approx id="S3.T2.3.3.3.3.1.m1.1.1.cmml" xref="S3.T2.3.3.3.3.1.m1.1.1"></approx></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.3.3.3.3.1.m1.1c">\approx</annotation></semantics></math>450W)</td>
+<td id="S3.T2.3.3.3.3.2" class="ltx_td ltx_align_left">346 layers, 76M params</td>
+<td id="S3.T2.3.3.3.3.3" class="ltx_td ltx_align_left">Volta GPU, 5120 CUDA cores</td>
+</tr>
+<tr id="S3.T2.3.3.3.10" class="ltx_tr">
+<td id="S3.T2.3.3.3.10.1" class="ltx_td ltx_border_bb"></td>
+<td id="S3.T2.3.3.3.10.2" class="ltx_td ltx_align_left ltx_border_bb">1280x1280 Resolution</td>
+<td id="S3.T2.3.3.3.10.3" class="ltx_td ltx_align_left ltx_border_bb">Intel Xeon G6132 @2.6 Ghz</td>
+</tr>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S3.T2.5.1.1" class="ltx_text" style="font-size:90%;">Table 2</span>: </span><span id="S3.T2.6.2" class="ltx_text" style="font-size:90%;">Based on inference time constraints, we selected distinct platforms to run three models of different sizes. Figure <a href="#S3.F1" title="Figure 1 ‣ 3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> compares inference times for different models and platforms.</span></figcaption>
+</figure>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">To perform object detection, we use YOLOv5 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, as it has been demonstrated to have superior performance in terms of accuracy and latency on state-of-the-art benchmark <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>, <a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite>.
+YOLOv5 offers various model sizes ranging from small to large. We observe that larger models are beneficial for detection quality (see Table <a href="#S2.T1" title="Table 1 ‣ 2.1 V2I communication ‣ 2 Related work ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>), but there are inference timing constraints that must be taken into account. In this context, we aim to identify the best model for each platform that satisfies the time constraint.
+We use Figure <a href="#S3.F1" title="Figure 1 ‣ 3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> to determine which model we can run on each platform. The inference time in Figure <a href="#S3.F1" title="Figure 1 ‣ 3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> shows that the larger model has an inference time of more than 50ms and as such is not suitable to run on the local platform. In view of the 20Hz detection speed, we decided to investigate the use of the small model on the local hardware, the large on the edge, and the large high-res one on the cloud. The exact YOLOv5 versions and the corresponding input resolutions are summarised in Table<a href="#S3.T2" title="Table 2 ‣ 3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<figure id="S3.F1" class="ltx_figure"><img src="/html/2308.05234/assets/x1.png" id="S3.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="415" height="301" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F1.2.1.1" class="ltx_text" style="font-size:90%;">Figure 1</span>: </span><span id="S3.F1.3.2" class="ltx_text" style="font-size:90%;">Model inference time comparison between different model sizes on different platforms. We use half-precision floating-point computation at inference time in order to speed up computation.</span></figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Networking Aspects </h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">In this section, we describe the main elements of the 5G <span title="" class="ltx_glossaryref">Radio Access Network (RAN)</span> and show how to use the network simulation framework to measure end-to-end network delays for a real-time object detection model supported by cloud infrastructure. To simulate the 5G data plane, we used Simu5G <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> which is a OMNeT++ based discrete event network simulation library <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite>. We focus on two scenarios, namely, perception data offloading with <span title="" class="ltx_glossaryref">MEC</span> and perception data offloading with cloud considering C-V2X.
+The network environment we consider consists of a <span title="" class="ltx_glossaryref">RAN</span> and a 5G <span title="" class="ltx_glossaryref">Core Network (CN)</span>.
+The <span title="" class="ltx_glossaryref">RAN</span> has a single <span title="" class="ltx_glossaryref">5G base station (BS)</span>, and one <span title="" class="ltx_glossaryref">user equipment (UE)</span> is attached to the <span title="" class="ltx_glossaryref">BS</span>, which is a vehicle in this use case <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite>.
+We also placed a <span title="" class="ltx_glossaryref">MEC</span> host close (500m) to the <span title="" class="ltx_glossaryref">BS</span> connected to a wired network, so <span title="" class="ltx_glossaryref">MEC</span> can interact closely with <span title="" class="ltx_glossaryref">BS</span> and obtain fast information from the <span title="" class="ltx_glossaryref">RAN</span> user.
+The gNB is then connected to a cloud server via <span title="" class="ltx_glossaryref">CN</span>.
+The different components of the framework are shown in Figure <a href="#S3.F2" title="Figure 2 ‣ 3.2 Networking Aspects ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+We used a static setup in which the vehicle remained stationary throughout the experiments.
+We acknowledge, static setup is a limitation of our study, as it does not accurately reflect real-world scenarios where mobility is common.
+However, we believe that it does not significantly undermine the validity of our findings, particularly in relation to network latency, which is relatively small.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p"><span id="S3.SS2.p2.1.1" class="ltx_text ltx_font_bold">5G Core Network (CN):</span> we consider a standalone version of the 5G core network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite>, which meets our requirements and is also available for simulation.
+A Point-to-Point (PPP) network interface is used to connect eNB to the cloud through a wired connection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>. The GPRS <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> tunnelling protocol (GTP) is used to route IP datagrams (UDP) and establish a communication between gNB and the cloud.</p>
+</div>
+<figure id="S3.F2" class="ltx_figure"><img src="/html/2308.05234/assets/x2.png" id="S3.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="267" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F2.2.1.1" class="ltx_text" style="font-size:90%;">Figure 2</span>: </span><span id="S3.F2.3.2" class="ltx_text" style="font-size:90%;">Architecture of the end-to-end network simulation, showing the main elements of the 5G radio access network (RAN), including the multi-access edge computing (MEC) host-level components with a User Equipment (UE).</span></figcaption>
+</figure>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.1" class="ltx_p"><span id="S3.SS2.p3.1.1" class="ltx_text ltx_font_bold">Multi-access Edge Computing (MEC):</span> The applications of MEC are growing and several standardisation initiatives are being carried out to provide a successful integration of MEC into the 5G network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite>. This work considers a simplified MEC host-level architecture in accordance with the <span title="" class="ltx_glossaryref">European Telecommunications Standards Institute (ETSI)</span> reference <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>. In our case, an MEC host is co-located with gNB as shown in Figure <a href="#S3.F2" title="Figure 2 ‣ 3.2 Networking Aspects ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. The MEC host provides various modules that allow MEC applications to operate efficiently and seamlessly. The MEC applications run in a virtual environment and the resource manager orchestrates the life cycle of those applications. The Virtualisation Manager allocates, manages, and releases virtualised aids such as computing, storage, and networking resources.
+The MEC host also includes a GTP protocol, which means that it can be located anywhere on the network. We placed the MEC 500m away from the gNB following the research is in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>. A PPP wired connection with 100G data rate is used to connect the MEC to gNB <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib41" title="" class="ltx_ref">41</a>]</cite>.</p>
+</div>
+<div id="S3.SS2.p4" class="ltx_para">
+<p id="S3.SS2.p4.1" class="ltx_p"><span id="S3.SS2.p4.1.1" class="ltx_text ltx_font_bold">5G base station (gNB):</span> In the case of the scenario considered, gNB is configured with protocol up to Layer 3 and supports two network interface cards.
+One for PPP wired connectivity to connect the core network and the other for the radio access network. The internal structure of the two network cards is shown in Figure <a href="#S3.F2" title="Figure 2 ‣ 3.2 Networking Aspects ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+The PPP connection uses the GTP protocol, which has the same architecture as CN.
+On the other hand, the radio access network card has four modules.
+The topmost is the packet data convergence protocol (PDCP), which receives IP datagrams, performs ciphering, and sends them to the radio link control layer (RLC).
+RLC service data units are stored in the RLC buffer and retrieved by the underlying Media Access Control layer (MAC) when a transmission is required.
+The MAC layer aggregates the data into transport blocks, adds an MAC header, and sends everything through the physical layer (PHY) for transmission; for more details, we refer the reader to the Simu5G documentation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>.</p>
+</div>
+<div id="S3.SS2.p5" class="ltx_para">
+<p id="S3.SS2.p5.1" class="ltx_p"><span id="S3.SS2.p5.1.1" class="ltx_text ltx_font_bold">User equipment (UE):</span> As defined in the ETSI <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> and 3GPP specifications <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite>, user equipment is any device used by the end user. In our case, the user equipment refers to a car that is connected to the gNB, and equipped with C-V2X protocol stacks. We choose C-V2X because it is a 3GPP defined standard for connected mobility applications and works with 5G NR technology that is also available for simulation. It is important to mention that we used C-V2X only for bidirectional Vehicle-to-Infrastructure communications following the application needs. And the application we are focusing on is the offloading of perception data to the edge and cloud for real-time object detection. As part of the development policies and the implementation of Simu5G the UE has dual NIC to allow dual connectivity for both LTE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> and 5G NR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>, as shown in Figure <a href="#S3.F2" title="Figure 2 ‣ 3.2 Networking Aspects ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<figure id="S3.T3" class="ltx_table">
+<div id="S3.T3.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:266pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(26.1pt,-16.0pt) scale(1.13690598497403,1.13690598497403) ;">
+<table id="S3.T3.1.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T3.1.1.2" class="ltx_tr">
+<td id="S3.T3.1.1.2.1" class="ltx_td ltx_align_left ltx_border_tt"><span id="S3.T3.1.1.2.1.1" class="ltx_text ltx_font_bold">Parameter Name</span></td>
+<td id="S3.T3.1.1.2.2" class="ltx_td ltx_align_left ltx_border_tt"><span id="S3.T3.1.1.2.2.1" class="ltx_text ltx_font_bold">Value</span></td>
+</tr>
+<tr id="S3.T3.1.1.3" class="ltx_tr">
+<td id="S3.T3.1.1.3.1" class="ltx_td ltx_align_left ltx_border_t">Carrier frequency</td>
+<td id="S3.T3.1.1.3.2" class="ltx_td ltx_align_left ltx_border_t">3.6 GHz <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite>
+</td>
+</tr>
+<tr id="S3.T3.1.1.4" class="ltx_tr">
+<td id="S3.T3.1.1.4.1" class="ltx_td ltx_align_left">gNB Tx Power</td>
+<td id="S3.T3.1.1.4.2" class="ltx_td ltx_align_left">46 dBm</td>
+</tr>
+<tr id="S3.T3.1.1.5" class="ltx_tr">
+<td id="S3.T3.1.1.5.1" class="ltx_td ltx_align_left">Path loss model</td>
+<td id="S3.T3.1.1.5.2" class="ltx_td ltx_align_left">
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, Urban Macro (UMa)</td>
+</tr>
+<tr id="S3.T3.1.1.6" class="ltx_tr">
+<td id="S3.T3.1.1.6.1" class="ltx_td ltx_align_left">Fading + Shadowing model</td>
+<td id="S3.T3.1.1.6.2" class="ltx_td ltx_align_left">Enable, Long-normal distribution</td>
+</tr>
+<tr id="S3.T3.1.1.7" class="ltx_tr">
+<td id="S3.T3.1.1.7.1" class="ltx_td ltx_align_left">Number of repetitions</td>
+<td id="S3.T3.1.1.7.2" class="ltx_td ltx_align_left">200</td>
+</tr>
+<tr id="S3.T3.1.1.8" class="ltx_tr">
+<td id="S3.T3.1.1.8.1" class="ltx_td ltx_align_left">Path loss model</td>
+<td id="S3.T3.1.1.8.2" class="ltx_td ltx_align_left">3GPP-TR 36.873 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib44" title="" class="ltx_ref">44</a>]</cite>
+</td>
+</tr>
+<tr id="S3.T3.1.1.9" class="ltx_tr">
+<td id="S3.T3.1.1.9.1" class="ltx_td ltx_align_left">UDP Packet size</td>
+<td id="S3.T3.1.1.9.2" class="ltx_td ltx_align_left">4096 B <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib45" title="" class="ltx_ref">45</a>]</cite>
+</td>
+</tr>
+<tr id="S3.T3.1.1.10" class="ltx_tr">
+<td id="S3.T3.1.1.10.1" class="ltx_td ltx_align_left">Throughput</td>
+<td id="S3.T3.1.1.10.2" class="ltx_td ltx_align_left">113.94 Mbit/s (Avg.)</td>
+</tr>
+<tr id="S3.T3.1.1.1" class="ltx_tr">
+<td id="S3.T3.1.1.1.1" class="ltx_td ltx_align_left">Numerology <math id="S3.T3.1.1.1.1.m1.1" class="ltx_Math" alttext="(\mu)" display="inline"><semantics id="S3.T3.1.1.1.1.m1.1a"><mrow id="S3.T3.1.1.1.1.m1.1.2.2"><mo stretchy="false" id="S3.T3.1.1.1.1.m1.1.2.2.1">(</mo><mi id="S3.T3.1.1.1.1.m1.1.1" xref="S3.T3.1.1.1.1.m1.1.1.cmml">μ</mi><mo stretchy="false" id="S3.T3.1.1.1.1.m1.1.2.2.2">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.T3.1.1.1.1.m1.1b"><ci id="S3.T3.1.1.1.1.m1.1.1.cmml" xref="S3.T3.1.1.1.1.m1.1.1">𝜇</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T3.1.1.1.1.m1.1c">(\mu)</annotation></semantics></math>
+</td>
+<td id="S3.T3.1.1.1.2" class="ltx_td ltx_align_left">3</td>
+</tr>
+<tr id="S3.T3.1.1.11" class="ltx_tr">
+<td id="S3.T3.1.1.11.1" class="ltx_td ltx_align_left">Latency (Vehicle-to-Edge)</td>
+<td id="S3.T3.1.1.11.2" class="ltx_td ltx_align_left">0.43 ms (Avg.)</td>
+</tr>
+<tr id="S3.T3.1.1.12" class="ltx_tr">
+<td id="S3.T3.1.1.12.1" class="ltx_td ltx_align_left">Latency (Vehicle-to-Cloud)</td>
+<td id="S3.T3.1.1.12.2" class="ltx_td ltx_align_left">0.45 ms (Avg.)</td>
+</tr>
+<tr id="S3.T3.1.1.13" class="ltx_tr">
+<td id="S3.T3.1.1.13.1" class="ltx_td ltx_align_left ltx_border_bb">Packet loss ratio</td>
+<td id="S3.T3.1.1.13.2" class="ltx_td ltx_align_left ltx_border_bb">0.0001</td>
+</tr>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S3.T3.3.1.1" class="ltx_text" style="font-size:90%;">Table 3</span>: </span><span id="S3.T3.4.2" class="ltx_text" style="font-size:90%;">Important network parameters with throughput and packet loss ratio for a stationary test. The averages are computed over 200 repetitions.</span></figcaption>
+</figure>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Perception Aspects</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p"><span id="S3.SS3.p1.1.1" class="ltx_text ltx_font_bold">Dataset generation:</span> In order to train the YOLOv5 models described in Table <a href="#S3.T2" title="Table 2 ‣ 3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, we built a synthetic dataset using the CARLA simulator <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib46" title="" class="ltx_ref">46</a>]</cite>.
+CARLA allows us to simulate a camera-equipped car driving in a rendered town environment, specifically under different weather conditions.
+However, in this study, we only considered clear daylight weather conditions.
+Additionally, it provides access to ground truth bounding boxes for three classes of interest: vehicles, pedestrians, and traffic lights.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.1" class="ltx_p">We run the simulation to collect ten thousand camera frames, taken at 1Hz from the front of the ego-vehicle.
+We also collect ground truth 3D bounding boxes, which we project into camera frame coordinates to obtain 2D bounding boxes usable for training and evaluating YOLOv5.
+The dataset is split into three subsets: 6000 frames are used for training, 2000 for validation, and the remaining 2000 frames for testing.
+Table <a href="#S3.T4" title="Table 4 ‣ 3.3 Perception Aspects ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> presents the distribution of instances in different classes and provides essential information on the composition of the data set, where the first column denotes partitioning for different purposes.
+A notable aspect of this distribution is the considerably lower number of pedestrian instances compared to traffic lights and vehicles across all subsets.
+This imbalance may influence the performance of models trained on the dataset, potentially making them less proficient in detecting pedestrians compared to traffic lights and vehicles.
+Further analysis or data collection may be necessary to ensure representative and balanced data across all classes for more reliable results.</p>
+</div>
+<figure id="S3.T4" class="ltx_table">
+<div id="S3.T4.2" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:346.9pt;height:155.8pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(53.2pt,-23.9pt) scale(1.44239843719764,1.44239843719764) ;">
+<table id="S3.T4.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T4.2.1.1" class="ltx_tr">
+<td id="S3.T4.2.1.1.1" class="ltx_td"></td>
+<td id="S3.T4.2.1.1.2" class="ltx_td ltx_align_center" colspan="3"><span id="S3.T4.2.1.1.2.1" class="ltx_text ltx_font_bold">Class</span></td>
+</tr>
+<tr id="S3.T4.2.1.2" class="ltx_tr">
+<td id="S3.T4.2.1.2.1" class="ltx_td"></td>
+<td id="S3.T4.2.1.2.2" class="ltx_td ltx_align_center ltx_border_t"><span id="S3.T4.2.1.2.2.1" class="ltx_text ltx_font_bold">Pedestrians</span></td>
+<td id="S3.T4.2.1.2.3" class="ltx_td ltx_align_center ltx_border_t"><span id="S3.T4.2.1.2.3.1" class="ltx_text ltx_font_bold">Traffic Lights</span></td>
+<td id="S3.T4.2.1.2.4" class="ltx_td ltx_align_center ltx_border_t"><span id="S3.T4.2.1.2.4.1" class="ltx_text ltx_font_bold">Vehicles</span></td>
+</tr>
+<tr id="S3.T4.2.1.3" class="ltx_tr">
+<td id="S3.T4.2.1.3.1" class="ltx_td ltx_align_left ltx_border_t">Train</td>
+<td id="S3.T4.2.1.3.2" class="ltx_td ltx_align_center ltx_border_t">12916</td>
+<td id="S3.T4.2.1.3.3" class="ltx_td ltx_align_center ltx_border_t">43418</td>
+<td id="S3.T4.2.1.3.4" class="ltx_td ltx_align_center ltx_border_t">33351</td>
+</tr>
+<tr id="S3.T4.2.1.4" class="ltx_tr">
+<td id="S3.T4.2.1.4.1" class="ltx_td ltx_align_left">Validation</td>
+<td id="S3.T4.2.1.4.2" class="ltx_td ltx_align_center">2164</td>
+<td id="S3.T4.2.1.4.3" class="ltx_td ltx_align_center">8272</td>
+<td id="S3.T4.2.1.4.4" class="ltx_td ltx_align_center">11295</td>
+</tr>
+<tr id="S3.T4.2.1.5" class="ltx_tr">
+<td id="S3.T4.2.1.5.1" class="ltx_td ltx_align_left">Test</td>
+<td id="S3.T4.2.1.5.2" class="ltx_td ltx_align_center">1756</td>
+<td id="S3.T4.2.1.5.3" class="ltx_td ltx_align_center">11115</td>
+<td id="S3.T4.2.1.5.4" class="ltx_td ltx_align_center">7897</td>
+</tr>
+<tr id="S3.T4.2.1.6" class="ltx_tr">
+<td id="S3.T4.2.1.6.1" class="ltx_td ltx_align_left ltx_border_bb ltx_border_t">Total</td>
+<td id="S3.T4.2.1.6.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">16836</td>
+<td id="S3.T4.2.1.6.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">62805</td>
+<td id="S3.T4.2.1.6.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">52576</td>
+</tr>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S3.T4.3.1.1" class="ltx_text" style="font-size:90%;">Table 4</span>: </span><span id="S3.T4.4.2" class="ltx_text" style="font-size:90%;">Dataset composition and instance counts per class.</span></figcaption>
+</figure>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span>Exploring Compression Settings</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.1" class="ltx_p">We explore the influence of varying compression qualities on the volume of data to be transmitted to the edge or cloud.
+Our in depth analysis of various compression levels aims to identify the most resource-efficient settings that can potentially optimize network resources and reduce the transmission latency, while preserving superior detection quality.</p>
+</div>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.1" class="ltx_p"><span id="S3.SS4.p2.1.1" class="ltx_text ltx_font_bold">JPEG compression</span> is a widely used compression algorithm known for its ability to strike a balance between image quality and file size reduction.
+It uses a lossy compression algorithm that selectively discards visual information to decrease file size.
+The compression level is largely controlled by a quality parameter, the <span id="S3.SS4.p2.1.2" class="ltx_text ltx_font_italic">Q-value</span>, which ranges from 0 to 100.
+Higher <span id="S3.SS4.p2.1.3" class="ltx_text ltx_font_italic">Q-values</span> preserve more details but result in larger sizes.
+In this study, we evaluated JPEG compression across a spectrum of quality levels from high quality (JPEG-H) to very low quality (JPEG-VL), while maintaining the default values for other parameters.
+The results, displayed in Figure <a href="#S3.F3" title="Figure 3 ‣ 3.4 Exploring Compression Settings ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, demonstrate the mean data sizes associated with various JPEG qualities.
+For further investigation, we defined four distinct scenarios: JPEG-H (high quality) at <span id="S3.SS4.p2.1.4" class="ltx_text ltx_font_italic">Q-value</span> 100, JPEG-M (medium quality) at 80, JPEG-L (low quality) at 30, and JPEG-VL (very low quality) at 10.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2308.05234/assets/x3.png" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="392" height="292" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F3.2.1.1" class="ltx_text" style="font-size:90%;">Figure 3</span>: </span><span id="S3.F3.3.2" class="ltx_text" style="font-size:90%;">The figure illustrates the mean data sizes for various JPEG compression qualities, namely JPEG-H (high quality), JPEG-M (medium quality), JPEG-L (low quality), and JPEG-VL (very low quality). We considered two distinct image dimensions: 640x640 for the edge and 1280x1280 for the cloud.</span></figcaption>
+</figure>
+<div id="S3.SS4.p3" class="ltx_para">
+<p id="S3.SS4.p3.1" class="ltx_p"><span id="S3.SS4.p3.1.1" class="ltx_text ltx_font_bold">H.265 compression</span> when using H.265 compression for camera sensor data streaming, several configuration and parameter settings can be adjusted.
+The selection of these parameters plays a pivotal role in navigating the balance between compression quality and latency.
+These settings include, but are not limited to, parameters such as Constant Rate Factor (CRF), presets, and lookahead settings, each offering various degrees of control over the encoding trade-off.
+The following discussion will elaborate on these parameters and their impact on the overall outcome.</p>
+<ul id="S3.I1" class="ltx_itemize">
+<li id="S3.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S3.I1.i1.p1" class="ltx_para">
+<p id="S3.I1.i1.p1.1" class="ltx_p"><span id="S3.I1.i1.p1.1.1" class="ltx_text ltx_font_bold">H.265 Frames:</span> The fundamental computation of H.265 encoding starts with the estimation of three different frame types: I-frames (intra-coded frames), P-frames (predictive frames), and B-frames (bidirectional predictive frames).
+Each of these uniquely contributes to overall efficiency.
+The I-frame (known as the key frame) serves as the foundation, with all subsequent P-frame and B-frame relying on it.
+The principle of I-frames is based on the fact that neighboring pixels within an image often exhibit high similarity.
+Minor differences between these adjacent pixels can be encoded using fewer bits, reducing the overall size.</p>
+</div>
+<div id="S3.I1.i1.p2" class="ltx_para">
+<p id="S3.I1.i1.p2.1" class="ltx_p">The P-frames differ from the I-frames in that they are not self-contained. Instead, the P-frames contain only the changes in the stream from the previous frame.
+More specifically, a P-frame uses the prior I-frame or P-frame to encode the current frame, and hence making them predictive.
+They look at what has changed (such as the movement of objects) since the previous frame.
+If nothing has changed, no data need to be streamed, which is where much of the compression is achieved.
+If parts of the frame have changed, only the changes need to be encoded and streamed over the network.</p>
+</div>
+<div id="S3.I1.i1.p3" class="ltx_para">
+<p id="S3.I1.i1.p3.1" class="ltx_p">However, B-frames refer to both the previous and future frames to achieve higher compression efficiency.
+They increase the encoding complexity and introduce some latency, but result in smaller file sizes and better quality. When H.265 is configured without B-frames, only I-frames and P-frames are used, reducing complexity and latency.</p>
+</div>
+</li>
+<li id="S3.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S3.I1.i2.p1" class="ltx_para">
+<p id="S3.I1.i2.p1.1" class="ltx_p"><span id="S3.I1.i2.p1.1.1" class="ltx_text ltx_font_bold">Lookahead</span> allows the encoder to examine future frames before encoding the current frame. This can increase compression efficiency and stream data quality, but can also introduce latency. If no lookahead is applied, this means that the encoder is not examining future frames before encoding the current frame. For the use case presented here, B-frames cannot be created since waiting for future information to encode the current frame implies an unacceptable increase of latency. Instead, stream compression may only rely on I-frames and P-frames. This setup is less efficient in terms of data compression compared to when B-frames are used, but it reduces latency and is suitable for real-time object detection in autonomous driving.</p>
+</div>
+</li>
+<li id="S3.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S3.I1.i3.p1" class="ltx_para">
+<p id="S3.I1.i3.p1.1" class="ltx_p"><span id="S3.I1.i3.p1.1.1" class="ltx_text ltx_font_bold">Constant Rate Factor (CRF):</span> strives to maintain a steady visual quality taking into account the complexity and motion within each frame.
+The H.265 compression assigns CRF values ranging from 0 to 51, which serve as quality-controlled variables affecting the bitrate.
+For instance, the CRF value can be adjusted to control the trade-off between quality and data size that needs to be transmitted to the edge/cloud. A lower CRF value gives higher quality but a larger data stream size. Conversely, a higher CRF value provides a smaller frame size but lower quality.</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S3.SS4.p4" class="ltx_para">
+<p id="S3.SS4.p4.1" class="ltx_p">Using all possible CRF values, we performed a trade-off analysis to identify the optimal CRF for our real-time object detection use case.
+The lookahead functionality remained deactivated, and B-frames were excluded, while the rest of the parameters were set to their default values using FFmpeg <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib47" title="" class="ltx_ref">47</a>]</cite>.
+In the absence of B-frames and lookahead in the encoding setup, a notable reduction in both computational complexity and latency was observed.
+These findings are particularly beneficial for applications that require real-time stream data transmission, where lower latency is a critical requirement.
+The results of these experiments, depicted in Figure <a href="#S3.F4" title="Figure 4 ‣ 3.4 Exploring Compression Settings ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, illustrate the relationship between the CRF values and the resulting data size.
+Lower CRF values, which are indicative of higher quality, are correlated with larger data sizes. In contrast, increasing the CRF value leads to a reduction in the size of the data.
+This clearly demonstrates the trade-off between data size and the range of quality levels from high quality (H.265-H) to very low quality (H.265-VL).
+These observations will inform our decision-making on the quality levels that will be investigated further.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2308.05234/assets/x4.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="392" height="262" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F4.2.1.1" class="ltx_text" style="font-size:90%;">Figure 4</span>: </span><span id="S3.F4.3.2" class="ltx_text" style="font-size:90%;">Mean data sizes for various H.265 compression factor, namely H.265-H (high quality), H.265-M (medium quality), H.265-L (low quality), and H.265-VL (very low quality). We considered two distinct image dimensions: 640x640 for the edge scenario and 1280x1280 for the cloud scenario.</span></figcaption>
+</figure>
+<div id="S3.SS4.p5" class="ltx_para">
+<p id="S3.SS4.p5.1" class="ltx_p">For further investigation, we defined four distinct scenarios: H.265-H (high quality) at CRF 0, H.265-M (medium quality) at 24, H.265-L (low quality) at 30, and H.265-VL (very low quality) at 51. We considered two distinct image dimensions: 640x640 for the edge scenario and 1280x1280 for the cloud scenario.
+To facilitate a comprehensive evaluation, we categorized our analysis into four specific scenarios, each representing a different quality level in H.265 compression.
+We assigned CRF 0 to H.265-H for high quality, CRF 24 to H.265-M for medium, CRF 30 to H.265-L for low, and finally, CRF 51 to H.265-VL for very low quality, as demonstrated in Figure <a href="#S3.F4" title="Figure 4 ‣ 3.4 Exploring Compression Settings ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.</p>
+</div>
+<div id="S3.SS4.p6" class="ltx_para">
+<p id="S3.SS4.p6.1" class="ltx_p"><span id="S3.SS4.p6.1.1" class="ltx_text ltx_font_bold">Training Protocol:</span> All models are trained for 100 epochs on a single NVIDIA Tesla V100. We use the Adam optimizer with an initial learning rate of <math id="S3.SS4.p6.1.m1.1" class="ltx_Math" alttext="0.001" display="inline"><semantics id="S3.SS4.p6.1.m1.1a"><mn id="S3.SS4.p6.1.m1.1.1" xref="S3.SS4.p6.1.m1.1.1.cmml">0.001</mn><annotation-xml encoding="MathML-Content" id="S3.SS4.p6.1.m1.1b"><cn type="float" id="S3.SS4.p6.1.m1.1.1.cmml" xref="S3.SS4.p6.1.m1.1.1">0.001</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p6.1.m1.1c">0.001</annotation></semantics></math>. In order to speed up training, we set the batch size to the maximal value that fits in GPU memory for each experiment.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Results</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">This section describes the experiments carried out to evaluate our proposed data offloading strategies. Experiments are performed utilizing the hardware setup described in Section <a href="#S3.T2" title="Table 2 ‣ 3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+Our analysis focuses on two critical key performance indicators, which are end-to-end delay and quality of detection. The close monitoring of these metrics enables the identification of potential bottlenecks or inefficiencies in real-time object detection for autonomous driving, ensuring that the vehicle responds accurately and in a timely manner to its surroundings.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>End-to-end delay evaluation</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">To be able to compare the performance/latency trade-off of the three scenarios described in Section <a href="#S3.SS1" title="3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.1</span></a> and Table <a href="#S3.T2" title="Table 2 ‣ 3.1 Motivation &amp; Hardware ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, we first measure their end-to-end delays.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.1" class="ltx_p">In the case of the local platform, the delay depends only on the inference time on the local hardware.
+Note that non-maximum suppression (NMS) &amp; input preprocessing are included in our inference time measurements, in addition to the forward pass of the model. By considering these integral components, we obtain a local end-to-end delay of <math id="S4.SS1.p2.1.m1.1" class="ltx_Math" alttext="19.5" display="inline"><semantics id="S4.SS1.p2.1.m1.1a"><mn id="S4.SS1.p2.1.m1.1.1" xref="S4.SS1.p2.1.m1.1.1.cmml">19.5</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.1.m1.1b"><cn type="float" id="S4.SS1.p2.1.m1.1.1.cmml" xref="S4.SS1.p2.1.m1.1.1">19.5</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.1.m1.1c">19.5</annotation></semantics></math> ms.
+This latency forms a critical part of our performance analysis, reflecting the efficiency of processing data locally without using any offloading strategies.</p>
+</div>
+<div id="S4.SS1.p3" class="ltx_para">
+<p id="S4.SS1.p3.1" class="ltx_p">For the second and third scenarios, we evaluate the data offloading strategy between the car and edge or cloud platforms.
+Network latency is measured using the end-to-end simulation framework presented in Figure <a href="#S3.F2" title="Figure 2 ‣ 3.2 Networking Aspects ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. The important network simulation parameters with throughput and packet loss ratio are summarised in Table <a href="#S3.T3" title="Table 3 ‣ 3.2 Networking Aspects ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+In these situations, the end-to-end delay includes compression, transmission, decompression and inference.
+Although the time required to send the results back is not directly indicated, we assume an additional latency of 0.43 ms for the transmission delay, predicated on the notion that the raw detection results can be accommodated within a single packet.
+This assertion is supported by the data from Table <a href="#S3.T3" title="Table 3 ‣ 3.2 Networking Aspects ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, which shows that a single packet of size 4096 B takes approximately 0.43 ms (Avg.) to travel from the edge/cloud to the vehicle.</p>
+</div>
+<div id="S4.SS1.p4" class="ltx_para">
+<p id="S4.SS1.p4.2" class="ltx_p">Sending raw uncompressed frames to remote platforms results in large transmission delays because of the size of the data.
+We measured an average end-to-end latency of <math id="S4.SS1.p4.1.m1.1" class="ltx_Math" alttext="123.2" display="inline"><semantics id="S4.SS1.p4.1.m1.1a"><mn id="S4.SS1.p4.1.m1.1.1" xref="S4.SS1.p4.1.m1.1.1.cmml">123.2</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.1.m1.1b"><cn type="float" id="S4.SS1.p4.1.m1.1.1.cmml" xref="S4.SS1.p4.1.m1.1.1">123.2</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.1.m1.1c">123.2</annotation></semantics></math> ms in the vehicle-to-edge scenario. This delay rises to <math id="S4.SS1.p4.2.m2.1" class="ltx_Math" alttext="521.7" display="inline"><semantics id="S4.SS1.p4.2.m2.1a"><mn id="S4.SS1.p4.2.m2.1.1" xref="S4.SS1.p4.2.m2.1.1.cmml">521.7</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.2.m2.1b"><cn type="float" id="S4.SS1.p4.2.m2.1.1.cmml" xref="S4.SS1.p4.2.m2.1.1">521.7</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.2.m2.1c">521.7</annotation></semantics></math> ms in the vehicle-to-cloud scenario due to the higher quality frame being processed by the cloud model.
+Since these delays are not acceptable in most practical perception scenarios, we investigated the use of various compression strategies specified in Section <a href="#S3.SS4" title="3.4 Exploring Compression Settings ‣ 3 Methodology ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.4</span></a> to reduce the volume of camera sensor data that needs to be transmitted to the edge or cloud over the network. Compression always occurs on the local device, and decompression happens on either the edge or cloud device, depending on the scenario.
+As illustrated in Table <a href="#S4.T5" title="Table 5 ‣ 4.1 End-to-end delay evaluation ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, compression can drastically reduce the size of the frame to be transmitted, allowing real-time remote object detection when C-V2X is available.</p>
+</div>
+<div id="S4.SS1.p5" class="ltx_para">
+<p id="S4.SS1.p5.1" class="ltx_p">Table <a href="#S4.T5" title="Table 5 ‣ 4.1 End-to-end delay evaluation ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> illustrates a comprehensive analysis of the data size and end-to-end delay for edge and cloud scenarios under varying JPEG and H.265 compression qualities.
+When examining the edge scenario, the data size without compression is 1.23 MB, causing an end-to-end delay of 123.20 ms.
+The introduction of high quality JPEG compression significantly reduces the data size to 174.12 KB (<span id="S4.SS1.p5.1.1" class="ltx_text ltx_font_italic">i.e.</span> 13.82% of the original), and the end-to-end delay accordingly decreases to 59.48 ms.
+As the quality of JPEG compression is further reduced, we see a concomitant decrease in both data size and end-to-end delay, reaching as low as 9.48 KB (or 0.75% of the original size) and a 37.27 ms delay with JPEG very Low compression.
+We also observed significant improvements with H.265 compression. By exploiting the temporal relationships between frames, H.265 is able to minimize the data size to 0.26 KB (or 0.01% of the original size), thus achieving a delay of 37.47 ms in a very low setting.</p>
+</div>
+<div id="S4.SS1.p6" class="ltx_para">
+<p id="S4.SS1.p6.1" class="ltx_p">In the cloud scenario with no compression, the data size is considerably larger, starting at 4.92 MB with an end-to-end delay of 521.7 ms.
+However, similar to the edge scenario, the implementation of JPEG compression and H.265 compression shows a reduction in both the size of the data and the delay.
+With very low JPEG compression, the data size is reduced to 28.60 KB (or 0.6% of the original size) and results in a delay of 29.42 ms.
+With H.265 compression at a very low setting, the data size decreases to 0.69 KB (or 0.01% of the original) and the delay reduces to 27.78 ms. Table <a href="#S4.T5" title="Table 5 ‣ 4.1 End-to-end delay evaluation ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> conclusively demonstrates that the use of compression techniques can significantly reduce data size and latency in both vehicle-to-edge and vehicle-to-cloud scenarios. A breakdown and further details of these end-to-end delays are provided in Figure <a href="#S4.F5" title="Figure 5 ‣ 4.1 End-to-end delay evaluation ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.</p>
+</div>
+<figure id="S4.T5" class="ltx_table">
+<div id="S4.T5.2.2" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:390.3pt;height:492.8pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(31.9pt,-40.3pt) scale(1.19557198780371,1.19557198780371) ;">
+<table id="S4.T5.2.2.2" class="ltx_tabular ltx_align_middle">
+<tr id="S4.T5.2.2.2.3" class="ltx_tr">
+<td id="S4.T5.2.2.2.3.1" class="ltx_td ltx_align_center"><span id="S4.T5.2.2.2.3.1.1" class="ltx_text ltx_font_bold">Platform</span></td>
+<td id="S4.T5.2.2.2.3.2" class="ltx_td ltx_align_left"><span id="S4.T5.2.2.2.3.2.1" class="ltx_text ltx_font_bold">JPEG Quality</span></td>
+<td id="S4.T5.2.2.2.3.3" class="ltx_td ltx_align_left">
+<span id="S4.T5.2.2.2.3.3.1" class="ltx_text"></span><span id="S4.T5.2.2.2.3.3.2" class="ltx_text ltx_font_bold"> <span id="S4.T5.2.2.2.3.3.2.1" class="ltx_text">
+<span id="S4.T5.2.2.2.3.3.2.1.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T5.2.2.2.3.3.2.1.1.1" class="ltx_tr">
+<span id="S4.T5.2.2.2.3.3.2.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Avg. data size</span></span>
+<span id="S4.T5.2.2.2.3.3.2.1.1.2" class="ltx_tr">
+<span id="S4.T5.2.2.2.3.3.2.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">(% of original)</span></span>
+</span></span><span id="S4.T5.2.2.2.3.3.2.2" class="ltx_text"></span></span>
+</td>
+<td id="S4.T5.2.2.2.3.4" class="ltx_td ltx_align_center">
+<span id="S4.T5.2.2.2.3.4.1" class="ltx_text"></span><span id="S4.T5.2.2.2.3.4.2" class="ltx_text ltx_font_bold"> <span id="S4.T5.2.2.2.3.4.2.1" class="ltx_text">
+<span id="S4.T5.2.2.2.3.4.2.1.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T5.2.2.2.3.4.2.1.1.1" class="ltx_tr">
+<span id="S4.T5.2.2.2.3.4.2.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">End-to-end</span></span>
+<span id="S4.T5.2.2.2.3.4.2.1.1.2" class="ltx_tr">
+<span id="S4.T5.2.2.2.3.4.2.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">delay (ms)</span></span>
+</span></span><span id="S4.T5.2.2.2.3.4.2.2" class="ltx_text"></span></span>
+</td>
+</tr>
+<tr id="S4.T5.2.2.2.4" class="ltx_tr">
+<td id="S4.T5.2.2.2.4.1" class="ltx_td ltx_border_tt"></td>
+<td id="S4.T5.2.2.2.4.2" class="ltx_td ltx_align_left ltx_border_tt">No compression</td>
+<td id="S4.T5.2.2.2.4.3" class="ltx_td ltx_align_left ltx_border_tt">1.23 MB (100%)</td>
+<td id="S4.T5.2.2.2.4.4" class="ltx_td ltx_align_center ltx_border_tt">123.20</td>
+</tr>
+<tr id="S4.T5.2.2.2.5" class="ltx_tr">
+<td id="S4.T5.2.2.2.5.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.5.2" class="ltx_td ltx_align_left ltx_border_t">JPEG-H</td>
+<td id="S4.T5.2.2.2.5.3" class="ltx_td ltx_align_left ltx_border_t">174.12 KB (13.82%)</td>
+<td id="S4.T5.2.2.2.5.4" class="ltx_td ltx_align_center ltx_border_t">59.48</td>
+</tr>
+<tr id="S4.T5.2.2.2.6" class="ltx_tr">
+<td id="S4.T5.2.2.2.6.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.6.2" class="ltx_td ltx_align_left">JPEG-M</td>
+<td id="S4.T5.2.2.2.6.3" class="ltx_td ltx_align_left">40.78 KB (3.24%)</td>
+<td id="S4.T5.2.2.2.6.4" class="ltx_td ltx_align_center">43.59</td>
+</tr>
+<tr id="S4.T5.2.2.2.7" class="ltx_tr">
+<td id="S4.T5.2.2.2.7.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.7.2" class="ltx_td ltx_align_left">JPEG-L</td>
+<td id="S4.T5.2.2.2.7.3" class="ltx_td ltx_align_left">17.86 KB (1.42%)</td>
+<td id="S4.T5.2.2.2.7.4" class="ltx_td ltx_align_center">39.62</td>
+</tr>
+<tr id="S4.T5.1.1.1.1" class="ltx_tr">
+<td id="S4.T5.1.1.1.1.1" class="ltx_td ltx_align_center"><span id="S4.T5.1.1.1.1.1.1" class="ltx_text">
+<span id="S4.T5.1.1.1.1.1.1.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T5.1.1.1.1.1.1.1.2" class="ltx_tr">
+<span id="S4.T5.1.1.1.1.1.1.1.2.1" class="ltx_td ltx_align_center">Edge</span></span>
+<span id="S4.T5.1.1.1.1.1.1.1.1" class="ltx_tr">
+<span id="S4.T5.1.1.1.1.1.1.1.1.1" class="ltx_td ltx_align_center">640<math id="S4.T5.1.1.1.1.1.1.1.1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S4.T5.1.1.1.1.1.1.1.1.1.m1.1a"><mo id="S4.T5.1.1.1.1.1.1.1.1.1.m1.1.1" xref="S4.T5.1.1.1.1.1.1.1.1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S4.T5.1.1.1.1.1.1.1.1.1.m1.1b"><times id="S4.T5.1.1.1.1.1.1.1.1.1.m1.1.1.cmml" xref="S4.T5.1.1.1.1.1.1.1.1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S4.T5.1.1.1.1.1.1.1.1.1.m1.1c">\times</annotation></semantics></math>640</span></span>
+</span></span></td>
+<td id="S4.T5.1.1.1.1.2" class="ltx_td ltx_align_left">JPEG-VL</td>
+<td id="S4.T5.1.1.1.1.3" class="ltx_td ltx_align_left">9.48 KB (0.75%)</td>
+<td id="S4.T5.1.1.1.1.4" class="ltx_td ltx_align_center">37.27</td>
+</tr>
+<tr id="S4.T5.2.2.2.8" class="ltx_tr">
+<td id="S4.T5.2.2.2.8.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.8.2" class="ltx_td ltx_align_left ltx_border_t">H.265-H</td>
+<td id="S4.T5.2.2.2.8.3" class="ltx_td ltx_align_left ltx_border_t">100 KB (2.00%)</td>
+<td id="S4.T5.2.2.2.8.4" class="ltx_td ltx_align_center ltx_border_t">48.65</td>
+</tr>
+<tr id="S4.T5.2.2.2.9" class="ltx_tr">
+<td id="S4.T5.2.2.2.9.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.9.2" class="ltx_td ltx_align_left">H.265-M</td>
+<td id="S4.T5.2.2.2.9.3" class="ltx_td ltx_align_left">4.20 KB (0.09%)</td>
+<td id="S4.T5.2.2.2.9.4" class="ltx_td ltx_align_center">41.61</td>
+</tr>
+<tr id="S4.T5.2.2.2.10" class="ltx_tr">
+<td id="S4.T5.2.2.2.10.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.10.2" class="ltx_td ltx_align_left">H.265-L</td>
+<td id="S4.T5.2.2.2.10.3" class="ltx_td ltx_align_left">1.80 KB (0.04%)</td>
+<td id="S4.T5.2.2.2.10.4" class="ltx_td ltx_align_center">38.51</td>
+</tr>
+<tr id="S4.T5.2.2.2.11" class="ltx_tr">
+<td id="S4.T5.2.2.2.11.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.11.2" class="ltx_td ltx_align_left">H.265-VL</td>
+<td id="S4.T5.2.2.2.11.3" class="ltx_td ltx_align_left">0.26 KB (0.01%)</td>
+<td id="S4.T5.2.2.2.11.4" class="ltx_td ltx_align_center">37.47</td>
+</tr>
+<tr id="S4.T5.2.2.2.12" class="ltx_tr">
+<td id="S4.T5.2.2.2.12.1" class="ltx_td ltx_border_t"></td>
+<td id="S4.T5.2.2.2.12.2" class="ltx_td ltx_align_left ltx_border_t">No compression</td>
+<td id="S4.T5.2.2.2.12.3" class="ltx_td ltx_align_left ltx_border_t">4.92 MB (100%)</td>
+<td id="S4.T5.2.2.2.12.4" class="ltx_td ltx_align_center ltx_border_t">521.7</td>
+</tr>
+<tr id="S4.T5.2.2.2.13" class="ltx_tr">
+<td id="S4.T5.2.2.2.13.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.13.2" class="ltx_td ltx_align_left ltx_border_t">JPEG-H</td>
+<td id="S4.T5.2.2.2.13.3" class="ltx_td ltx_align_left ltx_border_t">604.38 KB (12.00%)</td>
+<td id="S4.T5.2.2.2.13.4" class="ltx_td ltx_align_center ltx_border_t">74.50</td>
+</tr>
+<tr id="S4.T5.2.2.2.14" class="ltx_tr">
+<td id="S4.T5.2.2.2.14.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.14.2" class="ltx_td ltx_align_left">JPEG-M</td>
+<td id="S4.T5.2.2.2.14.3" class="ltx_td ltx_align_left">125.51 KB (2.50%)</td>
+<td id="S4.T5.2.2.2.14.4" class="ltx_td ltx_align_center">40.71</td>
+</tr>
+<tr id="S4.T5.2.2.2.15" class="ltx_tr">
+<td id="S4.T5.2.2.2.15.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.15.2" class="ltx_td ltx_align_left">JPEG-L</td>
+<td id="S4.T5.2.2.2.15.3" class="ltx_td ltx_align_left">53.78 KB (1.13%)</td>
+<td id="S4.T5.2.2.2.15.4" class="ltx_td ltx_align_center">32.93</td>
+</tr>
+<tr id="S4.T5.2.2.2.2" class="ltx_tr">
+<td id="S4.T5.2.2.2.2.1" class="ltx_td ltx_align_center"><span id="S4.T5.2.2.2.2.1.1" class="ltx_text">
+<span id="S4.T5.2.2.2.2.1.1.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T5.2.2.2.2.1.1.1.2" class="ltx_tr">
+<span id="S4.T5.2.2.2.2.1.1.1.2.1" class="ltx_td ltx_align_center">Cloud</span></span>
+<span id="S4.T5.2.2.2.2.1.1.1.1" class="ltx_tr">
+<span id="S4.T5.2.2.2.2.1.1.1.1.1" class="ltx_td ltx_align_center">1280<math id="S4.T5.2.2.2.2.1.1.1.1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S4.T5.2.2.2.2.1.1.1.1.1.m1.1a"><mo id="S4.T5.2.2.2.2.1.1.1.1.1.m1.1.1" xref="S4.T5.2.2.2.2.1.1.1.1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S4.T5.2.2.2.2.1.1.1.1.1.m1.1b"><times id="S4.T5.2.2.2.2.1.1.1.1.1.m1.1.1.cmml" xref="S4.T5.2.2.2.2.1.1.1.1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S4.T5.2.2.2.2.1.1.1.1.1.m1.1c">\times</annotation></semantics></math>1280</span></span>
+</span></span></td>
+<td id="S4.T5.2.2.2.2.2" class="ltx_td ltx_align_left">JPEG-VL</td>
+<td id="S4.T5.2.2.2.2.3" class="ltx_td ltx_align_left">28.60 KB (0.6%)</td>
+<td id="S4.T5.2.2.2.2.4" class="ltx_td ltx_align_center">29.42</td>
+</tr>
+<tr id="S4.T5.2.2.2.16" class="ltx_tr">
+<td id="S4.T5.2.2.2.16.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.16.2" class="ltx_td ltx_align_left ltx_border_t">H.265-H</td>
+<td id="S4.T5.2.2.2.16.3" class="ltx_td ltx_align_left ltx_border_t">220 KB (4.37%)</td>
+<td id="S4.T5.2.2.2.16.4" class="ltx_td ltx_align_center ltx_border_t">46.93</td>
+</tr>
+<tr id="S4.T5.2.2.2.17" class="ltx_tr">
+<td id="S4.T5.2.2.2.17.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.17.2" class="ltx_td ltx_align_left">H.265-M</td>
+<td id="S4.T5.2.2.2.17.3" class="ltx_td ltx_align_left">11.20 KB (0.22%)</td>
+<td id="S4.T5.2.2.2.17.4" class="ltx_td ltx_align_center">30.21</td>
+</tr>
+<tr id="S4.T5.2.2.2.18" class="ltx_tr">
+<td id="S4.T5.2.2.2.18.1" class="ltx_td"></td>
+<td id="S4.T5.2.2.2.18.2" class="ltx_td ltx_align_left">H.265-L</td>
+<td id="S4.T5.2.2.2.18.3" class="ltx_td ltx_align_left">4.69 KB (0.09%)</td>
+<td id="S4.T5.2.2.2.18.4" class="ltx_td ltx_align_center">28.72</td>
+</tr>
+<tr id="S4.T5.2.2.2.19" class="ltx_tr">
+<td id="S4.T5.2.2.2.19.1" class="ltx_td ltx_border_bb"></td>
+<td id="S4.T5.2.2.2.19.2" class="ltx_td ltx_align_left ltx_border_bb">H.265-VL</td>
+<td id="S4.T5.2.2.2.19.3" class="ltx_td ltx_align_left ltx_border_bb">0.69 KB (0.01%)</td>
+<td id="S4.T5.2.2.2.19.4" class="ltx_td ltx_align_center ltx_border_bb">27.78</td>
+</tr>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S4.T5.4.1.1" class="ltx_text" style="font-size:90%;">Table 5</span>: </span><span id="S4.T5.5.2" class="ltx_text" style="font-size:90%;">Data size and end-to-end delay for both edge and cloud scenarios under different JPEG and H.265 compression qualities. The final column refers to the end-to-end delay in a vehicle-to-edge/cloud scenario. Figure <a href="#S4.F5" title="Figure 5 ‣ 4.1 End-to-end delay evaluation ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, illustrates a detailed breakdown of these delays.</span></figcaption>
+</figure>
+<div id="S4.SS1.p7" class="ltx_para">
+<p id="S4.SS1.p7.1" class="ltx_p">A breakdown of average end-to-end delays for different compression qualities is shown in Figure <a href="#S4.F5" title="Figure 5 ‣ 4.1 End-to-end delay evaluation ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.
+In all cases, compression and decompression have a negligible impact on the overall delay.
+As expected, network transmission increases with the amount of data to be transmitted.
+The inference times are constant for a given platform since the same model and input quality are considered.
+In terms of end-to-end delay, all compression qualities are viable for real-time operation at 20Hz on both platforms, except the JPEG high quality.
+The next section will investigate how compression impacts detection quality.</p>
+</div>
+<div id="S4.SS1.p8" class="ltx_para">
+<p id="S4.SS1.p8.1" class="ltx_p">Figure <a href="#S4.F5" title="Figure 5 ‣ 4.1 End-to-end delay evaluation ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> provides a detailed breakdown of the average end-to-end delays for each of the various compression qualities evaluated.
+In all cases, compression and decompression have a negligible impact on the overall delay.
+As expected, network transmission latency increases with the volume of data to be streamed.
+The inference times remain constant on a given platform, as the same model and input quality are consistently maintained.
+From an end-to-end delay perspective, all of the assessed compression quality levels prove to be well-suited for real-time operation at 20Hz on both platforms, with the sole exception of JPEG-H high quality.
+The next section examines how these compression strategies influence detection quality.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S4.F5.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2308.05234/assets/x5.png" id="S4.F5.sf1.g1" class="ltx_graphics ltx_img_landscape" width="415" height="153" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S4.F5.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S4.F5.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2308.05234/assets/x6.png" id="S4.F5.sf2.g1" class="ltx_graphics ltx_img_landscape" width="415" height="137" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S4.F5.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F5.2.1.1" class="ltx_text" style="font-size:90%;">Figure 5</span>: </span><span id="S4.F5.3.2" class="ltx_text" style="font-size:90%;">Breakdown of average end-to-end delay (ms) into compression overhead, network transfer and inference times. The dashed line represents the latency constraint for real-time object detection in autonomous driving scenarios.</span></figcaption>
+</figure>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Analyzing detection quality</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">In order to obtain a complete picture of detection quality, measuring only Precision and Recall is insufficient.
+We follow the object detection literature and compute the Average Precision (AP), which is the area below the Precision-Recall curve.
+A detection is considered a true positive if its Intersection-over-Union (IoU) with a ground truth bounding box exceeds 50%. In order to derive a single metric for all classes, the per-class APs are averaged to obtain the Mean Average Precision (mAP).</p>
+</div>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2308.05234/assets/x7.png" id="S4.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="392" height="294" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F6.2.1.1" class="ltx_text" style="font-size:90%;">Figure 6</span>: </span><span id="S4.F6.3.2" class="ltx_text" style="font-size:90%;">Trade-off between mean average precision (mAP) and end-to-end delay for different platforms and compression qualities. The end-to-end delay corresponds to the total of compression, network, decompression, and object detection inference delays. Very-low quality settings for both H.265-VL and JPEG-VL are not included, since their mAP fell below 10%, an unacceptable detection rate regardless of the reduced end-to-end delays.</span></figcaption>
+</figure>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">As already discussed, the end-to-end delay can be significantly reduced using various compression techniques. However, excessive compression affects the detection quality, degrading the mAP. This section aims to determine the best trade-offs between detection quality and end-to-end delay. These trade-offs are illustrated in Figure <a href="#S4.F6" title="Figure 6 ‣ 4.2 Analyzing detection quality ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.
+As expected, local operation is the fastest in terms of latency (19.5 ms), and obtains 64% mAP. As demonstrated in Figure <a href="#S4.F6" title="Figure 6 ‣ 4.2 Analyzing detection quality ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>, the cloud platform consistently outperformed the edge platform in terms of mAP and end-to-end latency trade-off in all comparable compression techniques.
+For example, on the cloud platform, when using H.265-H compression, the mAP reaches 82%, but the end-to-end delay is 46.93 ms.
+Interestingly, when using the H.265-M compression scenario, the mAP remains the same, but the delay is significantly reduced to 29.21 ms.
+Furthermore, lowering the compression quality to H.265-L slightly decreases the mAP to 72% and reduces the delay to 28.72 ms.
+Figure <a href="#S4.F6" title="Figure 6 ‣ 4.2 Analyzing detection quality ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> also shows an increase in mAP from 58% (JPEG-L) to 81% (JPEG-M), reaching 85% (JPEG-H) when considering JPEG compression techniques in the cloud.
+At the same time, the delay increases from 32.93 ms (JPEG-L) to 40.71 ms (JPEG-M) and peaks at 74.50 ms (JPEG-H).
+Although the highest detection quality (85% mAP) is achieved with JPEG-H compression, this comes at the cost of an increased end-to-end latency of 74.5 ms, which is not suitable for real-time object detection at 20Hz. Nevertheless, it can still be used for applications where 10Hz is an acceptable latency.</p>
+</div>
+<figure id="S4.F7" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S4.F7.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2308.05234/assets/Figure/comcom/val_batch0_pred_0.jpg" id="S4.F7.sf1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="265" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F7.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="S4.F7.sf1.3.2" class="ltx_text" style="font-size:90%;">H.265-H (CRF=0); Detected: 1 pedestrian, 7 vehicles, 8 traffic light</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S4.F7.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2308.05234/assets/Figure/comcom/val_batch0_pred_24.jpg" id="S4.F7.sf2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="265" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F7.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="S4.F7.sf2.3.2" class="ltx_text" style="font-size:90%;">H.265-M (CRF=24); Detected: 1 pedestrian, 7 vehicles, 7 traffic light</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S4.F7.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2308.05234/assets/Figure/comcom/val_batch0_pred_30.jpg" id="S4.F7.sf3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="265" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F7.sf3.2.1.1" class="ltx_text" style="font-size:90%;">(c)</span> </span><span id="S4.F7.sf3.3.2" class="ltx_text" style="font-size:90%;">H.265-L (CRF=30); Detected: 0 pedestrian, 7 vehicles, 6 traffic light</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S4.F7.sf4" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2308.05234/assets/Figure/comcom/val_batch0_pred_50.jpg" id="S4.F7.sf4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="265" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F7.sf4.2.1.1" class="ltx_text" style="font-size:90%;">(d)</span> </span><span id="S4.F7.sf4.3.2" class="ltx_text" style="font-size:90%;">H.265-VL (CRF=51); Detected: 0 pedestrian, 0 vehicles, 0 traffic light</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F7.2.1.1" class="ltx_text" style="font-size:90%;">Figure 7</span>: </span><span id="S4.F7.3.2" class="ltx_text" style="font-size:90%;">Visualisation of the number of detected pedestrians, vehicles and traffic light in the cloud platform on different H.265 compression settings. A detection is considered only if its IoU with a ground truth bounding box exceeds 50%. Ground truth: 8 traffic lights, 8 vehicles and 2 pedestrians.</span></figcaption>
+</figure>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p">In the edge scenario, considering the H.265-High compression setting results in a mAP of 67%, accompanied by an end-to-end delay of 48.65 ms.
+For H.265-M and H.265-L, the mAP gradually respectively decreases to 57% and 45%, with corresponding delay reductions of 41.61 and 38.51 ms. In the JPEG case, mAP increases from 51% (JPEG-L) to 66% (JPEG-M) and then to 67% (JPEG-H), while the delay increases from 39.62 ms (JPEG-L) to 43.59 ms (JPEG-M), reaching 59.48 ms (JPEG-H).
+Therefore, the edge scenario examined here is not advantageous over offloading to the cloud device.
+The use of better edge hardware specifically designed for mid-power inference rather than a traditional consumer GPU could most likely result in more competitive performance from the edge platform.
+On the other hand, the cloud platform is interesting, as it offers better performance with both JPEG and H.265, with 81% (JPEG-M) and 82% (H.265-H) mAP, respectively.
+Meanwhile, the end-to-end delays are kept under 50ms, respecting the 20Hz constraint.
+Although compression is necessary for real-time operation on edge and cloud platforms, we observe its negative impact on detection quality.
+At extreme compression levels, remote detection mAP can drop below local performance while taking longer, rendering offloading harmful. For example, when using very low-quality settings for both H.265-VL and JPEG-VL in cloud or edge scenarios, mAP dropped below 10%. This is considered unacceptable, regardless of the reduced end-to-end latency.</p>
+</div>
+<figure id="S4.T6" class="ltx_table">
+<div id="S4.T6.6" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:423.4pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(20.5pt,-20.0pt) scale(1.104449766162,1.104449766162) ;">
+<table id="S4.T6.6.1" class="ltx_tabular ltx_align_middle">
+<tr id="S4.T6.6.1.1" class="ltx_tr">
+<td id="S4.T6.6.1.1.1" class="ltx_td ltx_align_center">
+<span id="S4.T6.6.1.1.1.1" class="ltx_text"></span><span id="S4.T6.6.1.1.1.2" class="ltx_text ltx_font_bold"> <span id="S4.T6.6.1.1.1.2.1" class="ltx_text">
+<span id="S4.T6.6.1.1.1.2.1.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T6.6.1.1.1.2.1.1.1" class="ltx_tr">
+<span id="S4.T6.6.1.1.1.2.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Compression</span></span>
+</span></span><span id="S4.T6.6.1.1.1.2.2" class="ltx_text"></span></span>
+</td>
+<td id="S4.T6.6.1.1.2" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.1.2.1" class="ltx_text ltx_font_bold">Platform</span></td>
+<td id="S4.T6.6.1.1.3" class="ltx_td ltx_align_center">
+<span id="S4.T6.6.1.1.3.1" class="ltx_text"></span><span id="S4.T6.6.1.1.3.2" class="ltx_text ltx_font_bold"> <span id="S4.T6.6.1.1.3.2.1" class="ltx_text">
+<span id="S4.T6.6.1.1.3.2.1.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T6.6.1.1.3.2.1.1.1" class="ltx_tr">
+<span id="S4.T6.6.1.1.3.2.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Pedestrian</span></span>
+<span id="S4.T6.6.1.1.3.2.1.1.2" class="ltx_tr">
+<span id="S4.T6.6.1.1.3.2.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">(+% of Local)</span></span>
+</span></span><span id="S4.T6.6.1.1.3.2.2" class="ltx_text"></span></span>
+</td>
+<td id="S4.T6.6.1.1.4" class="ltx_td ltx_align_center">
+<span id="S4.T6.6.1.1.4.1" class="ltx_text"></span><span id="S4.T6.6.1.1.4.2" class="ltx_text ltx_font_bold"> <span id="S4.T6.6.1.1.4.2.1" class="ltx_text">
+<span id="S4.T6.6.1.1.4.2.1.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T6.6.1.1.4.2.1.1.1" class="ltx_tr">
+<span id="S4.T6.6.1.1.4.2.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Vehicle</span></span>
+<span id="S4.T6.6.1.1.4.2.1.1.2" class="ltx_tr">
+<span id="S4.T6.6.1.1.4.2.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">(+% of Local)</span></span>
+</span></span><span id="S4.T6.6.1.1.4.2.2" class="ltx_text"></span></span>
+</td>
+<td id="S4.T6.6.1.1.5" class="ltx_td ltx_align_center">
+<span id="S4.T6.6.1.1.5.1" class="ltx_text"></span><span id="S4.T6.6.1.1.5.2" class="ltx_text ltx_font_bold"> <span id="S4.T6.6.1.1.5.2.1" class="ltx_text">
+<span id="S4.T6.6.1.1.5.2.1.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T6.6.1.1.5.2.1.1.1" class="ltx_tr">
+<span id="S4.T6.6.1.1.5.2.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Traffic light</span></span>
+<span id="S4.T6.6.1.1.5.2.1.1.2" class="ltx_tr">
+<span id="S4.T6.6.1.1.5.2.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">(+% of Local)</span></span>
+</span></span><span id="S4.T6.6.1.1.5.2.2" class="ltx_text"></span></span>
+</td>
+</tr>
+<tr id="S4.T6.6.1.2" class="ltx_tr">
+<td id="S4.T6.6.1.2.1" class="ltx_td ltx_align_center ltx_border_tt" rowspan="3"><span id="S4.T6.6.1.2.1.1" class="ltx_text">No compression</span></td>
+<td id="S4.T6.6.1.2.2" class="ltx_td ltx_align_center ltx_border_tt" style="background-color:#CCCCCC;"><span id="S4.T6.6.1.2.2.1" class="ltx_text" style="background-color:#CCCCCC;">Local</span></td>
+<td id="S4.T6.6.1.2.3" class="ltx_td ltx_align_center ltx_border_tt" style="background-color:#CCCCCC;"><span id="S4.T6.6.1.2.3.1" class="ltx_text" style="background-color:#CCCCCC;">0.30 (0%)</span></td>
+<td id="S4.T6.6.1.2.4" class="ltx_td ltx_align_center ltx_border_tt" style="background-color:#CCCCCC;"><span id="S4.T6.6.1.2.4.1" class="ltx_text" style="background-color:#CCCCCC;">0.79 (0%)</span></td>
+<td id="S4.T6.6.1.2.5" class="ltx_td ltx_align_center ltx_border_tt" style="background-color:#CCCCCC;"><span id="S4.T6.6.1.2.5.1" class="ltx_text" style="background-color:#CCCCCC;">0.80 (0%)</span></td>
+</tr>
+<tr id="S4.T6.6.1.3" class="ltx_tr">
+<td id="S4.T6.6.1.3.1" class="ltx_td ltx_align_center">Edge</td>
+<td id="S4.T6.6.1.3.2" class="ltx_td ltx_align_center">0.36 (+20%)</td>
+<td id="S4.T6.6.1.3.3" class="ltx_td ltx_align_center">0.81 (+2%)</td>
+<td id="S4.T6.6.1.3.4" class="ltx_td ltx_align_center">0.82 (+2%)</td>
+</tr>
+<tr id="S4.T6.6.1.4" class="ltx_tr">
+<td id="S4.T6.6.1.4.1" class="ltx_td ltx_align_center">Cloud</td>
+<td id="S4.T6.6.1.4.2" class="ltx_td ltx_align_center">0.81 (+170%)</td>
+<td id="S4.T6.6.1.4.3" class="ltx_td ltx_align_center">0.89 (+12%)</td>
+<td id="S4.T6.6.1.4.4" class="ltx_td ltx_align_center">0.86 (+7%)</td>
+</tr>
+<tr id="S4.T6.6.1.5" class="ltx_tr">
+<td id="S4.T6.6.1.5.1" class="ltx_td ltx_align_center ltx_border_t" rowspan="2"><span id="S4.T6.6.1.5.1.1" class="ltx_text">JPEG-H</span></td>
+<td id="S4.T6.6.1.5.2" class="ltx_td ltx_align_center ltx_border_t">Edge</td>
+<td id="S4.T6.6.1.5.3" class="ltx_td ltx_align_center ltx_border_t">0.36 (+20%)</td>
+<td id="S4.T6.6.1.5.4" class="ltx_td ltx_align_center ltx_border_t">0.80 (+1%)</td>
+<td id="S4.T6.6.1.5.5" class="ltx_td ltx_align_center ltx_border_t">0.82 (+2%)</td>
+</tr>
+<tr id="S4.T6.6.1.6" class="ltx_tr">
+<td id="S4.T6.6.1.6.1" class="ltx_td ltx_align_center">Cloud</td>
+<td id="S4.T6.6.1.6.2" class="ltx_td ltx_align_center">0.80 (+166%)</td>
+<td id="S4.T6.6.1.6.3" class="ltx_td ltx_align_center">0.89 (+12%)</td>
+<td id="S4.T6.6.1.6.4" class="ltx_td ltx_align_center">0.86 (+7%)</td>
+</tr>
+<tr id="S4.T6.6.1.7" class="ltx_tr">
+<td id="S4.T6.6.1.7.1" class="ltx_td ltx_align_center ltx_border_t" rowspan="2"><span id="S4.T6.6.1.7.1.1" class="ltx_text">JPEG-M</span></td>
+<td id="S4.T6.6.1.7.2" class="ltx_td ltx_align_center ltx_border_t">Edge</td>
+<td id="S4.T6.6.1.7.3" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.1.7.3.1" class="ltx_text ltx_font_bold">0.41 (+36%)</span></td>
+<td id="S4.T6.6.1.7.4" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.1.7.4.1" class="ltx_text ltx_font_bold">0.83 (+5%)</span></td>
+<td id="S4.T6.6.1.7.5" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.1.7.5.1" class="ltx_text ltx_font_bold">0.78 (-2%)</span></td>
+</tr>
+<tr id="S4.T6.6.1.8" class="ltx_tr">
+<td id="S4.T6.6.1.8.1" class="ltx_td ltx_align_center">Cloud</td>
+<td id="S4.T6.6.1.8.2" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.8.2.1" class="ltx_text ltx_font_bold">0.65 (+116%)</span></td>
+<td id="S4.T6.6.1.8.3" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.8.3.1" class="ltx_text ltx_font_bold">0.88 (+11%)</span></td>
+<td id="S4.T6.6.1.8.4" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.8.4.1" class="ltx_text ltx_font_bold">0.85 (+6%)</span></td>
+</tr>
+<tr id="S4.T6.6.1.9" class="ltx_tr">
+<td id="S4.T6.6.1.9.1" class="ltx_td ltx_align_center ltx_border_t" rowspan="2"><span id="S4.T6.6.1.9.1.1" class="ltx_text">JPEG-L</span></td>
+<td id="S4.T6.6.1.9.2" class="ltx_td ltx_align_center ltx_border_t">Edge</td>
+<td id="S4.T6.6.1.9.3" class="ltx_td ltx_align_center ltx_border_t">0.35 (+16%)</td>
+<td id="S4.T6.6.1.9.4" class="ltx_td ltx_align_center ltx_border_t">0.77 (-2%)</td>
+<td id="S4.T6.6.1.9.5" class="ltx_td ltx_align_center ltx_border_t">0.74 (-7%)</td>
+</tr>
+<tr id="S4.T6.6.1.10" class="ltx_tr">
+<td id="S4.T6.6.1.10.1" class="ltx_td ltx_align_center">Cloud</td>
+<td id="S4.T6.6.1.10.2" class="ltx_td ltx_align_center">0.43 (+43%)</td>
+<td id="S4.T6.6.1.10.3" class="ltx_td ltx_align_center">0.84 (+6%)</td>
+<td id="S4.T6.6.1.10.4" class="ltx_td ltx_align_center">0.81 (+1%)</td>
+</tr>
+<tr id="S4.T6.6.1.11" class="ltx_tr">
+<td id="S4.T6.6.1.11.1" class="ltx_td ltx_align_center ltx_border_t" rowspan="2"><span id="S4.T6.6.1.11.1.1" class="ltx_text">JPEG-VL</span></td>
+<td id="S4.T6.6.1.11.2" class="ltx_td ltx_align_center ltx_border_t">Edge</td>
+<td id="S4.T6.6.1.11.3" class="ltx_td ltx_align_center ltx_border_t">0.23 (-23%)</td>
+<td id="S4.T6.6.1.11.4" class="ltx_td ltx_align_center ltx_border_t">0.73 (-7%)</td>
+<td id="S4.T6.6.1.11.5" class="ltx_td ltx_align_center ltx_border_t">0.55 (-31%)</td>
+</tr>
+<tr id="S4.T6.6.1.12" class="ltx_tr">
+<td id="S4.T6.6.1.12.1" class="ltx_td ltx_align_center">Cloud</td>
+<td id="S4.T6.6.1.12.2" class="ltx_td ltx_align_center">0.24 (-20.00%)</td>
+<td id="S4.T6.6.1.12.3" class="ltx_td ltx_align_center">0.78 (-1%)</td>
+<td id="S4.T6.6.1.12.4" class="ltx_td ltx_align_center">0.62 (-22%)</td>
+</tr>
+<tr id="S4.T6.6.1.13" class="ltx_tr">
+<td id="S4.T6.6.1.13.1" class="ltx_td ltx_align_center ltx_border_t" rowspan="2"><span id="S4.T6.6.1.13.1.1" class="ltx_text">H.265-H</span></td>
+<td id="S4.T6.6.1.13.2" class="ltx_td ltx_align_center ltx_border_t">Edge</td>
+<td id="S4.T6.6.1.13.3" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.1.13.3.1" class="ltx_text ltx_font_bold">0.36 (+20%)</span></td>
+<td id="S4.T6.6.1.13.4" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.1.13.4.1" class="ltx_text ltx_font_bold">0.80 (+1%)</span></td>
+<td id="S4.T6.6.1.13.5" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.1.13.5.1" class="ltx_text ltx_font_bold">0.83 (+3%)</span></td>
+</tr>
+<tr id="S4.T6.6.1.14" class="ltx_tr">
+<td id="S4.T6.6.1.14.1" class="ltx_td ltx_align_center">Cloud</td>
+<td id="S4.T6.6.1.14.2" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.14.2.1" class="ltx_text ltx_font_bold">0.68 (+126%)</span></td>
+<td id="S4.T6.6.1.14.3" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.14.3.1" class="ltx_text ltx_font_bold">0.83 (+5%)</span></td>
+<td id="S4.T6.6.1.14.4" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.14.4.1" class="ltx_text ltx_font_bold">0.83 (+3%)</span></td>
+</tr>
+<tr id="S4.T6.6.1.15" class="ltx_tr">
+<td id="S4.T6.6.1.15.1" class="ltx_td ltx_align_center ltx_border_t" rowspan="2"><span id="S4.T6.6.1.15.1.1" class="ltx_text">H.265-M</span></td>
+<td id="S4.T6.6.1.15.2" class="ltx_td ltx_align_center ltx_border_t">Edge</td>
+<td id="S4.T6.6.1.15.3" class="ltx_td ltx_align_center ltx_border_t">0.25 (-16%)</td>
+<td id="S4.T6.6.1.15.4" class="ltx_td ltx_align_center ltx_border_t">0.78 (-1%)</td>
+<td id="S4.T6.6.1.15.5" class="ltx_td ltx_align_center ltx_border_t">0.82 (+2%)</td>
+</tr>
+<tr id="S4.T6.6.1.16" class="ltx_tr">
+<td id="S4.T6.6.1.16.1" class="ltx_td ltx_align_center">Cloud</td>
+<td id="S4.T6.6.1.16.2" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.16.2.1" class="ltx_text ltx_font_bold">0.69 (+130%)</span></td>
+<td id="S4.T6.6.1.16.3" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.16.3.1" class="ltx_text ltx_font_bold">0.84 (+6%)</span></td>
+<td id="S4.T6.6.1.16.4" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.16.4.1" class="ltx_text ltx_font_bold">0.82 (+2%)</span></td>
+</tr>
+<tr id="S4.T6.6.1.17" class="ltx_tr">
+<td id="S4.T6.6.1.17.1" class="ltx_td ltx_align_center ltx_border_t" rowspan="2"><span id="S4.T6.6.1.17.1.1" class="ltx_text">H.265-L</span></td>
+<td id="S4.T6.6.1.17.2" class="ltx_td ltx_align_center ltx_border_t">Edge</td>
+<td id="S4.T6.6.1.17.3" class="ltx_td ltx_align_center ltx_border_t">0.04 (-86%)</td>
+<td id="S4.T6.6.1.17.4" class="ltx_td ltx_align_center ltx_border_t">0.59 (-25%)</td>
+<td id="S4.T6.6.1.17.5" class="ltx_td ltx_align_center ltx_border_t">0.72 (-10%)</td>
+</tr>
+<tr id="S4.T6.6.1.18" class="ltx_tr">
+<td id="S4.T6.6.1.18.1" class="ltx_td ltx_align_center">Cloud</td>
+<td id="S4.T6.6.1.18.2" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.18.2.1" class="ltx_text ltx_font_bold">0.51 (+70%)</span></td>
+<td id="S4.T6.6.1.18.3" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.18.3.1" class="ltx_text ltx_font_bold">0.82 (+3%)</span></td>
+<td id="S4.T6.6.1.18.4" class="ltx_td ltx_align_center"><span id="S4.T6.6.1.18.4.1" class="ltx_text ltx_font_bold">0.82 (+2%)</span></td>
+</tr>
+<tr id="S4.T6.6.1.19" class="ltx_tr">
+<td id="S4.T6.6.1.19.1" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" rowspan="2"><span id="S4.T6.6.1.19.1.1" class="ltx_text">H.265-VL</span></td>
+<td id="S4.T6.6.1.19.2" class="ltx_td ltx_align_center ltx_border_t">Edge</td>
+<td id="S4.T6.6.1.19.3" class="ltx_td ltx_align_center ltx_border_t">0.01 (-96%)</td>
+<td id="S4.T6.6.1.19.4" class="ltx_td ltx_align_center ltx_border_t">0.02 (-97%)</td>
+<td id="S4.T6.6.1.19.5" class="ltx_td ltx_align_center ltx_border_t">0.03 (-96%)</td>
+</tr>
+<tr id="S4.T6.6.1.20" class="ltx_tr">
+<td id="S4.T6.6.1.20.1" class="ltx_td ltx_align_center ltx_border_bb">Cloud</td>
+<td id="S4.T6.6.1.20.2" class="ltx_td ltx_align_center ltx_border_bb">0.03 (-90%)</td>
+<td id="S4.T6.6.1.20.3" class="ltx_td ltx_align_center ltx_border_bb">0.23 (-70%)</td>
+<td id="S4.T6.6.1.20.4" class="ltx_td ltx_align_center ltx_border_bb">0.04 (-95%)</td>
+</tr>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S4.T6.7.3.1" class="ltx_text" style="font-size:90%;">Table 6</span>: </span><span id="S4.T6.4.2" class="ltx_text" style="font-size:90%;">Per-class AP for different compression qualities and platforms. The input qualities are 640<math id="S4.T6.3.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S4.T6.3.1.m1.1b"><mo id="S4.T6.3.1.m1.1.1" xref="S4.T6.3.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S4.T6.3.1.m1.1c"><times id="S4.T6.3.1.m1.1.1.cmml" xref="S4.T6.3.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.3.1.m1.1d">\times</annotation></semantics></math>640 for the local and edge platforms, and 1280<math id="S4.T6.4.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S4.T6.4.2.m2.1b"><mo id="S4.T6.4.2.m2.1.1" xref="S4.T6.4.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S4.T6.4.2.m2.1c"><times id="S4.T6.4.2.m2.1.1.cmml" xref="S4.T6.4.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.4.2.m2.1d">\times</annotation></semantics></math>1280 for the cloud model. The baseline local model is highlighted in gray color, while all the models that are competitive, meeting both the mAP and latency constraint, are bolded.</span></figcaption>
+</figure>
+<div id="S4.SS2.p4" class="ltx_para">
+<p id="S4.SS2.p4.1" class="ltx_p">We also evaluate the detection quality separately for the three classes of interest: pedestrians, vehicles, and traffic lights. A visual representation is shown in Figure <a href="#S4.F7" title="Figure 7 ‣ 4.2 Analyzing detection quality ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>. The purpose of this evaluation is to understand the impact of compression on different classes. The results are shown in Table <a href="#S4.T6" title="Table 6 ‣ 4.2 Analyzing detection quality ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>. We observe that compression has a disproportionate impact on Average Precision (AP) for classes that are typically smaller in scale.
+We benchmark the performance of various compression settings with the corresponding platforms against the baseline scenario, <span id="S4.SS2.p4.1.1" class="ltx_text ltx_font_italic">i.e.</span> the local platform operating without any compression.
+The local platform performance shows an AP of 30% for pedestrian detection and achieves an AP of 79% and 80% for vehicle and traffic light detection, respectively.
+The Table <a href="#S4.T6" title="Table 6 ‣ 4.2 Analyzing detection quality ‣ 4 Results ‣ Leveraging the Edge and Cloud for V2X-Based Real-Time Object Detection in Autonomous Driving" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> demonstrate that the use of a cloud platform, compared to local and edge platforms, led to significant performance improvements for pedestrian detection, particularly with medium compression settings for both JPEG-M (+116%) and H.265-M (+130%).
+In particular, high-quality compression (JPEG-H and H.265-H) enables both edge and cloud platforms to outperform the local scenario, with a cloud platform improving pedestrian detection by 166% (JPEG-H) and 126% (H.265-H) and an edge platform achieving a 20% increase in AP in both cases.
+Although all platforms perform similarly for vehicle and traffic light detection with high and medium compression settings, the performance decreases noticeably at lower compression settings. Under very low quality compression (JPEG-VL and H.265-VL), the AP for all three classes drops on both platforms, underlining the limitations of excessive compression.
+These findings underline the potential of edge and cloud platforms, paired with appropriate compression settings, to improve object detection performance relative to a local platform, especially for pedestrian detection.
+However, the benefits diminish with lower compression quality, emphasizing the need to strike the right balance between compression level and detection performance for real-time object detection in autonomous driving.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusion and Future Work</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this work, we have explored the possibility of real-time remote object detection. Although larger models perform better, they also require higher computational power.
+Considering cost and power constraints in autonomous vehicles, the very best models cannot run locally in real-time.
+To solve this problem, we have proposed different strategies to offload object detection to edge or cloud devices using C-V2X.
+We have compared these strategies in terms of their detection quality and compliance with end-to-end latency requirements.
+To evaluate the proposed strategies, we have generated a synthetic dataset and have trained different variants of the YOLOv5 architecture.
+Using an end-to-end 5G network simulation framework, we have measured the network latency incurred when transferring camera frames for processing on the edge and cloud.
+We have also analysed how the use of heavy compression can reduce the frame size by up to 98% when using JPEG and H.265 to enable real-time remote processing.
+We showed that models with adequate compression can be run in real-time on the edge/cloud while outperforming local detection performance.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">The experimental results demonstrated that the H.265 (video) compression technique generally offers better performance in terms of detection quality and end-to-end latency trade-off compared to JPEG (image), particularly in the cloud scenario.
+However, there are scenarios where JPEG compression is still sufficient and can be used, such as where 10Hz is an acceptable latency.
+Our experimental results show that excessive compression affects the detection quality compared to raw frames, particularly for the pedestrian class.</p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p">Future work will focus on testing the offloading strategies in different driving environments. Since local perception is still needed as a fallback to cope with bad connectivity, we plan on investigating the impact of mode switching between local and remote processing on detection quality and latency.
+Additionally, we will examine the influence of mobility on network latency, considering factors such as signal strength, handovers, obstacles, interference, and network congestion.</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">Acknowledgments</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">This work is supported by the Fonds National de la Recherche of Luxembourg (FNR), under AFR grant agreement No 17020780 and project acronym <span id="Sx1.p1.1.1" class="ltx_text ltx_font_italic">ACDC</span>.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+S. A. Abdel Hakeem, A. A. Hady, H. Kim, 5g-v2x: Standardization, architecture,
+use cases, network-slicing, and edge-computing, Wireless Networks 26 (8)
+(2020) 6015–6041.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+J. B. Jocher Glenn, Ayush Chaurasia, A. Stoken, Yolov5 (2020),
+https://github.com/ultralytics/yolov5. (Accessed 10 July 2022).
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+F. Hawlader, F. Robinet, R. Frank, Vehicle-to-infrastructure communication for
+real-time object detection in autonomous driving, in: 2023 18th Wireless
+On-Demand Network Systems and Services Conference (WONS), IEEE, 2023, pp.
+40–46.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+M. H. C. Garcia, A. Molina-Galan, M. Boban, J. Gozalvez, B. Coll-Perales,
+T. Şahin, A. Kousaridas, A tutorial on 5g nr v2x communications, IEEE
+Communications Surveys &amp; Tutorials 23 (3) (2021) 1972–2026.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/COMST.2021.3057017" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/COMST.2021.3057017</span></a>.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+G. Nardini, G. Stea, A. Virdis, D. Sabella, Simu5g: a system-level simulator
+for 5g networks, in: SIMULTECH 2020, INSTICC, 2020, p. 23.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Y. Matsubara, M. Levorato, Neural compression and filtering for edge-assisted
+real-time object detection in challenged networks, in: 2020 25th
+International Conference on Pattern Recognition (ICPR), IEEE, 2021.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+B. Deguerre, C. Chatelain, G. Gasso, Fast object detection in compressed jpeg
+images, in: 2019 IEEE intelligent transportation systems conference (ITSC),
+IEEE, 2019, pp. 333–338.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+C.-M. Huang, C.-F. Lai, The mobile edge computing (mec)-based vehicle to
+infrastructure (v2i) data offloading from cellular network to vanet using the
+delay-constrained computing scheme, in: 2020 International Computer Symposium
+(ICS), IEEE, 2020.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+A. Islam, A. Debnath, M. Ghose, S. Chakraborty, A survey on task offloading in
+multi-access edge computing, Journal of Systems Architecture 118 (2021).
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+M.-a. E. Computing, Framework and reference architecture, etsi gs mec 003, rev.
+2.2. 1, dec. 2020.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+M. A. Khan, E. Baccour, Z. Chkirbene, A. Erbad, R. Hamila, M. Hamdi,
+M. Gabbouj, A survey on mobile edge computing for video streaming:
+Opportunities and challenges, IEEE Access (2022).
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Y. Siriwardhana, P. Porambage, M. Liyanage, M. Ylianttila, A survey on mobile
+augmented reality with 5g mobile edge computing: architectures, applications,
+and technical aspects, IEEE Communications Surveys &amp; Tutorials 23 (2) (2021)
+1160–1192.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+S.-L. C. Tsao, Enhanced gtp: an efficient packet tunneling protocol for general
+packet radio service, in: ICC 2001. IEEE International Conference on
+Communications. Conference Record (Cat. No. 01CH37240), Vol. 9, IEEE, 2001,
+pp. 2819–2823.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+P. Viola, M. Jones, Rapid object detection using a boosted cascade of simple
+features, in: Proceedings of the 2001 IEEE Computer Society Conference on
+Computer Vision and Pattern Recognition. CVPR 2001, 2001.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/CVPR.2001.990517" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/CVPR.2001.990517</span></a>.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+N. Dalal, B. Triggs, Histograms of oriented gradients for human detection, in:
+2005 IEEE Computer Society Conference on Computer Vision and Pattern
+Recognition (CVPR’05), Vol. 1, 2005, pp. 886–893 vol. 1.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/CVPR.2005.177" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/CVPR.2005.177</span></a>.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+R. Girshick, J. Donahue, T. Darrell, J. Malik, Rich feature hierarchies for
+accurate object detection and semantic segmentation, in: 2014 IEEE Conference
+on Computer Vision and Pattern Recognition, 2014.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/CVPR.2014.81" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/CVPR.2014.81</span></a>.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+R. Girshick, Fast r-cnn, in: 2015 IEEE International Conference on Computer
+Vision (ICCV), 2015.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/ICCV.2015.169" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/ICCV.2015.169</span></a>.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+S. Ren, K. He, R. Girshick, J. Sun, Faster r-cnn: Towards real-time object
+detection with region proposal networks, IEEE Transactions on Pattern
+Analysis and Machine Intelligence (2017).
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/TPAMI.2016.2577031" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/TPAMI.2016.2577031</span></a>.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+W. Liu, D. Anguelov, D. Erhan, C. Szegedy, S. Reed, C.-Y. Fu, A. C. Berg, Ssd:
+Single shot multibox detector, in: B. Leibe, J. Matas, N. Sebe, M. Welling
+(Eds.), Computer Vision – ECCV 2016, Springer International Publishing,
+Cham, 2016, pp. 21–37.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+J. Redmon, S. Divvala, R. Girshick, A. Farhadi, You only look once: Unified,
+real-time object detection, in: 2016 IEEE Conference on Computer Vision and
+Pattern Recognition (CVPR), 2016.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+M. Ehrlich, L. Davis, S.-N. Lim, A. Shrivastava, Analyzing and mitigating jpeg
+compression defects in deep learning, in: 2021 IEEE/CVF International
+Conference on Computer Vision Workshops (ICCVW), 2021.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+S. Dodge, L. Karam, Understanding how image quality affects deep neural
+networks, in: 2016 Eighth International Conference on Quality of Multimedia
+Experience (QoMEX), 2016.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/QoMEX.2016.7498955" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/QoMEX.2016.7498955</span></a>.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+R. Yu, D. Yang, H. Zhang, Edge-assisted collaborative perception in autonomous
+driving: A reflection on communication design, in: 2021 IEEE/ACM Symposium on
+Edge Computing (SEC), IEEE, 2021.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+H. Vanholder, Efficient inference with tensorrt, in: GPU Technology Conference,
+Vol. 1, 2016, p. 2.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+G. A. Kovács, L. Bokor, Integrating artery and simu5g: A mobile edge
+computing use case for collective perception-based v2x safety applications,
+in: 2022 45th International Conference on Telecommunications and Signal
+Processing (TSP), IEEE, 2022, pp. 360–366.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+J. Li, H. Gao, T. Lv, Y. Lu, Deep reinforcement learning based computation
+offloading and resource allocation for mec, in: 2018 IEEE Wireless
+communications and networking conference (WCNC), IEEE, 2018.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+A. Belogaev, A. Elokhin, A. Krasilov, E. Khorov, I. F. Akyildiz, Cost-effective
+v2x task offloading in mec-assisted intelligent transportation systems, IEEE
+access 8 (2020).
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+E. E. Marvasti, A. Raftari, A. E. Marvasti, Y. P. Fallah, R. Guo, H. Lu,
+Feature sharing and integration for cooperative cognition and perception with
+volumetric sensors, preprint arXiv:2011.08317 (2020).
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+E. Ye, P. Spiegel, M. Althoff, Cooperative raw sensor data fusion for ground
+truth generation in autonomous driving, in: IEEE 23rd International
+Conference on Intelligent Transportation Systems (ITSC), IEEE.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+F. Hawlader, R. Frank, Towards a framework to evaluate cooperative perception
+for connected vehicles, in: 2021 IEEE Vehicular Networking Conference (VNC),
+2021, pp. 36–39.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/VNC52810.2021.9644667" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/VNC52810.2021.9644667</span></a>.
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+J. Ren, Y. Guo, D. Zhang, Q. Liu, Y. Zhang, Distributed and efficient object
+detection in edge computing: Challenges and solutions, IEEE Network 32 (6)
+(2018).
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+M. Ahmed, S. Raza, M. A. Mirza, A. Aziz, M. A. Khan, W. U. Khan, J. Li, Z. Han,
+A survey on vehicular task offloading: Classification, issues, and
+challenges, Journal of King Saud University-Computer and Information Sciences
+(2022).
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+A. Ndikumana, K. K. Nguyen, M. Cheriet, Age of processing-based data offloading
+for autonomous vehicles in multirats open ran, IEEE Transactions on
+Intelligent Transportation Systems (2022).
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+G. Jocher, A. Chaurasia, A. Stoken, J. Borovec, Y. Kwon, J. Fang, K. Michael,
+D. Montes, J. Nadar, P. Skalski, et al., ultralytics/yolov5: v6. 1-tensorrt,
+tensorflow edge tpu and openvino export and inference, Zenodo (2022).
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+W. Zhao, S. Liu, X. Li, X. Han, H. Yang, Fast and accurate wheat grain quality
+detection based on improved yolov5, Computers and Electronics in Agriculture
+202 (2022) 107426.
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+A. Varga, R. Hornig, An overview of the omnet++ simulation environment, in: 1st
+International ICST Conference on Simulation Tools and Techniques for
+Communications, Networks and Systems, 2010.
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+M. Farasat, D. N. Thalakotuna, Z. Hu, Y. Yang, A review on 5g sub-6 ghz base
+station antenna design challenges, Electronics (2021).
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+G. Nardini, D. Sabella, G. Stea, P. Thakkar, A. Virdis, Simu5g–an omnet++
+library for end-to-end performance evaluation of 5g networks, IEEE Access
+(2020).
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/ACCESS.2020.3028550" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/ACCESS.2020.3028550</span></a>.
+
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock">
+H. Xu, S. Liu, G. Wang, G. Liu, B. Zeng, Omnet: Learning overlapping mask for
+partial-to-partial point cloud registration, in: Proceedings of the IEEE/CVF
+International Conference on Computer Vision, 2021.
+
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock">
+A. Filali, A. Abouaomar, S. Cherkaoui, A. Kobbane, M. Guizani, Multi-access
+edge computing: A survey, IEEE Access 8 (2020).
+
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock">
+J. Winick, S. Jamin, Inet-3.0: Internet topology generator, Tech. rep.,
+Technical Report CSE-TR-456-02, University of Michigan (2002).
+
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock">
+Z. Ali, S. Lagén, L. Giupponi, R. Rouil, 3gpp nr v2x mode 2: overview,
+models and system-level evaluation, IEEE Access (2021).
+
+</span>
+</li>
+<li id="bib.bib43" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[43]</span>
+<span class="ltx_bibblock">
+R. Frank, F. Hawlader, Poster: Commercial 5g performance: A v2x experiment, in:
+2021 IEEE Vehicular Networking Conference (VNC), IEEE, 2021, pp. 129–130.
+
+</span>
+</li>
+<li id="bib.bib44" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[44]</span>
+<span class="ltx_bibblock">
+T. S. Rappaport, Y. Xing, G. R. MacCartney, A. F. Molisch, E. Mellios,
+J. Zhang, Overview of millimeter wave communications for fifth-generation
+(5g) wireless networks—with a focus on propagation models, IEEE
+Transactions on antennas and propagation 65 (12) (2017).
+
+</span>
+</li>
+<li id="bib.bib45" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[45]</span>
+<span class="ltx_bibblock">
+J. Liu, Q. Zhang, To improve service reliability for ai-powered time-critical
+services using imperfect transmission in mec: An experimental study, IEEE
+Internet of Things Journal 7 (10) (2020) 9357–9371.
+
+</span>
+</li>
+<li id="bib.bib46" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[46]</span>
+<span class="ltx_bibblock">
+A. Dosovitskiy, G. Ros, V. Koltun, Carla: An open urban driving simulator, in:
+Conference on robot learning, PMLR, 2017.
+
+</span>
+</li>
+<li id="bib.bib47" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[47]</span>
+<span class="ltx_bibblock">
+FFmpeg, Available:, https://github.com/FFmpeg/FFmpeg (2023).
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2308.05233" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2308.05234" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2308.05234">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2308.05234" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2308.05235" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Feb 28 13:23:25 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

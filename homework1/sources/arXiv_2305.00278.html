@@ -1,0 +1,1185 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2305.00278] Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected</title><meta property="og:description" content="Meta AI Research has recently released SAM (Segment Anything Model) which is trained on a large segmentation dataset of over 1 billion masks. As a foundation model in the field of computer vision, SAM (Segment Anything…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2305.00278">
+
+<!--Generated on Thu Feb 29 10:32:35 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Dongsheng Han 
+<br class="ltx_break">Kyung Hee University 
+<br class="ltx_break"><span id="id1.1.id1" class="ltx_ERROR undefined">\And</span>Chaoning Zhang 
+<br class="ltx_break">Kyung Hee University
+<br class="ltx_break"><span id="id2.2.id2" class="ltx_ERROR undefined">\And</span>Yu Qiao 
+<br class="ltx_break">Kyung Hee University
+<br class="ltx_break"><span id="id3.3.id3" class="ltx_ERROR undefined">\And</span>Maryam Qamar 
+<br class="ltx_break">Kyung Hee University
+<br class="ltx_break"><span id="id4.4.id4" class="ltx_ERROR undefined">\And</span>Yuna Jung 
+<br class="ltx_break">Kyung Hee University
+<br class="ltx_break"><span id="id5.5.id5" class="ltx_ERROR undefined">\And</span>SeungKyu Lee 
+<br class="ltx_break">Kyung Hee University
+<br class="ltx_break"><span id="id6.6.id6" class="ltx_ERROR undefined">\And</span>Sung-Ho Bae 
+<br class="ltx_break">Kyung Hee University
+<br class="ltx_break"><span id="id7.7.id7" class="ltx_ERROR undefined">\And</span>Choong Seon Hong 
+<br class="ltx_break">Kyung Hee University
+<br class="ltx_break">
+</span><span class="ltx_author_notes">Correspondence Author: chaoningzhang1990@gmail.com</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id8.id1" class="ltx_p">Meta AI Research has recently released SAM (Segment Anything Model) which is trained on a large segmentation dataset of over 1 billion masks. As a foundation model in the field of computer vision, SAM (Segment Anything Model) has gained attention for its impressive performance in generic object segmentation. Despite its strong capability in a wide range of zero-shot transfer tasks, it remains unknown whether SAM can detect things in challenging setups like transparent objects. In this work, we perform an empirical evaluation of two glass-related challenging scenarios: mirror and transparent objects. We found that SAM often fails to detect the glass in both scenarios, which raises concern for deploying the SAM in safety-critical situations that have various forms of glass.</p>
+</div>
+<div id="p1" class="ltx_para ltx_noindent">
+<p id="p1.3" class="ltx_p"><em id="p1.3.1" class="ltx_emph ltx_font_bold ltx_font_italic">Keywords</em> Segment Anhting Model  <math id="p1.1.m1.1" class="ltx_Math" alttext="\cdot" display="inline"><semantics id="p1.1.m1.1a"><mo id="p1.1.m1.1.1" xref="p1.1.m1.1.1.cmml">⋅</mo><annotation-xml encoding="MathML-Content" id="p1.1.m1.1b"><ci id="p1.1.m1.1.1.cmml" xref="p1.1.m1.1.1">⋅</ci></annotation-xml><annotation encoding="application/x-tex" id="p1.1.m1.1c">\cdot</annotation></semantics></math>
+Glass  <math id="p1.2.m2.1" class="ltx_Math" alttext="\cdot" display="inline"><semantics id="p1.2.m2.1a"><mo id="p1.2.m2.1.1" xref="p1.2.m2.1.1.cmml">⋅</mo><annotation-xml encoding="MathML-Content" id="p1.2.m2.1b"><ci id="p1.2.m2.1.1.cmml" xref="p1.2.m2.1.1">⋅</ci></annotation-xml><annotation encoding="application/x-tex" id="p1.2.m2.1c">\cdot</annotation></semantics></math>
+Morror Object  <math id="p1.3.m3.1" class="ltx_Math" alttext="\cdot" display="inline"><semantics id="p1.3.m3.1a"><mo id="p1.3.m3.1.1" xref="p1.3.m3.1.1.cmml">⋅</mo><annotation-xml encoding="MathML-Content" id="p1.3.m3.1b"><ci id="p1.3.m3.1.1.cmml" xref="p1.3.m3.1.1">⋅</ci></annotation-xml><annotation encoding="application/x-tex" id="p1.3.m3.1c">\cdot</annotation></semantics></math>
+Transparent Object</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para ltx_noindent">
+<p id="S1.p1.1" class="ltx_p">In the past few years, generative AI <cite class="ltx_cite ltx_citemacro_cite">Zhang et al. (<a href="#bib.bib1" title="" class="ltx_ref">2023a</a>)</cite> has caught significant attention with interesting applications like ChatGPT <cite class="ltx_cite ltx_citemacro_cite">Zhang et al. (<a href="#bib.bib2" title="" class="ltx_ref">2023b</a>)</cite>, text-to-image <cite class="ltx_cite ltx_citemacro_cite">Zhang et al. (<a href="#bib.bib3" title="" class="ltx_ref">2023c</a>)</cite>, text-to-speech <cite class="ltx_cite ltx_citemacro_cite">Zhang et al. (<a href="#bib.bib4" title="" class="ltx_ref">2023d</a>)</cite> and graph generation <cite class="ltx_cite ltx_citemacro_cite">Zhang et al. (<a href="#bib.bib5" title="" class="ltx_ref">2023e</a>)</cite>. A key factor that drives the development of generative AI is foundation model <cite class="ltx_cite ltx_citemacro_cite">Bommasani et al. (<a href="#bib.bib6" title="" class="ltx_ref">2021</a>)</cite> that at inference can generalize to tasks and data distributions different from training. With the success of ChatGPT <cite class="ltx_cite ltx_citemacro_cite">Zhang et al. (<a href="#bib.bib2" title="" class="ltx_ref">2023b</a>)</cite>, GPT-3 <cite class="ltx_cite ltx_citemacro_citep">(Brown et al., <a href="#bib.bib7" title="" class="ltx_ref">2020</a>)</cite> has been widely recognized as one of the most widely recognized foundation models for NLP.</p>
+</div>
+<div id="S1.p2" class="ltx_para ltx_noindent">
+<p id="S1.p2.1" class="ltx_p">Very recently, Meta AI research team has recent released a segment anything project <cite class="ltx_cite ltx_citemacro_cite">Kirillov et al. (<a href="#bib.bib8" title="" class="ltx_ref">2023</a>)</cite> that introduces a promotable segmentation task for training a vision foundation model. The resulting segment anything model (SAM) has been recognized as the GPT-3 moment for vision. The model was trained on over 1 billion masks on 11 million licensed and privacy-respecting images.
+It represents a significant step towards achieving cognitive recognition for all objects in the world, aiming to handle interactive segmentation tasks while addressing real-world constraints. Segmentation tasks encompass a wide range of challenging areas, and the detection of transparent objects and mirror regions constitutes one of the most representative and challenging tasks in this field. Given the ubiquitous appearance of such glass objects in daily life and the unique challenges in detecting, localizing, and reconstructing them from color images in computer vision<cite class="ltx_cite ltx_citemacro_citep">(Lin et al., <a href="#bib.bib9" title="" class="ltx_ref">2021</a>)</cite>. This diccicult is due to the fact that most glass objects exhibit a visual appearance that includes both the transmitted background scene and reflected objects<cite class="ltx_cite ltx_citemacro_citep">(Maeno et al., <a href="#bib.bib10" title="" class="ltx_ref">2013</a>)</cite><cite class="ltx_cite ltx_citemacro_citep">(He et al., <a href="#bib.bib11" title="" class="ltx_ref">2021</a>)</cite>, while the visual appearance observed from a mirror surface is entirely from reflected objects. These issues led to many incidents, such as collisions of autonomous mobile robots with transparent front doors or mirror walls and robot arms struggling to grip a transparent bottle.</p>
+</div>
+<div id="S1.p3" class="ltx_para ltx_noindent">
+<p id="S1.p3.1" class="ltx_p">In this work, we examine the performance of the SAM foundation model in recognizing and segmenting transparent objects and mirror surfaces and evaluate its segmentation results. We aim to explore the challenges that arise for foundation models in computer vision tasks when dealing with the reflection and refraction phenomena that occur on glass and mirror objects, as well as the faint object boundaries that result from these effects. After extensive testing on large glass and mirror dataset benchmarks, we find that while SAM segments general objects well in natural images well but often fail to detect mirror and transparent objects. Failing to recognize glass can cause serious issues when deploying the vision foundation model in safety-critical setups.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Experimental Evaluations</h2>
+
+<div id="S2.p1" class="ltx_para ltx_noindent">
+<p id="S2.p1.1" class="ltx_p"><span id="S2.p1.1.1" class="ltx_text ltx_font_bold">Datasets:</span>
+As the SAM model is designed to recognize and segment all objects in an image, we select benchmark datasets where only one transparent or mirror object exists in a given scene. This allows us to evaluate the model’s capability to identify and segment these specific objects accurately. We conduct experiments on two glass segmentation datasets GDD <cite class="ltx_cite ltx_citemacro_citep">(Mei et al., <a href="#bib.bib12" title="" class="ltx_ref">2020</a>)</cite>, GSD <cite class="ltx_cite ltx_citemacro_citep">(Lin et al., <a href="#bib.bib9" title="" class="ltx_ref">2021</a>)</cite> and two mirror segmentation datasets MSD <cite class="ltx_cite ltx_citemacro_citep">(Yang et al., <a href="#bib.bib13" title="" class="ltx_ref">2019</a>)</cite>, PMD <cite class="ltx_cite ltx_citemacro_citep">(Lin et al., <a href="#bib.bib14" title="" class="ltx_ref">2020</a>)</cite>. GDD contains 2980 training and 936 test images. GSD is transparent object dataset collected and labeled through networking and photography, consisting of 4102 annotated glass images with close-up, medium, and long shots from diverse scenes. MSD is a large mirror segmentation dataset with 4018 images.
+PMD is the latest mirror segmentation dataset collected from both indoor and outdoor scenes.</p>
+</div>
+<div id="S2.p2" class="ltx_para ltx_noindent">
+<p id="S2.p2.1" class="ltx_p">In our final additional visualization experiment, we included a multi-class dataset of transparent objects called Trans10k <cite class="ltx_cite ltx_citemacro_citep">(Xie et al., <a href="#bib.bib15" title="" class="ltx_ref">2020</a>)</cite> in addition to the previous benchmark datasets. Trans10k is a dataset of transparent objects categorized into two groups based on objects properties: movable small objects (things) and non-movable objects (stuff).</p>
+</div>
+<div id="S2.p3" class="ltx_para ltx_noindent">
+<p id="S2.p3.1" class="ltx_p"><span id="S2.p3.1.1" class="ltx_text ltx_font_bold">Implementation Details:</span>
+We conduct the test using the SAM best pre-trained model VIT-H, which was pre-trained on a large segmentation dataset (SA-1B) and generously provided as open source by Meta AI Research. As SAM does not specify the object categories for segmentation, it outputs all possible objects in the image. To test SAM’s capability to recognize glass and mirror objects, we calculated the Intersection over Union (IoU) between the predicted results and the ground truth for each object outputted by SAM. We then selected the result with the highest IoU with the ground truth for glass objects and used it as the detection result for SAM. We conducted different evaluations based on this result.</p>
+</div>
+<div id="S2.p4" class="ltx_para ltx_noindent">
+<p id="S2.p4.2" class="ltx_p"><span id="S2.p4.2.1" class="ltx_text ltx_font_bold">Evaluation Metrics:</span>
+We employed five commonly used evaluation metrics in semantic and glass surface segmentation tasks: Intersection over Union (IoU), pixel accuracy (ACC), weighted F-measure (<math id="S2.p4.1.m1.1" class="ltx_Math" alttext="F_{\beta}" display="inline"><semantics id="S2.p4.1.m1.1a"><msub id="S2.p4.1.m1.1.1" xref="S2.p4.1.m1.1.1.cmml"><mi id="S2.p4.1.m1.1.1.2" xref="S2.p4.1.m1.1.1.2.cmml">F</mi><mi id="S2.p4.1.m1.1.1.3" xref="S2.p4.1.m1.1.1.3.cmml">β</mi></msub><annotation-xml encoding="MathML-Content" id="S2.p4.1.m1.1b"><apply id="S2.p4.1.m1.1.1.cmml" xref="S2.p4.1.m1.1.1"><csymbol cd="ambiguous" id="S2.p4.1.m1.1.1.1.cmml" xref="S2.p4.1.m1.1.1">subscript</csymbol><ci id="S2.p4.1.m1.1.1.2.cmml" xref="S2.p4.1.m1.1.1.2">𝐹</ci><ci id="S2.p4.1.m1.1.1.3.cmml" xref="S2.p4.1.m1.1.1.3">𝛽</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.1.m1.1c">F_{\beta}</annotation></semantics></math>) <cite class="ltx_cite ltx_citemacro_cite">Margolin et al. (<a href="#bib.bib16" title="" class="ltx_ref">2014</a>)</cite>, mean absolute error (MAE), and balance error rate (BER).
+<math id="S2.p4.2.m2.1" class="ltx_Math" alttext="{F}_{\beta}" display="inline"><semantics id="S2.p4.2.m2.1a"><msub id="S2.p4.2.m2.1.1" xref="S2.p4.2.m2.1.1.cmml"><mi id="S2.p4.2.m2.1.1.2" xref="S2.p4.2.m2.1.1.2.cmml">F</mi><mi id="S2.p4.2.m2.1.1.3" xref="S2.p4.2.m2.1.1.3.cmml">β</mi></msub><annotation-xml encoding="MathML-Content" id="S2.p4.2.m2.1b"><apply id="S2.p4.2.m2.1.1.cmml" xref="S2.p4.2.m2.1.1"><csymbol cd="ambiguous" id="S2.p4.2.m2.1.1.1.cmml" xref="S2.p4.2.m2.1.1">subscript</csymbol><ci id="S2.p4.2.m2.1.1.2.cmml" xref="S2.p4.2.m2.1.1.2">𝐹</ci><ci id="S2.p4.2.m2.1.1.3.cmml" xref="S2.p4.2.m2.1.1.3">𝛽</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.2.m2.1c">{F}_{\beta}</annotation></semantics></math> is a harmonic mean of average precision and average recall defined as follows.</p>
+<table id="S2.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E1.m1.3" class="ltx_Math" alttext="{\textit{F}_{\beta}}=\frac{(1+{\beta^{2}})(Precision\times{Recall})}{{\beta^{2}}Precision+Recall}," display="block"><semantics id="S2.E1.m1.3a"><mrow id="S2.E1.m1.3.3.1" xref="S2.E1.m1.3.3.1.1.cmml"><mrow id="S2.E1.m1.3.3.1.1" xref="S2.E1.m1.3.3.1.1.cmml"><msub id="S2.E1.m1.3.3.1.1.2" xref="S2.E1.m1.3.3.1.1.2.cmml"><mtext class="ltx_mathvariant_italic" id="S2.E1.m1.3.3.1.1.2.2" xref="S2.E1.m1.3.3.1.1.2.2a.cmml">F</mtext><mi id="S2.E1.m1.3.3.1.1.2.3" xref="S2.E1.m1.3.3.1.1.2.3.cmml">β</mi></msub><mo id="S2.E1.m1.3.3.1.1.1" xref="S2.E1.m1.3.3.1.1.1.cmml">=</mo><mfrac id="S2.E1.m1.2.2" xref="S2.E1.m1.2.2.cmml"><mrow id="S2.E1.m1.2.2.2" xref="S2.E1.m1.2.2.2.cmml"><mrow id="S2.E1.m1.1.1.1.1.1" xref="S2.E1.m1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S2.E1.m1.1.1.1.1.1.2" xref="S2.E1.m1.1.1.1.1.1.1.cmml">(</mo><mrow id="S2.E1.m1.1.1.1.1.1.1" xref="S2.E1.m1.1.1.1.1.1.1.cmml"><mn id="S2.E1.m1.1.1.1.1.1.1.2" xref="S2.E1.m1.1.1.1.1.1.1.2.cmml">1</mn><mo id="S2.E1.m1.1.1.1.1.1.1.1" xref="S2.E1.m1.1.1.1.1.1.1.1.cmml">+</mo><msup id="S2.E1.m1.1.1.1.1.1.1.3" xref="S2.E1.m1.1.1.1.1.1.1.3.cmml"><mi id="S2.E1.m1.1.1.1.1.1.1.3.2" xref="S2.E1.m1.1.1.1.1.1.1.3.2.cmml">β</mi><mn id="S2.E1.m1.1.1.1.1.1.1.3.3" xref="S2.E1.m1.1.1.1.1.1.1.3.3.cmml">2</mn></msup></mrow><mo stretchy="false" id="S2.E1.m1.1.1.1.1.1.3" xref="S2.E1.m1.1.1.1.1.1.1.cmml">)</mo></mrow><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.3" xref="S2.E1.m1.2.2.2.3.cmml">​</mo><mrow id="S2.E1.m1.2.2.2.2.1" xref="S2.E1.m1.2.2.2.2.1.1.cmml"><mo stretchy="false" id="S2.E1.m1.2.2.2.2.1.2" xref="S2.E1.m1.2.2.2.2.1.1.cmml">(</mo><mrow id="S2.E1.m1.2.2.2.2.1.1" xref="S2.E1.m1.2.2.2.2.1.1.cmml"><mrow id="S2.E1.m1.2.2.2.2.1.1.2" xref="S2.E1.m1.2.2.2.2.1.1.2.cmml"><mrow id="S2.E1.m1.2.2.2.2.1.1.2.2" xref="S2.E1.m1.2.2.2.2.1.1.2.2.cmml"><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.2" xref="S2.E1.m1.2.2.2.2.1.1.2.2.2.cmml">P</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.2.2.1" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.3" xref="S2.E1.m1.2.2.2.2.1.1.2.2.3.cmml">r</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.2.2.1a" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.4" xref="S2.E1.m1.2.2.2.2.1.1.2.2.4.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.2.2.1b" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.5" xref="S2.E1.m1.2.2.2.2.1.1.2.2.5.cmml">c</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.2.2.1c" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.6" xref="S2.E1.m1.2.2.2.2.1.1.2.2.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.2.2.1d" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.7" xref="S2.E1.m1.2.2.2.2.1.1.2.2.7.cmml">s</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.2.2.1e" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.8" xref="S2.E1.m1.2.2.2.2.1.1.2.2.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.2.2.1f" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.9" xref="S2.E1.m1.2.2.2.2.1.1.2.2.9.cmml">o</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.2.2.1g" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.2.10" xref="S2.E1.m1.2.2.2.2.1.1.2.2.10.cmml">n</mi></mrow><mo lspace="0.222em" rspace="0.222em" id="S2.E1.m1.2.2.2.2.1.1.2.1" xref="S2.E1.m1.2.2.2.2.1.1.2.1.cmml">×</mo><mi id="S2.E1.m1.2.2.2.2.1.1.2.3" xref="S2.E1.m1.2.2.2.2.1.1.2.3.cmml">R</mi></mrow><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.1" xref="S2.E1.m1.2.2.2.2.1.1.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.3" xref="S2.E1.m1.2.2.2.2.1.1.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.1a" xref="S2.E1.m1.2.2.2.2.1.1.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.4" xref="S2.E1.m1.2.2.2.2.1.1.4.cmml">c</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.1b" xref="S2.E1.m1.2.2.2.2.1.1.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.5" xref="S2.E1.m1.2.2.2.2.1.1.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.1c" xref="S2.E1.m1.2.2.2.2.1.1.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.6" xref="S2.E1.m1.2.2.2.2.1.1.6.cmml">l</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1.1d" xref="S2.E1.m1.2.2.2.2.1.1.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.1.7" xref="S2.E1.m1.2.2.2.2.1.1.7.cmml">l</mi></mrow><mo stretchy="false" id="S2.E1.m1.2.2.2.2.1.3" xref="S2.E1.m1.2.2.2.2.1.1.cmml">)</mo></mrow></mrow><mrow id="S2.E1.m1.2.2.4" xref="S2.E1.m1.2.2.4.cmml"><mrow id="S2.E1.m1.2.2.4.2" xref="S2.E1.m1.2.2.4.2.cmml"><msup id="S2.E1.m1.2.2.4.2.2" xref="S2.E1.m1.2.2.4.2.2.cmml"><mi id="S2.E1.m1.2.2.4.2.2.2" xref="S2.E1.m1.2.2.4.2.2.2.cmml">β</mi><mn id="S2.E1.m1.2.2.4.2.2.3" xref="S2.E1.m1.2.2.4.2.2.3.cmml">2</mn></msup><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.3" xref="S2.E1.m1.2.2.4.2.3.cmml">P</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1a" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.4" xref="S2.E1.m1.2.2.4.2.4.cmml">r</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1b" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.5" xref="S2.E1.m1.2.2.4.2.5.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1c" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.6" xref="S2.E1.m1.2.2.4.2.6.cmml">c</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1d" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.7" xref="S2.E1.m1.2.2.4.2.7.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1e" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.8" xref="S2.E1.m1.2.2.4.2.8.cmml">s</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1f" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.9" xref="S2.E1.m1.2.2.4.2.9.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1g" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.10" xref="S2.E1.m1.2.2.4.2.10.cmml">o</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.2.1h" xref="S2.E1.m1.2.2.4.2.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.2.11" xref="S2.E1.m1.2.2.4.2.11.cmml">n</mi></mrow><mo id="S2.E1.m1.2.2.4.1" xref="S2.E1.m1.2.2.4.1.cmml">+</mo><mrow id="S2.E1.m1.2.2.4.3" xref="S2.E1.m1.2.2.4.3.cmml"><mi id="S2.E1.m1.2.2.4.3.2" xref="S2.E1.m1.2.2.4.3.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.3.1" xref="S2.E1.m1.2.2.4.3.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.3.3" xref="S2.E1.m1.2.2.4.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.3.1a" xref="S2.E1.m1.2.2.4.3.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.3.4" xref="S2.E1.m1.2.2.4.3.4.cmml">c</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.3.1b" xref="S2.E1.m1.2.2.4.3.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.3.5" xref="S2.E1.m1.2.2.4.3.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.3.1c" xref="S2.E1.m1.2.2.4.3.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.3.6" xref="S2.E1.m1.2.2.4.3.6.cmml">l</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.4.3.1d" xref="S2.E1.m1.2.2.4.3.1.cmml">​</mo><mi id="S2.E1.m1.2.2.4.3.7" xref="S2.E1.m1.2.2.4.3.7.cmml">l</mi></mrow></mrow></mfrac></mrow><mo id="S2.E1.m1.3.3.1.2" xref="S2.E1.m1.3.3.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.E1.m1.3b"><apply id="S2.E1.m1.3.3.1.1.cmml" xref="S2.E1.m1.3.3.1"><eq id="S2.E1.m1.3.3.1.1.1.cmml" xref="S2.E1.m1.3.3.1.1.1"></eq><apply id="S2.E1.m1.3.3.1.1.2.cmml" xref="S2.E1.m1.3.3.1.1.2"><csymbol cd="ambiguous" id="S2.E1.m1.3.3.1.1.2.1.cmml" xref="S2.E1.m1.3.3.1.1.2">subscript</csymbol><ci id="S2.E1.m1.3.3.1.1.2.2a.cmml" xref="S2.E1.m1.3.3.1.1.2.2"><mtext class="ltx_mathvariant_italic" id="S2.E1.m1.3.3.1.1.2.2.cmml" xref="S2.E1.m1.3.3.1.1.2.2">F</mtext></ci><ci id="S2.E1.m1.3.3.1.1.2.3.cmml" xref="S2.E1.m1.3.3.1.1.2.3">𝛽</ci></apply><apply id="S2.E1.m1.2.2.cmml" xref="S2.E1.m1.2.2"><divide id="S2.E1.m1.2.2.3.cmml" xref="S2.E1.m1.2.2"></divide><apply id="S2.E1.m1.2.2.2.cmml" xref="S2.E1.m1.2.2.2"><times id="S2.E1.m1.2.2.2.3.cmml" xref="S2.E1.m1.2.2.2.3"></times><apply id="S2.E1.m1.1.1.1.1.1.1.cmml" xref="S2.E1.m1.1.1.1.1.1"><plus id="S2.E1.m1.1.1.1.1.1.1.1.cmml" xref="S2.E1.m1.1.1.1.1.1.1.1"></plus><cn type="integer" id="S2.E1.m1.1.1.1.1.1.1.2.cmml" xref="S2.E1.m1.1.1.1.1.1.1.2">1</cn><apply id="S2.E1.m1.1.1.1.1.1.1.3.cmml" xref="S2.E1.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S2.E1.m1.1.1.1.1.1.1.3.1.cmml" xref="S2.E1.m1.1.1.1.1.1.1.3">superscript</csymbol><ci id="S2.E1.m1.1.1.1.1.1.1.3.2.cmml" xref="S2.E1.m1.1.1.1.1.1.1.3.2">𝛽</ci><cn type="integer" id="S2.E1.m1.1.1.1.1.1.1.3.3.cmml" xref="S2.E1.m1.1.1.1.1.1.1.3.3">2</cn></apply></apply><apply id="S2.E1.m1.2.2.2.2.1.1.cmml" xref="S2.E1.m1.2.2.2.2.1"><times id="S2.E1.m1.2.2.2.2.1.1.1.cmml" xref="S2.E1.m1.2.2.2.2.1.1.1"></times><apply id="S2.E1.m1.2.2.2.2.1.1.2.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2"><times id="S2.E1.m1.2.2.2.2.1.1.2.1.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.1"></times><apply id="S2.E1.m1.2.2.2.2.1.1.2.2.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2"><times id="S2.E1.m1.2.2.2.2.1.1.2.2.1.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.1"></times><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.2.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.2">𝑃</ci><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.3.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.3">𝑟</ci><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.4.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.4">𝑒</ci><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.5.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.5">𝑐</ci><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.6.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.6">𝑖</ci><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.7.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.7">𝑠</ci><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.8.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.8">𝑖</ci><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.9.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.9">𝑜</ci><ci id="S2.E1.m1.2.2.2.2.1.1.2.2.10.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.2.10">𝑛</ci></apply><ci id="S2.E1.m1.2.2.2.2.1.1.2.3.cmml" xref="S2.E1.m1.2.2.2.2.1.1.2.3">𝑅</ci></apply><ci id="S2.E1.m1.2.2.2.2.1.1.3.cmml" xref="S2.E1.m1.2.2.2.2.1.1.3">𝑒</ci><ci id="S2.E1.m1.2.2.2.2.1.1.4.cmml" xref="S2.E1.m1.2.2.2.2.1.1.4">𝑐</ci><ci id="S2.E1.m1.2.2.2.2.1.1.5.cmml" xref="S2.E1.m1.2.2.2.2.1.1.5">𝑎</ci><ci id="S2.E1.m1.2.2.2.2.1.1.6.cmml" xref="S2.E1.m1.2.2.2.2.1.1.6">𝑙</ci><ci id="S2.E1.m1.2.2.2.2.1.1.7.cmml" xref="S2.E1.m1.2.2.2.2.1.1.7">𝑙</ci></apply></apply><apply id="S2.E1.m1.2.2.4.cmml" xref="S2.E1.m1.2.2.4"><plus id="S2.E1.m1.2.2.4.1.cmml" xref="S2.E1.m1.2.2.4.1"></plus><apply id="S2.E1.m1.2.2.4.2.cmml" xref="S2.E1.m1.2.2.4.2"><times id="S2.E1.m1.2.2.4.2.1.cmml" xref="S2.E1.m1.2.2.4.2.1"></times><apply id="S2.E1.m1.2.2.4.2.2.cmml" xref="S2.E1.m1.2.2.4.2.2"><csymbol cd="ambiguous" id="S2.E1.m1.2.2.4.2.2.1.cmml" xref="S2.E1.m1.2.2.4.2.2">superscript</csymbol><ci id="S2.E1.m1.2.2.4.2.2.2.cmml" xref="S2.E1.m1.2.2.4.2.2.2">𝛽</ci><cn type="integer" id="S2.E1.m1.2.2.4.2.2.3.cmml" xref="S2.E1.m1.2.2.4.2.2.3">2</cn></apply><ci id="S2.E1.m1.2.2.4.2.3.cmml" xref="S2.E1.m1.2.2.4.2.3">𝑃</ci><ci id="S2.E1.m1.2.2.4.2.4.cmml" xref="S2.E1.m1.2.2.4.2.4">𝑟</ci><ci id="S2.E1.m1.2.2.4.2.5.cmml" xref="S2.E1.m1.2.2.4.2.5">𝑒</ci><ci id="S2.E1.m1.2.2.4.2.6.cmml" xref="S2.E1.m1.2.2.4.2.6">𝑐</ci><ci id="S2.E1.m1.2.2.4.2.7.cmml" xref="S2.E1.m1.2.2.4.2.7">𝑖</ci><ci id="S2.E1.m1.2.2.4.2.8.cmml" xref="S2.E1.m1.2.2.4.2.8">𝑠</ci><ci id="S2.E1.m1.2.2.4.2.9.cmml" xref="S2.E1.m1.2.2.4.2.9">𝑖</ci><ci id="S2.E1.m1.2.2.4.2.10.cmml" xref="S2.E1.m1.2.2.4.2.10">𝑜</ci><ci id="S2.E1.m1.2.2.4.2.11.cmml" xref="S2.E1.m1.2.2.4.2.11">𝑛</ci></apply><apply id="S2.E1.m1.2.2.4.3.cmml" xref="S2.E1.m1.2.2.4.3"><times id="S2.E1.m1.2.2.4.3.1.cmml" xref="S2.E1.m1.2.2.4.3.1"></times><ci id="S2.E1.m1.2.2.4.3.2.cmml" xref="S2.E1.m1.2.2.4.3.2">𝑅</ci><ci id="S2.E1.m1.2.2.4.3.3.cmml" xref="S2.E1.m1.2.2.4.3.3">𝑒</ci><ci id="S2.E1.m1.2.2.4.3.4.cmml" xref="S2.E1.m1.2.2.4.3.4">𝑐</ci><ci id="S2.E1.m1.2.2.4.3.5.cmml" xref="S2.E1.m1.2.2.4.3.5">𝑎</ci><ci id="S2.E1.m1.2.2.4.3.6.cmml" xref="S2.E1.m1.2.2.4.3.6">𝑙</ci><ci id="S2.E1.m1.2.2.4.3.7.cmml" xref="S2.E1.m1.2.2.4.3.7">𝑙</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E1.m1.3c">{\textit{F}_{\beta}}=\frac{(1+{\beta^{2}})(Precision\times{Recall})}{{\beta^{2}}Precision+Recall},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S2.p4.3" class="ltx_p">where <math id="S2.p4.3.m1.1" class="ltx_Math" alttext="\beta^{2}" display="inline"><semantics id="S2.p4.3.m1.1a"><msup id="S2.p4.3.m1.1.1" xref="S2.p4.3.m1.1.1.cmml"><mi id="S2.p4.3.m1.1.1.2" xref="S2.p4.3.m1.1.1.2.cmml">β</mi><mn id="S2.p4.3.m1.1.1.3" xref="S2.p4.3.m1.1.1.3.cmml">2</mn></msup><annotation-xml encoding="MathML-Content" id="S2.p4.3.m1.1b"><apply id="S2.p4.3.m1.1.1.cmml" xref="S2.p4.3.m1.1.1"><csymbol cd="ambiguous" id="S2.p4.3.m1.1.1.1.cmml" xref="S2.p4.3.m1.1.1">superscript</csymbol><ci id="S2.p4.3.m1.1.1.2.cmml" xref="S2.p4.3.m1.1.1.2">𝛽</ci><cn type="integer" id="S2.p4.3.m1.1.1.3.cmml" xref="S2.p4.3.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.3.m1.1c">\beta^{2}</annotation></semantics></math> is set to 0.3 as suggested in <cite class="ltx_cite ltx_citemacro_cite">Achanta et al. (<a href="#bib.bib17" title="" class="ltx_ref">2009</a>)</cite>.
+Mean absolute error (MAE) is widely used in foreground-background segmentation tasks where average pixel-wise error between predicted mask P and ground truth mask G are calculated.</p>
+<table id="S2.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E2.m1.5" class="ltx_Math" alttext="{\textit{MAE}}=\frac{1}{H\times{W}}\sum_{i=1}^{H}\sum_{j=1}^{W}\mid P(i,j)-G(i,j)\mid," display="block"><semantics id="S2.E2.m1.5a"><mrow id="S2.E2.m1.5.5.1" xref="S2.E2.m1.5.5.1.1.cmml"><mrow id="S2.E2.m1.5.5.1.1" xref="S2.E2.m1.5.5.1.1.cmml"><mtext class="ltx_mathvariant_italic" id="S2.E2.m1.5.5.1.1.3" xref="S2.E2.m1.5.5.1.1.3a.cmml">MAE</mtext><mo id="S2.E2.m1.5.5.1.1.2" xref="S2.E2.m1.5.5.1.1.2.cmml">=</mo><mrow id="S2.E2.m1.5.5.1.1.1" xref="S2.E2.m1.5.5.1.1.1.cmml"><mfrac id="S2.E2.m1.5.5.1.1.1.3" xref="S2.E2.m1.5.5.1.1.1.3.cmml"><mn id="S2.E2.m1.5.5.1.1.1.3.2" xref="S2.E2.m1.5.5.1.1.1.3.2.cmml">1</mn><mrow id="S2.E2.m1.5.5.1.1.1.3.3" xref="S2.E2.m1.5.5.1.1.1.3.3.cmml"><mi id="S2.E2.m1.5.5.1.1.1.3.3.2" xref="S2.E2.m1.5.5.1.1.1.3.3.2.cmml">H</mi><mo lspace="0.222em" rspace="0.222em" id="S2.E2.m1.5.5.1.1.1.3.3.1" xref="S2.E2.m1.5.5.1.1.1.3.3.1.cmml">×</mo><mi id="S2.E2.m1.5.5.1.1.1.3.3.3" xref="S2.E2.m1.5.5.1.1.1.3.3.3.cmml">W</mi></mrow></mfrac><mo lspace="0em" rspace="0em" id="S2.E2.m1.5.5.1.1.1.2" xref="S2.E2.m1.5.5.1.1.1.2.cmml">​</mo><mrow id="S2.E2.m1.5.5.1.1.1.1" xref="S2.E2.m1.5.5.1.1.1.1.cmml"><munderover id="S2.E2.m1.5.5.1.1.1.1.2" xref="S2.E2.m1.5.5.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S2.E2.m1.5.5.1.1.1.1.2.2.2" xref="S2.E2.m1.5.5.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S2.E2.m1.5.5.1.1.1.1.2.2.3" xref="S2.E2.m1.5.5.1.1.1.1.2.2.3.cmml"><mi id="S2.E2.m1.5.5.1.1.1.1.2.2.3.2" xref="S2.E2.m1.5.5.1.1.1.1.2.2.3.2.cmml">i</mi><mo id="S2.E2.m1.5.5.1.1.1.1.2.2.3.1" xref="S2.E2.m1.5.5.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S2.E2.m1.5.5.1.1.1.1.2.2.3.3" xref="S2.E2.m1.5.5.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S2.E2.m1.5.5.1.1.1.1.2.3" xref="S2.E2.m1.5.5.1.1.1.1.2.3.cmml">H</mi></munderover><mrow id="S2.E2.m1.5.5.1.1.1.1.1" xref="S2.E2.m1.5.5.1.1.1.1.1.cmml"><munderover id="S2.E2.m1.5.5.1.1.1.1.1.2" xref="S2.E2.m1.5.5.1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S2.E2.m1.5.5.1.1.1.1.1.2.2.2" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S2.E2.m1.5.5.1.1.1.1.1.2.2.3" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.cmml"><mi id="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.2" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.2.cmml">j</mi><mo id="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.1" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.3" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S2.E2.m1.5.5.1.1.1.1.1.2.3" xref="S2.E2.m1.5.5.1.1.1.1.1.2.3.cmml">W</mi></munderover><mrow id="S2.E2.m1.5.5.1.1.1.1.1.1.1" xref="S2.E2.m1.5.5.1.1.1.1.1.1.2.cmml"><mo fence="true" lspace="0em" rspace="0em" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.2" xref="S2.E2.m1.5.5.1.1.1.1.1.1.2.1.cmml">∣</mo><mrow id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.cmml"><mrow id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.cmml"><mi id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.2" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.2.cmml">P</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.1" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><mrow id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.2" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.1.cmml"><mo stretchy="false" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.2.1" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.1.cmml">(</mo><mi id="S2.E2.m1.1.1" xref="S2.E2.m1.1.1.cmml">i</mi><mo id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.2.2" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.1.cmml">,</mo><mi id="S2.E2.m1.2.2" xref="S2.E2.m1.2.2.cmml">j</mi><mo stretchy="false" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.2.3" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.1.cmml">)</mo></mrow></mrow><mo id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.1" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.1.cmml">−</mo><mrow id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.cmml"><mi id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.2" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.2.cmml">G</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.1" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.1.cmml">​</mo><mrow id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.2" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.1.cmml"><mo stretchy="false" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.2.1" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.1.cmml">(</mo><mi id="S2.E2.m1.3.3" xref="S2.E2.m1.3.3.cmml">i</mi><mo id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.2.2" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.1.cmml">,</mo><mi id="S2.E2.m1.4.4" xref="S2.E2.m1.4.4.cmml">j</mi><mo stretchy="false" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.2.3" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.1.cmml">)</mo></mrow></mrow></mrow><mo fence="true" lspace="0em" rspace="0em" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.3" xref="S2.E2.m1.5.5.1.1.1.1.1.1.2.1.cmml">∣</mo></mrow></mrow></mrow></mrow></mrow><mo id="S2.E2.m1.5.5.1.2" xref="S2.E2.m1.5.5.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.E2.m1.5b"><apply id="S2.E2.m1.5.5.1.1.cmml" xref="S2.E2.m1.5.5.1"><eq id="S2.E2.m1.5.5.1.1.2.cmml" xref="S2.E2.m1.5.5.1.1.2"></eq><ci id="S2.E2.m1.5.5.1.1.3a.cmml" xref="S2.E2.m1.5.5.1.1.3"><mtext class="ltx_mathvariant_italic" id="S2.E2.m1.5.5.1.1.3.cmml" xref="S2.E2.m1.5.5.1.1.3">MAE</mtext></ci><apply id="S2.E2.m1.5.5.1.1.1.cmml" xref="S2.E2.m1.5.5.1.1.1"><times id="S2.E2.m1.5.5.1.1.1.2.cmml" xref="S2.E2.m1.5.5.1.1.1.2"></times><apply id="S2.E2.m1.5.5.1.1.1.3.cmml" xref="S2.E2.m1.5.5.1.1.1.3"><divide id="S2.E2.m1.5.5.1.1.1.3.1.cmml" xref="S2.E2.m1.5.5.1.1.1.3"></divide><cn type="integer" id="S2.E2.m1.5.5.1.1.1.3.2.cmml" xref="S2.E2.m1.5.5.1.1.1.3.2">1</cn><apply id="S2.E2.m1.5.5.1.1.1.3.3.cmml" xref="S2.E2.m1.5.5.1.1.1.3.3"><times id="S2.E2.m1.5.5.1.1.1.3.3.1.cmml" xref="S2.E2.m1.5.5.1.1.1.3.3.1"></times><ci id="S2.E2.m1.5.5.1.1.1.3.3.2.cmml" xref="S2.E2.m1.5.5.1.1.1.3.3.2">𝐻</ci><ci id="S2.E2.m1.5.5.1.1.1.3.3.3.cmml" xref="S2.E2.m1.5.5.1.1.1.3.3.3">𝑊</ci></apply></apply><apply id="S2.E2.m1.5.5.1.1.1.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1"><apply id="S2.E2.m1.5.5.1.1.1.1.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2"><csymbol cd="ambiguous" id="S2.E2.m1.5.5.1.1.1.1.2.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2">superscript</csymbol><apply id="S2.E2.m1.5.5.1.1.1.1.2.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2"><csymbol cd="ambiguous" id="S2.E2.m1.5.5.1.1.1.1.2.2.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2">subscript</csymbol><sum id="S2.E2.m1.5.5.1.1.1.1.2.2.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2.2.2"></sum><apply id="S2.E2.m1.5.5.1.1.1.1.2.2.3.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2.2.3"><eq id="S2.E2.m1.5.5.1.1.1.1.2.2.3.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2.2.3.1"></eq><ci id="S2.E2.m1.5.5.1.1.1.1.2.2.3.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2.2.3.2">𝑖</ci><cn type="integer" id="S2.E2.m1.5.5.1.1.1.1.2.2.3.3.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S2.E2.m1.5.5.1.1.1.1.2.3.cmml" xref="S2.E2.m1.5.5.1.1.1.1.2.3">𝐻</ci></apply><apply id="S2.E2.m1.5.5.1.1.1.1.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1"><apply id="S2.E2.m1.5.5.1.1.1.1.1.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S2.E2.m1.5.5.1.1.1.1.1.2.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2">superscript</csymbol><apply id="S2.E2.m1.5.5.1.1.1.1.1.2.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S2.E2.m1.5.5.1.1.1.1.1.2.2.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2">subscript</csymbol><sum id="S2.E2.m1.5.5.1.1.1.1.1.2.2.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.2"></sum><apply id="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.3"><eq id="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.1"></eq><ci id="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.2">𝑗</ci><cn type="integer" id="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.3.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S2.E2.m1.5.5.1.1.1.1.1.2.3.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.2.3">𝑊</ci></apply><apply id="S2.E2.m1.5.5.1.1.1.1.1.1.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S2.E2.m1.5.5.1.1.1.1.1.1.2.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.2">delimited-∣∣</csymbol><apply id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1"><minus id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.1"></minus><apply id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2"><times id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.1"></times><ci id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.2">𝑃</ci><interval closure="open" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.2.3.2"><ci id="S2.E2.m1.1.1.cmml" xref="S2.E2.m1.1.1">𝑖</ci><ci id="S2.E2.m1.2.2.cmml" xref="S2.E2.m1.2.2">𝑗</ci></interval></apply><apply id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3"><times id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.1"></times><ci id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.2.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.2">𝐺</ci><interval closure="open" id="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.1.cmml" xref="S2.E2.m1.5.5.1.1.1.1.1.1.1.1.3.3.2"><ci id="S2.E2.m1.3.3.cmml" xref="S2.E2.m1.3.3">𝑖</ci><ci id="S2.E2.m1.4.4.cmml" xref="S2.E2.m1.4.4">𝑗</ci></interval></apply></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E2.m1.5c">{\textit{MAE}}=\frac{1}{H\times{W}}\sum_{i=1}^{H}\sum_{j=1}^{W}\mid P(i,j)-G(i,j)\mid,</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S2.p4.4" class="ltx_p">where P(i, j) indicates predicted probability at location (i, j).
+We employ the balance error rate (BER) as an evaluation metric, which takes into account the imbalanced regions in glass and mirror object segmentation tasks. This metric provides a quantitative measure for evaluating the performance of glass surface segmentation.</p>
+<table id="S2.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E3.m1.1" class="ltx_Math" alttext="{\textit{BER}}=(1-\frac{1}{2}(\frac{TP}{\textit{N}_{p}}+\frac{TN}{\textit{N}_{n}}))\times{100}," display="block"><semantics id="S2.E3.m1.1a"><mrow id="S2.E3.m1.1.1.1" xref="S2.E3.m1.1.1.1.1.cmml"><mrow id="S2.E3.m1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.cmml"><mtext class="ltx_mathvariant_italic" id="S2.E3.m1.1.1.1.1.3" xref="S2.E3.m1.1.1.1.1.3a.cmml">BER</mtext><mo id="S2.E3.m1.1.1.1.1.2" xref="S2.E3.m1.1.1.1.1.2.cmml">=</mo><mrow id="S2.E3.m1.1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.1.cmml"><mrow id="S2.E3.m1.1.1.1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S2.E3.m1.1.1.1.1.1.1.1.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S2.E3.m1.1.1.1.1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.1.1.1.1.cmml"><mn id="S2.E3.m1.1.1.1.1.1.1.1.1.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.3.cmml">1</mn><mo id="S2.E3.m1.1.1.1.1.1.1.1.1.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.2.cmml">−</mo><mrow id="S2.E3.m1.1.1.1.1.1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.cmml"><mfrac id="S2.E3.m1.1.1.1.1.1.1.1.1.1.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.cmml"><mn id="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.2.cmml">1</mn><mn id="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.3.cmml">2</mn></mfrac><mo lspace="0em" rspace="0em" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.2.cmml">​</mo><mrow id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mfrac id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mrow id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml"><mi id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.2.cmml">T</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.1" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.1.cmml">​</mo><mi id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.3.cmml">P</mi></mrow><msub id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml"><mtext class="ltx_mathvariant_italic" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2a.cmml">N</mtext><mi id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml">p</mi></msub></mfrac><mo id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">+</mo><mfrac id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml"><mrow id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.cmml"><mi id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.2.cmml">T</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.1" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.1.cmml">​</mo><mi id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.3.cmml">N</mi></mrow><msub id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.cmml"><mtext class="ltx_mathvariant_italic" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.2" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.2a.cmml">N</mtext><mi id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.3.cmml">n</mi></msub></mfrac></mrow><mo stretchy="false" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow><mo rspace="0.055em" stretchy="false" id="S2.E3.m1.1.1.1.1.1.1.1.3" xref="S2.E3.m1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo rspace="0.222em" id="S2.E3.m1.1.1.1.1.1.2" xref="S2.E3.m1.1.1.1.1.1.2.cmml">×</mo><mn id="S2.E3.m1.1.1.1.1.1.3" xref="S2.E3.m1.1.1.1.1.1.3.cmml">100</mn></mrow></mrow><mo id="S2.E3.m1.1.1.1.2" xref="S2.E3.m1.1.1.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.E3.m1.1b"><apply id="S2.E3.m1.1.1.1.1.cmml" xref="S2.E3.m1.1.1.1"><eq id="S2.E3.m1.1.1.1.1.2.cmml" xref="S2.E3.m1.1.1.1.1.2"></eq><ci id="S2.E3.m1.1.1.1.1.3a.cmml" xref="S2.E3.m1.1.1.1.1.3"><mtext class="ltx_mathvariant_italic" id="S2.E3.m1.1.1.1.1.3.cmml" xref="S2.E3.m1.1.1.1.1.3">BER</mtext></ci><apply id="S2.E3.m1.1.1.1.1.1.cmml" xref="S2.E3.m1.1.1.1.1.1"><times id="S2.E3.m1.1.1.1.1.1.2.cmml" xref="S2.E3.m1.1.1.1.1.1.2"></times><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1"><minus id="S2.E3.m1.1.1.1.1.1.1.1.1.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.2"></minus><cn type="integer" id="S2.E3.m1.1.1.1.1.1.1.1.1.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.3">1</cn><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1"><times id="S2.E3.m1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.2"></times><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.3"><divide id="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.3"></divide><cn type="integer" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.2">1</cn><cn type="integer" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.3.3">2</cn></apply><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1"><plus id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.1"></plus><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2"><divide id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2"></divide><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2"><times id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.1"></times><ci id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.2">𝑇</ci><ci id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.3">𝑃</ci></apply><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3"><csymbol cd="ambiguous" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3">subscript</csymbol><ci id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2a.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2"><mtext class="ltx_mathvariant_italic" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2">N</mtext></ci><ci id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3">𝑝</ci></apply></apply><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3"><divide id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3"></divide><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2"><times id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.1"></times><ci id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.2">𝑇</ci><ci id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.2.3">𝑁</ci></apply><apply id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3"><csymbol cd="ambiguous" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3">subscript</csymbol><ci id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.2a.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.2"><mtext class="ltx_mathvariant_italic" id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.2.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.2">N</mtext></ci><ci id="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.3.cmml" xref="S2.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.3.3.3">𝑛</ci></apply></apply></apply></apply></apply><cn type="integer" id="S2.E3.m1.1.1.1.1.1.3.cmml" xref="S2.E3.m1.1.1.1.1.1.3">100</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E3.m1.1c">{\textit{BER}}=(1-\frac{1}{2}(\frac{TP}{\textit{N}_{p}}+\frac{TN}{\textit{N}_{n}}))\times{100},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p id="S2.p4.5" class="ltx_p">where TP, TN, Np, and Nn represent the numbers of true positives, true negatives, glass pixels, and non-glass pixels.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Experiment on glass objects</h3>
+
+<div id="S2.SS1.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS1.p1.1" class="ltx_p">We compare SAM with the state-of-the-art semantic segmentation, shadow detection, saliency object detection, and glass segmentation methods such as MirrorNet, Translab, GDNet, EBLNet as shown in Table <a href="#S2.T1" title="Table 1 ‣ 2.1 Experiment on glass objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, <a href="#S2.T2" title="Table 2 ‣ 2.1 Experiment on glass objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS1.p2.1" class="ltx_p">As shown in Table <a href="#S2.T1" title="Table 1 ‣ 2.1 Experiment on glass objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> and <a href="#S2.T2" title="Table 2 ‣ 2.1 Experiment on glass objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, We observed that the segmentation results of glass objects in two benchmarks were poor for the SAM model.</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para ltx_noindent">
+<p id="S2.SS1.p3.1" class="ltx_p">As shown in Figure <a href="#S2.F1" title="Figure 1 ‣ 2.1 Experiment on glass objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> and <a href="#S2.F4" title="Figure 4 ‣ 2.3 Additional visualization results ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, We find that the SAM model struggle to recognize and segment the boundary regions, particularly when the boundaries of glass objects are distorte by light. These challenges in glass objects segmentation are caused by the fact that transparent surfaces exhibit a visual appearance that includes both the transmitted background scene and any objects behind them, making it difficult to distinguish and accurately segment them from their surroundings. The phenomenon of transmission tends to cause SAM to detect objects behind glass objects, rather than the glass objects themselves.</p>
+</div>
+<figure id="S2.T1" class="ltx_table">
+<table id="S2.T1.6" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T1.6.6" class="ltx_tr">
+<th id="S2.T1.6.6.7" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt">Method</th>
+<th id="S2.T1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">IoU <math id="S2.T1.1.1.1.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T1.1.1.1.m1.1a"><mo stretchy="false" id="S2.T1.1.1.1.m1.1.1" xref="S2.T1.1.1.1.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T1.1.1.1.m1.1b"><ci id="S2.T1.1.1.1.m1.1.1.cmml" xref="S2.T1.1.1.1.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.1.1.1.m1.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Acc <math id="S2.T1.2.2.2.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T1.2.2.2.m1.1a"><mo stretchy="false" id="S2.T1.2.2.2.m1.1.1" xref="S2.T1.2.2.2.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T1.2.2.2.m1.1b"><ci id="S2.T1.2.2.2.m1.1.1.cmml" xref="S2.T1.2.2.2.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.2.2.2.m1.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T1.4.4.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<math id="S2.T1.3.3.3.m1.1" class="ltx_Math" alttext="{F}_{\beta}" display="inline"><semantics id="S2.T1.3.3.3.m1.1a"><msub id="S2.T1.3.3.3.m1.1.1" xref="S2.T1.3.3.3.m1.1.1.cmml"><mi id="S2.T1.3.3.3.m1.1.1.2" xref="S2.T1.3.3.3.m1.1.1.2.cmml">F</mi><mi id="S2.T1.3.3.3.m1.1.1.3" xref="S2.T1.3.3.3.m1.1.1.3.cmml">β</mi></msub><annotation-xml encoding="MathML-Content" id="S2.T1.3.3.3.m1.1b"><apply id="S2.T1.3.3.3.m1.1.1.cmml" xref="S2.T1.3.3.3.m1.1.1"><csymbol cd="ambiguous" id="S2.T1.3.3.3.m1.1.1.1.cmml" xref="S2.T1.3.3.3.m1.1.1">subscript</csymbol><ci id="S2.T1.3.3.3.m1.1.1.2.cmml" xref="S2.T1.3.3.3.m1.1.1.2">𝐹</ci><ci id="S2.T1.3.3.3.m1.1.1.3.cmml" xref="S2.T1.3.3.3.m1.1.1.3">𝛽</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.3.3.3.m1.1c">{F}_{\beta}</annotation></semantics></math> <math id="S2.T1.4.4.4.m2.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T1.4.4.4.m2.1a"><mo stretchy="false" id="S2.T1.4.4.4.m2.1.1" xref="S2.T1.4.4.4.m2.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T1.4.4.4.m2.1b"><ci id="S2.T1.4.4.4.m2.1.1.cmml" xref="S2.T1.4.4.4.m2.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.4.4.4.m2.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T1.5.5.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">mAE <math id="S2.T1.5.5.5.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S2.T1.5.5.5.m1.1a"><mo stretchy="false" id="S2.T1.5.5.5.m1.1.1" xref="S2.T1.5.5.5.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S2.T1.5.5.5.m1.1b"><ci id="S2.T1.5.5.5.m1.1.1.cmml" xref="S2.T1.5.5.5.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.5.5.5.m1.1c">\downarrow</annotation></semantics></math>
+</th>
+<th id="S2.T1.6.6.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">BER <math id="S2.T1.6.6.6.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S2.T1.6.6.6.m1.1a"><mo stretchy="false" id="S2.T1.6.6.6.m1.1.1" xref="S2.T1.6.6.6.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S2.T1.6.6.6.m1.1b"><ci id="S2.T1.6.6.6.m1.1.1.cmml" xref="S2.T1.6.6.6.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.6.6.6.m1.1c">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T1.6.7.1" class="ltx_tr">
+<th id="S2.T1.6.7.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">PSPNet <cite class="ltx_cite ltx_citemacro_cite">Zhao et al. (<a href="#bib.bib18" title="" class="ltx_ref">2017</a>)</cite>
+</th>
+<td id="S2.T1.6.7.1.2" class="ltx_td ltx_align_center ltx_border_t">84.06</td>
+<td id="S2.T1.6.7.1.3" class="ltx_td ltx_align_center ltx_border_t">0.916</td>
+<td id="S2.T1.6.7.1.4" class="ltx_td ltx_align_center ltx_border_t">0.906</td>
+<td id="S2.T1.6.7.1.5" class="ltx_td ltx_align_center ltx_border_t">0.084</td>
+<td id="S2.T1.6.7.1.6" class="ltx_td ltx_align_center ltx_border_t">8.79</td>
+</tr>
+<tr id="S2.T1.6.8.2" class="ltx_tr">
+<th id="S2.T1.6.8.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">PointRend <cite class="ltx_cite ltx_citemacro_cite">Kirillov et al. (<a href="#bib.bib19" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T1.6.8.2.2" class="ltx_td ltx_align_center">86.51</td>
+<td id="S2.T1.6.8.2.3" class="ltx_td ltx_align_center">0.933</td>
+<td id="S2.T1.6.8.2.4" class="ltx_td ltx_align_center">0.928</td>
+<td id="S2.T1.6.8.2.5" class="ltx_td ltx_align_center">0.067</td>
+<td id="S2.T1.6.8.2.6" class="ltx_td ltx_align_center">6.50</td>
+</tr>
+<tr id="S2.T1.6.9.3" class="ltx_tr">
+<th id="S2.T1.6.9.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">PiCANet <cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a href="#bib.bib20" title="" class="ltx_ref">2018</a>)</cite>
+</th>
+<td id="S2.T1.6.9.3.2" class="ltx_td ltx_align_center">83.73</td>
+<td id="S2.T1.6.9.3.3" class="ltx_td ltx_align_center">0.916</td>
+<td id="S2.T1.6.9.3.4" class="ltx_td ltx_align_center">0.909</td>
+<td id="S2.T1.6.9.3.5" class="ltx_td ltx_align_center">0.093</td>
+<td id="S2.T1.6.9.3.6" class="ltx_td ltx_align_center">8.26</td>
+</tr>
+<tr id="S2.T1.6.10.4" class="ltx_tr">
+<th id="S2.T1.6.10.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">DSC <cite class="ltx_cite ltx_citemacro_cite">Hu et al. (<a href="#bib.bib21" title="" class="ltx_ref">2018</a>)</cite>
+</th>
+<td id="S2.T1.6.10.4.2" class="ltx_td ltx_align_center">83.56</td>
+<td id="S2.T1.6.10.4.3" class="ltx_td ltx_align_center">0.914</td>
+<td id="S2.T1.6.10.4.4" class="ltx_td ltx_align_center">0.911</td>
+<td id="S2.T1.6.10.4.5" class="ltx_td ltx_align_center">0.090</td>
+<td id="S2.T1.6.10.4.6" class="ltx_td ltx_align_center">7.97</td>
+</tr>
+<tr id="S2.T1.6.11.5" class="ltx_tr">
+<th id="S2.T1.6.11.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">BDRAR <cite class="ltx_cite ltx_citemacro_cite">Zhu et al. (<a href="#bib.bib22" title="" class="ltx_ref">2018</a>)</cite>
+</th>
+<td id="S2.T1.6.11.5.2" class="ltx_td ltx_align_center">80.01</td>
+<td id="S2.T1.6.11.5.3" class="ltx_td ltx_align_center">0.902</td>
+<td id="S2.T1.6.11.5.4" class="ltx_td ltx_align_center">0.902</td>
+<td id="S2.T1.6.11.5.5" class="ltx_td ltx_align_center">0.098</td>
+<td id="S2.T1.6.11.5.6" class="ltx_td ltx_align_center">9.87</td>
+</tr>
+<tr id="S2.T1.6.12.6" class="ltx_tr">
+<th id="S2.T1.6.12.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">MirrorNet <cite class="ltx_cite ltx_citemacro_cite">Yang et al. (<a href="#bib.bib13" title="" class="ltx_ref">2019</a>)</cite>
+</th>
+<td id="S2.T1.6.12.6.2" class="ltx_td ltx_align_center">85.07</td>
+<td id="S2.T1.6.12.6.3" class="ltx_td ltx_align_center">0.918</td>
+<td id="S2.T1.6.12.6.4" class="ltx_td ltx_align_center">0.903</td>
+<td id="S2.T1.6.12.6.5" class="ltx_td ltx_align_center">0.083</td>
+<td id="S2.T1.6.12.6.6" class="ltx_td ltx_align_center">7.67</td>
+</tr>
+<tr id="S2.T1.6.13.7" class="ltx_tr">
+<th id="S2.T1.6.13.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">GDNet <cite class="ltx_cite ltx_citemacro_cite">Mei et al. (<a href="#bib.bib12" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T1.6.13.7.2" class="ltx_td ltx_align_center">87.63</td>
+<td id="S2.T1.6.13.7.3" class="ltx_td ltx_align_center">0.939</td>
+<td id="S2.T1.6.13.7.4" class="ltx_td ltx_align_center">0.937</td>
+<td id="S2.T1.6.13.7.5" class="ltx_td ltx_align_center">0.063</td>
+<td id="S2.T1.6.13.7.6" class="ltx_td ltx_align_center">5.62</td>
+</tr>
+<tr id="S2.T1.6.14.8" class="ltx_tr">
+<th id="S2.T1.6.14.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">EBLNet <cite class="ltx_cite ltx_citemacro_cite">He et al. (<a href="#bib.bib11" title="" class="ltx_ref">2021</a>)</cite>
+</th>
+<td id="S2.T1.6.14.8.2" class="ltx_td ltx_align_center">88.16</td>
+<td id="S2.T1.6.14.8.3" class="ltx_td ltx_align_center">0.941</td>
+<td id="S2.T1.6.14.8.4" class="ltx_td ltx_align_center">0.939</td>
+<td id="S2.T1.6.14.8.5" class="ltx_td ltx_align_center">0.059</td>
+<td id="S2.T1.6.14.8.6" class="ltx_td ltx_align_center">5.58</td>
+</tr>
+<tr id="S2.T1.6.15.9" class="ltx_tr">
+<th id="S2.T1.6.15.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t"><span id="S2.T1.6.15.9.1.1" class="ltx_text ltx_font_bold">SAM</span></th>
+<td id="S2.T1.6.15.9.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T1.6.15.9.2.1" class="ltx_text ltx_font_bold">48.47</span></td>
+<td id="S2.T1.6.15.9.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T1.6.15.9.3.1" class="ltx_text ltx_font_bold">0.732</span></td>
+<td id="S2.T1.6.15.9.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T1.6.15.9.4.1" class="ltx_text ltx_font_bold">0.798</span></td>
+<td id="S2.T1.6.15.9.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T1.6.15.9.5.1" class="ltx_text ltx_font_bold">0.268</span></td>
+<td id="S2.T1.6.15.9.6" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T1.6.15.9.6.1" class="ltx_text ltx_font_bold">26.08</span></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Experimental Comparison on GDD</figcaption>
+</figure>
+<figure id="S2.T2" class="ltx_table">
+<table id="S2.T2.5" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T2.5.5" class="ltx_tr">
+<th id="S2.T2.5.5.6" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt">Method</th>
+<th id="S2.T2.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">IoU <math id="S2.T2.1.1.1.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T2.1.1.1.m1.1a"><mo stretchy="false" id="S2.T2.1.1.1.m1.1.1" xref="S2.T2.1.1.1.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T2.1.1.1.m1.1b"><ci id="S2.T2.1.1.1.m1.1.1.cmml" xref="S2.T2.1.1.1.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T2.1.1.1.m1.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T2.3.3.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<math id="S2.T2.2.2.2.m1.1" class="ltx_Math" alttext="{F}_{\beta}" display="inline"><semantics id="S2.T2.2.2.2.m1.1a"><msub id="S2.T2.2.2.2.m1.1.1" xref="S2.T2.2.2.2.m1.1.1.cmml"><mi id="S2.T2.2.2.2.m1.1.1.2" xref="S2.T2.2.2.2.m1.1.1.2.cmml">F</mi><mi id="S2.T2.2.2.2.m1.1.1.3" xref="S2.T2.2.2.2.m1.1.1.3.cmml">β</mi></msub><annotation-xml encoding="MathML-Content" id="S2.T2.2.2.2.m1.1b"><apply id="S2.T2.2.2.2.m1.1.1.cmml" xref="S2.T2.2.2.2.m1.1.1"><csymbol cd="ambiguous" id="S2.T2.2.2.2.m1.1.1.1.cmml" xref="S2.T2.2.2.2.m1.1.1">subscript</csymbol><ci id="S2.T2.2.2.2.m1.1.1.2.cmml" xref="S2.T2.2.2.2.m1.1.1.2">𝐹</ci><ci id="S2.T2.2.2.2.m1.1.1.3.cmml" xref="S2.T2.2.2.2.m1.1.1.3">𝛽</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T2.2.2.2.m1.1c">{F}_{\beta}</annotation></semantics></math> <math id="S2.T2.3.3.3.m2.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T2.3.3.3.m2.1a"><mo stretchy="false" id="S2.T2.3.3.3.m2.1.1" xref="S2.T2.3.3.3.m2.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T2.3.3.3.m2.1b"><ci id="S2.T2.3.3.3.m2.1.1.cmml" xref="S2.T2.3.3.3.m2.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T2.3.3.3.m2.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T2.4.4.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">mAE <math id="S2.T2.4.4.4.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S2.T2.4.4.4.m1.1a"><mo stretchy="false" id="S2.T2.4.4.4.m1.1.1" xref="S2.T2.4.4.4.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S2.T2.4.4.4.m1.1b"><ci id="S2.T2.4.4.4.m1.1.1.cmml" xref="S2.T2.4.4.4.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T2.4.4.4.m1.1c">\downarrow</annotation></semantics></math>
+</th>
+<th id="S2.T2.5.5.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">BER <math id="S2.T2.5.5.5.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S2.T2.5.5.5.m1.1a"><mo stretchy="false" id="S2.T2.5.5.5.m1.1.1" xref="S2.T2.5.5.5.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S2.T2.5.5.5.m1.1b"><ci id="S2.T2.5.5.5.m1.1.1.cmml" xref="S2.T2.5.5.5.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T2.5.5.5.m1.1c">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T2.5.6.1" class="ltx_tr">
+<th id="S2.T2.5.6.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">BASNet<cite class="ltx_cite ltx_citemacro_cite">Qin et al. (<a href="#bib.bib23" title="" class="ltx_ref">2019</a>)</cite>
+</th>
+<td id="S2.T2.5.6.1.2" class="ltx_td ltx_align_center ltx_border_t">69.79</td>
+<td id="S2.T2.5.6.1.3" class="ltx_td ltx_align_center ltx_border_t">0.808</td>
+<td id="S2.T2.5.6.1.4" class="ltx_td ltx_align_center ltx_border_t">0.106</td>
+<td id="S2.T2.5.6.1.5" class="ltx_td ltx_align_center ltx_border_t">13.54</td>
+</tr>
+<tr id="S2.T2.5.7.2" class="ltx_tr">
+<th id="S2.T2.5.7.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">MINet <cite class="ltx_cite ltx_citemacro_cite">Pang et al. (<a href="#bib.bib24" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T2.5.7.2.2" class="ltx_td ltx_align_center">77.29</td>
+<td id="S2.T2.5.7.2.3" class="ltx_td ltx_align_center">0.879</td>
+<td id="S2.T2.5.7.2.4" class="ltx_td ltx_align_center">0.077</td>
+<td id="S2.T2.5.7.2.5" class="ltx_td ltx_align_center">9.54</td>
+</tr>
+<tr id="S2.T2.5.8.3" class="ltx_tr">
+<th id="S2.T2.5.8.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">BDRAR<cite class="ltx_cite ltx_citemacro_cite">Pang et al. (<a href="#bib.bib24" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T2.5.8.3.2" class="ltx_td ltx_align_center">75.92</td>
+<td id="S2.T2.5.8.3.3" class="ltx_td ltx_align_center">0.860</td>
+<td id="S2.T2.5.8.3.4" class="ltx_td ltx_align_center">0.081</td>
+<td id="S2.T2.5.8.3.5" class="ltx_td ltx_align_center">8.61</td>
+</tr>
+<tr id="S2.T2.5.9.4" class="ltx_tr">
+<th id="S2.T2.5.9.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">PSPNet<cite class="ltx_cite ltx_citemacro_cite">Pang et al. (<a href="#bib.bib24" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T2.5.9.4.2" class="ltx_td ltx_align_center">7.30</td>
+<td id="S2.T2.5.9.4.3" class="ltx_td ltx_align_center">0.834</td>
+<td id="S2.T2.5.9.4.4" class="ltx_td ltx_align_center">0.110</td>
+<td id="S2.T2.5.9.4.5" class="ltx_td ltx_align_center">10.66</td>
+</tr>
+<tr id="S2.T2.5.10.5" class="ltx_tr">
+<th id="S2.T2.5.10.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">MirrorNet <cite class="ltx_cite ltx_citemacro_cite">Yang et al. (<a href="#bib.bib13" title="" class="ltx_ref">2019</a>)</cite>
+</th>
+<td id="S2.T2.5.10.5.2" class="ltx_td ltx_align_center">74.20</td>
+<td id="S2.T2.5.10.5.3" class="ltx_td ltx_align_center">0.828</td>
+<td id="S2.T2.5.10.5.4" class="ltx_td ltx_align_center">0.090</td>
+<td id="S2.T2.5.10.5.5" class="ltx_td ltx_align_center">10.76</td>
+</tr>
+<tr id="S2.T2.5.11.6" class="ltx_tr">
+<th id="S2.T2.5.11.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">SINet <cite class="ltx_cite ltx_citemacro_cite">Fan et al. (<a href="#bib.bib25" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T2.5.11.6.2" class="ltx_td ltx_align_center">77.04</td>
+<td id="S2.T2.5.11.6.3" class="ltx_td ltx_align_center">0.875</td>
+<td id="S2.T2.5.11.6.4" class="ltx_td ltx_align_center">0.077</td>
+<td id="S2.T2.5.11.6.5" class="ltx_td ltx_align_center">9.25</td>
+</tr>
+<tr id="S2.T2.5.12.7" class="ltx_tr">
+<th id="S2.T2.5.12.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">GDNet <cite class="ltx_cite ltx_citemacro_cite">Mei et al. (<a href="#bib.bib12" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T2.5.12.7.2" class="ltx_td ltx_align_center">79.01</td>
+<td id="S2.T2.5.12.7.3" class="ltx_td ltx_align_center">0.869</td>
+<td id="S2.T2.5.12.7.4" class="ltx_td ltx_align_center">0.069</td>
+<td id="S2.T2.5.12.7.5" class="ltx_td ltx_align_center">7.72</td>
+</tr>
+<tr id="S2.T2.5.13.8" class="ltx_tr">
+<th id="S2.T2.5.13.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">TransLab<cite class="ltx_cite ltx_citemacro_cite">Xie et al. (<a href="#bib.bib15" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T2.5.13.8.2" class="ltx_td ltx_align_center">74.05</td>
+<td id="S2.T2.5.13.8.3" class="ltx_td ltx_align_center">0.837</td>
+<td id="S2.T2.5.13.8.4" class="ltx_td ltx_align_center">0.088</td>
+<td id="S2.T2.5.13.8.5" class="ltx_td ltx_align_center">11.35</td>
+</tr>
+<tr id="S2.T2.5.14.9" class="ltx_tr">
+<th id="S2.T2.5.14.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">GlassNet <cite class="ltx_cite ltx_citemacro_cite">Lin et al. (<a href="#bib.bib9" title="" class="ltx_ref">2021</a>)</cite>
+</th>
+<td id="S2.T2.5.14.9.2" class="ltx_td ltx_align_center">83.64</td>
+<td id="S2.T2.5.14.9.3" class="ltx_td ltx_align_center">0.903</td>
+<td id="S2.T2.5.14.9.4" class="ltx_td ltx_align_center">0.055</td>
+<td id="S2.T2.5.14.9.5" class="ltx_td ltx_align_center">6.12</td>
+</tr>
+<tr id="S2.T2.5.15.10" class="ltx_tr">
+<th id="S2.T2.5.15.10.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">GlassSemNet<cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib26" title="" class="ltx_ref">Lin et al. </a></cite>
+</th>
+<td id="S2.T2.5.15.10.2" class="ltx_td ltx_align_center">85.60</td>
+<td id="S2.T2.5.15.10.3" class="ltx_td ltx_align_center">0.920</td>
+<td id="S2.T2.5.15.10.4" class="ltx_td ltx_align_center">0.044</td>
+<td id="S2.T2.5.15.10.5" class="ltx_td ltx_align_center">5.60</td>
+</tr>
+<tr id="S2.T2.5.16.11" class="ltx_tr">
+<th id="S2.T2.5.16.11.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t"><span id="S2.T2.5.16.11.1.1" class="ltx_text ltx_font_bold">SAM</span></th>
+<td id="S2.T2.5.16.11.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T2.5.16.11.2.1" class="ltx_text ltx_font_bold">50.60</span></td>
+<td id="S2.T2.5.16.11.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T2.5.16.11.3.1" class="ltx_text ltx_font_bold">0.799</span></td>
+<td id="S2.T2.5.16.11.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T2.5.16.11.4.1" class="ltx_text ltx_font_bold">0.213</span></td>
+<td id="S2.T2.5.16.11.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T2.5.16.11.5.1" class="ltx_text ltx_font_bold">23.91</span></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Experimental Comparison on GSD. </figcaption>
+</figure>
+<figure id="S2.F1" class="ltx_figure"><img src="/html/2305.00278/assets/figs_glass/glass.jpg" id="S2.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="717" height="214" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Sample qualitative comparison results on GDD and GSD.</figcaption>
+</figure>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Experiment on mirror objects</h3>
+
+<div id="S2.SS2.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS2.p1.1" class="ltx_p">We compare SAM with the state-of-the-art semantic segmentation, shadow detection, saliency objects detection, and mirror objects segmentation methods such as BDRAR, MirrorNet, EBLNet, PMD-Net, LSA as shown in Table <a href="#S2.T3" title="Table 3 ‣ 2.2 Experiment on mirror objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, <a href="#S2.T4" title="Table 4 ‣ 2.2 Experiment on mirror objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS2.p2.1" class="ltx_p">Segmenting mirror objects is a challenging task in semantic segmentation due to their strong reflective properties, which cause them to have a variable appearance. To evaluate the performance of SAM model, we conducted tests on the MSD and PMD benchmark datasets, <cite class="ltx_cite ltx_citemacro_citep">(Lin et al., <a href="#bib.bib14" title="" class="ltx_ref">2020</a>)</cite>.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para ltx_noindent">
+<p id="S2.SS2.p3.1" class="ltx_p">Through our experiments, we found that the PMD benchmark, with more images of mirrors captured from a distance, offers a clearer view of the boundaries of mirror regions compared to the MSD benchmark, which has more images captured from close range. As shown in Table <a href="#S2.T4" title="Table 4 ‣ 2.2 Experiment on mirror objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, SAM performs comparably to state-of-the-art methods on the PMD benchmark benchmark. However, as shown in Table<a href="#S2.T3" title="Table 3 ‣ 2.2 Experiment on mirror objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> and Figure<a href="#S2.F2" title="Figure 2 ‣ 2.2 Experiment on mirror objects ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, SAM’s performance on the MSD benchmark is somewhat unsatisfactory, as it tends to segment objects inside the mirror rather than recognizing the mirror itself.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2305.00278/assets/figs_glass/mirror1.jpg" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="717" height="198" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Sample qualitative comparison results on MSD and PMD.</figcaption>
+</figure>
+<figure id="S2.T3" class="ltx_table">
+<table id="S2.T3.6" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T3.6.6" class="ltx_tr">
+<th id="S2.T3.6.6.7" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt">Method</th>
+<th id="S2.T3.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">IoU <math id="S2.T3.1.1.1.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T3.1.1.1.m1.1a"><mo stretchy="false" id="S2.T3.1.1.1.m1.1.1" xref="S2.T3.1.1.1.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T3.1.1.1.m1.1b"><ci id="S2.T3.1.1.1.m1.1.1.cmml" xref="S2.T3.1.1.1.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T3.1.1.1.m1.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T3.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Acc <math id="S2.T3.2.2.2.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T3.2.2.2.m1.1a"><mo stretchy="false" id="S2.T3.2.2.2.m1.1.1" xref="S2.T3.2.2.2.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T3.2.2.2.m1.1b"><ci id="S2.T3.2.2.2.m1.1.1.cmml" xref="S2.T3.2.2.2.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T3.2.2.2.m1.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T3.4.4.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<math id="S2.T3.3.3.3.m1.1" class="ltx_Math" alttext="{F}_{\beta}" display="inline"><semantics id="S2.T3.3.3.3.m1.1a"><msub id="S2.T3.3.3.3.m1.1.1" xref="S2.T3.3.3.3.m1.1.1.cmml"><mi id="S2.T3.3.3.3.m1.1.1.2" xref="S2.T3.3.3.3.m1.1.1.2.cmml">F</mi><mi id="S2.T3.3.3.3.m1.1.1.3" xref="S2.T3.3.3.3.m1.1.1.3.cmml">β</mi></msub><annotation-xml encoding="MathML-Content" id="S2.T3.3.3.3.m1.1b"><apply id="S2.T3.3.3.3.m1.1.1.cmml" xref="S2.T3.3.3.3.m1.1.1"><csymbol cd="ambiguous" id="S2.T3.3.3.3.m1.1.1.1.cmml" xref="S2.T3.3.3.3.m1.1.1">subscript</csymbol><ci id="S2.T3.3.3.3.m1.1.1.2.cmml" xref="S2.T3.3.3.3.m1.1.1.2">𝐹</ci><ci id="S2.T3.3.3.3.m1.1.1.3.cmml" xref="S2.T3.3.3.3.m1.1.1.3">𝛽</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T3.3.3.3.m1.1c">{F}_{\beta}</annotation></semantics></math> <math id="S2.T3.4.4.4.m2.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T3.4.4.4.m2.1a"><mo stretchy="false" id="S2.T3.4.4.4.m2.1.1" xref="S2.T3.4.4.4.m2.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T3.4.4.4.m2.1b"><ci id="S2.T3.4.4.4.m2.1.1.cmml" xref="S2.T3.4.4.4.m2.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T3.4.4.4.m2.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T3.5.5.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">mAE <math id="S2.T3.5.5.5.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S2.T3.5.5.5.m1.1a"><mo stretchy="false" id="S2.T3.5.5.5.m1.1.1" xref="S2.T3.5.5.5.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S2.T3.5.5.5.m1.1b"><ci id="S2.T3.5.5.5.m1.1.1.cmml" xref="S2.T3.5.5.5.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T3.5.5.5.m1.1c">\downarrow</annotation></semantics></math>
+</th>
+<th id="S2.T3.6.6.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">BER <math id="S2.T3.6.6.6.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S2.T3.6.6.6.m1.1a"><mo stretchy="false" id="S2.T3.6.6.6.m1.1.1" xref="S2.T3.6.6.6.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S2.T3.6.6.6.m1.1b"><ci id="S2.T3.6.6.6.m1.1.1.cmml" xref="S2.T3.6.6.6.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T3.6.6.6.m1.1c">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T3.6.7.1" class="ltx_tr">
+<th id="S2.T3.6.7.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">ICNet <cite class="ltx_cite ltx_citemacro_cite">Zhao et al. (<a href="#bib.bib27" title="" class="ltx_ref">2018</a>)</cite>
+</th>
+<td id="S2.T3.6.7.1.2" class="ltx_td ltx_align_center ltx_border_t">57.25</td>
+<td id="S2.T3.6.7.1.3" class="ltx_td ltx_align_center ltx_border_t">0.694</td>
+<td id="S2.T3.6.7.1.4" class="ltx_td ltx_align_center ltx_border_t">0.710</td>
+<td id="S2.T3.6.7.1.5" class="ltx_td ltx_align_center ltx_border_t">0.124</td>
+<td id="S2.T3.6.7.1.6" class="ltx_td ltx_align_center ltx_border_t">18.75</td>
+</tr>
+<tr id="S2.T3.6.8.2" class="ltx_tr">
+<th id="S2.T3.6.8.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">DSS<cite class="ltx_cite ltx_citemacro_cite">Hou et al. (<a href="#bib.bib28" title="" class="ltx_ref">2017</a>)</cite>
+</th>
+<td id="S2.T3.6.8.2.2" class="ltx_td ltx_align_center">59.11</td>
+<td id="S2.T3.6.8.2.3" class="ltx_td ltx_align_center">0.665</td>
+<td id="S2.T3.6.8.2.4" class="ltx_td ltx_align_center">0.743</td>
+<td id="S2.T3.6.8.2.5" class="ltx_td ltx_align_center">0.125</td>
+<td id="S2.T3.6.8.2.6" class="ltx_td ltx_align_center">18.81</td>
+</tr>
+<tr id="S2.T3.6.9.3" class="ltx_tr">
+<th id="S2.T3.6.9.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">RAS<cite class="ltx_cite ltx_citemacro_cite">Chen et al. (<a href="#bib.bib29" title="" class="ltx_ref">2018</a>)</cite>
+</th>
+<td id="S2.T3.6.9.3.2" class="ltx_td ltx_align_center">60.48</td>
+<td id="S2.T3.6.9.3.3" class="ltx_td ltx_align_center">0.845</td>
+<td id="S2.T3.6.9.3.4" class="ltx_td ltx_align_center">0.758</td>
+<td id="S2.T3.6.9.3.5" class="ltx_td ltx_align_center">0.111</td>
+<td id="S2.T3.6.9.3.6" class="ltx_td ltx_align_center">17.60</td>
+</tr>
+<tr id="S2.T3.6.10.4" class="ltx_tr">
+<th id="S2.T3.6.10.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">BDRAR<cite class="ltx_cite ltx_citemacro_cite">Zhu et al. (<a href="#bib.bib22" title="" class="ltx_ref">2018</a>)</cite>
+</th>
+<td id="S2.T3.6.10.4.2" class="ltx_td ltx_align_center">67.43</td>
+<td id="S2.T3.6.10.4.3" class="ltx_td ltx_align_center">0.821</td>
+<td id="S2.T3.6.10.4.4" class="ltx_td ltx_align_center">0.792</td>
+<td id="S2.T3.6.10.4.5" class="ltx_td ltx_align_center">0.093</td>
+<td id="S2.T3.6.10.4.6" class="ltx_td ltx_align_center">12.41</td>
+</tr>
+<tr id="S2.T3.6.11.5" class="ltx_tr">
+<th id="S2.T3.6.11.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">DSC<cite class="ltx_cite ltx_citemacro_cite">Hu et al. (<a href="#bib.bib21" title="" class="ltx_ref">2018</a>)</cite>
+</th>
+<td id="S2.T3.6.11.5.2" class="ltx_td ltx_align_center">69.71</td>
+<td id="S2.T3.6.11.5.3" class="ltx_td ltx_align_center">0.816</td>
+<td id="S2.T3.6.11.5.4" class="ltx_td ltx_align_center">0.812</td>
+<td id="S2.T3.6.11.5.5" class="ltx_td ltx_align_center">0.087</td>
+<td id="S2.T3.6.11.5.6" class="ltx_td ltx_align_center">11.77</td>
+</tr>
+<tr id="S2.T3.6.12.6" class="ltx_tr">
+<th id="S2.T3.6.12.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">PSPNet <cite class="ltx_cite ltx_citemacro_cite">Zhao et al. (<a href="#bib.bib18" title="" class="ltx_ref">2017</a>)</cite>
+</th>
+<td id="S2.T3.6.12.6.2" class="ltx_td ltx_align_center">68.01</td>
+<td id="S2.T3.6.12.6.3" class="ltx_td ltx_align_center">0.922</td>
+<td id="S2.T3.6.12.6.4" class="ltx_td ltx_align_center">0.846</td>
+<td id="S2.T3.6.12.6.5" class="ltx_td ltx_align_center">0.079</td>
+<td id="S2.T3.6.12.6.6" class="ltx_td ltx_align_center">12.08</td>
+</tr>
+<tr id="S2.T3.6.13.7" class="ltx_tr">
+<th id="S2.T3.6.13.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">MirrorNet<cite class="ltx_cite ltx_citemacro_cite">Yang et al. (<a href="#bib.bib13" title="" class="ltx_ref">2019</a>)</cite>
+</th>
+<td id="S2.T3.6.13.7.2" class="ltx_td ltx_align_center">78.95</td>
+<td id="S2.T3.6.13.7.3" class="ltx_td ltx_align_center">0.935</td>
+<td id="S2.T3.6.13.7.4" class="ltx_td ltx_align_center">0.857</td>
+<td id="S2.T3.6.13.7.5" class="ltx_td ltx_align_center">0.065</td>
+<td id="S2.T3.6.13.7.6" class="ltx_td ltx_align_center">6.39</td>
+</tr>
+<tr id="S2.T3.6.14.8" class="ltx_tr">
+<th id="S2.T3.6.14.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">LSA <cite class="ltx_cite ltx_citemacro_cite">Guan et al. (<a href="#bib.bib30" title="" class="ltx_ref">2022</a>)</cite>
+</th>
+<td id="S2.T3.6.14.8.2" class="ltx_td ltx_align_center">79.85</td>
+<td id="S2.T3.6.14.8.3" class="ltx_td ltx_align_center">0.946</td>
+<td id="S2.T3.6.14.8.4" class="ltx_td ltx_align_center">0.889</td>
+<td id="S2.T3.6.14.8.5" class="ltx_td ltx_align_center">0.055</td>
+<td id="S2.T3.6.14.8.6" class="ltx_td ltx_align_center">7.12</td>
+</tr>
+<tr id="S2.T3.6.15.9" class="ltx_tr">
+<th id="S2.T3.6.15.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">EBLNet <cite class="ltx_cite ltx_citemacro_cite">He et al. (<a href="#bib.bib11" title="" class="ltx_ref">2021</a>)</cite>
+</th>
+<td id="S2.T3.6.15.9.2" class="ltx_td ltx_align_center">80.33</td>
+<td id="S2.T3.6.15.9.3" class="ltx_td ltx_align_center">0.951</td>
+<td id="S2.T3.6.15.9.4" class="ltx_td ltx_align_center">0.883</td>
+<td id="S2.T3.6.15.9.5" class="ltx_td ltx_align_center">0.049</td>
+<td id="S2.T3.6.15.9.6" class="ltx_td ltx_align_center">8.63</td>
+</tr>
+<tr id="S2.T3.6.16.10" class="ltx_tr">
+<th id="S2.T3.6.16.10.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t"><span id="S2.T3.6.16.10.1.1" class="ltx_text ltx_font_bold">SAM</span></th>
+<td id="S2.T3.6.16.10.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T3.6.16.10.2.1" class="ltx_text ltx_font_bold">51.57</span></td>
+<td id="S2.T3.6.16.10.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T3.6.16.10.3.1" class="ltx_text ltx_font_bold">0.876</span></td>
+<td id="S2.T3.6.16.10.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T3.6.16.10.4.1" class="ltx_text ltx_font_bold">0.817</span></td>
+<td id="S2.T3.6.16.10.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T3.6.16.10.5.1" class="ltx_text ltx_font_bold">0.124</span></td>
+<td id="S2.T3.6.16.10.6" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T3.6.16.10.6.1" class="ltx_text ltx_font_bold">23.17</span></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Experimental Comparison on MSD</figcaption>
+</figure>
+<figure id="S2.T4" class="ltx_table">
+<table id="S2.T4.5" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T4.5.5" class="ltx_tr">
+<th id="S2.T4.5.5.6" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt">Method</th>
+<th id="S2.T4.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">IoU <math id="S2.T4.1.1.1.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T4.1.1.1.m1.1a"><mo stretchy="false" id="S2.T4.1.1.1.m1.1.1" xref="S2.T4.1.1.1.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T4.1.1.1.m1.1b"><ci id="S2.T4.1.1.1.m1.1.1.cmml" xref="S2.T4.1.1.1.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T4.1.1.1.m1.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T4.3.3.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<math id="S2.T4.2.2.2.m1.1" class="ltx_Math" alttext="{F}_{\beta}" display="inline"><semantics id="S2.T4.2.2.2.m1.1a"><msub id="S2.T4.2.2.2.m1.1.1" xref="S2.T4.2.2.2.m1.1.1.cmml"><mi id="S2.T4.2.2.2.m1.1.1.2" xref="S2.T4.2.2.2.m1.1.1.2.cmml">F</mi><mi id="S2.T4.2.2.2.m1.1.1.3" xref="S2.T4.2.2.2.m1.1.1.3.cmml">β</mi></msub><annotation-xml encoding="MathML-Content" id="S2.T4.2.2.2.m1.1b"><apply id="S2.T4.2.2.2.m1.1.1.cmml" xref="S2.T4.2.2.2.m1.1.1"><csymbol cd="ambiguous" id="S2.T4.2.2.2.m1.1.1.1.cmml" xref="S2.T4.2.2.2.m1.1.1">subscript</csymbol><ci id="S2.T4.2.2.2.m1.1.1.2.cmml" xref="S2.T4.2.2.2.m1.1.1.2">𝐹</ci><ci id="S2.T4.2.2.2.m1.1.1.3.cmml" xref="S2.T4.2.2.2.m1.1.1.3">𝛽</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T4.2.2.2.m1.1c">{F}_{\beta}</annotation></semantics></math> <math id="S2.T4.3.3.3.m2.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T4.3.3.3.m2.1a"><mo stretchy="false" id="S2.T4.3.3.3.m2.1.1" xref="S2.T4.3.3.3.m2.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T4.3.3.3.m2.1b"><ci id="S2.T4.3.3.3.m2.1.1.cmml" xref="S2.T4.3.3.3.m2.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T4.3.3.3.m2.1c">\uparrow</annotation></semantics></math>
+</th>
+<th id="S2.T4.4.4.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">mAE <math id="S2.T4.4.4.4.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S2.T4.4.4.4.m1.1a"><mo stretchy="false" id="S2.T4.4.4.4.m1.1.1" xref="S2.T4.4.4.4.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S2.T4.4.4.4.m1.1b"><ci id="S2.T4.4.4.4.m1.1.1.cmml" xref="S2.T4.4.4.4.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T4.4.4.4.m1.1c">\downarrow</annotation></semantics></math>
+</th>
+<th id="S2.T4.5.5.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Acc <math id="S2.T4.5.5.5.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S2.T4.5.5.5.m1.1a"><mo stretchy="false" id="S2.T4.5.5.5.m1.1.1" xref="S2.T4.5.5.5.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S2.T4.5.5.5.m1.1b"><ci id="S2.T4.5.5.5.m1.1.1.cmml" xref="S2.T4.5.5.5.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.T4.5.5.5.m1.1c">\uparrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T4.5.6.1" class="ltx_tr">
+<th id="S2.T4.5.6.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">CPNET <cite class="ltx_cite ltx_citemacro_cite">Yu et al. (<a href="#bib.bib31" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T4.5.6.1.2" class="ltx_td ltx_align_center ltx_border_t">56.36</td>
+<td id="S2.T4.5.6.1.3" class="ltx_td ltx_align_center ltx_border_t">0.734</td>
+<td id="S2.T4.5.6.1.4" class="ltx_td ltx_align_center ltx_border_t">0.051</td>
+<td id="S2.T4.5.6.1.5" class="ltx_td ltx_align_center ltx_border_t">94.85</td>
+</tr>
+<tr id="S2.T4.5.7.2" class="ltx_tr">
+<th id="S2.T4.5.7.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">GloRe <cite class="ltx_cite ltx_citemacro_cite">Chen et al. (<a href="#bib.bib32" title="" class="ltx_ref">2019</a>)</cite>
+</th>
+<td id="S2.T4.5.7.2.2" class="ltx_td ltx_align_center">61.25</td>
+<td id="S2.T4.5.7.2.3" class="ltx_td ltx_align_center">0.774</td>
+<td id="S2.T4.5.7.2.4" class="ltx_td ltx_align_center">0.044</td>
+<td id="S2.T4.5.7.2.5" class="ltx_td ltx_align_center">95.61</td>
+</tr>
+<tr id="S2.T4.5.8.3" class="ltx_tr">
+<th id="S2.T4.5.8.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">BDRAR<cite class="ltx_cite ltx_citemacro_cite">Zhu et al. (<a href="#bib.bib22" title="" class="ltx_ref">2018</a>)</cite>
+</th>
+<td id="S2.T4.5.8.3.2" class="ltx_td ltx_align_center">58.43</td>
+<td id="S2.T4.5.8.3.3" class="ltx_td ltx_align_center">0.7433</td>
+<td id="S2.T4.5.8.3.4" class="ltx_td ltx_align_center">0.043</td>
+<td id="S2.T4.5.8.3.5" class="ltx_td ltx_align_center">95.66</td>
+</tr>
+<tr id="S2.T4.5.9.4" class="ltx_tr">
+<th id="S2.T4.5.9.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">PSPNet <cite class="ltx_cite ltx_citemacro_cite">Zhao et al. (<a href="#bib.bib18" title="" class="ltx_ref">2017</a>)</cite>
+</th>
+<td id="S2.T4.5.9.4.2" class="ltx_td ltx_align_center">60.44</td>
+<td id="S2.T4.5.9.4.3" class="ltx_td ltx_align_center">0.806</td>
+<td id="S2.T4.5.9.4.4" class="ltx_td ltx_align_center">0.039</td>
+<td id="S2.T4.5.9.4.5" class="ltx_td ltx_align_center">96.13</td>
+</tr>
+<tr id="S2.T4.5.10.5" class="ltx_tr">
+<th id="S2.T4.5.10.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">MirrorNet <cite class="ltx_cite ltx_citemacro_cite">Yang et al. (<a href="#bib.bib13" title="" class="ltx_ref">2019</a>)</cite>
+</th>
+<td id="S2.T4.5.10.5.2" class="ltx_td ltx_align_center">62.50</td>
+<td id="S2.T4.5.10.5.3" class="ltx_td ltx_align_center">0.778</td>
+<td id="S2.T4.5.10.5.4" class="ltx_td ltx_align_center">0.041</td>
+<td id="S2.T4.5.10.5.5" class="ltx_td ltx_align_center">96.27</td>
+</tr>
+<tr id="S2.T4.5.11.6" class="ltx_tr">
+<th id="S2.T4.5.11.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">PMD-Net <cite class="ltx_cite ltx_citemacro_cite">Lin et al. (<a href="#bib.bib14" title="" class="ltx_ref">2020</a>)</cite>
+</th>
+<td id="S2.T4.5.11.6.2" class="ltx_td ltx_align_center">62.40</td>
+<td id="S2.T4.5.11.6.3" class="ltx_td ltx_align_center">0.827</td>
+<td id="S2.T4.5.11.6.4" class="ltx_td ltx_align_center">0.055</td>
+<td id="S2.T4.5.11.6.5" class="ltx_td ltx_align_center">96.80</td>
+</tr>
+<tr id="S2.T4.5.12.7" class="ltx_tr">
+<th id="S2.T4.5.12.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">LSA <cite class="ltx_cite ltx_citemacro_cite">Guan et al. (<a href="#bib.bib30" title="" class="ltx_ref">2022</a>)</cite>
+</th>
+<td id="S2.T4.5.12.7.2" class="ltx_td ltx_align_center">66.84</td>
+<td id="S2.T4.5.12.7.3" class="ltx_td ltx_align_center">0.844</td>
+<td id="S2.T4.5.12.7.4" class="ltx_td ltx_align_center">0.049</td>
+<td id="S2.T4.5.12.7.5" class="ltx_td ltx_align_center">96.82</td>
+</tr>
+<tr id="S2.T4.5.13.8" class="ltx_tr">
+<th id="S2.T4.5.13.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t"><span id="S2.T4.5.13.8.1.1" class="ltx_text ltx_font_bold">SAM</span></th>
+<td id="S2.T4.5.13.8.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T4.5.13.8.2.1" class="ltx_text ltx_font_bold">64.75</span></td>
+<td id="S2.T4.5.13.8.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T4.5.13.8.3.1" class="ltx_text ltx_font_bold">0.861</span></td>
+<td id="S2.T4.5.13.8.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T4.5.13.8.4.1" class="ltx_text ltx_font_bold">0.0525</span></td>
+<td id="S2.T4.5.13.8.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S2.T4.5.13.8.5.1" class="ltx_text ltx_font_bold">94.75</span></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Experimental Comparison on PMD
+</figcaption>
+</figure>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Additional visualization results</h3>
+
+<div id="S2.SS3.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS3.p1.1" class="ltx_p">We conducted additional visualization experiments on the glass and mirror object benchmarks to facilitate observation of the results.</p>
+</div>
+<div id="S2.SS3.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS3.p2.1" class="ltx_p">In contrast to the previous visualizations, we present the detection results of all objects in the predicted images of glass and mirror objects. To enhance the visibility of the results obtained from the demonstration, we applied a pseudo-binary technique to improve the clarity of the output results. Our output images are generated as pseudo-binary images, where the predicted regions of objects are represented in shades of gray, and the non-object regions are displayed as black. Furthermore, if overlapping objects are detected, the corresponding overlapping regions will be entirely displayed as white.</p>
+</div>
+<div id="S2.SS3.p3" class="ltx_para ltx_noindent">
+<p id="S2.SS3.p3.1" class="ltx_p">As shown in Figures <a href="#S2.F3" title="Figure 3 ‣ 2.3 Additional visualization results ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> and <a href="#S2.F4" title="Figure 4 ‣ 2.3 Additional visualization results ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, when recognizing glass objects, the SAM model successfully identified objects behind the transparent ones, but failed to recognize the glass objects themselves. And many regions inside the glass were not segmented as any object, resulting in these regions being unlabeled and displayed as black areas. In Figure <a href="#S2.F5" title="Figure 5 ‣ 2.3 Additional visualization results ‣ 2 Experimental Evaluations ‣ Segment Anything Model (SAM) Meets Glass: Mirror and Transparent Objects Cannot Be Easily Detected" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> the model correctly identified most objects reflected in the mirror, but neglected to recognize the mirror itself.</p>
+</div>
+<figure id="S2.F3" class="ltx_figure"><img src="/html/2305.00278/assets/figs_glass/trans10k-all.jpg" id="S2.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="795" height="248" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Some challenging scenarios involving objects categorized as glass "things" and "stuff" in the Trans10k test sets resulted in poor testing results. Please zoom in to see the details.</figcaption>
+</figure>
+<figure id="S2.F4" class="ltx_figure"><img src="/html/2305.00278/assets/figs_glass/glass-all.jpg" id="S2.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="777" height="284" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Some bad testing results obtain from challenging scenarios that involve glass objects.</figcaption>
+</figure>
+<figure id="S2.F5" class="ltx_figure"><img src="/html/2305.00278/assets/figs_glass/mirror-all.jpg" id="S2.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="796" height="284" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Some bad testing results obtain from challenging scenarios that involve mirror objects.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Conclusion</h2>
+
+<div id="S3.p1" class="ltx_para ltx_noindent">
+<p id="S3.p1.1" class="ltx_p">This work is the first of its kind to perform a comprehensive study on whether SAM can segment glass-related objects. We find that SAM often fails to detect transparent objects. On two benchmark datasets, the performance of SAM is significantly worse than those models that are specifically trained to detect transparent objects.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. [2023a]</span>
+<span class="ltx_bibblock">
+Chaoning Zhang, Chenshuang Zhang, Sheng Zheng, Yu Qiao, Chenghao Li, Mengchun
+Zhang, Sumit Kumar Dam, Chu Myaet Thwal, Ye Lin Tun, Le Luang Huy, et al.
+
+</span>
+<span class="ltx_bibblock">A complete survey on generative ai (aigc): Is chatgpt from gpt-4 to
+gpt-5 all you need?
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2303.11717</em>, 2023a.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. [2023b]</span>
+<span class="ltx_bibblock">
+Chaoning Zhang, Chenshuang Zhang, Chenghao Li, Yu Qiao, Sheng Zheng,
+Sumit Kumar Dam, Mengchun Zhang, Jung Uk Kim, Seong Tae Kim, Jinwoo Choi,
+et al.
+
+</span>
+<span class="ltx_bibblock">One small step for generative ai, one giant leap for agi: A complete
+survey on chatgpt in aigc era.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2304.06488</em>, 2023b.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. [2023c]</span>
+<span class="ltx_bibblock">
+Chenshuang Zhang, Chaoning Zhang, Mengchun Zhang, and In So Kweon.
+
+</span>
+<span class="ltx_bibblock">Text-to-image diffusion models in generative ai: A survey.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2303.07909</em>, 2023c.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. [2023d]</span>
+<span class="ltx_bibblock">
+Chenshuang Zhang, Chaoning Zhang, Sheng Zheng, Mengchun Zhang, Maryam Qamar,
+Sung-Ho Bae, and In So Kweon.
+
+</span>
+<span class="ltx_bibblock">A survey on audio diffusion models: Text to speech synthesis and
+enhancement in generative ai.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2303.13336</em>, 2023d.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. [2023e]</span>
+<span class="ltx_bibblock">
+Mengchun Zhang, Maryam Qamar, Taegoo Kang, Yuna Jung, Chenshuang Zhang, Sung-Ho
+Bae, and Chaoning Zhang.
+
+</span>
+<span class="ltx_bibblock">A survey on graph diffusion models: Generative ai in science for
+molecule, protein and material.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2304.01565</em>, 2023e.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bommasani et al. [2021]</span>
+<span class="ltx_bibblock">
+Rishi Bommasani, Drew A Hudson, Ehsan Adeli, Russ Altman, Simran Arora, Sydney
+von Arx, Michael S Bernstein, Jeannette Bohg, Antoine Bosselut, Emma
+Brunskill, et al.
+
+</span>
+<span class="ltx_bibblock">On the opportunities and risks of foundation models.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2108.07258</em>, 2021.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Brown et al. [2020]</span>
+<span class="ltx_bibblock">
+Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla
+Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell,
+et al.
+
+</span>
+<span class="ltx_bibblock">Language models are few-shot learners.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">Advances in neural information processing systems</em>,
+33:1877–1901, 2020.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kirillov et al. [2023]</span>
+<span class="ltx_bibblock">
+Alexander Kirillov, Eric Mintun, Nikhila Ravi, Hanzi Mao, Chloe Rolland, Laura
+Gustafson, Tete Xiao, Spencer Whitehead, Alexander C Berg, Wan-Yen Lo, et al.
+
+</span>
+<span class="ltx_bibblock">Segment anything.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2304.02643</em>, 2023.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lin et al. [2021]</span>
+<span class="ltx_bibblock">
+Jiaying Lin, Zebang He, and Rynson WH Lau.
+
+</span>
+<span class="ltx_bibblock">Rich context aggregation with reflection prior for glass surface
+detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision
+and Pattern Recognition</em>, pages 13415–13424, 2021.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Maeno et al. [2013]</span>
+<span class="ltx_bibblock">
+Kazuki Maeno, Hajime Nagahara, Atsushi Shimada, and Rin-ichiro Taniguchi.
+
+</span>
+<span class="ltx_bibblock">Light field distortion feature for transparent object recognition.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition</em>, pages 2786–2793, 2013.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">He et al. [2021]</span>
+<span class="ltx_bibblock">
+Hao He, Xiangtai Li, Guangliang Cheng, Jianping Shi, Yunhai Tong, Gaofeng Meng,
+Véronique Prinet, and LuBin Weng.
+
+</span>
+<span class="ltx_bibblock">Enhanced boundary learning for glass-like object segmentation.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF International Conference on
+Computer Vision</em>, pages 15859–15868, 2021.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mei et al. [2020]</span>
+<span class="ltx_bibblock">
+Haiyang Mei, Xin Yang, Yang Wang, Yuanyuan Liu, Shengfeng He, Qiang Zhang,
+Xiaopeng Wei, and Rynson WH Lau.
+
+</span>
+<span class="ltx_bibblock">Don’t hit me! glass detection in real-world scenes.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib12.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision
+and Pattern Recognition</em>, pages 3687–3696, 2020.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. [2019]</span>
+<span class="ltx_bibblock">
+Xin Yang, Haiyang Mei, Ke Xu, Xiaopeng Wei, Baocai Yin, and Rynson WH Lau.
+
+</span>
+<span class="ltx_bibblock">Where is my mirror?
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib13.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF International Conference on
+Computer Vision</em>, pages 8809–8818, 2019.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lin et al. [2020]</span>
+<span class="ltx_bibblock">
+Jiaying Lin, Guodong Wang, and Rynson WH Lau.
+
+</span>
+<span class="ltx_bibblock">Progressive mirror detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib14.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision
+and Pattern Recognition</em>, pages 3697–3705, 2020.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xie et al. [2020]</span>
+<span class="ltx_bibblock">
+Enze Xie, Wenjia Wang, Wenhai Wang, Mingyu Ding, Chunhua Shen, and Ping Luo.
+
+</span>
+<span class="ltx_bibblock">Segmenting transparent objects in the wild.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic">Computer Vision–ECCV 2020: 16th European Conference,
+Glasgow, UK, August 23–28, 2020, Proceedings, Part XIII 16</em>, pages 696–711.
+Springer, 2020.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Margolin et al. [2014]</span>
+<span class="ltx_bibblock">
+Ran Margolin, Lihi Zelnik-Manor, and Ayellet Tal.
+
+</span>
+<span class="ltx_bibblock">How to evaluate foreground maps?
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</em>, pages 248–255, 2014.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Achanta et al. [2009]</span>
+<span class="ltx_bibblock">
+Radhakrishna Achanta, Sheila Hemami, Francisco Estrada, and Sabine Susstrunk.
+
+</span>
+<span class="ltx_bibblock">Frequency-tuned salient region detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic">2009 IEEE conference on computer vision and pattern
+recognition</em>, pages 1597–1604. IEEE, 2009.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhao et al. [2017]</span>
+<span class="ltx_bibblock">
+Hengshuang Zhao, Jianping Shi, Xiaojuan Qi, Xiaogang Wang, and Jiaya Jia.
+
+</span>
+<span class="ltx_bibblock">Pyramid scene parsing network.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib18.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</em>, pages 2881–2890, 2017.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kirillov et al. [2020]</span>
+<span class="ltx_bibblock">
+Alexander Kirillov, Yuxin Wu, Kaiming He, and Ross Girshick.
+
+</span>
+<span class="ltx_bibblock">Pointrend: Image segmentation as rendering.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision
+and pattern recognition</em>, pages 9799–9808, 2020.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al. [2018]</span>
+<span class="ltx_bibblock">
+Nian Liu, Junwei Han, and Ming-Hsuan Yang.
+
+</span>
+<span class="ltx_bibblock">Picanet: Learning pixel-wise contextual attention for saliency
+detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib20.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</em>, pages 3089–3098, 2018.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hu et al. [2018]</span>
+<span class="ltx_bibblock">
+Xiaowei Hu, Lei Zhu, Chi-Wing Fu, Jing Qin, and Pheng-Ann Heng.
+
+</span>
+<span class="ltx_bibblock">Direction-aware spatial context features for shadow detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib21.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</em>, pages 7454–7462, 2018.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhu et al. [2018]</span>
+<span class="ltx_bibblock">
+Lei Zhu, Zijun Deng, Xiaowei Hu, Chi-Wing Fu, Xuemiao Xu, Jing Qin, and
+Pheng-Ann Heng.
+
+</span>
+<span class="ltx_bibblock">Bidirectional feature pyramid network with recurrent attention
+residual modules for shadow detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib22.1.1" class="ltx_emph ltx_font_italic">Proceedings of the European Conference on Computer Vision
+(ECCV)</em>, pages 121–136, 2018.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Qin et al. [2019]</span>
+<span class="ltx_bibblock">
+Xuebin Qin, Zichen Zhang, Chenyang Huang, Chao Gao, Masood Dehghan, and Martin
+Jagersand.
+
+</span>
+<span class="ltx_bibblock">Basnet: Boundary-aware salient object detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib23.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision
+and pattern recognition</em>, pages 7479–7489, 2019.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pang et al. [2020]</span>
+<span class="ltx_bibblock">
+Youwei Pang, Xiaoqi Zhao, Lihe Zhang, and Huchuan Lu.
+
+</span>
+<span class="ltx_bibblock">Multi-scale interactive network for salient object detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib24.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision
+and pattern recognition</em>, pages 9413–9422, 2020.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fan et al. [2020]</span>
+<span class="ltx_bibblock">
+Deng-Ping Fan, Ge-Peng Ji, Guolei Sun, Ming-Ming Cheng, Jianbing Shen, and Ling
+Shao.
+
+</span>
+<span class="ltx_bibblock">Camouflaged object detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib25.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision
+and pattern recognition</em>, pages 2777–2787, 2020.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+Jiaying Lin, Yuen Hei Yeung, and Rynson WH Lau.
+
+</span>
+<span class="ltx_bibblock">Exploiting semantic relations for glass surface detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib26.1.1" class="ltx_emph ltx_font_italic">Advances in Neural Information Processing Systems</em>.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhao et al. [2018]</span>
+<span class="ltx_bibblock">
+Hengshuang Zhao, Xiaojuan Qi, Xiaoyong Shen, Jianping Shi, and Jiaya Jia.
+
+</span>
+<span class="ltx_bibblock">Icnet for real-time semantic segmentation on high-resolution images.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib27.1.1" class="ltx_emph ltx_font_italic">Proceedings of the European conference on computer vision
+(ECCV)</em>, pages 405–420, 2018.
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hou et al. [2017]</span>
+<span class="ltx_bibblock">
+Qibin Hou, Ming-Ming Cheng, Xiaowei Hu, Ali Borji, Zhuowen Tu, and Philip HS
+Torr.
+
+</span>
+<span class="ltx_bibblock">Deeply supervised salient object detection with short connections.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib28.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</em>, pages 3203–3212, 2017.
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al. [2018]</span>
+<span class="ltx_bibblock">
+Shuhan Chen, Xiuli Tan, Ben Wang, and Xuelong Hu.
+
+</span>
+<span class="ltx_bibblock">Reverse attention for salient object detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib29.1.1" class="ltx_emph ltx_font_italic">Proceedings of the European conference on computer vision
+(ECCV)</em>, pages 234–250, 2018.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Guan et al. [2022]</span>
+<span class="ltx_bibblock">
+Huankang Guan, Jiaying Lin, and Rynson WH Lau.
+
+</span>
+<span class="ltx_bibblock">Learning semantic associations for mirror detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib30.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision
+and Pattern Recognition</em>, pages 5941–5950, 2022.
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yu et al. [2020]</span>
+<span class="ltx_bibblock">
+Changqian Yu, Jingbo Wang, Changxin Gao, Gang Yu, Chunhua Shen, and Nong Sang.
+
+</span>
+<span class="ltx_bibblock">Context prior for scene segmentation.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib31.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision
+and pattern recognition</em>, pages 12416–12425, 2020.
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al. [2019]</span>
+<span class="ltx_bibblock">
+Yunpeng Chen, Marcus Rohrbach, Zhicheng Yan, Yan Shuicheng, Jiashi Feng, and
+Yannis Kalantidis.
+
+</span>
+<span class="ltx_bibblock">Graph-based global reasoning networks.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib32.1.1" class="ltx_emph ltx_font_italic">CVPR</em>, pages 433–442, 2019.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2305.00277" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2305.00278" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2305.00278">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2305.00278" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2305.00279" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Thu Feb 29 10:32:35 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,991 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2308.00596] MonoNext: A 3D Monocular Object Detection with ConvNext</title><meta property="og:description" content="Autonomous driving perception tasks rely heavily on cameras as the primary sensor for Object Detection, Semantic Segmentation, Instance Segmentation, and Object Tracking. However, RGB images captured by cameras lack de…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MonoNext: A 3D Monocular Object Detection with ConvNext">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="MonoNext: A 3D Monocular Object Detection with ConvNext">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2308.00596">
+
+<!--Generated on Wed Feb 28 14:41:43 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document" style="font-size:173%;">MonoNext: A 3D Monocular Object Detection with ConvNext
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Marcelo Eduardo Pederiva<sup id="id6.6.id1" class="ltx_sup"><span id="id6.6.id1.1" class="ltx_text ltx_font_italic">1</span></sup>, José Mario De Martino<sup id="id7.7.id2" class="ltx_sup"><span id="id7.7.id2.1" class="ltx_text ltx_font_italic">1</span></sup> and Alessandro Zimmer<sup id="id8.8.id3" class="ltx_sup"><span id="id8.8.id3.1" class="ltx_text ltx_font_italic">2</span></sup>
+</span><span class="ltx_author_notes">This work was supported by The National Council for Scientific and Technological Development<sup id="id9.9.id1" class="ltx_sup"><span id="id9.9.id1.1" class="ltx_text ltx_font_italic">1</span></sup>Marcelo Eduardo Pederiva and José Mario De Martino are with School of Electrical and Computer Engineering,
+University of Campinas, Brazil
+<span id="id10.10.id2" class="ltx_text ltx_font_typewriter" style="font-size:90%;">marcelopederiva@gmail.com, martino@unicamp.br</span><sup id="id11.11.id1" class="ltx_sup"><span id="id11.11.id1.1" class="ltx_text ltx_font_italic">2</span></sup>Alessandro Zimmer is with the Center of Automotive Research on Integrated Safety Systems and Measurement Area, Technische Hochschule Ingolstadt,
+Germany
+<span id="id12.12.id2" class="ltx_text ltx_font_typewriter" style="font-size:90%;">Alessandro.Zimmer@thi.de</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id13.id1" class="ltx_p">Autonomous driving perception tasks rely heavily on cameras as the primary sensor for Object Detection, Semantic Segmentation, Instance Segmentation, and Object Tracking. However, RGB images captured by cameras lack depth information, which poses a significant challenge in 3D detection tasks. To supplement this missing data, mapping sensors such as LIDAR and RADAR are used for accurate 3D Object Detection. Despite their significant accuracy, the multi-sensor models are expensive and require a high computational demand. In contrast, Monocular 3D Object Detection models are becoming increasingly popular, offering a faster, cheaper, and easier-to-implement solution for 3D detections. This paper introduces a different Multi-Tasking Learning approach called MonoNext that utilizes a spatial grid to map objects in the scene. MonoNext employs a straightforward approach based on the ConvNext network and requires only 3D bounding box annotated data. In our experiments with the KITTI dataset, MonoNext achieved high precision and competitive performance comparable with state-of-the-art approaches. Furthermore, by adding more training data, MonoNext surpassed itself and achieved higher accuracies. The code will be released at <a target="_blank" href="https://github.com/marcelopederiva/MonoNext" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/marcelopederiva/MonoNext</a>.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">Introduction</span>
+</h2>
+
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2308.00596/assets/images/step_2.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_portrait" width="419" height="564" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>MonoNext Approach Overview. The model constructs a two-dimensional grid covering the area observed by the camera. Each cell of this grid will estimate if there is an object in it and its characteristics. Finally, the cells that have the highest confidence value of having an object are chosen.</figcaption>
+</figure>
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Object detection is a fundamental task in the field of Computer Vision. The ability to recognize and locate objects in both two and three dimensions plays a critical role in various areas, including robotic vision, safety applications, and autonomous driving.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Object detection based on images has experienced significant advancements over the years, attracting the attention of research centers, industries, and universities. While 2D object detection achieves high accuracy in real time, accurately estimating the three-dimensional characteristics of objects without deep information remains a challenging task.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Currently, state-of-the-art 3D Object Detection methods depend on the use of multiple sensors to estimate the characteristics of objects in a scene. By combining data from sensors that map the environment and cameras, these methods can achieve up to 80% accuracy in detecting objects, as demonstrated by the KITTI benchmark <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. However, sensors that provide this environment mapping, such as LIDARs, are expensive and computationally demanding. As a result, there is a growing interest in developing 3D detection models that rely solely on cameras in order to reduce cost and computational complexity.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">While some existing works have explored the use of two cameras, from different perspectives, to improve 3D estimation (Stereo Object Detection) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>, this paper focuses on developing a 3D prediction model based on a single input image (Monocular Object Detection) to make the approach more accessible and expand its applications. Our model builds a Bird-Eye-View grid, where each cell grid contains the estimation of confidence, class, 3D position, 3D dimension, and yaw-angle of the object in it (Figure <a href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>). The proposed approach is divided into three steps, including a light CNN backbone, followed by a ConvNext-based architecture, and a Multi-Task learning design for the object’s characteristics estimation.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">The model was tested on the KITTI dataset to detect cars in urban streets, and its performance was comparable with current methods, achieving competitive accuracies in the validation set. Although the paper primarily presents a vehicle detection application for use in the field of Self-Driving cars, the model is highly flexible, allowing its implementation to detect different objects for a variety of applications.</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p">The paper is organized as follows. Initially, a section of Related Works (Section <a href="#S2" title="II Related Work ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>) reviews the state-of-the-art 2D and 3D detection models. Next, in section <a href="#S3" title="III Our Approach ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">III</span></a>, the main approach of our work is presented. This section shows a definition of the target problem and an explanation of our method, such as architecture, loss equation, and training parameters. In section <a href="#S4" title="IV Experiments ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a>, the results of our model on the KITTI dataset is presented along with a comparison of the results given by the state-of-the-art. Finally, in section <a href="#S5" title="V Conclusions ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">V</span></a>, a summary and the model’s performance is discussed.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Related Work</span>
+</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS1.5.1.1" class="ltx_text">II-A</span> </span><span id="S2.SS1.6.2" class="ltx_text ltx_font_italic">2D Object Detection </span>
+</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">2D Object Detection is a Computer Vision task that involves locating and classifying objects within an image. There are two types of methods used for this task: two-stage and single-stage detectors. Two-stage detectors use a first step to find proposed regions and a second step to identify and classify objects in these regions, providing high accuracy but slower performance. Single-stage detectors use a straightforward approach for identifying objects, providing faster detections and real-time predictions.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">The Region-based Convolutional Neural Network (R-CNN) pioneered the two-stage object detection approach by utilizing CNNs to improve object detection accuracy <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. R-CNN uses a CNN, such as AlexNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, to propose regions of interest, which are then passed by another network to predict objects. The model featured the best accuracy at the time and inspired the development of derived versions. Fast R-CNN and Faster R-CNN are variations of R-CNN that further improved object detection performance by introducing better region proposal methods and approaches to detect faster <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>. Furthermore, different two-stage methods emerged, presenting competitive performances. SPP-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> proposes a Spatial Pyramid Pooling layer to handle variable input sizes and aspect ratios, reducing computational demands, and achieving comparable accuracy to R-CNN with faster detection times. The Feature Pyramid Network (FPN) concatenates feature maps from different scales to enhancing the detection of small objects and maintain accuracy at different scales <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>.</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.1" class="ltx_p">One-stage models have become increasingly popular due to their fast response time and straightforward approach. One of the most influential one-stage models is the Single Shot Multibox Detector (SSD) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>. The SSD uses a cascading approach to detect objects based on different layers’ dimensions in the Convolutional Network, achieving the same performance as two-stage models while maintaining real-time behavior.</p>
+</div>
+<div id="S2.SS1.p4" class="ltx_para">
+<p id="S2.SS1.p4.1" class="ltx_p">Another widely known one-stage model is the You Only Look Once (YOLO) model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>. The YOLO model uses a unique and straightforward architecture that predicts a classification grid based on the input image. Although the model initially did not have the best accuracy, it was very light and reached high detection speeds. Over the years, new versions of YOLO have emerged with changes in architecture and training to achieve high accuracy and low response times <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>.</p>
+</div>
+<div id="S2.SS1.p5" class="ltx_para">
+<p id="S2.SS1.p5.1" class="ltx_p">The Swin-Transformer model is another approach to object detection that uses the Vision Transformer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>. The Transformer architecture has had a significant impact on Natural Language Processing (NLP) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, and its vision-based approach achieves high accuracy in image classification. Although the model is still in its early stages, it has already shown competitive accuracy compared to other approaches.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS2.5.1.1" class="ltx_text">II-B</span> </span><span id="S2.SS2.6.2" class="ltx_text ltx_font_italic">Monocular 3D Object Detection</span>
+</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Unlike 2D detections, 3D object detection models are tasked with recognizing objects in a three-dimensional space, which requires accurate 3D localization, dimension, and angle rotation of the object. However, predicting these characteristics using only one image (monocular detection) and without depth information is challenging.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Several works propose different approaches for monocular detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>, <a href="#bib.bib22" title="" class="ltx_ref">22</a>, <a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>. Some methods use the object’s position information in the image to detect 2D objects and then refine 3D estimates on it <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>. The GS3D utilizes 2D detection models to project a 3D guidance and then refines the projection for the final detection of objects <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>. In contrast, MonoCon uses 2D detection data but proposes a direct approach to 3D estimation, where 2D information is only used to converge the loss error <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>. Mono3D uses 2D data along with class semantic and instance semantic information to refine the model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">Alternatively, some approaches aim to detect objects in a single step <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>, <a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>. For example, M3D-RPN presents a parallel network approach for simultaneous prediction of 2D and 3D detections <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>. The model uses deep-aware convolution techniques to learn spatial information. On the other hand, the Orthographic Feature Transform predicts a feature grid from the output of a front-end ResNet-18 to map the objects in the scene in a voxel-based representation. This grid projection is then refined by another network that predicts the object’s characteristics in each grid <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>.</p>
+</div>
+<div id="S2.SS2.p4" class="ltx_para">
+<p id="S2.SS2.p4.1" class="ltx_p">Other methods rely on geometric uncertainty projection approaches to estimate the depth distance of objects. Models like GUPNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>, MonoFlex <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite> and MonoPair <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>, which utilize heatmap data, 3D and 2D labels to converge the training step, have shown impressive results. By combining various sources of information, the performance achieved by these models currently represents the state-of-the-art in Monocular 3D Object Detection.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure">
+<p id="S2.F2.1" class="ltx_p ltx_align_center"><span id="S2.F2.1.1" class="ltx_text"><img src="/html/2308.00596/assets/images/MonoNext.drawio.png" id="S2.F2.1.1.g1" class="ltx_graphics ltx_img_landscape" width="598" height="215" alt="Refer to caption"></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>MonoNext Framework. The input image passes through a Feature Extractor, with a backbone and a ConvNext architecture. Then it branches into five tasks to predict each characteristic of the object in a 15<math id="S2.F2.3.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S2.F2.3.m1.1b"><mo id="S2.F2.3.m1.1.1" xref="S2.F2.3.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S2.F2.3.m1.1c"><times id="S2.F2.3.m1.1.1.cmml" xref="S2.F2.3.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S2.F2.3.m1.1d">\times</annotation></semantics></math> 15 grid BEV.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Our Approach</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">In this section, we introduce our proposed method for Monocular 3D Object Detection. Our approach utilizes Multi-Task Learning to estimate various characteristics of objects present in the scene based on a single input image, including 3D position (<span id="S3.p1.1.1" class="ltx_text ltx_font_italic">x,y,z</span>), 3D dimension (<span id="S3.p1.1.2" class="ltx_text ltx_font_italic">w,h,l</span>), class, and yaw-angle (<math id="S3.p1.1.m1.1" class="ltx_Math" alttext="\theta" display="inline"><semantics id="S3.p1.1.m1.1a"><mi id="S3.p1.1.m1.1.1" xref="S3.p1.1.m1.1.1.cmml">θ</mi><annotation-xml encoding="MathML-Content" id="S3.p1.1.m1.1b"><ci id="S3.p1.1.m1.1.1.cmml" xref="S3.p1.1.m1.1.1">𝜃</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.1.m1.1c">\theta</annotation></semantics></math>).</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Our goal is to create a two-dimensional grid to map the objects presented in the image, where each grid cell will provide confidence in having an object and its corresponding characteristics. As the target object (vehicles) has limited variations in the vertical axis and to ensure a lightweight model, we adopt a <math id="S3.p2.1.m1.1" class="ltx_Math" alttext="15\times 15" display="inline"><semantics id="S3.p2.1.m1.1a"><mrow id="S3.p2.1.m1.1.1" xref="S3.p2.1.m1.1.1.cmml"><mn id="S3.p2.1.m1.1.1.2" xref="S3.p2.1.m1.1.1.2.cmml">15</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p2.1.m1.1.1.1" xref="S3.p2.1.m1.1.1.1.cmml">×</mo><mn id="S3.p2.1.m1.1.1.3" xref="S3.p2.1.m1.1.1.3.cmml">15</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.1.m1.1b"><apply id="S3.p2.1.m1.1.1.cmml" xref="S3.p2.1.m1.1.1"><times id="S3.p2.1.m1.1.1.1.cmml" xref="S3.p2.1.m1.1.1.1"></times><cn type="integer" id="S3.p2.1.m1.1.1.2.cmml" xref="S3.p2.1.m1.1.1.2">15</cn><cn type="integer" id="S3.p2.1.m1.1.1.3.cmml" xref="S3.p2.1.m1.1.1.3">15</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.1.m1.1c">15\times 15</annotation></semantics></math> grid in Bird-Eye-View to cover all the vehicles in the image. The prediction process of this grid will be shown below.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">First, an overview of the approach is presented to illustrate all processes of the model detection. Next, it is discussed the Feature Extractor, which is followed by the Multi-Task Learning step. Finally, the Loss Equation is presented.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS1.5.1.1" class="ltx_text">III-A</span> </span><span id="S3.SS1.6.2" class="ltx_text ltx_font_italic">Framework Overview</span>
+</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.2" class="ltx_p">As shown in Figure <a href="#S2.F2" title="Figure 2 ‣ II-B Monocular 3D Object Detection ‣ II Related Work ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, our approach is composed of 2 steps, a Feature Extractor and a Multi-Task Learning step. In the first stage, the model receives an RGB image as input and passes through 2 different CNNs, the MobileNetV2 as backbone, and a ConvNext-based network. The output of this stage already presents the Bird-Eye-View grid (<math id="S3.SS1.p1.1.m1.1" class="ltx_Math" alttext="15\times 15" display="inline"><semantics id="S3.SS1.p1.1.m1.1a"><mrow id="S3.SS1.p1.1.m1.1.1" xref="S3.SS1.p1.1.m1.1.1.cmml"><mn id="S3.SS1.p1.1.m1.1.1.2" xref="S3.SS1.p1.1.m1.1.1.2.cmml">15</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.1.m1.1.1.1" xref="S3.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S3.SS1.p1.1.m1.1.1.3" xref="S3.SS1.p1.1.m1.1.1.3.cmml">15</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.1.m1.1b"><apply id="S3.SS1.p1.1.m1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1"><times id="S3.SS1.p1.1.m1.1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.SS1.p1.1.m1.1.1.2.cmml" xref="S3.SS1.p1.1.m1.1.1.2">15</cn><cn type="integer" id="S3.SS1.p1.1.m1.1.1.3.cmml" xref="S3.SS1.p1.1.m1.1.1.3">15</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.1.m1.1c">15\times 15</annotation></semantics></math>) with 128 filters. Then, this layer is divided into 5 branches, where each branch will refine this output to predict a particular task: Class, Confidence, Position (x, y, z), Dimension (w, h, l), and Yaw-angle (<math id="S3.SS1.p1.2.m2.1" class="ltx_Math" alttext="\theta" display="inline"><semantics id="S3.SS1.p1.2.m2.1a"><mi id="S3.SS1.p1.2.m2.1.1" xref="S3.SS1.p1.2.m2.1.1.cmml">θ</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.2.m2.1b"><ci id="S3.SS1.p1.2.m2.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1">𝜃</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.2.m2.1c">\theta</annotation></semantics></math>).</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS2.5.1.1" class="ltx_text">III-B</span> </span><span id="S3.SS2.6.2" class="ltx_text ltx_font_italic">Feature Extractor</span>
+</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">To extract features, our proposed method incorporates a known backbone along with a sequence of Convolutional Layers based on ConvNext.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">Seeking to design a lightweight detection model, we opted for MobileNetV2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite> as the backbone of our Feature Extractor step. MobileNetV2 has demonstrated excellent performance while being one of the lightest feature extractors. This made it one of the best candidates to serve as the backbone of our model. However, having just the MobileNetV2 is insufficient for performing well in 3D detections. Therefore, our approach utilizes a ConvNext-based light architecture to complement this stage.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.1" class="ltx_p">ConvNext <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite> has introduced a novel design of convolutional layers that have surpassed the accuracy of Transformers-based models. Despite its performance, the default ConvNext network requires high memory allocation. To address this limitation, we propose a simple ConvNext-based architecture for this stage.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure">
+<p id="S3.F3.1" class="ltx_p ltx_align_center"><span id="S3.F3.1.1" class="ltx_text"><img src="/html/2308.00596/assets/images/subblock.png" id="S3.F3.1.1.g1" class="ltx_graphics ltx_img_landscape" width="419" height="328" alt="Refer to caption"></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Sub Block architecture based on ConvNext. The block has 3 Convolutional Layers with a shortcut adding the output of the Convolutional sequence.</figcaption>
+</figure>
+<div id="S3.SS2.p4" class="ltx_para">
+<p id="S3.SS2.p4.1" class="ltx_p">Our ConvNext architecture is based on blocks, where each block is composed of a 2D Convolutional Layer (ConvLayer), a sub-block, and a Layer Normalization. Figure <a href="#S3.F3" title="Figure 3 ‣ III-B Feature Extractor ‣ III Our Approach ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> illustrates the Sub-Block, which consists of a ConvLayer with kernel size 7 and N filters, followed by a Layer Normalization, a ConvLayer with kernel size 1 and 4*N filters, GELU activation function, another ConvLayer with kernel size 1 and N filters, and finally, this output is added to the input to create a shortcut.</p>
+</div>
+<div id="S3.SS2.p5" class="ltx_para">
+<p id="S3.SS2.p5.1" class="ltx_p">The output of the Backbone passes by a sequence of 4 blocks, with each block having a specific number of filters and kernel size, represented as (512,3), (256,4), (256,3), and (128,3).</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS3.5.1.1" class="ltx_text">III-C</span> </span><span id="S3.SS3.6.2" class="ltx_text ltx_font_italic">Multi-task Learning</span>
+</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">3D detection requires the prediction of many objects’ characteristics. Thus, we apply a Multi-task Learning approach to estimate all required information simultaneously. The output of the Feature Extractor step is split into five tasks, and each branch passes through a residual ConvNext block(256,1). Subsequently, each task goes through a last Convolutional Layer, which utilizes an activation function, <span id="S3.SS3.p1.1.1" class="ltx_text ltx_font_italic">softmax</span> for Classification and <span id="S3.SS3.p1.1.2" class="ltx_text ltx_font_italic">sigmoid</span> for the other tasks.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.1" class="ltx_p">In the end, we obtain a 15x15 horizontal-depth grid, where each grid cell contains nine values. One value represents the confidence score, and eight values estimate the 3D characteristics of the object. This approach allows us to map the objects in the image into the two-dimensional grid while simultaneously estimating the objects’ characteristics.</p>
+</div>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS4.5.1.1" class="ltx_text">III-D</span> </span><span id="S3.SS4.6.2" class="ltx_text ltx_font_italic">Loss Equation</span>
+</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.4" class="ltx_p">In the Multi-Task Learning step, our model generates multiple predictions simultaneously. To ensure the model convergence, we consider the errors of all tasks and sum them up in the total loss equation (Equation <a href="#S3.E1" title="In III-D Loss Equation ‣ III Our Approach ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>). As a consequence, our total loss will be the result of the sum of three specific losses: Confidence loss (<math id="S3.SS4.p1.1.m1.1" class="ltx_Math" alttext="loss_{conf}" display="inline"><semantics id="S3.SS4.p1.1.m1.1a"><mrow id="S3.SS4.p1.1.m1.1.1" xref="S3.SS4.p1.1.m1.1.1.cmml"><mi id="S3.SS4.p1.1.m1.1.1.2" xref="S3.SS4.p1.1.m1.1.1.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.1.m1.1.1.1" xref="S3.SS4.p1.1.m1.1.1.1.cmml">​</mo><mi id="S3.SS4.p1.1.m1.1.1.3" xref="S3.SS4.p1.1.m1.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.1.m1.1.1.1a" xref="S3.SS4.p1.1.m1.1.1.1.cmml">​</mo><mi id="S3.SS4.p1.1.m1.1.1.4" xref="S3.SS4.p1.1.m1.1.1.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.1.m1.1.1.1b" xref="S3.SS4.p1.1.m1.1.1.1.cmml">​</mo><msub id="S3.SS4.p1.1.m1.1.1.5" xref="S3.SS4.p1.1.m1.1.1.5.cmml"><mi id="S3.SS4.p1.1.m1.1.1.5.2" xref="S3.SS4.p1.1.m1.1.1.5.2.cmml">s</mi><mrow id="S3.SS4.p1.1.m1.1.1.5.3" xref="S3.SS4.p1.1.m1.1.1.5.3.cmml"><mi id="S3.SS4.p1.1.m1.1.1.5.3.2" xref="S3.SS4.p1.1.m1.1.1.5.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.1.m1.1.1.5.3.1" xref="S3.SS4.p1.1.m1.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.1.m1.1.1.5.3.3" xref="S3.SS4.p1.1.m1.1.1.5.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.1.m1.1.1.5.3.1a" xref="S3.SS4.p1.1.m1.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.1.m1.1.1.5.3.4" xref="S3.SS4.p1.1.m1.1.1.5.3.4.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.1.m1.1.1.5.3.1b" xref="S3.SS4.p1.1.m1.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.1.m1.1.1.5.3.5" xref="S3.SS4.p1.1.m1.1.1.5.3.5.cmml">f</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.1.m1.1b"><apply id="S3.SS4.p1.1.m1.1.1.cmml" xref="S3.SS4.p1.1.m1.1.1"><times id="S3.SS4.p1.1.m1.1.1.1.cmml" xref="S3.SS4.p1.1.m1.1.1.1"></times><ci id="S3.SS4.p1.1.m1.1.1.2.cmml" xref="S3.SS4.p1.1.m1.1.1.2">𝑙</ci><ci id="S3.SS4.p1.1.m1.1.1.3.cmml" xref="S3.SS4.p1.1.m1.1.1.3">𝑜</ci><ci id="S3.SS4.p1.1.m1.1.1.4.cmml" xref="S3.SS4.p1.1.m1.1.1.4">𝑠</ci><apply id="S3.SS4.p1.1.m1.1.1.5.cmml" xref="S3.SS4.p1.1.m1.1.1.5"><csymbol cd="ambiguous" id="S3.SS4.p1.1.m1.1.1.5.1.cmml" xref="S3.SS4.p1.1.m1.1.1.5">subscript</csymbol><ci id="S3.SS4.p1.1.m1.1.1.5.2.cmml" xref="S3.SS4.p1.1.m1.1.1.5.2">𝑠</ci><apply id="S3.SS4.p1.1.m1.1.1.5.3.cmml" xref="S3.SS4.p1.1.m1.1.1.5.3"><times id="S3.SS4.p1.1.m1.1.1.5.3.1.cmml" xref="S3.SS4.p1.1.m1.1.1.5.3.1"></times><ci id="S3.SS4.p1.1.m1.1.1.5.3.2.cmml" xref="S3.SS4.p1.1.m1.1.1.5.3.2">𝑐</ci><ci id="S3.SS4.p1.1.m1.1.1.5.3.3.cmml" xref="S3.SS4.p1.1.m1.1.1.5.3.3">𝑜</ci><ci id="S3.SS4.p1.1.m1.1.1.5.3.4.cmml" xref="S3.SS4.p1.1.m1.1.1.5.3.4">𝑛</ci><ci id="S3.SS4.p1.1.m1.1.1.5.3.5.cmml" xref="S3.SS4.p1.1.m1.1.1.5.3.5">𝑓</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.1.m1.1c">loss_{conf}</annotation></semantics></math>), Class loss (<math id="S3.SS4.p1.2.m2.1" class="ltx_Math" alttext="loss_{class}" display="inline"><semantics id="S3.SS4.p1.2.m2.1a"><mrow id="S3.SS4.p1.2.m2.1.1" xref="S3.SS4.p1.2.m2.1.1.cmml"><mi id="S3.SS4.p1.2.m2.1.1.2" xref="S3.SS4.p1.2.m2.1.1.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.2.m2.1.1.1" xref="S3.SS4.p1.2.m2.1.1.1.cmml">​</mo><mi id="S3.SS4.p1.2.m2.1.1.3" xref="S3.SS4.p1.2.m2.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.2.m2.1.1.1a" xref="S3.SS4.p1.2.m2.1.1.1.cmml">​</mo><mi id="S3.SS4.p1.2.m2.1.1.4" xref="S3.SS4.p1.2.m2.1.1.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.2.m2.1.1.1b" xref="S3.SS4.p1.2.m2.1.1.1.cmml">​</mo><msub id="S3.SS4.p1.2.m2.1.1.5" xref="S3.SS4.p1.2.m2.1.1.5.cmml"><mi id="S3.SS4.p1.2.m2.1.1.5.2" xref="S3.SS4.p1.2.m2.1.1.5.2.cmml">s</mi><mrow id="S3.SS4.p1.2.m2.1.1.5.3" xref="S3.SS4.p1.2.m2.1.1.5.3.cmml"><mi id="S3.SS4.p1.2.m2.1.1.5.3.2" xref="S3.SS4.p1.2.m2.1.1.5.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.2.m2.1.1.5.3.1" xref="S3.SS4.p1.2.m2.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.2.m2.1.1.5.3.3" xref="S3.SS4.p1.2.m2.1.1.5.3.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.2.m2.1.1.5.3.1a" xref="S3.SS4.p1.2.m2.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.2.m2.1.1.5.3.4" xref="S3.SS4.p1.2.m2.1.1.5.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.2.m2.1.1.5.3.1b" xref="S3.SS4.p1.2.m2.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.2.m2.1.1.5.3.5" xref="S3.SS4.p1.2.m2.1.1.5.3.5.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.2.m2.1.1.5.3.1c" xref="S3.SS4.p1.2.m2.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.2.m2.1.1.5.3.6" xref="S3.SS4.p1.2.m2.1.1.5.3.6.cmml">s</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.2.m2.1b"><apply id="S3.SS4.p1.2.m2.1.1.cmml" xref="S3.SS4.p1.2.m2.1.1"><times id="S3.SS4.p1.2.m2.1.1.1.cmml" xref="S3.SS4.p1.2.m2.1.1.1"></times><ci id="S3.SS4.p1.2.m2.1.1.2.cmml" xref="S3.SS4.p1.2.m2.1.1.2">𝑙</ci><ci id="S3.SS4.p1.2.m2.1.1.3.cmml" xref="S3.SS4.p1.2.m2.1.1.3">𝑜</ci><ci id="S3.SS4.p1.2.m2.1.1.4.cmml" xref="S3.SS4.p1.2.m2.1.1.4">𝑠</ci><apply id="S3.SS4.p1.2.m2.1.1.5.cmml" xref="S3.SS4.p1.2.m2.1.1.5"><csymbol cd="ambiguous" id="S3.SS4.p1.2.m2.1.1.5.1.cmml" xref="S3.SS4.p1.2.m2.1.1.5">subscript</csymbol><ci id="S3.SS4.p1.2.m2.1.1.5.2.cmml" xref="S3.SS4.p1.2.m2.1.1.5.2">𝑠</ci><apply id="S3.SS4.p1.2.m2.1.1.5.3.cmml" xref="S3.SS4.p1.2.m2.1.1.5.3"><times id="S3.SS4.p1.2.m2.1.1.5.3.1.cmml" xref="S3.SS4.p1.2.m2.1.1.5.3.1"></times><ci id="S3.SS4.p1.2.m2.1.1.5.3.2.cmml" xref="S3.SS4.p1.2.m2.1.1.5.3.2">𝑐</ci><ci id="S3.SS4.p1.2.m2.1.1.5.3.3.cmml" xref="S3.SS4.p1.2.m2.1.1.5.3.3">𝑙</ci><ci id="S3.SS4.p1.2.m2.1.1.5.3.4.cmml" xref="S3.SS4.p1.2.m2.1.1.5.3.4">𝑎</ci><ci id="S3.SS4.p1.2.m2.1.1.5.3.5.cmml" xref="S3.SS4.p1.2.m2.1.1.5.3.5">𝑠</ci><ci id="S3.SS4.p1.2.m2.1.1.5.3.6.cmml" xref="S3.SS4.p1.2.m2.1.1.5.3.6">𝑠</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.2.m2.1c">loss_{class}</annotation></semantics></math>), Box loss (<math id="S3.SS4.p1.3.m3.1" class="ltx_Math" alttext="loss_{box}" display="inline"><semantics id="S3.SS4.p1.3.m3.1a"><mrow id="S3.SS4.p1.3.m3.1.1" xref="S3.SS4.p1.3.m3.1.1.cmml"><mi id="S3.SS4.p1.3.m3.1.1.2" xref="S3.SS4.p1.3.m3.1.1.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.3.m3.1.1.1" xref="S3.SS4.p1.3.m3.1.1.1.cmml">​</mo><mi id="S3.SS4.p1.3.m3.1.1.3" xref="S3.SS4.p1.3.m3.1.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.3.m3.1.1.1a" xref="S3.SS4.p1.3.m3.1.1.1.cmml">​</mo><mi id="S3.SS4.p1.3.m3.1.1.4" xref="S3.SS4.p1.3.m3.1.1.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.3.m3.1.1.1b" xref="S3.SS4.p1.3.m3.1.1.1.cmml">​</mo><msub id="S3.SS4.p1.3.m3.1.1.5" xref="S3.SS4.p1.3.m3.1.1.5.cmml"><mi id="S3.SS4.p1.3.m3.1.1.5.2" xref="S3.SS4.p1.3.m3.1.1.5.2.cmml">s</mi><mrow id="S3.SS4.p1.3.m3.1.1.5.3" xref="S3.SS4.p1.3.m3.1.1.5.3.cmml"><mi id="S3.SS4.p1.3.m3.1.1.5.3.2" xref="S3.SS4.p1.3.m3.1.1.5.3.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.3.m3.1.1.5.3.1" xref="S3.SS4.p1.3.m3.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.3.m3.1.1.5.3.3" xref="S3.SS4.p1.3.m3.1.1.5.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.3.m3.1.1.5.3.1a" xref="S3.SS4.p1.3.m3.1.1.5.3.1.cmml">​</mo><mi id="S3.SS4.p1.3.m3.1.1.5.3.4" xref="S3.SS4.p1.3.m3.1.1.5.3.4.cmml">x</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.3.m3.1b"><apply id="S3.SS4.p1.3.m3.1.1.cmml" xref="S3.SS4.p1.3.m3.1.1"><times id="S3.SS4.p1.3.m3.1.1.1.cmml" xref="S3.SS4.p1.3.m3.1.1.1"></times><ci id="S3.SS4.p1.3.m3.1.1.2.cmml" xref="S3.SS4.p1.3.m3.1.1.2">𝑙</ci><ci id="S3.SS4.p1.3.m3.1.1.3.cmml" xref="S3.SS4.p1.3.m3.1.1.3">𝑜</ci><ci id="S3.SS4.p1.3.m3.1.1.4.cmml" xref="S3.SS4.p1.3.m3.1.1.4">𝑠</ci><apply id="S3.SS4.p1.3.m3.1.1.5.cmml" xref="S3.SS4.p1.3.m3.1.1.5"><csymbol cd="ambiguous" id="S3.SS4.p1.3.m3.1.1.5.1.cmml" xref="S3.SS4.p1.3.m3.1.1.5">subscript</csymbol><ci id="S3.SS4.p1.3.m3.1.1.5.2.cmml" xref="S3.SS4.p1.3.m3.1.1.5.2">𝑠</ci><apply id="S3.SS4.p1.3.m3.1.1.5.3.cmml" xref="S3.SS4.p1.3.m3.1.1.5.3"><times id="S3.SS4.p1.3.m3.1.1.5.3.1.cmml" xref="S3.SS4.p1.3.m3.1.1.5.3.1"></times><ci id="S3.SS4.p1.3.m3.1.1.5.3.2.cmml" xref="S3.SS4.p1.3.m3.1.1.5.3.2">𝑏</ci><ci id="S3.SS4.p1.3.m3.1.1.5.3.3.cmml" xref="S3.SS4.p1.3.m3.1.1.5.3.3">𝑜</ci><ci id="S3.SS4.p1.3.m3.1.1.5.3.4.cmml" xref="S3.SS4.p1.3.m3.1.1.5.3.4">𝑥</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.3.m3.1c">loss_{box}</annotation></semantics></math>). In each equation, the variables with hat represent the ground truth and, without hat, the model’s predictions. Additionally, to refine the relevance of each loss in the total loss value, a weight parameter (<math id="S3.SS4.p1.4.m4.1" class="ltx_Math" alttext="\lambda" display="inline"><semantics id="S3.SS4.p1.4.m4.1a"><mi id="S3.SS4.p1.4.m4.1.1" xref="S3.SS4.p1.4.m4.1.1.cmml">λ</mi><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.4.m4.1b"><ci id="S3.SS4.p1.4.m4.1.1.cmml" xref="S3.SS4.p1.4.m4.1.1">𝜆</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.4.m4.1c">\lambda</annotation></semantics></math>) was implemented.</p>
+</div>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.4" class="ltx_p">We will consider only the cell grid responsible for detecting one object. Therefore, the <math id="S3.SS4.p2.1.m1.1" class="ltx_Math" alttext="\mathsf{1}_{i}^{obj}" display="inline"><semantics id="S3.SS4.p2.1.m1.1a"><msubsup id="S3.SS4.p2.1.m1.1.1" xref="S3.SS4.p2.1.m1.1.1.cmml"><mn id="S3.SS4.p2.1.m1.1.1.2.2" xref="S3.SS4.p2.1.m1.1.1.2.2.cmml">𝟣</mn><mi id="S3.SS4.p2.1.m1.1.1.2.3" xref="S3.SS4.p2.1.m1.1.1.2.3.cmml">i</mi><mrow id="S3.SS4.p2.1.m1.1.1.3" xref="S3.SS4.p2.1.m1.1.1.3.cmml"><mi id="S3.SS4.p2.1.m1.1.1.3.2" xref="S3.SS4.p2.1.m1.1.1.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.1.m1.1.1.3.1" xref="S3.SS4.p2.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.1.m1.1.1.3.3" xref="S3.SS4.p2.1.m1.1.1.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.1.m1.1.1.3.1a" xref="S3.SS4.p2.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.1.m1.1.1.3.4" xref="S3.SS4.p2.1.m1.1.1.3.4.cmml">j</mi></mrow></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.1.m1.1b"><apply id="S3.SS4.p2.1.m1.1.1.cmml" xref="S3.SS4.p2.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.1.m1.1.1.1.cmml" xref="S3.SS4.p2.1.m1.1.1">superscript</csymbol><apply id="S3.SS4.p2.1.m1.1.1.2.cmml" xref="S3.SS4.p2.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.1.m1.1.1.2.1.cmml" xref="S3.SS4.p2.1.m1.1.1">subscript</csymbol><cn type="integer" id="S3.SS4.p2.1.m1.1.1.2.2.cmml" xref="S3.SS4.p2.1.m1.1.1.2.2">1</cn><ci id="S3.SS4.p2.1.m1.1.1.2.3.cmml" xref="S3.SS4.p2.1.m1.1.1.2.3">𝑖</ci></apply><apply id="S3.SS4.p2.1.m1.1.1.3.cmml" xref="S3.SS4.p2.1.m1.1.1.3"><times id="S3.SS4.p2.1.m1.1.1.3.1.cmml" xref="S3.SS4.p2.1.m1.1.1.3.1"></times><ci id="S3.SS4.p2.1.m1.1.1.3.2.cmml" xref="S3.SS4.p2.1.m1.1.1.3.2">𝑜</ci><ci id="S3.SS4.p2.1.m1.1.1.3.3.cmml" xref="S3.SS4.p2.1.m1.1.1.3.3">𝑏</ci><ci id="S3.SS4.p2.1.m1.1.1.3.4.cmml" xref="S3.SS4.p2.1.m1.1.1.3.4">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.1.m1.1c">\mathsf{1}_{i}^{obj}</annotation></semantics></math> parameter results in 1 if the cell is responsible for detecting an object. Otherwise, <math id="S3.SS4.p2.2.m2.1" class="ltx_Math" alttext="\mathsf{1}_{i}^{obj}" display="inline"><semantics id="S3.SS4.p2.2.m2.1a"><msubsup id="S3.SS4.p2.2.m2.1.1" xref="S3.SS4.p2.2.m2.1.1.cmml"><mn id="S3.SS4.p2.2.m2.1.1.2.2" xref="S3.SS4.p2.2.m2.1.1.2.2.cmml">𝟣</mn><mi id="S3.SS4.p2.2.m2.1.1.2.3" xref="S3.SS4.p2.2.m2.1.1.2.3.cmml">i</mi><mrow id="S3.SS4.p2.2.m2.1.1.3" xref="S3.SS4.p2.2.m2.1.1.3.cmml"><mi id="S3.SS4.p2.2.m2.1.1.3.2" xref="S3.SS4.p2.2.m2.1.1.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.2.m2.1.1.3.1" xref="S3.SS4.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.2.m2.1.1.3.3" xref="S3.SS4.p2.2.m2.1.1.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.2.m2.1.1.3.1a" xref="S3.SS4.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.2.m2.1.1.3.4" xref="S3.SS4.p2.2.m2.1.1.3.4.cmml">j</mi></mrow></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.2.m2.1b"><apply id="S3.SS4.p2.2.m2.1.1.cmml" xref="S3.SS4.p2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.2.m2.1.1.1.cmml" xref="S3.SS4.p2.2.m2.1.1">superscript</csymbol><apply id="S3.SS4.p2.2.m2.1.1.2.cmml" xref="S3.SS4.p2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.2.m2.1.1.2.1.cmml" xref="S3.SS4.p2.2.m2.1.1">subscript</csymbol><cn type="integer" id="S3.SS4.p2.2.m2.1.1.2.2.cmml" xref="S3.SS4.p2.2.m2.1.1.2.2">1</cn><ci id="S3.SS4.p2.2.m2.1.1.2.3.cmml" xref="S3.SS4.p2.2.m2.1.1.2.3">𝑖</ci></apply><apply id="S3.SS4.p2.2.m2.1.1.3.cmml" xref="S3.SS4.p2.2.m2.1.1.3"><times id="S3.SS4.p2.2.m2.1.1.3.1.cmml" xref="S3.SS4.p2.2.m2.1.1.3.1"></times><ci id="S3.SS4.p2.2.m2.1.1.3.2.cmml" xref="S3.SS4.p2.2.m2.1.1.3.2">𝑜</ci><ci id="S3.SS4.p2.2.m2.1.1.3.3.cmml" xref="S3.SS4.p2.2.m2.1.1.3.3">𝑏</ci><ci id="S3.SS4.p2.2.m2.1.1.3.4.cmml" xref="S3.SS4.p2.2.m2.1.1.3.4">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.2.m2.1c">\mathsf{1}_{i}^{obj}</annotation></semantics></math> results in 0. The <math id="S3.SS4.p2.3.m3.1" class="ltx_Math" alttext="\mathsf{1}_{i}^{noobj}" display="inline"><semantics id="S3.SS4.p2.3.m3.1a"><msubsup id="S3.SS4.p2.3.m3.1.1" xref="S3.SS4.p2.3.m3.1.1.cmml"><mn id="S3.SS4.p2.3.m3.1.1.2.2" xref="S3.SS4.p2.3.m3.1.1.2.2.cmml">𝟣</mn><mi id="S3.SS4.p2.3.m3.1.1.2.3" xref="S3.SS4.p2.3.m3.1.1.2.3.cmml">i</mi><mrow id="S3.SS4.p2.3.m3.1.1.3" xref="S3.SS4.p2.3.m3.1.1.3.cmml"><mi id="S3.SS4.p2.3.m3.1.1.3.2" xref="S3.SS4.p2.3.m3.1.1.3.2.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.3.m3.1.1.3.1" xref="S3.SS4.p2.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.3.m3.1.1.3.3" xref="S3.SS4.p2.3.m3.1.1.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.3.m3.1.1.3.1a" xref="S3.SS4.p2.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.3.m3.1.1.3.4" xref="S3.SS4.p2.3.m3.1.1.3.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.3.m3.1.1.3.1b" xref="S3.SS4.p2.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.3.m3.1.1.3.5" xref="S3.SS4.p2.3.m3.1.1.3.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.3.m3.1.1.3.1c" xref="S3.SS4.p2.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.3.m3.1.1.3.6" xref="S3.SS4.p2.3.m3.1.1.3.6.cmml">j</mi></mrow></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.3.m3.1b"><apply id="S3.SS4.p2.3.m3.1.1.cmml" xref="S3.SS4.p2.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.3.m3.1.1.1.cmml" xref="S3.SS4.p2.3.m3.1.1">superscript</csymbol><apply id="S3.SS4.p2.3.m3.1.1.2.cmml" xref="S3.SS4.p2.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.3.m3.1.1.2.1.cmml" xref="S3.SS4.p2.3.m3.1.1">subscript</csymbol><cn type="integer" id="S3.SS4.p2.3.m3.1.1.2.2.cmml" xref="S3.SS4.p2.3.m3.1.1.2.2">1</cn><ci id="S3.SS4.p2.3.m3.1.1.2.3.cmml" xref="S3.SS4.p2.3.m3.1.1.2.3">𝑖</ci></apply><apply id="S3.SS4.p2.3.m3.1.1.3.cmml" xref="S3.SS4.p2.3.m3.1.1.3"><times id="S3.SS4.p2.3.m3.1.1.3.1.cmml" xref="S3.SS4.p2.3.m3.1.1.3.1"></times><ci id="S3.SS4.p2.3.m3.1.1.3.2.cmml" xref="S3.SS4.p2.3.m3.1.1.3.2">𝑛</ci><ci id="S3.SS4.p2.3.m3.1.1.3.3.cmml" xref="S3.SS4.p2.3.m3.1.1.3.3">𝑜</ci><ci id="S3.SS4.p2.3.m3.1.1.3.4.cmml" xref="S3.SS4.p2.3.m3.1.1.3.4">𝑜</ci><ci id="S3.SS4.p2.3.m3.1.1.3.5.cmml" xref="S3.SS4.p2.3.m3.1.1.3.5">𝑏</ci><ci id="S3.SS4.p2.3.m3.1.1.3.6.cmml" xref="S3.SS4.p2.3.m3.1.1.3.6">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.3.m3.1c">\mathsf{1}_{i}^{noobj}</annotation></semantics></math> represents the opposite of <math id="S3.SS4.p2.4.m4.1" class="ltx_Math" alttext="\mathsf{1}_{i}^{obj}" display="inline"><semantics id="S3.SS4.p2.4.m4.1a"><msubsup id="S3.SS4.p2.4.m4.1.1" xref="S3.SS4.p2.4.m4.1.1.cmml"><mn id="S3.SS4.p2.4.m4.1.1.2.2" xref="S3.SS4.p2.4.m4.1.1.2.2.cmml">𝟣</mn><mi id="S3.SS4.p2.4.m4.1.1.2.3" xref="S3.SS4.p2.4.m4.1.1.2.3.cmml">i</mi><mrow id="S3.SS4.p2.4.m4.1.1.3" xref="S3.SS4.p2.4.m4.1.1.3.cmml"><mi id="S3.SS4.p2.4.m4.1.1.3.2" xref="S3.SS4.p2.4.m4.1.1.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.4.m4.1.1.3.1" xref="S3.SS4.p2.4.m4.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.4.m4.1.1.3.3" xref="S3.SS4.p2.4.m4.1.1.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.4.m4.1.1.3.1a" xref="S3.SS4.p2.4.m4.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p2.4.m4.1.1.3.4" xref="S3.SS4.p2.4.m4.1.1.3.4.cmml">j</mi></mrow></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.4.m4.1b"><apply id="S3.SS4.p2.4.m4.1.1.cmml" xref="S3.SS4.p2.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.4.m4.1.1.1.cmml" xref="S3.SS4.p2.4.m4.1.1">superscript</csymbol><apply id="S3.SS4.p2.4.m4.1.1.2.cmml" xref="S3.SS4.p2.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.4.m4.1.1.2.1.cmml" xref="S3.SS4.p2.4.m4.1.1">subscript</csymbol><cn type="integer" id="S3.SS4.p2.4.m4.1.1.2.2.cmml" xref="S3.SS4.p2.4.m4.1.1.2.2">1</cn><ci id="S3.SS4.p2.4.m4.1.1.2.3.cmml" xref="S3.SS4.p2.4.m4.1.1.2.3">𝑖</ci></apply><apply id="S3.SS4.p2.4.m4.1.1.3.cmml" xref="S3.SS4.p2.4.m4.1.1.3"><times id="S3.SS4.p2.4.m4.1.1.3.1.cmml" xref="S3.SS4.p2.4.m4.1.1.3.1"></times><ci id="S3.SS4.p2.4.m4.1.1.3.2.cmml" xref="S3.SS4.p2.4.m4.1.1.3.2">𝑜</ci><ci id="S3.SS4.p2.4.m4.1.1.3.3.cmml" xref="S3.SS4.p2.4.m4.1.1.3.3">𝑏</ci><ci id="S3.SS4.p2.4.m4.1.1.3.4.cmml" xref="S3.SS4.p2.4.m4.1.1.3.4">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.4.m4.1c">\mathsf{1}_{i}^{obj}</annotation></semantics></math>.</p>
+</div>
+<div id="S3.SS4.p3" class="ltx_para">
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1.1" class="ltx_Math" alttext="loss=loss_{conf}+loss_{class}+loss_{box}" display="block"><semantics id="S3.E1.m1.1a"><mrow id="S3.E1.m1.1.1" xref="S3.E1.m1.1.1.cmml"><mrow id="S3.E1.m1.1.1.2" xref="S3.E1.m1.1.1.2.cmml"><mi id="S3.E1.m1.1.1.2.2" xref="S3.E1.m1.1.1.2.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.2.1" xref="S3.E1.m1.1.1.2.1.cmml">​</mo><mi id="S3.E1.m1.1.1.2.3" xref="S3.E1.m1.1.1.2.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.2.1a" xref="S3.E1.m1.1.1.2.1.cmml">​</mo><mi id="S3.E1.m1.1.1.2.4" xref="S3.E1.m1.1.1.2.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.2.1b" xref="S3.E1.m1.1.1.2.1.cmml">​</mo><mi id="S3.E1.m1.1.1.2.5" xref="S3.E1.m1.1.1.2.5.cmml">s</mi></mrow><mo id="S3.E1.m1.1.1.1" xref="S3.E1.m1.1.1.1.cmml">=</mo><mrow id="S3.E1.m1.1.1.3" xref="S3.E1.m1.1.1.3.cmml"><mrow id="S3.E1.m1.1.1.3.2" xref="S3.E1.m1.1.1.3.2.cmml"><mi id="S3.E1.m1.1.1.3.2.2" xref="S3.E1.m1.1.1.3.2.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.2.1" xref="S3.E1.m1.1.1.3.2.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.2.3" xref="S3.E1.m1.1.1.3.2.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.2.1a" xref="S3.E1.m1.1.1.3.2.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.2.4" xref="S3.E1.m1.1.1.3.2.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.2.1b" xref="S3.E1.m1.1.1.3.2.1.cmml">​</mo><msub id="S3.E1.m1.1.1.3.2.5" xref="S3.E1.m1.1.1.3.2.5.cmml"><mi id="S3.E1.m1.1.1.3.2.5.2" xref="S3.E1.m1.1.1.3.2.5.2.cmml">s</mi><mrow id="S3.E1.m1.1.1.3.2.5.3" xref="S3.E1.m1.1.1.3.2.5.3.cmml"><mi id="S3.E1.m1.1.1.3.2.5.3.2" xref="S3.E1.m1.1.1.3.2.5.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.2.5.3.1" xref="S3.E1.m1.1.1.3.2.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.2.5.3.3" xref="S3.E1.m1.1.1.3.2.5.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.2.5.3.1a" xref="S3.E1.m1.1.1.3.2.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.2.5.3.4" xref="S3.E1.m1.1.1.3.2.5.3.4.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.2.5.3.1b" xref="S3.E1.m1.1.1.3.2.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.2.5.3.5" xref="S3.E1.m1.1.1.3.2.5.3.5.cmml">f</mi></mrow></msub></mrow><mo id="S3.E1.m1.1.1.3.1" xref="S3.E1.m1.1.1.3.1.cmml">+</mo><mrow id="S3.E1.m1.1.1.3.3" xref="S3.E1.m1.1.1.3.3.cmml"><mi id="S3.E1.m1.1.1.3.3.2" xref="S3.E1.m1.1.1.3.3.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.1" xref="S3.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.3.3" xref="S3.E1.m1.1.1.3.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.1a" xref="S3.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.3.4" xref="S3.E1.m1.1.1.3.3.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.1b" xref="S3.E1.m1.1.1.3.3.1.cmml">​</mo><msub id="S3.E1.m1.1.1.3.3.5" xref="S3.E1.m1.1.1.3.3.5.cmml"><mi id="S3.E1.m1.1.1.3.3.5.2" xref="S3.E1.m1.1.1.3.3.5.2.cmml">s</mi><mrow id="S3.E1.m1.1.1.3.3.5.3" xref="S3.E1.m1.1.1.3.3.5.3.cmml"><mi id="S3.E1.m1.1.1.3.3.5.3.2" xref="S3.E1.m1.1.1.3.3.5.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.5.3.1" xref="S3.E1.m1.1.1.3.3.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.3.5.3.3" xref="S3.E1.m1.1.1.3.3.5.3.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.5.3.1a" xref="S3.E1.m1.1.1.3.3.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.3.5.3.4" xref="S3.E1.m1.1.1.3.3.5.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.5.3.1b" xref="S3.E1.m1.1.1.3.3.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.3.5.3.5" xref="S3.E1.m1.1.1.3.3.5.3.5.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.5.3.1c" xref="S3.E1.m1.1.1.3.3.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.3.5.3.6" xref="S3.E1.m1.1.1.3.3.5.3.6.cmml">s</mi></mrow></msub></mrow><mo id="S3.E1.m1.1.1.3.1a" xref="S3.E1.m1.1.1.3.1.cmml">+</mo><mrow id="S3.E1.m1.1.1.3.4" xref="S3.E1.m1.1.1.3.4.cmml"><mi id="S3.E1.m1.1.1.3.4.2" xref="S3.E1.m1.1.1.3.4.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.4.1" xref="S3.E1.m1.1.1.3.4.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.4.3" xref="S3.E1.m1.1.1.3.4.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.4.1a" xref="S3.E1.m1.1.1.3.4.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.4.4" xref="S3.E1.m1.1.1.3.4.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.4.1b" xref="S3.E1.m1.1.1.3.4.1.cmml">​</mo><msub id="S3.E1.m1.1.1.3.4.5" xref="S3.E1.m1.1.1.3.4.5.cmml"><mi id="S3.E1.m1.1.1.3.4.5.2" xref="S3.E1.m1.1.1.3.4.5.2.cmml">s</mi><mrow id="S3.E1.m1.1.1.3.4.5.3" xref="S3.E1.m1.1.1.3.4.5.3.cmml"><mi id="S3.E1.m1.1.1.3.4.5.3.2" xref="S3.E1.m1.1.1.3.4.5.3.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.4.5.3.1" xref="S3.E1.m1.1.1.3.4.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.4.5.3.3" xref="S3.E1.m1.1.1.3.4.5.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.4.5.3.1a" xref="S3.E1.m1.1.1.3.4.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.4.5.3.4" xref="S3.E1.m1.1.1.3.4.5.3.4.cmml">x</mi></mrow></msub></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.1b"><apply id="S3.E1.m1.1.1.cmml" xref="S3.E1.m1.1.1"><eq id="S3.E1.m1.1.1.1.cmml" xref="S3.E1.m1.1.1.1"></eq><apply id="S3.E1.m1.1.1.2.cmml" xref="S3.E1.m1.1.1.2"><times id="S3.E1.m1.1.1.2.1.cmml" xref="S3.E1.m1.1.1.2.1"></times><ci id="S3.E1.m1.1.1.2.2.cmml" xref="S3.E1.m1.1.1.2.2">𝑙</ci><ci id="S3.E1.m1.1.1.2.3.cmml" xref="S3.E1.m1.1.1.2.3">𝑜</ci><ci id="S3.E1.m1.1.1.2.4.cmml" xref="S3.E1.m1.1.1.2.4">𝑠</ci><ci id="S3.E1.m1.1.1.2.5.cmml" xref="S3.E1.m1.1.1.2.5">𝑠</ci></apply><apply id="S3.E1.m1.1.1.3.cmml" xref="S3.E1.m1.1.1.3"><plus id="S3.E1.m1.1.1.3.1.cmml" xref="S3.E1.m1.1.1.3.1"></plus><apply id="S3.E1.m1.1.1.3.2.cmml" xref="S3.E1.m1.1.1.3.2"><times id="S3.E1.m1.1.1.3.2.1.cmml" xref="S3.E1.m1.1.1.3.2.1"></times><ci id="S3.E1.m1.1.1.3.2.2.cmml" xref="S3.E1.m1.1.1.3.2.2">𝑙</ci><ci id="S3.E1.m1.1.1.3.2.3.cmml" xref="S3.E1.m1.1.1.3.2.3">𝑜</ci><ci id="S3.E1.m1.1.1.3.2.4.cmml" xref="S3.E1.m1.1.1.3.2.4">𝑠</ci><apply id="S3.E1.m1.1.1.3.2.5.cmml" xref="S3.E1.m1.1.1.3.2.5"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.2.5.1.cmml" xref="S3.E1.m1.1.1.3.2.5">subscript</csymbol><ci id="S3.E1.m1.1.1.3.2.5.2.cmml" xref="S3.E1.m1.1.1.3.2.5.2">𝑠</ci><apply id="S3.E1.m1.1.1.3.2.5.3.cmml" xref="S3.E1.m1.1.1.3.2.5.3"><times id="S3.E1.m1.1.1.3.2.5.3.1.cmml" xref="S3.E1.m1.1.1.3.2.5.3.1"></times><ci id="S3.E1.m1.1.1.3.2.5.3.2.cmml" xref="S3.E1.m1.1.1.3.2.5.3.2">𝑐</ci><ci id="S3.E1.m1.1.1.3.2.5.3.3.cmml" xref="S3.E1.m1.1.1.3.2.5.3.3">𝑜</ci><ci id="S3.E1.m1.1.1.3.2.5.3.4.cmml" xref="S3.E1.m1.1.1.3.2.5.3.4">𝑛</ci><ci id="S3.E1.m1.1.1.3.2.5.3.5.cmml" xref="S3.E1.m1.1.1.3.2.5.3.5">𝑓</ci></apply></apply></apply><apply id="S3.E1.m1.1.1.3.3.cmml" xref="S3.E1.m1.1.1.3.3"><times id="S3.E1.m1.1.1.3.3.1.cmml" xref="S3.E1.m1.1.1.3.3.1"></times><ci id="S3.E1.m1.1.1.3.3.2.cmml" xref="S3.E1.m1.1.1.3.3.2">𝑙</ci><ci id="S3.E1.m1.1.1.3.3.3.cmml" xref="S3.E1.m1.1.1.3.3.3">𝑜</ci><ci id="S3.E1.m1.1.1.3.3.4.cmml" xref="S3.E1.m1.1.1.3.3.4">𝑠</ci><apply id="S3.E1.m1.1.1.3.3.5.cmml" xref="S3.E1.m1.1.1.3.3.5"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.3.5.1.cmml" xref="S3.E1.m1.1.1.3.3.5">subscript</csymbol><ci id="S3.E1.m1.1.1.3.3.5.2.cmml" xref="S3.E1.m1.1.1.3.3.5.2">𝑠</ci><apply id="S3.E1.m1.1.1.3.3.5.3.cmml" xref="S3.E1.m1.1.1.3.3.5.3"><times id="S3.E1.m1.1.1.3.3.5.3.1.cmml" xref="S3.E1.m1.1.1.3.3.5.3.1"></times><ci id="S3.E1.m1.1.1.3.3.5.3.2.cmml" xref="S3.E1.m1.1.1.3.3.5.3.2">𝑐</ci><ci id="S3.E1.m1.1.1.3.3.5.3.3.cmml" xref="S3.E1.m1.1.1.3.3.5.3.3">𝑙</ci><ci id="S3.E1.m1.1.1.3.3.5.3.4.cmml" xref="S3.E1.m1.1.1.3.3.5.3.4">𝑎</ci><ci id="S3.E1.m1.1.1.3.3.5.3.5.cmml" xref="S3.E1.m1.1.1.3.3.5.3.5">𝑠</ci><ci id="S3.E1.m1.1.1.3.3.5.3.6.cmml" xref="S3.E1.m1.1.1.3.3.5.3.6">𝑠</ci></apply></apply></apply><apply id="S3.E1.m1.1.1.3.4.cmml" xref="S3.E1.m1.1.1.3.4"><times id="S3.E1.m1.1.1.3.4.1.cmml" xref="S3.E1.m1.1.1.3.4.1"></times><ci id="S3.E1.m1.1.1.3.4.2.cmml" xref="S3.E1.m1.1.1.3.4.2">𝑙</ci><ci id="S3.E1.m1.1.1.3.4.3.cmml" xref="S3.E1.m1.1.1.3.4.3">𝑜</ci><ci id="S3.E1.m1.1.1.3.4.4.cmml" xref="S3.E1.m1.1.1.3.4.4">𝑠</ci><apply id="S3.E1.m1.1.1.3.4.5.cmml" xref="S3.E1.m1.1.1.3.4.5"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.4.5.1.cmml" xref="S3.E1.m1.1.1.3.4.5">subscript</csymbol><ci id="S3.E1.m1.1.1.3.4.5.2.cmml" xref="S3.E1.m1.1.1.3.4.5.2">𝑠</ci><apply id="S3.E1.m1.1.1.3.4.5.3.cmml" xref="S3.E1.m1.1.1.3.4.5.3"><times id="S3.E1.m1.1.1.3.4.5.3.1.cmml" xref="S3.E1.m1.1.1.3.4.5.3.1"></times><ci id="S3.E1.m1.1.1.3.4.5.3.2.cmml" xref="S3.E1.m1.1.1.3.4.5.3.2">𝑏</ci><ci id="S3.E1.m1.1.1.3.4.5.3.3.cmml" xref="S3.E1.m1.1.1.3.4.5.3.3">𝑜</ci><ci id="S3.E1.m1.1.1.3.4.5.3.4.cmml" xref="S3.E1.m1.1.1.3.4.5.3.4">𝑥</ci></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.1c">loss=loss_{conf}+loss_{class}+loss_{box}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS4.p4" class="ltx_para">
+<p id="S3.SS4.p4.1" class="ltx_p">To evaluate the Confidence score in each prediction, we used the L2 loss function. Equation <a href="#S3.E2" title="In III-D Loss Equation ‣ III Our Approach ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>) considers the confidence prediction at correct cells and the missed ones.</p>
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E2.m1.41" class="ltx_Math" alttext="\begin{split}loss_{conf}=&amp;\lambda_{obj}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{obj}(\hat{C_{i}}-C_{i})^{2}+\\
+&amp;\lambda_{noobj}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{noobj}(\hat{C_{i}}-C_{i})^{2}\end{split}" display="block"><semantics id="S3.E2.m1.41a"><mtable columnspacing="0pt" displaystyle="true" rowspacing="0pt" id="S3.E2.m1.41.41.4" xref="S3.E2.m1.39.39.2.cmml"><mtr id="S3.E2.m1.41.41.4a" xref="S3.E2.m1.39.39.2.cmml"><mtd class="ltx_align_right" columnalign="right" id="S3.E2.m1.41.41.4b" xref="S3.E2.m1.39.39.2.cmml"><mrow id="S3.E2.m1.6.6.6.6.6" xref="S3.E2.m1.39.39.2.cmml"><mrow id="S3.E2.m1.6.6.6.6.6.7" xref="S3.E2.m1.39.39.2.cmml"><mi id="S3.E2.m1.1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.6.6.6.6.6.7.1" xref="S3.E2.m1.39.39.2.cmml">​</mo><mi id="S3.E2.m1.2.2.2.2.2.2" xref="S3.E2.m1.2.2.2.2.2.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.6.6.6.6.6.7.1a" xref="S3.E2.m1.39.39.2.cmml">​</mo><mi id="S3.E2.m1.3.3.3.3.3.3" xref="S3.E2.m1.3.3.3.3.3.3.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.6.6.6.6.6.7.1b" xref="S3.E2.m1.39.39.2.cmml">​</mo><msub id="S3.E2.m1.6.6.6.6.6.7.2" xref="S3.E2.m1.39.39.2.cmml"><mi id="S3.E2.m1.4.4.4.4.4.4" xref="S3.E2.m1.4.4.4.4.4.4.cmml">s</mi><mrow id="S3.E2.m1.5.5.5.5.5.5.1" xref="S3.E2.m1.5.5.5.5.5.5.1.cmml"><mi id="S3.E2.m1.5.5.5.5.5.5.1.2" xref="S3.E2.m1.5.5.5.5.5.5.1.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.5.5.5.5.5.5.1.1" xref="S3.E2.m1.5.5.5.5.5.5.1.1.cmml">​</mo><mi id="S3.E2.m1.5.5.5.5.5.5.1.3" xref="S3.E2.m1.5.5.5.5.5.5.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.5.5.5.5.5.5.1.1a" xref="S3.E2.m1.5.5.5.5.5.5.1.1.cmml">​</mo><mi id="S3.E2.m1.5.5.5.5.5.5.1.4" xref="S3.E2.m1.5.5.5.5.5.5.1.4.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.5.5.5.5.5.5.1.1b" xref="S3.E2.m1.5.5.5.5.5.5.1.1.cmml">​</mo><mi id="S3.E2.m1.5.5.5.5.5.5.1.5" xref="S3.E2.m1.5.5.5.5.5.5.1.5.cmml">f</mi></mrow></msub></mrow><mo id="S3.E2.m1.6.6.6.6.6.6" xref="S3.E2.m1.6.6.6.6.6.6.cmml">=</mo><mi id="S3.E2.m1.6.6.6.6.6.8" xref="S3.E2.m1.39.39.2.cmml"></mi></mrow></mtd><mtd class="ltx_align_left" columnalign="left" id="S3.E2.m1.41.41.4c" xref="S3.E2.m1.39.39.2.cmml"><mrow id="S3.E2.m1.40.40.3.38.23.17" xref="S3.E2.m1.39.39.2.cmml"><mrow id="S3.E2.m1.40.40.3.38.23.17.17" xref="S3.E2.m1.39.39.2.cmml"><msub id="S3.E2.m1.40.40.3.38.23.17.17.3" xref="S3.E2.m1.39.39.2.cmml"><mi id="S3.E2.m1.7.7.7.7.1.1" xref="S3.E2.m1.7.7.7.7.1.1.cmml">λ</mi><mrow id="S3.E2.m1.8.8.8.8.2.2.1" xref="S3.E2.m1.8.8.8.8.2.2.1.cmml"><mi id="S3.E2.m1.8.8.8.8.2.2.1.2" xref="S3.E2.m1.8.8.8.8.2.2.1.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.8.8.8.8.2.2.1.1" xref="S3.E2.m1.8.8.8.8.2.2.1.1.cmml">​</mo><mi id="S3.E2.m1.8.8.8.8.2.2.1.3" xref="S3.E2.m1.8.8.8.8.2.2.1.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.8.8.8.8.2.2.1.1a" xref="S3.E2.m1.8.8.8.8.2.2.1.1.cmml">​</mo><mi id="S3.E2.m1.8.8.8.8.2.2.1.4" xref="S3.E2.m1.8.8.8.8.2.2.1.4.cmml">j</mi></mrow></msub><mo lspace="0em" rspace="0em" id="S3.E2.m1.40.40.3.38.23.17.17.2" xref="S3.E2.m1.39.39.2.cmml">​</mo><mrow id="S3.E2.m1.40.40.3.38.23.17.17.1" xref="S3.E2.m1.39.39.2.cmml"><munderover id="S3.E2.m1.40.40.3.38.23.17.17.1.2" xref="S3.E2.m1.39.39.2.cmml"><mo movablelimits="false" id="S3.E2.m1.9.9.9.9.3.3" xref="S3.E2.m1.9.9.9.9.3.3.cmml">∑</mo><mrow id="S3.E2.m1.10.10.10.10.4.4.1" xref="S3.E2.m1.10.10.10.10.4.4.1.cmml"><mi id="S3.E2.m1.10.10.10.10.4.4.1.2" xref="S3.E2.m1.10.10.10.10.4.4.1.2.cmml">i</mi><mo id="S3.E2.m1.10.10.10.10.4.4.1.1" xref="S3.E2.m1.10.10.10.10.4.4.1.1.cmml">=</mo><mn id="S3.E2.m1.10.10.10.10.4.4.1.3" xref="S3.E2.m1.10.10.10.10.4.4.1.3.cmml">0</mn></mrow><mrow id="S3.E2.m1.11.11.11.11.5.5.1" xref="S3.E2.m1.11.11.11.11.5.5.1.cmml"><msub id="S3.E2.m1.11.11.11.11.5.5.1.2" xref="S3.E2.m1.11.11.11.11.5.5.1.2.cmml"><mi id="S3.E2.m1.11.11.11.11.5.5.1.2.2" xref="S3.E2.m1.11.11.11.11.5.5.1.2.2.cmml">S</mi><mi id="S3.E2.m1.11.11.11.11.5.5.1.2.3" xref="S3.E2.m1.11.11.11.11.5.5.1.2.3.cmml">X</mi></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E2.m1.11.11.11.11.5.5.1.1" xref="S3.E2.m1.11.11.11.11.5.5.1.1.cmml">∗</mo><msub id="S3.E2.m1.11.11.11.11.5.5.1.3" xref="S3.E2.m1.11.11.11.11.5.5.1.3.cmml"><mi id="S3.E2.m1.11.11.11.11.5.5.1.3.2" xref="S3.E2.m1.11.11.11.11.5.5.1.3.2.cmml">S</mi><mi id="S3.E2.m1.11.11.11.11.5.5.1.3.3" xref="S3.E2.m1.11.11.11.11.5.5.1.3.3.cmml">Z</mi></msub></mrow></munderover><mrow id="S3.E2.m1.40.40.3.38.23.17.17.1.1" xref="S3.E2.m1.39.39.2.cmml"><msubsup id="S3.E2.m1.40.40.3.38.23.17.17.1.1.3" xref="S3.E2.m1.39.39.2.cmml"><mn id="S3.E2.m1.12.12.12.12.6.6" xref="S3.E2.m1.12.12.12.12.6.6.cmml">𝟣</mn><mi id="S3.E2.m1.13.13.13.13.7.7.1" xref="S3.E2.m1.13.13.13.13.7.7.1.cmml">i</mi><mrow id="S3.E2.m1.14.14.14.14.8.8.1" xref="S3.E2.m1.14.14.14.14.8.8.1.cmml"><mi id="S3.E2.m1.14.14.14.14.8.8.1.2" xref="S3.E2.m1.14.14.14.14.8.8.1.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.14.14.14.14.8.8.1.1" xref="S3.E2.m1.14.14.14.14.8.8.1.1.cmml">​</mo><mi id="S3.E2.m1.14.14.14.14.8.8.1.3" xref="S3.E2.m1.14.14.14.14.8.8.1.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.14.14.14.14.8.8.1.1a" xref="S3.E2.m1.14.14.14.14.8.8.1.1.cmml">​</mo><mi id="S3.E2.m1.14.14.14.14.8.8.1.4" xref="S3.E2.m1.14.14.14.14.8.8.1.4.cmml">j</mi></mrow></msubsup><mo lspace="0em" rspace="0em" id="S3.E2.m1.40.40.3.38.23.17.17.1.1.2" xref="S3.E2.m1.39.39.2.cmml">​</mo><msup id="S3.E2.m1.40.40.3.38.23.17.17.1.1.1" xref="S3.E2.m1.39.39.2.cmml"><mrow id="S3.E2.m1.40.40.3.38.23.17.17.1.1.1.1.1" xref="S3.E2.m1.39.39.2.cmml"><mo stretchy="false" id="S3.E2.m1.15.15.15.15.9.9" xref="S3.E2.m1.39.39.2.cmml">(</mo><mrow id="S3.E2.m1.40.40.3.38.23.17.17.1.1.1.1.1.1" xref="S3.E2.m1.39.39.2.cmml"><mover accent="true" id="S3.E2.m1.16.16.16.16.10.10" xref="S3.E2.m1.16.16.16.16.10.10.cmml"><msub id="S3.E2.m1.16.16.16.16.10.10.2" xref="S3.E2.m1.16.16.16.16.10.10.2.cmml"><mi id="S3.E2.m1.16.16.16.16.10.10.2.2" xref="S3.E2.m1.16.16.16.16.10.10.2.2.cmml">C</mi><mi id="S3.E2.m1.16.16.16.16.10.10.2.3" xref="S3.E2.m1.16.16.16.16.10.10.2.3.cmml">i</mi></msub><mo id="S3.E2.m1.16.16.16.16.10.10.1" xref="S3.E2.m1.16.16.16.16.10.10.1.cmml">^</mo></mover><mo id="S3.E2.m1.17.17.17.17.11.11" xref="S3.E2.m1.17.17.17.17.11.11.cmml">−</mo><msub id="S3.E2.m1.40.40.3.38.23.17.17.1.1.1.1.1.1.1" xref="S3.E2.m1.39.39.2.cmml"><mi id="S3.E2.m1.18.18.18.18.12.12" xref="S3.E2.m1.18.18.18.18.12.12.cmml">C</mi><mi id="S3.E2.m1.19.19.19.19.13.13.1" xref="S3.E2.m1.19.19.19.19.13.13.1.cmml">i</mi></msub></mrow><mo stretchy="false" id="S3.E2.m1.20.20.20.20.14.14" xref="S3.E2.m1.39.39.2.cmml">)</mo></mrow><mn id="S3.E2.m1.21.21.21.21.15.15.1" xref="S3.E2.m1.21.21.21.21.15.15.1.cmml">2</mn></msup></mrow></mrow></mrow><mo id="S3.E2.m1.22.22.22.22.16.16" xref="S3.E2.m1.22.22.22.22.16.16.cmml">+</mo></mrow></mtd></mtr><mtr id="S3.E2.m1.41.41.4d" xref="S3.E2.m1.39.39.2.cmml"><mtd id="S3.E2.m1.41.41.4e" xref="S3.E2.m1.39.39.2.cmml"></mtd><mtd class="ltx_align_left" columnalign="left" id="S3.E2.m1.41.41.4f" xref="S3.E2.m1.39.39.2.cmml"><mrow id="S3.E2.m1.41.41.4.39.16.16" xref="S3.E2.m1.39.39.2.cmml"><msub id="S3.E2.m1.41.41.4.39.16.16.18" xref="S3.E2.m1.39.39.2.cmml"><mi id="S3.E2.m1.23.23.23.1.1.1" xref="S3.E2.m1.23.23.23.1.1.1.cmml">λ</mi><mrow id="S3.E2.m1.24.24.24.2.2.2.1" xref="S3.E2.m1.24.24.24.2.2.2.1.cmml"><mi id="S3.E2.m1.24.24.24.2.2.2.1.2" xref="S3.E2.m1.24.24.24.2.2.2.1.2.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.24.24.24.2.2.2.1.1" xref="S3.E2.m1.24.24.24.2.2.2.1.1.cmml">​</mo><mi id="S3.E2.m1.24.24.24.2.2.2.1.3" xref="S3.E2.m1.24.24.24.2.2.2.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.24.24.24.2.2.2.1.1a" xref="S3.E2.m1.24.24.24.2.2.2.1.1.cmml">​</mo><mi id="S3.E2.m1.24.24.24.2.2.2.1.4" xref="S3.E2.m1.24.24.24.2.2.2.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.24.24.24.2.2.2.1.1b" xref="S3.E2.m1.24.24.24.2.2.2.1.1.cmml">​</mo><mi id="S3.E2.m1.24.24.24.2.2.2.1.5" xref="S3.E2.m1.24.24.24.2.2.2.1.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.24.24.24.2.2.2.1.1c" xref="S3.E2.m1.24.24.24.2.2.2.1.1.cmml">​</mo><mi id="S3.E2.m1.24.24.24.2.2.2.1.6" xref="S3.E2.m1.24.24.24.2.2.2.1.6.cmml">j</mi></mrow></msub><mo lspace="0em" rspace="0em" id="S3.E2.m1.41.41.4.39.16.16.17" xref="S3.E2.m1.39.39.2.cmml">​</mo><mrow id="S3.E2.m1.41.41.4.39.16.16.16" xref="S3.E2.m1.39.39.2.cmml"><munderover id="S3.E2.m1.41.41.4.39.16.16.16.2" xref="S3.E2.m1.39.39.2.cmml"><mo movablelimits="false" id="S3.E2.m1.25.25.25.3.3.3" xref="S3.E2.m1.25.25.25.3.3.3.cmml">∑</mo><mrow id="S3.E2.m1.26.26.26.4.4.4.1" xref="S3.E2.m1.26.26.26.4.4.4.1.cmml"><mi id="S3.E2.m1.26.26.26.4.4.4.1.2" xref="S3.E2.m1.26.26.26.4.4.4.1.2.cmml">i</mi><mo id="S3.E2.m1.26.26.26.4.4.4.1.1" xref="S3.E2.m1.26.26.26.4.4.4.1.1.cmml">=</mo><mn id="S3.E2.m1.26.26.26.4.4.4.1.3" xref="S3.E2.m1.26.26.26.4.4.4.1.3.cmml">0</mn></mrow><mrow id="S3.E2.m1.27.27.27.5.5.5.1" xref="S3.E2.m1.27.27.27.5.5.5.1.cmml"><msub id="S3.E2.m1.27.27.27.5.5.5.1.2" xref="S3.E2.m1.27.27.27.5.5.5.1.2.cmml"><mi id="S3.E2.m1.27.27.27.5.5.5.1.2.2" xref="S3.E2.m1.27.27.27.5.5.5.1.2.2.cmml">S</mi><mi id="S3.E2.m1.27.27.27.5.5.5.1.2.3" xref="S3.E2.m1.27.27.27.5.5.5.1.2.3.cmml">X</mi></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E2.m1.27.27.27.5.5.5.1.1" xref="S3.E2.m1.27.27.27.5.5.5.1.1.cmml">∗</mo><msub id="S3.E2.m1.27.27.27.5.5.5.1.3" xref="S3.E2.m1.27.27.27.5.5.5.1.3.cmml"><mi id="S3.E2.m1.27.27.27.5.5.5.1.3.2" xref="S3.E2.m1.27.27.27.5.5.5.1.3.2.cmml">S</mi><mi id="S3.E2.m1.27.27.27.5.5.5.1.3.3" xref="S3.E2.m1.27.27.27.5.5.5.1.3.3.cmml">Z</mi></msub></mrow></munderover><mrow id="S3.E2.m1.41.41.4.39.16.16.16.1" xref="S3.E2.m1.39.39.2.cmml"><msubsup id="S3.E2.m1.41.41.4.39.16.16.16.1.3" xref="S3.E2.m1.39.39.2.cmml"><mn id="S3.E2.m1.28.28.28.6.6.6" xref="S3.E2.m1.28.28.28.6.6.6.cmml">𝟣</mn><mi id="S3.E2.m1.29.29.29.7.7.7.1" xref="S3.E2.m1.29.29.29.7.7.7.1.cmml">i</mi><mrow id="S3.E2.m1.30.30.30.8.8.8.1" xref="S3.E2.m1.30.30.30.8.8.8.1.cmml"><mi id="S3.E2.m1.30.30.30.8.8.8.1.2" xref="S3.E2.m1.30.30.30.8.8.8.1.2.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.30.30.30.8.8.8.1.1" xref="S3.E2.m1.30.30.30.8.8.8.1.1.cmml">​</mo><mi id="S3.E2.m1.30.30.30.8.8.8.1.3" xref="S3.E2.m1.30.30.30.8.8.8.1.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.30.30.30.8.8.8.1.1a" xref="S3.E2.m1.30.30.30.8.8.8.1.1.cmml">​</mo><mi id="S3.E2.m1.30.30.30.8.8.8.1.4" xref="S3.E2.m1.30.30.30.8.8.8.1.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.30.30.30.8.8.8.1.1b" xref="S3.E2.m1.30.30.30.8.8.8.1.1.cmml">​</mo><mi id="S3.E2.m1.30.30.30.8.8.8.1.5" xref="S3.E2.m1.30.30.30.8.8.8.1.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.30.30.30.8.8.8.1.1c" xref="S3.E2.m1.30.30.30.8.8.8.1.1.cmml">​</mo><mi id="S3.E2.m1.30.30.30.8.8.8.1.6" xref="S3.E2.m1.30.30.30.8.8.8.1.6.cmml">j</mi></mrow></msubsup><mo lspace="0em" rspace="0em" id="S3.E2.m1.41.41.4.39.16.16.16.1.2" xref="S3.E2.m1.39.39.2.cmml">​</mo><msup id="S3.E2.m1.41.41.4.39.16.16.16.1.1" xref="S3.E2.m1.39.39.2.cmml"><mrow id="S3.E2.m1.41.41.4.39.16.16.16.1.1.1.1" xref="S3.E2.m1.39.39.2.cmml"><mo stretchy="false" id="S3.E2.m1.31.31.31.9.9.9" xref="S3.E2.m1.39.39.2.cmml">(</mo><mrow id="S3.E2.m1.41.41.4.39.16.16.16.1.1.1.1.1" xref="S3.E2.m1.39.39.2.cmml"><mover accent="true" id="S3.E2.m1.32.32.32.10.10.10" xref="S3.E2.m1.32.32.32.10.10.10.cmml"><msub id="S3.E2.m1.32.32.32.10.10.10.2" xref="S3.E2.m1.32.32.32.10.10.10.2.cmml"><mi id="S3.E2.m1.32.32.32.10.10.10.2.2" xref="S3.E2.m1.32.32.32.10.10.10.2.2.cmml">C</mi><mi id="S3.E2.m1.32.32.32.10.10.10.2.3" xref="S3.E2.m1.32.32.32.10.10.10.2.3.cmml">i</mi></msub><mo id="S3.E2.m1.32.32.32.10.10.10.1" xref="S3.E2.m1.32.32.32.10.10.10.1.cmml">^</mo></mover><mo id="S3.E2.m1.33.33.33.11.11.11" xref="S3.E2.m1.33.33.33.11.11.11.cmml">−</mo><msub id="S3.E2.m1.41.41.4.39.16.16.16.1.1.1.1.1.1" xref="S3.E2.m1.39.39.2.cmml"><mi id="S3.E2.m1.34.34.34.12.12.12" xref="S3.E2.m1.34.34.34.12.12.12.cmml">C</mi><mi id="S3.E2.m1.35.35.35.13.13.13.1" xref="S3.E2.m1.35.35.35.13.13.13.1.cmml">i</mi></msub></mrow><mo stretchy="false" id="S3.E2.m1.36.36.36.14.14.14" xref="S3.E2.m1.39.39.2.cmml">)</mo></mrow><mn id="S3.E2.m1.37.37.37.15.15.15.1" xref="S3.E2.m1.37.37.37.15.15.15.1.cmml">2</mn></msup></mrow></mrow></mrow></mtd></mtr></mtable><annotation-xml encoding="MathML-Content" id="S3.E2.m1.41b"><apply id="S3.E2.m1.39.39.2.cmml" xref="S3.E2.m1.41.41.4"><eq id="S3.E2.m1.6.6.6.6.6.6.cmml" xref="S3.E2.m1.6.6.6.6.6.6"></eq><apply id="S3.E2.m1.39.39.2.4.cmml" xref="S3.E2.m1.41.41.4"><times id="S3.E2.m1.39.39.2.4.1.cmml" xref="S3.E2.m1.41.41.4"></times><ci id="S3.E2.m1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1">𝑙</ci><ci id="S3.E2.m1.2.2.2.2.2.2.cmml" xref="S3.E2.m1.2.2.2.2.2.2">𝑜</ci><ci id="S3.E2.m1.3.3.3.3.3.3.cmml" xref="S3.E2.m1.3.3.3.3.3.3">𝑠</ci><apply id="S3.E2.m1.39.39.2.4.5.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.39.39.2.4.5.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><ci id="S3.E2.m1.4.4.4.4.4.4.cmml" xref="S3.E2.m1.4.4.4.4.4.4">𝑠</ci><apply id="S3.E2.m1.5.5.5.5.5.5.1.cmml" xref="S3.E2.m1.5.5.5.5.5.5.1"><times id="S3.E2.m1.5.5.5.5.5.5.1.1.cmml" xref="S3.E2.m1.5.5.5.5.5.5.1.1"></times><ci id="S3.E2.m1.5.5.5.5.5.5.1.2.cmml" xref="S3.E2.m1.5.5.5.5.5.5.1.2">𝑐</ci><ci id="S3.E2.m1.5.5.5.5.5.5.1.3.cmml" xref="S3.E2.m1.5.5.5.5.5.5.1.3">𝑜</ci><ci id="S3.E2.m1.5.5.5.5.5.5.1.4.cmml" xref="S3.E2.m1.5.5.5.5.5.5.1.4">𝑛</ci><ci id="S3.E2.m1.5.5.5.5.5.5.1.5.cmml" xref="S3.E2.m1.5.5.5.5.5.5.1.5">𝑓</ci></apply></apply></apply><apply id="S3.E2.m1.39.39.2.2.cmml" xref="S3.E2.m1.41.41.4"><plus id="S3.E2.m1.22.22.22.22.16.16.cmml" xref="S3.E2.m1.22.22.22.22.16.16"></plus><apply id="S3.E2.m1.38.38.1.1.1.cmml" xref="S3.E2.m1.41.41.4"><times id="S3.E2.m1.38.38.1.1.1.2.cmml" xref="S3.E2.m1.41.41.4"></times><apply id="S3.E2.m1.38.38.1.1.1.3.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.38.38.1.1.1.3.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><ci id="S3.E2.m1.7.7.7.7.1.1.cmml" xref="S3.E2.m1.7.7.7.7.1.1">𝜆</ci><apply id="S3.E2.m1.8.8.8.8.2.2.1.cmml" xref="S3.E2.m1.8.8.8.8.2.2.1"><times id="S3.E2.m1.8.8.8.8.2.2.1.1.cmml" xref="S3.E2.m1.8.8.8.8.2.2.1.1"></times><ci id="S3.E2.m1.8.8.8.8.2.2.1.2.cmml" xref="S3.E2.m1.8.8.8.8.2.2.1.2">𝑜</ci><ci id="S3.E2.m1.8.8.8.8.2.2.1.3.cmml" xref="S3.E2.m1.8.8.8.8.2.2.1.3">𝑏</ci><ci id="S3.E2.m1.8.8.8.8.2.2.1.4.cmml" xref="S3.E2.m1.8.8.8.8.2.2.1.4">𝑗</ci></apply></apply><apply id="S3.E2.m1.38.38.1.1.1.1.cmml" xref="S3.E2.m1.41.41.4"><apply id="S3.E2.m1.38.38.1.1.1.1.2.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.38.38.1.1.1.1.2.1.cmml" xref="S3.E2.m1.41.41.4">superscript</csymbol><apply id="S3.E2.m1.38.38.1.1.1.1.2.2.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.38.38.1.1.1.1.2.2.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><sum id="S3.E2.m1.9.9.9.9.3.3.cmml" xref="S3.E2.m1.9.9.9.9.3.3"></sum><apply id="S3.E2.m1.10.10.10.10.4.4.1.cmml" xref="S3.E2.m1.10.10.10.10.4.4.1"><eq id="S3.E2.m1.10.10.10.10.4.4.1.1.cmml" xref="S3.E2.m1.10.10.10.10.4.4.1.1"></eq><ci id="S3.E2.m1.10.10.10.10.4.4.1.2.cmml" xref="S3.E2.m1.10.10.10.10.4.4.1.2">𝑖</ci><cn type="integer" id="S3.E2.m1.10.10.10.10.4.4.1.3.cmml" xref="S3.E2.m1.10.10.10.10.4.4.1.3">0</cn></apply></apply><apply id="S3.E2.m1.11.11.11.11.5.5.1.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1"><times id="S3.E2.m1.11.11.11.11.5.5.1.1.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.1"></times><apply id="S3.E2.m1.11.11.11.11.5.5.1.2.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.11.11.11.11.5.5.1.2.1.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.2">subscript</csymbol><ci id="S3.E2.m1.11.11.11.11.5.5.1.2.2.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.2.2">𝑆</ci><ci id="S3.E2.m1.11.11.11.11.5.5.1.2.3.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.2.3">𝑋</ci></apply><apply id="S3.E2.m1.11.11.11.11.5.5.1.3.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.11.11.11.11.5.5.1.3.1.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.3">subscript</csymbol><ci id="S3.E2.m1.11.11.11.11.5.5.1.3.2.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.3.2">𝑆</ci><ci id="S3.E2.m1.11.11.11.11.5.5.1.3.3.cmml" xref="S3.E2.m1.11.11.11.11.5.5.1.3.3">𝑍</ci></apply></apply></apply><apply id="S3.E2.m1.38.38.1.1.1.1.1.cmml" xref="S3.E2.m1.41.41.4"><times id="S3.E2.m1.38.38.1.1.1.1.1.2.cmml" xref="S3.E2.m1.41.41.4"></times><apply id="S3.E2.m1.38.38.1.1.1.1.1.3.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.38.38.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.41.41.4">superscript</csymbol><apply id="S3.E2.m1.38.38.1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.38.38.1.1.1.1.1.3.2.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><cn type="integer" id="S3.E2.m1.12.12.12.12.6.6.cmml" xref="S3.E2.m1.12.12.12.12.6.6">1</cn><ci id="S3.E2.m1.13.13.13.13.7.7.1.cmml" xref="S3.E2.m1.13.13.13.13.7.7.1">𝑖</ci></apply><apply id="S3.E2.m1.14.14.14.14.8.8.1.cmml" xref="S3.E2.m1.14.14.14.14.8.8.1"><times id="S3.E2.m1.14.14.14.14.8.8.1.1.cmml" xref="S3.E2.m1.14.14.14.14.8.8.1.1"></times><ci id="S3.E2.m1.14.14.14.14.8.8.1.2.cmml" xref="S3.E2.m1.14.14.14.14.8.8.1.2">𝑜</ci><ci id="S3.E2.m1.14.14.14.14.8.8.1.3.cmml" xref="S3.E2.m1.14.14.14.14.8.8.1.3">𝑏</ci><ci id="S3.E2.m1.14.14.14.14.8.8.1.4.cmml" xref="S3.E2.m1.14.14.14.14.8.8.1.4">𝑗</ci></apply></apply><apply id="S3.E2.m1.38.38.1.1.1.1.1.1.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.38.38.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.41.41.4">superscript</csymbol><apply id="S3.E2.m1.38.38.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.41.41.4"><minus id="S3.E2.m1.17.17.17.17.11.11.cmml" xref="S3.E2.m1.17.17.17.17.11.11"></minus><apply id="S3.E2.m1.16.16.16.16.10.10.cmml" xref="S3.E2.m1.16.16.16.16.10.10"><ci id="S3.E2.m1.16.16.16.16.10.10.1.cmml" xref="S3.E2.m1.16.16.16.16.10.10.1">^</ci><apply id="S3.E2.m1.16.16.16.16.10.10.2.cmml" xref="S3.E2.m1.16.16.16.16.10.10.2"><csymbol cd="ambiguous" id="S3.E2.m1.16.16.16.16.10.10.2.1.cmml" xref="S3.E2.m1.16.16.16.16.10.10.2">subscript</csymbol><ci id="S3.E2.m1.16.16.16.16.10.10.2.2.cmml" xref="S3.E2.m1.16.16.16.16.10.10.2.2">𝐶</ci><ci id="S3.E2.m1.16.16.16.16.10.10.2.3.cmml" xref="S3.E2.m1.16.16.16.16.10.10.2.3">𝑖</ci></apply></apply><apply id="S3.E2.m1.38.38.1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.38.38.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><ci id="S3.E2.m1.18.18.18.18.12.12.cmml" xref="S3.E2.m1.18.18.18.18.12.12">𝐶</ci><ci id="S3.E2.m1.19.19.19.19.13.13.1.cmml" xref="S3.E2.m1.19.19.19.19.13.13.1">𝑖</ci></apply></apply><cn type="integer" id="S3.E2.m1.21.21.21.21.15.15.1.cmml" xref="S3.E2.m1.21.21.21.21.15.15.1">2</cn></apply></apply></apply></apply><apply id="S3.E2.m1.39.39.2.2.2.cmml" xref="S3.E2.m1.41.41.4"><times id="S3.E2.m1.39.39.2.2.2.2.cmml" xref="S3.E2.m1.41.41.4"></times><apply id="S3.E2.m1.39.39.2.2.2.3.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.39.39.2.2.2.3.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><ci id="S3.E2.m1.23.23.23.1.1.1.cmml" xref="S3.E2.m1.23.23.23.1.1.1">𝜆</ci><apply id="S3.E2.m1.24.24.24.2.2.2.1.cmml" xref="S3.E2.m1.24.24.24.2.2.2.1"><times id="S3.E2.m1.24.24.24.2.2.2.1.1.cmml" xref="S3.E2.m1.24.24.24.2.2.2.1.1"></times><ci id="S3.E2.m1.24.24.24.2.2.2.1.2.cmml" xref="S3.E2.m1.24.24.24.2.2.2.1.2">𝑛</ci><ci id="S3.E2.m1.24.24.24.2.2.2.1.3.cmml" xref="S3.E2.m1.24.24.24.2.2.2.1.3">𝑜</ci><ci id="S3.E2.m1.24.24.24.2.2.2.1.4.cmml" xref="S3.E2.m1.24.24.24.2.2.2.1.4">𝑜</ci><ci id="S3.E2.m1.24.24.24.2.2.2.1.5.cmml" xref="S3.E2.m1.24.24.24.2.2.2.1.5">𝑏</ci><ci id="S3.E2.m1.24.24.24.2.2.2.1.6.cmml" xref="S3.E2.m1.24.24.24.2.2.2.1.6">𝑗</ci></apply></apply><apply id="S3.E2.m1.39.39.2.2.2.1.cmml" xref="S3.E2.m1.41.41.4"><apply id="S3.E2.m1.39.39.2.2.2.1.2.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.39.39.2.2.2.1.2.1.cmml" xref="S3.E2.m1.41.41.4">superscript</csymbol><apply id="S3.E2.m1.39.39.2.2.2.1.2.2.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.39.39.2.2.2.1.2.2.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><sum id="S3.E2.m1.25.25.25.3.3.3.cmml" xref="S3.E2.m1.25.25.25.3.3.3"></sum><apply id="S3.E2.m1.26.26.26.4.4.4.1.cmml" xref="S3.E2.m1.26.26.26.4.4.4.1"><eq id="S3.E2.m1.26.26.26.4.4.4.1.1.cmml" xref="S3.E2.m1.26.26.26.4.4.4.1.1"></eq><ci id="S3.E2.m1.26.26.26.4.4.4.1.2.cmml" xref="S3.E2.m1.26.26.26.4.4.4.1.2">𝑖</ci><cn type="integer" id="S3.E2.m1.26.26.26.4.4.4.1.3.cmml" xref="S3.E2.m1.26.26.26.4.4.4.1.3">0</cn></apply></apply><apply id="S3.E2.m1.27.27.27.5.5.5.1.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1"><times id="S3.E2.m1.27.27.27.5.5.5.1.1.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.1"></times><apply id="S3.E2.m1.27.27.27.5.5.5.1.2.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.27.27.27.5.5.5.1.2.1.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.2">subscript</csymbol><ci id="S3.E2.m1.27.27.27.5.5.5.1.2.2.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.2.2">𝑆</ci><ci id="S3.E2.m1.27.27.27.5.5.5.1.2.3.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.2.3">𝑋</ci></apply><apply id="S3.E2.m1.27.27.27.5.5.5.1.3.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.27.27.27.5.5.5.1.3.1.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.3">subscript</csymbol><ci id="S3.E2.m1.27.27.27.5.5.5.1.3.2.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.3.2">𝑆</ci><ci id="S3.E2.m1.27.27.27.5.5.5.1.3.3.cmml" xref="S3.E2.m1.27.27.27.5.5.5.1.3.3">𝑍</ci></apply></apply></apply><apply id="S3.E2.m1.39.39.2.2.2.1.1.cmml" xref="S3.E2.m1.41.41.4"><times id="S3.E2.m1.39.39.2.2.2.1.1.2.cmml" xref="S3.E2.m1.41.41.4"></times><apply id="S3.E2.m1.39.39.2.2.2.1.1.3.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.39.39.2.2.2.1.1.3.1.cmml" xref="S3.E2.m1.41.41.4">superscript</csymbol><apply id="S3.E2.m1.39.39.2.2.2.1.1.3.2.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.39.39.2.2.2.1.1.3.2.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><cn type="integer" id="S3.E2.m1.28.28.28.6.6.6.cmml" xref="S3.E2.m1.28.28.28.6.6.6">1</cn><ci id="S3.E2.m1.29.29.29.7.7.7.1.cmml" xref="S3.E2.m1.29.29.29.7.7.7.1">𝑖</ci></apply><apply id="S3.E2.m1.30.30.30.8.8.8.1.cmml" xref="S3.E2.m1.30.30.30.8.8.8.1"><times id="S3.E2.m1.30.30.30.8.8.8.1.1.cmml" xref="S3.E2.m1.30.30.30.8.8.8.1.1"></times><ci id="S3.E2.m1.30.30.30.8.8.8.1.2.cmml" xref="S3.E2.m1.30.30.30.8.8.8.1.2">𝑛</ci><ci id="S3.E2.m1.30.30.30.8.8.8.1.3.cmml" xref="S3.E2.m1.30.30.30.8.8.8.1.3">𝑜</ci><ci id="S3.E2.m1.30.30.30.8.8.8.1.4.cmml" xref="S3.E2.m1.30.30.30.8.8.8.1.4">𝑜</ci><ci id="S3.E2.m1.30.30.30.8.8.8.1.5.cmml" xref="S3.E2.m1.30.30.30.8.8.8.1.5">𝑏</ci><ci id="S3.E2.m1.30.30.30.8.8.8.1.6.cmml" xref="S3.E2.m1.30.30.30.8.8.8.1.6">𝑗</ci></apply></apply><apply id="S3.E2.m1.39.39.2.2.2.1.1.1.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.39.39.2.2.2.1.1.1.2.cmml" xref="S3.E2.m1.41.41.4">superscript</csymbol><apply id="S3.E2.m1.39.39.2.2.2.1.1.1.1.1.1.cmml" xref="S3.E2.m1.41.41.4"><minus id="S3.E2.m1.33.33.33.11.11.11.cmml" xref="S3.E2.m1.33.33.33.11.11.11"></minus><apply id="S3.E2.m1.32.32.32.10.10.10.cmml" xref="S3.E2.m1.32.32.32.10.10.10"><ci id="S3.E2.m1.32.32.32.10.10.10.1.cmml" xref="S3.E2.m1.32.32.32.10.10.10.1">^</ci><apply id="S3.E2.m1.32.32.32.10.10.10.2.cmml" xref="S3.E2.m1.32.32.32.10.10.10.2"><csymbol cd="ambiguous" id="S3.E2.m1.32.32.32.10.10.10.2.1.cmml" xref="S3.E2.m1.32.32.32.10.10.10.2">subscript</csymbol><ci id="S3.E2.m1.32.32.32.10.10.10.2.2.cmml" xref="S3.E2.m1.32.32.32.10.10.10.2.2">𝐶</ci><ci id="S3.E2.m1.32.32.32.10.10.10.2.3.cmml" xref="S3.E2.m1.32.32.32.10.10.10.2.3">𝑖</ci></apply></apply><apply id="S3.E2.m1.39.39.2.2.2.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.41.41.4"><csymbol cd="ambiguous" id="S3.E2.m1.39.39.2.2.2.1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.41.41.4">subscript</csymbol><ci id="S3.E2.m1.34.34.34.12.12.12.cmml" xref="S3.E2.m1.34.34.34.12.12.12">𝐶</ci><ci id="S3.E2.m1.35.35.35.13.13.13.1.cmml" xref="S3.E2.m1.35.35.35.13.13.13.1">𝑖</ci></apply></apply><cn type="integer" id="S3.E2.m1.37.37.37.15.15.15.1.cmml" xref="S3.E2.m1.37.37.37.15.15.15.1">2</cn></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m1.41c">\begin{split}loss_{conf}=&amp;\lambda_{obj}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{obj}(\hat{C_{i}}-C_{i})^{2}+\\
+&amp;\lambda_{noobj}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{noobj}(\hat{C_{i}}-C_{i})^{2}\end{split}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS4.p5" class="ltx_para">
+<p id="S3.SS4.p5.1" class="ltx_p">The Classification loss (Equation <a href="#S3.E3" title="In III-D Loss Equation ‣ III Our Approach ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) is represented by the square error of the prediction and ground truth.</p>
+</div>
+<div id="S3.SS4.p6" class="ltx_para">
+<table id="S3.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E3.m1.1" class="ltx_Math" alttext="loss_{class}=\lambda_{class}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{obj}\sum_{c\in classes}(class_{i}-\hat{class}_{i})^{2}" display="block"><semantics id="S3.E3.m1.1a"><mrow id="S3.E3.m1.1.1" xref="S3.E3.m1.1.1.cmml"><mrow id="S3.E3.m1.1.1.3" xref="S3.E3.m1.1.1.3.cmml"><mi id="S3.E3.m1.1.1.3.2" xref="S3.E3.m1.1.1.3.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.3.1" xref="S3.E3.m1.1.1.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.3.3" xref="S3.E3.m1.1.1.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.3.1a" xref="S3.E3.m1.1.1.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.3.4" xref="S3.E3.m1.1.1.3.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.3.1b" xref="S3.E3.m1.1.1.3.1.cmml">​</mo><msub id="S3.E3.m1.1.1.3.5" xref="S3.E3.m1.1.1.3.5.cmml"><mi id="S3.E3.m1.1.1.3.5.2" xref="S3.E3.m1.1.1.3.5.2.cmml">s</mi><mrow id="S3.E3.m1.1.1.3.5.3" xref="S3.E3.m1.1.1.3.5.3.cmml"><mi id="S3.E3.m1.1.1.3.5.3.2" xref="S3.E3.m1.1.1.3.5.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.3.5.3.1" xref="S3.E3.m1.1.1.3.5.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.3.5.3.3" xref="S3.E3.m1.1.1.3.5.3.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.3.5.3.1a" xref="S3.E3.m1.1.1.3.5.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.3.5.3.4" xref="S3.E3.m1.1.1.3.5.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.3.5.3.1b" xref="S3.E3.m1.1.1.3.5.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.3.5.3.5" xref="S3.E3.m1.1.1.3.5.3.5.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.3.5.3.1c" xref="S3.E3.m1.1.1.3.5.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.3.5.3.6" xref="S3.E3.m1.1.1.3.5.3.6.cmml">s</mi></mrow></msub></mrow><mo id="S3.E3.m1.1.1.2" xref="S3.E3.m1.1.1.2.cmml">=</mo><mrow id="S3.E3.m1.1.1.1" xref="S3.E3.m1.1.1.1.cmml"><msub id="S3.E3.m1.1.1.1.3" xref="S3.E3.m1.1.1.1.3.cmml"><mi id="S3.E3.m1.1.1.1.3.2" xref="S3.E3.m1.1.1.1.3.2.cmml">λ</mi><mrow id="S3.E3.m1.1.1.1.3.3" xref="S3.E3.m1.1.1.1.3.3.cmml"><mi id="S3.E3.m1.1.1.1.3.3.2" xref="S3.E3.m1.1.1.1.3.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.3.3.1" xref="S3.E3.m1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.3.3.3" xref="S3.E3.m1.1.1.1.3.3.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.3.3.1a" xref="S3.E3.m1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.3.3.4" xref="S3.E3.m1.1.1.1.3.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.3.3.1b" xref="S3.E3.m1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.3.3.5" xref="S3.E3.m1.1.1.1.3.3.5.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.3.3.1c" xref="S3.E3.m1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.3.3.6" xref="S3.E3.m1.1.1.1.3.3.6.cmml">s</mi></mrow></msub><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.2" xref="S3.E3.m1.1.1.1.2.cmml">​</mo><mrow id="S3.E3.m1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.cmml"><munderover id="S3.E3.m1.1.1.1.1.2" xref="S3.E3.m1.1.1.1.1.2.cmml"><mo movablelimits="false" id="S3.E3.m1.1.1.1.1.2.2.2" xref="S3.E3.m1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S3.E3.m1.1.1.1.1.2.2.3" xref="S3.E3.m1.1.1.1.1.2.2.3.cmml"><mi id="S3.E3.m1.1.1.1.1.2.2.3.2" xref="S3.E3.m1.1.1.1.1.2.2.3.2.cmml">i</mi><mo id="S3.E3.m1.1.1.1.1.2.2.3.1" xref="S3.E3.m1.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S3.E3.m1.1.1.1.1.2.2.3.3" xref="S3.E3.m1.1.1.1.1.2.2.3.3.cmml">0</mn></mrow><mrow id="S3.E3.m1.1.1.1.1.2.3" xref="S3.E3.m1.1.1.1.1.2.3.cmml"><msub id="S3.E3.m1.1.1.1.1.2.3.2" xref="S3.E3.m1.1.1.1.1.2.3.2.cmml"><mi id="S3.E3.m1.1.1.1.1.2.3.2.2" xref="S3.E3.m1.1.1.1.1.2.3.2.2.cmml">S</mi><mi id="S3.E3.m1.1.1.1.1.2.3.2.3" xref="S3.E3.m1.1.1.1.1.2.3.2.3.cmml">X</mi></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E3.m1.1.1.1.1.2.3.1" xref="S3.E3.m1.1.1.1.1.2.3.1.cmml">∗</mo><msub id="S3.E3.m1.1.1.1.1.2.3.3" xref="S3.E3.m1.1.1.1.1.2.3.3.cmml"><mi id="S3.E3.m1.1.1.1.1.2.3.3.2" xref="S3.E3.m1.1.1.1.1.2.3.3.2.cmml">S</mi><mi id="S3.E3.m1.1.1.1.1.2.3.3.3" xref="S3.E3.m1.1.1.1.1.2.3.3.3.cmml">Z</mi></msub></mrow></munderover><mrow id="S3.E3.m1.1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.1.cmml"><msubsup id="S3.E3.m1.1.1.1.1.1.3" xref="S3.E3.m1.1.1.1.1.1.3.cmml"><mn id="S3.E3.m1.1.1.1.1.1.3.2.2" xref="S3.E3.m1.1.1.1.1.1.3.2.2.cmml">𝟣</mn><mi id="S3.E3.m1.1.1.1.1.1.3.2.3" xref="S3.E3.m1.1.1.1.1.1.3.2.3.cmml">i</mi><mrow id="S3.E3.m1.1.1.1.1.1.3.3" xref="S3.E3.m1.1.1.1.1.1.3.3.cmml"><mi id="S3.E3.m1.1.1.1.1.1.3.3.2" xref="S3.E3.m1.1.1.1.1.1.3.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.3.3.1" xref="S3.E3.m1.1.1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.3.3.3" xref="S3.E3.m1.1.1.1.1.1.3.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.3.3.1a" xref="S3.E3.m1.1.1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.3.3.4" xref="S3.E3.m1.1.1.1.1.1.3.3.4.cmml">j</mi></mrow></msubsup><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.2" xref="S3.E3.m1.1.1.1.1.1.2.cmml">​</mo><mrow id="S3.E3.m1.1.1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.1.1.cmml"><munder id="S3.E3.m1.1.1.1.1.1.1.2" xref="S3.E3.m1.1.1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.2.2" xref="S3.E3.m1.1.1.1.1.1.1.2.2.cmml">∑</mo><mrow id="S3.E3.m1.1.1.1.1.1.1.2.3" xref="S3.E3.m1.1.1.1.1.1.1.2.3.cmml"><mi id="S3.E3.m1.1.1.1.1.1.1.2.3.2" xref="S3.E3.m1.1.1.1.1.1.1.2.3.2.cmml">c</mi><mo id="S3.E3.m1.1.1.1.1.1.1.2.3.1" xref="S3.E3.m1.1.1.1.1.1.1.2.3.1.cmml">∈</mo><mrow id="S3.E3.m1.1.1.1.1.1.1.2.3.3" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.cmml"><mi id="S3.E3.m1.1.1.1.1.1.1.2.3.3.2" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.2.3.3.1" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.2.3.3.3" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.2.3.3.1a" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.2.3.3.4" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.2.3.3.1b" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.2.3.3.5" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.5.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.2.3.3.1c" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.2.3.3.6" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.6.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.2.3.3.1d" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.2.3.3.7" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.7.cmml">e</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.2.3.3.1e" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.2.3.3.8" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.8.cmml">s</mi></mrow></mrow></munder><msup id="S3.E3.m1.1.1.1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E3.m1.1.1.1.1.1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.2" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1a" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.4" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1b" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.5" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.5.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1c" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><msub id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.cmml"><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.2" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.2.cmml">s</mi><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.3" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.3.cmml">i</mi></msub></mrow><mo id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.cmml"><mover accent="true" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.cmml"><mrow id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.cmml"><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.2" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.3" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1a" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.4" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1b" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.5" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.5.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1c" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.6" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.6.cmml">s</mi></mrow><mo id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.1" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.1.cmml">^</mo></mover><mi id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.3" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.3" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mn id="S3.E3.m1.1.1.1.1.1.1.1.3" xref="S3.E3.m1.1.1.1.1.1.1.1.3.cmml">2</mn></msup></mrow></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E3.m1.1b"><apply id="S3.E3.m1.1.1.cmml" xref="S3.E3.m1.1.1"><eq id="S3.E3.m1.1.1.2.cmml" xref="S3.E3.m1.1.1.2"></eq><apply id="S3.E3.m1.1.1.3.cmml" xref="S3.E3.m1.1.1.3"><times id="S3.E3.m1.1.1.3.1.cmml" xref="S3.E3.m1.1.1.3.1"></times><ci id="S3.E3.m1.1.1.3.2.cmml" xref="S3.E3.m1.1.1.3.2">𝑙</ci><ci id="S3.E3.m1.1.1.3.3.cmml" xref="S3.E3.m1.1.1.3.3">𝑜</ci><ci id="S3.E3.m1.1.1.3.4.cmml" xref="S3.E3.m1.1.1.3.4">𝑠</ci><apply id="S3.E3.m1.1.1.3.5.cmml" xref="S3.E3.m1.1.1.3.5"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.3.5.1.cmml" xref="S3.E3.m1.1.1.3.5">subscript</csymbol><ci id="S3.E3.m1.1.1.3.5.2.cmml" xref="S3.E3.m1.1.1.3.5.2">𝑠</ci><apply id="S3.E3.m1.1.1.3.5.3.cmml" xref="S3.E3.m1.1.1.3.5.3"><times id="S3.E3.m1.1.1.3.5.3.1.cmml" xref="S3.E3.m1.1.1.3.5.3.1"></times><ci id="S3.E3.m1.1.1.3.5.3.2.cmml" xref="S3.E3.m1.1.1.3.5.3.2">𝑐</ci><ci id="S3.E3.m1.1.1.3.5.3.3.cmml" xref="S3.E3.m1.1.1.3.5.3.3">𝑙</ci><ci id="S3.E3.m1.1.1.3.5.3.4.cmml" xref="S3.E3.m1.1.1.3.5.3.4">𝑎</ci><ci id="S3.E3.m1.1.1.3.5.3.5.cmml" xref="S3.E3.m1.1.1.3.5.3.5">𝑠</ci><ci id="S3.E3.m1.1.1.3.5.3.6.cmml" xref="S3.E3.m1.1.1.3.5.3.6">𝑠</ci></apply></apply></apply><apply id="S3.E3.m1.1.1.1.cmml" xref="S3.E3.m1.1.1.1"><times id="S3.E3.m1.1.1.1.2.cmml" xref="S3.E3.m1.1.1.1.2"></times><apply id="S3.E3.m1.1.1.1.3.cmml" xref="S3.E3.m1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.3.1.cmml" xref="S3.E3.m1.1.1.1.3">subscript</csymbol><ci id="S3.E3.m1.1.1.1.3.2.cmml" xref="S3.E3.m1.1.1.1.3.2">𝜆</ci><apply id="S3.E3.m1.1.1.1.3.3.cmml" xref="S3.E3.m1.1.1.1.3.3"><times id="S3.E3.m1.1.1.1.3.3.1.cmml" xref="S3.E3.m1.1.1.1.3.3.1"></times><ci id="S3.E3.m1.1.1.1.3.3.2.cmml" xref="S3.E3.m1.1.1.1.3.3.2">𝑐</ci><ci id="S3.E3.m1.1.1.1.3.3.3.cmml" xref="S3.E3.m1.1.1.1.3.3.3">𝑙</ci><ci id="S3.E3.m1.1.1.1.3.3.4.cmml" xref="S3.E3.m1.1.1.1.3.3.4">𝑎</ci><ci id="S3.E3.m1.1.1.1.3.3.5.cmml" xref="S3.E3.m1.1.1.1.3.3.5">𝑠</ci><ci id="S3.E3.m1.1.1.1.3.3.6.cmml" xref="S3.E3.m1.1.1.1.3.3.6">𝑠</ci></apply></apply><apply id="S3.E3.m1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1"><apply id="S3.E3.m1.1.1.1.1.2.cmml" xref="S3.E3.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.2.1.cmml" xref="S3.E3.m1.1.1.1.1.2">superscript</csymbol><apply id="S3.E3.m1.1.1.1.1.2.2.cmml" xref="S3.E3.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.2.2.1.cmml" xref="S3.E3.m1.1.1.1.1.2">subscript</csymbol><sum id="S3.E3.m1.1.1.1.1.2.2.2.cmml" xref="S3.E3.m1.1.1.1.1.2.2.2"></sum><apply id="S3.E3.m1.1.1.1.1.2.2.3.cmml" xref="S3.E3.m1.1.1.1.1.2.2.3"><eq id="S3.E3.m1.1.1.1.1.2.2.3.1.cmml" xref="S3.E3.m1.1.1.1.1.2.2.3.1"></eq><ci id="S3.E3.m1.1.1.1.1.2.2.3.2.cmml" xref="S3.E3.m1.1.1.1.1.2.2.3.2">𝑖</ci><cn type="integer" id="S3.E3.m1.1.1.1.1.2.2.3.3.cmml" xref="S3.E3.m1.1.1.1.1.2.2.3.3">0</cn></apply></apply><apply id="S3.E3.m1.1.1.1.1.2.3.cmml" xref="S3.E3.m1.1.1.1.1.2.3"><times id="S3.E3.m1.1.1.1.1.2.3.1.cmml" xref="S3.E3.m1.1.1.1.1.2.3.1"></times><apply id="S3.E3.m1.1.1.1.1.2.3.2.cmml" xref="S3.E3.m1.1.1.1.1.2.3.2"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.2.3.2.1.cmml" xref="S3.E3.m1.1.1.1.1.2.3.2">subscript</csymbol><ci id="S3.E3.m1.1.1.1.1.2.3.2.2.cmml" xref="S3.E3.m1.1.1.1.1.2.3.2.2">𝑆</ci><ci id="S3.E3.m1.1.1.1.1.2.3.2.3.cmml" xref="S3.E3.m1.1.1.1.1.2.3.2.3">𝑋</ci></apply><apply id="S3.E3.m1.1.1.1.1.2.3.3.cmml" xref="S3.E3.m1.1.1.1.1.2.3.3"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.2.3.3.1.cmml" xref="S3.E3.m1.1.1.1.1.2.3.3">subscript</csymbol><ci id="S3.E3.m1.1.1.1.1.2.3.3.2.cmml" xref="S3.E3.m1.1.1.1.1.2.3.3.2">𝑆</ci><ci id="S3.E3.m1.1.1.1.1.2.3.3.3.cmml" xref="S3.E3.m1.1.1.1.1.2.3.3.3">𝑍</ci></apply></apply></apply><apply id="S3.E3.m1.1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1.1"><times id="S3.E3.m1.1.1.1.1.1.2.cmml" xref="S3.E3.m1.1.1.1.1.1.2"></times><apply id="S3.E3.m1.1.1.1.1.1.3.cmml" xref="S3.E3.m1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.1.3.1.cmml" xref="S3.E3.m1.1.1.1.1.1.3">superscript</csymbol><apply id="S3.E3.m1.1.1.1.1.1.3.2.cmml" xref="S3.E3.m1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.1.3.2.1.cmml" xref="S3.E3.m1.1.1.1.1.1.3">subscript</csymbol><cn type="integer" id="S3.E3.m1.1.1.1.1.1.3.2.2.cmml" xref="S3.E3.m1.1.1.1.1.1.3.2.2">1</cn><ci id="S3.E3.m1.1.1.1.1.1.3.2.3.cmml" xref="S3.E3.m1.1.1.1.1.1.3.2.3">𝑖</ci></apply><apply id="S3.E3.m1.1.1.1.1.1.3.3.cmml" xref="S3.E3.m1.1.1.1.1.1.3.3"><times id="S3.E3.m1.1.1.1.1.1.3.3.1.cmml" xref="S3.E3.m1.1.1.1.1.1.3.3.1"></times><ci id="S3.E3.m1.1.1.1.1.1.3.3.2.cmml" xref="S3.E3.m1.1.1.1.1.1.3.3.2">𝑜</ci><ci id="S3.E3.m1.1.1.1.1.1.3.3.3.cmml" xref="S3.E3.m1.1.1.1.1.1.3.3.3">𝑏</ci><ci id="S3.E3.m1.1.1.1.1.1.3.3.4.cmml" xref="S3.E3.m1.1.1.1.1.1.3.3.4">𝑗</ci></apply></apply><apply id="S3.E3.m1.1.1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1"><apply id="S3.E3.m1.1.1.1.1.1.1.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.1.1.2.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2">subscript</csymbol><sum id="S3.E3.m1.1.1.1.1.1.1.2.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.2"></sum><apply id="S3.E3.m1.1.1.1.1.1.1.2.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3"><in id="S3.E3.m1.1.1.1.1.1.1.2.3.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.1"></in><ci id="S3.E3.m1.1.1.1.1.1.1.2.3.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.2">𝑐</ci><apply id="S3.E3.m1.1.1.1.1.1.1.2.3.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3"><times id="S3.E3.m1.1.1.1.1.1.1.2.3.3.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.1"></times><ci id="S3.E3.m1.1.1.1.1.1.1.2.3.3.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.2">𝑐</ci><ci id="S3.E3.m1.1.1.1.1.1.1.2.3.3.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.3">𝑙</ci><ci id="S3.E3.m1.1.1.1.1.1.1.2.3.3.4.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.4">𝑎</ci><ci id="S3.E3.m1.1.1.1.1.1.1.2.3.3.5.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.5">𝑠</ci><ci id="S3.E3.m1.1.1.1.1.1.1.2.3.3.6.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.6">𝑠</ci><ci id="S3.E3.m1.1.1.1.1.1.1.2.3.3.7.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.7">𝑒</ci><ci id="S3.E3.m1.1.1.1.1.1.1.2.3.3.8.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2.3.3.8">𝑠</ci></apply></apply></apply><apply id="S3.E3.m1.1.1.1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.1.1.1.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1">superscript</csymbol><apply id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1"><minus id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.1"></minus><apply id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2"><times id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.1"></times><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.2">𝑐</ci><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.3">𝑙</ci><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.4.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.4">𝑎</ci><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.5.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.5">𝑠</ci><apply id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6">subscript</csymbol><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.2">𝑠</ci><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.2.6.3">𝑖</ci></apply></apply><apply id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3">subscript</csymbol><apply id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2"><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.1">^</ci><apply id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2"><times id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.1"></times><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.2">𝑐</ci><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.3">𝑙</ci><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.4.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.4">𝑎</ci><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.5.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.5">𝑠</ci><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.6.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.6">𝑠</ci></apply></apply><ci id="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.1.1.1.3.3">𝑖</ci></apply></apply><cn type="integer" id="S3.E3.m1.1.1.1.1.1.1.1.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.1.3">2</cn></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E3.m1.1c">loss_{class}=\lambda_{class}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{obj}\sum_{c\in classes}(class_{i}-\hat{class}_{i})^{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS4.p7" class="ltx_para">
+<p id="S3.SS4.p7.1" class="ltx_p">Finally, the Box Loss is defined by the bounding box characteristics and the rotation angle. To evaluate the objects’ dimensions and positions, we consider the square error of the IoU score of the prediction and ground truth and the square error of the rotation estimation.</p>
+</div>
+<div id="S3.SS4.p8" class="ltx_para">
+<table id="S3.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E4.m1.1" class="ltx_Math" alttext="loss_{box}=\lambda_{IoU}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{obj}IoU+\lambda_{\theta}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{obj}(\theta_{i}-\hat{\theta}_{i})^{2}" display="block"><semantics id="S3.E4.m1.1a"><mrow id="S3.E4.m1.1.1" xref="S3.E4.m1.1.1.cmml"><mrow id="S3.E4.m1.1.1.3" xref="S3.E4.m1.1.1.3.cmml"><mi id="S3.E4.m1.1.1.3.2" xref="S3.E4.m1.1.1.3.2.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.3.1" xref="S3.E4.m1.1.1.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.3.3" xref="S3.E4.m1.1.1.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.3.1a" xref="S3.E4.m1.1.1.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.3.4" xref="S3.E4.m1.1.1.3.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.3.1b" xref="S3.E4.m1.1.1.3.1.cmml">​</mo><msub id="S3.E4.m1.1.1.3.5" xref="S3.E4.m1.1.1.3.5.cmml"><mi id="S3.E4.m1.1.1.3.5.2" xref="S3.E4.m1.1.1.3.5.2.cmml">s</mi><mrow id="S3.E4.m1.1.1.3.5.3" xref="S3.E4.m1.1.1.3.5.3.cmml"><mi id="S3.E4.m1.1.1.3.5.3.2" xref="S3.E4.m1.1.1.3.5.3.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.3.5.3.1" xref="S3.E4.m1.1.1.3.5.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.3.5.3.3" xref="S3.E4.m1.1.1.3.5.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.3.5.3.1a" xref="S3.E4.m1.1.1.3.5.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.3.5.3.4" xref="S3.E4.m1.1.1.3.5.3.4.cmml">x</mi></mrow></msub></mrow><mo id="S3.E4.m1.1.1.2" xref="S3.E4.m1.1.1.2.cmml">=</mo><mrow id="S3.E4.m1.1.1.1" xref="S3.E4.m1.1.1.1.cmml"><mrow id="S3.E4.m1.1.1.1.3" xref="S3.E4.m1.1.1.1.3.cmml"><msub id="S3.E4.m1.1.1.1.3.2" xref="S3.E4.m1.1.1.1.3.2.cmml"><mi id="S3.E4.m1.1.1.1.3.2.2" xref="S3.E4.m1.1.1.1.3.2.2.cmml">λ</mi><mrow id="S3.E4.m1.1.1.1.3.2.3" xref="S3.E4.m1.1.1.1.3.2.3.cmml"><mi id="S3.E4.m1.1.1.1.3.2.3.2" xref="S3.E4.m1.1.1.1.3.2.3.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.3.2.3.1" xref="S3.E4.m1.1.1.1.3.2.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.3.2.3.3" xref="S3.E4.m1.1.1.1.3.2.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.3.2.3.1a" xref="S3.E4.m1.1.1.1.3.2.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.3.2.3.4" xref="S3.E4.m1.1.1.1.3.2.3.4.cmml">U</mi></mrow></msub><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.3.1" xref="S3.E4.m1.1.1.1.3.1.cmml">​</mo><mrow id="S3.E4.m1.1.1.1.3.3" xref="S3.E4.m1.1.1.1.3.3.cmml"><munderover id="S3.E4.m1.1.1.1.3.3.1" xref="S3.E4.m1.1.1.1.3.3.1.cmml"><mo movablelimits="false" id="S3.E4.m1.1.1.1.3.3.1.2.2" xref="S3.E4.m1.1.1.1.3.3.1.2.2.cmml">∑</mo><mrow id="S3.E4.m1.1.1.1.3.3.1.2.3" xref="S3.E4.m1.1.1.1.3.3.1.2.3.cmml"><mi id="S3.E4.m1.1.1.1.3.3.1.2.3.2" xref="S3.E4.m1.1.1.1.3.3.1.2.3.2.cmml">i</mi><mo id="S3.E4.m1.1.1.1.3.3.1.2.3.1" xref="S3.E4.m1.1.1.1.3.3.1.2.3.1.cmml">=</mo><mn id="S3.E4.m1.1.1.1.3.3.1.2.3.3" xref="S3.E4.m1.1.1.1.3.3.1.2.3.3.cmml">0</mn></mrow><mrow id="S3.E4.m1.1.1.1.3.3.1.3" xref="S3.E4.m1.1.1.1.3.3.1.3.cmml"><msub id="S3.E4.m1.1.1.1.3.3.1.3.2" xref="S3.E4.m1.1.1.1.3.3.1.3.2.cmml"><mi id="S3.E4.m1.1.1.1.3.3.1.3.2.2" xref="S3.E4.m1.1.1.1.3.3.1.3.2.2.cmml">S</mi><mi id="S3.E4.m1.1.1.1.3.3.1.3.2.3" xref="S3.E4.m1.1.1.1.3.3.1.3.2.3.cmml">X</mi></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E4.m1.1.1.1.3.3.1.3.1" xref="S3.E4.m1.1.1.1.3.3.1.3.1.cmml">∗</mo><msub id="S3.E4.m1.1.1.1.3.3.1.3.3" xref="S3.E4.m1.1.1.1.3.3.1.3.3.cmml"><mi id="S3.E4.m1.1.1.1.3.3.1.3.3.2" xref="S3.E4.m1.1.1.1.3.3.1.3.3.2.cmml">S</mi><mi id="S3.E4.m1.1.1.1.3.3.1.3.3.3" xref="S3.E4.m1.1.1.1.3.3.1.3.3.3.cmml">Z</mi></msub></mrow></munderover><mrow id="S3.E4.m1.1.1.1.3.3.2" xref="S3.E4.m1.1.1.1.3.3.2.cmml"><msubsup id="S3.E4.m1.1.1.1.3.3.2.2" xref="S3.E4.m1.1.1.1.3.3.2.2.cmml"><mn id="S3.E4.m1.1.1.1.3.3.2.2.2.2" xref="S3.E4.m1.1.1.1.3.3.2.2.2.2.cmml">𝟣</mn><mi id="S3.E4.m1.1.1.1.3.3.2.2.2.3" xref="S3.E4.m1.1.1.1.3.3.2.2.2.3.cmml">i</mi><mrow id="S3.E4.m1.1.1.1.3.3.2.2.3" xref="S3.E4.m1.1.1.1.3.3.2.2.3.cmml"><mi id="S3.E4.m1.1.1.1.3.3.2.2.3.2" xref="S3.E4.m1.1.1.1.3.3.2.2.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.3.3.2.2.3.1" xref="S3.E4.m1.1.1.1.3.3.2.2.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.3.3.2.2.3.3" xref="S3.E4.m1.1.1.1.3.3.2.2.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.3.3.2.2.3.1a" xref="S3.E4.m1.1.1.1.3.3.2.2.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.3.3.2.2.3.4" xref="S3.E4.m1.1.1.1.3.3.2.2.3.4.cmml">j</mi></mrow></msubsup><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.3.3.2.1" xref="S3.E4.m1.1.1.1.3.3.2.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.3.3.2.3" xref="S3.E4.m1.1.1.1.3.3.2.3.cmml">I</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.3.3.2.1a" xref="S3.E4.m1.1.1.1.3.3.2.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.3.3.2.4" xref="S3.E4.m1.1.1.1.3.3.2.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.3.3.2.1b" xref="S3.E4.m1.1.1.1.3.3.2.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.3.3.2.5" xref="S3.E4.m1.1.1.1.3.3.2.5.cmml">U</mi></mrow></mrow></mrow><mo id="S3.E4.m1.1.1.1.2" xref="S3.E4.m1.1.1.1.2.cmml">+</mo><mrow id="S3.E4.m1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.cmml"><msub id="S3.E4.m1.1.1.1.1.3" xref="S3.E4.m1.1.1.1.1.3.cmml"><mi id="S3.E4.m1.1.1.1.1.3.2" xref="S3.E4.m1.1.1.1.1.3.2.cmml">λ</mi><mi id="S3.E4.m1.1.1.1.1.3.3" xref="S3.E4.m1.1.1.1.1.3.3.cmml">θ</mi></msub><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.1.2" xref="S3.E4.m1.1.1.1.1.2.cmml">​</mo><mrow id="S3.E4.m1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.cmml"><munderover id="S3.E4.m1.1.1.1.1.1.2" xref="S3.E4.m1.1.1.1.1.1.2.cmml"><mo movablelimits="false" id="S3.E4.m1.1.1.1.1.1.2.2.2" xref="S3.E4.m1.1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S3.E4.m1.1.1.1.1.1.2.2.3" xref="S3.E4.m1.1.1.1.1.1.2.2.3.cmml"><mi id="S3.E4.m1.1.1.1.1.1.2.2.3.2" xref="S3.E4.m1.1.1.1.1.1.2.2.3.2.cmml">i</mi><mo id="S3.E4.m1.1.1.1.1.1.2.2.3.1" xref="S3.E4.m1.1.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S3.E4.m1.1.1.1.1.1.2.2.3.3" xref="S3.E4.m1.1.1.1.1.1.2.2.3.3.cmml">0</mn></mrow><mrow id="S3.E4.m1.1.1.1.1.1.2.3" xref="S3.E4.m1.1.1.1.1.1.2.3.cmml"><msub id="S3.E4.m1.1.1.1.1.1.2.3.2" xref="S3.E4.m1.1.1.1.1.1.2.3.2.cmml"><mi id="S3.E4.m1.1.1.1.1.1.2.3.2.2" xref="S3.E4.m1.1.1.1.1.1.2.3.2.2.cmml">S</mi><mi id="S3.E4.m1.1.1.1.1.1.2.3.2.3" xref="S3.E4.m1.1.1.1.1.1.2.3.2.3.cmml">X</mi></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E4.m1.1.1.1.1.1.2.3.1" xref="S3.E4.m1.1.1.1.1.1.2.3.1.cmml">∗</mo><msub id="S3.E4.m1.1.1.1.1.1.2.3.3" xref="S3.E4.m1.1.1.1.1.1.2.3.3.cmml"><mi id="S3.E4.m1.1.1.1.1.1.2.3.3.2" xref="S3.E4.m1.1.1.1.1.1.2.3.3.2.cmml">S</mi><mi id="S3.E4.m1.1.1.1.1.1.2.3.3.3" xref="S3.E4.m1.1.1.1.1.1.2.3.3.3.cmml">Z</mi></msub></mrow></munderover><mrow id="S3.E4.m1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.cmml"><msubsup id="S3.E4.m1.1.1.1.1.1.1.3" xref="S3.E4.m1.1.1.1.1.1.1.3.cmml"><mn id="S3.E4.m1.1.1.1.1.1.1.3.2.2" xref="S3.E4.m1.1.1.1.1.1.1.3.2.2.cmml">𝟣</mn><mi id="S3.E4.m1.1.1.1.1.1.1.3.2.3" xref="S3.E4.m1.1.1.1.1.1.1.3.2.3.cmml">i</mi><mrow id="S3.E4.m1.1.1.1.1.1.1.3.3" xref="S3.E4.m1.1.1.1.1.1.1.3.3.cmml"><mi id="S3.E4.m1.1.1.1.1.1.1.3.3.2" xref="S3.E4.m1.1.1.1.1.1.1.3.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.1.1.1.3.3.1" xref="S3.E4.m1.1.1.1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.1.1.1.3.3.3" xref="S3.E4.m1.1.1.1.1.1.1.3.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.1.1.1.3.3.1a" xref="S3.E4.m1.1.1.1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.1.1.1.3.3.4" xref="S3.E4.m1.1.1.1.1.1.1.3.3.4.cmml">j</mi></mrow></msubsup><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.1.1.1.2" xref="S3.E4.m1.1.1.1.1.1.1.2.cmml">​</mo><msup id="S3.E4.m1.1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E4.m1.1.1.1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E4.m1.1.1.1.1.1.1.1.1.1.2" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.cmml"><msub id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">θ</mi><mi id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml">i</mi></msub><mo id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.cmml"><mover accent="true" id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.cmml"><mi id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.2" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.cmml">θ</mi><mo id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.1" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.1.cmml">^</mo></mover><mi id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.3" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="S3.E4.m1.1.1.1.1.1.1.1.1.1.3" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mn id="S3.E4.m1.1.1.1.1.1.1.1.3" xref="S3.E4.m1.1.1.1.1.1.1.1.3.cmml">2</mn></msup></mrow></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E4.m1.1b"><apply id="S3.E4.m1.1.1.cmml" xref="S3.E4.m1.1.1"><eq id="S3.E4.m1.1.1.2.cmml" xref="S3.E4.m1.1.1.2"></eq><apply id="S3.E4.m1.1.1.3.cmml" xref="S3.E4.m1.1.1.3"><times id="S3.E4.m1.1.1.3.1.cmml" xref="S3.E4.m1.1.1.3.1"></times><ci id="S3.E4.m1.1.1.3.2.cmml" xref="S3.E4.m1.1.1.3.2">𝑙</ci><ci id="S3.E4.m1.1.1.3.3.cmml" xref="S3.E4.m1.1.1.3.3">𝑜</ci><ci id="S3.E4.m1.1.1.3.4.cmml" xref="S3.E4.m1.1.1.3.4">𝑠</ci><apply id="S3.E4.m1.1.1.3.5.cmml" xref="S3.E4.m1.1.1.3.5"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.3.5.1.cmml" xref="S3.E4.m1.1.1.3.5">subscript</csymbol><ci id="S3.E4.m1.1.1.3.5.2.cmml" xref="S3.E4.m1.1.1.3.5.2">𝑠</ci><apply id="S3.E4.m1.1.1.3.5.3.cmml" xref="S3.E4.m1.1.1.3.5.3"><times id="S3.E4.m1.1.1.3.5.3.1.cmml" xref="S3.E4.m1.1.1.3.5.3.1"></times><ci id="S3.E4.m1.1.1.3.5.3.2.cmml" xref="S3.E4.m1.1.1.3.5.3.2">𝑏</ci><ci id="S3.E4.m1.1.1.3.5.3.3.cmml" xref="S3.E4.m1.1.1.3.5.3.3">𝑜</ci><ci id="S3.E4.m1.1.1.3.5.3.4.cmml" xref="S3.E4.m1.1.1.3.5.3.4">𝑥</ci></apply></apply></apply><apply id="S3.E4.m1.1.1.1.cmml" xref="S3.E4.m1.1.1.1"><plus id="S3.E4.m1.1.1.1.2.cmml" xref="S3.E4.m1.1.1.1.2"></plus><apply id="S3.E4.m1.1.1.1.3.cmml" xref="S3.E4.m1.1.1.1.3"><times id="S3.E4.m1.1.1.1.3.1.cmml" xref="S3.E4.m1.1.1.1.3.1"></times><apply id="S3.E4.m1.1.1.1.3.2.cmml" xref="S3.E4.m1.1.1.1.3.2"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.3.2.1.cmml" xref="S3.E4.m1.1.1.1.3.2">subscript</csymbol><ci id="S3.E4.m1.1.1.1.3.2.2.cmml" xref="S3.E4.m1.1.1.1.3.2.2">𝜆</ci><apply id="S3.E4.m1.1.1.1.3.2.3.cmml" xref="S3.E4.m1.1.1.1.3.2.3"><times id="S3.E4.m1.1.1.1.3.2.3.1.cmml" xref="S3.E4.m1.1.1.1.3.2.3.1"></times><ci id="S3.E4.m1.1.1.1.3.2.3.2.cmml" xref="S3.E4.m1.1.1.1.3.2.3.2">𝐼</ci><ci id="S3.E4.m1.1.1.1.3.2.3.3.cmml" xref="S3.E4.m1.1.1.1.3.2.3.3">𝑜</ci><ci id="S3.E4.m1.1.1.1.3.2.3.4.cmml" xref="S3.E4.m1.1.1.1.3.2.3.4">𝑈</ci></apply></apply><apply id="S3.E4.m1.1.1.1.3.3.cmml" xref="S3.E4.m1.1.1.1.3.3"><apply id="S3.E4.m1.1.1.1.3.3.1.cmml" xref="S3.E4.m1.1.1.1.3.3.1"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.3.3.1.1.cmml" xref="S3.E4.m1.1.1.1.3.3.1">superscript</csymbol><apply id="S3.E4.m1.1.1.1.3.3.1.2.cmml" xref="S3.E4.m1.1.1.1.3.3.1"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.3.3.1.2.1.cmml" xref="S3.E4.m1.1.1.1.3.3.1">subscript</csymbol><sum id="S3.E4.m1.1.1.1.3.3.1.2.2.cmml" xref="S3.E4.m1.1.1.1.3.3.1.2.2"></sum><apply id="S3.E4.m1.1.1.1.3.3.1.2.3.cmml" xref="S3.E4.m1.1.1.1.3.3.1.2.3"><eq id="S3.E4.m1.1.1.1.3.3.1.2.3.1.cmml" xref="S3.E4.m1.1.1.1.3.3.1.2.3.1"></eq><ci id="S3.E4.m1.1.1.1.3.3.1.2.3.2.cmml" xref="S3.E4.m1.1.1.1.3.3.1.2.3.2">𝑖</ci><cn type="integer" id="S3.E4.m1.1.1.1.3.3.1.2.3.3.cmml" xref="S3.E4.m1.1.1.1.3.3.1.2.3.3">0</cn></apply></apply><apply id="S3.E4.m1.1.1.1.3.3.1.3.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3"><times id="S3.E4.m1.1.1.1.3.3.1.3.1.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.1"></times><apply id="S3.E4.m1.1.1.1.3.3.1.3.2.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.2"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.3.3.1.3.2.1.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.2">subscript</csymbol><ci id="S3.E4.m1.1.1.1.3.3.1.3.2.2.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.2.2">𝑆</ci><ci id="S3.E4.m1.1.1.1.3.3.1.3.2.3.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.2.3">𝑋</ci></apply><apply id="S3.E4.m1.1.1.1.3.3.1.3.3.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.3"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.3.3.1.3.3.1.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.3">subscript</csymbol><ci id="S3.E4.m1.1.1.1.3.3.1.3.3.2.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.3.2">𝑆</ci><ci id="S3.E4.m1.1.1.1.3.3.1.3.3.3.cmml" xref="S3.E4.m1.1.1.1.3.3.1.3.3.3">𝑍</ci></apply></apply></apply><apply id="S3.E4.m1.1.1.1.3.3.2.cmml" xref="S3.E4.m1.1.1.1.3.3.2"><times id="S3.E4.m1.1.1.1.3.3.2.1.cmml" xref="S3.E4.m1.1.1.1.3.3.2.1"></times><apply id="S3.E4.m1.1.1.1.3.3.2.2.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.3.3.2.2.1.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2">superscript</csymbol><apply id="S3.E4.m1.1.1.1.3.3.2.2.2.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.3.3.2.2.2.1.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2">subscript</csymbol><cn type="integer" id="S3.E4.m1.1.1.1.3.3.2.2.2.2.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2.2.2">1</cn><ci id="S3.E4.m1.1.1.1.3.3.2.2.2.3.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2.2.3">𝑖</ci></apply><apply id="S3.E4.m1.1.1.1.3.3.2.2.3.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2.3"><times id="S3.E4.m1.1.1.1.3.3.2.2.3.1.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2.3.1"></times><ci id="S3.E4.m1.1.1.1.3.3.2.2.3.2.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2.3.2">𝑜</ci><ci id="S3.E4.m1.1.1.1.3.3.2.2.3.3.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2.3.3">𝑏</ci><ci id="S3.E4.m1.1.1.1.3.3.2.2.3.4.cmml" xref="S3.E4.m1.1.1.1.3.3.2.2.3.4">𝑗</ci></apply></apply><ci id="S3.E4.m1.1.1.1.3.3.2.3.cmml" xref="S3.E4.m1.1.1.1.3.3.2.3">𝐼</ci><ci id="S3.E4.m1.1.1.1.3.3.2.4.cmml" xref="S3.E4.m1.1.1.1.3.3.2.4">𝑜</ci><ci id="S3.E4.m1.1.1.1.3.3.2.5.cmml" xref="S3.E4.m1.1.1.1.3.3.2.5">𝑈</ci></apply></apply></apply><apply id="S3.E4.m1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1"><times id="S3.E4.m1.1.1.1.1.2.cmml" xref="S3.E4.m1.1.1.1.1.2"></times><apply id="S3.E4.m1.1.1.1.1.3.cmml" xref="S3.E4.m1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.3.1.cmml" xref="S3.E4.m1.1.1.1.1.3">subscript</csymbol><ci id="S3.E4.m1.1.1.1.1.3.2.cmml" xref="S3.E4.m1.1.1.1.1.3.2">𝜆</ci><ci id="S3.E4.m1.1.1.1.1.3.3.cmml" xref="S3.E4.m1.1.1.1.1.3.3">𝜃</ci></apply><apply id="S3.E4.m1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1"><apply id="S3.E4.m1.1.1.1.1.1.2.cmml" xref="S3.E4.m1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.2.1.cmml" xref="S3.E4.m1.1.1.1.1.1.2">superscript</csymbol><apply id="S3.E4.m1.1.1.1.1.1.2.2.cmml" xref="S3.E4.m1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.2.2.1.cmml" xref="S3.E4.m1.1.1.1.1.1.2">subscript</csymbol><sum id="S3.E4.m1.1.1.1.1.1.2.2.2.cmml" xref="S3.E4.m1.1.1.1.1.1.2.2.2"></sum><apply id="S3.E4.m1.1.1.1.1.1.2.2.3.cmml" xref="S3.E4.m1.1.1.1.1.1.2.2.3"><eq id="S3.E4.m1.1.1.1.1.1.2.2.3.1.cmml" xref="S3.E4.m1.1.1.1.1.1.2.2.3.1"></eq><ci id="S3.E4.m1.1.1.1.1.1.2.2.3.2.cmml" xref="S3.E4.m1.1.1.1.1.1.2.2.3.2">𝑖</ci><cn type="integer" id="S3.E4.m1.1.1.1.1.1.2.2.3.3.cmml" xref="S3.E4.m1.1.1.1.1.1.2.2.3.3">0</cn></apply></apply><apply id="S3.E4.m1.1.1.1.1.1.2.3.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3"><times id="S3.E4.m1.1.1.1.1.1.2.3.1.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.1"></times><apply id="S3.E4.m1.1.1.1.1.1.2.3.2.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.2"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.2.3.2.1.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.2">subscript</csymbol><ci id="S3.E4.m1.1.1.1.1.1.2.3.2.2.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.2.2">𝑆</ci><ci id="S3.E4.m1.1.1.1.1.1.2.3.2.3.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.2.3">𝑋</ci></apply><apply id="S3.E4.m1.1.1.1.1.1.2.3.3.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.3"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.2.3.3.1.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.3">subscript</csymbol><ci id="S3.E4.m1.1.1.1.1.1.2.3.3.2.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.3.2">𝑆</ci><ci id="S3.E4.m1.1.1.1.1.1.2.3.3.3.cmml" xref="S3.E4.m1.1.1.1.1.1.2.3.3.3">𝑍</ci></apply></apply></apply><apply id="S3.E4.m1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1"><times id="S3.E4.m1.1.1.1.1.1.1.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.2"></times><apply id="S3.E4.m1.1.1.1.1.1.1.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.1.3.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3">superscript</csymbol><apply id="S3.E4.m1.1.1.1.1.1.1.3.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3">subscript</csymbol><cn type="integer" id="S3.E4.m1.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.2.2">1</cn><ci id="S3.E4.m1.1.1.1.1.1.1.3.2.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.2.3">𝑖</ci></apply><apply id="S3.E4.m1.1.1.1.1.1.1.3.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.3"><times id="S3.E4.m1.1.1.1.1.1.1.3.3.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.3.1"></times><ci id="S3.E4.m1.1.1.1.1.1.1.3.3.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.3.2">𝑜</ci><ci id="S3.E4.m1.1.1.1.1.1.1.3.3.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.3.3">𝑏</ci><ci id="S3.E4.m1.1.1.1.1.1.1.3.3.4.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.3.4">𝑗</ci></apply></apply><apply id="S3.E4.m1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.1.1.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1">superscript</csymbol><apply id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1"><minus id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.1"></minus><apply id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.2">𝜃</ci><ci id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.2.3">𝑖</ci></apply><apply id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3">subscript</csymbol><apply id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2"><ci id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.1">^</ci><ci id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.2.2">𝜃</ci></apply><ci id="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1.1.1.3.3">𝑖</ci></apply></apply><cn type="integer" id="S3.E4.m1.1.1.1.1.1.1.1.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.3">2</cn></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E4.m1.1c">loss_{box}=\lambda_{IoU}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{obj}IoU+\lambda_{\theta}\sum_{i=0}^{S_{X}*S_{Z}}\mathsf{1}_{i}^{obj}(\theta_{i}-\hat{\theta}_{i})^{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS4.p9" class="ltx_para">
+<p id="S3.SS4.p9.5" class="ltx_p">The weight values were optimized at the training step, avoiding overfitting in all tasks. As a result, the weights are defined as follows: <math id="S3.SS4.p9.1.m1.1" class="ltx_Math" alttext="\lambda_{obj}=5" display="inline"><semantics id="S3.SS4.p9.1.m1.1a"><mrow id="S3.SS4.p9.1.m1.1.1" xref="S3.SS4.p9.1.m1.1.1.cmml"><msub id="S3.SS4.p9.1.m1.1.1.2" xref="S3.SS4.p9.1.m1.1.1.2.cmml"><mi id="S3.SS4.p9.1.m1.1.1.2.2" xref="S3.SS4.p9.1.m1.1.1.2.2.cmml">λ</mi><mrow id="S3.SS4.p9.1.m1.1.1.2.3" xref="S3.SS4.p9.1.m1.1.1.2.3.cmml"><mi id="S3.SS4.p9.1.m1.1.1.2.3.2" xref="S3.SS4.p9.1.m1.1.1.2.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.1.m1.1.1.2.3.1" xref="S3.SS4.p9.1.m1.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.1.m1.1.1.2.3.3" xref="S3.SS4.p9.1.m1.1.1.2.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.1.m1.1.1.2.3.1a" xref="S3.SS4.p9.1.m1.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.1.m1.1.1.2.3.4" xref="S3.SS4.p9.1.m1.1.1.2.3.4.cmml">j</mi></mrow></msub><mo id="S3.SS4.p9.1.m1.1.1.1" xref="S3.SS4.p9.1.m1.1.1.1.cmml">=</mo><mn id="S3.SS4.p9.1.m1.1.1.3" xref="S3.SS4.p9.1.m1.1.1.3.cmml">5</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p9.1.m1.1b"><apply id="S3.SS4.p9.1.m1.1.1.cmml" xref="S3.SS4.p9.1.m1.1.1"><eq id="S3.SS4.p9.1.m1.1.1.1.cmml" xref="S3.SS4.p9.1.m1.1.1.1"></eq><apply id="S3.SS4.p9.1.m1.1.1.2.cmml" xref="S3.SS4.p9.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.SS4.p9.1.m1.1.1.2.1.cmml" xref="S3.SS4.p9.1.m1.1.1.2">subscript</csymbol><ci id="S3.SS4.p9.1.m1.1.1.2.2.cmml" xref="S3.SS4.p9.1.m1.1.1.2.2">𝜆</ci><apply id="S3.SS4.p9.1.m1.1.1.2.3.cmml" xref="S3.SS4.p9.1.m1.1.1.2.3"><times id="S3.SS4.p9.1.m1.1.1.2.3.1.cmml" xref="S3.SS4.p9.1.m1.1.1.2.3.1"></times><ci id="S3.SS4.p9.1.m1.1.1.2.3.2.cmml" xref="S3.SS4.p9.1.m1.1.1.2.3.2">𝑜</ci><ci id="S3.SS4.p9.1.m1.1.1.2.3.3.cmml" xref="S3.SS4.p9.1.m1.1.1.2.3.3">𝑏</ci><ci id="S3.SS4.p9.1.m1.1.1.2.3.4.cmml" xref="S3.SS4.p9.1.m1.1.1.2.3.4">𝑗</ci></apply></apply><cn type="integer" id="S3.SS4.p9.1.m1.1.1.3.cmml" xref="S3.SS4.p9.1.m1.1.1.3">5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p9.1.m1.1c">\lambda_{obj}=5</annotation></semantics></math>; <math id="S3.SS4.p9.2.m2.1" class="ltx_Math" alttext="\lambda_{noobj}=1" display="inline"><semantics id="S3.SS4.p9.2.m2.1a"><mrow id="S3.SS4.p9.2.m2.1.1" xref="S3.SS4.p9.2.m2.1.1.cmml"><msub id="S3.SS4.p9.2.m2.1.1.2" xref="S3.SS4.p9.2.m2.1.1.2.cmml"><mi id="S3.SS4.p9.2.m2.1.1.2.2" xref="S3.SS4.p9.2.m2.1.1.2.2.cmml">λ</mi><mrow id="S3.SS4.p9.2.m2.1.1.2.3" xref="S3.SS4.p9.2.m2.1.1.2.3.cmml"><mi id="S3.SS4.p9.2.m2.1.1.2.3.2" xref="S3.SS4.p9.2.m2.1.1.2.3.2.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.2.m2.1.1.2.3.1" xref="S3.SS4.p9.2.m2.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.2.m2.1.1.2.3.3" xref="S3.SS4.p9.2.m2.1.1.2.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.2.m2.1.1.2.3.1a" xref="S3.SS4.p9.2.m2.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.2.m2.1.1.2.3.4" xref="S3.SS4.p9.2.m2.1.1.2.3.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.2.m2.1.1.2.3.1b" xref="S3.SS4.p9.2.m2.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.2.m2.1.1.2.3.5" xref="S3.SS4.p9.2.m2.1.1.2.3.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.2.m2.1.1.2.3.1c" xref="S3.SS4.p9.2.m2.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.2.m2.1.1.2.3.6" xref="S3.SS4.p9.2.m2.1.1.2.3.6.cmml">j</mi></mrow></msub><mo id="S3.SS4.p9.2.m2.1.1.1" xref="S3.SS4.p9.2.m2.1.1.1.cmml">=</mo><mn id="S3.SS4.p9.2.m2.1.1.3" xref="S3.SS4.p9.2.m2.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p9.2.m2.1b"><apply id="S3.SS4.p9.2.m2.1.1.cmml" xref="S3.SS4.p9.2.m2.1.1"><eq id="S3.SS4.p9.2.m2.1.1.1.cmml" xref="S3.SS4.p9.2.m2.1.1.1"></eq><apply id="S3.SS4.p9.2.m2.1.1.2.cmml" xref="S3.SS4.p9.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.SS4.p9.2.m2.1.1.2.1.cmml" xref="S3.SS4.p9.2.m2.1.1.2">subscript</csymbol><ci id="S3.SS4.p9.2.m2.1.1.2.2.cmml" xref="S3.SS4.p9.2.m2.1.1.2.2">𝜆</ci><apply id="S3.SS4.p9.2.m2.1.1.2.3.cmml" xref="S3.SS4.p9.2.m2.1.1.2.3"><times id="S3.SS4.p9.2.m2.1.1.2.3.1.cmml" xref="S3.SS4.p9.2.m2.1.1.2.3.1"></times><ci id="S3.SS4.p9.2.m2.1.1.2.3.2.cmml" xref="S3.SS4.p9.2.m2.1.1.2.3.2">𝑛</ci><ci id="S3.SS4.p9.2.m2.1.1.2.3.3.cmml" xref="S3.SS4.p9.2.m2.1.1.2.3.3">𝑜</ci><ci id="S3.SS4.p9.2.m2.1.1.2.3.4.cmml" xref="S3.SS4.p9.2.m2.1.1.2.3.4">𝑜</ci><ci id="S3.SS4.p9.2.m2.1.1.2.3.5.cmml" xref="S3.SS4.p9.2.m2.1.1.2.3.5">𝑏</ci><ci id="S3.SS4.p9.2.m2.1.1.2.3.6.cmml" xref="S3.SS4.p9.2.m2.1.1.2.3.6">𝑗</ci></apply></apply><cn type="integer" id="S3.SS4.p9.2.m2.1.1.3.cmml" xref="S3.SS4.p9.2.m2.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p9.2.m2.1c">\lambda_{noobj}=1</annotation></semantics></math>; <math id="S3.SS4.p9.3.m3.1" class="ltx_Math" alttext="\lambda_{class}=1" display="inline"><semantics id="S3.SS4.p9.3.m3.1a"><mrow id="S3.SS4.p9.3.m3.1.1" xref="S3.SS4.p9.3.m3.1.1.cmml"><msub id="S3.SS4.p9.3.m3.1.1.2" xref="S3.SS4.p9.3.m3.1.1.2.cmml"><mi id="S3.SS4.p9.3.m3.1.1.2.2" xref="S3.SS4.p9.3.m3.1.1.2.2.cmml">λ</mi><mrow id="S3.SS4.p9.3.m3.1.1.2.3" xref="S3.SS4.p9.3.m3.1.1.2.3.cmml"><mi id="S3.SS4.p9.3.m3.1.1.2.3.2" xref="S3.SS4.p9.3.m3.1.1.2.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.3.m3.1.1.2.3.1" xref="S3.SS4.p9.3.m3.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.3.m3.1.1.2.3.3" xref="S3.SS4.p9.3.m3.1.1.2.3.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.3.m3.1.1.2.3.1a" xref="S3.SS4.p9.3.m3.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.3.m3.1.1.2.3.4" xref="S3.SS4.p9.3.m3.1.1.2.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.3.m3.1.1.2.3.1b" xref="S3.SS4.p9.3.m3.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.3.m3.1.1.2.3.5" xref="S3.SS4.p9.3.m3.1.1.2.3.5.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.3.m3.1.1.2.3.1c" xref="S3.SS4.p9.3.m3.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.3.m3.1.1.2.3.6" xref="S3.SS4.p9.3.m3.1.1.2.3.6.cmml">s</mi></mrow></msub><mo id="S3.SS4.p9.3.m3.1.1.1" xref="S3.SS4.p9.3.m3.1.1.1.cmml">=</mo><mn id="S3.SS4.p9.3.m3.1.1.3" xref="S3.SS4.p9.3.m3.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p9.3.m3.1b"><apply id="S3.SS4.p9.3.m3.1.1.cmml" xref="S3.SS4.p9.3.m3.1.1"><eq id="S3.SS4.p9.3.m3.1.1.1.cmml" xref="S3.SS4.p9.3.m3.1.1.1"></eq><apply id="S3.SS4.p9.3.m3.1.1.2.cmml" xref="S3.SS4.p9.3.m3.1.1.2"><csymbol cd="ambiguous" id="S3.SS4.p9.3.m3.1.1.2.1.cmml" xref="S3.SS4.p9.3.m3.1.1.2">subscript</csymbol><ci id="S3.SS4.p9.3.m3.1.1.2.2.cmml" xref="S3.SS4.p9.3.m3.1.1.2.2">𝜆</ci><apply id="S3.SS4.p9.3.m3.1.1.2.3.cmml" xref="S3.SS4.p9.3.m3.1.1.2.3"><times id="S3.SS4.p9.3.m3.1.1.2.3.1.cmml" xref="S3.SS4.p9.3.m3.1.1.2.3.1"></times><ci id="S3.SS4.p9.3.m3.1.1.2.3.2.cmml" xref="S3.SS4.p9.3.m3.1.1.2.3.2">𝑐</ci><ci id="S3.SS4.p9.3.m3.1.1.2.3.3.cmml" xref="S3.SS4.p9.3.m3.1.1.2.3.3">𝑙</ci><ci id="S3.SS4.p9.3.m3.1.1.2.3.4.cmml" xref="S3.SS4.p9.3.m3.1.1.2.3.4">𝑎</ci><ci id="S3.SS4.p9.3.m3.1.1.2.3.5.cmml" xref="S3.SS4.p9.3.m3.1.1.2.3.5">𝑠</ci><ci id="S3.SS4.p9.3.m3.1.1.2.3.6.cmml" xref="S3.SS4.p9.3.m3.1.1.2.3.6">𝑠</ci></apply></apply><cn type="integer" id="S3.SS4.p9.3.m3.1.1.3.cmml" xref="S3.SS4.p9.3.m3.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p9.3.m3.1c">\lambda_{class}=1</annotation></semantics></math>;
+<br class="ltx_break"><math id="S3.SS4.p9.4.m4.1" class="ltx_Math" alttext="\lambda_{IoU}=10" display="inline"><semantics id="S3.SS4.p9.4.m4.1a"><mrow id="S3.SS4.p9.4.m4.1.1" xref="S3.SS4.p9.4.m4.1.1.cmml"><msub id="S3.SS4.p9.4.m4.1.1.2" xref="S3.SS4.p9.4.m4.1.1.2.cmml"><mi id="S3.SS4.p9.4.m4.1.1.2.2" xref="S3.SS4.p9.4.m4.1.1.2.2.cmml">λ</mi><mrow id="S3.SS4.p9.4.m4.1.1.2.3" xref="S3.SS4.p9.4.m4.1.1.2.3.cmml"><mi id="S3.SS4.p9.4.m4.1.1.2.3.2" xref="S3.SS4.p9.4.m4.1.1.2.3.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.4.m4.1.1.2.3.1" xref="S3.SS4.p9.4.m4.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.4.m4.1.1.2.3.3" xref="S3.SS4.p9.4.m4.1.1.2.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p9.4.m4.1.1.2.3.1a" xref="S3.SS4.p9.4.m4.1.1.2.3.1.cmml">​</mo><mi id="S3.SS4.p9.4.m4.1.1.2.3.4" xref="S3.SS4.p9.4.m4.1.1.2.3.4.cmml">U</mi></mrow></msub><mo id="S3.SS4.p9.4.m4.1.1.1" xref="S3.SS4.p9.4.m4.1.1.1.cmml">=</mo><mn id="S3.SS4.p9.4.m4.1.1.3" xref="S3.SS4.p9.4.m4.1.1.3.cmml">10</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p9.4.m4.1b"><apply id="S3.SS4.p9.4.m4.1.1.cmml" xref="S3.SS4.p9.4.m4.1.1"><eq id="S3.SS4.p9.4.m4.1.1.1.cmml" xref="S3.SS4.p9.4.m4.1.1.1"></eq><apply id="S3.SS4.p9.4.m4.1.1.2.cmml" xref="S3.SS4.p9.4.m4.1.1.2"><csymbol cd="ambiguous" id="S3.SS4.p9.4.m4.1.1.2.1.cmml" xref="S3.SS4.p9.4.m4.1.1.2">subscript</csymbol><ci id="S3.SS4.p9.4.m4.1.1.2.2.cmml" xref="S3.SS4.p9.4.m4.1.1.2.2">𝜆</ci><apply id="S3.SS4.p9.4.m4.1.1.2.3.cmml" xref="S3.SS4.p9.4.m4.1.1.2.3"><times id="S3.SS4.p9.4.m4.1.1.2.3.1.cmml" xref="S3.SS4.p9.4.m4.1.1.2.3.1"></times><ci id="S3.SS4.p9.4.m4.1.1.2.3.2.cmml" xref="S3.SS4.p9.4.m4.1.1.2.3.2">𝐼</ci><ci id="S3.SS4.p9.4.m4.1.1.2.3.3.cmml" xref="S3.SS4.p9.4.m4.1.1.2.3.3">𝑜</ci><ci id="S3.SS4.p9.4.m4.1.1.2.3.4.cmml" xref="S3.SS4.p9.4.m4.1.1.2.3.4">𝑈</ci></apply></apply><cn type="integer" id="S3.SS4.p9.4.m4.1.1.3.cmml" xref="S3.SS4.p9.4.m4.1.1.3">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p9.4.m4.1c">\lambda_{IoU}=10</annotation></semantics></math>; <math id="S3.SS4.p9.5.m5.1" class="ltx_Math" alttext="\lambda_{\theta}=1" display="inline"><semantics id="S3.SS4.p9.5.m5.1a"><mrow id="S3.SS4.p9.5.m5.1.1" xref="S3.SS4.p9.5.m5.1.1.cmml"><msub id="S3.SS4.p9.5.m5.1.1.2" xref="S3.SS4.p9.5.m5.1.1.2.cmml"><mi id="S3.SS4.p9.5.m5.1.1.2.2" xref="S3.SS4.p9.5.m5.1.1.2.2.cmml">λ</mi><mi id="S3.SS4.p9.5.m5.1.1.2.3" xref="S3.SS4.p9.5.m5.1.1.2.3.cmml">θ</mi></msub><mo id="S3.SS4.p9.5.m5.1.1.1" xref="S3.SS4.p9.5.m5.1.1.1.cmml">=</mo><mn id="S3.SS4.p9.5.m5.1.1.3" xref="S3.SS4.p9.5.m5.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p9.5.m5.1b"><apply id="S3.SS4.p9.5.m5.1.1.cmml" xref="S3.SS4.p9.5.m5.1.1"><eq id="S3.SS4.p9.5.m5.1.1.1.cmml" xref="S3.SS4.p9.5.m5.1.1.1"></eq><apply id="S3.SS4.p9.5.m5.1.1.2.cmml" xref="S3.SS4.p9.5.m5.1.1.2"><csymbol cd="ambiguous" id="S3.SS4.p9.5.m5.1.1.2.1.cmml" xref="S3.SS4.p9.5.m5.1.1.2">subscript</csymbol><ci id="S3.SS4.p9.5.m5.1.1.2.2.cmml" xref="S3.SS4.p9.5.m5.1.1.2.2">𝜆</ci><ci id="S3.SS4.p9.5.m5.1.1.2.3.cmml" xref="S3.SS4.p9.5.m5.1.1.2.3">𝜃</ci></apply><cn type="integer" id="S3.SS4.p9.5.m5.1.1.3.cmml" xref="S3.SS4.p9.5.m5.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p9.5.m5.1c">\lambda_{\theta}=1</annotation></semantics></math>.</p>
+</div>
+<div id="S3.SS4.p10" class="ltx_para">
+<p id="S3.SS4.p10.4" class="ltx_p">The <math id="S3.SS4.p10.1.m1.1" class="ltx_Math" alttext="\lambda_{obj}" display="inline"><semantics id="S3.SS4.p10.1.m1.1a"><msub id="S3.SS4.p10.1.m1.1.1" xref="S3.SS4.p10.1.m1.1.1.cmml"><mi id="S3.SS4.p10.1.m1.1.1.2" xref="S3.SS4.p10.1.m1.1.1.2.cmml">λ</mi><mrow id="S3.SS4.p10.1.m1.1.1.3" xref="S3.SS4.p10.1.m1.1.1.3.cmml"><mi id="S3.SS4.p10.1.m1.1.1.3.2" xref="S3.SS4.p10.1.m1.1.1.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.1.m1.1.1.3.1" xref="S3.SS4.p10.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.1.m1.1.1.3.3" xref="S3.SS4.p10.1.m1.1.1.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.1.m1.1.1.3.1a" xref="S3.SS4.p10.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.1.m1.1.1.3.4" xref="S3.SS4.p10.1.m1.1.1.3.4.cmml">j</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p10.1.m1.1b"><apply id="S3.SS4.p10.1.m1.1.1.cmml" xref="S3.SS4.p10.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS4.p10.1.m1.1.1.1.cmml" xref="S3.SS4.p10.1.m1.1.1">subscript</csymbol><ci id="S3.SS4.p10.1.m1.1.1.2.cmml" xref="S3.SS4.p10.1.m1.1.1.2">𝜆</ci><apply id="S3.SS4.p10.1.m1.1.1.3.cmml" xref="S3.SS4.p10.1.m1.1.1.3"><times id="S3.SS4.p10.1.m1.1.1.3.1.cmml" xref="S3.SS4.p10.1.m1.1.1.3.1"></times><ci id="S3.SS4.p10.1.m1.1.1.3.2.cmml" xref="S3.SS4.p10.1.m1.1.1.3.2">𝑜</ci><ci id="S3.SS4.p10.1.m1.1.1.3.3.cmml" xref="S3.SS4.p10.1.m1.1.1.3.3">𝑏</ci><ci id="S3.SS4.p10.1.m1.1.1.3.4.cmml" xref="S3.SS4.p10.1.m1.1.1.3.4">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p10.1.m1.1c">\lambda_{obj}</annotation></semantics></math> requires a higher weight than <math id="S3.SS4.p10.2.m2.1" class="ltx_Math" alttext="\lambda_{noobj}" display="inline"><semantics id="S3.SS4.p10.2.m2.1a"><msub id="S3.SS4.p10.2.m2.1.1" xref="S3.SS4.p10.2.m2.1.1.cmml"><mi id="S3.SS4.p10.2.m2.1.1.2" xref="S3.SS4.p10.2.m2.1.1.2.cmml">λ</mi><mrow id="S3.SS4.p10.2.m2.1.1.3" xref="S3.SS4.p10.2.m2.1.1.3.cmml"><mi id="S3.SS4.p10.2.m2.1.1.3.2" xref="S3.SS4.p10.2.m2.1.1.3.2.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.2.m2.1.1.3.1" xref="S3.SS4.p10.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.2.m2.1.1.3.3" xref="S3.SS4.p10.2.m2.1.1.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.2.m2.1.1.3.1a" xref="S3.SS4.p10.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.2.m2.1.1.3.4" xref="S3.SS4.p10.2.m2.1.1.3.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.2.m2.1.1.3.1b" xref="S3.SS4.p10.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.2.m2.1.1.3.5" xref="S3.SS4.p10.2.m2.1.1.3.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.2.m2.1.1.3.1c" xref="S3.SS4.p10.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.2.m2.1.1.3.6" xref="S3.SS4.p10.2.m2.1.1.3.6.cmml">j</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p10.2.m2.1b"><apply id="S3.SS4.p10.2.m2.1.1.cmml" xref="S3.SS4.p10.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS4.p10.2.m2.1.1.1.cmml" xref="S3.SS4.p10.2.m2.1.1">subscript</csymbol><ci id="S3.SS4.p10.2.m2.1.1.2.cmml" xref="S3.SS4.p10.2.m2.1.1.2">𝜆</ci><apply id="S3.SS4.p10.2.m2.1.1.3.cmml" xref="S3.SS4.p10.2.m2.1.1.3"><times id="S3.SS4.p10.2.m2.1.1.3.1.cmml" xref="S3.SS4.p10.2.m2.1.1.3.1"></times><ci id="S3.SS4.p10.2.m2.1.1.3.2.cmml" xref="S3.SS4.p10.2.m2.1.1.3.2">𝑛</ci><ci id="S3.SS4.p10.2.m2.1.1.3.3.cmml" xref="S3.SS4.p10.2.m2.1.1.3.3">𝑜</ci><ci id="S3.SS4.p10.2.m2.1.1.3.4.cmml" xref="S3.SS4.p10.2.m2.1.1.3.4">𝑜</ci><ci id="S3.SS4.p10.2.m2.1.1.3.5.cmml" xref="S3.SS4.p10.2.m2.1.1.3.5">𝑏</ci><ci id="S3.SS4.p10.2.m2.1.1.3.6.cmml" xref="S3.SS4.p10.2.m2.1.1.3.6">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p10.2.m2.1c">\lambda_{noobj}</annotation></semantics></math> to incentive the training step to start detecting all existing objects in the scene. With low weight in <math id="S3.SS4.p10.3.m3.1" class="ltx_Math" alttext="\lambda_{noobj}" display="inline"><semantics id="S3.SS4.p10.3.m3.1a"><msub id="S3.SS4.p10.3.m3.1.1" xref="S3.SS4.p10.3.m3.1.1.cmml"><mi id="S3.SS4.p10.3.m3.1.1.2" xref="S3.SS4.p10.3.m3.1.1.2.cmml">λ</mi><mrow id="S3.SS4.p10.3.m3.1.1.3" xref="S3.SS4.p10.3.m3.1.1.3.cmml"><mi id="S3.SS4.p10.3.m3.1.1.3.2" xref="S3.SS4.p10.3.m3.1.1.3.2.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.3.m3.1.1.3.1" xref="S3.SS4.p10.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.3.m3.1.1.3.3" xref="S3.SS4.p10.3.m3.1.1.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.3.m3.1.1.3.1a" xref="S3.SS4.p10.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.3.m3.1.1.3.4" xref="S3.SS4.p10.3.m3.1.1.3.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.3.m3.1.1.3.1b" xref="S3.SS4.p10.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.3.m3.1.1.3.5" xref="S3.SS4.p10.3.m3.1.1.3.5.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.3.m3.1.1.3.1c" xref="S3.SS4.p10.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.3.m3.1.1.3.6" xref="S3.SS4.p10.3.m3.1.1.3.6.cmml">j</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p10.3.m3.1b"><apply id="S3.SS4.p10.3.m3.1.1.cmml" xref="S3.SS4.p10.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS4.p10.3.m3.1.1.1.cmml" xref="S3.SS4.p10.3.m3.1.1">subscript</csymbol><ci id="S3.SS4.p10.3.m3.1.1.2.cmml" xref="S3.SS4.p10.3.m3.1.1.2">𝜆</ci><apply id="S3.SS4.p10.3.m3.1.1.3.cmml" xref="S3.SS4.p10.3.m3.1.1.3"><times id="S3.SS4.p10.3.m3.1.1.3.1.cmml" xref="S3.SS4.p10.3.m3.1.1.3.1"></times><ci id="S3.SS4.p10.3.m3.1.1.3.2.cmml" xref="S3.SS4.p10.3.m3.1.1.3.2">𝑛</ci><ci id="S3.SS4.p10.3.m3.1.1.3.3.cmml" xref="S3.SS4.p10.3.m3.1.1.3.3">𝑜</ci><ci id="S3.SS4.p10.3.m3.1.1.3.4.cmml" xref="S3.SS4.p10.3.m3.1.1.3.4">𝑜</ci><ci id="S3.SS4.p10.3.m3.1.1.3.5.cmml" xref="S3.SS4.p10.3.m3.1.1.3.5">𝑏</ci><ci id="S3.SS4.p10.3.m3.1.1.3.6.cmml" xref="S3.SS4.p10.3.m3.1.1.3.6">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p10.3.m3.1c">\lambda_{noobj}</annotation></semantics></math>, the learning process slowly disregards the wrong confidences. On the other hand, keeping a low weight in <math id="S3.SS4.p10.4.m4.1" class="ltx_Math" alttext="\lambda_{obj}" display="inline"><semantics id="S3.SS4.p10.4.m4.1a"><msub id="S3.SS4.p10.4.m4.1.1" xref="S3.SS4.p10.4.m4.1.1.cmml"><mi id="S3.SS4.p10.4.m4.1.1.2" xref="S3.SS4.p10.4.m4.1.1.2.cmml">λ</mi><mrow id="S3.SS4.p10.4.m4.1.1.3" xref="S3.SS4.p10.4.m4.1.1.3.cmml"><mi id="S3.SS4.p10.4.m4.1.1.3.2" xref="S3.SS4.p10.4.m4.1.1.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.4.m4.1.1.3.1" xref="S3.SS4.p10.4.m4.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.4.m4.1.1.3.3" xref="S3.SS4.p10.4.m4.1.1.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p10.4.m4.1.1.3.1a" xref="S3.SS4.p10.4.m4.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p10.4.m4.1.1.3.4" xref="S3.SS4.p10.4.m4.1.1.3.4.cmml">j</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p10.4.m4.1b"><apply id="S3.SS4.p10.4.m4.1.1.cmml" xref="S3.SS4.p10.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS4.p10.4.m4.1.1.1.cmml" xref="S3.SS4.p10.4.m4.1.1">subscript</csymbol><ci id="S3.SS4.p10.4.m4.1.1.2.cmml" xref="S3.SS4.p10.4.m4.1.1.2">𝜆</ci><apply id="S3.SS4.p10.4.m4.1.1.3.cmml" xref="S3.SS4.p10.4.m4.1.1.3"><times id="S3.SS4.p10.4.m4.1.1.3.1.cmml" xref="S3.SS4.p10.4.m4.1.1.3.1"></times><ci id="S3.SS4.p10.4.m4.1.1.3.2.cmml" xref="S3.SS4.p10.4.m4.1.1.3.2">𝑜</ci><ci id="S3.SS4.p10.4.m4.1.1.3.3.cmml" xref="S3.SS4.p10.4.m4.1.1.3.3">𝑏</ci><ci id="S3.SS4.p10.4.m4.1.1.3.4.cmml" xref="S3.SS4.p10.4.m4.1.1.3.4">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p10.4.m4.1c">\lambda_{obj}</annotation></semantics></math>, the training step did not converge to detect all objects.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Experiments</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">The proposed method is evaluated on KITTI 3D Object Detection benchmark <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. The dataset includes an open-access 7481 images for training and a 7481 closed test set. However, the test set submissions are limited. Consequently, the <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite> proposed a model’s evaluation with the training set, splitting the open-access set into approximately 50% for training (3712 images) and the rest for validation (3769 images).</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">The results are evaluated on three different difficulty levels: Easy, Moderate, and Hard, representing a fully visible, part-occluded, and mostly-occluded object, respectively. In addition, the dataset presents multiple classes, such as Car, Truck, Van, Pedestrian, and Cyclist.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.5.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.6.2" class="ltx_text ltx_font_italic">Implementation and Training Parameters</span>
+</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">The input image is resized to <math id="S4.SS1.p1.1.m1.1" class="ltx_Math" alttext="480\times 480" display="inline"><semantics id="S4.SS1.p1.1.m1.1a"><mrow id="S4.SS1.p1.1.m1.1.1" xref="S4.SS1.p1.1.m1.1.1.cmml"><mn id="S4.SS1.p1.1.m1.1.1.2" xref="S4.SS1.p1.1.m1.1.1.2.cmml">480</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p1.1.m1.1.1.1" xref="S4.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS1.p1.1.m1.1.1.3" xref="S4.SS1.p1.1.m1.1.1.3.cmml">480</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.1.m1.1b"><apply id="S4.SS1.p1.1.m1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1"><times id="S4.SS1.p1.1.m1.1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS1.p1.1.m1.1.1.2.cmml" xref="S4.SS1.p1.1.m1.1.1.2">480</cn><cn type="integer" id="S4.SS1.p1.1.m1.1.1.3.cmml" xref="S4.SS1.p1.1.m1.1.1.3">480</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.1.m1.1c">480\times 480</annotation></semantics></math>. The increase in contrast and horizontal flip was adopted as the data augmentation. Our model was trained in a GPU: RTX2080ti and CPU: intel i7 9700KF with batch size 8, achieving the best results with around 200 epochs. The AdamW optimizer was used with an initial learning rate of 1e-4 and weight decay of 1e-6. For performance comparison, the model was trained to recognize only one class (vehicles) around [-55/55m, 0/15m, 0/85m]. However, our model is flexible to detect multiple classes and in different environments.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.5.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.6.2" class="ltx_text ltx_font_italic">Main Results</span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">As shown in Table I, we trained our model with different configurations of training sets: 50% dataset (3712 images), 50% dataset with data augmentation, 80% dataset (5984 images), 80% dataset with data augmentation. Furthermore, our model was not pre-trained with different 3D detection datasets. The performance was acquired training only with the provided data from the KITTI training set. As a consequence, our method performance is highly dependent on the amount of training data.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_r"></th>
+<th id="S4.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r">Easy</th>
+<th id="S4.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r">Moderate</th>
+<th id="S4.T1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r">Hard</th>
+<th id="S4.T1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column">Average</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.2.1" class="ltx_tr">
+<th id="S4.T1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t">MonoNext (50%)</th>
+<td id="S4.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">13.49</td>
+<td id="S4.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">5.61</td>
+<td id="S4.T1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">7.79</td>
+<td id="S4.T1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_t">8.96</td>
+</tr>
+<tr id="S4.T1.1.3.2" class="ltx_tr">
+<th id="S4.T1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">MonoNext (50% + data aug)</th>
+<td id="S4.T1.1.3.2.2" class="ltx_td ltx_align_center ltx_border_r">20.76</td>
+<td id="S4.T1.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r">9.79</td>
+<td id="S4.T1.1.3.2.4" class="ltx_td ltx_align_center ltx_border_r">8.70</td>
+<td id="S4.T1.1.3.2.5" class="ltx_td ltx_align_center">13.08</td>
+</tr>
+<tr id="S4.T1.1.4.3" class="ltx_tr">
+<th id="S4.T1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">MonoNext (80%)</th>
+<td id="S4.T1.1.4.3.2" class="ltx_td ltx_align_center ltx_border_r">24.12</td>
+<td id="S4.T1.1.4.3.3" class="ltx_td ltx_align_center ltx_border_r">14.26</td>
+<td id="S4.T1.1.4.3.4" class="ltx_td ltx_align_center ltx_border_r">14.46</td>
+<td id="S4.T1.1.4.3.5" class="ltx_td ltx_align_center">17.61</td>
+</tr>
+<tr id="S4.T1.1.5.4" class="ltx_tr">
+<th id="S4.T1.1.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T1.1.5.4.1.1" class="ltx_text ltx_font_bold">MonoNext (80% + data aug)</span></th>
+<td id="S4.T1.1.5.4.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T1.1.5.4.2.1" class="ltx_text ltx_font_bold">27.28</span></td>
+<td id="S4.T1.1.5.4.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T1.1.5.4.3.1" class="ltx_text ltx_font_bold">16.01</span></td>
+<td id="S4.T1.1.5.4.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T1.1.5.4.4.1" class="ltx_text ltx_font_bold">15.01</span></td>
+<td id="S4.T1.1.5.4.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S4.T1.1.5.4.5.1" class="ltx_text ltx_font_bold">19.43</span></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>MonoNext performance with the increment of data.</figcaption>
+</figure>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">In the KITTI dataset, there are more Easy detections shown in the images. In this case, using 50% of the dataset for training contributes to achieving great performance in this category and does not generalize the model enough for other detections (Moderate, Hard). Conversely, with 80% of the dataset + data augmentation, our model achieves high performance in 3D detection based on monocular models. The model presents a proper generalization of each detection category and a higher performance in hard detections. The table shows that the model still has the performance to achieve better results with more training data.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p">Also, in Table <a href="#S4.T2" title="TABLE II ‣ IV-B Main Results ‣ IV Experiments ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>, you can find the model’s overall performance with different metrics. Average Recognition represents vehicles recognized in the scene with an IoU&gt;0.1. Considering correct detections with IoU&gt;0.5, the model correctly detects 43% of full visible vehicles. Furthermore, evaluating the recognition of objects, MonoNext reaches an accuracy of  72% in its detections.</p>
+</div>
+<figure id="S4.T2" class="ltx_table">
+<table id="S4.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.1" class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_r"></th>
+<th id="S4.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r">Easy</th>
+<th id="S4.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r">Moderate</th>
+<th id="S4.T2.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column">Hard</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.2.1" class="ltx_tr">
+<th id="S4.T2.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t">Mean IoU</th>
+<td id="S4.T2.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.4624</td>
+<td id="S4.T2.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.2257</td>
+<td id="S4.T2.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">0.1361</td>
+</tr>
+<tr id="S4.T2.1.3.2" class="ltx_tr">
+<th id="S4.T2.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">mAP(IoU&gt;0.7) (%)</th>
+<td id="S4.T2.1.3.2.2" class="ltx_td ltx_align_center ltx_border_r">27.28</td>
+<td id="S4.T2.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r">16.01</td>
+<td id="S4.T2.1.3.2.4" class="ltx_td ltx_align_center">15.01</td>
+</tr>
+<tr id="S4.T2.1.4.3" class="ltx_tr">
+<th id="S4.T2.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">mAP(IoU&gt;0.5) (%)</th>
+<td id="S4.T2.1.4.3.2" class="ltx_td ltx_align_center ltx_border_r">43.21</td>
+<td id="S4.T2.1.4.3.3" class="ltx_td ltx_align_center ltx_border_r">29.26</td>
+<td id="S4.T2.1.4.3.4" class="ltx_td ltx_align_center">26.5</td>
+</tr>
+<tr id="S4.T2.1.5.4" class="ltx_tr">
+<th id="S4.T2.1.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">Average Recognition (%)</th>
+<td id="S4.T2.1.5.4.2" class="ltx_td ltx_align_center ltx_border_r">72.26</td>
+<td id="S4.T2.1.5.4.3" class="ltx_td ltx_align_center ltx_border_r">65.07</td>
+<td id="S4.T2.1.5.4.4" class="ltx_td ltx_align_center">60.52</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE II: </span>MonoNext Overall Performance in Car detection.</figcaption>
+</figure>
+<div id="S4.SS2.p4" class="ltx_para">
+<p id="S4.SS2.p4.1" class="ltx_p">Figure <a href="#S4.F4" title="Figure 4 ‣ IV-B Main Results ‣ IV Experiments ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> shows the output of MonoNext, demonstrating great and bad predictions to show the efficiency of our model. In Figures <a href="#S4.F4" title="Figure 4 ‣ IV-B Main Results ‣ IV Experiments ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>a) and <a href="#S4.F4" title="Figure 4 ‣ IV-B Main Results ‣ IV Experiments ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>c) we see that the model recognizes all vehicles in the scene, accurately predicts fully visible vehicles, and has difficulty estimating depth in cases of vehicles that present low brightness. On the other hand, in Figure <a href="#S4.F4" title="Figure 4 ‣ IV-B Main Results ‣ IV Experiments ‣ MonoNext: A 3D Monocular Object Detection with ConvNext" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>b) we observe that the model presents excellent precision in the detection of nearby vehicles, accurately predicting both the 3D bounding box and the yaw-angle of the vehicles.</p>
+</div>
+<figure id="S4.F4" class="ltx_figure">
+<p id="S4.F4.1" class="ltx_p ltx_align_center"><span id="S4.F4.1.1" class="ltx_text"><img src="/html/2308.00596/assets/images/all_img.png" id="S4.F4.1.1.g1" class="ltx_graphics ltx_img_landscape" width="598" height="163" alt="Refer to caption"></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>The visualized result of MonoNext detections on the validation set. In Black is the Self-driving car and camera position, in Green are the Ground truth object boxes, and the Blue represents the MonoNext predictions. In each image: Above shows the input image; on the left side, there is a three-dimensional view; on the right, a Bird-Eye-View (BEV) of the detections.</figcaption>
+</figure>
+<div id="S4.SS2.p5" class="ltx_para">
+<p id="S4.SS2.p5.1" class="ltx_p"><span id="S4.SS2.p5.1.1" class="ltx_text ltx_font_bold">Comparison on the car category on validation set.</span></p>
+</div>
+<div id="S4.SS2.p6" class="ltx_para">
+<p id="S4.SS2.p6.1" class="ltx_p">In Table 3, we compare our model against the state-of-art in the KITTI validation set. Despite using a small dataset of 3712 images (50%), MonoNext outperforms several images-only methods. We achieved competitive performance in Easy detections, with a 4.48% increase in accuracy compared to MonoPair. While our model did not reach the same performance as GUPNet in all categories, it’s important to note that GUPNet uses pre-trained weights, which helps in achieving higher performance even with a small dataset.</p>
+</div>
+<div id="S4.SS2.p7" class="ltx_para">
+<p id="S4.SS2.p7.1" class="ltx_p">One of the advantages of MonoNext is that it does not require 2D labels for model convergence, unlike GUPNet. With only 3D feature annotations, MonoNext excels in its performance and proves to be a competitive option for monocular detections. Moreover, our method is simple and easy to implement.</p>
+</div>
+<figure id="S4.T3" class="ltx_table">
+<table id="S4.T3.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T3.1.1" class="ltx_tr">
+<th id="S4.T3.1.1.2" class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_r"></th>
+<th id="S4.T3.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column" colspan="4"><math id="S4.T3.1.1.1.m1.1" class="ltx_math_unparsed" alttext="AP_{3D}(IoU=0.7)(\%)" display="inline"><semantics id="S4.T3.1.1.1.m1.1a"><mrow id="S4.T3.1.1.1.m1.1b"><mi mathsize="90%" id="S4.T3.1.1.1.m1.1.1">A</mi><msub id="S4.T3.1.1.1.m1.1.2"><mi mathsize="90%" id="S4.T3.1.1.1.m1.1.2.2">P</mi><mrow id="S4.T3.1.1.1.m1.1.2.3"><mn mathsize="90%" id="S4.T3.1.1.1.m1.1.2.3.2">3</mn><mo lspace="0em" rspace="0em" id="S4.T3.1.1.1.m1.1.2.3.1">​</mo><mi mathsize="90%" id="S4.T3.1.1.1.m1.1.2.3.3">D</mi></mrow></msub><mrow id="S4.T3.1.1.1.m1.1.3"><mo maxsize="90%" minsize="90%" id="S4.T3.1.1.1.m1.1.3.1">(</mo><mi mathsize="90%" id="S4.T3.1.1.1.m1.1.3.2">I</mi><mi mathsize="90%" id="S4.T3.1.1.1.m1.1.3.3">o</mi><mi mathsize="90%" id="S4.T3.1.1.1.m1.1.3.4">U</mi><mo mathsize="90%" id="S4.T3.1.1.1.m1.1.3.5">=</mo><mn mathsize="90%" id="S4.T3.1.1.1.m1.1.3.6">0.7</mn><mo maxsize="90%" minsize="90%" id="S4.T3.1.1.1.m1.1.3.7">)</mo></mrow><mrow id="S4.T3.1.1.1.m1.1.4"><mo maxsize="90%" minsize="90%" id="S4.T3.1.1.1.m1.1.4.1">(</mo><mo mathsize="90%" id="S4.T3.1.1.1.m1.1.4.2">%</mo><mo maxsize="90%" minsize="90%" id="S4.T3.1.1.1.m1.1.4.3">)</mo></mrow></mrow><annotation encoding="application/x-tex" id="S4.T3.1.1.1.m1.1c">AP_{3D}(IoU=0.7)(\%)</annotation></semantics></math></th>
+</tr>
+<tr id="S4.T3.1.2.1" class="ltx_tr">
+<th id="S4.T3.1.2.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t"><span id="S4.T3.1.2.1.1.1" class="ltx_text" style="font-size:90%;">Models</span></th>
+<th id="S4.T3.1.2.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S4.T3.1.2.1.2.1" class="ltx_text" style="font-size:90%;">Easy</span></th>
+<th id="S4.T3.1.2.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S4.T3.1.2.1.3.1" class="ltx_text" style="font-size:90%;">Moderate</span></th>
+<th id="S4.T3.1.2.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S4.T3.1.2.1.4.1" class="ltx_text" style="font-size:90%;">Hard</span></th>
+<th id="S4.T3.1.2.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S4.T3.1.2.1.5.1" class="ltx_text" style="font-size:90%;">Average</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T3.1.3.1" class="ltx_tr">
+<th id="S4.T3.1.3.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t">
+<span id="S4.T3.1.3.1.1.1" class="ltx_text" style="font-size:90%;">CenterNet </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.3.1.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib17" title="" class="ltx_ref">17</a><span id="S4.T3.1.3.1.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.3.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.3.1.2.1" class="ltx_text" style="font-size:90%;">00.60</span></td>
+<td id="S4.T3.1.3.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.3.1.3.1" class="ltx_text" style="font-size:90%;">00.66</span></td>
+<td id="S4.T3.1.3.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.3.1.4.1" class="ltx_text" style="font-size:90%;">00.77</span></td>
+<td id="S4.T3.1.3.1.5" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T3.1.3.1.5.1" class="ltx_text" style="font-size:90%;">00.68</span></td>
+</tr>
+<tr id="S4.T3.1.4.2" class="ltx_tr">
+<th id="S4.T3.1.4.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">
+<span id="S4.T3.1.4.2.1.1" class="ltx_text" style="font-size:90%;">FQNet </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.4.2.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib18" title="" class="ltx_ref">18</a><span id="S4.T3.1.4.2.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.4.2.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.4.2.2.1" class="ltx_text" style="font-size:90%;">02.77</span></td>
+<td id="S4.T3.1.4.2.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.4.2.3.1" class="ltx_text" style="font-size:90%;">01.51</span></td>
+<td id="S4.T3.1.4.2.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.4.2.4.1" class="ltx_text" style="font-size:90%;">01.01</span></td>
+<td id="S4.T3.1.4.2.5" class="ltx_td ltx_align_center"><span id="S4.T3.1.4.2.5.1" class="ltx_text" style="font-size:90%;">01.76</span></td>
+</tr>
+<tr id="S4.T3.1.5.3" class="ltx_tr">
+<th id="S4.T3.1.5.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">
+<span id="S4.T3.1.5.3.1.1" class="ltx_text" style="font-size:90%;">MonoDIS </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.5.3.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib19" title="" class="ltx_ref">19</a><span id="S4.T3.1.5.3.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.5.3.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.5.3.2.1" class="ltx_text" style="font-size:90%;">11.06</span></td>
+<td id="S4.T3.1.5.3.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.5.3.3.1" class="ltx_text" style="font-size:90%;">07.60</span></td>
+<td id="S4.T3.1.5.3.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.5.3.4.1" class="ltx_text" style="font-size:90%;">06.37</span></td>
+<td id="S4.T3.1.5.3.5" class="ltx_td ltx_align_center"><span id="S4.T3.1.5.3.5.1" class="ltx_text" style="font-size:90%;">08.34</span></td>
+</tr>
+<tr id="S4.T3.1.6.4" class="ltx_tr">
+<th id="S4.T3.1.6.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">
+<span id="S4.T3.1.6.4.1.1" class="ltx_text" style="font-size:90%;">MonoGRNet </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.6.4.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib20" title="" class="ltx_ref">20</a><span id="S4.T3.1.6.4.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.6.4.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.6.4.2.1" class="ltx_text" style="font-size:90%;">11.90</span></td>
+<td id="S4.T3.1.6.4.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.6.4.3.1" class="ltx_text" style="font-size:90%;">07.56</span></td>
+<td id="S4.T3.1.6.4.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.6.4.4.1" class="ltx_text" style="font-size:90%;">05.76</span></td>
+<td id="S4.T3.1.6.4.5" class="ltx_td ltx_align_center"><span id="S4.T3.1.6.4.5.1" class="ltx_text" style="font-size:90%;">08.41</span></td>
+</tr>
+<tr id="S4.T3.1.7.5" class="ltx_tr">
+<th id="S4.T3.1.7.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">
+<span id="S4.T3.1.7.5.1.1" class="ltx_text" style="font-size:90%;">SMOKE </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.7.5.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib21" title="" class="ltx_ref">21</a><span id="S4.T3.1.7.5.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.7.5.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.7.5.2.1" class="ltx_text" style="font-size:90%;">14.03</span></td>
+<td id="S4.T3.1.7.5.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.7.5.3.1" class="ltx_text" style="font-size:90%;">09.76</span></td>
+<td id="S4.T3.1.7.5.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.7.5.4.1" class="ltx_text" style="font-size:90%;">07.84</span></td>
+<td id="S4.T3.1.7.5.5" class="ltx_td ltx_align_center"><span id="S4.T3.1.7.5.5.1" class="ltx_text" style="font-size:90%;">10.54</span></td>
+</tr>
+<tr id="S4.T3.1.8.6" class="ltx_tr">
+<th id="S4.T3.1.8.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">
+<span id="S4.T3.1.8.6.1.1" class="ltx_text" style="font-size:90%;">RTM3D </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.8.6.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib22" title="" class="ltx_ref">22</a><span id="S4.T3.1.8.6.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.8.6.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.8.6.2.1" class="ltx_text" style="font-size:90%;">14.41</span></td>
+<td id="S4.T3.1.8.6.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.8.6.3.1" class="ltx_text" style="font-size:90%;">10.34</span></td>
+<td id="S4.T3.1.8.6.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.8.6.4.1" class="ltx_text" style="font-size:90%;">08.77</span></td>
+<td id="S4.T3.1.8.6.5" class="ltx_td ltx_align_center"><span id="S4.T3.1.8.6.5.1" class="ltx_text" style="font-size:90%;">11.17</span></td>
+</tr>
+<tr id="S4.T3.1.9.7" class="ltx_tr">
+<th id="S4.T3.1.9.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">
+<span id="S4.T3.1.9.7.1.1" class="ltx_text" style="font-size:90%;">M3D-RPN </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.9.7.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib30" title="" class="ltx_ref">30</a><span id="S4.T3.1.9.7.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.9.7.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.9.7.2.1" class="ltx_text" style="font-size:90%;">14.53</span></td>
+<td id="S4.T3.1.9.7.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.9.7.3.1" class="ltx_text" style="font-size:90%;">11.07</span></td>
+<td id="S4.T3.1.9.7.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.9.7.4.1" class="ltx_text" style="font-size:90%;">08.65</span></td>
+<td id="S4.T3.1.9.7.5" class="ltx_td ltx_align_center"><span id="S4.T3.1.9.7.5.1" class="ltx_text" style="font-size:90%;">11.42</span></td>
+</tr>
+<tr id="S4.T3.1.10.8" class="ltx_tr">
+<th id="S4.T3.1.10.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">
+<span id="S4.T3.1.10.8.1.1" class="ltx_text" style="font-size:90%;">MoVi3D </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.10.8.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib23" title="" class="ltx_ref">23</a><span id="S4.T3.1.10.8.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.10.8.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.10.8.2.1" class="ltx_text" style="font-size:90%;">14.28</span></td>
+<td id="S4.T3.1.10.8.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.10.8.3.1" class="ltx_text" style="font-size:90%;">11.13</span></td>
+<td id="S4.T3.1.10.8.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.10.8.4.1" class="ltx_text" style="font-size:90%;">09.68</span></td>
+<td id="S4.T3.1.10.8.5" class="ltx_td ltx_align_center"><span id="S4.T3.1.10.8.5.1" class="ltx_text" style="font-size:90%;">11.70</span></td>
+</tr>
+<tr id="S4.T3.1.11.9" class="ltx_tr">
+<th id="S4.T3.1.11.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">
+<span id="S4.T3.1.11.9.1.1" class="ltx_text" style="font-size:90%;">MonoPair </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.11.9.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib34" title="" class="ltx_ref">34</a><span id="S4.T3.1.11.9.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.11.9.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.11.9.2.1" class="ltx_text" style="font-size:90%;">16.28</span></td>
+<td id="S4.T3.1.11.9.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.11.9.3.1" class="ltx_text" style="font-size:90%;">12.30</span></td>
+<td id="S4.T3.1.11.9.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T3.1.11.9.4.1" class="ltx_text" style="font-size:90%;">10.42</span></td>
+<td id="S4.T3.1.11.9.5" class="ltx_td ltx_align_center"><span id="S4.T3.1.11.9.5.1" class="ltx_text" style="font-size:90%;">13.00</span></td>
+</tr>
+<tr id="S4.T3.1.12.10" class="ltx_tr">
+<th id="S4.T3.1.12.10.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t"><span id="S4.T3.1.12.10.1.1" class="ltx_text ltx_font_bold" style="font-size:90%;">MonoNext (Ours)</span></th>
+<td id="S4.T3.1.12.10.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.12.10.2.1" class="ltx_text" style="font-size:90%;">20.76</span></td>
+<td id="S4.T3.1.12.10.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.12.10.3.1" class="ltx_text" style="font-size:90%;">09.79</span></td>
+<td id="S4.T3.1.12.10.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.12.10.4.1" class="ltx_text" style="font-size:90%;">08.70</span></td>
+<td id="S4.T3.1.12.10.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.12.10.5.1" class="ltx_text" style="font-size:90%;">13.08</span></td>
+</tr>
+<tr id="S4.T3.1.13.11" class="ltx_tr">
+<th id="S4.T3.1.13.11.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t">
+<span id="S4.T3.1.13.11.1.1" class="ltx_text" style="font-size:90%;">GupNet </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T3.1.13.11.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib32" title="" class="ltx_ref">32</a><span id="S4.T3.1.13.11.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T3.1.13.11.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.13.11.2.1" class="ltx_text ltx_font_bold" style="font-size:90%;">22.76</span></td>
+<td id="S4.T3.1.13.11.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.13.11.3.1" class="ltx_text ltx_font_bold" style="font-size:90%;">16.46</span></td>
+<td id="S4.T3.1.13.11.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.13.11.4.1" class="ltx_text ltx_font_bold" style="font-size:90%;">13.72</span></td>
+<td id="S4.T3.1.13.11.5" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T3.1.13.11.5.1" class="ltx_text ltx_font_bold" style="font-size:90%;">17.65</span></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">TABLE III: </span>Performance of the Car category on the KITTI validation set.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Conclusions</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In conclusion, we have presented a novel model for Monocular 3D Object Detection called MonoNext, which uses a ConvNext-based architecture mixed with the MobineNetV2 to develop a lightweight approach for predicting multi-tasks for 3D detections. Our experiments on the KITTI benchmark have shown that the performance of our model is highly dependent on the number of training images. Nevertheless, our method presents competitive performance against state-of-the-art models when tested on the validation set. Moreover, by increasing the training set size, our model outperforms the current models. Although we have only evaluated our model’s performance in vehicle detection, it can be easily implemented for different objects in diverse environments. Additionally, the MonoNext model is flexible and capable of detecting multiple objects in the same scene. Overall, this work presents a promising approach for Monocular 3D Object Detection that can be further improved by incorporating additional training data and techniques.</p>
+</div>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span id="S6.1.1" class="ltx_text ltx_font_smallcaps">Acknowledge</span>
+</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">The authors acknowledge the funding received from The National Council for Scientific and Technological Development (CNPq 141061/2021-9).</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+A. Geiger, P. Lenz, and R. Urtasun, “Are we ready for autonomous driving? the
+kitti vision benchmark suite,” in <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">Conference on Computer Vision and
+Pattern Recognition (CVPR)</em>, 2012.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Y. Liu, L. Wang, and M. Liu, “Yolostereo3d: A step back to 2d for efficient
+stereo 3d detection,” in <em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">2021 IEEE International Conference on
+Robotics and Automation (ICRA)</em>, 2021, pp. 13 018–13 024.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Y. Chen, S. Huang, S. Liu, B. Yu, and J. Jia, “Dsgn++: Exploiting
+visual-spatial relation for stereo-based 3d detectors,” 2022. [Online].
+Available: <a target="_blank" href="https://arxiv.org/abs/2204.03039" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/2204.03039</a>
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+R. Girshick, J. Donahue, T. Darrell, and J. Malik, “Rich feature hierarchies
+for accurate object detection and semantic segmentation,” 2013. [Online].
+Available: <a target="_blank" href="https://arxiv.org/abs/1311.2524" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/1311.2524</a>
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+A. Krizhevsky, I. Sutskever, and G. E. Hinton, “Imagenet classification with
+deep convolutional neural networks,” in <em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">Proceedings of the 25th
+International Conference on Neural Information Processing Systems - Volume
+1</em>, ser. NIPS’12.   Red Hook, NY, USA:
+Curran Associates Inc., 2012, p. 1097–1105.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+R. Girshick, “Fast r-cnn,” in <em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">2015 IEEE International Conference on
+Computer Vision (ICCV)</em>, 2015, pp. 1440–1448.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+S. Ren, K. He, R. Girshick, and J. Sun, “Faster r-cnn: Towards real-time
+object detection with region proposal networks,” in <em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">Advances in Neural
+Information Processing Systems</em>, C. Cortes, N. Lawrence, D. Lee, M. Sugiyama,
+and R. Garnett, Eds., vol. 28.   Curran
+Associates, Inc., 2015. [Online]. Available:
+<a target="_blank" href="https://proceedings.neurips.cc/paper/2015/file/14bfa6bb14875e45bba028a21ed38046-Paper.pdf" title="" class="ltx_ref ltx_url">https://proceedings.neurips.cc/paper/2015/file/14bfa6bb14875e45bba028a21ed38046-Paper.pdf</a>
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+K. He, X. Zhang, S. Ren, and J. Sun, “Spatial pyramid pooling in deep
+convolutional networks for visual recognition,” in <em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">Computer Vision –
+ECCV 2014</em>, D. Fleet, T. Pajdla, B. Schiele, and T. Tuytelaars, Eds.   Cham: Springer International Publishing,
+2014, pp. 346–361.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+T.-Y. Lin, P. Dollár, R. Girshick, K. He, B. Hariharan, and S. Belongie,
+“Feature pyramid networks for object detection,” in <em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">2017 IEEE
+Conference on Computer Vision and Pattern Recognition (CVPR)</em>, 2017, pp.
+936–944.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+W. Liu, D. Anguelov, D. Erhan, C. Szegedy, S. Reed, C.-Y. Fu, and A. C. Berg,
+“SSD: Single shot MultiBox detector,” in <em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">Computer Vision
+– ECCV 2016</em>.   Springer
+International Publishing, 2016, pp. 21–37. [Online]. Available:
+<a target="_blank" href="https://doi.org/10.1007/978-3-319-46448-0_2" title="" class="ltx_ref ltx_url">https://doi.org/10.1007/978-3-319-46448-0˙2</a>
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+J. Redmon, S. Divvala, R. Girshick, and A. Farhadi, “You only look once:
+Unified, real-time object detection,” 2015. [Online]. Available:
+<a target="_blank" href="https://arxiv.org/abs/1506.02640" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/1506.02640</a>
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+J. Redmon and A. Farhadi, “Yolo9000: Better, faster, stronger,” 2016.
+[Online]. Available: <a target="_blank" href="https://arxiv.org/abs/1612.08242" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/1612.08242</a>
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+——, “Yolov3: An incremental improvement,” 2018. [Online]. Available:
+<a target="_blank" href="https://arxiv.org/abs/1804.02767" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/1804.02767</a>
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+A. Bochkovskiy, C.-Y. Wang, and H.-Y. M. Liao, “Yolov4: Optimal speed and
+accuracy of object detection,” 2020. [Online]. Available:
+<a target="_blank" href="https://arxiv.org/abs/2004.10934" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/2004.10934</a>
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Z. Liu, Y. Lin, Y. Cao, H. Hu, Y. Wei, Z. Zhang, S. Lin, and B. Guo, “Swin
+transformer: Hierarchical vision transformer using shifted windows,” 2021.
+[Online]. Available: <a target="_blank" href="https://arxiv.org/abs/2103.14030" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/2103.14030</a>
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, L. u.
+Kaiser, and I. Polosukhin, “Attention is all you need,” in <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">Advances
+in Neural Information Processing Systems</em>, I. Guyon, U. V. Luxburg,
+S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, Eds.,
+vol. 30.   Curran Associates, Inc.,
+2017. [Online]. Available:
+<a target="_blank" href="https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf" title="" class="ltx_ref ltx_url">https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf</a>
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+X. Zhou, D. Wang, and P. Krähenbühl, “Objects as points,” 2019. [Online].
+Available: <a target="_blank" href="https://arxiv.org/abs/1904.07850" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/1904.07850</a>
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+L. Liu, J. Lu, C. Xu, Q. Tian, and J. Zhou, “Deep fitting degree scoring
+network for monocular 3d object detection,” 2019. [Online]. Available:
+<a target="_blank" href="https://arxiv.org/abs/1904.12681" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/1904.12681</a>
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+A. Simonelli, S. R. Bulo, L. Porzi, M. Lopez-Antequera, and P. Kontschieder,
+“Disentangling monocular 3d object detection,” in <em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic">Proceedings of the
+IEEE/CVF International Conference on Computer Vision (ICCV)</em>, October 2019.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Z. Qin, J. Wang, and Y. Lu, “Monogrnet: A geometric reasoning network for
+monocular 3d object localization,” 2018. [Online]. Available:
+<a target="_blank" href="https://arxiv.org/abs/1811.10247" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/1811.10247</a>
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Z. Liu, Z. Wu, and R. Toth, “Smoke: Single-stage monocular 3d object detection
+via keypoint estimation,” in <em id="bib.bib21.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on
+Computer Vision and Pattern Recognition (CVPR) Workshops</em>, June 2020.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+P. Li, H. Zhao, P. Liu, and F. Cao, “RTM3d: Real-time monocular 3d detection
+from object keypoints for autonomous driving,” in <em id="bib.bib22.1.1" class="ltx_emph ltx_font_italic">Computer Vision
+– ECCV 2020</em>.   Springer
+International Publishing, 2020, pp. 644–660. [Online]. Available:
+<a target="_blank" href="https://doi.org/10.1007/978-3-030-58580-8_38" title="" class="ltx_ref ltx_url">https://doi.org/10.1007/978-3-030-58580-8˙38</a>
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+A. Simonelli, S. R. Buló, L. Porzi, E. Ricci, and P. Kontschieder,
+“Towards generalization across depth for monocular 3d object detection,” in
+<em id="bib.bib23.1.1" class="ltx_emph ltx_font_italic">Computer Vision – ECCV 2020</em>.   Springer International Publishing, 2020, pp. 767–782. [Online].
+Available: <a target="_blank" href="https://doi.org/10.1007/978-3-030-58542-6_46" title="" class="ltx_ref ltx_url">https://doi.org/10.1007/978-3-030-58542-6˙46</a>
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+F. Chabot, M. Chaouch, J. Rabarisoa, C. Teuliere, and T. Chateau, “Deep manta:
+A coarse-to-fine many-task network for joint 2d and 3d vehicle analysis from
+monocular image,” in <em id="bib.bib24.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE Conference on Computer
+Vision and Pattern Recognition (CVPR)</em>, July 2017.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+B. Li, W. Ouyang, L. Sheng, X. Zeng, and X. Wang, “Gs3d: An efficient 3d
+object detection framework for autonomous driving,” in <em id="bib.bib25.1.1" class="ltx_emph ltx_font_italic">Proceedings of
+the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>,
+June 2019.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+T. W. Xianpeng Liu, Nan Xue, “Learning auxiliary monocular contexts helps
+monocular 3d object detection,” in <em id="bib.bib26.1.1" class="ltx_emph ltx_font_italic">36th AAAI Conference on Artifical
+Intelligence (AAAI)</em>, Feburary 2022.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+X. Chen, K. Kundu, Z. Zhang, H. Ma, S. Fidler, and R. Urtasun, “Monocular 3d
+object detection for autonomous driving,” in <em id="bib.bib27.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition (CVPR)</em>, June 2016.
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+Y. Zhou, Y. He, H. Zhu, C. Wang, H. Li, and Q. Jiang, “Monocular 3d object
+detection: An extrinsic parameter free approach,” in <em id="bib.bib28.1.1" class="ltx_emph ltx_font_italic">Proceedings of
+the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>,
+June 2021, pp. 7556–7566.
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+K.-C. Huang, T.-H. Wu, H.-T. Su, and W. H. Hsu, “Monodtr: Monocular 3d object
+detection with depth-aware transformer,” in <em id="bib.bib29.1.1" class="ltx_emph ltx_font_italic">Proceedings of the
+IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>, June
+2022, pp. 4012–4021.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+G. Brazil and X. Liu, “M3d-rpn: Monocular 3d region proposal network for
+object detection,” in <em id="bib.bib30.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF International
+Conference on Computer Vision (ICCV)</em>, October 2019.
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+T. Roddick, A. Kendall, and R. Cipolla, “Orthographic feature transform for
+monocular 3d object detection,” 2018. [Online]. Available:
+<a target="_blank" href="https://arxiv.org/abs/1811.08188" title="" class="ltx_ref ltx_url">https://arxiv.org/abs/1811.08188</a>
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+Y. Lu, X. Ma, L. Yang, T. Zhang, Y. Liu, Q. Chu, J. Yan, and W. Ouyang,
+“Geometry uncertainty projection network for monocular 3d object
+detection,” in <em id="bib.bib32.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF International Conference on
+Computer Vision (ICCV)</em>, October 2021, pp. 3111–3121.
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+Y. Zhang, J. Lu, and J. Zhou, “Objects are different: Flexible monocular 3d
+object detection,” in <em id="bib.bib33.1.1" class="ltx_emph ltx_font_italic">2021 IEEE/CVF Conference on Computer Vision and
+Pattern Recognition (CVPR)</em>, 2021, pp. 3288–3297.
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+Y. Chen, L. Tai, K. Sun, and M. Li, “Monopair: Monocular 3d object detection
+using pairwise spatial relationships,” in <em id="bib.bib34.1.1" class="ltx_emph ltx_font_italic">IEEE/CVF Conference on
+Computer Vision and Pattern Recognition (CVPR)</em>, June 2020.
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+M. Sandler, A. Howard, M. Zhu, A. Zhmoginov, and L.-C. Chen, “Mobilenetv2:
+Inverted residuals and linear bottlenecks,” in <em id="bib.bib35.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition (CVPR)</em>, June 2018.
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+Z. Liu, H. Mao, C.-Y. Wu, C. Feichtenhofer, T. Darrell, and S. Xie, “A convnet
+for the 2020s,” in <em id="bib.bib36.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer
+Vision and Pattern Recognition (CVPR)</em>, June 2022, pp. 11 976–11 986.
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+X. Chen, H. Ma, J. Wan, B. Li, and T. Xia, “Multi-view 3d object detection
+network for autonomous driving,” in <em id="bib.bib37.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE Conference
+on Computer Vision and Pattern Recognition (CVPR)</em>, July 2017.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2308.00595" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2308.00596" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2308.00596">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2308.00596" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2308.00597" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Feb 28 14:41:43 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

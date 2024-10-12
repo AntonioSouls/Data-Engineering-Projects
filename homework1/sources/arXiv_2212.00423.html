@@ -1,0 +1,1887 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2212.00423] Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings</title><meta property="og:description" content="Insects as pollinators play a crucial role in ecosystem management and world food production.
+However, insect populations are declining, calling for efficient methods of insect monitoring.
+Existing methods analyze vide…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2212.00423">
+
+<!--Generated on Fri Mar  1 13:30:26 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Kim Bjerge, Carsten Eie Frigaard and Henrik Karstoft
+<br class="ltx_break">Department of Electrical and Computer Engineering, Aarhus University
+<br class="ltx_break">Finlandsgade 22, 8200 Aarhus N, Denmark
+<br class="ltx_break"><span id="id1.1.id1" class="ltx_text ltx_font_typewriter" style="font-size:90%;">{kbe, cef, hka}@ece.au.dk</span>
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id2.id1" class="ltx_p">Insects as pollinators play a crucial role in ecosystem management and world food production.
+However, insect populations are declining, calling for efficient methods of insect monitoring.
+Existing methods analyze video or time-lapse images of insects in nature,
+but the analysis is challenging since insects are small objects in complex and dynamic scenes of natural vegetation.
+In this work, we provide a dataset of primary honeybees visiting three different plant species during two months of the summer period.
+The dataset consists of 107,387 annotated time-lapse images from multiple cameras, including 9,423 annotated insects.
+We present a method pipeline for detecting insects in time-lapse RGB images.
+The pipeline consists of a two-step process.
+Firstly, the time-lapse RGB images are preprocessed to enhance insects in the images.
+This Motion-Informed-Enhancement technique uses motion and colors to enhance insects in images.
+Secondly, the enhanced images are subsequently fed into a Convolutional Neural network (CNN) object detector.
+The method improves the deep learning object detectors You Only Look Once (YOLO) and Faster Region-based CNN (Faster R-CNN).
+Using Motion-Informed-Enhancement, the YOLO-detector improves the average micro F1-score from 0.49 to 0.71,
+and the Faster R-CNN-detector improves the average micro F1-score from 0.32 to 0.56 on the dataset.
+Our dataset and proposed method provide a step forward to automate the time-lapse camera monitoring of flying insects.
+The dataset is published on: <a target="_blank" href="https://vision.eng.au.dk/mie/" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://vision.eng.au.dk/mie/</a></p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">More than half of all described species on Earth are insects, and they are the most abundant group of animals and live in almost every habitat.
+There are multiple reports of evidence for a decline in abundance, diversity, and biomass of insects in the world <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib47" title="" class="ltx_ref">47</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>.
+Changes in the abundance of insects could have cascading effects on the food web.
+Bees, hoverflies, wasps, beetles, butterflies, and moths are important pollinators and prey for birds, frogs, and bats.
+Some of the most damaging pest species in agriculture and forestry are moths <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> and insects are known to be major factors in the world’s agricultural economy.
+Therefore, it is crucial to monitor insects in the context of global change in climate and habitats.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Automated insect camera traps and data-analyzing algorithms based on computer vision and deep learning are valuable tools for monitoring
+and understanding insect trends and their underlying drivers <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>.
+It is challenging to automate insect detection since insects move fast, and their environmental interactions, such as pollination events, are ephemeral.
+Insects also have small sizes <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>, <a href="#bib.bib49" title="" class="ltx_ref">49</a>]</cite>, and may be occluded by flowers or leaves, making it hard to separate the objects of interest from the natural vegetation.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">A particularly exciting prospect enabled by computer vision is automated, non-invasive monitoring of insects and other small organisms in their natural environment.
+Here, image processing with deep learning models of insects can be applied either in real-time <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>
+or batched since time-lapse images can be stored and processed after collection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Convolutional Neural Networks (CNN) are extensively used for object detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>, <a href="#bib.bib41" title="" class="ltx_ref">41</a>, <a href="#bib.bib30" title="" class="ltx_ref">30</a>, <a href="#bib.bib50" title="" class="ltx_ref">50</a>]</cite> in many contexts,
+including insect detection and species identification.
+CNN for object detection predicts bounding boxes around objects within the image, their class labels, and confidence scores.
+You Only Look Once (YOLO) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> is a one-stage object detector and has been popular
+in many applications and applied for the detection of insects <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>.
+Two-stage detectors such as Faster Region-based Convolutional Neural Network (Faster R-CNN) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>
+are also very common and have been adapted for small object detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">Annotated datasets are essential for data-driven insect detectors.
+Data should include images of the insects for detection and images of the typical backgrounds where such insects may be found.
+Suppose an object detector is trained on one dataset.
+In that case, it will not necessarily have the same performance on time-lapse recordings from a new monitoring site.
+One false detection in a time-lapse image sequence of natural vegetation will cause multiple false detections in the subsequent stationary images <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>.</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p">We hypothesize that Motion-Information-Enhancement in insect detection in time-lapse recordings will improve the detection in the wildlife environment.
+In short, we summarize our contributions as follows:</p>
+</div>
+<div id="S1.p7" class="ltx_para">
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">Provide a dataset with annotated insects (primary honeybees) and a comprehensive test dataset with time-lapse annotated recordings from different monitoring sites.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">Propose a new pipeline method to improve insect detection in the wild, built on Motion-Informed-Enhancement, YOLOv5, and Faster R-CNN with ResNet50 as the backbone.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Detection of small objects</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Small object detection in low-resolution remote sensing images presents numerous challenges <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>.
+Targets are relatively small compared to the field of view, do not present distinct features, and are often grouped and lost in cluttered backgrounds.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">Liu <em id="S2.SS1.p2.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS1.p2.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite> compares the performances of several leading deep learning methods for small object detection.
+They discuss the challenges and techniques in improving the detection of small objects.
+Techniques include fusing feature maps from shallow layers and deep layers to obtain necessary spatial and semantic information.
+Another approach is multi-scale architecture consisting of separate branches for small, medium,
+and large-scale objects generating anchors of different scales such as Darknet53 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>.
+Usually, small objects require high resolution and are difficult to recognize,
+here spatial and temporal contextual information plays a critical role in small object detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>, <a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>.</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.1" class="ltx_p">A review of recent advances in small object detection based on deep learning is provided by Tong <em id="S2.SS1.p3.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS1.p3.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib46" title="" class="ltx_ref">46</a>]</cite>.
+They provide a comprehensive survey of the existing small object detection methods based on deep learning.
+The review covers topics such as multiscale feature learning <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>, pyramid networks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, data augmentation, training strategy, and context-based detection.
+Important needs for the future are proposed: emerging small object detection datasets and benchmarks, small object detection methods, and framework for small object detection tasks.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Detection in single image</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Detection of small objects in the spatial dimension of images is investigated in several domains such as remote sensing <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite> with single-shot or time-lapse images.
+For small object detection tasks, the detection is very difficult since these small objects could be tightly grouped and interfere with background information.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Du <em id="S2.SS2.p2.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS2.p2.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> proposes an extended network architecture based on YOLOv3 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite> for small-sized object detection - on a complex background.
+They added multi-scale convolution kernels with different receptive fields into YOLOv3 to improve extracting the semantic features
+of the objects using an Inception-like architecture inspired by GoogleNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib45" title="" class="ltx_ref">45</a>]</cite>.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">Huang <em id="S2.SS2.p3.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS2.p3.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite> proposes a small object detection method based on YOLOv4 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> for chip surface defect inspection.
+They extend the backbone of YOLOv4 architecture with an enhanced receptive field by adding
+an additional fusion output (<math id="S2.SS2.p3.1.m1.1" class="ltx_Math" alttext="104\times 104" display="inline"><semantics id="S2.SS2.p3.1.m1.1a"><mrow id="S2.SS2.p3.1.m1.1.1" xref="S2.SS2.p3.1.m1.1.1.cmml"><mn id="S2.SS2.p3.1.m1.1.1.2" xref="S2.SS2.p3.1.m1.1.1.2.cmml">104</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS2.p3.1.m1.1.1.1" xref="S2.SS2.p3.1.m1.1.1.1.cmml">×</mo><mn id="S2.SS2.p3.1.m1.1.1.3" xref="S2.SS2.p3.1.m1.1.1.3.cmml">104</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS2.p3.1.m1.1b"><apply id="S2.SS2.p3.1.m1.1.1.cmml" xref="S2.SS2.p3.1.m1.1.1"><times id="S2.SS2.p3.1.m1.1.1.1.cmml" xref="S2.SS2.p3.1.m1.1.1.1"></times><cn type="integer" id="S2.SS2.p3.1.m1.1.1.2.cmml" xref="S2.SS2.p3.1.m1.1.1.2">104</cn><cn type="integer" id="S2.SS2.p3.1.m1.1.1.3.cmml" xref="S2.SS2.p3.1.m1.1.1.3">104</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p3.1.m1.1c">104\times 104</annotation></semantics></math>) from the Cross Stage Partial Layer (CSP2) with a similarly extended neck.</p>
+</div>
+<div id="S2.SS2.p4" class="ltx_para">
+<p id="S2.SS2.p4.1" class="ltx_p">These works focus on improving the architecture for detecting small objects but are only demonstrated on a general dataset not including insects and show only minor improvements.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Detection in a sequence of images</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">With higher framerates such as video recording <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>, information in the temporal dimension can be used to improve the detection and tracking of moving objects <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib51" title="" class="ltx_ref">51</a>]</cite>.
+The detection of small moving objects is an important research area with respect to flying insects,
+surveillance of honeybee colonies, and tracking the movement of insects.
+Motion-based detections consist principally of background subtraction and frame differencing.
+State-of-the-art methods aim to combine approaches of both spatial appearance and motion to improve object detection.
+Here CNNs consider both motion and appearance information to extract object locations <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>, <a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite>.</p>
+</div>
+<div id="S2.SS3.p2" class="ltx_para">
+<p id="S2.SS3.p2.1" class="ltx_p">LaLonde <em id="S2.SS3.p2.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS3.p2.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite> propose ClusterNet for the detection of small cars in wide area motion imagery.
+They achieve state-of-the-art accuracy using a two-stage deep network where the second stage detects small objects using a large receptive field.
+However, the inputs are consecutive adjoining frames with frame rates of 0.8 fps.</p>
+</div>
+<div id="S2.SS3.p3" class="ltx_para">
+<p id="S2.SS3.p3.1" class="ltx_p">Stojnić <em id="S2.SS3.p3.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS3.p3.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib44" title="" class="ltx_ref">44</a>]</cite> propose how to track small moving honeybees recorded by Unmanned Aerial Vehicles (UAV) videos.
+First, they perform background estimation and subtraction followed by semantic segmentation using U-net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib48" title="" class="ltx_ref">48</a>]</cite> then followed by thresholding of the segmented frame.
+Since a labeled dataset of small moving objects did not exist, they generate synthetic videos for training by adding small blob-like objects on real-world backgrounds.
+In a final test on real-world videos with manually annotated flying honeybees, they achieved a best average F1-score of 0.71 on three small video test sequences.</p>
+</div>
+<div id="S2.SS3.p4" class="ltx_para">
+<p id="S2.SS3.p4.1" class="ltx_p">Aguilar <em id="S2.SS3.p4.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS3.p4.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> studied small object detection and tracking in satellite videos of motorbikes.
+They use a track-by-detection approach to detect and track small moving targets by using CNN object detection and a Bayesian tracker.</p>
+</div>
+<div id="S2.SS3.p5" class="ltx_para">
+<p id="S2.SS3.p5.1" class="ltx_p">Insect detection and tracking are proposed in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> where images are recorded in real-time with a framerate of only 0.33 fps
+performing insect detection and species classification using YOLOv3 followed by a multiple object tracker using detected center points and the size of the object-bounding box.</p>
+</div>
+<div id="S2.SS3.p6" class="ltx_para">
+<p id="S2.SS3.p6.1" class="ltx_p">In-field camera recording, naturally requires hardware sufficient to process and store the videos with a real-time sampling frequency.
+This poses technical difficulties when the recording period is long and the hardware must operate without external power and network connection.
+In this paper, we focus on small object detection for time-lapse recordings, which require less storage space.
+We improve insect object detection using temporal images without tracking.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Dataset</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">We provide a new, comprehensive benchmark dataset to evaluate data-driven methods for detecting small insects in the real natural environment.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Images in the dataset were collected using four recording units, each consisting of a Raspberry Pi 3B computer
+connected to two Logitech C922 HD Pro USB web cameras <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite> with a resolution of 1920x1080 pixels.
+Images from the two cameras were stored in JPG format on an external 2TB USB hard disk.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">A time-lapse program <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite> installed on the Raspberry Pi was used to continuously capture time-lapse images with a framerate of 30 seconds between images.
+The camera used automatic exposure to handle light variations in the wild related to direct sun, clouds, and shadows.
+Auto-focus was enabled to handle variations of the camera distance and orientation in relation to the scene with plants and insects.
+The system recorded images every day from 4:30 AM to 22:30 PM, resulting in a maximum of 2,160 images per camera per day.</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.1" class="ltx_p">During the period May 31’st to August 5’st 2022, the camera systems were in operation in four greenhouses in Flakkebjerg, Denmark.
+The camera systems monitor insects visiting three different species of plants: <em id="S3.p4.1.1" class="ltx_emph ltx_font_italic">Trifolium prantese</em> (red clover), <em id="S3.p4.1.2" class="ltx_emph ltx_font_italic">Cakile maritima</em> (sea rocket), and <em id="S3.p4.1.3" class="ltx_emph ltx_font_italic">Malva sylvestris</em> (common mallow).
+The camera systems were moved during the recording period to ensure different flowering plants were recorded from a side or top camera view during the whole period of observation.
+A small beehive was placed in each greenhouse with western honeybees (<em id="S3.p4.1.4" class="ltx_emph ltx_font_italic">Apis mellifera</em>), meaning primary honeybees were expected to be monitored during insect plant visits.</p>
+</div>
+<div id="S3.p5" class="ltx_para">
+<p id="S3.p5.1" class="ltx_p">A dataset for training and validation was created based on recordings from six different cameras with side and top views of red clover and sea rocket as shown in <a href="#S3.F1" title="In 3 Dataset ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<figure id="S3.F1" class="ltx_figure"><img src="/html/2212.00423/assets/figs/Backgrounds.png" id="S3.F1.g1" class="ltx_graphics ltx_centering ltx_img_square" width="598" height="506" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F1.2.1.1" class="ltx_text" style="font-size:90%;">Figure 1</span>: </span><span id="S3.F1.3.2" class="ltx_text" style="font-size:90%;">Example of six background images from camera systems monitoring flowing plants of sea rocket and red clover seen from a top and side view.
+Images were recorded by camera systems on sites shown in <a href="#S5.T1" title="In 5.1 Train and validation ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Tab.</span> <span class="ltx_text ltx_ref_tag">1</span></a>. (S1-1 w26, S2-1 w27, S1-1 w27, S3-0 w29, S1-0 w30, and S4-1 w29) </span></figcaption>
+</figure>
+<div id="S3.p6" class="ltx_para">
+<p id="S3.p6.1" class="ltx_p">Finally, a comprehensive test dataset was created by selecting seven camera sites as listed in <a href="#S5.T4" title="In 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Tab.</span> <span class="ltx_text ltx_ref_tag">4</span></a>.
+The test dataset was selected to have other backgrounds and camera views than included during model training.
+The seven sites contain two weeks of recordings, monitoring common mallow, one-week monitoring sea rocket, and four weeks monitoring red clover seen from a camera top and side view.
+All images were annotated using an iterative semi-automated process using human labeling and verification of model detections to find and annotate insects in more than 100,000 images.
+The goal is to evaluate the object detection models on a real dataset with another distribution than images used for training and validation.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Method</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">Our proposed pipeline for detecting insects in time-lapse RGB images consists of a two-step process.
+In the first step, images with Motion-Informed-Enhancement (MIE) were created.
+In the second step, existing object detectors based on deep learning detectors use these enhanced images to improve the detection of small objects.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Motion-Informed-Enhancement</h3>
+
+<figure id="S4.F2" class="ltx_figure"><img src="/html/2212.00423/assets/figs/MotionImg.png" id="S4.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="227" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F2.8.4.1" class="ltx_text" style="font-size:90%;">Figure 2</span>: </span><span id="S4.F2.6.3" class="ltx_text" style="font-size:90%;">Left image shows the original colored image to time <math id="S4.F2.4.1.m1.1" class="ltx_Math" alttext="k" display="inline"><semantics id="S4.F2.4.1.m1.1b"><mi id="S4.F2.4.1.m1.1.1" xref="S4.F2.4.1.m1.1.1.cmml">k</mi><annotation-xml encoding="MathML-Content" id="S4.F2.4.1.m1.1c"><ci id="S4.F2.4.1.m1.1.1.cmml" xref="S4.F2.4.1.m1.1.1">𝑘</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.F2.4.1.m1.1d">k</annotation></semantics></math> with a honeybee. The center image shows how the motion likelihood <math id="S4.F2.5.2.m2.1" class="ltx_Math" alttext="3FD" display="inline"><semantics id="S4.F2.5.2.m2.1b"><mrow id="S4.F2.5.2.m2.1.1" xref="S4.F2.5.2.m2.1.1.cmml"><mn id="S4.F2.5.2.m2.1.1.2" xref="S4.F2.5.2.m2.1.1.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S4.F2.5.2.m2.1.1.1" xref="S4.F2.5.2.m2.1.1.1.cmml">​</mo><mi id="S4.F2.5.2.m2.1.1.3" xref="S4.F2.5.2.m2.1.1.3.cmml">F</mi><mo lspace="0em" rspace="0em" id="S4.F2.5.2.m2.1.1.1b" xref="S4.F2.5.2.m2.1.1.1.cmml">​</mo><mi id="S4.F2.5.2.m2.1.1.4" xref="S4.F2.5.2.m2.1.1.4.cmml">D</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.F2.5.2.m2.1c"><apply id="S4.F2.5.2.m2.1.1.cmml" xref="S4.F2.5.2.m2.1.1"><times id="S4.F2.5.2.m2.1.1.1.cmml" xref="S4.F2.5.2.m2.1.1.1"></times><cn type="integer" id="S4.F2.5.2.m2.1.1.2.cmml" xref="S4.F2.5.2.m2.1.1.2">3</cn><ci id="S4.F2.5.2.m2.1.1.3.cmml" xref="S4.F2.5.2.m2.1.1.3">𝐹</ci><ci id="S4.F2.5.2.m2.1.1.4.cmml" xref="S4.F2.5.2.m2.1.1.4">𝐷</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F2.5.2.m2.1d">3FD</annotation></semantics></math> is emphasized in the image.
+The right image shows the motion-enhanced image <math id="S4.F2.6.3.m3.1" class="ltx_Math" alttext="MI" display="inline"><semantics id="S4.F2.6.3.m3.1b"><mrow id="S4.F2.6.3.m3.1.1" xref="S4.F2.6.3.m3.1.1.cmml"><mi id="S4.F2.6.3.m3.1.1.2" xref="S4.F2.6.3.m3.1.1.2.cmml">M</mi><mo lspace="0em" rspace="0em" id="S4.F2.6.3.m3.1.1.1" xref="S4.F2.6.3.m3.1.1.1.cmml">​</mo><mi id="S4.F2.6.3.m3.1.1.3" xref="S4.F2.6.3.m3.1.1.3.cmml">I</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.F2.6.3.m3.1c"><apply id="S4.F2.6.3.m3.1.1.cmml" xref="S4.F2.6.3.m3.1.1"><times id="S4.F2.6.3.m3.1.1.1.cmml" xref="S4.F2.6.3.m3.1.1.1"></times><ci id="S4.F2.6.3.m3.1.1.2.cmml" xref="S4.F2.6.3.m3.1.1.2">𝑀</ci><ci id="S4.F2.6.3.m3.1.1.3.cmml" xref="S4.F2.6.3.m3.1.1.3">𝐼</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F2.6.3.m3.1d">MI</annotation></semantics></math> with a red color indicating information about the moving insect.</span></figcaption>
+</figure>
+<figure id="S4.F3" class="ltx_figure"><img src="/html/2212.00423/assets/figs/BigMotionImg.png" id="S4.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="337" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F3.2.1.1" class="ltx_text" style="font-size:90%;">Figure 3</span>: </span><span id="S4.F3.3.2" class="ltx_text" style="font-size:90%;">A full scale 1920x1080 motion-enhanced image with one honeybee.</span></figcaption>
+</figure>
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">Monitoring insects in their natural environment can be done with time-lapse cameras, where a time-lapse image is recorded at fixed time intervals of typically 30 or 60 seconds.
+We hypothesize that small objects in motion will be easier to detect with deep learning detectors if images also include information from the temporal dimension in training the model.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.1" class="ltx_p">The motion-informed detection operator proposed by Aguilar <em id="S4.SS1.p2.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S4.SS1.p2.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> is modified for this paper to improve insect object detection using temporal images without tracking.
+The detection operator estimates motion by finding the difference between consecutive frames in a time-lapse sequence.
+Our proposal modifies this method to create an enhanced image with motion information that is used for inference and training the deep learning object detector.
+By using the standard RGB image format and only modifying the color content, existing object detectors can be used without modifications.
+This approach can reuse popular image object detectors with CNN such as YOLO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite> and Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>.</p>
+</div>
+<div id="S4.SS1.p3" class="ltx_para">
+<p id="S4.SS1.p3.4" class="ltx_p">Three consecutive images in the time-lapse recording were used to create the enhanced image.
+The colored images were first converted to grayscale and blurred (<math id="S4.SS1.p3.1.m1.1" class="ltx_Math" alttext="IGB_{k}" display="inline"><semantics id="S4.SS1.p3.1.m1.1a"><mrow id="S4.SS1.p3.1.m1.1.1" xref="S4.SS1.p3.1.m1.1.1.cmml"><mi id="S4.SS1.p3.1.m1.1.1.2" xref="S4.SS1.p3.1.m1.1.1.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.1.m1.1.1.1" xref="S4.SS1.p3.1.m1.1.1.1.cmml">​</mo><mi id="S4.SS1.p3.1.m1.1.1.3" xref="S4.SS1.p3.1.m1.1.1.3.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.1.m1.1.1.1a" xref="S4.SS1.p3.1.m1.1.1.1.cmml">​</mo><msub id="S4.SS1.p3.1.m1.1.1.4" xref="S4.SS1.p3.1.m1.1.1.4.cmml"><mi id="S4.SS1.p3.1.m1.1.1.4.2" xref="S4.SS1.p3.1.m1.1.1.4.2.cmml">B</mi><mi id="S4.SS1.p3.1.m1.1.1.4.3" xref="S4.SS1.p3.1.m1.1.1.4.3.cmml">k</mi></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.1.m1.1b"><apply id="S4.SS1.p3.1.m1.1.1.cmml" xref="S4.SS1.p3.1.m1.1.1"><times id="S4.SS1.p3.1.m1.1.1.1.cmml" xref="S4.SS1.p3.1.m1.1.1.1"></times><ci id="S4.SS1.p3.1.m1.1.1.2.cmml" xref="S4.SS1.p3.1.m1.1.1.2">𝐼</ci><ci id="S4.SS1.p3.1.m1.1.1.3.cmml" xref="S4.SS1.p3.1.m1.1.1.3">𝐺</ci><apply id="S4.SS1.p3.1.m1.1.1.4.cmml" xref="S4.SS1.p3.1.m1.1.1.4"><csymbol cd="ambiguous" id="S4.SS1.p3.1.m1.1.1.4.1.cmml" xref="S4.SS1.p3.1.m1.1.1.4">subscript</csymbol><ci id="S4.SS1.p3.1.m1.1.1.4.2.cmml" xref="S4.SS1.p3.1.m1.1.1.4.2">𝐵</ci><ci id="S4.SS1.p3.1.m1.1.1.4.3.cmml" xref="S4.SS1.p3.1.m1.1.1.4.3">𝑘</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.1.m1.1c">IGB_{k}</annotation></semantics></math>) with a Gaussian kernel of 5x5 pixels (image size: 1920x1080 pixels).
+The gray scales and blurred images were then used to create the motion likelihood <math id="S4.SS1.p3.2.m2.2" class="ltx_Math" alttext="3FD_{k}[i,j]" display="inline"><semantics id="S4.SS1.p3.2.m2.2a"><mrow id="S4.SS1.p3.2.m2.2.3" xref="S4.SS1.p3.2.m2.2.3.cmml"><mn id="S4.SS1.p3.2.m2.2.3.2" xref="S4.SS1.p3.2.m2.2.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S4.SS1.p3.2.m2.2.3.1" xref="S4.SS1.p3.2.m2.2.3.1.cmml">​</mo><mi id="S4.SS1.p3.2.m2.2.3.3" xref="S4.SS1.p3.2.m2.2.3.3.cmml">F</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.2.m2.2.3.1a" xref="S4.SS1.p3.2.m2.2.3.1.cmml">​</mo><msub id="S4.SS1.p3.2.m2.2.3.4" xref="S4.SS1.p3.2.m2.2.3.4.cmml"><mi id="S4.SS1.p3.2.m2.2.3.4.2" xref="S4.SS1.p3.2.m2.2.3.4.2.cmml">D</mi><mi id="S4.SS1.p3.2.m2.2.3.4.3" xref="S4.SS1.p3.2.m2.2.3.4.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S4.SS1.p3.2.m2.2.3.1b" xref="S4.SS1.p3.2.m2.2.3.1.cmml">​</mo><mrow id="S4.SS1.p3.2.m2.2.3.5.2" xref="S4.SS1.p3.2.m2.2.3.5.1.cmml"><mo stretchy="false" id="S4.SS1.p3.2.m2.2.3.5.2.1" xref="S4.SS1.p3.2.m2.2.3.5.1.cmml">[</mo><mi id="S4.SS1.p3.2.m2.1.1" xref="S4.SS1.p3.2.m2.1.1.cmml">i</mi><mo id="S4.SS1.p3.2.m2.2.3.5.2.2" xref="S4.SS1.p3.2.m2.2.3.5.1.cmml">,</mo><mi id="S4.SS1.p3.2.m2.2.2" xref="S4.SS1.p3.2.m2.2.2.cmml">j</mi><mo stretchy="false" id="S4.SS1.p3.2.m2.2.3.5.2.3" xref="S4.SS1.p3.2.m2.2.3.5.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.2.m2.2b"><apply id="S4.SS1.p3.2.m2.2.3.cmml" xref="S4.SS1.p3.2.m2.2.3"><times id="S4.SS1.p3.2.m2.2.3.1.cmml" xref="S4.SS1.p3.2.m2.2.3.1"></times><cn type="integer" id="S4.SS1.p3.2.m2.2.3.2.cmml" xref="S4.SS1.p3.2.m2.2.3.2">3</cn><ci id="S4.SS1.p3.2.m2.2.3.3.cmml" xref="S4.SS1.p3.2.m2.2.3.3">𝐹</ci><apply id="S4.SS1.p3.2.m2.2.3.4.cmml" xref="S4.SS1.p3.2.m2.2.3.4"><csymbol cd="ambiguous" id="S4.SS1.p3.2.m2.2.3.4.1.cmml" xref="S4.SS1.p3.2.m2.2.3.4">subscript</csymbol><ci id="S4.SS1.p3.2.m2.2.3.4.2.cmml" xref="S4.SS1.p3.2.m2.2.3.4.2">𝐷</ci><ci id="S4.SS1.p3.2.m2.2.3.4.3.cmml" xref="S4.SS1.p3.2.m2.2.3.4.3">𝑘</ci></apply><interval closure="closed" id="S4.SS1.p3.2.m2.2.3.5.1.cmml" xref="S4.SS1.p3.2.m2.2.3.5.2"><ci id="S4.SS1.p3.2.m2.1.1.cmml" xref="S4.SS1.p3.2.m2.1.1">𝑖</ci><ci id="S4.SS1.p3.2.m2.2.2.cmml" xref="S4.SS1.p3.2.m2.2.2">𝑗</ci></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.2.m2.2c">3FD_{k}[i,j]</annotation></semantics></math>,
+where <math id="S4.SS1.p3.3.m3.2" class="ltx_math_unparsed" alttext="[i,j]\in[1..N]\times[1..M]" display="inline"><semantics id="S4.SS1.p3.3.m3.2a"><mrow id="S4.SS1.p3.3.m3.2b"><mrow id="S4.SS1.p3.3.m3.2.3"><mo stretchy="false" id="S4.SS1.p3.3.m3.2.3.1">[</mo><mi id="S4.SS1.p3.3.m3.1.1">i</mi><mo id="S4.SS1.p3.3.m3.2.3.2">,</mo><mi id="S4.SS1.p3.3.m3.2.2">j</mi><mo stretchy="false" id="S4.SS1.p3.3.m3.2.3.3">]</mo></mrow><mo id="S4.SS1.p3.3.m3.2.4">∈</mo><mrow id="S4.SS1.p3.3.m3.2.5"><mo stretchy="false" id="S4.SS1.p3.3.m3.2.5.1">[</mo><mn id="S4.SS1.p3.3.m3.2.5.2">1</mn><mo lspace="0em" rspace="0.0835em" id="S4.SS1.p3.3.m3.2.5.3">.</mo><mo lspace="0.0835em" rspace="0.167em" id="S4.SS1.p3.3.m3.2.5.4">.</mo><mi id="S4.SS1.p3.3.m3.2.5.5">N</mi><mo rspace="0.055em" stretchy="false" id="S4.SS1.p3.3.m3.2.5.6">]</mo></mrow><mo rspace="0.222em" id="S4.SS1.p3.3.m3.2.6">×</mo><mrow id="S4.SS1.p3.3.m3.2.7"><mo stretchy="false" id="S4.SS1.p3.3.m3.2.7.1">[</mo><mn id="S4.SS1.p3.3.m3.2.7.2">1</mn><mo lspace="0em" rspace="0.0835em" id="S4.SS1.p3.3.m3.2.7.3">.</mo><mo lspace="0.0835em" rspace="0.167em" id="S4.SS1.p3.3.m3.2.7.4">.</mo><mi id="S4.SS1.p3.3.m3.2.7.5">M</mi><mo stretchy="false" id="S4.SS1.p3.3.m3.2.7.6">]</mo></mrow></mrow><annotation encoding="application/x-tex" id="S4.SS1.p3.3.m3.2c">[i,j]\in[1..N]\times[1..M]</annotation></semantics></math> are the pixel coordinates and <math id="S4.SS1.p3.4.m4.1" class="ltx_Math" alttext="k\in\mathbb{N}" display="inline"><semantics id="S4.SS1.p3.4.m4.1a"><mrow id="S4.SS1.p3.4.m4.1.1" xref="S4.SS1.p3.4.m4.1.1.cmml"><mi id="S4.SS1.p3.4.m4.1.1.2" xref="S4.SS1.p3.4.m4.1.1.2.cmml">k</mi><mo id="S4.SS1.p3.4.m4.1.1.1" xref="S4.SS1.p3.4.m4.1.1.1.cmml">∈</mo><mi id="S4.SS1.p3.4.m4.1.1.3" xref="S4.SS1.p3.4.m4.1.1.3.cmml">ℕ</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.4.m4.1b"><apply id="S4.SS1.p3.4.m4.1.1.cmml" xref="S4.SS1.p3.4.m4.1.1"><in id="S4.SS1.p3.4.m4.1.1.1.cmml" xref="S4.SS1.p3.4.m4.1.1.1"></in><ci id="S4.SS1.p3.4.m4.1.1.2.cmml" xref="S4.SS1.p3.4.m4.1.1.2">𝑘</ci><ci id="S4.SS1.p3.4.m4.1.1.3.cmml" xref="S4.SS1.p3.4.m4.1.1.3">ℕ</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.4.m4.1c">k\in\mathbb{N}</annotation></semantics></math> is the time index.
+This process is summarized in equations <a href="#S4.E1" title="In 4.1 Motion-Informed-Enhancement ‣ 4 Method ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Eq.</span> <span class="ltx_text ltx_ref_tag">1</span></a> and <a href="#S4.E2" title="In 4.1 Motion-Informed-Enhancement ‣ 4 Method ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Eq.</span> <span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+<table id="S4.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E1.m1.6" class="ltx_Math" alttext="\Delta IGB_{k}[i,j]=IGB_{k}[i,j]-IGB_{k-1}[i,j]" display="block"><semantics id="S4.E1.m1.6a"><mrow id="S4.E1.m1.6.7" xref="S4.E1.m1.6.7.cmml"><mrow id="S4.E1.m1.6.7.2" xref="S4.E1.m1.6.7.2.cmml"><mi mathvariant="normal" id="S4.E1.m1.6.7.2.2" xref="S4.E1.m1.6.7.2.2.cmml">Δ</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.2.1" xref="S4.E1.m1.6.7.2.1.cmml">​</mo><mi id="S4.E1.m1.6.7.2.3" xref="S4.E1.m1.6.7.2.3.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.2.1a" xref="S4.E1.m1.6.7.2.1.cmml">​</mo><mi id="S4.E1.m1.6.7.2.4" xref="S4.E1.m1.6.7.2.4.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.2.1b" xref="S4.E1.m1.6.7.2.1.cmml">​</mo><msub id="S4.E1.m1.6.7.2.5" xref="S4.E1.m1.6.7.2.5.cmml"><mi id="S4.E1.m1.6.7.2.5.2" xref="S4.E1.m1.6.7.2.5.2.cmml">B</mi><mi id="S4.E1.m1.6.7.2.5.3" xref="S4.E1.m1.6.7.2.5.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.2.1c" xref="S4.E1.m1.6.7.2.1.cmml">​</mo><mrow id="S4.E1.m1.6.7.2.6.2" xref="S4.E1.m1.6.7.2.6.1.cmml"><mo stretchy="false" id="S4.E1.m1.6.7.2.6.2.1" xref="S4.E1.m1.6.7.2.6.1.cmml">[</mo><mi id="S4.E1.m1.1.1" xref="S4.E1.m1.1.1.cmml">i</mi><mo id="S4.E1.m1.6.7.2.6.2.2" xref="S4.E1.m1.6.7.2.6.1.cmml">,</mo><mi id="S4.E1.m1.2.2" xref="S4.E1.m1.2.2.cmml">j</mi><mo stretchy="false" id="S4.E1.m1.6.7.2.6.2.3" xref="S4.E1.m1.6.7.2.6.1.cmml">]</mo></mrow></mrow><mo id="S4.E1.m1.6.7.1" xref="S4.E1.m1.6.7.1.cmml">=</mo><mrow id="S4.E1.m1.6.7.3" xref="S4.E1.m1.6.7.3.cmml"><mrow id="S4.E1.m1.6.7.3.2" xref="S4.E1.m1.6.7.3.2.cmml"><mi id="S4.E1.m1.6.7.3.2.2" xref="S4.E1.m1.6.7.3.2.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.3.2.1" xref="S4.E1.m1.6.7.3.2.1.cmml">​</mo><mi id="S4.E1.m1.6.7.3.2.3" xref="S4.E1.m1.6.7.3.2.3.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.3.2.1a" xref="S4.E1.m1.6.7.3.2.1.cmml">​</mo><msub id="S4.E1.m1.6.7.3.2.4" xref="S4.E1.m1.6.7.3.2.4.cmml"><mi id="S4.E1.m1.6.7.3.2.4.2" xref="S4.E1.m1.6.7.3.2.4.2.cmml">B</mi><mi id="S4.E1.m1.6.7.3.2.4.3" xref="S4.E1.m1.6.7.3.2.4.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.3.2.1b" xref="S4.E1.m1.6.7.3.2.1.cmml">​</mo><mrow id="S4.E1.m1.6.7.3.2.5.2" xref="S4.E1.m1.6.7.3.2.5.1.cmml"><mo stretchy="false" id="S4.E1.m1.6.7.3.2.5.2.1" xref="S4.E1.m1.6.7.3.2.5.1.cmml">[</mo><mi id="S4.E1.m1.3.3" xref="S4.E1.m1.3.3.cmml">i</mi><mo id="S4.E1.m1.6.7.3.2.5.2.2" xref="S4.E1.m1.6.7.3.2.5.1.cmml">,</mo><mi id="S4.E1.m1.4.4" xref="S4.E1.m1.4.4.cmml">j</mi><mo stretchy="false" id="S4.E1.m1.6.7.3.2.5.2.3" xref="S4.E1.m1.6.7.3.2.5.1.cmml">]</mo></mrow></mrow><mo id="S4.E1.m1.6.7.3.1" xref="S4.E1.m1.6.7.3.1.cmml">−</mo><mrow id="S4.E1.m1.6.7.3.3" xref="S4.E1.m1.6.7.3.3.cmml"><mi id="S4.E1.m1.6.7.3.3.2" xref="S4.E1.m1.6.7.3.3.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.3.3.1" xref="S4.E1.m1.6.7.3.3.1.cmml">​</mo><mi id="S4.E1.m1.6.7.3.3.3" xref="S4.E1.m1.6.7.3.3.3.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.3.3.1a" xref="S4.E1.m1.6.7.3.3.1.cmml">​</mo><msub id="S4.E1.m1.6.7.3.3.4" xref="S4.E1.m1.6.7.3.3.4.cmml"><mi id="S4.E1.m1.6.7.3.3.4.2" xref="S4.E1.m1.6.7.3.3.4.2.cmml">B</mi><mrow id="S4.E1.m1.6.7.3.3.4.3" xref="S4.E1.m1.6.7.3.3.4.3.cmml"><mi id="S4.E1.m1.6.7.3.3.4.3.2" xref="S4.E1.m1.6.7.3.3.4.3.2.cmml">k</mi><mo id="S4.E1.m1.6.7.3.3.4.3.1" xref="S4.E1.m1.6.7.3.3.4.3.1.cmml">−</mo><mn id="S4.E1.m1.6.7.3.3.4.3.3" xref="S4.E1.m1.6.7.3.3.4.3.3.cmml">1</mn></mrow></msub><mo lspace="0em" rspace="0em" id="S4.E1.m1.6.7.3.3.1b" xref="S4.E1.m1.6.7.3.3.1.cmml">​</mo><mrow id="S4.E1.m1.6.7.3.3.5.2" xref="S4.E1.m1.6.7.3.3.5.1.cmml"><mo stretchy="false" id="S4.E1.m1.6.7.3.3.5.2.1" xref="S4.E1.m1.6.7.3.3.5.1.cmml">[</mo><mi id="S4.E1.m1.5.5" xref="S4.E1.m1.5.5.cmml">i</mi><mo id="S4.E1.m1.6.7.3.3.5.2.2" xref="S4.E1.m1.6.7.3.3.5.1.cmml">,</mo><mi id="S4.E1.m1.6.6" xref="S4.E1.m1.6.6.cmml">j</mi><mo stretchy="false" id="S4.E1.m1.6.7.3.3.5.2.3" xref="S4.E1.m1.6.7.3.3.5.1.cmml">]</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E1.m1.6b"><apply id="S4.E1.m1.6.7.cmml" xref="S4.E1.m1.6.7"><eq id="S4.E1.m1.6.7.1.cmml" xref="S4.E1.m1.6.7.1"></eq><apply id="S4.E1.m1.6.7.2.cmml" xref="S4.E1.m1.6.7.2"><times id="S4.E1.m1.6.7.2.1.cmml" xref="S4.E1.m1.6.7.2.1"></times><ci id="S4.E1.m1.6.7.2.2.cmml" xref="S4.E1.m1.6.7.2.2">Δ</ci><ci id="S4.E1.m1.6.7.2.3.cmml" xref="S4.E1.m1.6.7.2.3">𝐼</ci><ci id="S4.E1.m1.6.7.2.4.cmml" xref="S4.E1.m1.6.7.2.4">𝐺</ci><apply id="S4.E1.m1.6.7.2.5.cmml" xref="S4.E1.m1.6.7.2.5"><csymbol cd="ambiguous" id="S4.E1.m1.6.7.2.5.1.cmml" xref="S4.E1.m1.6.7.2.5">subscript</csymbol><ci id="S4.E1.m1.6.7.2.5.2.cmml" xref="S4.E1.m1.6.7.2.5.2">𝐵</ci><ci id="S4.E1.m1.6.7.2.5.3.cmml" xref="S4.E1.m1.6.7.2.5.3">𝑘</ci></apply><interval closure="closed" id="S4.E1.m1.6.7.2.6.1.cmml" xref="S4.E1.m1.6.7.2.6.2"><ci id="S4.E1.m1.1.1.cmml" xref="S4.E1.m1.1.1">𝑖</ci><ci id="S4.E1.m1.2.2.cmml" xref="S4.E1.m1.2.2">𝑗</ci></interval></apply><apply id="S4.E1.m1.6.7.3.cmml" xref="S4.E1.m1.6.7.3"><minus id="S4.E1.m1.6.7.3.1.cmml" xref="S4.E1.m1.6.7.3.1"></minus><apply id="S4.E1.m1.6.7.3.2.cmml" xref="S4.E1.m1.6.7.3.2"><times id="S4.E1.m1.6.7.3.2.1.cmml" xref="S4.E1.m1.6.7.3.2.1"></times><ci id="S4.E1.m1.6.7.3.2.2.cmml" xref="S4.E1.m1.6.7.3.2.2">𝐼</ci><ci id="S4.E1.m1.6.7.3.2.3.cmml" xref="S4.E1.m1.6.7.3.2.3">𝐺</ci><apply id="S4.E1.m1.6.7.3.2.4.cmml" xref="S4.E1.m1.6.7.3.2.4"><csymbol cd="ambiguous" id="S4.E1.m1.6.7.3.2.4.1.cmml" xref="S4.E1.m1.6.7.3.2.4">subscript</csymbol><ci id="S4.E1.m1.6.7.3.2.4.2.cmml" xref="S4.E1.m1.6.7.3.2.4.2">𝐵</ci><ci id="S4.E1.m1.6.7.3.2.4.3.cmml" xref="S4.E1.m1.6.7.3.2.4.3">𝑘</ci></apply><interval closure="closed" id="S4.E1.m1.6.7.3.2.5.1.cmml" xref="S4.E1.m1.6.7.3.2.5.2"><ci id="S4.E1.m1.3.3.cmml" xref="S4.E1.m1.3.3">𝑖</ci><ci id="S4.E1.m1.4.4.cmml" xref="S4.E1.m1.4.4">𝑗</ci></interval></apply><apply id="S4.E1.m1.6.7.3.3.cmml" xref="S4.E1.m1.6.7.3.3"><times id="S4.E1.m1.6.7.3.3.1.cmml" xref="S4.E1.m1.6.7.3.3.1"></times><ci id="S4.E1.m1.6.7.3.3.2.cmml" xref="S4.E1.m1.6.7.3.3.2">𝐼</ci><ci id="S4.E1.m1.6.7.3.3.3.cmml" xref="S4.E1.m1.6.7.3.3.3">𝐺</ci><apply id="S4.E1.m1.6.7.3.3.4.cmml" xref="S4.E1.m1.6.7.3.3.4"><csymbol cd="ambiguous" id="S4.E1.m1.6.7.3.3.4.1.cmml" xref="S4.E1.m1.6.7.3.3.4">subscript</csymbol><ci id="S4.E1.m1.6.7.3.3.4.2.cmml" xref="S4.E1.m1.6.7.3.3.4.2">𝐵</ci><apply id="S4.E1.m1.6.7.3.3.4.3.cmml" xref="S4.E1.m1.6.7.3.3.4.3"><minus id="S4.E1.m1.6.7.3.3.4.3.1.cmml" xref="S4.E1.m1.6.7.3.3.4.3.1"></minus><ci id="S4.E1.m1.6.7.3.3.4.3.2.cmml" xref="S4.E1.m1.6.7.3.3.4.3.2">𝑘</ci><cn type="integer" id="S4.E1.m1.6.7.3.3.4.3.3.cmml" xref="S4.E1.m1.6.7.3.3.4.3.3">1</cn></apply></apply><interval closure="closed" id="S4.E1.m1.6.7.3.3.5.1.cmml" xref="S4.E1.m1.6.7.3.3.5.2"><ci id="S4.E1.m1.5.5.cmml" xref="S4.E1.m1.5.5">𝑖</ci><ci id="S4.E1.m1.6.6.cmml" xref="S4.E1.m1.6.6">𝑗</ci></interval></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E1.m1.6c">\Delta IGB_{k}[i,j]=IGB_{k}[i,j]-IGB_{k-1}[i,j]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<table id="S4.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E2.m1.8" class="ltx_Math" alttext="3FD_{k}[i,j]=|\Delta IGB_{k}[i,j]|+|\Delta IGB_{k+1}[i,j]|" display="block"><semantics id="S4.E2.m1.8a"><mrow id="S4.E2.m1.8.8" xref="S4.E2.m1.8.8.cmml"><mrow id="S4.E2.m1.8.8.4" xref="S4.E2.m1.8.8.4.cmml"><mn id="S4.E2.m1.8.8.4.2" xref="S4.E2.m1.8.8.4.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S4.E2.m1.8.8.4.1" xref="S4.E2.m1.8.8.4.1.cmml">​</mo><mi id="S4.E2.m1.8.8.4.3" xref="S4.E2.m1.8.8.4.3.cmml">F</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.8.8.4.1a" xref="S4.E2.m1.8.8.4.1.cmml">​</mo><msub id="S4.E2.m1.8.8.4.4" xref="S4.E2.m1.8.8.4.4.cmml"><mi id="S4.E2.m1.8.8.4.4.2" xref="S4.E2.m1.8.8.4.4.2.cmml">D</mi><mi id="S4.E2.m1.8.8.4.4.3" xref="S4.E2.m1.8.8.4.4.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S4.E2.m1.8.8.4.1b" xref="S4.E2.m1.8.8.4.1.cmml">​</mo><mrow id="S4.E2.m1.8.8.4.5.2" xref="S4.E2.m1.8.8.4.5.1.cmml"><mo stretchy="false" id="S4.E2.m1.8.8.4.5.2.1" xref="S4.E2.m1.8.8.4.5.1.cmml">[</mo><mi id="S4.E2.m1.1.1" xref="S4.E2.m1.1.1.cmml">i</mi><mo id="S4.E2.m1.8.8.4.5.2.2" xref="S4.E2.m1.8.8.4.5.1.cmml">,</mo><mi id="S4.E2.m1.2.2" xref="S4.E2.m1.2.2.cmml">j</mi><mo stretchy="false" id="S4.E2.m1.8.8.4.5.2.3" xref="S4.E2.m1.8.8.4.5.1.cmml">]</mo></mrow></mrow><mo id="S4.E2.m1.8.8.3" xref="S4.E2.m1.8.8.3.cmml">=</mo><mrow id="S4.E2.m1.8.8.2" xref="S4.E2.m1.8.8.2.cmml"><mrow id="S4.E2.m1.7.7.1.1.1" xref="S4.E2.m1.7.7.1.1.2.cmml"><mo stretchy="false" id="S4.E2.m1.7.7.1.1.1.2" xref="S4.E2.m1.7.7.1.1.2.1.cmml">|</mo><mrow id="S4.E2.m1.7.7.1.1.1.1" xref="S4.E2.m1.7.7.1.1.1.1.cmml"><mi mathvariant="normal" id="S4.E2.m1.7.7.1.1.1.1.2" xref="S4.E2.m1.7.7.1.1.1.1.2.cmml">Δ</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.7.7.1.1.1.1.1" xref="S4.E2.m1.7.7.1.1.1.1.1.cmml">​</mo><mi id="S4.E2.m1.7.7.1.1.1.1.3" xref="S4.E2.m1.7.7.1.1.1.1.3.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.7.7.1.1.1.1.1a" xref="S4.E2.m1.7.7.1.1.1.1.1.cmml">​</mo><mi id="S4.E2.m1.7.7.1.1.1.1.4" xref="S4.E2.m1.7.7.1.1.1.1.4.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.7.7.1.1.1.1.1b" xref="S4.E2.m1.7.7.1.1.1.1.1.cmml">​</mo><msub id="S4.E2.m1.7.7.1.1.1.1.5" xref="S4.E2.m1.7.7.1.1.1.1.5.cmml"><mi id="S4.E2.m1.7.7.1.1.1.1.5.2" xref="S4.E2.m1.7.7.1.1.1.1.5.2.cmml">B</mi><mi id="S4.E2.m1.7.7.1.1.1.1.5.3" xref="S4.E2.m1.7.7.1.1.1.1.5.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S4.E2.m1.7.7.1.1.1.1.1c" xref="S4.E2.m1.7.7.1.1.1.1.1.cmml">​</mo><mrow id="S4.E2.m1.7.7.1.1.1.1.6.2" xref="S4.E2.m1.7.7.1.1.1.1.6.1.cmml"><mo stretchy="false" id="S4.E2.m1.7.7.1.1.1.1.6.2.1" xref="S4.E2.m1.7.7.1.1.1.1.6.1.cmml">[</mo><mi id="S4.E2.m1.3.3" xref="S4.E2.m1.3.3.cmml">i</mi><mo id="S4.E2.m1.7.7.1.1.1.1.6.2.2" xref="S4.E2.m1.7.7.1.1.1.1.6.1.cmml">,</mo><mi id="S4.E2.m1.4.4" xref="S4.E2.m1.4.4.cmml">j</mi><mo stretchy="false" id="S4.E2.m1.7.7.1.1.1.1.6.2.3" xref="S4.E2.m1.7.7.1.1.1.1.6.1.cmml">]</mo></mrow></mrow><mo stretchy="false" id="S4.E2.m1.7.7.1.1.1.3" xref="S4.E2.m1.7.7.1.1.2.1.cmml">|</mo></mrow><mo id="S4.E2.m1.8.8.2.3" xref="S4.E2.m1.8.8.2.3.cmml">+</mo><mrow id="S4.E2.m1.8.8.2.2.1" xref="S4.E2.m1.8.8.2.2.2.cmml"><mo stretchy="false" id="S4.E2.m1.8.8.2.2.1.2" xref="S4.E2.m1.8.8.2.2.2.1.cmml">|</mo><mrow id="S4.E2.m1.8.8.2.2.1.1" xref="S4.E2.m1.8.8.2.2.1.1.cmml"><mi mathvariant="normal" id="S4.E2.m1.8.8.2.2.1.1.2" xref="S4.E2.m1.8.8.2.2.1.1.2.cmml">Δ</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.8.8.2.2.1.1.1" xref="S4.E2.m1.8.8.2.2.1.1.1.cmml">​</mo><mi id="S4.E2.m1.8.8.2.2.1.1.3" xref="S4.E2.m1.8.8.2.2.1.1.3.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.8.8.2.2.1.1.1a" xref="S4.E2.m1.8.8.2.2.1.1.1.cmml">​</mo><mi id="S4.E2.m1.8.8.2.2.1.1.4" xref="S4.E2.m1.8.8.2.2.1.1.4.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.8.8.2.2.1.1.1b" xref="S4.E2.m1.8.8.2.2.1.1.1.cmml">​</mo><msub id="S4.E2.m1.8.8.2.2.1.1.5" xref="S4.E2.m1.8.8.2.2.1.1.5.cmml"><mi id="S4.E2.m1.8.8.2.2.1.1.5.2" xref="S4.E2.m1.8.8.2.2.1.1.5.2.cmml">B</mi><mrow id="S4.E2.m1.8.8.2.2.1.1.5.3" xref="S4.E2.m1.8.8.2.2.1.1.5.3.cmml"><mi id="S4.E2.m1.8.8.2.2.1.1.5.3.2" xref="S4.E2.m1.8.8.2.2.1.1.5.3.2.cmml">k</mi><mo id="S4.E2.m1.8.8.2.2.1.1.5.3.1" xref="S4.E2.m1.8.8.2.2.1.1.5.3.1.cmml">+</mo><mn id="S4.E2.m1.8.8.2.2.1.1.5.3.3" xref="S4.E2.m1.8.8.2.2.1.1.5.3.3.cmml">1</mn></mrow></msub><mo lspace="0em" rspace="0em" id="S4.E2.m1.8.8.2.2.1.1.1c" xref="S4.E2.m1.8.8.2.2.1.1.1.cmml">​</mo><mrow id="S4.E2.m1.8.8.2.2.1.1.6.2" xref="S4.E2.m1.8.8.2.2.1.1.6.1.cmml"><mo stretchy="false" id="S4.E2.m1.8.8.2.2.1.1.6.2.1" xref="S4.E2.m1.8.8.2.2.1.1.6.1.cmml">[</mo><mi id="S4.E2.m1.5.5" xref="S4.E2.m1.5.5.cmml">i</mi><mo id="S4.E2.m1.8.8.2.2.1.1.6.2.2" xref="S4.E2.m1.8.8.2.2.1.1.6.1.cmml">,</mo><mi id="S4.E2.m1.6.6" xref="S4.E2.m1.6.6.cmml">j</mi><mo stretchy="false" id="S4.E2.m1.8.8.2.2.1.1.6.2.3" xref="S4.E2.m1.8.8.2.2.1.1.6.1.cmml">]</mo></mrow></mrow><mo stretchy="false" id="S4.E2.m1.8.8.2.2.1.3" xref="S4.E2.m1.8.8.2.2.2.1.cmml">|</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E2.m1.8b"><apply id="S4.E2.m1.8.8.cmml" xref="S4.E2.m1.8.8"><eq id="S4.E2.m1.8.8.3.cmml" xref="S4.E2.m1.8.8.3"></eq><apply id="S4.E2.m1.8.8.4.cmml" xref="S4.E2.m1.8.8.4"><times id="S4.E2.m1.8.8.4.1.cmml" xref="S4.E2.m1.8.8.4.1"></times><cn type="integer" id="S4.E2.m1.8.8.4.2.cmml" xref="S4.E2.m1.8.8.4.2">3</cn><ci id="S4.E2.m1.8.8.4.3.cmml" xref="S4.E2.m1.8.8.4.3">𝐹</ci><apply id="S4.E2.m1.8.8.4.4.cmml" xref="S4.E2.m1.8.8.4.4"><csymbol cd="ambiguous" id="S4.E2.m1.8.8.4.4.1.cmml" xref="S4.E2.m1.8.8.4.4">subscript</csymbol><ci id="S4.E2.m1.8.8.4.4.2.cmml" xref="S4.E2.m1.8.8.4.4.2">𝐷</ci><ci id="S4.E2.m1.8.8.4.4.3.cmml" xref="S4.E2.m1.8.8.4.4.3">𝑘</ci></apply><interval closure="closed" id="S4.E2.m1.8.8.4.5.1.cmml" xref="S4.E2.m1.8.8.4.5.2"><ci id="S4.E2.m1.1.1.cmml" xref="S4.E2.m1.1.1">𝑖</ci><ci id="S4.E2.m1.2.2.cmml" xref="S4.E2.m1.2.2">𝑗</ci></interval></apply><apply id="S4.E2.m1.8.8.2.cmml" xref="S4.E2.m1.8.8.2"><plus id="S4.E2.m1.8.8.2.3.cmml" xref="S4.E2.m1.8.8.2.3"></plus><apply id="S4.E2.m1.7.7.1.1.2.cmml" xref="S4.E2.m1.7.7.1.1.1"><abs id="S4.E2.m1.7.7.1.1.2.1.cmml" xref="S4.E2.m1.7.7.1.1.1.2"></abs><apply id="S4.E2.m1.7.7.1.1.1.1.cmml" xref="S4.E2.m1.7.7.1.1.1.1"><times id="S4.E2.m1.7.7.1.1.1.1.1.cmml" xref="S4.E2.m1.7.7.1.1.1.1.1"></times><ci id="S4.E2.m1.7.7.1.1.1.1.2.cmml" xref="S4.E2.m1.7.7.1.1.1.1.2">Δ</ci><ci id="S4.E2.m1.7.7.1.1.1.1.3.cmml" xref="S4.E2.m1.7.7.1.1.1.1.3">𝐼</ci><ci id="S4.E2.m1.7.7.1.1.1.1.4.cmml" xref="S4.E2.m1.7.7.1.1.1.1.4">𝐺</ci><apply id="S4.E2.m1.7.7.1.1.1.1.5.cmml" xref="S4.E2.m1.7.7.1.1.1.1.5"><csymbol cd="ambiguous" id="S4.E2.m1.7.7.1.1.1.1.5.1.cmml" xref="S4.E2.m1.7.7.1.1.1.1.5">subscript</csymbol><ci id="S4.E2.m1.7.7.1.1.1.1.5.2.cmml" xref="S4.E2.m1.7.7.1.1.1.1.5.2">𝐵</ci><ci id="S4.E2.m1.7.7.1.1.1.1.5.3.cmml" xref="S4.E2.m1.7.7.1.1.1.1.5.3">𝑘</ci></apply><interval closure="closed" id="S4.E2.m1.7.7.1.1.1.1.6.1.cmml" xref="S4.E2.m1.7.7.1.1.1.1.6.2"><ci id="S4.E2.m1.3.3.cmml" xref="S4.E2.m1.3.3">𝑖</ci><ci id="S4.E2.m1.4.4.cmml" xref="S4.E2.m1.4.4">𝑗</ci></interval></apply></apply><apply id="S4.E2.m1.8.8.2.2.2.cmml" xref="S4.E2.m1.8.8.2.2.1"><abs id="S4.E2.m1.8.8.2.2.2.1.cmml" xref="S4.E2.m1.8.8.2.2.1.2"></abs><apply id="S4.E2.m1.8.8.2.2.1.1.cmml" xref="S4.E2.m1.8.8.2.2.1.1"><times id="S4.E2.m1.8.8.2.2.1.1.1.cmml" xref="S4.E2.m1.8.8.2.2.1.1.1"></times><ci id="S4.E2.m1.8.8.2.2.1.1.2.cmml" xref="S4.E2.m1.8.8.2.2.1.1.2">Δ</ci><ci id="S4.E2.m1.8.8.2.2.1.1.3.cmml" xref="S4.E2.m1.8.8.2.2.1.1.3">𝐼</ci><ci id="S4.E2.m1.8.8.2.2.1.1.4.cmml" xref="S4.E2.m1.8.8.2.2.1.1.4">𝐺</ci><apply id="S4.E2.m1.8.8.2.2.1.1.5.cmml" xref="S4.E2.m1.8.8.2.2.1.1.5"><csymbol cd="ambiguous" id="S4.E2.m1.8.8.2.2.1.1.5.1.cmml" xref="S4.E2.m1.8.8.2.2.1.1.5">subscript</csymbol><ci id="S4.E2.m1.8.8.2.2.1.1.5.2.cmml" xref="S4.E2.m1.8.8.2.2.1.1.5.2">𝐵</ci><apply id="S4.E2.m1.8.8.2.2.1.1.5.3.cmml" xref="S4.E2.m1.8.8.2.2.1.1.5.3"><plus id="S4.E2.m1.8.8.2.2.1.1.5.3.1.cmml" xref="S4.E2.m1.8.8.2.2.1.1.5.3.1"></plus><ci id="S4.E2.m1.8.8.2.2.1.1.5.3.2.cmml" xref="S4.E2.m1.8.8.2.2.1.1.5.3.2">𝑘</ci><cn type="integer" id="S4.E2.m1.8.8.2.2.1.1.5.3.3.cmml" xref="S4.E2.m1.8.8.2.2.1.1.5.3.3">1</cn></apply></apply><interval closure="closed" id="S4.E2.m1.8.8.2.2.1.1.6.1.cmml" xref="S4.E2.m1.8.8.2.2.1.1.6.2"><ci id="S4.E2.m1.5.5.cmml" xref="S4.E2.m1.5.5">𝑖</ci><ci id="S4.E2.m1.6.6.cmml" xref="S4.E2.m1.6.6">𝑗</ci></interval></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E2.m1.8c">3FD_{k}[i,j]=|\Delta IGB_{k}[i,j]|+|\Delta IGB_{k+1}[i,j]|</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S4.SS1.p4" class="ltx_para">
+<p id="S4.SS1.p4.6" class="ltx_p">The original colored image, at time <math id="S4.SS1.p4.1.m1.1" class="ltx_Math" alttext="k" display="inline"><semantics id="S4.SS1.p4.1.m1.1a"><mi id="S4.SS1.p4.1.m1.1.1" xref="S4.SS1.p4.1.m1.1.1.cmml">k</mi><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.1.m1.1b"><ci id="S4.SS1.p4.1.m1.1.1.cmml" xref="S4.SS1.p4.1.m1.1.1">𝑘</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.1.m1.1c">k</annotation></semantics></math> was then modified to create a motion-enhanced image (<math id="S4.SS1.p4.2.m2.1" class="ltx_Math" alttext="MI" display="inline"><semantics id="S4.SS1.p4.2.m2.1a"><mrow id="S4.SS1.p4.2.m2.1.1" xref="S4.SS1.p4.2.m2.1.1.cmml"><mi id="S4.SS1.p4.2.m2.1.1.2" xref="S4.SS1.p4.2.m2.1.1.2.cmml">M</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.2.m2.1.1.1" xref="S4.SS1.p4.2.m2.1.1.1.cmml">​</mo><mi id="S4.SS1.p4.2.m2.1.1.3" xref="S4.SS1.p4.2.m2.1.1.3.cmml">I</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.2.m2.1b"><apply id="S4.SS1.p4.2.m2.1.1.cmml" xref="S4.SS1.p4.2.m2.1.1"><times id="S4.SS1.p4.2.m2.1.1.1.cmml" xref="S4.SS1.p4.2.m2.1.1.1"></times><ci id="S4.SS1.p4.2.m2.1.1.2.cmml" xref="S4.SS1.p4.2.m2.1.1.2">𝑀</ci><ci id="S4.SS1.p4.2.m2.1.1.3.cmml" xref="S4.SS1.p4.2.m2.1.1.3">𝐼</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.2.m2.1c">MI</annotation></semantics></math>).
+Here the enhanced blue color channel <math id="S4.SS1.p4.3.m3.1" class="ltx_Math" alttext="MI_{b}" display="inline"><semantics id="S4.SS1.p4.3.m3.1a"><mrow id="S4.SS1.p4.3.m3.1.1" xref="S4.SS1.p4.3.m3.1.1.cmml"><mi id="S4.SS1.p4.3.m3.1.1.2" xref="S4.SS1.p4.3.m3.1.1.2.cmml">M</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.3.m3.1.1.1" xref="S4.SS1.p4.3.m3.1.1.1.cmml">​</mo><msub id="S4.SS1.p4.3.m3.1.1.3" xref="S4.SS1.p4.3.m3.1.1.3.cmml"><mi id="S4.SS1.p4.3.m3.1.1.3.2" xref="S4.SS1.p4.3.m3.1.1.3.2.cmml">I</mi><mi id="S4.SS1.p4.3.m3.1.1.3.3" xref="S4.SS1.p4.3.m3.1.1.3.3.cmml">b</mi></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.3.m3.1b"><apply id="S4.SS1.p4.3.m3.1.1.cmml" xref="S4.SS1.p4.3.m3.1.1"><times id="S4.SS1.p4.3.m3.1.1.1.cmml" xref="S4.SS1.p4.3.m3.1.1.1"></times><ci id="S4.SS1.p4.3.m3.1.1.2.cmml" xref="S4.SS1.p4.3.m3.1.1.2">𝑀</ci><apply id="S4.SS1.p4.3.m3.1.1.3.cmml" xref="S4.SS1.p4.3.m3.1.1.3"><csymbol cd="ambiguous" id="S4.SS1.p4.3.m3.1.1.3.1.cmml" xref="S4.SS1.p4.3.m3.1.1.3">subscript</csymbol><ci id="S4.SS1.p4.3.m3.1.1.3.2.cmml" xref="S4.SS1.p4.3.m3.1.1.3.2">𝐼</ci><ci id="S4.SS1.p4.3.m3.1.1.3.3.cmml" xref="S4.SS1.p4.3.m3.1.1.3.3">𝑏</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.3.m3.1c">MI_{b}</annotation></semantics></math> was replaced by a combination of the original red (<math id="S4.SS1.p4.4.m4.1" class="ltx_Math" alttext="I_{r}" display="inline"><semantics id="S4.SS1.p4.4.m4.1a"><msub id="S4.SS1.p4.4.m4.1.1" xref="S4.SS1.p4.4.m4.1.1.cmml"><mi id="S4.SS1.p4.4.m4.1.1.2" xref="S4.SS1.p4.4.m4.1.1.2.cmml">I</mi><mi id="S4.SS1.p4.4.m4.1.1.3" xref="S4.SS1.p4.4.m4.1.1.3.cmml">r</mi></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.4.m4.1b"><apply id="S4.SS1.p4.4.m4.1.1.cmml" xref="S4.SS1.p4.4.m4.1.1"><csymbol cd="ambiguous" id="S4.SS1.p4.4.m4.1.1.1.cmml" xref="S4.SS1.p4.4.m4.1.1">subscript</csymbol><ci id="S4.SS1.p4.4.m4.1.1.2.cmml" xref="S4.SS1.p4.4.m4.1.1.2">𝐼</ci><ci id="S4.SS1.p4.4.m4.1.1.3.cmml" xref="S4.SS1.p4.4.m4.1.1.3">𝑟</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.4.m4.1c">I_{r}</annotation></semantics></math>) and blue color channels (<math id="S4.SS1.p4.5.m5.1" class="ltx_Math" alttext="I_{b}" display="inline"><semantics id="S4.SS1.p4.5.m5.1a"><msub id="S4.SS1.p4.5.m5.1.1" xref="S4.SS1.p4.5.m5.1.1.cmml"><mi id="S4.SS1.p4.5.m5.1.1.2" xref="S4.SS1.p4.5.m5.1.1.2.cmml">I</mi><mi id="S4.SS1.p4.5.m5.1.1.3" xref="S4.SS1.p4.5.m5.1.1.3.cmml">b</mi></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.5.m5.1b"><apply id="S4.SS1.p4.5.m5.1.1.cmml" xref="S4.SS1.p4.5.m5.1.1"><csymbol cd="ambiguous" id="S4.SS1.p4.5.m5.1.1.1.cmml" xref="S4.SS1.p4.5.m5.1.1">subscript</csymbol><ci id="S4.SS1.p4.5.m5.1.1.2.cmml" xref="S4.SS1.p4.5.m5.1.1.2">𝐼</ci><ci id="S4.SS1.p4.5.m5.1.1.3.cmml" xref="S4.SS1.p4.5.m5.1.1.3">𝑏</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.5.m5.1c">I_{b}</annotation></semantics></math>) shown in equation <a href="#S4.E3" title="In 4.1 Motion-Informed-Enhancement ‣ 4 Method ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Eq.</span> <span class="ltx_text ltx_ref_tag">3</span></a>.
+The motion likelihood <math id="S4.SS1.p4.6.m6.1" class="ltx_Math" alttext="3FD" display="inline"><semantics id="S4.SS1.p4.6.m6.1a"><mrow id="S4.SS1.p4.6.m6.1.1" xref="S4.SS1.p4.6.m6.1.1.cmml"><mn id="S4.SS1.p4.6.m6.1.1.2" xref="S4.SS1.p4.6.m6.1.1.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S4.SS1.p4.6.m6.1.1.1" xref="S4.SS1.p4.6.m6.1.1.1.cmml">​</mo><mi id="S4.SS1.p4.6.m6.1.1.3" xref="S4.SS1.p4.6.m6.1.1.3.cmml">F</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.6.m6.1.1.1a" xref="S4.SS1.p4.6.m6.1.1.1.cmml">​</mo><mi id="S4.SS1.p4.6.m6.1.1.4" xref="S4.SS1.p4.6.m6.1.1.4.cmml">D</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.6.m6.1b"><apply id="S4.SS1.p4.6.m6.1.1.cmml" xref="S4.SS1.p4.6.m6.1.1"><times id="S4.SS1.p4.6.m6.1.1.1.cmml" xref="S4.SS1.p4.6.m6.1.1.1"></times><cn type="integer" id="S4.SS1.p4.6.m6.1.1.2.cmml" xref="S4.SS1.p4.6.m6.1.1.2">3</cn><ci id="S4.SS1.p4.6.m6.1.1.3.cmml" xref="S4.SS1.p4.6.m6.1.1.3">𝐹</ci><ci id="S4.SS1.p4.6.m6.1.1.4.cmml" xref="S4.SS1.p4.6.m6.1.1.4">𝐷</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.6.m6.1c">3FD</annotation></semantics></math> was inserted in the enhanced red channel see equation <a href="#S4.E4" title="In 4.1 Motion-Informed-Enhancement ‣ 4 Method ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Eq.</span> <span class="ltx_text ltx_ref_tag">4</span></a>.
+The original green channel was unchanged, copied to the enhanced green channel in equation <a href="#S4.E5" title="In 4.1 Motion-Informed-Enhancement ‣ 4 Method ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Eq.</span> <span class="ltx_text ltx_ref_tag">5</span></a>.</p>
+<table id="S4.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E3.m1.6" class="ltx_Math" alttext="MI_{b}[i,j]=0.5I_{b}[i,j]+0.5I_{r}[i,j]" display="block"><semantics id="S4.E3.m1.6a"><mrow id="S4.E3.m1.6.7" xref="S4.E3.m1.6.7.cmml"><mrow id="S4.E3.m1.6.7.2" xref="S4.E3.m1.6.7.2.cmml"><mi id="S4.E3.m1.6.7.2.2" xref="S4.E3.m1.6.7.2.2.cmml">M</mi><mo lspace="0em" rspace="0em" id="S4.E3.m1.6.7.2.1" xref="S4.E3.m1.6.7.2.1.cmml">​</mo><msub id="S4.E3.m1.6.7.2.3" xref="S4.E3.m1.6.7.2.3.cmml"><mi id="S4.E3.m1.6.7.2.3.2" xref="S4.E3.m1.6.7.2.3.2.cmml">I</mi><mi id="S4.E3.m1.6.7.2.3.3" xref="S4.E3.m1.6.7.2.3.3.cmml">b</mi></msub><mo lspace="0em" rspace="0em" id="S4.E3.m1.6.7.2.1a" xref="S4.E3.m1.6.7.2.1.cmml">​</mo><mrow id="S4.E3.m1.6.7.2.4.2" xref="S4.E3.m1.6.7.2.4.1.cmml"><mo stretchy="false" id="S4.E3.m1.6.7.2.4.2.1" xref="S4.E3.m1.6.7.2.4.1.cmml">[</mo><mi id="S4.E3.m1.1.1" xref="S4.E3.m1.1.1.cmml">i</mi><mo id="S4.E3.m1.6.7.2.4.2.2" xref="S4.E3.m1.6.7.2.4.1.cmml">,</mo><mi id="S4.E3.m1.2.2" xref="S4.E3.m1.2.2.cmml">j</mi><mo stretchy="false" id="S4.E3.m1.6.7.2.4.2.3" xref="S4.E3.m1.6.7.2.4.1.cmml">]</mo></mrow></mrow><mo id="S4.E3.m1.6.7.1" xref="S4.E3.m1.6.7.1.cmml">=</mo><mrow id="S4.E3.m1.6.7.3" xref="S4.E3.m1.6.7.3.cmml"><mrow id="S4.E3.m1.6.7.3.2" xref="S4.E3.m1.6.7.3.2.cmml"><mn id="S4.E3.m1.6.7.3.2.2" xref="S4.E3.m1.6.7.3.2.2.cmml">0.5</mn><mo lspace="0em" rspace="0em" id="S4.E3.m1.6.7.3.2.1" xref="S4.E3.m1.6.7.3.2.1.cmml">​</mo><msub id="S4.E3.m1.6.7.3.2.3" xref="S4.E3.m1.6.7.3.2.3.cmml"><mi id="S4.E3.m1.6.7.3.2.3.2" xref="S4.E3.m1.6.7.3.2.3.2.cmml">I</mi><mi id="S4.E3.m1.6.7.3.2.3.3" xref="S4.E3.m1.6.7.3.2.3.3.cmml">b</mi></msub><mo lspace="0em" rspace="0em" id="S4.E3.m1.6.7.3.2.1a" xref="S4.E3.m1.6.7.3.2.1.cmml">​</mo><mrow id="S4.E3.m1.6.7.3.2.4.2" xref="S4.E3.m1.6.7.3.2.4.1.cmml"><mo stretchy="false" id="S4.E3.m1.6.7.3.2.4.2.1" xref="S4.E3.m1.6.7.3.2.4.1.cmml">[</mo><mi id="S4.E3.m1.3.3" xref="S4.E3.m1.3.3.cmml">i</mi><mo id="S4.E3.m1.6.7.3.2.4.2.2" xref="S4.E3.m1.6.7.3.2.4.1.cmml">,</mo><mi id="S4.E3.m1.4.4" xref="S4.E3.m1.4.4.cmml">j</mi><mo stretchy="false" id="S4.E3.m1.6.7.3.2.4.2.3" xref="S4.E3.m1.6.7.3.2.4.1.cmml">]</mo></mrow></mrow><mo id="S4.E3.m1.6.7.3.1" xref="S4.E3.m1.6.7.3.1.cmml">+</mo><mrow id="S4.E3.m1.6.7.3.3" xref="S4.E3.m1.6.7.3.3.cmml"><mn id="S4.E3.m1.6.7.3.3.2" xref="S4.E3.m1.6.7.3.3.2.cmml">0.5</mn><mo lspace="0em" rspace="0em" id="S4.E3.m1.6.7.3.3.1" xref="S4.E3.m1.6.7.3.3.1.cmml">​</mo><msub id="S4.E3.m1.6.7.3.3.3" xref="S4.E3.m1.6.7.3.3.3.cmml"><mi id="S4.E3.m1.6.7.3.3.3.2" xref="S4.E3.m1.6.7.3.3.3.2.cmml">I</mi><mi id="S4.E3.m1.6.7.3.3.3.3" xref="S4.E3.m1.6.7.3.3.3.3.cmml">r</mi></msub><mo lspace="0em" rspace="0em" id="S4.E3.m1.6.7.3.3.1a" xref="S4.E3.m1.6.7.3.3.1.cmml">​</mo><mrow id="S4.E3.m1.6.7.3.3.4.2" xref="S4.E3.m1.6.7.3.3.4.1.cmml"><mo stretchy="false" id="S4.E3.m1.6.7.3.3.4.2.1" xref="S4.E3.m1.6.7.3.3.4.1.cmml">[</mo><mi id="S4.E3.m1.5.5" xref="S4.E3.m1.5.5.cmml">i</mi><mo id="S4.E3.m1.6.7.3.3.4.2.2" xref="S4.E3.m1.6.7.3.3.4.1.cmml">,</mo><mi id="S4.E3.m1.6.6" xref="S4.E3.m1.6.6.cmml">j</mi><mo stretchy="false" id="S4.E3.m1.6.7.3.3.4.2.3" xref="S4.E3.m1.6.7.3.3.4.1.cmml">]</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E3.m1.6b"><apply id="S4.E3.m1.6.7.cmml" xref="S4.E3.m1.6.7"><eq id="S4.E3.m1.6.7.1.cmml" xref="S4.E3.m1.6.7.1"></eq><apply id="S4.E3.m1.6.7.2.cmml" xref="S4.E3.m1.6.7.2"><times id="S4.E3.m1.6.7.2.1.cmml" xref="S4.E3.m1.6.7.2.1"></times><ci id="S4.E3.m1.6.7.2.2.cmml" xref="S4.E3.m1.6.7.2.2">𝑀</ci><apply id="S4.E3.m1.6.7.2.3.cmml" xref="S4.E3.m1.6.7.2.3"><csymbol cd="ambiguous" id="S4.E3.m1.6.7.2.3.1.cmml" xref="S4.E3.m1.6.7.2.3">subscript</csymbol><ci id="S4.E3.m1.6.7.2.3.2.cmml" xref="S4.E3.m1.6.7.2.3.2">𝐼</ci><ci id="S4.E3.m1.6.7.2.3.3.cmml" xref="S4.E3.m1.6.7.2.3.3">𝑏</ci></apply><interval closure="closed" id="S4.E3.m1.6.7.2.4.1.cmml" xref="S4.E3.m1.6.7.2.4.2"><ci id="S4.E3.m1.1.1.cmml" xref="S4.E3.m1.1.1">𝑖</ci><ci id="S4.E3.m1.2.2.cmml" xref="S4.E3.m1.2.2">𝑗</ci></interval></apply><apply id="S4.E3.m1.6.7.3.cmml" xref="S4.E3.m1.6.7.3"><plus id="S4.E3.m1.6.7.3.1.cmml" xref="S4.E3.m1.6.7.3.1"></plus><apply id="S4.E3.m1.6.7.3.2.cmml" xref="S4.E3.m1.6.7.3.2"><times id="S4.E3.m1.6.7.3.2.1.cmml" xref="S4.E3.m1.6.7.3.2.1"></times><cn type="float" id="S4.E3.m1.6.7.3.2.2.cmml" xref="S4.E3.m1.6.7.3.2.2">0.5</cn><apply id="S4.E3.m1.6.7.3.2.3.cmml" xref="S4.E3.m1.6.7.3.2.3"><csymbol cd="ambiguous" id="S4.E3.m1.6.7.3.2.3.1.cmml" xref="S4.E3.m1.6.7.3.2.3">subscript</csymbol><ci id="S4.E3.m1.6.7.3.2.3.2.cmml" xref="S4.E3.m1.6.7.3.2.3.2">𝐼</ci><ci id="S4.E3.m1.6.7.3.2.3.3.cmml" xref="S4.E3.m1.6.7.3.2.3.3">𝑏</ci></apply><interval closure="closed" id="S4.E3.m1.6.7.3.2.4.1.cmml" xref="S4.E3.m1.6.7.3.2.4.2"><ci id="S4.E3.m1.3.3.cmml" xref="S4.E3.m1.3.3">𝑖</ci><ci id="S4.E3.m1.4.4.cmml" xref="S4.E3.m1.4.4">𝑗</ci></interval></apply><apply id="S4.E3.m1.6.7.3.3.cmml" xref="S4.E3.m1.6.7.3.3"><times id="S4.E3.m1.6.7.3.3.1.cmml" xref="S4.E3.m1.6.7.3.3.1"></times><cn type="float" id="S4.E3.m1.6.7.3.3.2.cmml" xref="S4.E3.m1.6.7.3.3.2">0.5</cn><apply id="S4.E3.m1.6.7.3.3.3.cmml" xref="S4.E3.m1.6.7.3.3.3"><csymbol cd="ambiguous" id="S4.E3.m1.6.7.3.3.3.1.cmml" xref="S4.E3.m1.6.7.3.3.3">subscript</csymbol><ci id="S4.E3.m1.6.7.3.3.3.2.cmml" xref="S4.E3.m1.6.7.3.3.3.2">𝐼</ci><ci id="S4.E3.m1.6.7.3.3.3.3.cmml" xref="S4.E3.m1.6.7.3.3.3.3">𝑟</ci></apply><interval closure="closed" id="S4.E3.m1.6.7.3.3.4.1.cmml" xref="S4.E3.m1.6.7.3.3.4.2"><ci id="S4.E3.m1.5.5.cmml" xref="S4.E3.m1.5.5">𝑖</ci><ci id="S4.E3.m1.6.6.cmml" xref="S4.E3.m1.6.6">𝑗</ci></interval></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E3.m1.6c">MI_{b}[i,j]=0.5I_{b}[i,j]+0.5I_{r}[i,j]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<table id="S4.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E4.m1.4" class="ltx_Math" alttext="MI_{r}[i,j]=3FD_{k}[i,j]" display="block"><semantics id="S4.E4.m1.4a"><mrow id="S4.E4.m1.4.5" xref="S4.E4.m1.4.5.cmml"><mrow id="S4.E4.m1.4.5.2" xref="S4.E4.m1.4.5.2.cmml"><mi id="S4.E4.m1.4.5.2.2" xref="S4.E4.m1.4.5.2.2.cmml">M</mi><mo lspace="0em" rspace="0em" id="S4.E4.m1.4.5.2.1" xref="S4.E4.m1.4.5.2.1.cmml">​</mo><msub id="S4.E4.m1.4.5.2.3" xref="S4.E4.m1.4.5.2.3.cmml"><mi id="S4.E4.m1.4.5.2.3.2" xref="S4.E4.m1.4.5.2.3.2.cmml">I</mi><mi id="S4.E4.m1.4.5.2.3.3" xref="S4.E4.m1.4.5.2.3.3.cmml">r</mi></msub><mo lspace="0em" rspace="0em" id="S4.E4.m1.4.5.2.1a" xref="S4.E4.m1.4.5.2.1.cmml">​</mo><mrow id="S4.E4.m1.4.5.2.4.2" xref="S4.E4.m1.4.5.2.4.1.cmml"><mo stretchy="false" id="S4.E4.m1.4.5.2.4.2.1" xref="S4.E4.m1.4.5.2.4.1.cmml">[</mo><mi id="S4.E4.m1.1.1" xref="S4.E4.m1.1.1.cmml">i</mi><mo id="S4.E4.m1.4.5.2.4.2.2" xref="S4.E4.m1.4.5.2.4.1.cmml">,</mo><mi id="S4.E4.m1.2.2" xref="S4.E4.m1.2.2.cmml">j</mi><mo stretchy="false" id="S4.E4.m1.4.5.2.4.2.3" xref="S4.E4.m1.4.5.2.4.1.cmml">]</mo></mrow></mrow><mo id="S4.E4.m1.4.5.1" xref="S4.E4.m1.4.5.1.cmml">=</mo><mrow id="S4.E4.m1.4.5.3" xref="S4.E4.m1.4.5.3.cmml"><mn id="S4.E4.m1.4.5.3.2" xref="S4.E4.m1.4.5.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S4.E4.m1.4.5.3.1" xref="S4.E4.m1.4.5.3.1.cmml">​</mo><mi id="S4.E4.m1.4.5.3.3" xref="S4.E4.m1.4.5.3.3.cmml">F</mi><mo lspace="0em" rspace="0em" id="S4.E4.m1.4.5.3.1a" xref="S4.E4.m1.4.5.3.1.cmml">​</mo><msub id="S4.E4.m1.4.5.3.4" xref="S4.E4.m1.4.5.3.4.cmml"><mi id="S4.E4.m1.4.5.3.4.2" xref="S4.E4.m1.4.5.3.4.2.cmml">D</mi><mi id="S4.E4.m1.4.5.3.4.3" xref="S4.E4.m1.4.5.3.4.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S4.E4.m1.4.5.3.1b" xref="S4.E4.m1.4.5.3.1.cmml">​</mo><mrow id="S4.E4.m1.4.5.3.5.2" xref="S4.E4.m1.4.5.3.5.1.cmml"><mo stretchy="false" id="S4.E4.m1.4.5.3.5.2.1" xref="S4.E4.m1.4.5.3.5.1.cmml">[</mo><mi id="S4.E4.m1.3.3" xref="S4.E4.m1.3.3.cmml">i</mi><mo id="S4.E4.m1.4.5.3.5.2.2" xref="S4.E4.m1.4.5.3.5.1.cmml">,</mo><mi id="S4.E4.m1.4.4" xref="S4.E4.m1.4.4.cmml">j</mi><mo stretchy="false" id="S4.E4.m1.4.5.3.5.2.3" xref="S4.E4.m1.4.5.3.5.1.cmml">]</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E4.m1.4b"><apply id="S4.E4.m1.4.5.cmml" xref="S4.E4.m1.4.5"><eq id="S4.E4.m1.4.5.1.cmml" xref="S4.E4.m1.4.5.1"></eq><apply id="S4.E4.m1.4.5.2.cmml" xref="S4.E4.m1.4.5.2"><times id="S4.E4.m1.4.5.2.1.cmml" xref="S4.E4.m1.4.5.2.1"></times><ci id="S4.E4.m1.4.5.2.2.cmml" xref="S4.E4.m1.4.5.2.2">𝑀</ci><apply id="S4.E4.m1.4.5.2.3.cmml" xref="S4.E4.m1.4.5.2.3"><csymbol cd="ambiguous" id="S4.E4.m1.4.5.2.3.1.cmml" xref="S4.E4.m1.4.5.2.3">subscript</csymbol><ci id="S4.E4.m1.4.5.2.3.2.cmml" xref="S4.E4.m1.4.5.2.3.2">𝐼</ci><ci id="S4.E4.m1.4.5.2.3.3.cmml" xref="S4.E4.m1.4.5.2.3.3">𝑟</ci></apply><interval closure="closed" id="S4.E4.m1.4.5.2.4.1.cmml" xref="S4.E4.m1.4.5.2.4.2"><ci id="S4.E4.m1.1.1.cmml" xref="S4.E4.m1.1.1">𝑖</ci><ci id="S4.E4.m1.2.2.cmml" xref="S4.E4.m1.2.2">𝑗</ci></interval></apply><apply id="S4.E4.m1.4.5.3.cmml" xref="S4.E4.m1.4.5.3"><times id="S4.E4.m1.4.5.3.1.cmml" xref="S4.E4.m1.4.5.3.1"></times><cn type="integer" id="S4.E4.m1.4.5.3.2.cmml" xref="S4.E4.m1.4.5.3.2">3</cn><ci id="S4.E4.m1.4.5.3.3.cmml" xref="S4.E4.m1.4.5.3.3">𝐹</ci><apply id="S4.E4.m1.4.5.3.4.cmml" xref="S4.E4.m1.4.5.3.4"><csymbol cd="ambiguous" id="S4.E4.m1.4.5.3.4.1.cmml" xref="S4.E4.m1.4.5.3.4">subscript</csymbol><ci id="S4.E4.m1.4.5.3.4.2.cmml" xref="S4.E4.m1.4.5.3.4.2">𝐷</ci><ci id="S4.E4.m1.4.5.3.4.3.cmml" xref="S4.E4.m1.4.5.3.4.3">𝑘</ci></apply><interval closure="closed" id="S4.E4.m1.4.5.3.5.1.cmml" xref="S4.E4.m1.4.5.3.5.2"><ci id="S4.E4.m1.3.3.cmml" xref="S4.E4.m1.3.3">𝑖</ci><ci id="S4.E4.m1.4.4.cmml" xref="S4.E4.m1.4.4">𝑗</ci></interval></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E4.m1.4c">MI_{r}[i,j]=3FD_{k}[i,j]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+<table id="S4.E5" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E5.m1.4" class="ltx_Math" alttext="MI_{g}[i,j]=I_{g}[i,j]" display="block"><semantics id="S4.E5.m1.4a"><mrow id="S4.E5.m1.4.5" xref="S4.E5.m1.4.5.cmml"><mrow id="S4.E5.m1.4.5.2" xref="S4.E5.m1.4.5.2.cmml"><mi id="S4.E5.m1.4.5.2.2" xref="S4.E5.m1.4.5.2.2.cmml">M</mi><mo lspace="0em" rspace="0em" id="S4.E5.m1.4.5.2.1" xref="S4.E5.m1.4.5.2.1.cmml">​</mo><msub id="S4.E5.m1.4.5.2.3" xref="S4.E5.m1.4.5.2.3.cmml"><mi id="S4.E5.m1.4.5.2.3.2" xref="S4.E5.m1.4.5.2.3.2.cmml">I</mi><mi id="S4.E5.m1.4.5.2.3.3" xref="S4.E5.m1.4.5.2.3.3.cmml">g</mi></msub><mo lspace="0em" rspace="0em" id="S4.E5.m1.4.5.2.1a" xref="S4.E5.m1.4.5.2.1.cmml">​</mo><mrow id="S4.E5.m1.4.5.2.4.2" xref="S4.E5.m1.4.5.2.4.1.cmml"><mo stretchy="false" id="S4.E5.m1.4.5.2.4.2.1" xref="S4.E5.m1.4.5.2.4.1.cmml">[</mo><mi id="S4.E5.m1.1.1" xref="S4.E5.m1.1.1.cmml">i</mi><mo id="S4.E5.m1.4.5.2.4.2.2" xref="S4.E5.m1.4.5.2.4.1.cmml">,</mo><mi id="S4.E5.m1.2.2" xref="S4.E5.m1.2.2.cmml">j</mi><mo stretchy="false" id="S4.E5.m1.4.5.2.4.2.3" xref="S4.E5.m1.4.5.2.4.1.cmml">]</mo></mrow></mrow><mo id="S4.E5.m1.4.5.1" xref="S4.E5.m1.4.5.1.cmml">=</mo><mrow id="S4.E5.m1.4.5.3" xref="S4.E5.m1.4.5.3.cmml"><msub id="S4.E5.m1.4.5.3.2" xref="S4.E5.m1.4.5.3.2.cmml"><mi id="S4.E5.m1.4.5.3.2.2" xref="S4.E5.m1.4.5.3.2.2.cmml">I</mi><mi id="S4.E5.m1.4.5.3.2.3" xref="S4.E5.m1.4.5.3.2.3.cmml">g</mi></msub><mo lspace="0em" rspace="0em" id="S4.E5.m1.4.5.3.1" xref="S4.E5.m1.4.5.3.1.cmml">​</mo><mrow id="S4.E5.m1.4.5.3.3.2" xref="S4.E5.m1.4.5.3.3.1.cmml"><mo stretchy="false" id="S4.E5.m1.4.5.3.3.2.1" xref="S4.E5.m1.4.5.3.3.1.cmml">[</mo><mi id="S4.E5.m1.3.3" xref="S4.E5.m1.3.3.cmml">i</mi><mo id="S4.E5.m1.4.5.3.3.2.2" xref="S4.E5.m1.4.5.3.3.1.cmml">,</mo><mi id="S4.E5.m1.4.4" xref="S4.E5.m1.4.4.cmml">j</mi><mo stretchy="false" id="S4.E5.m1.4.5.3.3.2.3" xref="S4.E5.m1.4.5.3.3.1.cmml">]</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E5.m1.4b"><apply id="S4.E5.m1.4.5.cmml" xref="S4.E5.m1.4.5"><eq id="S4.E5.m1.4.5.1.cmml" xref="S4.E5.m1.4.5.1"></eq><apply id="S4.E5.m1.4.5.2.cmml" xref="S4.E5.m1.4.5.2"><times id="S4.E5.m1.4.5.2.1.cmml" xref="S4.E5.m1.4.5.2.1"></times><ci id="S4.E5.m1.4.5.2.2.cmml" xref="S4.E5.m1.4.5.2.2">𝑀</ci><apply id="S4.E5.m1.4.5.2.3.cmml" xref="S4.E5.m1.4.5.2.3"><csymbol cd="ambiguous" id="S4.E5.m1.4.5.2.3.1.cmml" xref="S4.E5.m1.4.5.2.3">subscript</csymbol><ci id="S4.E5.m1.4.5.2.3.2.cmml" xref="S4.E5.m1.4.5.2.3.2">𝐼</ci><ci id="S4.E5.m1.4.5.2.3.3.cmml" xref="S4.E5.m1.4.5.2.3.3">𝑔</ci></apply><interval closure="closed" id="S4.E5.m1.4.5.2.4.1.cmml" xref="S4.E5.m1.4.5.2.4.2"><ci id="S4.E5.m1.1.1.cmml" xref="S4.E5.m1.1.1">𝑖</ci><ci id="S4.E5.m1.2.2.cmml" xref="S4.E5.m1.2.2">𝑗</ci></interval></apply><apply id="S4.E5.m1.4.5.3.cmml" xref="S4.E5.m1.4.5.3"><times id="S4.E5.m1.4.5.3.1.cmml" xref="S4.E5.m1.4.5.3.1"></times><apply id="S4.E5.m1.4.5.3.2.cmml" xref="S4.E5.m1.4.5.3.2"><csymbol cd="ambiguous" id="S4.E5.m1.4.5.3.2.1.cmml" xref="S4.E5.m1.4.5.3.2">subscript</csymbol><ci id="S4.E5.m1.4.5.3.2.2.cmml" xref="S4.E5.m1.4.5.3.2.2">𝐼</ci><ci id="S4.E5.m1.4.5.3.2.3.cmml" xref="S4.E5.m1.4.5.3.2.3">𝑔</ci></apply><interval closure="closed" id="S4.E5.m1.4.5.3.3.1.cmml" xref="S4.E5.m1.4.5.3.3.2"><ci id="S4.E5.m1.3.3.cmml" xref="S4.E5.m1.3.3">𝑖</ci><ci id="S4.E5.m1.4.4.cmml" xref="S4.E5.m1.4.4">𝑗</ci></interval></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E5.m1.4c">MI_{g}[i,j]=I_{g}[i,j]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S4.SS1.p5" class="ltx_para">
+<p id="S4.SS1.p5.1" class="ltx_p">Results of the proposed method are illustrated in <a href="#S4.F2" title="In 4.1 Motion-Informed-Enhancement ‣ 4 Method ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Figs.</span> <span class="ltx_text ltx_ref_tag">2</span></a> and <a href="#S4.F3" title="Figure 3 ‣ 4.1 Motion-Informed-Enhancement ‣ 4 Method ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+It shows how the motion information is created and is finally seen as a red color on the moving insect in the enhanced image.
+Most of the background colors of the leaves are green and unchanged in the enhanced image.
+Colors from flowers such as pink, red, and orange are mixed in the blue channel.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Object detection with deep learning</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">Image object detection methods based on deep learning rely solely on spatial image information to extract features and detect regions of objects in the image.
+In our work, Faster R-CNN with a backbone of ResNet50 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> and YOLOv5 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>
+with a backbone of CSPDarknet53 were evaluated to detect small insects in wildlife images.
+YOLO is a one-stage object detector and Faster R-CNN is a two-stage.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">One-stage object detectors predict the boundary of bounding boxes, detect whether an object is present and classify the object in the same process stage.
+One-state detectors are typically faster than two-stage detectors at the cost of lower accuracy.
+However, fast execution is important when millions of images need to be processed, such as remote sensing, on a large scale.
+Although remarkable results are achieved across several benchmarks, their performance decreases with small objects in complex environments such as insect monitoring.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p">Two-stage detectors perform region proposals before inference and classification.
+Faster R-CNN proposes a Region Proposal Network (RPN), which is a Fully Convolutional Network (FCN) that generates region proposals with various scales and aspect ratios.
+It scans the proposed regions to assess whether future inference needs to be carried out.
+The content of the proposed regions defined by a bounding box is classified in the second stage and the box coordinates are adjusted.</p>
+</div>
+<div id="S4.SS2.p4" class="ltx_para">
+<p id="S4.SS2.p4.1" class="ltx_p">In the paper <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> different YOLOv5 architectures are evaluated finding that YOLOv5m6 with 35.7 million parameters
+is the optimal model to detect and classify insect species in images with flowering <em id="S4.SS2.p4.1.1" class="ltx_emph ltx_font_italic">Sedum</em> plants.
+To improve performance and speed up training, the YOLOv5m6 and Faster R-CNN with ResNet50 are pre-trained on the COCO dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>.
+For Faster R-CNN with ResNet50, a simple pipeline <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite> with data augmentation was used to train the model.
+The augmentation includes random vertical and horizontal image flip, image rotation, and different types of blurring.
+Images are re-sized to 1280x720 pixels for training with the two evaluated networks and transfer learning (COCO) is used to fine-tune the parameters of the CNN.</p>
+</div>
+<div id="S4.SS2.p5" class="ltx_para">
+<p id="S4.SS2.p5.1" class="ltx_p">A micro- and macro-average metric was computed for the model predictions of the selected seven different physical sites in the test dataset.
+The macro-average metric was computed as the average recall, precision, and F1-score for the model performance for each test site.
+The micro-average aggregates the contributions from all test sites to compute metrics based on the total number of true positive, false positive, and false negative predictions.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Experiment and results</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">717,311 images were recorded in the period of the experiment monitoring honeybees and other insects visiting three different plant species.</p>
+</div>
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span>Train and validation</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.1" class="ltx_p">First, a trained model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> was used to find insects in recordings from 10 different weeks and camera sites as listed in <a href="#S5.T1" title="In 5.1 Train and validation ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Tab.</span> <span class="ltx_text ltx_ref_tag">1</span></a>.
+These predictions generated a large number of images of candidate insects, which were verified.
+Images with predictions were manually corrected for false positives, resulting in several images with corrected annotated insects and background images without insects.
+During quality checks, non-detected insects (false negative) were found, annotated, and added to the dataset.</p>
+</div>
+<figure id="S5.T1" class="ltx_table">
+<table id="S5.T1.2" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T1.2.1.1" class="ltx_tr">
+<th id="S5.T1.2.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_tt">Cam.</th>
+<td id="S5.T1.2.1.1.2" class="ltx_td ltx_align_center ltx_border_tt">Week</td>
+<td id="S5.T1.2.1.1.3" class="ltx_td ltx_align_center ltx_border_tt">Days</td>
+<td id="S5.T1.2.1.1.4" class="ltx_td ltx_align_center ltx_border_tt">Insects</td>
+<td id="S5.T1.2.1.1.5" class="ltx_td ltx_align_center ltx_border_tt">Back.</td>
+<td id="S5.T1.2.1.1.6" class="ltx_td ltx_align_center ltx_border_tt">View</td>
+<td id="S5.T1.2.1.1.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt">Plant</td>
+</tr>
+<tr id="S5.T1.2.2.2" class="ltx_tr">
+<th id="S5.T1.2.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t">S1-1</th>
+<td id="S5.T1.2.2.2.2" class="ltx_td ltx_align_center ltx_border_t">26</td>
+<td id="S5.T1.2.2.2.3" class="ltx_td ltx_align_center ltx_border_t">2</td>
+<td id="S5.T1.2.2.2.4" class="ltx_td ltx_align_center ltx_border_t">1079</td>
+<td id="S5.T1.2.2.2.5" class="ltx_td ltx_align_center ltx_border_t">340</td>
+<td id="S5.T1.2.2.2.6" class="ltx_td ltx_align_center ltx_border_t">Top</td>
+<td id="S5.T1.2.2.2.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">Rocket</td>
+</tr>
+<tr id="S5.T1.2.3.3" class="ltx_tr">
+<th id="S5.T1.2.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S1-1</th>
+<td id="S5.T1.2.3.3.2" class="ltx_td ltx_align_center">27</td>
+<td id="S5.T1.2.3.3.3" class="ltx_td ltx_align_center">2</td>
+<td id="S5.T1.2.3.3.4" class="ltx_td ltx_align_center">21</td>
+<td id="S5.T1.2.3.3.5" class="ltx_td ltx_align_center">312</td>
+<td id="S5.T1.2.3.3.6" class="ltx_td ltx_align_center">Top</td>
+<td id="S5.T1.2.3.3.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</td>
+</tr>
+<tr id="S5.T1.2.4.4" class="ltx_tr">
+<th id="S5.T1.2.4.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S1-0</th>
+<td id="S5.T1.2.4.4.2" class="ltx_td ltx_align_center">29</td>
+<td id="S5.T1.2.4.4.3" class="ltx_td ltx_align_center">7</td>
+<td id="S5.T1.2.4.4.4" class="ltx_td ltx_align_center">395</td>
+<td id="S5.T1.2.4.4.5" class="ltx_td ltx_align_center">143</td>
+<td id="S5.T1.2.4.4.6" class="ltx_td ltx_align_center">Top</td>
+<td id="S5.T1.2.4.4.7" class="ltx_td ltx_nopad_r ltx_align_center">Rocket</td>
+</tr>
+<tr id="S5.T1.2.5.5" class="ltx_tr">
+<th id="S5.T1.2.5.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S1-0</th>
+<td id="S5.T1.2.5.5.2" class="ltx_td ltx_align_center">30</td>
+<td id="S5.T1.2.5.5.3" class="ltx_td ltx_align_center">7</td>
+<td id="S5.T1.2.5.5.4" class="ltx_td ltx_align_center">648</td>
+<td id="S5.T1.2.5.5.5" class="ltx_td ltx_align_center">115</td>
+<td id="S5.T1.2.5.5.6" class="ltx_td ltx_align_center">Side</td>
+<td id="S5.T1.2.5.5.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</td>
+</tr>
+<tr id="S5.T1.2.6.6" class="ltx_tr">
+<th id="S5.T1.2.6.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S2-1</th>
+<td id="S5.T1.2.6.6.2" class="ltx_td ltx_align_center">27</td>
+<td id="S5.T1.2.6.6.3" class="ltx_td ltx_align_center">7</td>
+<td id="S5.T1.2.6.6.4" class="ltx_td ltx_align_center">186</td>
+<td id="S5.T1.2.6.6.5" class="ltx_td ltx_align_center">136</td>
+<td id="S5.T1.2.6.6.6" class="ltx_td ltx_align_center">Side</td>
+<td id="S5.T1.2.6.6.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</td>
+</tr>
+<tr id="S5.T1.2.7.7" class="ltx_tr">
+<th id="S5.T1.2.7.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S3-0</th>
+<td id="S5.T1.2.7.7.2" class="ltx_td ltx_align_center">29</td>
+<td id="S5.T1.2.7.7.3" class="ltx_td ltx_align_center">7</td>
+<td id="S5.T1.2.7.7.4" class="ltx_td ltx_align_center">120</td>
+<td id="S5.T1.2.7.7.5" class="ltx_td ltx_align_center">308</td>
+<td id="S5.T1.2.7.7.6" class="ltx_td ltx_align_center">Side</td>
+<td id="S5.T1.2.7.7.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</td>
+</tr>
+<tr id="S5.T1.2.8.8" class="ltx_tr">
+<th id="S5.T1.2.8.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-0</th>
+<td id="S5.T1.2.8.8.2" class="ltx_td ltx_align_center">28</td>
+<td id="S5.T1.2.8.8.3" class="ltx_td ltx_align_center">7</td>
+<td id="S5.T1.2.8.8.4" class="ltx_td ltx_align_center">154</td>
+<td id="S5.T1.2.8.8.5" class="ltx_td ltx_align_center">533</td>
+<td id="S5.T1.2.8.8.6" class="ltx_td ltx_align_center">Side</td>
+<td id="S5.T1.2.8.8.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</td>
+</tr>
+<tr id="S5.T1.2.9.9" class="ltx_tr">
+<th id="S5.T1.2.9.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-0</th>
+<td id="S5.T1.2.9.9.2" class="ltx_td ltx_align_center">30</td>
+<td id="S5.T1.2.9.9.3" class="ltx_td ltx_align_center">7</td>
+<td id="S5.T1.2.9.9.4" class="ltx_td ltx_align_center">20</td>
+<td id="S5.T1.2.9.9.5" class="ltx_td ltx_align_center">468</td>
+<td id="S5.T1.2.9.9.6" class="ltx_td ltx_align_center">Top</td>
+<td id="S5.T1.2.9.9.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</td>
+</tr>
+<tr id="S5.T1.2.10.10" class="ltx_tr">
+<th id="S5.T1.2.10.10.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-1</th>
+<td id="S5.T1.2.10.10.2" class="ltx_td ltx_align_center">28</td>
+<td id="S5.T1.2.10.10.3" class="ltx_td ltx_align_center">7</td>
+<td id="S5.T1.2.10.10.4" class="ltx_td ltx_align_center">108</td>
+<td id="S5.T1.2.10.10.5" class="ltx_td ltx_align_center">77</td>
+<td id="S5.T1.2.10.10.6" class="ltx_td ltx_align_center">Top</td>
+<td id="S5.T1.2.10.10.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</td>
+</tr>
+<tr id="S5.T1.2.11.11" class="ltx_tr">
+<th id="S5.T1.2.11.11.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-1</th>
+<td id="S5.T1.2.11.11.2" class="ltx_td ltx_align_center">29</td>
+<td id="S5.T1.2.11.11.3" class="ltx_td ltx_align_center">7</td>
+<td id="S5.T1.2.11.11.4" class="ltx_td ltx_align_center">83</td>
+<td id="S5.T1.2.11.11.5" class="ltx_td ltx_align_center">93</td>
+<td id="S5.T1.2.11.11.6" class="ltx_td ltx_align_center">Top</td>
+<td id="S5.T1.2.11.11.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</td>
+</tr>
+<tr id="S5.T1.2.12.12" class="ltx_tr">
+<th id="S5.T1.2.12.12.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_r ltx_border_tt">Total</th>
+<td id="S5.T1.2.12.12.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_tt">10</td>
+<td id="S5.T1.2.12.12.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_tt">60</td>
+<td id="S5.T1.2.12.12.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_tt">2,814</td>
+<td id="S5.T1.2.12.12.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_tt">2,525</td>
+<td id="S5.T1.2.12.12.6" class="ltx_td ltx_border_bb ltx_border_tt"></td>
+<td id="S5.T1.2.12.12.7" class="ltx_td ltx_nopad_r ltx_border_bb ltx_border_tt"></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S5.T1.5.1.1" class="ltx_text" style="font-size:90%;">Table 1</span>: </span><span id="S5.T1.6.2" class="ltx_text" style="font-size:90%;">Shows the camera sites and weeks from where data was selected to create a train and validation dataset.
+System number and camera Id (Sx-0/1) identify each camera.
+Insects are the number of annotated insects found in the selected images.
+Background (Back.) is the number of images without any insects where false positive detections were removed.
+The flowering plants are seen with a camera view from the top or side.
+The plant species are Sea rocket (<em id="S5.T1.6.2.1" class="ltx_emph ltx_font_italic">Cakile maritima</em>) and red clover (<em id="S5.T1.6.2.2" class="ltx_emph ltx_font_italic">Trifolium prantese</em>).
+Example of background images are shown in <a href="#S3.F1" title="In 3 Dataset ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">1</span></a></span></figcaption>
+</figure>
+<div id="S5.SS1.p2" class="ltx_para">
+<p id="S5.SS1.p2.1" class="ltx_p">This dataset was used to create a final training dataset with an approximate split of 20% annotations used for validation.
+The train and validation dataset were manually corrected a second time based on the motion-enhanced images and additional corrections were made.
+An additional 253 insects were found with an increase of 8% more annotated insects compared to the first manually corrected dataset.
+The datasets were created in two versions with color and motion-enhanced images.
+The resulting final datasets for train and validation are listed in <a href="#S5.T2" title="In 5.1 Train and validation ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Tab.</span> <span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<figure id="S5.T2" class="ltx_table">
+<table id="S5.T2.2" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T2.2.1.1" class="ltx_tr">
+<th id="S5.T2.2.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt">Dataset</th>
+<td id="S5.T2.2.1.1.2" class="ltx_td ltx_align_center ltx_border_tt">Insects</td>
+<td id="S5.T2.2.1.1.3" class="ltx_td ltx_align_center ltx_border_tt">Images</td>
+<td id="S5.T2.2.1.1.4" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt">Background</td>
+</tr>
+<tr id="S5.T2.2.2.2" class="ltx_tr">
+<th id="S5.T2.2.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">Train</th>
+<td id="S5.T2.2.2.2.2" class="ltx_td ltx_align_center ltx_border_t">2,499</td>
+<td id="S5.T2.2.2.2.3" class="ltx_td ltx_align_center ltx_border_t">3,783</td>
+<td id="S5.T2.2.2.2.4" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">1,953</td>
+</tr>
+<tr id="S5.T2.2.3.3" class="ltx_tr">
+<th id="S5.T2.2.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">Validate</th>
+<td id="S5.T2.2.3.3.2" class="ltx_td ltx_align_center">568</td>
+<td id="S5.T2.2.3.3.3" class="ltx_td ltx_align_center">946</td>
+<td id="S5.T2.2.3.3.4" class="ltx_td ltx_nopad_r ltx_align_center">508</td>
+</tr>
+<tr id="S5.T2.2.4.4" class="ltx_tr">
+<th id="S5.T2.2.4.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_tt">Total</th>
+<td id="S5.T2.2.4.4.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_tt">3,067</td>
+<td id="S5.T2.2.4.4.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_tt">4,729</td>
+<td id="S5.T2.2.4.4.4" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_tt">2,461</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S5.T2.3.1.1" class="ltx_text" style="font-size:90%;">Table 2</span>: </span><span id="S5.T2.4.2" class="ltx_text" style="font-size:90%;">Shows the final train and validation dataset with annotated insects and the number of images.
+Background is the number of images without any insects.</span></figcaption>
+</figure>
+<div id="S5.SS1.p3" class="ltx_para">
+<p id="S5.SS1.p3.1" class="ltx_p">The training and validation datasets were used to train the two different object detection, Faster R-CNN with ResNet50 and YOLOv5.
+The models were trained with color and motion-enhanced datasets as listed below:</p>
+</div>
+<div id="S5.SS1.p4" class="ltx_para">
+<ul id="S5.I1" class="ltx_itemize">
+<li id="S5.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S5.I1.i1.p1" class="ltx_para">
+<p id="S5.I1.i1.p1.1" class="ltx_p">Faster R-CNN with color images</p>
+</div>
+</li>
+<li id="S5.I1.i2" class="ltx_item" style="list-style-type:none;padding-top:-5.0pt;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S5.I1.i2.p1" class="ltx_para">
+<p id="S5.I1.i2.p1.1" class="ltx_p">Faster R-CNN with MIE</p>
+</div>
+</li>
+<li id="S5.I1.i3" class="ltx_item" style="list-style-type:none;padding-top:-5.0pt;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S5.I1.i3.p1" class="ltx_para">
+<p id="S5.I1.i3.p1.1" class="ltx_p">YOLOv5 with color images</p>
+</div>
+</li>
+<li id="S5.I1.i4" class="ltx_item" style="list-style-type:none;padding-top:-5.0pt;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S5.I1.i4.p1" class="ltx_para">
+<p id="S5.I1.i4.p1.1" class="ltx_p">YOLOv5 with MIE</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S5.SS1.p5" class="ltx_para">
+<p id="S5.SS1.p5.1" class="ltx_p">Each combination of models and dataset was trained five times.
+The highest validation F1-score was used to select the best five models without over-fitting the network.
+For each of the five trained models, the precision, recall, F1-score, and Average Precision (AP@.5) were calculated on the validation dataset.
+AP@.5 is calculated as the mean area under the precision-recall curve for a single class (insects) with an Intersection over Union (IoU) of 0.5.
+The average for the five trained models is listed in <a href="#S5.T3" title="In 5.1 Train and validation ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Tab.</span> <span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+<figure id="S5.T3" class="ltx_table">
+<p id="S5.T3.2" class="ltx_p ltx_align_center"><span id="S5.T3.2.1" class="ltx_text ltx_inline-block" style="width:433.6pt;">
+<span id="S5.T3.2.1.1" class="ltx_inline-block ltx_transformed_outer" style="width:258.8pt;height:90pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<span id="S5.T3.2.1.1.1" class="ltx_p"><span id="S5.T3.2.1.1.1.1" class="ltx_text">
+<span id="S5.T3.2.1.1.1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<span class="ltx_thead">
+<span id="S5.T3.2.1.1.1.1.1.1.1" class="ltx_tr">
+<span id="S5.T3.2.1.1.1.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt">Model</span>
+<span id="S5.T3.2.1.1.1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Dataset</span>
+<span id="S5.T3.2.1.1.1.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Recall</span>
+<span id="S5.T3.2.1.1.1.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Prec.</span>
+<span id="S5.T3.2.1.1.1.1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">F1-score</span>
+<span id="S5.T3.2.1.1.1.1.1.1.1.6" class="ltx_td ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_tt">AP@.5</span></span>
+</span>
+<span class="ltx_tbody">
+<span id="S5.T3.2.1.1.1.1.1.2.1" class="ltx_tr">
+<span id="S5.T3.2.1.1.1.1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">FR-CNN</span>
+<span id="S5.T3.2.1.1.1.1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">Color</span>
+<span id="S5.T3.2.1.1.1.1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">0.867</span>
+<span id="S5.T3.2.1.1.1.1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">0.889</span>
+<span id="S5.T3.2.1.1.1.1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_t">0.878</span>
+<span id="S5.T3.2.1.1.1.1.1.2.1.6" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">0.890</span></span>
+<span id="S5.T3.2.1.1.1.1.1.3.2" class="ltx_tr">
+<span id="S5.T3.2.1.1.1.1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">FR-CNN</span>
+<span id="S5.T3.2.1.1.1.1.1.3.2.2" class="ltx_td ltx_align_center">Motion</span>
+<span id="S5.T3.2.1.1.1.1.1.3.2.3" class="ltx_td ltx_align_center">0.889</span>
+<span id="S5.T3.2.1.1.1.1.1.3.2.4" class="ltx_td ltx_align_center">0.862</span>
+<span id="S5.T3.2.1.1.1.1.1.3.2.5" class="ltx_td ltx_align_center">0.875</span>
+<span id="S5.T3.2.1.1.1.1.1.3.2.6" class="ltx_td ltx_nopad_r ltx_align_center">0.900</span></span>
+<span id="S5.T3.2.1.1.1.1.1.4.3" class="ltx_tr">
+<span id="S5.T3.2.1.1.1.1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">YOLOv5</span>
+<span id="S5.T3.2.1.1.1.1.1.4.3.2" class="ltx_td ltx_align_center">Color</span>
+<span id="S5.T3.2.1.1.1.1.1.4.3.3" class="ltx_td ltx_align_center">0.888</span>
+<span id="S5.T3.2.1.1.1.1.1.4.3.4" class="ltx_td ltx_align_center">0.897</span>
+<span id="S5.T3.2.1.1.1.1.1.4.3.5" class="ltx_td ltx_align_center">0.892</span>
+<span id="S5.T3.2.1.1.1.1.1.4.3.6" class="ltx_td ltx_nopad_r ltx_align_center">0.914</span></span>
+<span id="S5.T3.2.1.1.1.1.1.5.4" class="ltx_tr">
+<span id="S5.T3.2.1.1.1.1.1.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb">YOLOv5</span>
+<span id="S5.T3.2.1.1.1.1.1.5.4.2" class="ltx_td ltx_align_center ltx_border_bb">Motion</span>
+<span id="S5.T3.2.1.1.1.1.1.5.4.3" class="ltx_td ltx_align_center ltx_border_bb">0.919</span>
+<span id="S5.T3.2.1.1.1.1.1.5.4.4" class="ltx_td ltx_align_center ltx_border_bb">0.852</span>
+<span id="S5.T3.2.1.1.1.1.1.5.4.5" class="ltx_td ltx_align_center ltx_border_bb">0.884</span>
+<span id="S5.T3.2.1.1.1.1.1.5.4.6" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb">0.924</span></span>
+</span>
+</span></span></span>
+</span></span></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S5.T3.3.1.1" class="ltx_text" style="font-size:90%;">Table 3</span>: </span><span id="S5.T3.4.2" class="ltx_text" style="font-size:90%;">Shows the average validation recall, precision, F1-score and AP@.5 for five trained Faster R-CNN and YOLOv5 models
+with color images and motion-enhanced images.</span></figcaption>
+</figure>
+<div id="S5.SS1.p6" class="ltx_para">
+<p id="S5.SS1.p6.1" class="ltx_p">The results show a high recall, precision, and F1-score for all models in the range of 85% to 92%.
+The trained models with motion-enhanced images have a recall of 1-2% higher than with color images, but the precision is 4-5% lower.
+The trained YOLOv5 models have approximately a 1% higher F1-score and 2% higher AP@.5 than Faster R-CNN.
+Based on the results, training with motion-enhanced images does not improve the F1-score.</p>
+</div>
+</section>
+<section id="S5.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span>Test results and discussion</h3>
+
+<div id="S5.SS2.p1" class="ltx_para">
+<p id="S5.SS2.p1.1" class="ltx_p">The test dataset was created from seven different sites and weeks not included in the training and validation datasets.
+A separate YOLOv5 model was trained on the training and validation dataset described in section <a href="#S5.SS1" title="5.1 Train and validation ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Sec.</span> <span class="ltx_text ltx_ref_tag">5.1</span></a>.
+This model performed inference on the selected seven sites and weeks of recordings.
+The results were manually evaluated, removing false predictions and searching for non-detected insects in more than 100,000 images.
+In total, 5,737 insects were found and annotated in this first part of the iterative semi-automated process.
+In the second part, two additional object detection models with Faster R-CNN and YOLOv5 were trained with motion-enhanced images.
+These two models performed inference on the seven sites and predictions were compared with the first part of annotated images, resulting in the finding of an additional 619 insects.
+The complete test dataset is listed in <a href="#S5.T4" title="In 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Tab.</span> <span class="ltx_text ltx_ref_tag">4</span></a></p>
+</div>
+<figure id="S5.T4" class="ltx_table">
+<p id="S5.T4.2" class="ltx_p ltx_align_center"><span id="S5.T4.2.1" class="ltx_text ltx_inline-block" style="width:433.6pt;">
+<span id="S5.T4.2.1.1" class="ltx_inline-block ltx_transformed_outer" style="width:285.5pt;height:144pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<span id="S5.T4.2.1.1.1" class="ltx_p"><span id="S5.T4.2.1.1.1.1" class="ltx_text">
+<span id="S5.T4.2.1.1.1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<span class="ltx_thead">
+<span id="S5.T4.2.1.1.1.1.1.1.1" class="ltx_tr">
+<span id="S5.T4.2.1.1.1.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_tt">Cam.</span>
+<span id="S5.T4.2.1.1.1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Week</span>
+<span id="S5.T4.2.1.1.1.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Insects</span>
+<span id="S5.T4.2.1.1.1.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Images</span>
+<span id="S5.T4.2.1.1.1.1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Ratio (%)</span>
+<span id="S5.T4.2.1.1.1.1.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">View</span>
+<span id="S5.T4.2.1.1.1.1.1.1.1.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_tt">Plant</span></span>
+</span>
+<span class="ltx_tbody">
+<span id="S5.T4.2.1.1.1.1.1.2.1" class="ltx_tr">
+<span id="S5.T4.2.1.1.1.1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t">S1-0</span>
+<span id="S5.T4.2.1.1.1.1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">24</span>
+<span id="S5.T4.2.1.1.1.1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">170</span>
+<span id="S5.T4.2.1.1.1.1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">14,092</span>
+<span id="S5.T4.2.1.1.1.1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_t">1.2</span>
+<span id="S5.T4.2.1.1.1.1.1.2.1.6" class="ltx_td ltx_align_center ltx_border_t">Top</span>
+<span id="S5.T4.2.1.1.1.1.1.2.1.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">Rocket</span></span>
+<span id="S5.T4.2.1.1.1.1.1.3.2" class="ltx_tr">
+<span id="S5.T4.2.1.1.1.1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S1-1</span>
+<span id="S5.T4.2.1.1.1.1.1.3.2.2" class="ltx_td ltx_align_center">29</span>
+<span id="S5.T4.2.1.1.1.1.1.3.2.3" class="ltx_td ltx_align_center">333</span>
+<span id="S5.T4.2.1.1.1.1.1.3.2.4" class="ltx_td ltx_align_center">15,120</span>
+<span id="S5.T4.2.1.1.1.1.1.3.2.5" class="ltx_td ltx_align_center">2.2</span>
+<span id="S5.T4.2.1.1.1.1.1.3.2.6" class="ltx_td ltx_align_center">Top</span>
+<span id="S5.T4.2.1.1.1.1.1.3.2.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</span></span>
+<span id="S5.T4.2.1.1.1.1.1.4.3" class="ltx_tr">
+<span id="S5.T4.2.1.1.1.1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S2-0</span>
+<span id="S5.T4.2.1.1.1.1.1.4.3.2" class="ltx_td ltx_align_center">24</span>
+<span id="S5.T4.2.1.1.1.1.1.4.3.3" class="ltx_td ltx_align_center">322</span>
+<span id="S5.T4.2.1.1.1.1.1.4.3.4" class="ltx_td ltx_align_center">14,066</span>
+<span id="S5.T4.2.1.1.1.1.1.4.3.5" class="ltx_td ltx_align_center">2.3</span>
+<span id="S5.T4.2.1.1.1.1.1.4.3.6" class="ltx_td ltx_align_center">Side</span>
+<span id="S5.T4.2.1.1.1.1.1.4.3.7" class="ltx_td ltx_nopad_r ltx_align_center">Mallow</span></span>
+<span id="S5.T4.2.1.1.1.1.1.5.4" class="ltx_tr">
+<span id="S5.T4.2.1.1.1.1.1.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S2-1</span>
+<span id="S5.T4.2.1.1.1.1.1.5.4.2" class="ltx_td ltx_align_center">26</span>
+<span id="S5.T4.2.1.1.1.1.1.5.4.3" class="ltx_td ltx_align_center">411</span>
+<span id="S5.T4.2.1.1.1.1.1.5.4.4" class="ltx_td ltx_align_center">14,011</span>
+<span id="S5.T4.2.1.1.1.1.1.5.4.5" class="ltx_td ltx_align_center">2.9</span>
+<span id="S5.T4.2.1.1.1.1.1.5.4.6" class="ltx_td ltx_align_center">Side</span>
+<span id="S5.T4.2.1.1.1.1.1.5.4.7" class="ltx_td ltx_nopad_r ltx_align_center">Mallow</span></span>
+<span id="S5.T4.2.1.1.1.1.1.6.5" class="ltx_tr">
+<span id="S5.T4.2.1.1.1.1.1.6.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S3-0</span>
+<span id="S5.T4.2.1.1.1.1.1.6.5.2" class="ltx_td ltx_align_center">28</span>
+<span id="S5.T4.2.1.1.1.1.1.6.5.3" class="ltx_td ltx_align_center">2,100</span>
+<span id="S5.T4.2.1.1.1.1.1.6.5.4" class="ltx_td ltx_align_center">15,120</span>
+<span id="S5.T4.2.1.1.1.1.1.6.5.5" class="ltx_td ltx_align_center">13.9</span>
+<span id="S5.T4.2.1.1.1.1.1.6.5.6" class="ltx_td ltx_align_center">Side</span>
+<span id="S5.T4.2.1.1.1.1.1.6.5.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</span></span>
+<span id="S5.T4.2.1.1.1.1.1.7.6" class="ltx_tr">
+<span id="S5.T4.2.1.1.1.1.1.7.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-0</span>
+<span id="S5.T4.2.1.1.1.1.1.7.6.2" class="ltx_td ltx_align_center">27</span>
+<span id="S5.T4.2.1.1.1.1.1.7.6.3" class="ltx_td ltx_align_center">2,319</span>
+<span id="S5.T4.2.1.1.1.1.1.7.6.4" class="ltx_td ltx_align_center">15,120</span>
+<span id="S5.T4.2.1.1.1.1.1.7.6.5" class="ltx_td ltx_align_center">15.3</span>
+<span id="S5.T4.2.1.1.1.1.1.7.6.6" class="ltx_td ltx_align_center">Side</span>
+<span id="S5.T4.2.1.1.1.1.1.7.6.7" class="ltx_td ltx_nopad_r ltx_align_center">Clover</span></span>
+<span id="S5.T4.2.1.1.1.1.1.8.7" class="ltx_tr">
+<span id="S5.T4.2.1.1.1.1.1.8.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_r">S4-1</span>
+<span id="S5.T4.2.1.1.1.1.1.8.7.2" class="ltx_td ltx_align_center ltx_border_bb">30</span>
+<span id="S5.T4.2.1.1.1.1.1.8.7.3" class="ltx_td ltx_align_center ltx_border_bb">701</span>
+<span id="S5.T4.2.1.1.1.1.1.8.7.4" class="ltx_td ltx_align_center ltx_border_bb">15,120</span>
+<span id="S5.T4.2.1.1.1.1.1.8.7.5" class="ltx_td ltx_align_center ltx_border_bb">4.6</span>
+<span id="S5.T4.2.1.1.1.1.1.8.7.6" class="ltx_td ltx_align_center ltx_border_bb">Top</span>
+<span id="S5.T4.2.1.1.1.1.1.8.7.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb">Clover</span></span>
+</span>
+</span></span></span>
+</span></span></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S5.T4.6.1.1" class="ltx_text" style="font-size:90%;">Table 4</span>: </span><span id="S5.T4.7.2" class="ltx_text" style="font-size:90%;">Shows the test dataset with the number of annotated insects in recordings from seven different camera sites and weeks.
+System number and camera Id (Sx-0/1) identify each camera.
+The percentage ratio of annotated insects relative to the number of images recorded during each week is shown.
+The average ratio is 6.2% insects based on 6,356 annotations in 102,649 time-lapse recorded images.
+The flowering plants are seen with a camera view from the top or side.
+The plant species are Sea rocket (<em id="S5.T4.7.2.1" class="ltx_emph ltx_font_italic">Cakile maritima</em>), red clover (<em id="S5.T4.7.2.2" class="ltx_emph ltx_font_italic">Trifolium prantese</em>), and common mallow (<em id="S5.T4.7.2.3" class="ltx_emph ltx_font_italic">Malva sylvestris</em>).</span></figcaption>
+</figure>
+<div id="S5.SS2.p2" class="ltx_para">
+<p id="S5.SS2.p2.1" class="ltx_p">The test dataset contains sites with varying numbers of insects, ranging from a ratio of 1.2% to 15.3% insects compared to the number of recorded images.
+An average ratio of 6.2% insects was found in 102,649 images.
+Most of the annotated insects were honeybees, but a small number of hoverflies were found at camera site S1-1.
+The monitoring site S1-0 of sea rocket contains other animals such as spiders, beetles, and butterflies.
+Many of the images at site S1-1 were out of focus caused of a very short camera distance to the red clover plants.
+Sites S2-0 and S2-1 monitor common mallow, which was not part of the training and validation dataset.
+Site S4-0 had a longer camera distance to the red clover plants, where many honeybees were only barely visible.
+In general, many insects were partly visible due to occlusion by leaves or flowers where only the head or abdomen of the honeybee could be seen.
+Additional illustrations of insect annotations and detections are included in supplementary material.</p>
+</div>
+<div id="S5.SS2.p3" class="ltx_para">
+<p id="S5.SS2.p3.1" class="ltx_p">In <a href="#S5.T5" title="In 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Tab.</span> <span class="ltx_text ltx_ref_tag">5</span></a> the recall, precision, and F1-score are shown are calculated as an average of the five trained Faster R-CNN models evaluated on the seven test sites.
+The Faster R-CNN models were evaluated on color and motion-enhanced images.
+Recall, precision, and F1-score increased for all seven test sites with Faster R-CNN models trained with motion-enhanced images.
+The micro-average recall was increased by 15% and precision by nearly 40% indicating that our proposed method has a huge impact on detecting small insects.
+Especially verified on a test dataset with another marginal distribution than for the train and validation dataset.
+The F1-score was increased by 24% from 0.320 to 0.555.
+The most difficult test site for the models to predict was S1-0 with a low ratio of insects (1.2%) and with animals such as spiders and beetles not present in the training dataset.</p>
+</div>
+<figure id="S5.T5" class="ltx_table">
+<p id="S5.T5.2" class="ltx_p ltx_align_center"><span id="S5.T5.2.1" class="ltx_text ltx_inline-block" style="width:433.6pt;">
+<span id="S5.T5.2.1.1" class="ltx_inline-block ltx_transformed_outer" style="width:341.5pt;height:198pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<span id="S5.T5.2.1.1.1" class="ltx_p"><span id="S5.T5.2.1.1.1.1" class="ltx_text">
+<span id="S5.T5.2.1.1.1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<span class="ltx_tbody">
+<span id="S5.T5.2.1.1.1.1.1.1.1" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.1.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_r ltx_border_tt"></span>
+<span id="S5.T5.2.1.1.1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_border_tt">FR-CNN</span>
+<span id="S5.T5.2.1.1.1.1.1.1.1.3" class="ltx_td ltx_align_center ltx_border_tt">Motion</span>
+<span id="S5.T5.2.1.1.1.1.1.1.1.4" class="ltx_td ltx_align_center ltx_border_tt">FR-CNN</span>
+<span id="S5.T5.2.1.1.1.1.1.1.1.5" class="ltx_td ltx_align_center ltx_border_tt">Motion</span>
+<span id="S5.T5.2.1.1.1.1.1.1.1.6" class="ltx_td ltx_align_center ltx_border_tt">FR-CNN</span>
+<span id="S5.T5.2.1.1.1.1.1.1.1.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt">Motion</span></span>
+<span id="S5.T5.2.1.1.1.1.1.2.2" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">Camera</span>
+<span id="S5.T5.2.1.1.1.1.1.2.2.2" class="ltx_td ltx_align_center">Recall</span>
+<span id="S5.T5.2.1.1.1.1.1.2.2.3" class="ltx_td ltx_align_center">Recall</span>
+<span id="S5.T5.2.1.1.1.1.1.2.2.4" class="ltx_td ltx_align_center">Precision</span>
+<span id="S5.T5.2.1.1.1.1.1.2.2.5" class="ltx_td ltx_align_center">Precision</span>
+<span id="S5.T5.2.1.1.1.1.1.2.2.6" class="ltx_td ltx_align_center">F1-score</span>
+<span id="S5.T5.2.1.1.1.1.1.2.2.7" class="ltx_td ltx_nopad_r ltx_align_center">F1-score</span></span>
+<span id="S5.T5.2.1.1.1.1.1.3.3" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t">S1-0</span>
+<span id="S5.T5.2.1.1.1.1.1.3.3.2" class="ltx_td ltx_align_center ltx_border_t">0.051</span>
+<span id="S5.T5.2.1.1.1.1.1.3.3.3" class="ltx_td ltx_align_center ltx_border_t">0.262</span>
+<span id="S5.T5.2.1.1.1.1.1.3.3.4" class="ltx_td ltx_align_center ltx_border_t">0.032</span>
+<span id="S5.T5.2.1.1.1.1.1.3.3.5" class="ltx_td ltx_align_center ltx_border_t">0.758</span>
+<span id="S5.T5.2.1.1.1.1.1.3.3.6" class="ltx_td ltx_align_center ltx_border_t">0.037</span>
+<span id="S5.T5.2.1.1.1.1.1.3.3.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">0.385</span></span>
+<span id="S5.T5.2.1.1.1.1.1.4.4" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.4.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S1-1</span>
+<span id="S5.T5.2.1.1.1.1.1.4.4.2" class="ltx_td ltx_align_center">0.141</span>
+<span id="S5.T5.2.1.1.1.1.1.4.4.3" class="ltx_td ltx_align_center">0.413</span>
+<span id="S5.T5.2.1.1.1.1.1.4.4.4" class="ltx_td ltx_align_center">0.112</span>
+<span id="S5.T5.2.1.1.1.1.1.4.4.5" class="ltx_td ltx_align_center">0.488</span>
+<span id="S5.T5.2.1.1.1.1.1.4.4.6" class="ltx_td ltx_align_center">0.112</span>
+<span id="S5.T5.2.1.1.1.1.1.4.4.7" class="ltx_td ltx_nopad_r ltx_align_center">0.435</span></span>
+<span id="S5.T5.2.1.1.1.1.1.5.5" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.5.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S2-0</span>
+<span id="S5.T5.2.1.1.1.1.1.5.5.2" class="ltx_td ltx_align_center">0.305</span>
+<span id="S5.T5.2.1.1.1.1.1.5.5.3" class="ltx_td ltx_align_center">0.529</span>
+<span id="S5.T5.2.1.1.1.1.1.5.5.4" class="ltx_td ltx_align_center">0.250</span>
+<span id="S5.T5.2.1.1.1.1.1.5.5.5" class="ltx_td ltx_align_center">0.650</span>
+<span id="S5.T5.2.1.1.1.1.1.5.5.6" class="ltx_td ltx_align_center">0.274</span>
+<span id="S5.T5.2.1.1.1.1.1.5.5.7" class="ltx_td ltx_nopad_r ltx_align_center">0.576</span></span>
+<span id="S5.T5.2.1.1.1.1.1.6.6" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.6.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S2-1</span>
+<span id="S5.T5.2.1.1.1.1.1.6.6.2" class="ltx_td ltx_align_center">0.355</span>
+<span id="S5.T5.2.1.1.1.1.1.6.6.3" class="ltx_td ltx_align_center">0.496</span>
+<span id="S5.T5.2.1.1.1.1.1.6.6.4" class="ltx_td ltx_align_center">0.398</span>
+<span id="S5.T5.2.1.1.1.1.1.6.6.5" class="ltx_td ltx_align_center">0.599</span>
+<span id="S5.T5.2.1.1.1.1.1.6.6.6" class="ltx_td ltx_align_center">0.374</span>
+<span id="S5.T5.2.1.1.1.1.1.6.6.7" class="ltx_td ltx_nopad_r ltx_align_center">0.532</span></span>
+<span id="S5.T5.2.1.1.1.1.1.7.7" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.7.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S3-0</span>
+<span id="S5.T5.2.1.1.1.1.1.7.7.2" class="ltx_td ltx_align_center">0.404</span>
+<span id="S5.T5.2.1.1.1.1.1.7.7.3" class="ltx_td ltx_align_center">0.487</span>
+<span id="S5.T5.2.1.1.1.1.1.7.7.4" class="ltx_td ltx_align_center">0.538</span>
+<span id="S5.T5.2.1.1.1.1.1.7.7.5" class="ltx_td ltx_align_center">0.840</span>
+<span id="S5.T5.2.1.1.1.1.1.7.7.6" class="ltx_td ltx_align_center">0.459</span>
+<span id="S5.T5.2.1.1.1.1.1.7.7.7" class="ltx_td ltx_nopad_r ltx_align_center">0.612</span></span>
+<span id="S5.T5.2.1.1.1.1.1.8.8" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.8.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-0</span>
+<span id="S5.T5.2.1.1.1.1.1.8.8.2" class="ltx_td ltx_align_center">0.178</span>
+<span id="S5.T5.2.1.1.1.1.1.8.8.3" class="ltx_td ltx_align_center">0.365</span>
+<span id="S5.T5.2.1.1.1.1.1.8.8.4" class="ltx_td ltx_align_center">0.539</span>
+<span id="S5.T5.2.1.1.1.1.1.8.8.5" class="ltx_td ltx_align_center">0.891</span>
+<span id="S5.T5.2.1.1.1.1.1.8.8.6" class="ltx_td ltx_align_center">0.267</span>
+<span id="S5.T5.2.1.1.1.1.1.8.8.7" class="ltx_td ltx_nopad_r ltx_align_center">0.515</span></span>
+<span id="S5.T5.2.1.1.1.1.1.9.9" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.9.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-1</span>
+<span id="S5.T5.2.1.1.1.1.1.9.9.2" class="ltx_td ltx_align_center">0.496</span>
+<span id="S5.T5.2.1.1.1.1.1.9.9.3" class="ltx_td ltx_align_center">0.585</span>
+<span id="S5.T5.2.1.1.1.1.1.9.9.4" class="ltx_td ltx_align_center">0.262</span>
+<span id="S5.T5.2.1.1.1.1.1.9.9.5" class="ltx_td ltx_align_center">0.634</span>
+<span id="S5.T5.2.1.1.1.1.1.9.9.6" class="ltx_td ltx_align_center">0.337</span>
+<span id="S5.T5.2.1.1.1.1.1.9.9.7" class="ltx_td ltx_nopad_r ltx_align_center">0.603</span></span>
+<span id="S5.T5.2.1.1.1.1.1.10.10" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.10.10.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_tt">Macro</span>
+<span id="S5.T5.2.1.1.1.1.1.10.10.2" class="ltx_td ltx_align_center ltx_border_tt">0.276</span>
+<span id="S5.T5.2.1.1.1.1.1.10.10.3" class="ltx_td ltx_align_center ltx_border_tt">0.448</span>
+<span id="S5.T5.2.1.1.1.1.1.10.10.4" class="ltx_td ltx_align_center ltx_border_tt">0.305</span>
+<span id="S5.T5.2.1.1.1.1.1.10.10.5" class="ltx_td ltx_align_center ltx_border_tt">0.694</span>
+<span id="S5.T5.2.1.1.1.1.1.10.10.6" class="ltx_td ltx_align_center ltx_border_tt">0.266</span>
+<span id="S5.T5.2.1.1.1.1.1.10.10.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt">0.522</span></span>
+<span id="S5.T5.2.1.1.1.1.1.11.11" class="ltx_tr">
+<span id="S5.T5.2.1.1.1.1.1.11.11.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_r">Micro</span>
+<span id="S5.T5.2.1.1.1.1.1.11.11.2" class="ltx_td ltx_align_center ltx_border_bb">0.300</span>
+<span id="S5.T5.2.1.1.1.1.1.11.11.3" class="ltx_td ltx_align_center ltx_border_bb">0.446</span>
+<span id="S5.T5.2.1.1.1.1.1.11.11.4" class="ltx_td ltx_align_center ltx_border_bb">0.344</span>
+<span id="S5.T5.2.1.1.1.1.1.11.11.5" class="ltx_td ltx_align_center ltx_border_bb">0.751</span>
+<span id="S5.T5.2.1.1.1.1.1.11.11.6" class="ltx_td ltx_align_center ltx_border_bb">0.320</span>
+<span id="S5.T5.2.1.1.1.1.1.11.11.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb">0.555</span></span>
+</span>
+</span></span></span>
+</span></span></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S5.T5.3.1.1" class="ltx_text" style="font-size:90%;">Table 5</span>: </span><span id="S5.T5.4.2" class="ltx_text" style="font-size:90%;">Recall, precision, and F1-score on average for each camera site used in the test dataset.
+The average is calculated based on five trained Faster R-CNN with ResNet50 models compared
+with five models trained with motion-enhanced images.
+The macro and micro average metrics cover results from all seven camera sites and weeks.</span></figcaption>
+</figure>
+<div id="S5.SS2.p4" class="ltx_para">
+<p id="S5.SS2.p4.1" class="ltx_p">In <a href="#S5.T6" title="In 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Tab.</span> <span class="ltx_text ltx_ref_tag">6</span></a> the recall, precision, and F1-score are shown are calculated as an average of five trained YOLOv5 models evaluated on the seven test sites.
+The YOLOv5 models were evaluated on color images and motion-enhanced images.
+The micro-average recall was increased by 28.2% and precision by only 7%.
+However, the micro-average F1-score was increased by 22% from 0.490 to 0.713, indicating that motion-enhanced images do increase the ability to detect insects in the test dataset.
+The YOLOv5 models outperformed the Faster R-CNN trained models, achieving an increase of 16% for the micro-average F1-score from 0.555 to 0.713.
+Remark that camera sites S2-0 and S2-1 with common mallow, not included in the training,
+perform extremely well with motion-enhanced images achieving an F1-score of 0.643 and 0.618 respectively.
+Camera sites S3-0, S4-0, and S4-1 achieve the best recall, precision, and F1-score.
+This is probably due to the high insect ratio of 4.6%-15.3% and red clover plants were heavily represented in the training dataset.</p>
+</div>
+<figure id="S5.T6" class="ltx_table">
+<p id="S5.T6.2" class="ltx_p ltx_align_center"><span id="S5.T6.2.1" class="ltx_text ltx_inline-block" style="width:433.6pt;">
+<span id="S5.T6.2.1.1" class="ltx_inline-block ltx_transformed_outer" style="width:341.8pt;height:198pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<span id="S5.T6.2.1.1.1" class="ltx_p"><span id="S5.T6.2.1.1.1.1" class="ltx_text">
+<span id="S5.T6.2.1.1.1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<span class="ltx_tbody">
+<span id="S5.T6.2.1.1.1.1.1.1.1" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.1.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_r ltx_border_tt"></span>
+<span id="S5.T6.2.1.1.1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_border_tt">YOLOv5</span>
+<span id="S5.T6.2.1.1.1.1.1.1.1.3" class="ltx_td ltx_align_center ltx_border_tt">Motion</span>
+<span id="S5.T6.2.1.1.1.1.1.1.1.4" class="ltx_td ltx_align_center ltx_border_tt">YOLOv5</span>
+<span id="S5.T6.2.1.1.1.1.1.1.1.5" class="ltx_td ltx_align_center ltx_border_tt">Motion</span>
+<span id="S5.T6.2.1.1.1.1.1.1.1.6" class="ltx_td ltx_align_center ltx_border_tt">YOLOv5</span>
+<span id="S5.T6.2.1.1.1.1.1.1.1.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt">Motion</span></span>
+<span id="S5.T6.2.1.1.1.1.1.2.2" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">Camera</span>
+<span id="S5.T6.2.1.1.1.1.1.2.2.2" class="ltx_td ltx_align_center">Recall</span>
+<span id="S5.T6.2.1.1.1.1.1.2.2.3" class="ltx_td ltx_align_center">Recall</span>
+<span id="S5.T6.2.1.1.1.1.1.2.2.4" class="ltx_td ltx_align_center">Precision</span>
+<span id="S5.T6.2.1.1.1.1.1.2.2.5" class="ltx_td ltx_align_center">Precision</span>
+<span id="S5.T6.2.1.1.1.1.1.2.2.6" class="ltx_td ltx_align_center">F1-score</span>
+<span id="S5.T6.2.1.1.1.1.1.2.2.7" class="ltx_td ltx_nopad_r ltx_align_center">F1-score</span></span>
+<span id="S5.T6.2.1.1.1.1.1.3.3" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t">S1-0</span>
+<span id="S5.T6.2.1.1.1.1.1.3.3.2" class="ltx_td ltx_align_center ltx_border_t">0.028</span>
+<span id="S5.T6.2.1.1.1.1.1.3.3.3" class="ltx_td ltx_align_center ltx_border_t">0.284</span>
+<span id="S5.T6.2.1.1.1.1.1.3.3.4" class="ltx_td ltx_align_center ltx_border_t">0.019</span>
+<span id="S5.T6.2.1.1.1.1.1.3.3.5" class="ltx_td ltx_align_center ltx_border_t">0.693</span>
+<span id="S5.T6.2.1.1.1.1.1.3.3.6" class="ltx_td ltx_align_center ltx_border_t">0.017</span>
+<span id="S5.T6.2.1.1.1.1.1.3.3.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">0.389</span></span>
+<span id="S5.T6.2.1.1.1.1.1.4.4" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.4.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S1-1</span>
+<span id="S5.T6.2.1.1.1.1.1.4.4.2" class="ltx_td ltx_align_center">0.126</span>
+<span id="S5.T6.2.1.1.1.1.1.4.4.3" class="ltx_td ltx_align_center">0.502</span>
+<span id="S5.T6.2.1.1.1.1.1.4.4.4" class="ltx_td ltx_align_center">0.210</span>
+<span id="S5.T6.2.1.1.1.1.1.4.4.5" class="ltx_td ltx_align_center">0.437</span>
+<span id="S5.T6.2.1.1.1.1.1.4.4.6" class="ltx_td ltx_align_center">0.147</span>
+<span id="S5.T6.2.1.1.1.1.1.4.4.7" class="ltx_td ltx_nopad_r ltx_align_center">0.463</span></span>
+<span id="S5.T6.2.1.1.1.1.1.5.5" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.5.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S2-0</span>
+<span id="S5.T6.2.1.1.1.1.1.5.5.2" class="ltx_td ltx_align_center">0.288</span>
+<span id="S5.T6.2.1.1.1.1.1.5.5.3" class="ltx_td ltx_align_center">0.630</span>
+<span id="S5.T6.2.1.1.1.1.1.5.5.4" class="ltx_td ltx_align_center">0.619</span>
+<span id="S5.T6.2.1.1.1.1.1.5.5.5" class="ltx_td ltx_align_center">0.674</span>
+<span id="S5.T6.2.1.1.1.1.1.5.5.6" class="ltx_td ltx_align_center">0.376</span>
+<span id="S5.T6.2.1.1.1.1.1.5.5.7" class="ltx_td ltx_nopad_r ltx_align_center">0.643</span></span>
+<span id="S5.T6.2.1.1.1.1.1.6.6" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.6.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S2-1</span>
+<span id="S5.T6.2.1.1.1.1.1.6.6.2" class="ltx_td ltx_align_center">0.335</span>
+<span id="S5.T6.2.1.1.1.1.1.6.6.3" class="ltx_td ltx_align_center">0.635</span>
+<span id="S5.T6.2.1.1.1.1.1.6.6.4" class="ltx_td ltx_align_center">0.784</span>
+<span id="S5.T6.2.1.1.1.1.1.6.6.5" class="ltx_td ltx_align_center">0.621</span>
+<span id="S5.T6.2.1.1.1.1.1.6.6.6" class="ltx_td ltx_align_center">0.461</span>
+<span id="S5.T6.2.1.1.1.1.1.6.6.7" class="ltx_td ltx_nopad_r ltx_align_center">0.618</span></span>
+<span id="S5.T6.2.1.1.1.1.1.7.7" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.7.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S3-0</span>
+<span id="S5.T6.2.1.1.1.1.1.7.7.2" class="ltx_td ltx_align_center">0.442</span>
+<span id="S5.T6.2.1.1.1.1.1.7.7.3" class="ltx_td ltx_align_center">0.694</span>
+<span id="S5.T6.2.1.1.1.1.1.7.7.4" class="ltx_td ltx_align_center">0.890</span>
+<span id="S5.T6.2.1.1.1.1.1.7.7.5" class="ltx_td ltx_align_center">0.879</span>
+<span id="S5.T6.2.1.1.1.1.1.7.7.6" class="ltx_td ltx_align_center">0.587</span>
+<span id="S5.T6.2.1.1.1.1.1.7.7.7" class="ltx_td ltx_nopad_r ltx_align_center">0.772</span></span>
+<span id="S5.T6.2.1.1.1.1.1.8.8" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.8.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-0</span>
+<span id="S5.T6.2.1.1.1.1.1.8.8.2" class="ltx_td ltx_align_center">0.368</span>
+<span id="S5.T6.2.1.1.1.1.1.8.8.3" class="ltx_td ltx_align_center">0.665</span>
+<span id="S5.T6.2.1.1.1.1.1.8.8.4" class="ltx_td ltx_align_center">0.890</span>
+<span id="S5.T6.2.1.1.1.1.1.8.8.5" class="ltx_td ltx_align_center">0.865</span>
+<span id="S5.T6.2.1.1.1.1.1.8.8.6" class="ltx_td ltx_align_center">0.517</span>
+<span id="S5.T6.2.1.1.1.1.1.8.8.7" class="ltx_td ltx_nopad_r ltx_align_center">0.747</span></span>
+<span id="S5.T6.2.1.1.1.1.1.9.9" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.9.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">S4-1</span>
+<span id="S5.T6.2.1.1.1.1.1.9.9.2" class="ltx_td ltx_align_center">0.486</span>
+<span id="S5.T6.2.1.1.1.1.1.9.9.3" class="ltx_td ltx_align_center">0.733</span>
+<span id="S5.T6.2.1.1.1.1.1.9.9.4" class="ltx_td ltx_align_center">0.917</span>
+<span id="S5.T6.2.1.1.1.1.1.9.9.5" class="ltx_td ltx_align_center">0.727</span>
+<span id="S5.T6.2.1.1.1.1.1.9.9.6" class="ltx_td ltx_align_center">0.634</span>
+<span id="S5.T6.2.1.1.1.1.1.9.9.7" class="ltx_td ltx_nopad_r ltx_align_center">0.727</span></span>
+<span id="S5.T6.2.1.1.1.1.1.10.10" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.10.10.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_tt">Macro</span>
+<span id="S5.T6.2.1.1.1.1.1.10.10.2" class="ltx_td ltx_align_center ltx_border_tt">0.296</span>
+<span id="S5.T6.2.1.1.1.1.1.10.10.3" class="ltx_td ltx_align_center ltx_border_tt">0.592</span>
+<span id="S5.T6.2.1.1.1.1.1.10.10.4" class="ltx_td ltx_align_center ltx_border_tt">0.619</span>
+<span id="S5.T6.2.1.1.1.1.1.10.10.5" class="ltx_td ltx_align_center ltx_border_tt">0.699</span>
+<span id="S5.T6.2.1.1.1.1.1.10.10.6" class="ltx_td ltx_align_center ltx_border_tt">0.392</span>
+<span id="S5.T6.2.1.1.1.1.1.10.10.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt">0.623</span></span>
+<span id="S5.T6.2.1.1.1.1.1.11.11" class="ltx_tr">
+<span id="S5.T6.2.1.1.1.1.1.11.11.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_r">Micro</span>
+<span id="S5.T6.2.1.1.1.1.1.11.11.2" class="ltx_td ltx_align_center ltx_border_bb">0.377</span>
+<span id="S5.T6.2.1.1.1.1.1.11.11.3" class="ltx_td ltx_align_center ltx_border_bb">0.659</span>
+<span id="S5.T6.2.1.1.1.1.1.11.11.4" class="ltx_td ltx_align_center ltx_border_bb">0.718</span>
+<span id="S5.T6.2.1.1.1.1.1.11.11.5" class="ltx_td ltx_align_center ltx_border_bb">0.784</span>
+<span id="S5.T6.2.1.1.1.1.1.11.11.6" class="ltx_td ltx_align_center ltx_border_bb">0.490</span>
+<span id="S5.T6.2.1.1.1.1.1.11.11.7" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb">0.713</span></span>
+</span>
+</span></span></span>
+</span></span></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S5.T6.3.1.1" class="ltx_text" style="font-size:90%;">Table 6</span>: </span><span id="S5.T6.4.2" class="ltx_text" style="font-size:90%;">Recall, precision, and F1-score on average for each camera site used in the test dataset.
+The average is calculated based on five trained YOLOv5 models compared
+with five models trained with motion-enhanced images.
+The macro and micro average metrics cover results from all seven camera sites and weeks.</span></figcaption>
+</figure>
+<div id="S5.SS2.p5" class="ltx_para">
+<p id="S5.SS2.p5.1" class="ltx_p">The box plot of the F1-scores shown in <a href="#S5.F4" title="In 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">4</span></a> indicates an increasing F1-score with motion-trained models.
+It also shows a lower variation in the ability to detect insects between the seven different test sites, indicating a more robust detector.</p>
+</div>
+<figure id="S5.F4" class="ltx_figure"><img src="/html/2212.00423/assets/figs/F1scoreBoxPlot.png" id="S5.F4.g1" class="ltx_graphics ltx_centering ltx_img_square" width="359" height="362" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S5.F4.2.1.1" class="ltx_text" style="font-size:90%;">Figure 4</span>: </span><span id="S5.F4.3.2" class="ltx_text" style="font-size:90%;">Box plot of F1-score for seven sites of YOLOv5 and Faster R-CNN models trained with color and motion-enhanced (M) images.
+The horizontal orange mark indicates the micro-average F1-score based on all seven test sites.</span></figcaption>
+</figure>
+<figure id="S5.F5" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S5.F5.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2212.00423/assets/figs/AbundanceColor.png" id="S5.F5.sf1.g1" class="ltx_graphics ltx_img_landscape" width="598" height="338" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S5.F5.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="S5.F5.sf1.3.2" class="ltx_text" style="font-size:90%;">YOLOv5 with color images.</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S5.F5.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2212.00423/assets/figs/AbundanceMotion.png" id="S5.F5.sf2.g1" class="ltx_graphics ltx_img_landscape" width="598" height="338" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S5.F5.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="S5.F5.sf2.3.2" class="ltx_text" style="font-size:90%;">YOLOv5 with motion-enhanced images.</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S5.F5.2.1.1" class="ltx_text" style="font-size:90%;">Figure 5</span>: </span><span id="S5.F5.3.2" class="ltx_text" style="font-size:90%;">The abundance of insects from the two months monitoring period of flowers and insects.
+A two minutes filter is used to remove detections at the same spatial position in the time-lapse image sequence.
+The red and green curve shows the non-filtered and filtered detections, respectively.
+The difference between the curves indicates false predictions or an insect detected at the same position within two minutes.</span></figcaption>
+</figure>
+<figure id="S5.F6" class="ltx_figure">
+<p id="S5.F6.1" class="ltx_p ltx_align_center"><span id="S5.F6.1.1" class="ltx_text ltx_framed ltx_framed_rectangle" style="border-color: #000000;"><img src="/html/2212.00423/assets/x1.png" id="S5.F6.1.1.g1" class="ltx_graphics ltx_img_landscape" width="415" height="285" alt="Refer to caption"></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S5.F6.3.1.1" class="ltx_text" style="font-size:90%;">Figure 6</span>: </span><span id="S5.F6.4.2" class="ltx_text" style="font-size:90%;">Images with micro-average F1-scores from six different sites for YOLOv5 and Faster R-CNN trained models.
+The colors for F1-score bars of models are Faster R-CNN (F) light blue, Faster R-CNN with motion (FM) blue, YOLOv5 (Y) purple, and YOLOv5 with motion (YM) red.
+The six sites are Rocket top 1.2 (S1-0), Mallow 2.9 (S2-1), Clover top 2.3 (S1-1), Clover top 4.6 (S4-1), Clover side 13.9 (S3-0), Clover side 15.2 (S4-0).
+</span></figcaption>
+</figure>
+<div id="S5.SS2.p6" class="ltx_para">
+<p id="S5.SS2.p6.1" class="ltx_p"><a href="#S5.F5" title="In 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">5</span></a> shows the abundance of insects detected with two YOLOv5 models trained on color and motion-enhanced images over the two months of the experiment, including images from both training, validation, and test datasets.
+False insect detections are typically found in the same spatial position of the image.
+A honeybee visit within the camera view typically has a duration of fewer than 120 seconds documented in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>.
+A filter is therefore used to remove detections for the same spatial position within two minutes in the time-lapse image sequence.
+<a href="#S5.F5.sf1" title="In Figure 5 ‣ 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">5(a)</span></a> shows the abundance of a YOLOv5 model trained with color images.
+There are periods with a high difference in the filtered and non-filtered detections probably due to a high number of false insect detections.
+<a href="#S5.F5.sf2" title="In Figure 5 ‣ 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">5(b)</span></a> shows the abundance of a YOLOv5 model trained with motion-enhanced images.
+The model trained with motion-enhanced images shows in general a higher number of detections than the model trained with color images indicating more insects were found and detected.
+A visual overview of the results showing the micro-average F1-score for six different sites is shown in <a href="#S5.F6" title="In 5.2 Test results and discussion ‣ 5 Experiment and results ‣ Motion Informed Object Detection of Small Insects in Time-lapse Camera Recordings" class="ltx_ref"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">6</span></a>.
+Here it is evident that MIE improves the ability to detect small insects with a variety of background plants, camera view, and distance.
+It is also seen that with a higher ratio of insects, the overall F1-score is increased.
+Trained models with MIE are especially better at detecting insects on sites with sparse insects (Rocket top 1.2) and plants out of focus close to the camera (Clover top 2.3).</p>
+</div>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>Conclusion</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">This work provides a public benchmark dataset of annotated insects for time-lapse monitoring from seven different sites.
+The dataset meets an important demand for future research in detecting small objects <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib46" title="" class="ltx_ref">46</a>]</cite>.
+The test dataset includes 6,356 annotated insects in 102,649 images of complex scenes of the natural environment including three different plants of vegetation.
+A train and validation dataset is also published and verified with our newly proposed method to train the deep learning models with motion-enhanced images.
+The hypothesis that Motion-Information-Enhancement will improve insect detection in the wildlife environment has been proven.
+The trained CNN object detectors with YOLOv5 and Faster R-CNN demonstrate on the test datasets a micro-average F1-score of 0.71 and 0.56 respectively.
+This is a higher F1-score compared with models trained on normal color images, achieving only 0.49 with YOLOV5 and 0.32 with Faster R-CNN.
+Both models trained with motion-enhanced images have a higher recall than with color images, where YOLOv5 and Faster R-CNN are increased by 28% and 15%, respectively.
+Our work provides a step forward to automate the monitoring of flying insects in a complex and dynamic natural environment using time-lapse cameras and deep learning.</p>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<div id="S6.p2" class="ltx_para">
+<p id="S6.p2.1" class="ltx_p"><span id="S6.p2.1.1" class="ltx_text"> </span></p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography" style="font-size:90%;">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text" style="font-size:90%;">
+Camilo Aguilar, Mathias Ortner, and Josiane Zerubia.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.2.1" class="ltx_text" style="font-size:90%;">Small Object Detection and Tracking in Satellite Videos With Motion
+Informed-CNN and GM-PHD Filter.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Frontiers in Signal Processing</span><span id="bib.bib1.4.2" class="ltx_text" style="font-size:90%;">, 2, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text" style="font-size:90%;">
+Sarah E. Barlow and Mark A. O’Neill.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.2.1" class="ltx_text" style="font-size:90%;">Technological advances in field studies of pollinator ecology and
+the future of e-ecology.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Current Opinion in Insect Science</span><span id="bib.bib2.4.2" class="ltx_text" style="font-size:90%;">, 38, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text" style="font-size:90%;">
+Philipp Bergmann, Tim Meinhardt, and Laura Leal-Taixe.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.2.1" class="ltx_text" style="font-size:90%;">Tracking without bells and whistles.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib3.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE International Conference on Computer
+Vision</span><span id="bib.bib3.5.3" class="ltx_text" style="font-size:90%;">, volume 2019-October, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text" style="font-size:90%;">
+Kim Bjerge, Jamie Alison, Mads Dyrmann, Carsten Eie Frigaard, Hjalte M. R.
+Mann, and Toke Thomas Hoye.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.2.1" class="ltx_text" style="font-size:90%;">Accurate detection and identification of insects from camera trap
+images with deep learning.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">bioRxiv</span><span id="bib.bib4.4.2" class="ltx_text" style="font-size:90%;">, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text" style="font-size:90%;">
+Kim Bjerge, Hjalte M.R. Mann, and Toke T. Høye.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.2.1" class="ltx_text" style="font-size:90%;">Real-time insect tracking and monitoring with computer vision and
+deep learning.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Remote Sensing in Ecology and Conservation</span><span id="bib.bib5.4.2" class="ltx_text" style="font-size:90%;">, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text" style="font-size:90%;">
+Kim Bjerge, Jakob Bonde Nielsen, Martin Videbæk Sepstrup, Flemming
+Helsing-Nielsen, and Toke Thomas Høye.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.2.1" class="ltx_text" style="font-size:90%;">An automated light trap to monitor moths (Lepidoptera) using
+computer vision-based tracking and deep learning.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Sensors (Switzerland)</span><span id="bib.bib6.4.2" class="ltx_text" style="font-size:90%;">, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text" style="font-size:90%;">
+Alexey Bochkovskiy, Chien-Yao Wang, and Hong-Yuan Mark Liao.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.2.1" class="ltx_text" style="font-size:90%;">YOLOv4: Optimal Speed and Accuracy of Object Detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">arXiv</span><span id="bib.bib7.4.2" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text" style="font-size:90%;">
+Changqing Cao, Bo Wang, Wenrui Zhang, Xiaodong Zeng, Xu Yan, Zhejun Feng, Yutao
+Liu, and Zengyan Wu.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.2.1" class="ltx_text" style="font-size:90%;">An Improved Faster R-CNN for Small Object Detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Access</span><span id="bib.bib8.4.2" class="ltx_text" style="font-size:90%;">, 7, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text" style="font-size:90%;">
+Gerardo Ceballos, Paul R. Ehrlich, and Rodolfo Dirzo.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.2.1" class="ltx_text" style="font-size:90%;">Biological annihilation via the ongoing sixth mass extinction
+signaled by vertebrate population losses and declines.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the National Academy of Sciences of the United
+States of America</span><span id="bib.bib9.4.2" class="ltx_text" style="font-size:90%;">, 114(30), 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span id="bib.bib10.1.1" class="ltx_text" style="font-size:90%;">
+Chunfang Deng, Mengmeng Wang, Liang Liu, Yong Liu, and Yunliang Jiang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.2.1" class="ltx_text" style="font-size:90%;">Extended Feature Pyramid Network for Small Object Detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Transactions on Multimedia</span><span id="bib.bib10.4.2" class="ltx_text" style="font-size:90%;">, 24, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span id="bib.bib11.1.1" class="ltx_text" style="font-size:90%;">
+Raphael K. Didham, Yves Basset, C. Matilda Collins, Simon R. Leather, Nick A.
+Littlewood, Myles H.M. Menz, Jörg Müller, Laurence Packer,
+Manu E. Saunders, Karsten Schönrogge, Alan J.A. Stewart, Stephen P.
+Yanoviak, and Christopher Hassall.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.2.1" class="ltx_text" style="font-size:90%;">Interpreting insect declines: seven challenges and a way forward.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Insect Conservation and Diversity</span><span id="bib.bib11.4.2" class="ltx_text" style="font-size:90%;">, 13(2), 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span id="bib.bib12.1.1" class="ltx_text" style="font-size:90%;">
+Peng Du, Xiujie Qu, Tianbo Wei, Cheng Peng, Xinru Zhong, and Chen Chen.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.2.1" class="ltx_text" style="font-size:90%;">Research on Small Size Object Detection in Complex Background.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib12.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings 2018 Chinese Automation Congress, CAC 2018</span><span id="bib.bib12.5.3" class="ltx_text" style="font-size:90%;">,
+2019.
+</span>
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text" style="font-size:90%;">
+Panagiotis Eliopoulos, Nikolaos Alexandros Tatlas, Iraklis Rigakis, and Ilyas
+Potamitis.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.2.1" class="ltx_text" style="font-size:90%;">A “smart” trap device for detection of crawling insects and
+other arthropods in urban environments.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Electronics (Switzerland)</span><span id="bib.bib13.4.2" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text" style="font-size:90%;">
+R Fox, Ms Parsons, and Jw Chapman.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.2.1" class="ltx_text" style="font-size:90%;">The State of Britain’s Larger Moths 2013.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.3.1" class="ltx_text" style="font-size:90%;">Technical report, Wareham, Dorset, UK, 2013.
+</span>
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span id="bib.bib15.1.1" class="ltx_text" style="font-size:90%;">
+Carrillo J Geissmann Q, Abram PK, Wu D, Haney CH.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.2.1" class="ltx_text" style="font-size:90%;">Sticky Pi is a high-frequency smart trap that enables the study of
+insect circadian activity under natural conditions.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">PLoS Biol.</span><span id="bib.bib15.4.2" class="ltx_text" style="font-size:90%;">, 20(7), 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text" style="font-size:90%;">
+Alexander Gerovichev, Achiad Sadeh, Vlad Winter, Avi Bar-Massada, Tamar Keasar,
+and Chen Keasar.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.2.1" class="ltx_text" style="font-size:90%;">High Throughput Data Acquisition and Deep Learning for Insect
+Ecoinformatics.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Frontiers in Ecology and Evolution</span><span id="bib.bib16.4.2" class="ltx_text" style="font-size:90%;">, 9, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span id="bib.bib17.1.1" class="ltx_text" style="font-size:90%;">
+Amy Marie Gilpin, Andrew J. Denham, and David J. Ayre.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.2.1" class="ltx_text" style="font-size:90%;">The use of digital video recorders in pollination biology.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Ecological Entomology</span><span id="bib.bib17.4.2" class="ltx_text" style="font-size:90%;">, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span id="bib.bib18.1.1" class="ltx_text" style="font-size:90%;">
+Caspar A. Hallmann, Martin Sorg, Eelke Jongejans, Henk Siepel, Nick Hofland,
+Heinz Schwan, Werner Stenmans, Andreas Müller, Hubert Sumser, Thomas
+Hörren, Dave Goulson, and Hans De Kroon.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.2.1" class="ltx_text" style="font-size:90%;">More than 75 percent decline over 27 years in total flying insect
+biomass in protected areas.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">PLoS ONE</span><span id="bib.bib18.4.2" class="ltx_text" style="font-size:90%;">, 12(10), 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text" style="font-size:90%;">
+Yanyong Han and Yandong Han.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.2.1" class="ltx_text" style="font-size:90%;">A Deep Lightweight Convolutional Neural Network Method for Real-Time
+Small Object Detection in Optical Remote Sensing Images.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Sensing and Imaging</span><span id="bib.bib19.4.2" class="ltx_text" style="font-size:90%;">, 22(1), 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text" style="font-size:90%;">
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.2.1" class="ltx_text" style="font-size:90%;">Deep Residual Learning for Image Recognition.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib20.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of 2016 IEEE Conference on Computer Vision and
+Pattern Recognition</span><span id="bib.bib20.5.3" class="ltx_text" style="font-size:90%;">, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text" style="font-size:90%;">
+Toke T. Høye, Johanna Ärje, Kim Bjerge, Oskar L. P. Hansen, Alexandros
+Iosifidis, Florian Leese, Hjalte M. R. Mann, Kristian Meissner, Claus Melvad,
+and Jenni Raitoharju.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.2.1" class="ltx_text" style="font-size:90%;">Deep learning and computer vision will transform entomology.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the National Academy of Sciences</span><span id="bib.bib21.4.2" class="ltx_text" style="font-size:90%;">, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span id="bib.bib22.1.1" class="ltx_text" style="font-size:90%;">
+Guo X. Hu, Zhong Yang, Lei Hu, Li Huang, and Jia M. Han.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.2.1" class="ltx_text" style="font-size:90%;">Small Object Detection with Multiscale Features.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">International Journal of Digital Multimedia Broadcasting</span><span id="bib.bib22.4.2" class="ltx_text" style="font-size:90%;">, 2018,
+2018.
+</span>
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span id="bib.bib23.1.1" class="ltx_text" style="font-size:90%;">
+Haixin Huang, Xueduo Tang, Feng Wen, and Xin Jin.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.2.1" class="ltx_text" style="font-size:90%;">Small object detection method with shallow feature fusion network
+for chip surface defect detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Scientific Reports</span><span id="bib.bib23.4.2" class="ltx_text" style="font-size:90%;">, 12(1), 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span id="bib.bib24.1.1" class="ltx_text" style="font-size:90%;">
+Sakshi Indolia, Anil Kumar Goswami, S. P. Mishra, and Pooja Asopa.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.2.1" class="ltx_text" style="font-size:90%;">Conceptual Understanding of Convolutional Neural Network- A Deep
+Learning Approach.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib24.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Procedia Computer Science</span><span id="bib.bib24.5.3" class="ltx_text" style="font-size:90%;">, volume 132, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span id="bib.bib25.1.1" class="ltx_text" style="font-size:90%;">
+Glenn Jocher.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.2.1" class="ltx_text" style="font-size:90%;">You Only Look Once Ver. 5 (YOLOv5) on Github, 2020.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.3.1" class="ltx_text" style="font-size:90%;">https://github.com/ultralytics/yolov5.
+</span>
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span id="bib.bib26.1.1" class="ltx_text" style="font-size:90%;">
+Maartje J. Klapwijk, Gyöorgy Csóka, Anikó Hirka, and Christer
+Bjöorkman.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.2.1" class="ltx_text" style="font-size:90%;">Forest insects and climate change: Long-term trends in herbivore
+damage.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Ecology and Evolution</span><span id="bib.bib26.4.2" class="ltx_text" style="font-size:90%;">, 3(12), 2013.
+</span>
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span id="bib.bib27.1.1" class="ltx_text" style="font-size:90%;">
+Rodney Lalonde, Dong Zhang, and Mubarak Shah.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.2.1" class="ltx_text" style="font-size:90%;">ClusterNet: Detecting Small Objects in Large Scenes by Exploiting
+Spatio-Temporal Information.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib27.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE Computer Society Conference on
+Computer Vision and Pattern Recognition</span><span id="bib.bib27.5.3" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span id="bib.bib28.1.1" class="ltx_text" style="font-size:90%;">
+Jiaxu Leng, Yihui Ren, Wen Jiang, Xiaoding Sun, and Ye Wang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.2.1" class="ltx_text" style="font-size:90%;">Realize your surroundings: Exploiting context information for small
+object detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Neurocomputing</span><span id="bib.bib28.4.2" class="ltx_text" style="font-size:90%;">, 433, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span id="bib.bib29.1.1" class="ltx_text" style="font-size:90%;">
+Tsung-Yi Lin, Michael Maire, Serge Belongie, Lubomir Bourdev, Ross Girshick,
+James Hays, Pietro Perona, Deva Ramanan, C. Lawrence Zitnick, and Piotr
+Dollár.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.2.1" class="ltx_text" style="font-size:90%;">Microsoft COCO: Common Objects in Context.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE Computer Society Conference on Computer
+Vision and Pattern Recognition</span><span id="bib.bib29.4.2" class="ltx_text" style="font-size:90%;">, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock"><span id="bib.bib30.1.1" class="ltx_text" style="font-size:90%;">
+Li Liu, Wanli Ouyang, Xiaogang Wang, Paul Fieguth, Jie Chen, Xinwang Liu, and
+Matti Pietikäinen.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib30.2.1" class="ltx_text" style="font-size:90%;">Deep Learning for Generic Object Detection: A Survey.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib30.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">International Journal of Computer Vision</span><span id="bib.bib30.4.2" class="ltx_text" style="font-size:90%;">, 128(2), 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock"><span id="bib.bib31.1.1" class="ltx_text" style="font-size:90%;">
+Yang Liu, Peng Sun, Nickolas Wergeles, and Yi Shang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib31.2.1" class="ltx_text" style="font-size:90%;">A survey and performance evaluation of deep learning methods for
+small object detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib31.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Expert Systems with Applications</span><span id="bib.bib31.4.2" class="ltx_text" style="font-size:90%;">, 172, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock"><span id="bib.bib32.1.1" class="ltx_text" style="font-size:90%;">
+Logitech.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib32.2.1" class="ltx_text" style="font-size:90%;">C922 Pro HD Stream Webcam, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock"><span id="bib.bib33.1.1" class="ltx_text" style="font-size:90%;">
+Motion.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib33.2.1" class="ltx_text" style="font-size:90%;">Motion an open source program that monitors video from cameras.,
+2022.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib33.3.1" class="ltx_text" style="font-size:90%;">https://motion-project.github.io/.
+</span>
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock"><span id="bib.bib34.1.1" class="ltx_text" style="font-size:90%;">
+Nhat Duy Nguyen, Tien Do, Thanh Duc Ngo, and Duy Dinh Le.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib34.2.1" class="ltx_text" style="font-size:90%;">An Evaluation of Deep Learning Methods for Small Object Detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib34.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Journal of Electrical and Computer Engineering</span><span id="bib.bib34.4.2" class="ltx_text" style="font-size:90%;">, 2020, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock"><span id="bib.bib35.1.1" class="ltx_text" style="font-size:90%;">
+Michele Preti, François Verheggen, and Sergio Angeli.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib35.2.1" class="ltx_text" style="font-size:90%;">Insect pest monitoring with camera-equipped traps: strengths and
+limitations.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib35.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Journal of Pest Science</span><span id="bib.bib35.4.2" class="ltx_text" style="font-size:90%;">, 94(2), 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock"><span id="bib.bib36.1.1" class="ltx_text" style="font-size:90%;">
+Sovit Ranjan Rath.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib36.2.1" class="ltx_text" style="font-size:90%;">Faster R-CNN PyTorch training pipeline, 2022.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib36.3.1" class="ltx_text" style="font-size:90%;">https://github.com/sovit-123/fasterrcnn-pytorch-training-pipeline.
+</span>
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock"><span id="bib.bib37.1.1" class="ltx_text" style="font-size:90%;">
+Joseph Redmon, Santosh Divvala, Ross Girshick, and Ali Farhadi.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib37.2.1" class="ltx_text" style="font-size:90%;">You only look once: Unified, real-time object detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib37.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib37.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE Computer Society Conference on
+Computer Vision and Pattern Recognition</span><span id="bib.bib37.5.3" class="ltx_text" style="font-size:90%;">, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock"><span id="bib.bib38.1.1" class="ltx_text" style="font-size:90%;">
+Joseph Redmon and Ali Farhadi.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib38.2.1" class="ltx_text" style="font-size:90%;">YOLOv3: An incremental improvement.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib38.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">arXiv</span><span id="bib.bib38.4.2" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock"><span id="bib.bib39.1.1" class="ltx_text" style="font-size:90%;">
+Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib39.2.1" class="ltx_text" style="font-size:90%;">Faster R-CNN: Towards Real-Time Object Detection with Region
+Proposal Networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib39.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib39.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the 28th International Conference on Neural
+Information Processing Systems</span><span id="bib.bib39.5.3" class="ltx_text" style="font-size:90%;">, volume 1 of </span><span id="bib.bib39.6.4" class="ltx_text ltx_font_italic" style="font-size:90%;">NIPS’15</span><span id="bib.bib39.7.5" class="ltx_text" style="font-size:90%;">, page 91–99,
+Cambridge, MA, USA, 2015. MIT Press.
+</span>
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock"><span id="bib.bib40.1.1" class="ltx_text" style="font-size:90%;">
+Yun Ren, Changren Zhu, and Shunping Xiao.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib40.2.1" class="ltx_text" style="font-size:90%;">Small object detection in optical remote sensing images via modified
+Faster R-CNN, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock"><span id="bib.bib41.1.1" class="ltx_text" style="font-size:90%;">
+Ajay Shrestha and Ausif Mahmood.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib41.2.1" class="ltx_text" style="font-size:90%;">Review of deep learning algorithms and architectures.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib41.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Access</span><span id="bib.bib41.4.2" class="ltx_text" style="font-size:90%;">, 7, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock"><span id="bib.bib42.1.1" class="ltx_text" style="font-size:90%;">
+Lars Sommer, Wolfgang Kruger, and Michael Teutsch.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib42.2.1" class="ltx_text" style="font-size:90%;">Appearance and Motion Based Persistent Multiple Object Tracking in
+Wide Area Motion Imagery.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib42.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE International Conference on Computer
+Vision</span><span id="bib.bib42.4.2" class="ltx_text" style="font-size:90%;">, 2021-October:3871–3881, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib43" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[43]</span>
+<span class="ltx_bibblock"><span id="bib.bib43.1.1" class="ltx_text" style="font-size:90%;">
+Shaojian Song, Yuanchao Li, Qingbao Huang, and Gang Li.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib43.2.1" class="ltx_text" style="font-size:90%;">A new real-time detection and tracking method in videos for small
+target traffic signs.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib43.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Applied Sciences (Switzerland)</span><span id="bib.bib43.4.2" class="ltx_text" style="font-size:90%;">, 11(7), 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib44" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[44]</span>
+<span class="ltx_bibblock"><span id="bib.bib44.1.1" class="ltx_text" style="font-size:90%;">
+Vladan Stojnić, Vladimir Risojević, Mario Muštra, Vedran
+Jovanović, Janja Filipi, Nikola Kezić, and Zdenka Babić.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib44.2.1" class="ltx_text" style="font-size:90%;">A method for detection of small moving objects in UAV videos.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib44.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Remote Sensing</span><span id="bib.bib44.4.2" class="ltx_text" style="font-size:90%;">, 13(4), 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib45" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[45]</span>
+<span class="ltx_bibblock"><span id="bib.bib45.1.1" class="ltx_text" style="font-size:90%;">
+Christian Szegedy, Wei Liu, Yangqing Jia, Pierre Sermanet, Scott Reed, Dragomir
+Anguelov, Dumitru Erhan, Vincent Vanhoucke, and Andrew Rabinovich.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib45.2.1" class="ltx_text" style="font-size:90%;">Going deeper with convolutions.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib45.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE Computer Society Conference on Computer
+Vision and Pattern Recognition</span><span id="bib.bib45.4.2" class="ltx_text" style="font-size:90%;">, 07-12-June-2015:1–9, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib46" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[46]</span>
+<span class="ltx_bibblock"><span id="bib.bib46.1.1" class="ltx_text" style="font-size:90%;">
+Kang Tong, Yiquan Wu, and Fei Zhou.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib46.2.1" class="ltx_text" style="font-size:90%;">Recent advances in small object detection based on deep learning: A
+review.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib46.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Image and Vision Computing</span><span id="bib.bib46.4.2" class="ltx_text" style="font-size:90%;">, 97, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib47" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[47]</span>
+<span class="ltx_bibblock"><span id="bib.bib47.1.1" class="ltx_text" style="font-size:90%;">
+David L. Wagner.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib47.2.1" class="ltx_text" style="font-size:90%;">Insect declines in the anthropocene.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib47.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Annual Review of Entomology</span><span id="bib.bib47.4.2" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib48" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[48]</span>
+<span class="ltx_bibblock"><span id="bib.bib48.1.1" class="ltx_text" style="font-size:90%;">
+Weihao Weng and Xin Zhu.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib48.2.1" class="ltx_text" style="font-size:90%;">U-Net: Convolutional Networks for Biomedical Image Segmentation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib48.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Access</span><span id="bib.bib48.4.2" class="ltx_text" style="font-size:90%;">, 9:16591–16603, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib49" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[49]</span>
+<span class="ltx_bibblock"><span id="bib.bib49.1.1" class="ltx_text" style="font-size:90%;">
+Denan Xia, Peng Chen, Bing Wang, Jun Zhang, and Chengjun Xie.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib49.2.1" class="ltx_text" style="font-size:90%;">Insect detection and classification based on an improved
+convolutional neural network.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib49.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Sensors (Switzerland)</span><span id="bib.bib49.4.2" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib50" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[50]</span>
+<span class="ltx_bibblock"><span id="bib.bib50.1.1" class="ltx_text" style="font-size:90%;">
+Zhong Qiu Zhao, Peng Zheng, Shou Tao Xu, and Xindong Wu.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib50.2.1" class="ltx_text" style="font-size:90%;">Object Detection with Deep Learning: A Review.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib50.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Transactions on Neural Networks and Learning Systems</span><span id="bib.bib50.4.2" class="ltx_text" style="font-size:90%;">,
+30(11), 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib51" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[51]</span>
+<span class="ltx_bibblock"><span id="bib.bib51.1.1" class="ltx_text" style="font-size:90%;">
+Shicheng Zu, Kai Yang, Xiulai Wang, Zhongzheng Yu, Yawen Hu, and Jia Long.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib51.2.1" class="ltx_text" style="font-size:90%;">UAVs-based Small Object Detection and Tracking in Various Complex
+Scenarios.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib51.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib51.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ACM International Conference Proceeding Series</span><span id="bib.bib51.5.3" class="ltx_text" style="font-size:90%;">, 2021.
+</span>
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2212.00422" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2212.00423" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2212.00423">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2212.00423" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2212.00424" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Fri Mar  1 13:30:26 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

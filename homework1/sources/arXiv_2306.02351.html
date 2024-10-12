@@ -1,0 +1,797 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2306.02351] RSSOD-Bench: A large-scale benchmark dataset for Salient Object Detection in Optical Remote Sensing Imagery</title><meta property="og:description" content="We present the RSSOD-Bench dataset for salient object detection (SOD) in optical remote sensing imagery. While SOD has achieved success in natural scene images with deep learning, research in SOD for remote sensing ima…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RSSOD-Bench: A large-scale benchmark dataset for Salient Object Detection in Optical Remote Sensing Imagery">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="RSSOD-Bench: A large-scale benchmark dataset for Salient Object Detection in Optical Remote Sensing Imagery">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2306.02351">
+
+<!--Generated on Thu Feb 29 02:21:12 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">RSSOD-Bench: A large-scale benchmark dataset for Salient Object Detection in Optical Remote Sensing Imagery</h1>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">We present the RSSOD-Bench dataset for salient object detection (SOD) in optical remote sensing imagery. While SOD has achieved success in natural scene images with deep learning, research in SOD for remote sensing imagery (RSSOD) is still in its early stages. Existing RSSOD datasets have limitations in terms of scale, and scene categories, which make them misaligned with real-world applications. To address these shortcomings, we construct the RSSOD-Bench dataset, which contains images from four different cities in the USA <span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>The RSSOD-Bench dataset can be accessed via <a target="_blank" href="https://github.com/EarthNets/Dataset4EO" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/EarthNets/Dataset4EO</a></span></span></span>. The dataset provides annotations for various salient object categories, such as buildings, lakes, rivers, highways, bridges, aircraft, ships, athletic fields, and more. The salient objects in RSSOD-Bench exhibit large-scale variations, cluttered backgrounds, and different seasons. Unlike existing datasets, RSSOD-Bench offers uniform distribution across scene categories. We benchmark <span id="id1.id1.1" class="ltx_text ltx_font_bold">23</span> different state-of-the-art approaches from both the computer vision and remote sensing communities. Experimental results demonstrate that more research efforts are required for the RSSOD task.</p>
+</div>
+<div id="p1" class="ltx_para">
+<p id="p1.1" class="ltx_p"><span id="p1.1.1" class="ltx_text ltx_font_bold ltx_font_italic">Index Terms<span id="p1.1.1.1" class="ltx_text ltx_font_upright">— </span></span>
+benchmark, dataset, remote sensing, salient object detection</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Automatically extracting salient objects from images can serve as an important pre-processing step for numerous computer vision and remote sensing tasks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. To name a few, salient object detection (SOD) has been applied in self-supervised learning <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, image quality assessment <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, image retrieval <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>, etc. SOD aims to extract visually distinctive objects from diverse complicated backgrounds at a pixel level. Namely, given an input image, two steps are required for SOD models to successfully detect the salient objects: 1) determine correct salient areas from cluttered backgrounds; 2) accurately segment the pixels of salient objects.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2306.02351/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="238" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S1.F1.2.1.1" class="ltx_text ltx_font_bold">Fig. 1</span>: </span>Illustration of some visualization examples in the RSSOD-Bench dataset.
+Several challenging examples are presented, including tiny, large, dense, incomplete, and irregular salient objects.
+</figcaption>
+</figure>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">For natural scene images, SOD has achieved remarkable success with the advent of deep learning. However, research on SOD for remote sensing and Earth observation data (RSSOD) is still in its infancy. Natural scene images are usually object-centric. In contrast, remote sensing imagery, captured through high-altitude shooting, usually covers a larger range of scenes with diverse ground objects and complicated backgrounds. Considering these differences, several datasets dedicated to remote sensing data have been released to foster the research of novel methods. The ORSSD dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> contains 800 images (600 for training and 200 for testing) collected from Google Earth. EORSSD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> is an extended version of ORSSD with 2,000 images (1400 for training, 600 for testing) in total. ORSI-4199 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> is a large dataset, which contains 4,199 images with pixel-level annotations.</p>
+</div>
+<figure id="S1.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span id="S1.T1.2.1.1" class="ltx_text ltx_font_bold">Table 1</span>: </span>Statistics comparison with existing RSSOD datasets. </figcaption>
+<div id="S1.T1.3" class="ltx_inline-block ltx_transformed_outer" style="width:270.7pt;height:84.2pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-38.2pt,11.9pt) scale(0.78,0.78) ;">
+<table id="S1.T1.3.1" class="ltx_tabular ltx_align_middle">
+<tr id="S1.T1.3.1.1" class="ltx_tr">
+<td id="S1.T1.3.1.1.1" class="ltx_td ltx_align_center ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:1.0pt;background:black;display:inline-block;"> </span>
+Datasets</td>
+<td id="S1.T1.3.1.1.2" class="ltx_td ltx_align_center ltx_border_r">#Total Images</td>
+<td id="S1.T1.3.1.1.3" class="ltx_td ltx_align_center ltx_border_r">#Cities</td>
+<td id="S1.T1.3.1.1.4" class="ltx_td ltx_align_center ltx_border_r">#Training</td>
+<td id="S1.T1.3.1.1.5" class="ltx_td ltx_align_center ltx_border_r">#Validation</td>
+<td id="S1.T1.3.1.1.6" class="ltx_td ltx_align_center">#Test</td>
+</tr>
+<tr id="S1.T1.3.1.2" class="ltx_tr">
+<td id="S1.T1.3.1.2.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">ORSSD</td>
+<td id="S1.T1.3.1.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">800</td>
+<td id="S1.T1.3.1.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">—</td>
+<td id="S1.T1.3.1.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">600</td>
+<td id="S1.T1.3.1.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0</td>
+<td id="S1.T1.3.1.2.6" class="ltx_td ltx_align_center ltx_border_t">200</td>
+</tr>
+<tr id="S1.T1.3.1.3" class="ltx_tr">
+<td id="S1.T1.3.1.3.1" class="ltx_td ltx_align_center ltx_border_r">EORSSD</td>
+<td id="S1.T1.3.1.3.2" class="ltx_td ltx_align_center ltx_border_r">2,000</td>
+<td id="S1.T1.3.1.3.3" class="ltx_td ltx_align_center ltx_border_r">—</td>
+<td id="S1.T1.3.1.3.4" class="ltx_td ltx_align_center ltx_border_r">1,400</td>
+<td id="S1.T1.3.1.3.5" class="ltx_td ltx_align_center ltx_border_r">0</td>
+<td id="S1.T1.3.1.3.6" class="ltx_td ltx_align_center">600</td>
+</tr>
+<tr id="S1.T1.3.1.4" class="ltx_tr">
+<td id="S1.T1.3.1.4.1" class="ltx_td ltx_align_center ltx_border_r">ORSI-4199</td>
+<td id="S1.T1.3.1.4.2" class="ltx_td ltx_align_center ltx_border_r">4,199</td>
+<td id="S1.T1.3.1.4.3" class="ltx_td ltx_align_center ltx_border_r">—</td>
+<td id="S1.T1.3.1.4.4" class="ltx_td ltx_align_center ltx_border_r">2,000</td>
+<td id="S1.T1.3.1.4.5" class="ltx_td ltx_align_center ltx_border_r">0</td>
+<td id="S1.T1.3.1.4.6" class="ltx_td ltx_align_center">2,199</td>
+</tr>
+<tr id="S1.T1.3.1.5" class="ltx_tr">
+<td id="S1.T1.3.1.5.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S1.T1.3.1.5.1.1" class="ltx_text ltx_font_bold">Ours</span></td>
+<td id="S1.T1.3.1.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S1.T1.3.1.5.2.1" class="ltx_text ltx_font_bold">6,000</span></td>
+<td id="S1.T1.3.1.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S1.T1.3.1.5.3.1" class="ltx_text ltx_font_bold">4</span></td>
+<td id="S1.T1.3.1.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S1.T1.3.1.5.4.1" class="ltx_text ltx_font_bold">3,000</span></td>
+<td id="S1.T1.3.1.5.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S1.T1.3.1.5.5.1" class="ltx_text ltx_font_bold">600</span></td>
+<td id="S1.T1.3.1.5.6" class="ltx_td ltx_align_center ltx_border_t"><span id="S1.T1.3.1.5.6.1" class="ltx_text ltx_font_bold">2,400</span></td>
+</tr>
+<tr id="S1.T1.3.1.6" class="ltx_tr">
+<td id="S1.T1.3.1.6.1" class="ltx_td ltx_align_center ltx_border_r"><span class="ltx_rule" style="width:100%;height:1.0pt;background:black;display:inline-block;"> </span></td>
+<td id="S1.T1.3.1.6.2" class="ltx_td"></td>
+<td id="S1.T1.3.1.6.3" class="ltx_td"></td>
+<td id="S1.T1.3.1.6.4" class="ltx_td"></td>
+<td id="S1.T1.3.1.6.5" class="ltx_td"></td>
+<td id="S1.T1.3.1.6.6" class="ltx_td"></td>
+</tr>
+</table>
+</span></div>
+</figure>
+<figure id="S1.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span id="S1.T2.6.1.1" class="ltx_text ltx_font_bold">Table 2</span>: </span>Comparison study with state-of-the-art methods on the proposed RSSOD-Bench dataset.</figcaption>
+<div id="S1.T2.4" class="ltx_inline-block ltx_transformed_outer" style="width:433.6pt;height:474.5pt;vertical-align:-2.1pt;"><span class="ltx_transformed_inner" style="transform:translate(10.3pt,-11.2pt) scale(1.04985481507884,1.04985481507884) ;">
+<table id="S1.T2.4.4" class="ltx_tabular ltx_align_middle">
+<tr id="S1.T2.4.4.4" class="ltx_tr">
+<td id="S1.T2.4.4.4.5" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">
+<span class="ltx_rule" style="width:100%;height:1.0pt;background:black;display:inline-block;"> </span>
+Methods</td>
+<td id="S1.T2.4.4.4.6" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">Publications</td>
+<td id="S1.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><math id="S1.T2.1.1.1.1.m1.1" class="ltx_Math" alttext="\text{MAE}\downarrow" display="inline"><semantics id="S1.T2.1.1.1.1.m1.1a"><mrow id="S1.T2.1.1.1.1.m1.1.1" xref="S1.T2.1.1.1.1.m1.1.1.cmml"><mtext id="S1.T2.1.1.1.1.m1.1.1.2" xref="S1.T2.1.1.1.1.m1.1.1.2a.cmml">MAE</mtext><mo stretchy="false" id="S1.T2.1.1.1.1.m1.1.1.1" xref="S1.T2.1.1.1.1.m1.1.1.1.cmml">↓</mo><mi id="S1.T2.1.1.1.1.m1.1.1.3" xref="S1.T2.1.1.1.1.m1.1.1.3.cmml"></mi></mrow><annotation-xml encoding="MathML-Content" id="S1.T2.1.1.1.1.m1.1b"><apply id="S1.T2.1.1.1.1.m1.1.1.cmml" xref="S1.T2.1.1.1.1.m1.1.1"><ci id="S1.T2.1.1.1.1.m1.1.1.1.cmml" xref="S1.T2.1.1.1.1.m1.1.1.1">↓</ci><ci id="S1.T2.1.1.1.1.m1.1.1.2a.cmml" xref="S1.T2.1.1.1.1.m1.1.1.2"><mtext id="S1.T2.1.1.1.1.m1.1.1.2.cmml" xref="S1.T2.1.1.1.1.m1.1.1.2">MAE</mtext></ci><csymbol cd="latexml" id="S1.T2.1.1.1.1.m1.1.1.3.cmml" xref="S1.T2.1.1.1.1.m1.1.1.3">absent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.T2.1.1.1.1.m1.1c">\text{MAE}\downarrow</annotation></semantics></math></td>
+<td id="S1.T2.2.2.2.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><math id="S1.T2.2.2.2.2.m1.1" class="ltx_Math" alttext="F_{\beta}\uparrow" display="inline"><semantics id="S1.T2.2.2.2.2.m1.1a"><mrow id="S1.T2.2.2.2.2.m1.1.1" xref="S1.T2.2.2.2.2.m1.1.1.cmml"><msub id="S1.T2.2.2.2.2.m1.1.1.2" xref="S1.T2.2.2.2.2.m1.1.1.2.cmml"><mi id="S1.T2.2.2.2.2.m1.1.1.2.2" xref="S1.T2.2.2.2.2.m1.1.1.2.2.cmml">F</mi><mi id="S1.T2.2.2.2.2.m1.1.1.2.3" xref="S1.T2.2.2.2.2.m1.1.1.2.3.cmml">β</mi></msub><mo stretchy="false" id="S1.T2.2.2.2.2.m1.1.1.1" xref="S1.T2.2.2.2.2.m1.1.1.1.cmml">↑</mo><mi id="S1.T2.2.2.2.2.m1.1.1.3" xref="S1.T2.2.2.2.2.m1.1.1.3.cmml"></mi></mrow><annotation-xml encoding="MathML-Content" id="S1.T2.2.2.2.2.m1.1b"><apply id="S1.T2.2.2.2.2.m1.1.1.cmml" xref="S1.T2.2.2.2.2.m1.1.1"><ci id="S1.T2.2.2.2.2.m1.1.1.1.cmml" xref="S1.T2.2.2.2.2.m1.1.1.1">↑</ci><apply id="S1.T2.2.2.2.2.m1.1.1.2.cmml" xref="S1.T2.2.2.2.2.m1.1.1.2"><csymbol cd="ambiguous" id="S1.T2.2.2.2.2.m1.1.1.2.1.cmml" xref="S1.T2.2.2.2.2.m1.1.1.2">subscript</csymbol><ci id="S1.T2.2.2.2.2.m1.1.1.2.2.cmml" xref="S1.T2.2.2.2.2.m1.1.1.2.2">𝐹</ci><ci id="S1.T2.2.2.2.2.m1.1.1.2.3.cmml" xref="S1.T2.2.2.2.2.m1.1.1.2.3">𝛽</ci></apply><csymbol cd="latexml" id="S1.T2.2.2.2.2.m1.1.1.3.cmml" xref="S1.T2.2.2.2.2.m1.1.1.3">absent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.T2.2.2.2.2.m1.1c">F_{\beta}\uparrow</annotation></semantics></math></td>
+<td id="S1.T2.3.3.3.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><math id="S1.T2.3.3.3.3.m1.1" class="ltx_Math" alttext="S_{m}\uparrow" display="inline"><semantics id="S1.T2.3.3.3.3.m1.1a"><mrow id="S1.T2.3.3.3.3.m1.1.1" xref="S1.T2.3.3.3.3.m1.1.1.cmml"><msub id="S1.T2.3.3.3.3.m1.1.1.2" xref="S1.T2.3.3.3.3.m1.1.1.2.cmml"><mi id="S1.T2.3.3.3.3.m1.1.1.2.2" xref="S1.T2.3.3.3.3.m1.1.1.2.2.cmml">S</mi><mi id="S1.T2.3.3.3.3.m1.1.1.2.3" xref="S1.T2.3.3.3.3.m1.1.1.2.3.cmml">m</mi></msub><mo stretchy="false" id="S1.T2.3.3.3.3.m1.1.1.1" xref="S1.T2.3.3.3.3.m1.1.1.1.cmml">↑</mo><mi id="S1.T2.3.3.3.3.m1.1.1.3" xref="S1.T2.3.3.3.3.m1.1.1.3.cmml"></mi></mrow><annotation-xml encoding="MathML-Content" id="S1.T2.3.3.3.3.m1.1b"><apply id="S1.T2.3.3.3.3.m1.1.1.cmml" xref="S1.T2.3.3.3.3.m1.1.1"><ci id="S1.T2.3.3.3.3.m1.1.1.1.cmml" xref="S1.T2.3.3.3.3.m1.1.1.1">↑</ci><apply id="S1.T2.3.3.3.3.m1.1.1.2.cmml" xref="S1.T2.3.3.3.3.m1.1.1.2"><csymbol cd="ambiguous" id="S1.T2.3.3.3.3.m1.1.1.2.1.cmml" xref="S1.T2.3.3.3.3.m1.1.1.2">subscript</csymbol><ci id="S1.T2.3.3.3.3.m1.1.1.2.2.cmml" xref="S1.T2.3.3.3.3.m1.1.1.2.2">𝑆</ci><ci id="S1.T2.3.3.3.3.m1.1.1.2.3.cmml" xref="S1.T2.3.3.3.3.m1.1.1.2.3">𝑚</ci></apply><csymbol cd="latexml" id="S1.T2.3.3.3.3.m1.1.1.3.cmml" xref="S1.T2.3.3.3.3.m1.1.1.3">absent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.T2.3.3.3.3.m1.1c">S_{m}\uparrow</annotation></semantics></math></td>
+<td id="S1.T2.4.4.4.4" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><math id="S1.T2.4.4.4.4.m1.1" class="ltx_Math" alttext="E_{m}\uparrow" display="inline"><semantics id="S1.T2.4.4.4.4.m1.1a"><mrow id="S1.T2.4.4.4.4.m1.1.1" xref="S1.T2.4.4.4.4.m1.1.1.cmml"><msub id="S1.T2.4.4.4.4.m1.1.1.2" xref="S1.T2.4.4.4.4.m1.1.1.2.cmml"><mi id="S1.T2.4.4.4.4.m1.1.1.2.2" xref="S1.T2.4.4.4.4.m1.1.1.2.2.cmml">E</mi><mi id="S1.T2.4.4.4.4.m1.1.1.2.3" xref="S1.T2.4.4.4.4.m1.1.1.2.3.cmml">m</mi></msub><mo stretchy="false" id="S1.T2.4.4.4.4.m1.1.1.1" xref="S1.T2.4.4.4.4.m1.1.1.1.cmml">↑</mo><mi id="S1.T2.4.4.4.4.m1.1.1.3" xref="S1.T2.4.4.4.4.m1.1.1.3.cmml"></mi></mrow><annotation-xml encoding="MathML-Content" id="S1.T2.4.4.4.4.m1.1b"><apply id="S1.T2.4.4.4.4.m1.1.1.cmml" xref="S1.T2.4.4.4.4.m1.1.1"><ci id="S1.T2.4.4.4.4.m1.1.1.1.cmml" xref="S1.T2.4.4.4.4.m1.1.1.1">↑</ci><apply id="S1.T2.4.4.4.4.m1.1.1.2.cmml" xref="S1.T2.4.4.4.4.m1.1.1.2"><csymbol cd="ambiguous" id="S1.T2.4.4.4.4.m1.1.1.2.1.cmml" xref="S1.T2.4.4.4.4.m1.1.1.2">subscript</csymbol><ci id="S1.T2.4.4.4.4.m1.1.1.2.2.cmml" xref="S1.T2.4.4.4.4.m1.1.1.2.2">𝐸</ci><ci id="S1.T2.4.4.4.4.m1.1.1.2.3.cmml" xref="S1.T2.4.4.4.4.m1.1.1.2.3">𝑚</ci></apply><csymbol cd="latexml" id="S1.T2.4.4.4.4.m1.1.1.3.cmml" xref="S1.T2.4.4.4.4.m1.1.1.3">absent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.T2.4.4.4.4.m1.1c">E_{m}\uparrow</annotation></semantics></math></td>
+</tr>
+<tr id="S1.T2.4.4.5" class="ltx_tr">
+<td id="S1.T2.4.4.5.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">LC <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>
+</td>
+<td id="S1.T2.4.4.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">MM’06</td>
+<td id="S1.T2.4.4.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.1834</td>
+<td id="S1.T2.4.4.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.2467</td>
+<td id="S1.T2.4.4.5.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.5258</td>
+<td id="S1.T2.4.4.5.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.4826</td>
+</tr>
+<tr id="S1.T2.4.4.6" class="ltx_tr">
+<td id="S1.T2.4.4.6.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">FT<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>
+</td>
+<td id="S1.T2.4.4.6.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">CVPR’09</td>
+<td id="S1.T2.4.4.6.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.1588</td>
+<td id="S1.T2.4.4.6.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.2586</td>
+<td id="S1.T2.4.4.6.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.5417</td>
+<td id="S1.T2.4.4.6.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.4859</td>
+</tr>
+<tr id="S1.T2.4.4.7" class="ltx_tr">
+<td id="S1.T2.4.4.7.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">DSS<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>
+</td>
+<td id="S1.T2.4.4.7.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">CVPR’17</td>
+<td id="S1.T2.4.4.7.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0622</td>
+<td id="S1.T2.4.4.7.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.6761</td>
+<td id="S1.T2.4.4.7.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7627</td>
+<td id="S1.T2.4.4.7.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7022</td>
+</tr>
+<tr id="S1.T2.4.4.8" class="ltx_tr">
+<td id="S1.T2.4.4.8.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">NLDF<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>
+</td>
+<td id="S1.T2.4.4.8.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">CVPR’17</td>
+<td id="S1.T2.4.4.8.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0535</td>
+<td id="S1.T2.4.4.8.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.6765</td>
+<td id="S1.T2.4.4.8.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7798</td>
+<td id="S1.T2.4.4.8.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7632</td>
+</tr>
+<tr id="S1.T2.4.4.9" class="ltx_tr">
+<td id="S1.T2.4.4.9.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">RAS<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>
+</td>
+<td id="S1.T2.4.4.9.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">ECCV’18</td>
+<td id="S1.T2.4.4.9.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0476</td>
+<td id="S1.T2.4.4.9.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7158</td>
+<td id="S1.T2.4.4.9.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7923</td>
+<td id="S1.T2.4.4.9.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7524</td>
+</tr>
+<tr id="S1.T2.4.4.10" class="ltx_tr">
+<td id="S1.T2.4.4.10.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">PoolNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+</td>
+<td id="S1.T2.4.4.10.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">CVPR’19</td>
+<td id="S1.T2.4.4.10.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0609</td>
+<td id="S1.T2.4.4.10.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.6915</td>
+<td id="S1.T2.4.4.10.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7684</td>
+<td id="S1.T2.4.4.10.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7092</td>
+</tr>
+<tr id="S1.T2.4.4.11" class="ltx_tr">
+<td id="S1.T2.4.4.11.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">PFAN<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>
+</td>
+<td id="S1.T2.4.4.11.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">CVPR’19</td>
+<td id="S1.T2.4.4.11.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0430</td>
+<td id="S1.T2.4.4.11.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7207</td>
+<td id="S1.T2.4.4.11.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8046</td>
+<td id="S1.T2.4.4.11.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7684</td>
+</tr>
+<tr id="S1.T2.4.4.12" class="ltx_tr">
+<td id="S1.T2.4.4.12.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">SCRN<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>
+</td>
+<td id="S1.T2.4.4.12.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">ICCV’19</td>
+<td id="S1.T2.4.4.12.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0415</td>
+<td id="S1.T2.4.4.12.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7435</td>
+<td id="S1.T2.4.4.12.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8117</td>
+<td id="S1.T2.4.4.12.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7582</td>
+</tr>
+<tr id="S1.T2.4.4.13" class="ltx_tr">
+<td id="S1.T2.4.4.13.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">F3Net<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>
+</td>
+<td id="S1.T2.4.4.13.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">AAAI’20</td>
+<td id="S1.T2.4.4.13.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0456</td>
+<td id="S1.T2.4.4.13.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7089</td>
+<td id="S1.T2.4.4.13.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8043</td>
+<td id="S1.T2.4.4.13.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7679</td>
+</tr>
+<tr id="S1.T2.4.4.14" class="ltx_tr">
+<td id="S1.T2.4.4.14.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">MINet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>
+</td>
+<td id="S1.T2.4.4.14.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">CVPR’20</td>
+<td id="S1.T2.4.4.14.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0396</td>
+<td id="S1.T2.4.4.14.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7121</td>
+<td id="S1.T2.4.4.14.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8008</td>
+<td id="S1.T2.4.4.14.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8049</td>
+</tr>
+<tr id="S1.T2.4.4.15" class="ltx_tr">
+<td id="S1.T2.4.4.15.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">GateNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>
+</td>
+<td id="S1.T2.4.4.15.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">ECCV’20</td>
+<td id="S1.T2.4.4.15.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0385</td>
+<td id="S1.T2.4.4.15.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7369</td>
+<td id="S1.T2.4.4.15.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8224</td>
+<td id="S1.T2.4.4.15.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7877</td>
+</tr>
+<tr id="S1.T2.4.4.16" class="ltx_tr">
+<td id="S1.T2.4.4.16.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">PFSNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>
+</td>
+<td id="S1.T2.4.4.16.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">AAAI’21</td>
+<td id="S1.T2.4.4.16.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0409</td>
+<td id="S1.T2.4.4.16.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7457</td>
+<td id="S1.T2.4.4.16.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8271</td>
+<td id="S1.T2.4.4.16.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8027</td>
+</tr>
+<tr id="S1.T2.4.4.17" class="ltx_tr">
+<td id="S1.T2.4.4.17.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">SARNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>
+</td>
+<td id="S1.T2.4.4.17.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">RS’21</td>
+<td id="S1.T2.4.4.17.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0402</td>
+<td id="S1.T2.4.4.17.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7298</td>
+<td id="S1.T2.4.4.17.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8242</td>
+<td id="S1.T2.4.4.17.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8165</td>
+</tr>
+<tr id="S1.T2.4.4.18" class="ltx_tr">
+<td id="S1.T2.4.4.18.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">DAFNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>
+</td>
+<td id="S1.T2.4.4.18.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">TIP’21</td>
+<td id="S1.T2.4.4.18.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0541</td>
+<td id="S1.T2.4.4.18.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7006</td>
+<td id="S1.T2.4.4.18.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7939</td>
+<td id="S1.T2.4.4.18.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7389</td>
+</tr>
+<tr id="S1.T2.4.4.19" class="ltx_tr">
+<td id="S1.T2.4.4.19.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">FSMINet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>
+</td>
+<td id="S1.T2.4.4.19.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">GRSL’22</td>
+<td id="S1.T2.4.4.19.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0406</td>
+<td id="S1.T2.4.4.19.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7388</td>
+<td id="S1.T2.4.4.19.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8186</td>
+<td id="S1.T2.4.4.19.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8113</td>
+</tr>
+<tr id="S1.T2.4.4.20" class="ltx_tr">
+<td id="S1.T2.4.4.20.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">MSCNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>
+</td>
+<td id="S1.T2.4.4.20.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">ICPR’22</td>
+<td id="S1.T2.4.4.20.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0444</td>
+<td id="S1.T2.4.4.20.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7486</td>
+<td id="S1.T2.4.4.20.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8102</td>
+<td id="S1.T2.4.4.20.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8016</td>
+</tr>
+<tr id="S1.T2.4.4.21" class="ltx_tr">
+<td id="S1.T2.4.4.21.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">MCCNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>
+</td>
+<td id="S1.T2.4.4.21.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">TGRS’22</td>
+<td id="S1.T2.4.4.21.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0417</td>
+<td id="S1.T2.4.4.21.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7525</td>
+<td id="S1.T2.4.4.21.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8287</td>
+<td id="S1.T2.4.4.21.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8122</td>
+</tr>
+<tr id="S1.T2.4.4.22" class="ltx_tr">
+<td id="S1.T2.4.4.22.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">CorrNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>
+</td>
+<td id="S1.T2.4.4.22.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">TGRS’22</td>
+<td id="S1.T2.4.4.22.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0449</td>
+<td id="S1.T2.4.4.22.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7415</td>
+<td id="S1.T2.4.4.22.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7914</td>
+<td id="S1.T2.4.4.22.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7503</td>
+</tr>
+<tr id="S1.T2.4.4.23" class="ltx_tr">
+<td id="S1.T2.4.4.23.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">MJRBM-R<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>
+</td>
+<td id="S1.T2.4.4.23.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">TGRS’22</td>
+<td id="S1.T2.4.4.23.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.23.3.1" class="ltx_text" style="color:#0000FF;">0.0378</span></td>
+<td id="S1.T2.4.4.23.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7531</td>
+<td id="S1.T2.4.4.23.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8313</td>
+<td id="S1.T2.4.4.23.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7899</td>
+</tr>
+<tr id="S1.T2.4.4.24" class="ltx_tr">
+<td id="S1.T2.4.4.24.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">EMFI-R<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>
+</td>
+<td id="S1.T2.4.4.24.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">TGRS’22</td>
+<td id="S1.T2.4.4.24.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.24.3.1" class="ltx_text" style="color:#00FF00;">0.0377</span></td>
+<td id="S1.T2.4.4.24.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.24.4.1" class="ltx_text" style="color:#FF0000;">0.7765</span></td>
+<td id="S1.T2.4.4.24.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.24.5.1" class="ltx_text" style="color:#00FF00;">0.8400</span></td>
+<td id="S1.T2.4.4.24.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.24.6.1" class="ltx_text" style="color:#FF0000;">0.8244</span></td>
+</tr>
+<tr id="S1.T2.4.4.25" class="ltx_tr">
+<td id="S1.T2.4.4.25.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">HFANet-R<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>
+</td>
+<td id="S1.T2.4.4.25.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">TGRS’22</td>
+<td id="S1.T2.4.4.25.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0393</td>
+<td id="S1.T2.4.4.25.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.25.4.1" class="ltx_text" style="color:#00FF00;">0.7635</span></td>
+<td id="S1.T2.4.4.25.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8277</td>
+<td id="S1.T2.4.4.25.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.8020</td>
+</tr>
+<tr id="S1.T2.4.4.26" class="ltx_tr">
+<td id="S1.T2.4.4.26.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">ACCo-V<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>
+</td>
+<td id="S1.T2.4.4.26.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">TCYB’23</td>
+<td id="S1.T2.4.4.26.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.26.3.1" class="ltx_text" style="color:#FF0000;">0.0367</span></td>
+<td id="S1.T2.4.4.26.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.26.4.1" class="ltx_text" style="color:#0000FF;">0.7630</span></td>
+<td id="S1.T2.4.4.26.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.26.5.1" class="ltx_text" style="color:#FF0000;">0.8406</span></td>
+<td id="S1.T2.4.4.26.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.26.6.1" class="ltx_text" style="color:#0000FF;">0.8225</span></td>
+</tr>
+<tr id="S1.T2.4.4.27" class="ltx_tr">
+<td id="S1.T2.4.4.27.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">ACCo-R<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>
+</td>
+<td id="S1.T2.4.4.27.2" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">TCYB’23</td>
+<td id="S1.T2.4.4.27.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.0385</td>
+<td id="S1.T2.4.4.27.4" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;">0.7583</td>
+<td id="S1.T2.4.4.27.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.27.5.1" class="ltx_text" style="color:#0000FF;">0.8347</span></td>
+<td id="S1.T2.4.4.27.6" class="ltx_td ltx_align_center" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span id="S1.T2.4.4.27.6.1" class="ltx_text" style="color:#00FF00;">0.8226</span></td>
+</tr>
+<tr id="S1.T2.4.4.28" class="ltx_tr">
+<td id="S1.T2.4.4.28.1" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"><span class="ltx_rule" style="width:100%;height:1.0pt;background:black;display:inline-block;"> </span></td>
+<td id="S1.T2.4.4.28.2" class="ltx_td" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"></td>
+<td id="S1.T2.4.4.28.3" class="ltx_td" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"></td>
+<td id="S1.T2.4.4.28.4" class="ltx_td" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"></td>
+<td id="S1.T2.4.4.28.5" class="ltx_td" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"></td>
+<td id="S1.T2.4.4.28.6" class="ltx_td" style="padding-top:-0.05pt;padding-bottom:-0.05pt;"></td>
+</tr>
+</table>
+</span></div>
+</figure>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Several shortcomings of existing RSSOD datasets hinder further research and progress of the SOD. The first limitation is that the scale of existing datasets is relatively small. As presented in Table <a href="#S1.T1" title="Table 1 ‣ 1 Introduction ‣ RSSOD-Bench: A large-scale benchmark dataset for Salient Object Detection in Optical Remote Sensing Imagery" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, we list the statistical information of different existing datasets. The number of images in ORSSD and EORSSD datasets is less than 2,000, which is not enough to align the performance of models well with real-world scenarios. In contrast, our dataset contains 6,000 images collected in four different cities, which is larger than the existing ones.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">The second limitation is that the images are limited to some specific scene categories. The remote sensing images of existing datasets are usually collected in several scene categories and not uniformly sampled from the Earth’s surface. This makes the data distribution does not align well with real-world applications. Considering this problem, we introduce RSSOD-Bench to facilitate the research in the community.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Dataset Construction</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">For the RSSOD-Bench dataset, we annotate the salient objects that are naturally distinct from the background and are associated with certain object categories useful for specific tasks. Specifically, the following objects are annotated: buildings, lakes, rivers, highways, bridges, aircraft, ships, athletic fields, badminton courts, volleyball courts, baseball fields, basketball courts, gymnasiums, storage tanks, etc. As presented in Fig. <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ RSSOD-Bench: A large-scale benchmark dataset for Salient Object Detection in Optical Remote Sensing Imagery" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, the salient objects in RSSOD-Bench have large scale variations with tiny and large regions. Also, there are severely cluttered backgrounds with different seasons. In some scenes, the salient objects can be very dense. Note that, the remote sensing images in the RSSOD-Bench dataset are uniformly distributed regarding scene categories. This is different from existing ones that are usually collected from several scene categories.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Methods and Results</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.3" class="ltx_p">We report four commonly-used metrics in the field of SOD, including the <span id="S3.p1.3.1" class="ltx_text ltx_font_bold">MAE</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>, <span id="S3.p1.3.2" class="ltx_text ltx_font_bold">F-Measure</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>, <span id="S3.p1.3.3" class="ltx_text ltx_font_bold">S-Measure</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>, and <span id="S3.p1.3.4" class="ltx_text ltx_font_bold">E-Measure</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>. <span id="S3.p1.3.5" class="ltx_text ltx_font_bold">MAE</span> quantifies the pixel-level disparity between the predicted saliency map (SM) and the ground truth (GT). <span id="S3.p1.3.6" class="ltx_text ltx_font_bold">F-Measure</span> (<math id="S3.p1.1.m1.1" class="ltx_Math" alttext="F_{\beta}" display="inline"><semantics id="S3.p1.1.m1.1a"><msub id="S3.p1.1.m1.1.1" xref="S3.p1.1.m1.1.1.cmml"><mi id="S3.p1.1.m1.1.1.2" xref="S3.p1.1.m1.1.1.2.cmml">F</mi><mi id="S3.p1.1.m1.1.1.3" xref="S3.p1.1.m1.1.1.3.cmml">β</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p1.1.m1.1b"><apply id="S3.p1.1.m1.1.1.cmml" xref="S3.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.p1.1.m1.1.1.1.cmml" xref="S3.p1.1.m1.1.1">subscript</csymbol><ci id="S3.p1.1.m1.1.1.2.cmml" xref="S3.p1.1.m1.1.1.2">𝐹</ci><ci id="S3.p1.1.m1.1.1.3.cmml" xref="S3.p1.1.m1.1.1.3">𝛽</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.1.m1.1c">F_{\beta}</annotation></semantics></math>) is a composite metric that combines precision and recall to assess the similarity between SM and GT, with different weights. <span id="S3.p1.3.7" class="ltx_text ltx_font_bold">S-Measure</span> (<math id="S3.p1.2.m2.1" class="ltx_Math" alttext="S_{m}" display="inline"><semantics id="S3.p1.2.m2.1a"><msub id="S3.p1.2.m2.1.1" xref="S3.p1.2.m2.1.1.cmml"><mi id="S3.p1.2.m2.1.1.2" xref="S3.p1.2.m2.1.1.2.cmml">S</mi><mi id="S3.p1.2.m2.1.1.3" xref="S3.p1.2.m2.1.1.3.cmml">m</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p1.2.m2.1b"><apply id="S3.p1.2.m2.1.1.cmml" xref="S3.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.p1.2.m2.1.1.1.cmml" xref="S3.p1.2.m2.1.1">subscript</csymbol><ci id="S3.p1.2.m2.1.1.2.cmml" xref="S3.p1.2.m2.1.1.2">𝑆</ci><ci id="S3.p1.2.m2.1.1.3.cmml" xref="S3.p1.2.m2.1.1.3">𝑚</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.2.m2.1c">S_{m}</annotation></semantics></math>) utilizes balanced structural information from object-aware and region-aware levels to evaluate the structural likeness between SM and GT. <span id="S3.p1.3.8" class="ltx_text ltx_font_bold">E-Measure</span> (<math id="S3.p1.3.m3.1" class="ltx_Math" alttext="E_{m}" display="inline"><semantics id="S3.p1.3.m3.1a"><msub id="S3.p1.3.m3.1.1" xref="S3.p1.3.m3.1.1.cmml"><mi id="S3.p1.3.m3.1.1.2" xref="S3.p1.3.m3.1.1.2.cmml">E</mi><mi id="S3.p1.3.m3.1.1.3" xref="S3.p1.3.m3.1.1.3.cmml">m</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p1.3.m3.1b"><apply id="S3.p1.3.m3.1.1.cmml" xref="S3.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S3.p1.3.m3.1.1.1.cmml" xref="S3.p1.3.m3.1.1">subscript</csymbol><ci id="S3.p1.3.m3.1.1.2.cmml" xref="S3.p1.3.m3.1.1.2">𝐸</ci><ci id="S3.p1.3.m3.1.1.3.cmml" xref="S3.p1.3.m3.1.1.3">𝑚</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.3.m3.1c">E_{m}</annotation></semantics></math>) is a metric that signifies the degree of pixel-level correspondence and image-level statistics.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">To comprehensively validate existing state-of-the-art methods on our proposed dataset, we conduct extensive experiments to benchmark and compare their performance. Specifically, LC <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> and FT<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> are classical saliency detection methods with no use of deep learning models. As there are considerable SOD methods proposed in the computer vision (CV) community, we choose ten typical deep learning-based methods, including DSS<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>, NLDF<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, RAS<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, PoolNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, and so forth. Compared with classical methods, deep learning methods from the CV community can obtain clearly better results. For example, GateNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> and PFSNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> can achieve a <math id="S3.p2.1.m1.1" class="ltx_Math" alttext="S_{m}" display="inline"><semantics id="S3.p2.1.m1.1a"><msub id="S3.p2.1.m1.1.1" xref="S3.p2.1.m1.1.1.cmml"><mi id="S3.p2.1.m1.1.1.2" xref="S3.p2.1.m1.1.1.2.cmml">S</mi><mi id="S3.p2.1.m1.1.1.3" xref="S3.p2.1.m1.1.1.3.cmml">m</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p2.1.m1.1b"><apply id="S3.p2.1.m1.1.1.cmml" xref="S3.p2.1.m1.1.1"><csymbol cd="ambiguous" id="S3.p2.1.m1.1.1.1.cmml" xref="S3.p2.1.m1.1.1">subscript</csymbol><ci id="S3.p2.1.m1.1.1.2.cmml" xref="S3.p2.1.m1.1.1.2">𝑆</ci><ci id="S3.p2.1.m1.1.1.3.cmml" xref="S3.p2.1.m1.1.1.3">𝑚</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.1.m1.1c">S_{m}</annotation></semantics></math> of over 0.82. Furthermore, 11 RSSOD methods are compared on our dataset, including the SARNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>, FSMINet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>, MCCNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>, and so on. The methods from the remote sensing community achieve state-of-the-art performance.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">As presented in Table <a href="#S1.T2" title="Table 2 ‣ 1 Introduction ‣ RSSOD-Bench: A large-scale benchmark dataset for Salient Object Detection in Optical Remote Sensing Imagery" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, we use different colors (i.e., red, green, and blue) to highlight the best, second-best, and third-best quantitative results. Typically, several latest algorithms, MJRBM-R<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, EMFI-R<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>, HFANet-R<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, ACCo-V<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>, and ACCo-R<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite> works well on the proposed RSSOD-Bench dataset. This is in line with the expectations of these methods, and also reflects the feasibility of the proposed dataset.</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.1" class="ltx_p">However, as visualized in Fig. <a href="#S4.F2" title="Figure 2 ‣ 4 Conclusion ‣ RSSOD-Bench: A large-scale benchmark dataset for Salient Object Detection in Optical Remote Sensing Imagery" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, the segmentation results of hard examples are still not satisfactory on the proposed dataset. This indicates that more research efforts are required to enhance the SOD performance for real-world applications.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Conclusion</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We introduce the RSSOD-Bench dataset for salient object detection (SOD) in remote sensing imagery. Addressing the limitations of existing RSSOD datasets, RSSOD-Bench comprises carefully chosen images from four US cities, exhibiting diverse salient objects, varied backgrounds, and seasonal variations. Unlike previous datasets, RSSOD-Bench ensures uniform scene category distribution. We evaluate <span id="S4.p1.1.1" class="ltx_text ltx_font_bold">23</span> state-of-the-art approaches from computer vision and remote sensing communities. While these methods perform well on RSSOD-Bench, there is still room for improving SOD accuracy compared to existing datasets. Therefore, further research efforts and advanced models are needed to enhance performance.</p>
+</div>
+<figure id="S4.F2" class="ltx_figure"><img src="/html/2306.02351/assets/x2.png" id="S4.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="372" height="226" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F2.2.1.1" class="ltx_text ltx_font_bold">Fig. 2</span>: </span>Visualization saliency maps with 12 state-of-the-art methods on the proposed dataset, including five NSI-SOD approaches, and seven RSI-SOD algorithms, on different patterns. (a) Optical RSIs. (b) GT. (c) PFAN. (d) SCRN. (e) F3Net. (f) GateNet. (g) PFSNet. (h) FSMINet. (i) MCCNet. (j) CorrNet. (k) MJRBM-R. (l) EMFINet-R. (m) HFANet-R. (n) ACCo-V.
+</figcaption>
+</figure>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography" style="font-size:90%;">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text" style="font-size:90%;">
+Q. Wang, Y. Liu, Z. Xiong, and Y. Yuan, “Hybrid feature aligned network for
+salient object detection in optical remote sensing imagery,” </span><em id="bib.bib1.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE
+Trans. Geosci. Remote Sens.</em><span id="bib.bib1.3.3" class="ltx_text" style="font-size:90%;">, vol. 60, pp. 1–15, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text" style="font-size:90%;">
+Y. Liu, Z. Xiong, Y. Yuan, and Q. Wang, “Distilling knowledge from
+super-resolution for efficient remote sensing salient object detection,”
+</span><em id="bib.bib2.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Trans. Geosci. Remote Sens.</em><span id="bib.bib2.3.3" class="ltx_text" style="font-size:90%;">, vol. 61, pp. 1–16, 2023.
+</span>
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text" style="font-size:90%;">
+Z. Xiong, F. Zhang, Y. Wang, Y. Shi, and X. X. Zhu, “Earthnets: Empowering AI
+in Earth Observation,” </span><em id="bib.bib3.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">arXiv preprint arXiv:2210.04936</em><span id="bib.bib3.3.3" class="ltx_text" style="font-size:90%;">, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text" style="font-size:90%;">
+Y. Liu, Q. Li, Y. Yuan, Q. Du, and Q. Wang, “Abnet: Adaptive balanced network
+for multiscale object detection in remote sensing imagery,” </span><em id="bib.bib4.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE
+Trans. Geosci. Remote Sens.</em><span id="bib.bib4.3.3" class="ltx_text" style="font-size:90%;">, vol. 60, pp. 1–14, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text" style="font-size:90%;">
+W. Van Gansbeke, S. Vandenhende, S. Georgoulis, and L. Van Gool, “Unsupervised
+semantic segmentation by contrasting object mask proposals,” in </span><em id="bib.bib5.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc.
+IEEE Int. Conf. Comput. Vis. (ICCV)</em><span id="bib.bib5.3.3" class="ltx_text" style="font-size:90%;">, 2021, pp. 10 052–10 062.
+</span>
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text" style="font-size:90%;">
+K. Gu, S. Wang, H. Yang, W. Lin, G. Zhai, X. Yang, and W. Zhang,
+“Saliency-guided quality assessment of screen content images,” </span><em id="bib.bib6.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE
+Trans. Multimedia</em><span id="bib.bib6.3.3" class="ltx_text" style="font-size:90%;">, vol. 18, no. 6, pp. 1098–1110, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text" style="font-size:90%;">
+A. Babenko and V. Lempitsky, “Aggregating local deep features for image
+retrieval,” in </span><em id="bib.bib7.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE Int. Conf. Comput. Vis. (ICCV)</em><span id="bib.bib7.3.3" class="ltx_text" style="font-size:90%;">, 2015, pp.
+1269–1277.
+</span>
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text" style="font-size:90%;">
+C. Li, R. Cong, J. Hou, S. Zhang, Y. Qian, and S. Kwong, “Nested Network With
+Two-Stream Pyramid for Salient Object Detection in Optical Remote Sensing
+Images,” </span><em id="bib.bib8.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Trans. Geosci. Remote Sens.</em><span id="bib.bib8.3.3" class="ltx_text" style="font-size:90%;">, vol. 57, no. 11, pp.
+9156–9166, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text" style="font-size:90%;">
+Q. Zhang, R. Cong, C. Li, M.-M. Cheng, Y. Fang, X. Cao, Y. Zhao, and S. Kwong,
+“Dense Attention Fluid Network for Salient Object Detection in Optical
+Remote Sensing Images,” </span><em id="bib.bib9.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Trans. Image Process.</em><span id="bib.bib9.3.3" class="ltx_text" style="font-size:90%;">, vol. 30, pp.
+1305–1317, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span id="bib.bib10.1.1" class="ltx_text" style="font-size:90%;">
+Z. Tu, C. Wang, C. Li, M. Fan, H. Zhao, and B. Luo, “ORSI salient object
+detection via multiscale joint region and boundary model,” </span><em id="bib.bib10.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Trans.
+Geosci. Remote Sens.</em><span id="bib.bib10.3.3" class="ltx_text" style="font-size:90%;">, vol. 60, pp. 1–13, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span id="bib.bib11.1.1" class="ltx_text" style="font-size:90%;">
+Y. Zhai and M. Shah, “Visual attention detection in video sequences using
+spatiotemporal cues,” in </span><em id="bib.bib11.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. 14th ACM Int. Conf. Multimedia</em><span id="bib.bib11.3.3" class="ltx_text" style="font-size:90%;">, Oct.
+2006, pp. 815–824.
+</span>
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span id="bib.bib12.1.1" class="ltx_text" style="font-size:90%;">
+R. Achanta, S. Hemami, F. Estrada, and S. Susstrunk, “Frequency-tuned salient
+region detection,” in </span><em id="bib.bib12.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE Conf. Comput. Vis. Pattern Recognit.
+(CVPR)</em><span id="bib.bib12.3.3" class="ltx_text" style="font-size:90%;">, Jun. 2009, pp. 1597–1604.
+</span>
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text" style="font-size:90%;">
+Q. Hou, M.-M. Cheng, X. Hu, A. Borji, Z. Tu, and P. Torr, “Deeply Supervised
+Salient Object Detection with Short Connections,” </span><em id="bib.bib13.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Trans. Pattern
+Anal. Mach. Intell.</em><span id="bib.bib13.3.3" class="ltx_text" style="font-size:90%;">, vol. 41, no. 4, pp. 815–828, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text" style="font-size:90%;">
+Z. Luo, A. Mishra, A. Achkar, J. Eichel, S. Li, and P.-M. Jodoin, “Non-local
+Deep Features for Salient Object Detection,” in </span><em id="bib.bib14.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE Conf.
+Comput. Vis. Pattern Recognit. (CVPR)</em><span id="bib.bib14.3.3" class="ltx_text" style="font-size:90%;">, 2017, pp. 6593–6601.
+</span>
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span id="bib.bib15.1.1" class="ltx_text" style="font-size:90%;">
+S. Chen, X. Tan, B. Wang, and X. Hu, “Reverse Attention for Salient Object
+Detection,” in </span><em id="bib.bib15.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. Eur. Conf. Comput. Vis. (ECCV)</em><span id="bib.bib15.3.3" class="ltx_text" style="font-size:90%;">, Jul. 2018, pp.
+234–250.
+</span>
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text" style="font-size:90%;">
+J.-J. Liu, Q. Hou, M.-M. Cheng, J. Feng, and J. Jiang, “A Simple
+Pooling-Based Design for Real-Time Salient Object Detection,” in
+</span><em id="bib.bib16.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)</em><span id="bib.bib16.3.3" class="ltx_text" style="font-size:90%;">, 2019, pp.
+3912–3921.
+</span>
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span id="bib.bib17.1.1" class="ltx_text" style="font-size:90%;">
+T. Zhao and X. Wu, “Pyramid Feature Attention Network for Saliency
+Detection,” in </span><em id="bib.bib17.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE Conf. Comput. Vis. Pattern Recognit.
+(CVPR)</em><span id="bib.bib17.3.3" class="ltx_text" style="font-size:90%;">, 2019, pp. 3080–3089.
+</span>
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span id="bib.bib18.1.1" class="ltx_text" style="font-size:90%;">
+Z. Wu, L. Su, and Q. Huang, “Stacked Cross Refinement Network for Edge-Aware
+Salient Object Detection,” in </span><em id="bib.bib18.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE Int. Conf. Comput. Vis.
+(ICCV)</em><span id="bib.bib18.3.3" class="ltx_text" style="font-size:90%;">, 2019, pp. 7263–7272.
+</span>
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text" style="font-size:90%;">
+J. Wei, S. Wang, and Q. Huang, “F³Net: Fusion, Feedback and Focus for
+Salient Object Detection,” </span><em id="bib.bib19.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. AAAI Conf. Artif. Intell. (AAAI)</em><span id="bib.bib19.3.3" class="ltx_text" style="font-size:90%;">,
+vol. 34, no. 07, pp. 12 321–12 328, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text" style="font-size:90%;">
+Y. Pang, X. Zhao, L. Zhang, and H. Lu, “Multi-Scale Interactive Network for
+Salient Object Detection,” in </span><em id="bib.bib20.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE Conf. Comput. Vis. Pattern
+Recognit. (CVPR)</em><span id="bib.bib20.3.3" class="ltx_text" style="font-size:90%;">, 2020, pp. 9410–9419.
+</span>
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text" style="font-size:90%;">
+X. Zhao, Y. Pang, L. Zhang, H. Lu, and L. Zhang, “Suppress and balance: A
+simple gated network for salient object detection,” in </span><em id="bib.bib21.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. Eur.
+Conf. Comput. Vis. (ECCV)</em><span id="bib.bib21.3.3" class="ltx_text" style="font-size:90%;">, 2020, pp. 35–51.
+</span>
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span id="bib.bib22.1.1" class="ltx_text" style="font-size:90%;">
+M. Ma, C. Xia, and J. Li, “Pyramidal Feature Shrinking for Salient Object
+Detection,” </span><em id="bib.bib22.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. AAAI Conf. Artif. Intell. (AAAI)</em><span id="bib.bib22.3.3" class="ltx_text" style="font-size:90%;">, vol. 35, no. 03,
+pp. 2311–2318, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span id="bib.bib23.1.1" class="ltx_text" style="font-size:90%;">
+Z. Huang, H. Chen, B. Liu, and Z. Wang, “Semantic-Guided Attention Refinement
+Network for Salient Object Detection in Optical Remote Sensing Images,”
+</span><em id="bib.bib23.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Remote Sens.</em><span id="bib.bib23.3.3" class="ltx_text" style="font-size:90%;">, vol. 13, no. 11, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span id="bib.bib24.1.1" class="ltx_text" style="font-size:90%;">
+K. Shen, X. Zhou, B. Wan, R. Shi, and J. Zhang, “Fully squeezed multiscale
+inference network for fast and accurate saliency detection in optical
+remote-sensing images,” </span><em id="bib.bib24.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Geosci. Remote Sens. Lett.</em><span id="bib.bib24.3.3" class="ltx_text" style="font-size:90%;">, vol. 19, pp.
+1–5, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span id="bib.bib25.1.1" class="ltx_text" style="font-size:90%;">
+Y. Lin, H. Sun, N. Liu, Y. Bian, J. Cen, and H. Zhou, “A lightweight
+multi-scale context network for salient object detection in optical remote
+sensing images,” in </span><em id="bib.bib25.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. Int. Conf. Pattern Recognit. (ICPR)</em><span id="bib.bib25.3.3" class="ltx_text" style="font-size:90%;">, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span id="bib.bib26.1.1" class="ltx_text" style="font-size:90%;">
+G. Li, Z. Liu, W. Lin, and H. Ling, “Multi-Content Complementation Network
+for Salient Object Detection in Optical Remote Sensing Images,” </span><em id="bib.bib26.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE
+Trans. Geosci. Remote Sens.</em><span id="bib.bib26.3.3" class="ltx_text" style="font-size:90%;">, vol. 60, pp. 1–13, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span id="bib.bib27.1.1" class="ltx_text" style="font-size:90%;">
+G. Li, Z. Liu, Z. Bai, W. Lin, and H. Ling, “Lightweight salient object
+detection in optical remote sensing images via feature correlation,”
+</span><em id="bib.bib27.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Trans. Geosci. Remote Sens.</em><span id="bib.bib27.3.3" class="ltx_text" style="font-size:90%;">, vol. 60, pp. 1–12, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span id="bib.bib28.1.1" class="ltx_text" style="font-size:90%;">
+X. Zhou, K. Shen, Z. Liu, C. Gong, J. Zhang, and C. Yan, “Edge-Aware
+Multiscale Feature Integration Network for Salient Object Detection in
+Optical Remote Sensing Images,” </span><em id="bib.bib28.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Trans. Geosci. Remote Sens.</em><span id="bib.bib28.3.3" class="ltx_text" style="font-size:90%;">,
+vol. 60, pp. 1–15, 2022.
+</span>
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span id="bib.bib29.1.1" class="ltx_text" style="font-size:90%;">
+G. Li, Z. Liu, D. Zeng, W. Lin, and H. Ling, “Adjacent context coordination
+network for salient object detection in optical remote sensing images,”
+</span><em id="bib.bib29.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">IEEE Trans. on Cybern.</em><span id="bib.bib29.3.3" class="ltx_text" style="font-size:90%;">, vol. 53, no. 1, pp. 526–538, 2023.
+</span>
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock"><span id="bib.bib30.1.1" class="ltx_text" style="font-size:90%;">
+F. Perazzi, P. Krähenbühl, Y. Pritch, and A. Hornung, “Saliency filters:
+Contrast based filtering for salient region detection,” in </span><em id="bib.bib30.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE
+Conf. Comput. Vis. Pattern Recognit. (CVPR)</em><span id="bib.bib30.3.3" class="ltx_text" style="font-size:90%;">, 2012, pp. 733–740.
+</span>
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock"><span id="bib.bib31.1.1" class="ltx_text" style="font-size:90%;">
+D.-P. Fan, M.-M. Cheng, Y. Liu, T. Li, and A. Borji, “Structure-measure: A new
+way to evaluate foreground maps,” in </span><em id="bib.bib31.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. IEEE Int. Conf. Comput.
+Vis. (ICCV)</em><span id="bib.bib31.3.3" class="ltx_text" style="font-size:90%;">, 2017, pp. 4558–4567.
+</span>
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock"><span id="bib.bib32.1.1" class="ltx_text" style="font-size:90%;">
+D.-P. Fan, C. Gong, Y. Cao, B. Ren, M.-M. Cheng, and A. Borji,
+“Enhanced-Alignment Measure for Binary Foreground Map Evaluation,” in
+</span><em id="bib.bib32.2.2" class="ltx_emph ltx_font_italic" style="font-size:90%;">Proc. Int. Joint Conf. Artif. Intell. (IJCAI)</em><span id="bib.bib32.3.3" class="ltx_text" style="font-size:90%;">, Jul. 2018, pp.
+698–704.
+</span>
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2306.02350" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2306.02351" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2306.02351">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2306.02351" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2306.02354" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Thu Feb 29 02:21:12 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

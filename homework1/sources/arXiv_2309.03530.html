@@ -1,0 +1,969 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2309.03530] Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs</title><meta property="og:description" content="This paper proposes a novel approach for detecting objects using mobile robots in the context of the RoboCup Standard Platform League, with a primary focus on detecting the ball. The challenge lies in detecting a dynam…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2309.03530">
+
+<!--Generated on Wed Feb 28 07:50:12 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="keywords" lang="en" content="RoboCup Standard Platform League Convolutional Neural Network Object Detection Humanoid Robots Early Exits Real-time Processing">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span id="id1" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">institutetext: </span>TU Dortmund University, Robotics Research Institute
+<br class="ltx_break">Otto-Hahn-Str. 8, 44227 Dortmund, Germany
+<br class="ltx_break"><span id="id1.1" class="ltx_note ltx_role_email"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">email: </span>arne.moos@tu-dortmund.de</span></span></span></span></span></span>
+<h1 class="ltx_title ltx_title_document">Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Arne Moos
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_orcid"><a target="_blank" href="https://orcid.org/0000-0003-2682-4422" title="ORCID identifier" class="ltx_ref">0000-0003-2682-4422</a></span>
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">This paper proposes a novel approach for detecting objects using mobile robots in the context of the RoboCup Standard Platform League, with a primary focus on detecting the ball. The challenge lies in detecting a dynamic object in varying lighting conditions and blurred images caused by fast movements. To address this challenge, the paper presents a convolutional neural network architecture designed specifically for computationally constrained robotic platforms. The proposed CNN is trained to achieve high precision classification of single objects in image patches and to determine their precise spatial positions. The paper further integrates Early Exits into the existing high-precision CNN architecture to reduce the computational cost of easily rejectable cases in the background class. The training process involves a composite loss function based on confidence and positional losses with dynamic weighting and data augmentation. The proposed approach achieves a precision of 100% on the validation dataset and a recall of almost 87%, while maintaining an execution time of around 170 µs per hypotheses. By combining the proposed approach with an Early Exit, a runtime optimization of more than 28%, on average, can be achieved compared to the original CNN. Overall, this paper provides an efficient solution for an enhanced detection of objects, especially the ball, in computationally constrained robotic platforms.</p>
+</div>
+<div class="ltx_keywords">
+<h6 class="ltx_title ltx_title_keywords">Keywords: </h6>RoboCup Standard Platform League Convolutional Neural Network Object Detection Humanoid Robots Early Exits Real-time Processing
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Mobile robots require robust, reliable, and precise object detection capabilities to effectively perform their tasks. This paper focuses on the RoboCup Standard Platform League, which involves playing soccer using the NAO V6 humanoid robot platform<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><a target="_blank" href="https://www.aldebaran.com/en/nao" title="" class="ltx_ref ltx_url" style="color:#0000FF;">https://www.aldebaran.com/en/nao</a></span></span></span>. The robots use its cameras to detect objects in its environment, including static and dynamic ones like a rolling ball or other robots. Detecting dynamic objects can be challenging due to varying lighting conditions and fast movements. Deep neural networks with many layers are typically used, which increases the demand for computing power, a requirement that is lacking on a mobile robot platform like the NAO V6. Precise object detection is therefore more important than recall, as it is better to miss an object for a few frames than to have false detections and focus on the wrong areas. High precision also allows for faster re-detection of an object after it is lost, because it can be relied upon a single detection.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">In robot soccer, the ball is the most critical object to detect because a match cannot be won without accurate detection of the ball. Detecting a rolling ball is crucial for the robot to react quickly. Therefore, its detection was studied in this paper. Conventional preprocessing techniques, such as scan lines, are used to identify a larger number of candidate regions where a ball may be present. However, these regions must be classified with a high precision. At the same time, the exact position of the ball, i.e. its center, within this patch must be determined, since it cannot be assumed that the candidate regions are always exactly centered on the object. Typically, the candidate regions’ input data passes through a fixed neural network architecture. However, this fixed feed forward execution does not take into account that many of the patches that belong to the background class are more easily detectable and can therefore be rejected at earlier stages in the neural network.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">This paper’s main contribution consists of two parts. First, it presents a convolutional neural network architecture designed for computationally constrained robotic platforms, which is trained to achieve high precision classification of single objects in image patches and to determine their precise spatial positions. Second, the paper integrates Early Exits into an existing high-precision CNN architecture to reduce the computational cost of easily rejectable cases in the background class.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">The remainder of this paper is organized as follows: Section <a href="#S2" title="2 Related Work ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> presents object detection techniques for resource-constrained robots, particularly in the context of the RoboCup Standard Platform League. Furthermore, related approaches concerning the use of Early Exits are discussed. Section <a href="#S3" title="3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> explains the approach presented in this paper, including model design decisions, specialized training, and the addition of an Early Exit. The performance of the proposed approach is then evaluated in Section <a href="#S4" title="4 Evaluation ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>. Finally, Section <a href="#S5" title="5 Conclusion and Future Work ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> concludes with a summary and an outlook.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">This section covers two different topics of related work. In the first subsection, we present the different ball detection algorithms used by several teams in the RoboCup Standard Platform League, which include the use of neural networks and specialized algorithms. In the second subsection, we will highlight the concept of Early Exit neural networks and the various techniques proposed by researchers to incorporate them into deep neural networks.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Ball Detection in the RoboCup Standard Platform League</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">In recent years, the RoboCup Standard Platform League has seen significant advances in ball detection algorithms for the NAO robot, especially since the transition to a black and white ball in 2016. These improvements have enabled robots to better detect, track, and respond to the ball during gameplay, resulting in more accurate and efficient play combined with passes.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">Using a multistep process for ball detection, the B-Human team <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> scans for ball candidates using scan lines, followed by a neural network-based classification process to identify the real ball and estimate its center and radius. Their system includes three neural networks, one CNN for feature extraction and two DNNs for ball classification and position estimation. Similarly, the HTWK Robots team <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> uses a two-phase ball detection algorithm that involves an integral image and a deep convolutional neural network for hypothesis generation and classification, respectively. The rUNSWift team <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> uses a new convolutional neural network to improve their ball detection recall. Their framwork’s ball candidate finder undergoes pre-processing, heuristic checks, and quality modifiers for consistent region of interest scaling. Using a candidate generator based on filtered segments and multiple neural networks, the HULKs team’s <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> approach involves a pre-classification network for higher recall and a second classification network for higher precision. The position and radius of the ball are determined by a third neural network, which is optimized for maximum candidate throughput using a genetic algorithm. The Dutch Nao team <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> developed an improved ball detection system, which uses a convolutional neural network for candidate generation and a field border detection system to reduce false positives. The Berlin United team <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> proposes a two-step approach to detecting the ball used in competitions. Their approach involves finding candidates through perspective key points detection and classifying them using a measure function based on integral images. They also employ heuristics and neural networks to make the process tractable.</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.1" class="ltx_p">Menashe et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, affiliated with the UT Austin Villa team, present an approach that combines color and texture features to distinguish the ball from the field and other objects in the image. The authors use a sliding window technique to localize the ball and apply a machine learning classifier to verify the detection. In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>, Yan et al. propose a real-time lightweight CNN for ball detection in robots with limited computational resources, utilizing a combination of convolutional and pooling layers to achieve high accuracy while keeping the model small. Additionally, the paper by O’Keeffe and Villing <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> proposes a benchmark data set and evaluation of deep learning architectures for ball detection in the RoboCup SPL, which can be used to compare the effectiveness of various ball detection approaches.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Early Exit Neural Networks</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Deep neural networks (DNNs) have shown remarkable performance in various fields, such as computer vision and natural language processing. However, they are computationally expensive and require significant resources, hindering their deployment on resource-constrained devices. One approach to address this challenge is the use of Early Exits in DNNs. Early Exits allow a neural network to terminate its inference process early, bypassing unnecessary computations for some inputs, thereby reducing the overall computational cost.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Researchers have proposed methods for incorporating Early Exits in DNNs for efficient inference. Teerapittayanon et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> introduced BranchyNet, a framework for fast inference via early exiting from DNNs by training auxiliary classifiers for intermediate layers. Huang et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> presented Multi-Scale Dense Networks, which utilize a dense connectivity pattern and multiple paths with different resolutions to enable Erly Exits. Figurnov et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> introduced Spatially Adaptive Computation Time for Residual Networks, which dynamically adjusts the computation time for different regions of an input image. Bolukbasi et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> proposed Adaptive Neural Networks for Efficient Inference, which use a reinforcement learning-based approach to decide when to exit early. Panda et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> presented Conditional Deep Learning, which employs an energy-based gating mechanism to selectively execute layers. Jayakodi et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> proposed a co-design approach for trading-off accuracy and energy of deep inference on embedded systems. Berestizshevsky and Even <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> introduced cascaded inference based on soft max confidence, which dynamically sacrifices accuracy for reduced computation. Passalis et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> proposed a hierarchical Early Exit approach that adapts the number and position of Early Exits for different input instances. Matsubara et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> identified the benefits of early exiting in split computing architectures, including reduced memory consumption, faster inference, and better load balancing across different processing units.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">The approaches mentioned above have their unique strategies for Early Exits, and they can be categorized based on their input-adaptive, spatially adaptive, or hierarchical architectures. Input-adaptive methods dynamically adjust the network depth and width based on the input data <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>. Spatially adaptive methods adjust the computation time or number of operations needed for different input regions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>. Hierarchical Early Exit methods split the computation into multiple parts and terminate the computation based on an Early Exit criterion <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>. Other approaches aim to trade-off accuracy and energy by co-designing hardware and software for deep inference on embedded systems <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> or utilize cascaded inference based on soft max confidence, which dynamically sacrifices accuracy for reduced computation in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.</p>
+</div>
+<div id="S2.SS2.p4" class="ltx_para">
+<p id="S2.SS2.p4.1" class="ltx_p">The input-adaptive and spatially adaptive methods are particularly useful for handling large variations in input data, such as in image classification tasks with varying sizes or aspect ratios. On the other hand, hierarchical Early Exit methods are more suitable for tasks with a clear hierarchy of features, such as in object detection or segmentation tasks. This paper falls into the latter category. However, the Early Exits are utilized quite differently from those mentioned before. In our case, there are only very few examples of the positive class to be recognized, but quite a few cases of the background class. Therefore, this paper presents an approach for accelerating the classification of the background class through an Early Exit enhancement.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Approach</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">As described in Section <a href="#S1" title="1 Introduction ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, this work’s approach is to classify image regions (patches) obtained through preprocessing. Thereby, this work focuses on detecting the ball, which is one of the most crucial objects in robot soccer. In a worst-case scenario, where no ball is present in the image, the preprocessing stage generates up to 80 hypotheses per frame, with a mean and standard deviation of <math id="S3.p1.1.m1.1" class="ltx_Math" alttext="30\pm 10" display="inline"><semantics id="S3.p1.1.m1.1a"><mrow id="S3.p1.1.m1.1.1" xref="S3.p1.1.m1.1.1.cmml"><mn id="S3.p1.1.m1.1.1.2" xref="S3.p1.1.m1.1.1.2.cmml">30</mn><mo id="S3.p1.1.m1.1.1.1" xref="S3.p1.1.m1.1.1.1.cmml">±</mo><mn id="S3.p1.1.m1.1.1.3" xref="S3.p1.1.m1.1.1.3.cmml">10</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p1.1.m1.1b"><apply id="S3.p1.1.m1.1.1.cmml" xref="S3.p1.1.m1.1.1"><csymbol cd="latexml" id="S3.p1.1.m1.1.1.1.cmml" xref="S3.p1.1.m1.1.1.1">plus-or-minus</csymbol><cn type="integer" id="S3.p1.1.m1.1.1.2.cmml" xref="S3.p1.1.m1.1.1.2">30</cn><cn type="integer" id="S3.p1.1.m1.1.1.3.cmml" xref="S3.p1.1.m1.1.1.3">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.1.m1.1c">30\pm 10</annotation></semantics></math> hypotheses.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Now, on the one hand, this leads to the constraint that the detection must be executed with a high precision of at least 99.99%. Consequently, since in robot soccer there is only one ball on the field at a time, it also means that once a ball was detected with a high precision, processing all subsequent patches can be avoided for this frame. Nevertheless, it is imperative that the total execution time does not exceed the robot’s real-time data processing capability, which is typically 30 FPS for the cameras. Thus, it is crucial to ensure that the robot can execute other important modules subsequently to ball detection.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">Section <a href="#S3.SS1" title="3.1 Model Architecture ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.1</span></a> presents the neural network architecture we propose together with the chosen design decisions. Then, in Section <a href="#S3.SS2" title="3.2 Dataset ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.2</span></a> the dataset is explained, followed by a discussion on the training process in Section <a href="#S3.SS3" title="3.3 Training ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.3</span></a>. Finally, Section <a href="#S3.SS4" title="3.4 Adding an Early Exit ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.4</span></a> presents the enhancement of the neural network using Early Exits.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Model Architecture</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">When designing a convolutional neural network (CNN) for detecting a ball in an image patch, the first and most important constraint considered is the execution time. For the framework running on the NAO V6, the ball detection should not exceed 8 ms in the normal case to provide enough buffer for the subsequent modules. When considering an average of 30 + 10 hypotheses per frame, this results in a maximum inference time of 0.2 ms per hypothesis.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">Considering that convolution layers consume most of the execution time, it is apparent that there is room for optimization. Hence, we follow the MobileNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> approach, where computationally intensive convolutions are substituted with depthwise separable convolutions. A depth multiplier greater than 1 is utilized, temporarily increasing the number of filters for the depthwise convolution and subsequently reducing them for the pointwise convolution. This allows the extraction of more complex features while adhering to the execution time limitations.</p>
+</div>
+<div id="S3.SS1.p3" class="ltx_para">
+<p id="S3.SS1.p3.1" class="ltx_p">Since most processors support SIMD instructions of some kind, including the NAO V6 with up to SSE 4.2, this possibility of parallel processing is also taken into account. With the NAO V6, four data types with 4 bytes (e.g., floats) can be processed simultaneously by SIMD instructions using a 128-bit register. To take advantage of this, care was taken in the design to ensure that the number of filters must be divisible by four.</p>
+</div>
+<div id="S3.SS1.p4" class="ltx_para">
+<p id="S3.SS1.p4.1" class="ltx_p">The final model architecture for the CNN can be seen in Table <a href="#S3.T1" title="Table 1 ‣ 3.1 Model Architecture ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Architecture of the CNN for the ball detection on an image patch. Each Separable-/Convolutional layer follows a Batch Normalization and a Leaky ReLu layer. The * marks the layer after which the Early Exit is attached.</figcaption>
+<table id="S3.T1.1" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T1.1.1.1" class="ltx_tr">
+<td id="S3.T1.1.1.1.1" class="ltx_td ltx_align_center">Layer (type)</td>
+<td id="S3.T1.1.1.1.2" class="ltx_td ltx_align_center">Filter</td>
+<td id="S3.T1.1.1.1.3" class="ltx_td ltx_align_center">Kernel</td>
+<td id="S3.T1.1.1.1.4" class="ltx_td ltx_align_center">Stride</td>
+<td id="S3.T1.1.1.1.5" class="ltx_td ltx_align_center">Depth M.</td>
+<td id="S3.T1.1.1.1.6" class="ltx_td ltx_align_center">#MAC</td>
+<td id="S3.T1.1.1.1.7" class="ltx_td ltx_align_center">Output</td>
+</tr>
+<tr id="S3.T1.1.2.2" class="ltx_tr">
+<td id="S3.T1.1.2.2.1" class="ltx_td ltx_align_center ltx_border_tt">Input</td>
+<td id="S3.T1.1.2.2.2" class="ltx_td ltx_align_center ltx_border_tt">-</td>
+<td id="S3.T1.1.2.2.3" class="ltx_td ltx_align_center ltx_border_tt">-</td>
+<td id="S3.T1.1.2.2.4" class="ltx_td ltx_align_center ltx_border_tt">-</td>
+<td id="S3.T1.1.2.2.5" class="ltx_td ltx_align_center ltx_border_tt">-</td>
+<td id="S3.T1.1.2.2.6" class="ltx_td ltx_align_center ltx_border_tt">-</td>
+<td id="S3.T1.1.2.2.7" class="ltx_td ltx_align_center ltx_border_tt">32x32x3</td>
+</tr>
+<tr id="S3.T1.1.3.3" class="ltx_tr">
+<td id="S3.T1.1.3.3.1" class="ltx_td ltx_align_center ltx_border_t">SeparableConv2D*</td>
+<td id="S3.T1.1.3.3.2" class="ltx_td ltx_align_center ltx_border_t">8</td>
+<td id="S3.T1.1.3.3.3" class="ltx_td ltx_align_center ltx_border_t">3x3</td>
+<td id="S3.T1.1.3.3.4" class="ltx_td ltx_align_center ltx_border_t">2x2</td>
+<td id="S3.T1.1.3.3.5" class="ltx_td ltx_align_center ltx_border_t">1</td>
+<td id="S3.T1.1.3.3.6" class="ltx_td ltx_align_center ltx_border_t">13055</td>
+<td id="S3.T1.1.3.3.7" class="ltx_td ltx_align_center ltx_border_t">16x16x8</td>
+</tr>
+<tr id="S3.T1.1.4.4" class="ltx_tr">
+<td id="S3.T1.1.4.4.1" class="ltx_td ltx_align_center ltx_border_t">Conv2D</td>
+<td id="S3.T1.1.4.4.2" class="ltx_td ltx_align_center ltx_border_t">4</td>
+<td id="S3.T1.1.4.4.3" class="ltx_td ltx_align_center ltx_border_t">1x1</td>
+<td id="S3.T1.1.4.4.4" class="ltx_td ltx_align_center ltx_border_t">1x1</td>
+<td id="S3.T1.1.4.4.5" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.4.4.6" class="ltx_td ltx_align_center ltx_border_t">8190</td>
+<td id="S3.T1.1.4.4.7" class="ltx_td ltx_align_center ltx_border_t">16x16x4</td>
+</tr>
+<tr id="S3.T1.1.5.5" class="ltx_tr">
+<td id="S3.T1.1.5.5.1" class="ltx_td ltx_align_center ltx_border_t">SeparableConv2D</td>
+<td id="S3.T1.1.5.5.2" class="ltx_td ltx_align_center ltx_border_t">16</td>
+<td id="S3.T1.1.5.5.3" class="ltx_td ltx_align_center ltx_border_t">3x3</td>
+<td id="S3.T1.1.5.5.4" class="ltx_td ltx_align_center ltx_border_t">2x2</td>
+<td id="S3.T1.1.5.5.5" class="ltx_td ltx_align_center ltx_border_t">2</td>
+<td id="S3.T1.1.5.5.6" class="ltx_td ltx_align_center ltx_border_t">12800</td>
+<td id="S3.T1.1.5.5.7" class="ltx_td ltx_align_center ltx_border_t">8x8x16</td>
+</tr>
+<tr id="S3.T1.1.6.6" class="ltx_tr">
+<td id="S3.T1.1.6.6.1" class="ltx_td ltx_align_center ltx_border_t">Conv2D</td>
+<td id="S3.T1.1.6.6.2" class="ltx_td ltx_align_center ltx_border_t">8</td>
+<td id="S3.T1.1.6.6.3" class="ltx_td ltx_align_center ltx_border_t">1x1</td>
+<td id="S3.T1.1.6.6.4" class="ltx_td ltx_align_center ltx_border_t">1x1</td>
+<td id="S3.T1.1.6.6.5" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.6.6.6" class="ltx_td ltx_align_center ltx_border_t">8190</td>
+<td id="S3.T1.1.6.6.7" class="ltx_td ltx_align_center ltx_border_t">8x8x8</td>
+</tr>
+<tr id="S3.T1.1.7.7" class="ltx_tr">
+<td id="S3.T1.1.7.7.1" class="ltx_td ltx_align_center ltx_border_t">SeparableConv2D</td>
+<td id="S3.T1.1.7.7.2" class="ltx_td ltx_align_center ltx_border_t">20</td>
+<td id="S3.T1.1.7.7.3" class="ltx_td ltx_align_center ltx_border_t">3x3</td>
+<td id="S3.T1.1.7.7.4" class="ltx_td ltx_align_center ltx_border_t">2x2</td>
+<td id="S3.T1.1.7.7.5" class="ltx_td ltx_align_center ltx_border_t">4</td>
+<td id="S3.T1.1.7.7.6" class="ltx_td ltx_align_center ltx_border_t">14850</td>
+<td id="S3.T1.1.7.7.7" class="ltx_td ltx_align_center ltx_border_t">4x4x20</td>
+</tr>
+<tr id="S3.T1.1.8.8" class="ltx_tr">
+<td id="S3.T1.1.8.8.1" class="ltx_td ltx_align_center ltx_border_t">Conv2D</td>
+<td id="S3.T1.1.8.8.2" class="ltx_td ltx_align_center ltx_border_t">12</td>
+<td id="S3.T1.1.8.8.3" class="ltx_td ltx_align_center ltx_border_t">1x1</td>
+<td id="S3.T1.1.8.8.4" class="ltx_td ltx_align_center ltx_border_t">1x1</td>
+<td id="S3.T1.1.8.8.5" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.8.8.6" class="ltx_td ltx_align_center ltx_border_t">3840</td>
+<td id="S3.T1.1.8.8.7" class="ltx_td ltx_align_center ltx_border_t">4x4x12</td>
+</tr>
+<tr id="S3.T1.1.9.9" class="ltx_tr">
+<td id="S3.T1.1.9.9.1" class="ltx_td ltx_align_center ltx_border_t">SeparableConv2D</td>
+<td id="S3.T1.1.9.9.2" class="ltx_td ltx_align_center ltx_border_t">32</td>
+<td id="S3.T1.1.9.9.3" class="ltx_td ltx_align_center ltx_border_t">3x3</td>
+<td id="S3.T1.1.9.9.4" class="ltx_td ltx_align_center ltx_border_t">2x2</td>
+<td id="S3.T1.1.9.9.5" class="ltx_td ltx_align_center ltx_border_t">8</td>
+<td id="S3.T1.1.9.9.6" class="ltx_td ltx_align_center ltx_border_t">15745</td>
+<td id="S3.T1.1.9.9.7" class="ltx_td ltx_align_center ltx_border_t">2x2x32</td>
+</tr>
+<tr id="S3.T1.1.10.10" class="ltx_tr">
+<td id="S3.T1.1.10.10.1" class="ltx_td ltx_align_center ltx_border_t">Conv2D</td>
+<td id="S3.T1.1.10.10.2" class="ltx_td ltx_align_center ltx_border_t">16</td>
+<td id="S3.T1.1.10.10.3" class="ltx_td ltx_align_center ltx_border_t">1x1</td>
+<td id="S3.T1.1.10.10.4" class="ltx_td ltx_align_center ltx_border_t">1x1</td>
+<td id="S3.T1.1.10.10.5" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.10.10.6" class="ltx_td ltx_align_center ltx_border_t">2050</td>
+<td id="S3.T1.1.10.10.7" class="ltx_td ltx_align_center ltx_border_t">2x2x16</td>
+</tr>
+<tr id="S3.T1.1.11.11" class="ltx_tr">
+<td id="S3.T1.1.11.11.1" class="ltx_td ltx_align_center ltx_border_t">Flatten</td>
+<td id="S3.T1.1.11.11.2" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.11.11.3" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.11.11.4" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.11.11.5" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.11.11.6" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.11.11.7" class="ltx_td ltx_align_center ltx_border_t">64</td>
+</tr>
+<tr id="S3.T1.1.12.12" class="ltx_tr">
+<td id="S3.T1.1.12.12.1" class="ltx_td ltx_align_center ltx_border_t">Dense</td>
+<td id="S3.T1.1.12.12.2" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.12.12.3" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.12.12.4" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.12.12.5" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T1.1.12.12.6" class="ltx_td ltx_align_center ltx_border_t">192</td>
+<td id="S3.T1.1.12.12.7" class="ltx_td ltx_align_center ltx_border_t">3</td>
+</tr>
+<tr id="S3.T1.1.13.13" class="ltx_tr">
+<td id="S3.T1.1.13.13.1" class="ltx_td ltx_align_center ltx_border_tt" colspan="7">Total #MAC: 78912</td>
+</tr>
+<tr id="S3.T1.1.14.14" class="ltx_tr">
+<td id="S3.T1.1.14.14.1" class="ltx_td ltx_align_center ltx_border_bb" colspan="7">Total #Params: 6686</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Dataset</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">The dataset we use for this work consists of small image patches in the RGB format with a size of 32x32 pixels. These were obtained from the preprocessing of the Nao Devils framework during games in recent years. A total of 225350 patches were labeled by hand. The dataset was then split in a ratio of around 70/30 between training and validation data. A detailed distribution can be found in Table <a href="#S3.T2" title="Table 2 ‣ 3.2 Dataset ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. In addition to the initial classification, the following properties were also labeled:</p>
+<ul id="S3.I1" class="ltx_itemize">
+<li id="S3.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i1.p1" class="ltx_para">
+<p id="S3.I1.i1.p1.1" class="ltx_p"><span id="S3.I1.i1.p1.1.1" class="ltx_text ltx_font_bold">Bounding Box:</span> The upper left and lower right corners of the surrounding bounding box. Here, the coordinates can also be outside the patch because in the end, only the center of the object is used, so truncated objects can also be detected properly.</p>
+</div>
+</li>
+<li id="S3.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i2.p1" class="ltx_para">
+<p id="S3.I1.i2.p1.1" class="ltx_p"><span id="S3.I1.i2.p1.1.1" class="ltx_text ltx_font_bold">Concealed:</span> Indication of whether another object (i.e., in the foreground) partially conceals the object to be classified.</p>
+</div>
+</li>
+<li id="S3.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i3.p1" class="ltx_para">
+<p id="S3.I1.i3.p1.1" class="ltx_p"><span id="S3.I1.i3.p1.1.1" class="ltx_text ltx_font_bold">Visibility:</span> The visibility of the object in discrete increments with 25% steps (i.e., 0-25%, 25-50%, …) based on the size of the bounding box that is inside the image, as well as the degree of concealment.</p>
+</div>
+</li>
+</ul>
+<p id="S3.SS2.p1.2" class="ltx_p">These additional properties account for image patch complexity in detection. A clear, fully visible ball being undetected is worse than a blurry or partially obscured ball.</p>
+</div>
+<figure id="S3.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2: </span>Number of patches in the dataset belonging to each class and its distribution
+to training and validation sets.</figcaption>
+<table id="S3.T2.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T2.1.1.1" class="ltx_tr">
+<td id="S3.T2.1.1.1.1" class="ltx_td ltx_border_tt"></td>
+<th id="S3.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Ball</th>
+<th id="S3.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">No ball</th>
+<th id="S3.T2.1.1.1.4" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt">Total</th>
+</tr>
+<tr id="S3.T2.1.2.2" class="ltx_tr">
+<td id="S3.T2.1.2.2.1" class="ltx_td ltx_align_left ltx_border_t">Training</td>
+<td id="S3.T2.1.2.2.2" class="ltx_td ltx_align_center ltx_border_t">69544 <span id="S3.T2.1.2.2.2.1" class="ltx_text ltx_font_italic">(44.07%)</span>
+</td>
+<td id="S3.T2.1.2.2.3" class="ltx_td ltx_align_center ltx_border_t">88274 <span id="S3.T2.1.2.2.3.1" class="ltx_text ltx_font_italic">(55.93%)</span>
+</td>
+<td id="S3.T2.1.2.2.4" class="ltx_td ltx_align_right ltx_border_t">157818</td>
+</tr>
+<tr id="S3.T2.1.3.3" class="ltx_tr">
+<td id="S3.T2.1.3.3.1" class="ltx_td ltx_align_left ltx_border_bb">Validation</td>
+<td id="S3.T2.1.3.3.2" class="ltx_td ltx_align_center ltx_border_bb">28985 <span id="S3.T2.1.3.3.2.1" class="ltx_text ltx_font_italic">(42.92%)</span>
+</td>
+<td id="S3.T2.1.3.3.3" class="ltx_td ltx_align_center ltx_border_bb">38547 <span id="S3.T2.1.3.3.3.1" class="ltx_text ltx_font_italic">(57.08%)</span>
+</td>
+<td id="S3.T2.1.3.3.4" class="ltx_td ltx_align_right ltx_border_bb">67532</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Training</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">The training is conducted in TensorFlow<span id="footnote2" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span><a target="_blank" href="https://www.tensorflow.org/" title="" class="ltx_ref ltx_url" style="color:#0000FF;">https://www.tensorflow.org/</a></span></span></span>, a software framework for machine learning. For the inference of the trained neural network on the NAO V6, TensorFlow Lite is used, which is specially designed for inference on mobile edge devices.
+To enable the optimizer to perform effectively, a loss function that meets the requirements of the problem is needed. Since there are different objectives in the detection process, we present a composite loss function based on the two main objectives, combined with a dynamic weighting:</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<ul id="S3.I2" class="ltx_itemize">
+<li id="S3.I2.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I2.i1.p1" class="ltx_para">
+<p id="S3.I2.i1.p1.1" class="ltx_p"><span id="S3.I2.i1.p1.1.1" class="ltx_text ltx_font_bold">Confidence Loss:</span> Since the prediction of the confidence corresponds to probability distributions in the value range between 0 and 1, the use of a binary cross entropy seems to be appropriate. However, this loss function does not include any weighting to focus more on difficult examples. Therefore, the use of the Focal Loss <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> is proposed, which is based on cross entropy but adds a weighting factor to down weight the nearly correct classified examples and thus focus more on difficult examples.</p>
+</div>
+</li>
+<li id="S3.I2.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I2.i2.p1" class="ltx_para">
+<p id="S3.I2.i2.p1.1" class="ltx_p"><span id="S3.I2.i2.p1.1.1" class="ltx_text ltx_font_bold">Positional Loss:</span> To evaluate the deviation of the position between ground truth and prediction, the Manhattan Distance is suggested. By using it, it is possible to determine the pixel difference between the true position and the prediction.</p>
+</div>
+</li>
+<li id="S3.I2.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I2.i3.p1" class="ltx_para">
+<p id="S3.I2.i3.p1.1" class="ltx_p"><span id="S3.I2.i3.p1.1.1" class="ltx_text ltx_font_bold">Dynamic Weighting:</span> The Dynamic Weighting has two parts. The first part uses dataset properties, as described in Section <a href="#S3.SS2" title="3.2 Dataset ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.2</span></a>, to penalize misclassification of simple examples more severely. This prioritizes objects that need to be recognized and increases recall of simple examples. The second part optimizes the training process for high precision by assigning each patch to one of four sections of the confusion matrix and multiplying them by weighting factors. To teach the neural network to avoid false positives, a large factor of <math id="S3.I2.i3.p1.1.m1.1" class="ltx_Math" alttext="w_{fp}=1000" display="inline"><semantics id="S3.I2.i3.p1.1.m1.1a"><mrow id="S3.I2.i3.p1.1.m1.1.1" xref="S3.I2.i3.p1.1.m1.1.1.cmml"><msub id="S3.I2.i3.p1.1.m1.1.1.2" xref="S3.I2.i3.p1.1.m1.1.1.2.cmml"><mi id="S3.I2.i3.p1.1.m1.1.1.2.2" xref="S3.I2.i3.p1.1.m1.1.1.2.2.cmml">w</mi><mrow id="S3.I2.i3.p1.1.m1.1.1.2.3" xref="S3.I2.i3.p1.1.m1.1.1.2.3.cmml"><mi id="S3.I2.i3.p1.1.m1.1.1.2.3.2" xref="S3.I2.i3.p1.1.m1.1.1.2.3.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.I2.i3.p1.1.m1.1.1.2.3.1" xref="S3.I2.i3.p1.1.m1.1.1.2.3.1.cmml">​</mo><mi id="S3.I2.i3.p1.1.m1.1.1.2.3.3" xref="S3.I2.i3.p1.1.m1.1.1.2.3.3.cmml">p</mi></mrow></msub><mo id="S3.I2.i3.p1.1.m1.1.1.1" xref="S3.I2.i3.p1.1.m1.1.1.1.cmml">=</mo><mn id="S3.I2.i3.p1.1.m1.1.1.3" xref="S3.I2.i3.p1.1.m1.1.1.3.cmml">1000</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.I2.i3.p1.1.m1.1b"><apply id="S3.I2.i3.p1.1.m1.1.1.cmml" xref="S3.I2.i3.p1.1.m1.1.1"><eq id="S3.I2.i3.p1.1.m1.1.1.1.cmml" xref="S3.I2.i3.p1.1.m1.1.1.1"></eq><apply id="S3.I2.i3.p1.1.m1.1.1.2.cmml" xref="S3.I2.i3.p1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.I2.i3.p1.1.m1.1.1.2.1.cmml" xref="S3.I2.i3.p1.1.m1.1.1.2">subscript</csymbol><ci id="S3.I2.i3.p1.1.m1.1.1.2.2.cmml" xref="S3.I2.i3.p1.1.m1.1.1.2.2">𝑤</ci><apply id="S3.I2.i3.p1.1.m1.1.1.2.3.cmml" xref="S3.I2.i3.p1.1.m1.1.1.2.3"><times id="S3.I2.i3.p1.1.m1.1.1.2.3.1.cmml" xref="S3.I2.i3.p1.1.m1.1.1.2.3.1"></times><ci id="S3.I2.i3.p1.1.m1.1.1.2.3.2.cmml" xref="S3.I2.i3.p1.1.m1.1.1.2.3.2">𝑓</ci><ci id="S3.I2.i3.p1.1.m1.1.1.2.3.3.cmml" xref="S3.I2.i3.p1.1.m1.1.1.2.3.3">𝑝</ci></apply></apply><cn type="integer" id="S3.I2.i3.p1.1.m1.1.1.3.cmml" xref="S3.I2.i3.p1.1.m1.1.1.3">1000</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.i3.p1.1.m1.1c">w_{fp}=1000</annotation></semantics></math> is proposed.</p>
+</div>
+</li>
+</ul>
+<p id="S3.SS3.p2.2" class="ltx_p">At the end, the two loss functions are combined with specific weighting factors. The factors <math id="S3.SS3.p2.1.m1.1" class="ltx_Math" alttext="w_{c}=1.0" display="inline"><semantics id="S3.SS3.p2.1.m1.1a"><mrow id="S3.SS3.p2.1.m1.1.1" xref="S3.SS3.p2.1.m1.1.1.cmml"><msub id="S3.SS3.p2.1.m1.1.1.2" xref="S3.SS3.p2.1.m1.1.1.2.cmml"><mi id="S3.SS3.p2.1.m1.1.1.2.2" xref="S3.SS3.p2.1.m1.1.1.2.2.cmml">w</mi><mi id="S3.SS3.p2.1.m1.1.1.2.3" xref="S3.SS3.p2.1.m1.1.1.2.3.cmml">c</mi></msub><mo id="S3.SS3.p2.1.m1.1.1.1" xref="S3.SS3.p2.1.m1.1.1.1.cmml">=</mo><mn id="S3.SS3.p2.1.m1.1.1.3" xref="S3.SS3.p2.1.m1.1.1.3.cmml">1.0</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.1.m1.1b"><apply id="S3.SS3.p2.1.m1.1.1.cmml" xref="S3.SS3.p2.1.m1.1.1"><eq id="S3.SS3.p2.1.m1.1.1.1.cmml" xref="S3.SS3.p2.1.m1.1.1.1"></eq><apply id="S3.SS3.p2.1.m1.1.1.2.cmml" xref="S3.SS3.p2.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.p2.1.m1.1.1.2.1.cmml" xref="S3.SS3.p2.1.m1.1.1.2">subscript</csymbol><ci id="S3.SS3.p2.1.m1.1.1.2.2.cmml" xref="S3.SS3.p2.1.m1.1.1.2.2">𝑤</ci><ci id="S3.SS3.p2.1.m1.1.1.2.3.cmml" xref="S3.SS3.p2.1.m1.1.1.2.3">𝑐</ci></apply><cn type="float" id="S3.SS3.p2.1.m1.1.1.3.cmml" xref="S3.SS3.p2.1.m1.1.1.3">1.0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.1.m1.1c">w_{c}=1.0</annotation></semantics></math> for the Confidence Loss and <math id="S3.SS3.p2.2.m2.1" class="ltx_Math" alttext="w_{p}=0.5" display="inline"><semantics id="S3.SS3.p2.2.m2.1a"><mrow id="S3.SS3.p2.2.m2.1.1" xref="S3.SS3.p2.2.m2.1.1.cmml"><msub id="S3.SS3.p2.2.m2.1.1.2" xref="S3.SS3.p2.2.m2.1.1.2.cmml"><mi id="S3.SS3.p2.2.m2.1.1.2.2" xref="S3.SS3.p2.2.m2.1.1.2.2.cmml">w</mi><mi id="S3.SS3.p2.2.m2.1.1.2.3" xref="S3.SS3.p2.2.m2.1.1.2.3.cmml">p</mi></msub><mo id="S3.SS3.p2.2.m2.1.1.1" xref="S3.SS3.p2.2.m2.1.1.1.cmml">=</mo><mn id="S3.SS3.p2.2.m2.1.1.3" xref="S3.SS3.p2.2.m2.1.1.3.cmml">0.5</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.2.m2.1b"><apply id="S3.SS3.p2.2.m2.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1"><eq id="S3.SS3.p2.2.m2.1.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1.1"></eq><apply id="S3.SS3.p2.2.m2.1.1.2.cmml" xref="S3.SS3.p2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.p2.2.m2.1.1.2.1.cmml" xref="S3.SS3.p2.2.m2.1.1.2">subscript</csymbol><ci id="S3.SS3.p2.2.m2.1.1.2.2.cmml" xref="S3.SS3.p2.2.m2.1.1.2.2">𝑤</ci><ci id="S3.SS3.p2.2.m2.1.1.2.3.cmml" xref="S3.SS3.p2.2.m2.1.1.2.3">𝑝</ci></apply><cn type="float" id="S3.SS3.p2.2.m2.1.1.3.cmml" xref="S3.SS3.p2.2.m2.1.1.3">0.5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.2.m2.1c">w_{p}=0.5</annotation></semantics></math> for the Positional Loss have proven to be effective in creating a total loss.</p>
+</div>
+<div id="S3.SS3.p3" class="ltx_para">
+<p id="S3.SS3.p3.1" class="ltx_p">To improve the generalization of the neural network, data augmentation is employed. The amount of augmentation is dynamically controlled and gradually increased. Initially, affine transformations like scaling, translation, rotation, and shear are applied, as well as left-right flipping. Later, more augmentations such as brightness, contrast, and color changes, as well as motion blur and JPEG compression artifacts, are added.</p>
+</div>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span>Adding an Early Exit</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.1" class="ltx_p">As stated in Section <a href="#S3" title="3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, numerous ball hypotheses require classification. Not all images are of equal difficulty for classification. Therefore, it would be advantageous if the neural network is executed only up to the layer where precise prediction is possible to conserve computational time. Some methods for achieving this have already been introduced in Section <a href="#S2" title="2 Related Work ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.1" class="ltx_p">However, the distribution of object-to-background classes presented in this paper exhibits a substantial class imbalance, given that at most one ball should be present on the field/image. In our case, the primary goal is the rapid rejection of the background class, which only results in a change in recall, but it does not affect precision, which remains at a very high level.</p>
+</div>
+<div id="S3.SS4.p3" class="ltx_para">
+<p id="S3.SS4.p3.1" class="ltx_p">Therefore, this paper proposes a method to enhance a deep neural network by adding an Early Exit to stop further inference when the background class has already been detected. This approach is generic and not specifically limited to the model presented in Section <a href="#S3.SS1" title="3.1 Model Architecture ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.1</span></a>. The procedure for inserting the Early Exit is as follows:</p>
+</div>
+<div id="S3.SS4.p4" class="ltx_para">
+<ol id="S3.I3" class="ltx_enumerate">
+<li id="S3.I3.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S3.I3.i1.p1" class="ltx_para">
+<p id="S3.I3.i1.p1.1" class="ltx_p">Design a neural network model that satisfies the more precision targeted requirements. The execution time can be at the upper bound of the runtime limit.</p>
+</div>
+</li>
+<li id="S3.I3.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S3.I3.i2.p1" class="ltx_para">
+<p id="S3.I3.i2.p1.1" class="ltx_p">Train the model normally until there is no further improvement on the validation dataset. After training, lock all layer weights. In TensorFlow, this can be done using the <span id="S3.I3.i2.p1.1.1" class="ltx_text ltx_font_typewriter">trainable</span> flag of the layers.</p>
+</div>
+</li>
+<li id="S3.I3.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S3.I3.i3.p1" class="ltx_para">
+<p id="S3.I3.i3.p1.1" class="ltx_p">Examine the neural network model, and we suggest inserting an Early Exit after the first convolutional layer. The combination of Max Pooling and Dense Layer has been found to be the most promising. Table <a href="#S3.T1" title="Table 1 ‣ 3.1 Model Architecture ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> shows, marked with an *, after which layer the Early Exit is inserted for the CNN presented in this paper, while Table <a href="#S3.T3" title="Table 3 ‣ 3.4 Adding an Early Exit ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> shows its structure. The Early Exit enhancement can be applied directly to the trained and locked model or a new model with transferred weights can be created.</p>
+</div>
+</li>
+<li id="S3.I3.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span> 
+<div id="S3.I3.i4.p1" class="ltx_para">
+<p id="S3.I3.i4.p1.1" class="ltx_p">Train the layers of the Early Exit using the Confidence Loss, as described in Section <a href="#S3.SS3" title="3.3 Training ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.3</span></a>, with a high weighting factor for the false negatives <math id="S3.I3.i4.p1.1.m1.1" class="ltx_Math" alttext="w_{fn}=100" display="inline"><semantics id="S3.I3.i4.p1.1.m1.1a"><mrow id="S3.I3.i4.p1.1.m1.1.1" xref="S3.I3.i4.p1.1.m1.1.1.cmml"><msub id="S3.I3.i4.p1.1.m1.1.1.2" xref="S3.I3.i4.p1.1.m1.1.1.2.cmml"><mi id="S3.I3.i4.p1.1.m1.1.1.2.2" xref="S3.I3.i4.p1.1.m1.1.1.2.2.cmml">w</mi><mrow id="S3.I3.i4.p1.1.m1.1.1.2.3" xref="S3.I3.i4.p1.1.m1.1.1.2.3.cmml"><mi id="S3.I3.i4.p1.1.m1.1.1.2.3.2" xref="S3.I3.i4.p1.1.m1.1.1.2.3.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.I3.i4.p1.1.m1.1.1.2.3.1" xref="S3.I3.i4.p1.1.m1.1.1.2.3.1.cmml">​</mo><mi id="S3.I3.i4.p1.1.m1.1.1.2.3.3" xref="S3.I3.i4.p1.1.m1.1.1.2.3.3.cmml">n</mi></mrow></msub><mo id="S3.I3.i4.p1.1.m1.1.1.1" xref="S3.I3.i4.p1.1.m1.1.1.1.cmml">=</mo><mn id="S3.I3.i4.p1.1.m1.1.1.3" xref="S3.I3.i4.p1.1.m1.1.1.3.cmml">100</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.I3.i4.p1.1.m1.1b"><apply id="S3.I3.i4.p1.1.m1.1.1.cmml" xref="S3.I3.i4.p1.1.m1.1.1"><eq id="S3.I3.i4.p1.1.m1.1.1.1.cmml" xref="S3.I3.i4.p1.1.m1.1.1.1"></eq><apply id="S3.I3.i4.p1.1.m1.1.1.2.cmml" xref="S3.I3.i4.p1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.I3.i4.p1.1.m1.1.1.2.1.cmml" xref="S3.I3.i4.p1.1.m1.1.1.2">subscript</csymbol><ci id="S3.I3.i4.p1.1.m1.1.1.2.2.cmml" xref="S3.I3.i4.p1.1.m1.1.1.2.2">𝑤</ci><apply id="S3.I3.i4.p1.1.m1.1.1.2.3.cmml" xref="S3.I3.i4.p1.1.m1.1.1.2.3"><times id="S3.I3.i4.p1.1.m1.1.1.2.3.1.cmml" xref="S3.I3.i4.p1.1.m1.1.1.2.3.1"></times><ci id="S3.I3.i4.p1.1.m1.1.1.2.3.2.cmml" xref="S3.I3.i4.p1.1.m1.1.1.2.3.2">𝑓</ci><ci id="S3.I3.i4.p1.1.m1.1.1.2.3.3.cmml" xref="S3.I3.i4.p1.1.m1.1.1.2.3.3">𝑛</ci></apply></apply><cn type="integer" id="S3.I3.i4.p1.1.m1.1.1.3.cmml" xref="S3.I3.i4.p1.1.m1.1.1.3">100</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I3.i4.p1.1.m1.1c">w_{fn}=100</annotation></semantics></math>. Achieving high recall is crucial for the Early Exit to avoid discarding potential positive objects too early.</p>
+</div>
+</li>
+<li id="S3.I3.i5" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">5.</span> 
+<div id="S3.I3.i5.p1" class="ltx_para">
+<p id="S3.I3.i5.p1.1" class="ltx_p">Separate the neural network at the Early Exit, resulting in two models. The first model uses the image patch as input and outputs the convolution output and the Early Exit classification. If the confidence at the Early Exit is high enough, indicating that the patch probably contains the expected object, execute the second model with the convolution output of the first model as its input.</p>
+</div>
+</li>
+</ol>
+</div>
+<figure id="S3.T3" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 3: </span>Architecture of the Early Exit for the proposed ball detection CNN.</figcaption>
+<table id="S3.T3.1" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T3.1.1.1" class="ltx_tr">
+<td id="S3.T3.1.1.1.1" class="ltx_td ltx_align_center">Layer (type)</td>
+<td id="S3.T3.1.1.1.2" class="ltx_td ltx_align_center">Pool Size</td>
+<td id="S3.T3.1.1.1.3" class="ltx_td ltx_align_center">Stride</td>
+<td id="S3.T3.1.1.1.4" class="ltx_td ltx_align_center">#MAC</td>
+<td id="S3.T3.1.1.1.5" class="ltx_td ltx_align_center">Output</td>
+</tr>
+<tr id="S3.T3.1.2.2" class="ltx_tr">
+<td id="S3.T3.1.2.2.1" class="ltx_td ltx_align_center ltx_border_tt">Input</td>
+<td id="S3.T3.1.2.2.2" class="ltx_td ltx_align_center ltx_border_tt">-</td>
+<td id="S3.T3.1.2.2.3" class="ltx_td ltx_align_center ltx_border_tt">-</td>
+<td id="S3.T3.1.2.2.4" class="ltx_td ltx_align_center ltx_border_tt">-</td>
+<td id="S3.T3.1.2.2.5" class="ltx_td ltx_align_center ltx_border_tt">16x16x8</td>
+</tr>
+<tr id="S3.T3.1.3.3" class="ltx_tr">
+<td id="S3.T3.1.3.3.1" class="ltx_td ltx_align_center ltx_border_t">MaxPooling2D</td>
+<td id="S3.T3.1.3.3.2" class="ltx_td ltx_align_center ltx_border_t">2x2</td>
+<td id="S3.T3.1.3.3.3" class="ltx_td ltx_align_center ltx_border_t">2x2</td>
+<td id="S3.T3.1.3.3.4" class="ltx_td ltx_align_center ltx_border_t">510</td>
+<td id="S3.T3.1.3.3.5" class="ltx_td ltx_align_center ltx_border_t">8x8x8</td>
+</tr>
+<tr id="S3.T3.1.4.4" class="ltx_tr">
+<td id="S3.T3.1.4.4.1" class="ltx_td ltx_align_center ltx_border_t">Flatten</td>
+<td id="S3.T3.1.4.4.2" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T3.1.4.4.3" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T3.1.4.4.4" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T3.1.4.4.5" class="ltx_td ltx_align_center ltx_border_t">512</td>
+</tr>
+<tr id="S3.T3.1.5.5" class="ltx_tr">
+<td id="S3.T3.1.5.5.1" class="ltx_td ltx_align_center ltx_border_t">Dense</td>
+<td id="S3.T3.1.5.5.2" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T3.1.5.5.3" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S3.T3.1.5.5.4" class="ltx_td ltx_align_center ltx_border_t">1025</td>
+<td id="S3.T3.1.5.5.5" class="ltx_td ltx_align_center ltx_border_t">1</td>
+</tr>
+<tr id="S3.T3.1.6.6" class="ltx_tr">
+<td id="S3.T3.1.6.6.1" class="ltx_td ltx_align_center ltx_border_tt" colspan="5">Total # MAC: 1535 <span id="S3.T3.1.6.6.1.1" class="ltx_text ltx_font_italic">(+1.95%)</span>
+</td>
+</tr>
+<tr id="S3.T3.1.7.7" class="ltx_tr">
+<td id="S3.T3.1.7.7.1" class="ltx_td ltx_align_center ltx_border_bb" colspan="5">Total # Params: 513 <span id="S3.T3.1.7.7.1.1" class="ltx_text ltx_font_italic">(+7.67%)</span>
+</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Evaluation</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">For the evaluation of the developed CNN presented in Section <a href="#S3.SS1" title="3.1 Model Architecture ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.1</span></a>, the dataset described in Section <a href="#S3.SS2" title="3.2 Dataset ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.2</span></a> is utilized. As outlined in Section <a href="#S3.SS3" title="3.3 Training ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.3</span></a>, the ball detection CNN is initially trained without modification, after which it is enhanced with an Early Exit following the first convolutional layer and called EE-CNN. The evaluation criteria comprise both the runtime, as can be seen in Section <a href="#S4.SS1" title="4.1 Runtime Evaluation ‣ 4 Evaluation ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4.1</span></a> and the performance, which is assessed using a confusion matrix with precision and recall subsequently determined shown in Section <a href="#S4.SS2" title="4.2 Dataset Evaluation ‣ 4 Evaluation ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4.2</span></a>.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Runtime Evaluation</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">In order to measure the runtime on the NAO robot, we use the TensorFlow lite runtime environment. In this process, 3600 measurements were performed, and the results are shown in Table <a href="#S4.T4" title="Table 4 ‣ 4.1 Runtime Evaluation ‣ 4 Evaluation ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.
+It is directly evident that the runtime of the fully executed EE-CNN with 180 µs is 7.14% slower than the original CNN. Because, as can be seen in Table <a href="#S3.T3" title="Table 3 ‣ 3.4 Adding an Early Exit ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, several new layers have been added that require additional computations. However, it can also be seen that the execution time up to the Early Exit with 64 µs needs about 62% less runtime, which enables the approach presented in this paper to gain a performance advantage and the possibility to reduce the execution time.</p>
+</div>
+<figure id="S4.T4" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 4: </span>Execution times measured on the NAO V6 over 3600 measurements.</figcaption>
+<table id="S4.T4.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T4.1.1.1" class="ltx_tr">
+<th id="S4.T4.1.1.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_tt"></th>
+<th id="S4.T4.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Mean [ms]</th>
+<th id="S4.T4.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Std [ms]</th>
+<th id="S4.T4.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Min [ms]</th>
+<th id="S4.T4.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Max [ms]</th>
+</tr>
+<tr id="S4.T4.1.2.2" class="ltx_tr">
+<th id="S4.T4.1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_t">Full CNN</th>
+<th id="S4.T4.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">0.168</th>
+<th id="S4.T4.1.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">0.077</th>
+<th id="S4.T4.1.2.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">0.129</th>
+<th id="S4.T4.1.2.2.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">1.411</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T4.1.3.1" class="ltx_tr">
+<th id="S4.T4.1.3.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt" rowspan="2"><span id="S4.T4.1.3.1.1.1" class="ltx_text">Full EE-CNN</span></th>
+<td id="S4.T4.1.3.1.2" class="ltx_td ltx_align_center ltx_border_tt">0.180</td>
+<td id="S4.T4.1.3.1.3" class="ltx_td ltx_align_center ltx_border_tt">0.083</td>
+<td id="S4.T4.1.3.1.4" class="ltx_td ltx_align_center ltx_border_tt">0.136</td>
+<td id="S4.T4.1.3.1.5" class="ltx_td ltx_align_center ltx_border_tt">1.406</td>
+</tr>
+<tr id="S4.T4.1.4.2" class="ltx_tr">
+<td id="S4.T4.1.4.2.1" class="ltx_td ltx_align_center"><span id="S4.T4.1.4.2.1.1" class="ltx_text ltx_font_italic">+7.14%</span></td>
+<td id="S4.T4.1.4.2.2" class="ltx_td ltx_align_center"><span id="S4.T4.1.4.2.2.1" class="ltx_text ltx_font_italic">+7.79%</span></td>
+<td id="S4.T4.1.4.2.3" class="ltx_td ltx_align_center"><span id="S4.T4.1.4.2.3.1" class="ltx_text ltx_font_italic">+5.43%</span></td>
+<td id="S4.T4.1.4.2.4" class="ltx_td ltx_align_center"><span id="S4.T4.1.4.2.4.1" class="ltx_text ltx_font_italic">-0.36%</span></td>
+</tr>
+<tr id="S4.T4.1.5.3" class="ltx_tr">
+<th id="S4.T4.1.5.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t">Early Exit</th>
+<td id="S4.T4.1.5.3.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">0.064</td>
+<td id="S4.T4.1.5.3.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">0.049</td>
+<td id="S4.T4.1.5.3.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">0.043</td>
+<td id="S4.T4.1.5.3.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">1.299</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Dataset Evaluation</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">To compare the performance of the new EE ball detection CNN to the original CNN, we executed both on the same training and validation dataset. Based on the predicted classifications, we calculated the confusion matrix and determined the precision and recall. Results on training data are provided as additional information only. The evaluation is performed solely on validation data.
+As can be seen in Table <a href="#S4.T5" title="Table 5 ‣ 4.2 Dataset Evaluation ‣ 4 Evaluation ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, the original CNN achieves a precision of 100% on the validation dataset, with a recall of almost 87%. This shows that the CNN presented here is able to detect many balls with a very high precision. Also, an average deviation of the ball center with around 0.471<math id="S4.SS2.p1.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.SS2.p1.1.m1.1a"><mo id="S4.SS2.p1.1.m1.1.1" xref="S4.SS2.p1.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.1.m1.1b"><csymbol cd="latexml" id="S4.SS2.p1.1.m1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.1.m1.1c">\pm</annotation></semantics></math>0.795 pixel proves the effectiveness of the presented CNN model for detecting the correct spatial position.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">When considering the Early Exit extended CNN in Table <a href="#S4.T6" title="Table 6 ‣ 4.2 Dataset Evaluation ‣ 4 Evaluation ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>, there is only a small change in recall with no change in precision. The latter is also clear, since the Early Exit presented in this work never contributes to a preliminary classification of the positive class, i.e., the ball. Thus, only the recall decreases slightly by 0.35%.
+On the other hand, the much more relevant part is shown in the last column, showing how often the Early Exit has decided to stop early. It can be seen that on the validation data set for roughly 43% of the hypotheses, a decision can be made after the Early Exit without significantly influencing the recall.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p">Based on the class distribution of the dataset shown in Table <a href="#S3.T2" title="Table 2 ‣ 3.2 Dataset ‣ 3 Approach ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, the runtimes as shown in Table <a href="#S4.T4" title="Table 4 ‣ 4.1 Runtime Evaluation ‣ 4 Evaluation ‣ Efficient Single Object Detection on Image Patches with Early Exit Enhanced High-Precision CNNs" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, and the number of early exits, this leads to the shown mean execution time of 131 µs, which corresponds to a runtime optimization of more than 28% compared to the original CNN.</p>
+</div>
+<figure id="S4.T5" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 5: </span>Results for the original CNN.</figcaption>
+<table id="S4.T5.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T5.1.1.1" class="ltx_tr">
+<td id="S4.T5.1.1.1.1" class="ltx_td ltx_border_tt"></td>
+<th id="S4.T5.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">TP</th>
+<th id="S4.T5.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">FP</th>
+<th id="S4.T5.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">TN</th>
+<th id="S4.T5.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">FN</th>
+<th id="S4.T5.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">P</th>
+<th id="S4.T5.1.1.1.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">R</th>
+<td id="S4.T5.1.1.1.8" class="ltx_td ltx_border_tt"></td>
+</tr>
+<tr id="S4.T5.1.2.2" class="ltx_tr">
+<td id="S4.T5.1.2.2.1" class="ltx_td ltx_align_left ltx_border_t">Training</td>
+<td id="S4.T5.1.2.2.2" class="ltx_td ltx_align_center ltx_border_t">59978</td>
+<td id="S4.T5.1.2.2.3" class="ltx_td ltx_align_center ltx_border_t">0</td>
+<td id="S4.T5.1.2.2.4" class="ltx_td ltx_align_center ltx_border_t">88359</td>
+<td id="S4.T5.1.2.2.5" class="ltx_td ltx_align_center ltx_border_t">9615</td>
+<td id="S4.T5.1.2.2.6" class="ltx_td ltx_align_center ltx_border_t">100%</td>
+<td id="S4.T5.1.2.2.7" class="ltx_td ltx_align_center ltx_border_t">86.18%</td>
+<td id="S4.T5.1.2.2.8" class="ltx_td ltx_border_t"></td>
+</tr>
+<tr id="S4.T5.1.3.3" class="ltx_tr">
+<td id="S4.T5.1.3.3.1" class="ltx_td ltx_align_left ltx_border_bb ltx_border_t">Validation</td>
+<td id="S4.T5.1.3.3.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">25134</td>
+<td id="S4.T5.1.3.3.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">0</td>
+<td id="S4.T5.1.3.3.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">38581</td>
+<td id="S4.T5.1.3.3.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">3869</td>
+<td id="S4.T5.1.3.3.6" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">100%</td>
+<td id="S4.T5.1.3.3.7" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t">86.66%</td>
+<td id="S4.T5.1.3.3.8" class="ltx_td ltx_border_bb ltx_border_t"></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S4.T6" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 6: </span>Results for the combined EE-CNN. The #EE column specifies
+how many times the Early Exit triggered in order to save computation time.</figcaption>
+<table id="S4.T6.6" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T6.6.7.1" class="ltx_tr">
+<td id="S4.T6.6.7.1.1" class="ltx_td ltx_border_tt"></td>
+<td id="S4.T6.6.7.1.2" class="ltx_td ltx_align_center ltx_border_tt">TP</td>
+<td id="S4.T6.6.7.1.3" class="ltx_td ltx_align_center ltx_border_tt">FP</td>
+<td id="S4.T6.6.7.1.4" class="ltx_td ltx_align_center ltx_border_tt">TN</td>
+<td id="S4.T6.6.7.1.5" class="ltx_td ltx_align_center ltx_border_tt">FN</td>
+<td id="S4.T6.6.7.1.6" class="ltx_td ltx_align_center ltx_border_tt">P</td>
+<td id="S4.T6.6.7.1.7" class="ltx_td ltx_align_center ltx_border_tt">R</td>
+<td id="S4.T6.6.7.1.8" class="ltx_td ltx_align_center ltx_border_tt"><span id="S4.T6.6.7.1.8.1" class="ltx_text ltx_font_bold">#EE</span></td>
+</tr>
+<tr id="S4.T6.6.8.2" class="ltx_tr">
+<td id="S4.T6.6.8.2.1" class="ltx_td ltx_align_left ltx_border_t" rowspan="2"><span id="S4.T6.6.8.2.1.1" class="ltx_text">Training</span></td>
+<td id="S4.T6.6.8.2.2" class="ltx_td ltx_align_center ltx_border_t">59769</td>
+<td id="S4.T6.6.8.2.3" class="ltx_td ltx_align_center ltx_border_t">0</td>
+<td id="S4.T6.6.8.2.4" class="ltx_td ltx_align_center ltx_border_t">88359</td>
+<td id="S4.T6.6.8.2.5" class="ltx_td ltx_align_center ltx_border_t">9824</td>
+<td id="S4.T6.6.8.2.6" class="ltx_td ltx_align_center ltx_border_t">100%</td>
+<td id="S4.T6.6.8.2.7" class="ltx_td ltx_align_center ltx_border_t">85.88%</td>
+<td id="S4.T6.6.8.2.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.8.2.8.1" class="ltx_text ltx_font_bold">66046</span></td>
+</tr>
+<tr id="S4.T6.3.3" class="ltx_tr">
+<td id="S4.T6.3.3.4" class="ltx_td ltx_align_center"><span id="S4.T6.3.3.4.1" class="ltx_text ltx_font_italic">-0.35%</span></td>
+<td id="S4.T6.1.1.1" class="ltx_td ltx_align_center">
+<math id="S4.T6.1.1.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T6.1.1.1.m1.1a"><mo id="S4.T6.1.1.1.m1.1.1" xref="S4.T6.1.1.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T6.1.1.1.m1.1b"><csymbol cd="latexml" id="S4.T6.1.1.1.m1.1.1.cmml" xref="S4.T6.1.1.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.1.1.1.m1.1c">\pm</annotation></semantics></math><span id="S4.T6.1.1.1.1" class="ltx_text ltx_font_italic">0%</span>
+</td>
+<td id="S4.T6.2.2.2" class="ltx_td ltx_align_center">
+<math id="S4.T6.2.2.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T6.2.2.2.m1.1a"><mo id="S4.T6.2.2.2.m1.1.1" xref="S4.T6.2.2.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T6.2.2.2.m1.1b"><csymbol cd="latexml" id="S4.T6.2.2.2.m1.1.1.cmml" xref="S4.T6.2.2.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.2.2.2.m1.1c">\pm</annotation></semantics></math><span id="S4.T6.2.2.2.1" class="ltx_text ltx_font_italic">0%</span>
+</td>
+<td id="S4.T6.3.3.5" class="ltx_td ltx_align_center"><span id="S4.T6.3.3.5.1" class="ltx_text ltx_font_italic">+2.17%</span></td>
+<td id="S4.T6.3.3.3" class="ltx_td ltx_align_center">
+<math id="S4.T6.3.3.3.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T6.3.3.3.m1.1a"><mo id="S4.T6.3.3.3.m1.1.1" xref="S4.T6.3.3.3.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T6.3.3.3.m1.1b"><csymbol cd="latexml" id="S4.T6.3.3.3.m1.1.1.cmml" xref="S4.T6.3.3.3.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.3.3.3.m1.1c">\pm</annotation></semantics></math><span id="S4.T6.3.3.3.1" class="ltx_text ltx_font_italic">0%</span>
+</td>
+<td id="S4.T6.3.3.6" class="ltx_td ltx_align_center"><span id="S4.T6.3.3.6.1" class="ltx_text ltx_font_italic">-0.3%</span></td>
+<td id="S4.T6.3.3.7" class="ltx_td ltx_align_center"><span id="S4.T6.3.3.7.1" class="ltx_text ltx_font_bold ltx_font_italic">41.85%</span></td>
+</tr>
+<tr id="S4.T6.6.9.3" class="ltx_tr">
+<td id="S4.T6.6.9.3.1" class="ltx_td ltx_align_left ltx_border_t" rowspan="2"><span id="S4.T6.6.9.3.1.1" class="ltx_text">Validation</span></td>
+<td id="S4.T6.6.9.3.2" class="ltx_td ltx_align_center ltx_border_t">25033</td>
+<td id="S4.T6.6.9.3.3" class="ltx_td ltx_align_center ltx_border_t">0</td>
+<td id="S4.T6.6.9.3.4" class="ltx_td ltx_align_center ltx_border_t">38581</td>
+<td id="S4.T6.6.9.3.5" class="ltx_td ltx_align_center ltx_border_t">3970</td>
+<td id="S4.T6.6.9.3.6" class="ltx_td ltx_align_center ltx_border_t">100%</td>
+<td id="S4.T6.6.9.3.7" class="ltx_td ltx_align_center ltx_border_t">86.31%</td>
+<td id="S4.T6.6.9.3.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.9.3.8.1" class="ltx_text ltx_font_bold">28750</span></td>
+</tr>
+<tr id="S4.T6.6.6" class="ltx_tr">
+<td id="S4.T6.6.6.4" class="ltx_td ltx_align_center"><span id="S4.T6.6.6.4.1" class="ltx_text ltx_font_italic">-0.40%</span></td>
+<td id="S4.T6.4.4.1" class="ltx_td ltx_align_center">
+<math id="S4.T6.4.4.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T6.4.4.1.m1.1a"><mo id="S4.T6.4.4.1.m1.1.1" xref="S4.T6.4.4.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T6.4.4.1.m1.1b"><csymbol cd="latexml" id="S4.T6.4.4.1.m1.1.1.cmml" xref="S4.T6.4.4.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.4.4.1.m1.1c">\pm</annotation></semantics></math><span id="S4.T6.4.4.1.1" class="ltx_text ltx_font_italic">0%</span>
+</td>
+<td id="S4.T6.5.5.2" class="ltx_td ltx_align_center">
+<math id="S4.T6.5.5.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T6.5.5.2.m1.1a"><mo id="S4.T6.5.5.2.m1.1.1" xref="S4.T6.5.5.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T6.5.5.2.m1.1b"><csymbol cd="latexml" id="S4.T6.5.5.2.m1.1.1.cmml" xref="S4.T6.5.5.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.5.5.2.m1.1c">\pm</annotation></semantics></math><span id="S4.T6.5.5.2.1" class="ltx_text ltx_font_italic">0%</span>
+</td>
+<td id="S4.T6.6.6.5" class="ltx_td ltx_align_center"><span id="S4.T6.6.6.5.1" class="ltx_text ltx_font_italic">+2.61%</span></td>
+<td id="S4.T6.6.6.3" class="ltx_td ltx_align_center">
+<math id="S4.T6.6.6.3.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T6.6.6.3.m1.1a"><mo id="S4.T6.6.6.3.m1.1.1" xref="S4.T6.6.6.3.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T6.6.6.3.m1.1b"><csymbol cd="latexml" id="S4.T6.6.6.3.m1.1.1.cmml" xref="S4.T6.6.6.3.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.6.6.3.m1.1c">\pm</annotation></semantics></math><span id="S4.T6.6.6.3.1" class="ltx_text ltx_font_italic">0%</span>
+</td>
+<td id="S4.T6.6.6.6" class="ltx_td ltx_align_center"><span id="S4.T6.6.6.6.1" class="ltx_text ltx_font_italic">-0.35%</span></td>
+<td id="S4.T6.6.6.7" class="ltx_td ltx_align_center"><span id="S4.T6.6.6.7.1" class="ltx_text ltx_font_bold ltx_font_italic">42.57%</span></td>
+</tr>
+<tr id="S4.T6.6.10.4" class="ltx_tr">
+<td id="S4.T6.6.10.4.1" class="ltx_td ltx_align_right ltx_border_t" colspan="7">Mean Execution Time [µs]</td>
+<td id="S4.T6.6.10.4.2" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T6.6.10.4.2.1" class="ltx_text ltx_font_bold">0.131</span></td>
+</tr>
+<tr id="S4.T6.6.11.5" class="ltx_tr">
+<td id="S4.T6.6.11.5.1" class="ltx_td" colspan="7"></td>
+<td id="S4.T6.6.11.5.2" class="ltx_td ltx_align_center"><span id="S4.T6.6.11.5.2.1" class="ltx_text ltx_font_bold ltx_font_italic">-28.24%</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusion and Future Work</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">The paper proposes a novel approach for object detection in mobile robots on computationally constrained platforms. The main focus is on detecting the ball in robot soccer games, where a high level of precision and real-time processing is required. The paper highlights the challenges in detecting dynamic objects in varying lighting conditions and fast movements, which requires a high level of computational power. The proposed approach can detect single objects in image patches and determine their precise spatial positions with a high precision classification. The proposed method utilizes a convolutional neural network with depthwise separable convolutions, which is optimized to achieve the highest possible accuracy while adhering to the time constraints. The paper also explores the concept of Early Exit neural networks and its potential for reducing computational costs while maintaining performance. Early Exits are integrated in order to terminate the network’s inference process early, thereby reducing computational costs. This approach is evaluated and compared to the original CNN, which shows a decrease in the average execution time by 28% for the Early Exit version, with equal precision and almost equal recall.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">Future work could focus on optimizing the network architecture further to reduce the computational cost and increase the speed of execution. Additionally, exploring other methods for Early Exits and combining them with other techniques, such as pruning or quantization, could result in more efficient and accurate object detection in mobile robots. Finally, investigating the robustness of the proposed approach to changing lighting conditions and fast movements in various game scenarios as well as a different class distribution could further improve its applicability in practical use cases.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Ashar, J., Brameld, K., Jones, E.R., Kaur, T., Li, L., Lu, W., Pagnucco, M.,
+Sammut, C., Sheh, Q., Schmidt, P., Wells, T., Wondo, A., Yang, K.: rUNSWift
+Team Report 2019 (2019), only available online:
+<a target="_blank" href="https://github.com/UNSWComputing/rUNSWift-2019-release/raw/main/rUNSWift_Team_Report.pdf" title="" class="ltx_ref ltx_url" style="color:#0000FF;">https://github.com/UNSWComputing/rUNSWift-2019-release/raw/main/rUNSWift_Team_Report.pdf</a>
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Berestizshevsky, K., Even, G.: Dynamically sacrificing accuracy for reduced
+computation: Cascaded inference based on softmax confidence. In: Lecture
+Notes in Computer Science, pp. 306–320. Springer International Publishing
+(2019). https://doi.org/10.1007/978-3-030-30484-3_26
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Bolukbasi, T., Wang, J., Dekel, O., Saligrama, V.: Adaptive neural networks for
+efficient inference. In: Proceedings of the 34th International Conference on
+Machine Learning (ICML). p. 527–536. Springer International Publishing
+(2017). https://doi.org/10.1007/978-3-030-30484-3_26
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Lekanne gezegd Deprez, H., van der Wal, D., Kronemeijer, P., van der Meer, M.,
+Petrini, L., Groot, T., Nzuanzu, J., Lagrand, C.: Dutch Nao Team -
+Technical Report (2018), only available online:
+<a target="_blank" href="https://www.dutchnaoteam.nl/publications/2018/LekannegezegdDeprez2018.pdf" title="" class="ltx_ref ltx_url" style="color:#0000FF;">https://www.dutchnaoteam.nl/publications/2018/LekannegezegdDeprez2018.pdf</a>
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Essig, A., Gleske, P., Nölle, K., Schmidt, M., Sieck, H., Wetters, B.: HULKs
+Team Research Report 2021 (2021), only available online:
+<a target="_blank" href="https://hulks.de/_files/TRR_2021.pdf" title="" class="ltx_ref ltx_url" style="color:#0000FF;">https://hulks.de/_files/TRR_2021.pdf</a>
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Figurnov, M., Collins, M.D., Zhu, Y., Zhang, L., Huang, J., Vetrov, D.,
+Salakhutdinov, R.: Spatially adaptive computation time for residual networks.
+In: 2017 IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR) (2017). https://doi.org/10.1109/cvpr.2017.194
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Howard, A.G., Zhu, M., Chen, B., Kalenichenko, D., Wang, W., Weyand, T.,
+Andreetto, M., Adam, H.: Mobilenets: Efficient convolutional neural networks
+for mobile vision applications (2017). https://doi.org/10.48550/ARXIV.1704.04861
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+HTWK, N.T.: Team Research Report 2019 (2020), only available online:
+<a target="_blank" href="https://drive.google.com/file/d/13s28gGVsKkxd8ogoNfEf4Ic5Gyysi137/view" title="" class="ltx_ref ltx_url" style="color:#0000FF;">https://drive.google.com/file/d/13s28gGVsKkxd8ogoNfEf4Ic5Gyysi137/view</a>
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Huang, G., Chen, D., Li, T., Wu, F., van der Maaten, L., Weinberger, K.Q.:
+Multi-scale dense networks for resource efficient image classification. In:
+6th International Conference on Learning Representations, ICLR 2018 (2018).
+https://doi.org/10.48550/arXiv.1703.09844
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Jayakodi, N.K., Chatterjee, A., Choi, W., Doppa, J.R., Pande, P.P.: Trading-off
+accuracy and energy of deep inference on embedded systems: A co-design
+approach. IEEE Transactions on Computer-Aided Design of Integrated Circuits
+and Systems <span id="bib.bib10.1.1" class="ltx_text ltx_font_bold">37</span>(11), 2881–2893 (2018).
+https://doi.org/10.1109/tcad.2018.2857338
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Lin, T.Y., Goyal, P., Girshick, R., He, K., Dollár, P.: Focal loss for dense
+object detection. IEEE Transactions on Pattern Analysis and Machine
+Intelligence <span id="bib.bib11.1.1" class="ltx_text ltx_font_bold">42</span>(2), 318–327 (2020).
+https://doi.org/10.1109/TPAMI.2018.2858826
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Matsubara, Y., Levorato, M., Restuccia, F.: Split computing and early exiting
+for deep learning applications: Survey and research challenges. ACM
+Computing Surveys <span id="bib.bib12.1.1" class="ltx_text ltx_font_bold">55</span>(5), 1–30 (2022). https://doi.org/10.1145/3527155
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Mellmann, H., Schlotter, B., Kaden, S., Strobel, P., Krause, T.,
+Couque-Castelnovo, E., Ritter, C.N., Martin, R.: Berlin United - Nao
+Team Humboldt Team Report 2019 (2019), only available online:
+<a target="_blank" href="http://www2.informatik.hu-berlin.de/~naoth/docs/publications/technical/naoth-report.pdf" title="" class="ltx_ref ltx_url" style="color:#0000FF;">http://www2.informatik.hu-berlin.de/~naoth/docs/publications/technical/naoth-report.pdf</a>
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Menashe, J., Kelle, J., Genter, K., Hanna, J., Liebman, E., Narvekar, S.,
+Zhang, R., Stone, P.: Fast and precise black and white ball detection for
+robocup soccer. In: RoboCup 2017: Robot World Cup XXI. pp. 45–58 (2018).
+https://doi.org/10.1007/978-3-030-00308-1_4
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+O’Keeffe, S., Villing, R.: A benchmark data set and evaluation of deep learning
+architectures for ball detection in the robocup spl. In: RoboCup 2017: Robot
+World Cup XXI. pp. 398–409 (2018). https://doi.org/10.1007/978-3-030-00308-1_33
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Panda, P., Sengupta, A., Roy, K.: Conditional deep learning for
+energy-efficient and enhanced pattern recognition. In: Proceedings of the
+2016 Design, Automation &amp; Test in Europe Conference &amp; Exhibition (DATE)
+(2016). https://doi.org/10.3850/9783981537079_0819
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Passalis, N., Raitoharju, J., Tefas, A., Gabbouj, M.: Efficient adaptive
+inference for deep convolutional neural networks using hierarchical early
+exits. Pattern Recognition <span id="bib.bib17.1.1" class="ltx_text ltx_font_bold">105</span>, 107346 (2020).
+https://doi.org/10.1016/j.patcog.2020.107346
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Röfer, T., Laue, T., Baude, A., Blumenkamp, J., Felsch, G., Fiedler, J.,
+Hasselbring, A., Haß, T., Oppermann, J., Reichenberg, P., Schrader, N.,
+Weiß, D.: B-Human Team Report and Code Release 2019 (2019),
+only available online:
+<a target="_blank" href="http://www.b-human.de/downloads/publications/2019/CodeRelease2019.pdf" title="" class="ltx_ref ltx_url" style="color:#0000FF;">http://www.b-human.de/downloads/publications/2019/CodeRelease2019.pdf</a>
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Sandler, M., Howard, A., Zhu, M., Zhmoginov, A., Chen, L.C.: MobileNetV2:
+Inverted residuals and linear bottlenecks. In: 2018 IEEE/CVF Conference
+on Computer Vision and Pattern Recognition (2018).
+https://doi.org/10.1109/cvpr.2018.00474
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Teerapittayanon, S., McDanel, B., Kung, H.T.: BranchyNet: Fast inference via
+early exiting from deep neural networks. In: 23rd International Conference on
+Pattern Recognition (ICPR) (2016). https://doi.org/10.1109/icpr.2016.7900006
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Yan, Q., Li, S., Liu, C., Chen, Q.: Real-time lightweight cnn in robots with
+very limited computational resources: Detecting ball in nao. In: Computer
+Vision Systems. pp. 24–34 (2019). https://doi.org/10.1007/978-3-030-34995-0_3
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2309.03529" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2309.03530" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2309.03530">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2309.03530" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2309.03531" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Feb 28 07:50:12 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

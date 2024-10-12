@@ -1,0 +1,1092 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2212.11017] Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime</title><meta property="og:description" content="Deep learning-based object detection is a powerful approach for detecting faulty insulators in power lines. This involves training an object detection model from scratch, or fine tuning a model that is pre-trained on b…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2212.11017">
+
+<!--Generated on Fri Mar  1 10:55:22 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_fleqn">
+<h1 class="ltx_title ltx_title_document">Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Laya Das
+</span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Mohammad Hossein Saadat
+</span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Blazhe Gjorgiev
+</span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Etienne Auger
+</span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Giovanni Sansavini
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">Deep learning-based object detection is a powerful approach for detecting faulty insulators in power lines. This involves training an object detection model from scratch, or fine tuning a model that is pre-trained on benchmark computer vision datasets. This approach works well with a large number of insulator images, but can result in unreliable models in the low data regime. The current literature mainly focuses on detecting the presence or absence of insulator caps, which is a relatively easy detection task, and does not consider detection of finer faults such as flashed and broken disks. In this article, we formulate three object detection tasks for insulator and asset inspection from aerial images, focusing on incipient faults in disks. We curate a large reference dataset of insulator images that can be used to learn robust features for detecting healthy and faulty insulators. We study the advantage of using this dataset in the low target data regime by pre-training on the reference dataset followed by fine-tuning on the target dataset. The results suggest that object detection models can be used to detect faults in insulators at a much incipient stage, and that transfer learning adds value depending on the type of object detection model. We identify key factors that dictate performance in the low data-regime and outline potential approaches to improve the state-of-the-art.</p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification">keywords: </h6>
+fault detection , deep learning , transfer learning , generalizability
+
+</div>
+<div id="p1" class="ltx_para">
+<span id="p1.1" class="ltx_ERROR undefined">\affiliation</span>
+<p id="p1.2" class="ltx_p">[ETHZ]organization=Reliability and Risk Engineering,
+addressline=Department of Mechanical and Process Engineering,
+city=Zurich,
+postcode=8092,
+country=Switzerland</p>
+</div>
+<div id="p2" class="ltx_para">
+<span id="p2.1" class="ltx_ERROR undefined">\affiliation</span>
+<p id="p2.2" class="ltx_p">[SG]organization=Swissgrid AG,
+city=Aarau,
+postcode=5001,
+country=Switzerland</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Power transmission insulators are an important component of the transmission system and play a key role in ensuring reliable supply of power. They act as a bridge between transmission lines and transmission towers allowing for physical support, while preventing leakage of current through the tower <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. Much like other components of the transmission grid, they are subject to day-to-day variations in operation caused by fluctuating demand and generation, as well as to extreme environmental conditions such as lightning strikes, wind storms and rain. These factors, in addition to deposition of dust, rising daily temperatures and rapidly changing weather conditions deteriorate the quality of insulation, thereby allowing current to leak <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. The leakage current can worsen over time and ultimately result in a protection device to activate and disconnect the line <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. Regular inspection and maintenance of insulators is therefore important to ensure reliable operation of the system.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">There is an increasing interest in exploiting powerful deep learning models to perform automated monitoring of the health of insulators. One class of these studies relies on patterns manifested in measurements of current (or derivatives thereof) from multiple towers, and makes use of machine learning and deep learning methods for pattern recognition <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>. The second class of studies, and the topic considered in this article, involves collection of aerial images of insulators and uses deep learning models for detection and classification of insulators. Such an automated process reduces the reliance on human experts to inspect insulators and the associated costs and human errors. This also increases the safety of the data acquisition process, which involves controlling a drone from a distance instead of physically climbing the tower to collect the images.</p>
+</div>
+<section id="S1.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">1.1 </span>Related Work</h3>
+
+<div id="S1.SS1.p1" class="ltx_para">
+<p id="S1.SS1.p1.14" class="ltx_p">Several articles in the literature have developed machine learning and deep learning-based solutions for assessing the state of insulators from aerial images. The authors in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> use saliency maps for image segmentation with <math id="S1.SS1.p1.1.m1.1" class="ltx_Math" alttext="200" display="inline"><semantics id="S1.SS1.p1.1.m1.1a"><mn id="S1.SS1.p1.1.m1.1.1" xref="S1.SS1.p1.1.m1.1.1.cmml">200</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.1.m1.1b"><cn type="integer" id="S1.SS1.p1.1.m1.1.1.cmml" xref="S1.SS1.p1.1.m1.1.1">200</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.1.m1.1c">200</annotation></semantics></math> images through static local and global feature extraction. A weighted combination of the local and global saliency maps is used to extract insulators in an image. A Faster RCNN object detection model is applied to detect three different types of insulators in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>. A dataset with <math id="S1.SS1.p1.2.m2.1" class="ltx_Math" alttext="1000" display="inline"><semantics id="S1.SS1.p1.2.m2.1a"><mn id="S1.SS1.p1.2.m2.1.1" xref="S1.SS1.p1.2.m2.1.1.cmml">1000</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.2.m2.1b"><cn type="integer" id="S1.SS1.p1.2.m2.1.1.cmml" xref="S1.SS1.p1.2.m2.1.1">1000</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.2.m2.1c">1000</annotation></semantics></math> images for each type of insulator is used to train the model, which is then tested on <math id="S1.SS1.p1.3.m3.1" class="ltx_Math" alttext="500" display="inline"><semantics id="S1.SS1.p1.3.m3.1a"><mn id="S1.SS1.p1.3.m3.1.1" xref="S1.SS1.p1.3.m3.1.1.cmml">500</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.3.m3.1b"><cn type="integer" id="S1.SS1.p1.3.m3.1.1.cmml" xref="S1.SS1.p1.3.m3.1.1">500</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.3.m3.1c">500</annotation></semantics></math> images of each type of insulator. The authors also carry out fault detection with missing caps of insulators with the model, which is trained with <math id="S1.SS1.p1.4.m4.1" class="ltx_Math" alttext="80" display="inline"><semantics id="S1.SS1.p1.4.m4.1a"><mn id="S1.SS1.p1.4.m4.1.1" xref="S1.SS1.p1.4.m4.1.1.cmml">80</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.4.m4.1b"><cn type="integer" id="S1.SS1.p1.4.m4.1.1.cmml" xref="S1.SS1.p1.4.m4.1.1">80</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.4.m4.1c">80</annotation></semantics></math> images and tested on <math id="S1.SS1.p1.5.m5.1" class="ltx_Math" alttext="40" display="inline"><semantics id="S1.SS1.p1.5.m5.1a"><mn id="S1.SS1.p1.5.m5.1.1" xref="S1.SS1.p1.5.m5.1.1.cmml">40</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.5.m5.1b"><cn type="integer" id="S1.SS1.p1.5.m5.1.1.cmml" xref="S1.SS1.p1.5.m5.1.1">40</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.5.m5.1c">40</annotation></semantics></math> images, yielding <math id="S1.SS1.p1.6.m6.1" class="ltx_Math" alttext="92\%" display="inline"><semantics id="S1.SS1.p1.6.m6.1a"><mrow id="S1.SS1.p1.6.m6.1.1" xref="S1.SS1.p1.6.m6.1.1.cmml"><mn id="S1.SS1.p1.6.m6.1.1.2" xref="S1.SS1.p1.6.m6.1.1.2.cmml">92</mn><mo id="S1.SS1.p1.6.m6.1.1.1" xref="S1.SS1.p1.6.m6.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.6.m6.1b"><apply id="S1.SS1.p1.6.m6.1.1.cmml" xref="S1.SS1.p1.6.m6.1.1"><csymbol cd="latexml" id="S1.SS1.p1.6.m6.1.1.1.cmml" xref="S1.SS1.p1.6.m6.1.1.1">percent</csymbol><cn type="integer" id="S1.SS1.p1.6.m6.1.1.2.cmml" xref="S1.SS1.p1.6.m6.1.1.2">92</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.6.m6.1c">92\%</annotation></semantics></math> precision. The Single-Shot multi-box Detector (SSD) is utilized in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> to detect healthy and faulty insulators. The model is trained with <math id="S1.SS1.p1.7.m7.1" class="ltx_Math" alttext="385" display="inline"><semantics id="S1.SS1.p1.7.m7.1a"><mn id="S1.SS1.p1.7.m7.1.1" xref="S1.SS1.p1.7.m7.1.1.cmml">385</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.7.m7.1b"><cn type="integer" id="S1.SS1.p1.7.m7.1.1.cmml" xref="S1.SS1.p1.7.m7.1.1">385</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.7.m7.1c">385</annotation></semantics></math> images and achieves a precision of <math id="S1.SS1.p1.8.m8.1" class="ltx_Math" alttext="92.48\%" display="inline"><semantics id="S1.SS1.p1.8.m8.1a"><mrow id="S1.SS1.p1.8.m8.1.1" xref="S1.SS1.p1.8.m8.1.1.cmml"><mn id="S1.SS1.p1.8.m8.1.1.2" xref="S1.SS1.p1.8.m8.1.1.2.cmml">92.48</mn><mo id="S1.SS1.p1.8.m8.1.1.1" xref="S1.SS1.p1.8.m8.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.8.m8.1b"><apply id="S1.SS1.p1.8.m8.1.1.cmml" xref="S1.SS1.p1.8.m8.1.1"><csymbol cd="latexml" id="S1.SS1.p1.8.m8.1.1.1.cmml" xref="S1.SS1.p1.8.m8.1.1.1">percent</csymbol><cn type="float" id="S1.SS1.p1.8.m8.1.1.2.cmml" xref="S1.SS1.p1.8.m8.1.1.2">92.48</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.8.m8.1c">92.48\%</annotation></semantics></math> on a test dataset of <math id="S1.SS1.p1.9.m9.1" class="ltx_Math" alttext="100" display="inline"><semantics id="S1.SS1.p1.9.m9.1a"><mn id="S1.SS1.p1.9.m9.1.1" xref="S1.SS1.p1.9.m9.1.1.cmml">100</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.9.m9.1b"><cn type="integer" id="S1.SS1.p1.9.m9.1.1.cmml" xref="S1.SS1.p1.9.m9.1.1">100</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.9.m9.1c">100</annotation></semantics></math> images. The authors in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> employ a modified object detector inspired from the highly successful You Only Look Once version 2 (YOLOv2) model to detect missing disks in insulators. The authors compile a dataset of <math id="S1.SS1.p1.10.m10.1" class="ltx_Math" alttext="4031" display="inline"><semantics id="S1.SS1.p1.10.m10.1a"><mn id="S1.SS1.p1.10.m10.1.1" xref="S1.SS1.p1.10.m10.1.1.cmml">4031</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.10.m10.1b"><cn type="integer" id="S1.SS1.p1.10.m10.1.1.cmml" xref="S1.SS1.p1.10.m10.1.1">4031</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.10.m10.1c">4031</annotation></semantics></math> images and use modified YOLO models to achieve a detection precision of <math id="S1.SS1.p1.11.m11.1" class="ltx_Math" alttext="94.2\%" display="inline"><semantics id="S1.SS1.p1.11.m11.1a"><mrow id="S1.SS1.p1.11.m11.1.1" xref="S1.SS1.p1.11.m11.1.1.cmml"><mn id="S1.SS1.p1.11.m11.1.1.2" xref="S1.SS1.p1.11.m11.1.1.2.cmml">94.2</mn><mo id="S1.SS1.p1.11.m11.1.1.1" xref="S1.SS1.p1.11.m11.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.11.m11.1b"><apply id="S1.SS1.p1.11.m11.1.1.cmml" xref="S1.SS1.p1.11.m11.1.1"><csymbol cd="latexml" id="S1.SS1.p1.11.m11.1.1.1.cmml" xref="S1.SS1.p1.11.m11.1.1.1">percent</csymbol><cn type="float" id="S1.SS1.p1.11.m11.1.1.2.cmml" xref="S1.SS1.p1.11.m11.1.1.2">94.2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.11.m11.1c">94.2\%</annotation></semantics></math> for insulators with single missing disk and <math id="S1.SS1.p1.12.m12.1" class="ltx_Math" alttext="98.3\%" display="inline"><semantics id="S1.SS1.p1.12.m12.1a"><mrow id="S1.SS1.p1.12.m12.1.1" xref="S1.SS1.p1.12.m12.1.1.cmml"><mn id="S1.SS1.p1.12.m12.1.1.2" xref="S1.SS1.p1.12.m12.1.1.2.cmml">98.3</mn><mo id="S1.SS1.p1.12.m12.1.1.1" xref="S1.SS1.p1.12.m12.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.12.m12.1b"><apply id="S1.SS1.p1.12.m12.1.1.cmml" xref="S1.SS1.p1.12.m12.1.1"><csymbol cd="latexml" id="S1.SS1.p1.12.m12.1.1.1.cmml" xref="S1.SS1.p1.12.m12.1.1.1">percent</csymbol><cn type="float" id="S1.SS1.p1.12.m12.1.1.2.cmml" xref="S1.SS1.p1.12.m12.1.1.2">98.3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.12.m12.1c">98.3\%</annotation></semantics></math> for insulators with multiple missing disks. Similar approaches that make modifications to the model architecture to improve the performance of detection are proposed in the literature <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>. In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, the authors use bounding boxes instead of rectangular boxes to closely capture an insulator, thereby allowing a neural network to learn the features relevant to the insulator with minimal interference from the background. The work uses dataset of <math id="S1.SS1.p1.13.m13.1" class="ltx_Math" alttext="3700" display="inline"><semantics id="S1.SS1.p1.13.m13.1a"><mn id="S1.SS1.p1.13.m13.1.1" xref="S1.SS1.p1.13.m13.1.1.cmml">3700</mn><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.13.m13.1b"><cn type="integer" id="S1.SS1.p1.13.m13.1.1.cmml" xref="S1.SS1.p1.13.m13.1.1">3700</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.13.m13.1c">3700</annotation></semantics></math> images and trained a Faster RCNN model to detect healthy and faulty insulators (with missing disks) and achieved a precision of <math id="S1.SS1.p1.14.m14.1" class="ltx_Math" alttext="\sim 90\%" display="inline"><semantics id="S1.SS1.p1.14.m14.1a"><mrow id="S1.SS1.p1.14.m14.1.1" xref="S1.SS1.p1.14.m14.1.1.cmml"><mi id="S1.SS1.p1.14.m14.1.1.2" xref="S1.SS1.p1.14.m14.1.1.2.cmml"></mi><mo id="S1.SS1.p1.14.m14.1.1.1" xref="S1.SS1.p1.14.m14.1.1.1.cmml">∼</mo><mrow id="S1.SS1.p1.14.m14.1.1.3" xref="S1.SS1.p1.14.m14.1.1.3.cmml"><mn id="S1.SS1.p1.14.m14.1.1.3.2" xref="S1.SS1.p1.14.m14.1.1.3.2.cmml">90</mn><mo id="S1.SS1.p1.14.m14.1.1.3.1" xref="S1.SS1.p1.14.m14.1.1.3.1.cmml">%</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S1.SS1.p1.14.m14.1b"><apply id="S1.SS1.p1.14.m14.1.1.cmml" xref="S1.SS1.p1.14.m14.1.1"><csymbol cd="latexml" id="S1.SS1.p1.14.m14.1.1.1.cmml" xref="S1.SS1.p1.14.m14.1.1.1">similar-to</csymbol><csymbol cd="latexml" id="S1.SS1.p1.14.m14.1.1.2.cmml" xref="S1.SS1.p1.14.m14.1.1.2">absent</csymbol><apply id="S1.SS1.p1.14.m14.1.1.3.cmml" xref="S1.SS1.p1.14.m14.1.1.3"><csymbol cd="latexml" id="S1.SS1.p1.14.m14.1.1.3.1.cmml" xref="S1.SS1.p1.14.m14.1.1.3.1">percent</csymbol><cn type="integer" id="S1.SS1.p1.14.m14.1.1.3.2.cmml" xref="S1.SS1.p1.14.m14.1.1.3.2">90</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.SS1.p1.14.m14.1c">\sim 90\%</annotation></semantics></math> for the different subsets of their dataset.</p>
+</div>
+<div id="S1.SS1.p2" class="ltx_para">
+<p id="S1.SS1.p2.1" class="ltx_p">Despite the above advances, key challenges still remain unexplored. <span id="S1.SS1.p2.1.1" class="ltx_text ltx_font_italic">First</span>, articles that address the problem of differentiating between healthy and unhealthy insulators focus only on detecting missing caps. However, insulators can also have discoloured disks as remnants of electrical flashes or broken disks caused by physical damage. The knowledge of these damages is important for the operator to assess the state of health of insulators and prioritise maintenance activities. Detecting patches of discolouration and irregular shapes of disks is a much more difficult task than detecting the presence or absence of an entire cap. The ability of deep neural network models to capture these nuances and detect difficult patterns on insulators is not research in the literature. <span id="S1.SS1.p2.1.2" class="ltx_text ltx_font_italic">Second</span>, there are several other components such as Stockbridge dampers, bird nests and overgrowing vegetation, the detection of which is important from a monitoring and maintenance perspective of the system operator. Although there have been studies to detect these objects, in particular bird nests <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> and overgrowth of surrounding vegetation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, the development of a single model capable of detecting a multitude of these objects has not been extensively explored in the literature.</p>
+</div>
+<div id="S1.SS1.p3" class="ltx_para">
+<p id="S1.SS1.p3.1" class="ltx_p"><span id="S1.SS1.p3.1.1" class="ltx_text ltx_font_italic">Finally</span>, the vast majority of the literature approaches the problem from the perspective of model design, and little effort has been made to augment the richness of the data used to train and evaluate these models. While the development of models for traditional computer vision applications has immensely benefited from benchmark datasets such as Imagenet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> and MS-COCO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>, inspection of insulators from aerial images faces the challenge of limited data availability in the public domain. Consequently, a large number of insulator inspection models are trained with only one dataset, which is also the target dataset intended for deployment of the model. In such scenarios, the network sees only limited variability in terms of the background and features of objects in the foreground (e.g., different colours of insulator disks, different number and density of disks in the insulator, different types of discs/insulators, different positions of the insulators, etc.). This can result in the network’s features not being robust to small changes in the input. The development of a rich dataset that can address this issue is not studied in the literature.</p>
+</div>
+<div id="S1.SS1.p4" class="ltx_para">
+<p id="S1.SS1.p4.1" class="ltx_p">We address the above shortcomings of the literature in this article and develop a multi-object detection model that can learn difficult patterns and identify multiple assets from aerial images. We also prepare a sizable reference dataset collected from multiple open-source repositories that can be used to study the performance of insulator inspection models build with only one target dataset. Such a dataset can also be built upon to create a standrard benchmark dataset for training, evaluation and comparison of different models.</p>
+</div>
+</section>
+<section id="S1.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">1.2 </span>Contributions</h3>
+
+<div id="S1.SS2.p1" class="ltx_para">
+<p id="S1.SS2.p1.1" class="ltx_p">This article makes the following contributions:</p>
+<ol id="S1.I1" class="ltx_enumerate">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p"><span id="S1.I1.i1.p1.1.1" class="ltx_text ltx_font_bold">Detection of flashed and broken disks:</span> We train standard object detection models to detect healthy, flashed, and broken disks in insulators with a target dataset. This is a much more difficult and important task for planning and scheduling than the tasks previously studied in the literature.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p"><span id="S1.I1.i2.p1.1.1" class="ltx_text ltx_font_bold">Preparation of a reference dataset:</span> We collect and curate a large dataset from multiple sources that have made their respective datasets publicly available. These datasets contain images of transmission towers with multiple objects of interest, such as insulators, Stockbridge dampers and bird nests. Such a database with images collected by different agencies in multiple countries inherently exhibits a high richness in terms of the features of both foreground and background.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p"><span id="S1.I1.i3.p1.1.1" class="ltx_text ltx_font_bold">Supervised pre-training and fine tuning:</span> We use this dataset to pre-train standard object detection models in a supervised manner for detecting insulators and classifying them as healthy or faulty. We fine-tune this model to the small target dataset with transfer learning and compare its performance with a model trained from scratch only on the target dataset.</p>
+</div>
+</li>
+<li id="S1.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span> 
+<div id="S1.I1.i4.p1" class="ltx_para">
+<p id="S1.I1.i4.p1.1" class="ltx_p"><span id="S1.I1.i4.p1.1.1" class="ltx_text ltx_font_bold">Multiple asset detection:</span> We train end-to-end models for detecting insulators, disks, bird nests and dampers from aerial images with and without transfer learning and compare the performance.</p>
+</div>
+</li>
+<li id="S1.I1.i5" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">5.</span> 
+<div id="S1.I1.i5.p1" class="ltx_para">
+<p id="S1.I1.i5.p1.1" class="ltx_p"><span id="S1.I1.i5.p1.1.1" class="ltx_text ltx_font_bold">Sensitivity analysis:</span> We use different sizes of training dataset for fine-tuning a pre-trained model and study when having a large reference dataset adds value in terms of performance of the trained model.</p>
+</div>
+</li>
+</ol>
+</div>
+<div id="S1.SS2.p2" class="ltx_para">
+<p id="S1.SS2.p2.1" class="ltx_p">The rest of the article is organized as follows: Section <a href="#S2" title="2 Proposed Method ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> presents the dataset collection and curation procedure adopted to enhance the richness of training data. The approach used to detect multiple objects in images for inspection, the experimental setup and detection tasks performed along with sensitivity analyses are also discussed. Section <a href="#S3" title="3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> presents the results of our experiments followed by a discussion of the challenges and potential solutions. Finally, Section <a href="#S4" title="4 Conclusion ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> provides concluding remarks.</p>
+</div>
+</section>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Proposed Method</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">In this section, we describe the datasets used for pre-training and fine-tuning object detection models. The different detection tasks considered in this work are then discussed, followed by the setup for conducting different experiments for training and sensitivity analyses of the models.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Dataset preparation</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.9" class="ltx_p">The dataset we use to pre-train object detection models, referred to here as the reference dataset is a combination of three open-source datasets of aerial images of insulators. The first dataset is the Insulator Defect Image Dataset (IDID) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> that has <math id="S2.SS1.p1.1.m1.1" class="ltx_Math" alttext="1600" display="inline"><semantics id="S2.SS1.p1.1.m1.1a"><mn id="S2.SS1.p1.1.m1.1.1" xref="S2.SS1.p1.1.m1.1.1.cmml">1600</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.1.m1.1b"><cn type="integer" id="S2.SS1.p1.1.m1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1">1600</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.1.m1.1c">1600</annotation></semantics></math> images at varying resolutions. The median resolution of images in this dataset is <math id="S2.SS1.p1.2.m2.1" class="ltx_Math" alttext="4400\times 3008" display="inline"><semantics id="S2.SS1.p1.2.m2.1a"><mrow id="S2.SS1.p1.2.m2.1.1" xref="S2.SS1.p1.2.m2.1.1.cmml"><mn id="S2.SS1.p1.2.m2.1.1.2" xref="S2.SS1.p1.2.m2.1.1.2.cmml">4400</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS1.p1.2.m2.1.1.1" xref="S2.SS1.p1.2.m2.1.1.1.cmml">×</mo><mn id="S2.SS1.p1.2.m2.1.1.3" xref="S2.SS1.p1.2.m2.1.1.3.cmml">3008</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.2.m2.1b"><apply id="S2.SS1.p1.2.m2.1.1.cmml" xref="S2.SS1.p1.2.m2.1.1"><times id="S2.SS1.p1.2.m2.1.1.1.cmml" xref="S2.SS1.p1.2.m2.1.1.1"></times><cn type="integer" id="S2.SS1.p1.2.m2.1.1.2.cmml" xref="S2.SS1.p1.2.m2.1.1.2">4400</cn><cn type="integer" id="S2.SS1.p1.2.m2.1.1.3.cmml" xref="S2.SS1.p1.2.m2.1.1.3">3008</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.2.m2.1c">4400\times 3008</annotation></semantics></math>. Most images in this dataset contain only one insulator, with a few images containing two insulators. The dataset has a considerable variation in the colour of insulator disks (brown, black, white and gray) as well as in the background. The dataset provides the ground truth bounding boxes for insulators, healthy disks, broken disks and flashed disks. The second dataset is the bird nest detection dataset (BND) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>, <a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite> that consists of <math id="S2.SS1.p1.3.m3.1" class="ltx_Math" alttext="401" display="inline"><semantics id="S2.SS1.p1.3.m3.1a"><mn id="S2.SS1.p1.3.m3.1.1" xref="S2.SS1.p1.3.m3.1.1.cmml">401</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.3.m3.1b"><cn type="integer" id="S2.SS1.p1.3.m3.1.1.cmml" xref="S2.SS1.p1.3.m3.1.1">401</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.3.m3.1c">401</annotation></semantics></math> images of transmission towers with bird nests along with their ground truth bounding boxes. The median resolution of the images in this dataset is <math id="S2.SS1.p1.4.m4.1" class="ltx_Math" alttext="5472\times 3078" display="inline"><semantics id="S2.SS1.p1.4.m4.1a"><mrow id="S2.SS1.p1.4.m4.1.1" xref="S2.SS1.p1.4.m4.1.1.cmml"><mn id="S2.SS1.p1.4.m4.1.1.2" xref="S2.SS1.p1.4.m4.1.1.2.cmml">5472</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS1.p1.4.m4.1.1.1" xref="S2.SS1.p1.4.m4.1.1.1.cmml">×</mo><mn id="S2.SS1.p1.4.m4.1.1.3" xref="S2.SS1.p1.4.m4.1.1.3.cmml">3078</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.4.m4.1b"><apply id="S2.SS1.p1.4.m4.1.1.cmml" xref="S2.SS1.p1.4.m4.1.1"><times id="S2.SS1.p1.4.m4.1.1.1.cmml" xref="S2.SS1.p1.4.m4.1.1.1"></times><cn type="integer" id="S2.SS1.p1.4.m4.1.1.2.cmml" xref="S2.SS1.p1.4.m4.1.1.2">5472</cn><cn type="integer" id="S2.SS1.p1.4.m4.1.1.3.cmml" xref="S2.SS1.p1.4.m4.1.1.3">3078</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.4.m4.1c">5472\times 3078</annotation></semantics></math>. All insulators in this dataset are light green in colour, and the background in most of the images contains crops or grasslands with a few images having small houses and buildings. In contrast to IDID, the BND has images captured from a relatively greater distance and has <math id="S2.SS1.p1.5.m5.1" class="ltx_Math" alttext="2-6" display="inline"><semantics id="S2.SS1.p1.5.m5.1a"><mrow id="S2.SS1.p1.5.m5.1.1" xref="S2.SS1.p1.5.m5.1.1.cmml"><mn id="S2.SS1.p1.5.m5.1.1.2" xref="S2.SS1.p1.5.m5.1.1.2.cmml">2</mn><mo id="S2.SS1.p1.5.m5.1.1.1" xref="S2.SS1.p1.5.m5.1.1.1.cmml">−</mo><mn id="S2.SS1.p1.5.m5.1.1.3" xref="S2.SS1.p1.5.m5.1.1.3.cmml">6</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.5.m5.1b"><apply id="S2.SS1.p1.5.m5.1.1.cmml" xref="S2.SS1.p1.5.m5.1.1"><minus id="S2.SS1.p1.5.m5.1.1.1.cmml" xref="S2.SS1.p1.5.m5.1.1.1"></minus><cn type="integer" id="S2.SS1.p1.5.m5.1.1.2.cmml" xref="S2.SS1.p1.5.m5.1.1.2">2</cn><cn type="integer" id="S2.SS1.p1.5.m5.1.1.3.cmml" xref="S2.SS1.p1.5.m5.1.1.3">6</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.5.m5.1c">2-6</annotation></semantics></math> insulators in most images. These images also contain insulators and Stockbridge dampers. However, this dataset does not provide the ground truth bounding boxes for these objects. The third dataset is the Power Line Assets Detection (STN-PLAD) dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite> that consists of <math id="S2.SS1.p1.6.m6.1" class="ltx_Math" alttext="133" display="inline"><semantics id="S2.SS1.p1.6.m6.1a"><mn id="S2.SS1.p1.6.m6.1.1" xref="S2.SS1.p1.6.m6.1.1.cmml">133</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.6.m6.1b"><cn type="integer" id="S2.SS1.p1.6.m6.1.1.cmml" xref="S2.SS1.p1.6.m6.1.1">133</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.6.m6.1c">133</annotation></semantics></math> images of transmission towers with insulators and Stockbridge dampers. The median resolution of images in this dataset is <math id="S2.SS1.p1.7.m7.1" class="ltx_Math" alttext="4048\times 3040" display="inline"><semantics id="S2.SS1.p1.7.m7.1a"><mrow id="S2.SS1.p1.7.m7.1.1" xref="S2.SS1.p1.7.m7.1.1.cmml"><mn id="S2.SS1.p1.7.m7.1.1.2" xref="S2.SS1.p1.7.m7.1.1.2.cmml">4048</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS1.p1.7.m7.1.1.1" xref="S2.SS1.p1.7.m7.1.1.1.cmml">×</mo><mn id="S2.SS1.p1.7.m7.1.1.3" xref="S2.SS1.p1.7.m7.1.1.3.cmml">3040</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.7.m7.1b"><apply id="S2.SS1.p1.7.m7.1.1.cmml" xref="S2.SS1.p1.7.m7.1.1"><times id="S2.SS1.p1.7.m7.1.1.1.cmml" xref="S2.SS1.p1.7.m7.1.1.1"></times><cn type="integer" id="S2.SS1.p1.7.m7.1.1.2.cmml" xref="S2.SS1.p1.7.m7.1.1.2">4048</cn><cn type="integer" id="S2.SS1.p1.7.m7.1.1.3.cmml" xref="S2.SS1.p1.7.m7.1.1.3">3040</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.7.m7.1c">4048\times 3040</annotation></semantics></math>. This dataset has little to no vegetation in the background and consists mostly of dry patches of flatland and mountains. The insulators and dampers are both of consistent (white) colour and shape in all images in the dataset. The images in this dataset contain <math id="S2.SS1.p1.8.m8.1" class="ltx_Math" alttext="2-4" display="inline"><semantics id="S2.SS1.p1.8.m8.1a"><mrow id="S2.SS1.p1.8.m8.1.1" xref="S2.SS1.p1.8.m8.1.1.cmml"><mn id="S2.SS1.p1.8.m8.1.1.2" xref="S2.SS1.p1.8.m8.1.1.2.cmml">2</mn><mo id="S2.SS1.p1.8.m8.1.1.1" xref="S2.SS1.p1.8.m8.1.1.1.cmml">−</mo><mn id="S2.SS1.p1.8.m8.1.1.3" xref="S2.SS1.p1.8.m8.1.1.3.cmml">4</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.8.m8.1b"><apply id="S2.SS1.p1.8.m8.1.1.cmml" xref="S2.SS1.p1.8.m8.1.1"><minus id="S2.SS1.p1.8.m8.1.1.1.cmml" xref="S2.SS1.p1.8.m8.1.1.1"></minus><cn type="integer" id="S2.SS1.p1.8.m8.1.1.2.cmml" xref="S2.SS1.p1.8.m8.1.1.2">2</cn><cn type="integer" id="S2.SS1.p1.8.m8.1.1.3.cmml" xref="S2.SS1.p1.8.m8.1.1.3">4</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.8.m8.1c">2-4</annotation></semantics></math> insulators and around <math id="S2.SS1.p1.9.m9.1" class="ltx_Math" alttext="10" display="inline"><semantics id="S2.SS1.p1.9.m9.1a"><mn id="S2.SS1.p1.9.m9.1.1" xref="S2.SS1.p1.9.m9.1.1.cmml">10</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.9.m9.1b"><cn type="integer" id="S2.SS1.p1.9.m9.1.1.cmml" xref="S2.SS1.p1.9.m9.1.1">10</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.9.m9.1c">10</annotation></semantics></math> dampers and no bird nests. The dataset also provides the ground truth bounding boxes for the insulators and dampers. All the three datasets have images taken with good light exposure and weather conditions, and also have a single type of insulator (either ceramic or polymer). However, the combined dataset has a wide variability in the background as well as foreground.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.7" class="ltx_p">Owing to the different sources and purposes of the datasets, they contain the ground truths for only a subset of all objects of interest in the images. In order to create a homogeneous and complete dataset, we manually created the ground truth bounding boxes for insulators, nests and dampers for BND with the MATLAB ImageLabeler app <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>. As a result, the images from IDID are the only ones that have ground truth for the disks. However, since this dataset constitutes roughly <math id="S2.SS1.p2.1.m1.1" class="ltx_Math" alttext="75\%" display="inline"><semantics id="S2.SS1.p2.1.m1.1a"><mrow id="S2.SS1.p2.1.m1.1.1" xref="S2.SS1.p2.1.m1.1.1.cmml"><mn id="S2.SS1.p2.1.m1.1.1.2" xref="S2.SS1.p2.1.m1.1.1.2.cmml">75</mn><mo id="S2.SS1.p2.1.m1.1.1.1" xref="S2.SS1.p2.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.1.m1.1b"><apply id="S2.SS1.p2.1.m1.1.1.cmml" xref="S2.SS1.p2.1.m1.1.1"><csymbol cd="latexml" id="S2.SS1.p2.1.m1.1.1.1.cmml" xref="S2.SS1.p2.1.m1.1.1.1">percent</csymbol><cn type="integer" id="S2.SS1.p2.1.m1.1.1.2.cmml" xref="S2.SS1.p2.1.m1.1.1.2">75</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.1.m1.1c">75\%</annotation></semantics></math> of the reference dataset, this does not pose a significant threat as observed later. The characteristics of the reference dataset are summarised in Table <a href="#S2.T1" title="Table 1 ‣ 2.1 Dataset preparation ‣ 2 Proposed Method ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, segregated according to the source dataset. It can be observed from Table <a href="#S2.T1" title="Table 1 ‣ 2.1 Dataset preparation ‣ 2 Proposed Method ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> that the three datasets combined have a considerable number of objects of each class. Specifically, the resulting reference dataset contains <math id="S2.SS1.p2.2.m2.1" class="ltx_Math" alttext="2647" display="inline"><semantics id="S2.SS1.p2.2.m2.1a"><mn id="S2.SS1.p2.2.m2.1.1" xref="S2.SS1.p2.2.m2.1.1.cmml">2647</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.2.m2.1b"><cn type="integer" id="S2.SS1.p2.2.m2.1.1.cmml" xref="S2.SS1.p2.2.m2.1.1">2647</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.2.m2.1c">2647</annotation></semantics></math> insulators, <math id="S2.SS1.p2.3.m3.1" class="ltx_Math" alttext="13364" display="inline"><semantics id="S2.SS1.p2.3.m3.1a"><mn id="S2.SS1.p2.3.m3.1.1" xref="S2.SS1.p2.3.m3.1.1.cmml">13364</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.3.m3.1b"><cn type="integer" id="S2.SS1.p2.3.m3.1.1.cmml" xref="S2.SS1.p2.3.m3.1.1">13364</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.3.m3.1c">13364</annotation></semantics></math> healthy disks, <math id="S2.SS1.p2.4.m4.1" class="ltx_Math" alttext="2564" display="inline"><semantics id="S2.SS1.p2.4.m4.1a"><mn id="S2.SS1.p2.4.m4.1.1" xref="S2.SS1.p2.4.m4.1.1.cmml">2564</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.4.m4.1b"><cn type="integer" id="S2.SS1.p2.4.m4.1.1.cmml" xref="S2.SS1.p2.4.m4.1.1">2564</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.4.m4.1c">2564</annotation></semantics></math> flashed disks, <math id="S2.SS1.p2.5.m5.1" class="ltx_Math" alttext="1180" display="inline"><semantics id="S2.SS1.p2.5.m5.1a"><mn id="S2.SS1.p2.5.m5.1.1" xref="S2.SS1.p2.5.m5.1.1.cmml">1180</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.5.m5.1b"><cn type="integer" id="S2.SS1.p2.5.m5.1.1.cmml" xref="S2.SS1.p2.5.m5.1.1">1180</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.5.m5.1c">1180</annotation></semantics></math> broken disks, <math id="S2.SS1.p2.6.m6.1" class="ltx_Math" alttext="322" display="inline"><semantics id="S2.SS1.p2.6.m6.1a"><mn id="S2.SS1.p2.6.m6.1.1" xref="S2.SS1.p2.6.m6.1.1.cmml">322</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.6.m6.1b"><cn type="integer" id="S2.SS1.p2.6.m6.1.1.cmml" xref="S2.SS1.p2.6.m6.1.1">322</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.6.m6.1c">322</annotation></semantics></math> bird nests and <math id="S2.SS1.p2.7.m7.1" class="ltx_Math" alttext="2536" display="inline"><semantics id="S2.SS1.p2.7.m7.1a"><mn id="S2.SS1.p2.7.m7.1.1" xref="S2.SS1.p2.7.m7.1.1.cmml">2536</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.7.m7.1b"><cn type="integer" id="S2.SS1.p2.7.m7.1.1.cmml" xref="S2.SS1.p2.7.m7.1.1">2536</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.7.m7.1c">2536</annotation></semantics></math> Stockbridge dampers. In addition, the variations in backgrounds, colours of dampers and insulator disks, distance from the objects and orientation of the camera provide a rich dataset for training object detection models.</p>
+</div>
+<figure id="S2.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">Table 1: </span>Source-wise properties of images in the reference dataset (resolution presented as width <math id="S2.T1.2.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S2.T1.2.m1.1b"><mo id="S2.T1.2.m1.1.1" xref="S2.T1.2.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S2.T1.2.m1.1c"><times id="S2.T1.2.m1.1.1.cmml" xref="S2.T1.2.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.2.m1.1d">\times</annotation></semantics></math> height)</figcaption>
+<table id="S2.T1.5" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S2.T1.5.4.1" class="ltx_tr">
+<th id="S2.T1.5.4.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t"><span id="S2.T1.5.4.1.1.1" class="ltx_text" style="font-size:90%;">Property</span></th>
+<td id="S2.T1.5.4.1.2" class="ltx_td ltx_align_center ltx_border_t" colspan="3"><span id="S2.T1.5.4.1.2.1" class="ltx_text" style="font-size:90%;">Dataset</span></td>
+</tr>
+<tr id="S2.T1.5.5.2" class="ltx_tr">
+<th id="S2.T1.5.5.2.1" class="ltx_td ltx_th ltx_th_row ltx_border_r"></th>
+<td id="S2.T1.5.5.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S2.T1.5.5.2.2.1" class="ltx_text" style="font-size:90%;">IDID</span></td>
+<td id="S2.T1.5.5.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S2.T1.5.5.2.3.1" class="ltx_text" style="font-size:90%;">BND</span></td>
+<td id="S2.T1.5.5.2.4" class="ltx_td ltx_align_center ltx_border_t"><span id="S2.T1.5.5.2.4.1" class="ltx_text" style="font-size:90%;">STN-PLAD</span></td>
+</tr>
+<tr id="S2.T1.5.6.3" class="ltx_tr">
+<th id="S2.T1.5.6.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_tt"><span id="S2.T1.5.6.3.1.1" class="ltx_text" style="font-size:90%;">#Images</span></th>
+<td id="S2.T1.5.6.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S2.T1.5.6.3.2.1" class="ltx_text" style="font-size:90%;">1600</span></td>
+<td id="S2.T1.5.6.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S2.T1.5.6.3.3.1" class="ltx_text" style="font-size:90%;">401</span></td>
+<td id="S2.T1.5.6.3.4" class="ltx_td ltx_align_center ltx_border_tt"><span id="S2.T1.5.6.3.4.1" class="ltx_text" style="font-size:90%;">133</span></td>
+</tr>
+<tr id="S2.T1.5.3" class="ltx_tr">
+<th id="S2.T1.5.3.4" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t"><span id="S2.T1.5.3.4.1" class="ltx_text" style="font-size:90%;">Median resolution</span></th>
+<td id="S2.T1.3.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><math id="S2.T1.3.1.1.m1.1" class="ltx_Math" alttext="4400\times 3008" display="inline"><semantics id="S2.T1.3.1.1.m1.1a"><mrow id="S2.T1.3.1.1.m1.1.1" xref="S2.T1.3.1.1.m1.1.1.cmml"><mn mathsize="90%" id="S2.T1.3.1.1.m1.1.1.2" xref="S2.T1.3.1.1.m1.1.1.2.cmml">4400</mn><mo lspace="0.222em" mathsize="90%" rspace="0.222em" id="S2.T1.3.1.1.m1.1.1.1" xref="S2.T1.3.1.1.m1.1.1.1.cmml">×</mo><mn mathsize="90%" id="S2.T1.3.1.1.m1.1.1.3" xref="S2.T1.3.1.1.m1.1.1.3.cmml">3008</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.T1.3.1.1.m1.1b"><apply id="S2.T1.3.1.1.m1.1.1.cmml" xref="S2.T1.3.1.1.m1.1.1"><times id="S2.T1.3.1.1.m1.1.1.1.cmml" xref="S2.T1.3.1.1.m1.1.1.1"></times><cn type="integer" id="S2.T1.3.1.1.m1.1.1.2.cmml" xref="S2.T1.3.1.1.m1.1.1.2">4400</cn><cn type="integer" id="S2.T1.3.1.1.m1.1.1.3.cmml" xref="S2.T1.3.1.1.m1.1.1.3">3008</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.3.1.1.m1.1c">4400\times 3008</annotation></semantics></math></td>
+<td id="S2.T1.4.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><math id="S2.T1.4.2.2.m1.1" class="ltx_Math" alttext="5472\times 3078" display="inline"><semantics id="S2.T1.4.2.2.m1.1a"><mrow id="S2.T1.4.2.2.m1.1.1" xref="S2.T1.4.2.2.m1.1.1.cmml"><mn mathsize="90%" id="S2.T1.4.2.2.m1.1.1.2" xref="S2.T1.4.2.2.m1.1.1.2.cmml">5472</mn><mo lspace="0.222em" mathsize="90%" rspace="0.222em" id="S2.T1.4.2.2.m1.1.1.1" xref="S2.T1.4.2.2.m1.1.1.1.cmml">×</mo><mn mathsize="90%" id="S2.T1.4.2.2.m1.1.1.3" xref="S2.T1.4.2.2.m1.1.1.3.cmml">3078</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.T1.4.2.2.m1.1b"><apply id="S2.T1.4.2.2.m1.1.1.cmml" xref="S2.T1.4.2.2.m1.1.1"><times id="S2.T1.4.2.2.m1.1.1.1.cmml" xref="S2.T1.4.2.2.m1.1.1.1"></times><cn type="integer" id="S2.T1.4.2.2.m1.1.1.2.cmml" xref="S2.T1.4.2.2.m1.1.1.2">5472</cn><cn type="integer" id="S2.T1.4.2.2.m1.1.1.3.cmml" xref="S2.T1.4.2.2.m1.1.1.3">3078</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.4.2.2.m1.1c">5472\times 3078</annotation></semantics></math></td>
+<td id="S2.T1.5.3.3" class="ltx_td ltx_align_center ltx_border_t"><math id="S2.T1.5.3.3.m1.1" class="ltx_Math" alttext="4048\times 3040" display="inline"><semantics id="S2.T1.5.3.3.m1.1a"><mrow id="S2.T1.5.3.3.m1.1.1" xref="S2.T1.5.3.3.m1.1.1.cmml"><mn mathsize="90%" id="S2.T1.5.3.3.m1.1.1.2" xref="S2.T1.5.3.3.m1.1.1.2.cmml">4048</mn><mo lspace="0.222em" mathsize="90%" rspace="0.222em" id="S2.T1.5.3.3.m1.1.1.1" xref="S2.T1.5.3.3.m1.1.1.1.cmml">×</mo><mn mathsize="90%" id="S2.T1.5.3.3.m1.1.1.3" xref="S2.T1.5.3.3.m1.1.1.3.cmml">3040</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.T1.5.3.3.m1.1b"><apply id="S2.T1.5.3.3.m1.1.1.cmml" xref="S2.T1.5.3.3.m1.1.1"><times id="S2.T1.5.3.3.m1.1.1.1.cmml" xref="S2.T1.5.3.3.m1.1.1.1"></times><cn type="integer" id="S2.T1.5.3.3.m1.1.1.2.cmml" xref="S2.T1.5.3.3.m1.1.1.2">4048</cn><cn type="integer" id="S2.T1.5.3.3.m1.1.1.3.cmml" xref="S2.T1.5.3.3.m1.1.1.3">3040</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.5.3.3.m1.1c">4048\times 3040</annotation></semantics></math></td>
+</tr>
+<tr id="S2.T1.5.7.4" class="ltx_tr">
+<th id="S2.T1.5.7.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t"><span id="S2.T1.5.7.4.1.1" class="ltx_text" style="font-size:90%;">#Insulator</span></th>
+<td id="S2.T1.5.7.4.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S2.T1.5.7.4.2.1" class="ltx_text" style="font-size:90%;">1804</span></td>
+<td id="S2.T1.5.7.4.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S2.T1.5.7.4.3.1" class="ltx_text" style="font-size:90%;">531</span></td>
+<td id="S2.T1.5.7.4.4" class="ltx_td ltx_align_center ltx_border_t"><span id="S2.T1.5.7.4.4.1" class="ltx_text" style="font-size:90%;">312</span></td>
+</tr>
+<tr id="S2.T1.5.8.5" class="ltx_tr">
+<th id="S2.T1.5.8.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r"><span id="S2.T1.5.8.5.1.1" class="ltx_text" style="font-size:90%;">#Healthy Disk</span></th>
+<td id="S2.T1.5.8.5.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S2.T1.5.8.5.2.1" class="ltx_text" style="font-size:90%;">13364</span></td>
+<td id="S2.T1.5.8.5.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S2.T1.5.8.5.3.1" class="ltx_text" style="font-size:90%;">0</span></td>
+<td id="S2.T1.5.8.5.4" class="ltx_td ltx_align_center"><span id="S2.T1.5.8.5.4.1" class="ltx_text" style="font-size:90%;">0</span></td>
+</tr>
+<tr id="S2.T1.5.9.6" class="ltx_tr">
+<th id="S2.T1.5.9.6.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r"><span id="S2.T1.5.9.6.1.1" class="ltx_text" style="font-size:90%;">#Flashed Disk</span></th>
+<td id="S2.T1.5.9.6.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S2.T1.5.9.6.2.1" class="ltx_text" style="font-size:90%;">2564</span></td>
+<td id="S2.T1.5.9.6.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S2.T1.5.9.6.3.1" class="ltx_text" style="font-size:90%;">0</span></td>
+<td id="S2.T1.5.9.6.4" class="ltx_td ltx_align_center"><span id="S2.T1.5.9.6.4.1" class="ltx_text" style="font-size:90%;">0</span></td>
+</tr>
+<tr id="S2.T1.5.10.7" class="ltx_tr">
+<th id="S2.T1.5.10.7.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r"><span id="S2.T1.5.10.7.1.1" class="ltx_text" style="font-size:90%;">#Broken Disk</span></th>
+<td id="S2.T1.5.10.7.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S2.T1.5.10.7.2.1" class="ltx_text" style="font-size:90%;">1180</span></td>
+<td id="S2.T1.5.10.7.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S2.T1.5.10.7.3.1" class="ltx_text" style="font-size:90%;">0</span></td>
+<td id="S2.T1.5.10.7.4" class="ltx_td ltx_align_center"><span id="S2.T1.5.10.7.4.1" class="ltx_text" style="font-size:90%;">0</span></td>
+</tr>
+<tr id="S2.T1.5.11.8" class="ltx_tr">
+<th id="S2.T1.5.11.8.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r"><span id="S2.T1.5.11.8.1.1" class="ltx_text" style="font-size:90%;">#Bird Nest</span></th>
+<td id="S2.T1.5.11.8.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S2.T1.5.11.8.2.1" class="ltx_text" style="font-size:90%;">0</span></td>
+<td id="S2.T1.5.11.8.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S2.T1.5.11.8.3.1" class="ltx_text" style="font-size:90%;">322</span></td>
+<td id="S2.T1.5.11.8.4" class="ltx_td ltx_align_center"><span id="S2.T1.5.11.8.4.1" class="ltx_text" style="font-size:90%;">0</span></td>
+</tr>
+<tr id="S2.T1.5.12.9" class="ltx_tr">
+<th id="S2.T1.5.12.9.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r"><span id="S2.T1.5.12.9.1.1" class="ltx_text" style="font-size:90%;">#Damper</span></th>
+<td id="S2.T1.5.12.9.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S2.T1.5.12.9.2.1" class="ltx_text" style="font-size:90%;">0</span></td>
+<td id="S2.T1.5.12.9.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S2.T1.5.12.9.3.1" class="ltx_text" style="font-size:90%;">1031</span></td>
+<td id="S2.T1.5.12.9.4" class="ltx_td ltx_align_center ltx_border_b"><span id="S2.T1.5.12.9.4.1" class="ltx_text" style="font-size:90%;">1505</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.6" class="ltx_p">The target dataset considered in this work consist of images provided by the Swiss transmission system operator Swissgrid AG. This dataset contains <math id="S2.SS1.p3.1.m1.1" class="ltx_Math" alttext="77" display="inline"><semantics id="S2.SS1.p3.1.m1.1a"><mn id="S2.SS1.p3.1.m1.1.1" xref="S2.SS1.p3.1.m1.1.1.cmml">77</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.1.m1.1b"><cn type="integer" id="S2.SS1.p3.1.m1.1.1.cmml" xref="S2.SS1.p3.1.m1.1.1">77</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.1.m1.1c">77</annotation></semantics></math> images. The background and foreground features of this dataset differ from those in the reference dataset. In order to perform transfer learning and evaluate the performance of fine-tuned models, we manually label the insulators, disks and dampers in this dataset with the LabelImg app <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>, resulting in <math id="S2.SS1.p3.2.m2.1" class="ltx_Math" alttext="279" display="inline"><semantics id="S2.SS1.p3.2.m2.1a"><mn id="S2.SS1.p3.2.m2.1.1" xref="S2.SS1.p3.2.m2.1.1.cmml">279</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.2.m2.1b"><cn type="integer" id="S2.SS1.p3.2.m2.1.1.cmml" xref="S2.SS1.p3.2.m2.1.1">279</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.2.m2.1c">279</annotation></semantics></math> insulators, <math id="S2.SS1.p3.3.m3.1" class="ltx_Math" alttext="3706" display="inline"><semantics id="S2.SS1.p3.3.m3.1a"><mn id="S2.SS1.p3.3.m3.1.1" xref="S2.SS1.p3.3.m3.1.1.cmml">3706</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.3.m3.1b"><cn type="integer" id="S2.SS1.p3.3.m3.1.1.cmml" xref="S2.SS1.p3.3.m3.1.1">3706</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.3.m3.1c">3706</annotation></semantics></math> healthy disks, <math id="S2.SS1.p3.4.m4.1" class="ltx_Math" alttext="64" display="inline"><semantics id="S2.SS1.p3.4.m4.1a"><mn id="S2.SS1.p3.4.m4.1.1" xref="S2.SS1.p3.4.m4.1.1.cmml">64</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.4.m4.1b"><cn type="integer" id="S2.SS1.p3.4.m4.1.1.cmml" xref="S2.SS1.p3.4.m4.1.1">64</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.4.m4.1c">64</annotation></semantics></math> flashed disks, <math id="S2.SS1.p3.5.m5.1" class="ltx_Math" alttext="76" display="inline"><semantics id="S2.SS1.p3.5.m5.1a"><mn id="S2.SS1.p3.5.m5.1.1" xref="S2.SS1.p3.5.m5.1.1.cmml">76</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.5.m5.1b"><cn type="integer" id="S2.SS1.p3.5.m5.1.1.cmml" xref="S2.SS1.p3.5.m5.1.1">76</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.5.m5.1c">76</annotation></semantics></math> dampers and <math id="S2.SS1.p3.6.m6.1" class="ltx_Math" alttext="23" display="inline"><semantics id="S2.SS1.p3.6.m6.1a"><mn id="S2.SS1.p3.6.m6.1.1" xref="S2.SS1.p3.6.m6.1.1.cmml">23</mn><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.6.m6.1b"><cn type="integer" id="S2.SS1.p3.6.m6.1.1.cmml" xref="S2.SS1.p3.6.m6.1.1">23</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.6.m6.1c">23</annotation></semantics></math> bird nests. This dataset did not have any broken disks. In the following, we discuss the approach adopted to detect insulators, classify them as healthy or faulty as well as perform multi-object detection.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Model pool selection</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">In this work, we consider four types of object detection models that are popular in the computer vision literature. The first model is Faster RCNN, which is one of the earliest deep neural network-based object detection models. It has also been used in the early works for detection of insulators from aerial images in multiple articles <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>, <a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>. It is a two-stage model that makes use of a region proposal network (RPN) to identify potential object locations in the first stage, followed by another network to adjust the proposed locations and make final predictions in the second stage. The Faster RCNN model suffers from the fact that most of the locations proposed by the RPN do not contain an object, which results in a severe class imbalance problem. This challenge is partly addressed with an adjusted loss function that explicitly accounts for the imbalance, resulting in the RetinaNet model. While the first two models are two-stage object detection models, the third model considered in this work is a single-stage model, called the Fully Convolutional One-Stage detection model (FCOS). FCOS is a relatively recent detection model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite> and is also a proposal-free model that was shown to perform better than its contemporaries. In this article, we consider the Faster RCNN, RetinaNet and FCOS with ResNet50 as the backbone.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">The last model considered here is the fifth version of You Only Look Once models, i.e., YOLOv5 which comes from a lineage of highly successful one-stage YOLO models. YOLOv5 performs a series of pre-processing and post-processing steps along with multi-scale detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>, and has also been shown to outperform several other models like the Faster RCNN and RetinaNet. These models are very popular and successful in both computer vision and domain-specific applications, and cover a wide spectrum of modelling approaches including two-stage and one-stage models, imbalance addressing loss function, fully convolutional architectures as well as data augmentation extensive models. We do not consider the recent vision transformer based object detection models that have a very different architecture than convolutional models because of limited size of our datasets.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Detection tasks</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">We are predominantly interested in inspection of insulators. This can be achieved by (a) detecting the insulators and classifying them as healthy or faulty, or (b) detecting all disks and insulators in an end-to-end manner, and identifying healthy and faulty insulators depending on the type of disks detected. Thus, we consider two types of detection tasks for insulators as discussed below. In addition, the use of a deep learning model allows one to detect several objects, which we exploit to detect multiple objects of interest. These tasks discussed in detail below.</p>
+<ol id="S2.I1" class="ltx_enumerate">
+<li id="S2.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S2.I1.i1.p1" class="ltx_para">
+<p id="S2.I1.i1.p1.1" class="ltx_p"><span id="S2.I1.i1.p1.1.1" class="ltx_text ltx_font_italic">Task 1: Insulator detection –</span> The first task involves detection of insulators and is the simplest of the three tasks considered in this article. This task is also the one that is most commonly addressed in the literature, often with modifications to standard object detection models. We use this task to evaluate and compare the performance of the four types of object detection models.</p>
+</div>
+</li>
+<li id="S2.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S2.I1.i2.p1" class="ltx_para">
+<p id="S2.I1.i2.p1.1" class="ltx_p"><span id="S2.I1.i2.p1.1.1" class="ltx_text ltx_font_italic">Task 2: Insulator and disk detection –</span> The problem of detecting whether an insulator is healthy or faulty can be posed as a classification problem. However, our experiments showed that the performance of a classification-based assessment scheme is very poor. This is potentially due to the fact that there can be different types of damages to the insulator such as discolouration, broken disks and corrosion, each of which results in different patterns on the image. Aggregating different types of patterns into a single class (faulty) can result in the network getting confused at the time of training, and for example, mistaking reflections as discolourations, or different backgrounds as broken disks. Therefore, we pose this problem as one of object detection, where the model is trained to detect different types of disks - healthy, flashed and broken. This approach treats different types of damages in a systematic manner and a post-processing aggregates the classes without interfering in the detection of the disks.</p>
+</div>
+</li>
+<li id="S2.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S2.I1.i3.p1" class="ltx_para">
+<p id="S2.I1.i3.p1.1" class="ltx_p"><span id="S2.I1.i3.p1.1.1" class="ltx_text ltx_font_italic">Task 3: Multiple object detection –</span> In order to further exploit the potential of deep neural network-based models, we perform a final task of detecting multiple objects of interest. We consider detection of insulators, disks (healthy, flashed and broken), Stockbridge dampers and bird nests, resulting in 6 classes of objects. We demonstrate the potential of object detection models to detect multiple objects with these objects. Although this approach can be extended to any number of object classes, we consider only 6 objects and leave the inclusion of other objects such as corona rings of insulators and spacers for future work.</p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+<section id="S2.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.4 </span>Experimental setup and procedure</h3>
+
+<div id="S2.SS4.p1" class="ltx_para">
+<p id="S2.SS4.p1.11" class="ltx_p">In all our experiments, we resize all the images to <math id="S2.SS4.p1.1.m1.1" class="ltx_Math" alttext="1000\times 1000\times 3" display="inline"><semantics id="S2.SS4.p1.1.m1.1a"><mrow id="S2.SS4.p1.1.m1.1.1" xref="S2.SS4.p1.1.m1.1.1.cmml"><mn id="S2.SS4.p1.1.m1.1.1.2" xref="S2.SS4.p1.1.m1.1.1.2.cmml">1000</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS4.p1.1.m1.1.1.1" xref="S2.SS4.p1.1.m1.1.1.1.cmml">×</mo><mn id="S2.SS4.p1.1.m1.1.1.3" xref="S2.SS4.p1.1.m1.1.1.3.cmml">1000</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS4.p1.1.m1.1.1.1a" xref="S2.SS4.p1.1.m1.1.1.1.cmml">×</mo><mn id="S2.SS4.p1.1.m1.1.1.4" xref="S2.SS4.p1.1.m1.1.1.4.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.1.m1.1b"><apply id="S2.SS4.p1.1.m1.1.1.cmml" xref="S2.SS4.p1.1.m1.1.1"><times id="S2.SS4.p1.1.m1.1.1.1.cmml" xref="S2.SS4.p1.1.m1.1.1.1"></times><cn type="integer" id="S2.SS4.p1.1.m1.1.1.2.cmml" xref="S2.SS4.p1.1.m1.1.1.2">1000</cn><cn type="integer" id="S2.SS4.p1.1.m1.1.1.3.cmml" xref="S2.SS4.p1.1.m1.1.1.3">1000</cn><cn type="integer" id="S2.SS4.p1.1.m1.1.1.4.cmml" xref="S2.SS4.p1.1.m1.1.1.4">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.1.m1.1c">1000\times 1000\times 3</annotation></semantics></math>. The datasets are divided into subsets for training, validation and testing of the models. The exact ratio of these splits vary for different experiments and are detailed later. We adopt random horizontal flipping for data augmentation to train the Faster RCNN, RetinaNet and FCOS models. We observed that including more augmentation methods such as colour jitter and random cropping did not result in a noticeable improvement in performance for the three models. The YOLOv5 model is inherently trained with a host of data augmentation techniques and no additional methods of augmentation were included in the experiments. All our experiments are performed with PyTorch. The built-in models for Faster RCNN, RetinaNet and FCOS in PyTorch are used, while the official repository of YOLOv5 is used in the experiments. The total number of parameters of Faster RCNN, RetinaNet, FCOS and YOLOv5 are <math id="S2.SS4.p1.2.m2.1" class="ltx_Math" alttext="41.29" display="inline"><semantics id="S2.SS4.p1.2.m2.1a"><mn id="S2.SS4.p1.2.m2.1.1" xref="S2.SS4.p1.2.m2.1.1.cmml">41.29</mn><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.2.m2.1b"><cn type="float" id="S2.SS4.p1.2.m2.1.1.cmml" xref="S2.SS4.p1.2.m2.1.1">41.29</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.2.m2.1c">41.29</annotation></semantics></math>M, <math id="S2.SS4.p1.3.m3.1" class="ltx_Math" alttext="32.16" display="inline"><semantics id="S2.SS4.p1.3.m3.1a"><mn id="S2.SS4.p1.3.m3.1.1" xref="S2.SS4.p1.3.m3.1.1.cmml">32.16</mn><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.3.m3.1b"><cn type="float" id="S2.SS4.p1.3.m3.1.1.cmml" xref="S2.SS4.p1.3.m3.1.1">32.16</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.3.m3.1c">32.16</annotation></semantics></math>M, <math id="S2.SS4.p1.4.m4.1" class="ltx_Math" alttext="32.06" display="inline"><semantics id="S2.SS4.p1.4.m4.1a"><mn id="S2.SS4.p1.4.m4.1.1" xref="S2.SS4.p1.4.m4.1.1.cmml">32.06</mn><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.4.m4.1b"><cn type="float" id="S2.SS4.p1.4.m4.1.1.cmml" xref="S2.SS4.p1.4.m4.1.1">32.06</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.4.m4.1c">32.06</annotation></semantics></math>M and <math id="S2.SS4.p1.5.m5.1" class="ltx_Math" alttext="46.5" display="inline"><semantics id="S2.SS4.p1.5.m5.1a"><mn id="S2.SS4.p1.5.m5.1.1" xref="S2.SS4.p1.5.m5.1.1.cmml">46.5</mn><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.5.m5.1b"><cn type="float" id="S2.SS4.p1.5.m5.1.1.cmml" xref="S2.SS4.p1.5.m5.1.1">46.5</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.5.m5.1c">46.5</annotation></semantics></math>M respectively. The number of trainable parameters for pre-training is fixed, while this number varies for fine-tuning depending on freezing of different modules of the models. All models are trained (pre-training and fine-tuning) with stochastic gradient descent optimizer with default parameters for <math id="S2.SS4.p1.6.m6.1" class="ltx_Math" alttext="300" display="inline"><semantics id="S2.SS4.p1.6.m6.1a"><mn id="S2.SS4.p1.6.m6.1.1" xref="S2.SS4.p1.6.m6.1.1.cmml">300</mn><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.6.m6.1b"><cn type="integer" id="S2.SS4.p1.6.m6.1.1.cmml" xref="S2.SS4.p1.6.m6.1.1">300</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.6.m6.1c">300</annotation></semantics></math> epochs. A batch size of <math id="S2.SS4.p1.7.m7.1" class="ltx_Math" alttext="32" display="inline"><semantics id="S2.SS4.p1.7.m7.1a"><mn id="S2.SS4.p1.7.m7.1.1" xref="S2.SS4.p1.7.m7.1.1.cmml">32</mn><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.7.m7.1b"><cn type="integer" id="S2.SS4.p1.7.m7.1.1.cmml" xref="S2.SS4.p1.7.m7.1.1">32</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.7.m7.1c">32</annotation></semantics></math> is used for training Faster RCNN, RetinaNet and FCOS, while YOLOv5 is trained with the default setting of 64 images for backpropagation. The training and evaluation is performed on a workstation with NVIDIA RTX A6000 GPU and <math id="S2.SS4.p1.8.m8.1" class="ltx_Math" alttext="128" display="inline"><semantics id="S2.SS4.p1.8.m8.1a"><mn id="S2.SS4.p1.8.m8.1.1" xref="S2.SS4.p1.8.m8.1.1.cmml">128</mn><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.8.m8.1b"><cn type="integer" id="S2.SS4.p1.8.m8.1.1.cmml" xref="S2.SS4.p1.8.m8.1.1">128</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.8.m8.1c">128</annotation></semantics></math> GB of RAM. In order to evaluate the performance of the models, the standard COCO metric of mean average precision (mAP) is adopted.
+We report the mAP with a threshold of 0.5, i.e., mAP<sub id="S2.SS4.p1.11.1" class="ltx_sub"><span id="S2.SS4.p1.11.1.1" class="ltx_text ltx_font_italic">50</span></sub> for our experiments. For the sake of presentation, we use mAP and mAP<sub id="S2.SS4.p1.11.2" class="ltx_sub"><span id="S2.SS4.p1.11.2.1" class="ltx_text ltx_font_italic">50</span></sub> interchangeably in the rest of the article, while always referring to mAP<sub id="S2.SS4.p1.11.3" class="ltx_sub"><span id="S2.SS4.p1.11.3.1" class="ltx_text ltx_font_italic">50</span></sub>.</p>
+</div>
+<div id="S2.SS4.p2" class="ltx_para">
+<p id="S2.SS4.p2.6" class="ltx_p">With the above setup in place, we first train detection models with only the target dataset. A (train, val, test) split of (<math id="S2.SS4.p2.1.m1.3" class="ltx_Math" alttext="0.7,0.0,0.3" display="inline"><semantics id="S2.SS4.p2.1.m1.3a"><mrow id="S2.SS4.p2.1.m1.3.4.2" xref="S2.SS4.p2.1.m1.3.4.1.cmml"><mn id="S2.SS4.p2.1.m1.1.1" xref="S2.SS4.p2.1.m1.1.1.cmml">0.7</mn><mo id="S2.SS4.p2.1.m1.3.4.2.1" xref="S2.SS4.p2.1.m1.3.4.1.cmml">,</mo><mn id="S2.SS4.p2.1.m1.2.2" xref="S2.SS4.p2.1.m1.2.2.cmml">0.0</mn><mo id="S2.SS4.p2.1.m1.3.4.2.2" xref="S2.SS4.p2.1.m1.3.4.1.cmml">,</mo><mn id="S2.SS4.p2.1.m1.3.3" xref="S2.SS4.p2.1.m1.3.3.cmml">0.3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p2.1.m1.3b"><list id="S2.SS4.p2.1.m1.3.4.1.cmml" xref="S2.SS4.p2.1.m1.3.4.2"><cn type="float" id="S2.SS4.p2.1.m1.1.1.cmml" xref="S2.SS4.p2.1.m1.1.1">0.7</cn><cn type="float" id="S2.SS4.p2.1.m1.2.2.cmml" xref="S2.SS4.p2.1.m1.2.2">0.0</cn><cn type="float" id="S2.SS4.p2.1.m1.3.3.cmml" xref="S2.SS4.p2.1.m1.3.3">0.3</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p2.1.m1.3c">0.7,0.0,0.3</annotation></semantics></math>) is used for training Faster RCNN (referred to hereinafter as FRCNN), RetinaNet and FCOS models, while (<math id="S2.SS4.p2.2.m2.3" class="ltx_Math" alttext="0.7,0.1,0.2" display="inline"><semantics id="S2.SS4.p2.2.m2.3a"><mrow id="S2.SS4.p2.2.m2.3.4.2" xref="S2.SS4.p2.2.m2.3.4.1.cmml"><mn id="S2.SS4.p2.2.m2.1.1" xref="S2.SS4.p2.2.m2.1.1.cmml">0.7</mn><mo id="S2.SS4.p2.2.m2.3.4.2.1" xref="S2.SS4.p2.2.m2.3.4.1.cmml">,</mo><mn id="S2.SS4.p2.2.m2.2.2" xref="S2.SS4.p2.2.m2.2.2.cmml">0.1</mn><mo id="S2.SS4.p2.2.m2.3.4.2.2" xref="S2.SS4.p2.2.m2.3.4.1.cmml">,</mo><mn id="S2.SS4.p2.2.m2.3.3" xref="S2.SS4.p2.2.m2.3.3.cmml">0.2</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p2.2.m2.3b"><list id="S2.SS4.p2.2.m2.3.4.1.cmml" xref="S2.SS4.p2.2.m2.3.4.2"><cn type="float" id="S2.SS4.p2.2.m2.1.1.cmml" xref="S2.SS4.p2.2.m2.1.1">0.7</cn><cn type="float" id="S2.SS4.p2.2.m2.2.2.cmml" xref="S2.SS4.p2.2.m2.2.2">0.1</cn><cn type="float" id="S2.SS4.p2.2.m2.3.3.cmml" xref="S2.SS4.p2.2.m2.3.3">0.2</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p2.2.m2.3c">0.7,0.1,0.2</annotation></semantics></math>) is used for training YOLOv5. We then train detection models with the reference dataset with the above split to obtain the pre-trained models. These models are finally fine-tuned with a (train, val, test) split of (<math id="S2.SS4.p2.3.m3.3" class="ltx_Math" alttext="0.3,0.0,0.7" display="inline"><semantics id="S2.SS4.p2.3.m3.3a"><mrow id="S2.SS4.p2.3.m3.3.4.2" xref="S2.SS4.p2.3.m3.3.4.1.cmml"><mn id="S2.SS4.p2.3.m3.1.1" xref="S2.SS4.p2.3.m3.1.1.cmml">0.3</mn><mo id="S2.SS4.p2.3.m3.3.4.2.1" xref="S2.SS4.p2.3.m3.3.4.1.cmml">,</mo><mn id="S2.SS4.p2.3.m3.2.2" xref="S2.SS4.p2.3.m3.2.2.cmml">0.0</mn><mo id="S2.SS4.p2.3.m3.3.4.2.2" xref="S2.SS4.p2.3.m3.3.4.1.cmml">,</mo><mn id="S2.SS4.p2.3.m3.3.3" xref="S2.SS4.p2.3.m3.3.3.cmml">0.7</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p2.3.m3.3b"><list id="S2.SS4.p2.3.m3.3.4.1.cmml" xref="S2.SS4.p2.3.m3.3.4.2"><cn type="float" id="S2.SS4.p2.3.m3.1.1.cmml" xref="S2.SS4.p2.3.m3.1.1">0.3</cn><cn type="float" id="S2.SS4.p2.3.m3.2.2.cmml" xref="S2.SS4.p2.3.m3.2.2">0.0</cn><cn type="float" id="S2.SS4.p2.3.m3.3.3.cmml" xref="S2.SS4.p2.3.m3.3.3">0.7</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p2.3.m3.3c">0.3,0.0,0.7</annotation></semantics></math>) for FRCNN, RetinaNet and FCOS, while (<math id="S2.SS4.p2.4.m4.3" class="ltx_Math" alttext="0.3,0.1,0.6" display="inline"><semantics id="S2.SS4.p2.4.m4.3a"><mrow id="S2.SS4.p2.4.m4.3.4.2" xref="S2.SS4.p2.4.m4.3.4.1.cmml"><mn id="S2.SS4.p2.4.m4.1.1" xref="S2.SS4.p2.4.m4.1.1.cmml">0.3</mn><mo id="S2.SS4.p2.4.m4.3.4.2.1" xref="S2.SS4.p2.4.m4.3.4.1.cmml">,</mo><mn id="S2.SS4.p2.4.m4.2.2" xref="S2.SS4.p2.4.m4.2.2.cmml">0.1</mn><mo id="S2.SS4.p2.4.m4.3.4.2.2" xref="S2.SS4.p2.4.m4.3.4.1.cmml">,</mo><mn id="S2.SS4.p2.4.m4.3.3" xref="S2.SS4.p2.4.m4.3.3.cmml">0.6</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p2.4.m4.3b"><list id="S2.SS4.p2.4.m4.3.4.1.cmml" xref="S2.SS4.p2.4.m4.3.4.2"><cn type="float" id="S2.SS4.p2.4.m4.1.1.cmml" xref="S2.SS4.p2.4.m4.1.1">0.3</cn><cn type="float" id="S2.SS4.p2.4.m4.2.2.cmml" xref="S2.SS4.p2.4.m4.2.2">0.1</cn><cn type="float" id="S2.SS4.p2.4.m4.3.3.cmml" xref="S2.SS4.p2.4.m4.3.3">0.6</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p2.4.m4.3c">0.3,0.1,0.6</annotation></semantics></math>) for YOLOv5 on the target dataset to obtain the fine-tuned models. We adopt this process for all three detection tasks, resulting in a total of <math id="S2.SS4.p2.5.m5.1" class="ltx_Math" alttext="18" display="inline"><semantics id="S2.SS4.p2.5.m5.1a"><mn id="S2.SS4.p2.5.m5.1.1" xref="S2.SS4.p2.5.m5.1.1.cmml">18</mn><annotation-xml encoding="MathML-Content" id="S2.SS4.p2.5.m5.1b"><cn type="integer" id="S2.SS4.p2.5.m5.1.1.cmml" xref="S2.SS4.p2.5.m5.1.1">18</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p2.5.m5.1c">18</annotation></semantics></math> models. For the sake of brevity, we use the term <span id="S2.SS4.p2.6.1" class="ltx_text ltx_font_italic">target-trained model</span> to refer to a model trained from scratch and differentiate from pre-trained and fine-tuned models in the rest of the article.
+Finally, we vary the training subset size in the set <math id="S2.SS4.p2.6.m6.6" class="ltx_Math" alttext="\{0.1,0.2,0.3,0.4,0.5,0.7\}" display="inline"><semantics id="S2.SS4.p2.6.m6.6a"><mrow id="S2.SS4.p2.6.m6.6.7.2" xref="S2.SS4.p2.6.m6.6.7.1.cmml"><mo stretchy="false" id="S2.SS4.p2.6.m6.6.7.2.1" xref="S2.SS4.p2.6.m6.6.7.1.cmml">{</mo><mn id="S2.SS4.p2.6.m6.1.1" xref="S2.SS4.p2.6.m6.1.1.cmml">0.1</mn><mo id="S2.SS4.p2.6.m6.6.7.2.2" xref="S2.SS4.p2.6.m6.6.7.1.cmml">,</mo><mn id="S2.SS4.p2.6.m6.2.2" xref="S2.SS4.p2.6.m6.2.2.cmml">0.2</mn><mo id="S2.SS4.p2.6.m6.6.7.2.3" xref="S2.SS4.p2.6.m6.6.7.1.cmml">,</mo><mn id="S2.SS4.p2.6.m6.3.3" xref="S2.SS4.p2.6.m6.3.3.cmml">0.3</mn><mo id="S2.SS4.p2.6.m6.6.7.2.4" xref="S2.SS4.p2.6.m6.6.7.1.cmml">,</mo><mn id="S2.SS4.p2.6.m6.4.4" xref="S2.SS4.p2.6.m6.4.4.cmml">0.4</mn><mo id="S2.SS4.p2.6.m6.6.7.2.5" xref="S2.SS4.p2.6.m6.6.7.1.cmml">,</mo><mn id="S2.SS4.p2.6.m6.5.5" xref="S2.SS4.p2.6.m6.5.5.cmml">0.5</mn><mo id="S2.SS4.p2.6.m6.6.7.2.6" xref="S2.SS4.p2.6.m6.6.7.1.cmml">,</mo><mn id="S2.SS4.p2.6.m6.6.6" xref="S2.SS4.p2.6.m6.6.6.cmml">0.7</mn><mo stretchy="false" id="S2.SS4.p2.6.m6.6.7.2.7" xref="S2.SS4.p2.6.m6.6.7.1.cmml">}</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p2.6.m6.6b"><set id="S2.SS4.p2.6.m6.6.7.1.cmml" xref="S2.SS4.p2.6.m6.6.7.2"><cn type="float" id="S2.SS4.p2.6.m6.1.1.cmml" xref="S2.SS4.p2.6.m6.1.1">0.1</cn><cn type="float" id="S2.SS4.p2.6.m6.2.2.cmml" xref="S2.SS4.p2.6.m6.2.2">0.2</cn><cn type="float" id="S2.SS4.p2.6.m6.3.3.cmml" xref="S2.SS4.p2.6.m6.3.3">0.3</cn><cn type="float" id="S2.SS4.p2.6.m6.4.4.cmml" xref="S2.SS4.p2.6.m6.4.4">0.4</cn><cn type="float" id="S2.SS4.p2.6.m6.5.5.cmml" xref="S2.SS4.p2.6.m6.5.5">0.5</cn><cn type="float" id="S2.SS4.p2.6.m6.6.6.cmml" xref="S2.SS4.p2.6.m6.6.6">0.7</cn></set></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p2.6.m6.6c">\{0.1,0.2,0.3,0.4,0.5,0.7\}</annotation></semantics></math> and record the performance of the fine-tuned models. In the following section, we present the results of these experiments and provide a discussion of the key insights.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Results</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">In this section, we present the results and discuss the findings from our experiments for the three tasks identified above. For each task, we compare different models and training approaches, and highlight the combination that delivers the best performance.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Task 1: Insulator detection</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.5" class="ltx_p">The first and simplest task considered in this article is the detection of insulators. This is a one-class detection problem with fairly large object sizes compared to the other tasks. The mAP<sub id="S3.SS1.p1.5.1" class="ltx_sub"><span id="S3.SS1.p1.5.1.1" class="ltx_text ltx_font_italic">50</span></sub> of pre-trained models on the test images of reference dataset are <math id="S3.SS1.p1.2.m2.1" class="ltx_Math" alttext="0.86" display="inline"><semantics id="S3.SS1.p1.2.m2.1a"><mn id="S3.SS1.p1.2.m2.1.1" xref="S3.SS1.p1.2.m2.1.1.cmml">0.86</mn><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.2.m2.1b"><cn type="float" id="S3.SS1.p1.2.m2.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1">0.86</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.2.m2.1c">0.86</annotation></semantics></math>, <math id="S3.SS1.p1.3.m3.1" class="ltx_Math" alttext="0.88" display="inline"><semantics id="S3.SS1.p1.3.m3.1a"><mn id="S3.SS1.p1.3.m3.1.1" xref="S3.SS1.p1.3.m3.1.1.cmml">0.88</mn><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.3.m3.1b"><cn type="float" id="S3.SS1.p1.3.m3.1.1.cmml" xref="S3.SS1.p1.3.m3.1.1">0.88</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.3.m3.1c">0.88</annotation></semantics></math>, <math id="S3.SS1.p1.4.m4.1" class="ltx_Math" alttext="0.80" display="inline"><semantics id="S3.SS1.p1.4.m4.1a"><mn id="S3.SS1.p1.4.m4.1.1" xref="S3.SS1.p1.4.m4.1.1.cmml">0.80</mn><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.4.m4.1b"><cn type="float" id="S3.SS1.p1.4.m4.1.1.cmml" xref="S3.SS1.p1.4.m4.1.1">0.80</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.4.m4.1c">0.80</annotation></semantics></math> and <math id="S3.SS1.p1.5.m5.1" class="ltx_Math" alttext="0.97" display="inline"><semantics id="S3.SS1.p1.5.m5.1a"><mn id="S3.SS1.p1.5.m5.1.1" xref="S3.SS1.p1.5.m5.1.1.cmml">0.97</mn><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.5.m5.1b"><cn type="float" id="S3.SS1.p1.5.m5.1.1.cmml" xref="S3.SS1.p1.5.m5.1.1">0.97</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.5.m5.1c">0.97</annotation></semantics></math> for FRCNN, RetinaNet, FCOS and YOLOv5 respectively. The YOLOv5 model performs the best, followed by RetinaNet, FRCNN and FCOS. Some illustrative example of predictions with pre-trained models are shown in Fig. <a href="#S3.F1" title="Figure 1 ‣ 3.1 Task 1: Insulator detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> and the performance of target-trained and fine-tuned models are summarised in Table <a href="#S3.T2" title="Table 2 ‣ 3.1 Task 1: Insulator detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. The table shows that YOLOv5 outperforms all other models for both types of training. The FRCNN models exhibit the second best performance, followed by FCOS and RetinaNet. It can also be observed that the fine-tuned YOLOv5 model performs much better than others, and is only 14 points short of the model trained from scratch, compared to others that are at least 30 points apart. This is in stark contrast to other models that exhibit a sharp difference in performance between the fine-tuned and target-tuned models.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">We observe that YOLOv5 consistently outperforms the other three models for all the tasks and training procedures (training from scratch and fine-tuning). This can be attributed to the data augmentation-heavy pipeline of YOLOv5 which provides a significant advantage to the model in the low data-regime. We therefore focus the ensuing discussion on the performance of YOLOv5 models in the following sections.</p>
+</div>
+<figure id="S3.F1" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F1.sf1" class="ltx_figure ltx_figure_panel ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/frcnn1_.png" id="S3.F1.sf1.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/frcnn2_.png" id="S3.F1.sf1.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S3.F1.sf1.2.1.1" class="ltx_text" style="font-size:80%;">(a)</span> </span><span id="S3.F1.sf1.3.2" class="ltx_text" style="font-size:80%;">Faster RCNN</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F1.sf2" class="ltx_figure ltx_figure_panel ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/Retina1_.png" id="S3.F1.sf2.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/Retina2_.png" id="S3.F1.sf2.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S3.F1.sf2.2.1.1" class="ltx_text" style="font-size:80%;">(b)</span> </span><span id="S3.F1.sf2.3.2" class="ltx_text" style="font-size:80%;">RetinaNet</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F1.sf3" class="ltx_figure ltx_figure_panel ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/fcos1_.png" id="S3.F1.sf3.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/fcos2_.png" id="S3.F1.sf3.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S3.F1.sf3.2.1.1" class="ltx_text" style="font-size:80%;">(c)</span> </span><span id="S3.F1.sf3.3.2" class="ltx_text" style="font-size:80%;">FCOS</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F1.sf4" class="ltx_figure ltx_figure_panel ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/yolo1_.png" id="S3.F1.sf4.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/yolo2_.png" id="S3.F1.sf4.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S3.F1.sf4.2.1.1" class="ltx_text" style="font-size:80%;">(d)</span> </span><span id="S3.F1.sf4.3.2" class="ltx_text" style="font-size:80%;">YOLOv5</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Predictions of models trained on Task 1 (insulator detection) on test images of reference dataset</figcaption>
+</figure>
+<figure id="S3.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>mAP<sub id="S3.T2.4.1" class="ltx_sub"><span id="S3.T2.4.1.1" class="ltx_text ltx_font_italic">50</span></sub> for Task 1 (insulator detection) on target dataset</figcaption>
+<table id="S3.T2.5" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T2.5.1.1" class="ltx_tr">
+<th id="S3.T2.5.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T2.5.1.1.1.1" class="ltx_text" style="font-size:90%;">Model</span></th>
+<th id="S3.T2.5.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T2.5.1.1.2.1" class="ltx_text" style="font-size:90%;">Trained from scratch</span></th>
+<th id="S3.T2.5.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T2.5.1.1.3.1" class="ltx_text" style="font-size:90%;">Fine-tuned</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T2.5.2.1" class="ltx_tr">
+<td id="S3.T2.5.2.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T2.5.2.1.1.1" class="ltx_text" style="font-size:90%;">FRCNN</span></td>
+<td id="S3.T2.5.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T2.5.2.1.2.1" class="ltx_text" style="font-size:90%;">0.76</span></td>
+<td id="S3.T2.5.2.1.3" class="ltx_td ltx_align_center ltx_border_tt"><span id="S3.T2.5.2.1.3.1" class="ltx_text" style="font-size:90%;">0.45</span></td>
+</tr>
+<tr id="S3.T2.5.3.2" class="ltx_tr">
+<td id="S3.T2.5.3.2.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.5.3.2.1.1" class="ltx_text" style="font-size:90%;">RetinaNet</span></td>
+<td id="S3.T2.5.3.2.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.5.3.2.2.1" class="ltx_text" style="font-size:90%;">0.58</span></td>
+<td id="S3.T2.5.3.2.3" class="ltx_td ltx_align_center"><span id="S3.T2.5.3.2.3.1" class="ltx_text" style="font-size:90%;">0.15</span></td>
+</tr>
+<tr id="S3.T2.5.4.3" class="ltx_tr">
+<td id="S3.T2.5.4.3.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.5.4.3.1.1" class="ltx_text" style="font-size:90%;">FCOS</span></td>
+<td id="S3.T2.5.4.3.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.5.4.3.2.1" class="ltx_text" style="font-size:90%;">0.69</span></td>
+<td id="S3.T2.5.4.3.3" class="ltx_td ltx_align_center"><span id="S3.T2.5.4.3.3.1" class="ltx_text" style="font-size:90%;">0.18</span></td>
+</tr>
+<tr id="S3.T2.5.5.4" class="ltx_tr">
+<td id="S3.T2.5.5.4.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T2.5.5.4.1.1" class="ltx_text" style="font-size:90%;">YOLOv5</span></td>
+<td id="S3.T2.5.5.4.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T2.5.5.4.2.1" class="ltx_text" style="font-size:90%;">0.87</span></td>
+<td id="S3.T2.5.5.4.3" class="ltx_td ltx_align_center ltx_border_b"><span id="S3.T2.5.5.4.3.1" class="ltx_text" style="font-size:90%;">0.73</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S3.F2" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F2.sf1" class="ltx_figure ltx_figure_panel ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/fcrnn_t2_1_.png" id="S3.F2.sf1.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/fcrnn_t2_2_.png" id="S3.F2.sf1.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S3.F2.sf1.2.1.1" class="ltx_text" style="font-size:80%;">(a)</span> </span><span id="S3.F2.sf1.3.2" class="ltx_text" style="font-size:80%;">Faster RCNN</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F2.sf2" class="ltx_figure ltx_figure_panel ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/retina_t2_1_.png" id="S3.F2.sf2.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/retina_t2_2_.png" id="S3.F2.sf2.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S3.F2.sf2.2.1.1" class="ltx_text" style="font-size:80%;">(b)</span> </span><span id="S3.F2.sf2.3.2" class="ltx_text" style="font-size:80%;">RetinaNet</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F2.sf3" class="ltx_figure ltx_figure_panel ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/fcos_t2_1_.png" id="S3.F2.sf3.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/fcos_t2_2_.png" id="S3.F2.sf3.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S3.F2.sf3.2.1.1" class="ltx_text" style="font-size:80%;">(c)</span> </span><span id="S3.F2.sf3.3.2" class="ltx_text" style="font-size:80%;">FCOS</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F2.sf4" class="ltx_figure ltx_figure_panel ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/yolo_21_.png" id="S3.F2.sf4.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/yolo_22_.png" id="S3.F2.sf4.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="138" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S3.F2.sf4.2.1.1" class="ltx_text" style="font-size:80%;">(d)</span> </span><span id="S3.F2.sf4.3.2" class="ltx_text" style="font-size:80%;">YOLOv5</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Predictions of models trained on Task 2 (insulator and disk detection) on test images of reference dataset (orange: insulator, red: healthy disks, blue: broken disks, white: flashed disks)</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Task 2: Insulator and disk detection</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.5" class="ltx_p">The second task involves the detecting healthy and faulty disks in the insulators, which can be used to assess the health of insulators. This is a 4-class detection problem as discussed earlier. In this task, the insulator is of much lager size than the healthy and faulty disks. Since each insulator has approximately <math id="S3.SS2.p1.1.m1.1" class="ltx_Math" alttext="10" display="inline"><semantics id="S3.SS2.p1.1.m1.1a"><mn id="S3.SS2.p1.1.m1.1.1" xref="S3.SS2.p1.1.m1.1.1.cmml">10</mn><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.1.m1.1b"><cn type="integer" id="S3.SS2.p1.1.m1.1.1.cmml" xref="S3.SS2.p1.1.m1.1.1">10</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.1.m1.1c">10</annotation></semantics></math> disks, there are always ten times as many disks as insulators. Moreover, the number of healthy disks is also five to six times the number of flashed and broken disks in the reference dataset. Thus, this is a more challenging detection task with varying sizes of the objects and frequencies of their occurrence. The pre-trained YOLOv5 model has an mAP of <math id="S3.SS2.p1.2.m2.1" class="ltx_Math" alttext="0.98" display="inline"><semantics id="S3.SS2.p1.2.m2.1a"><mn id="S3.SS2.p1.2.m2.1.1" xref="S3.SS2.p1.2.m2.1.1.cmml">0.98</mn><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.2.m2.1b"><cn type="float" id="S3.SS2.p1.2.m2.1.1.cmml" xref="S3.SS2.p1.2.m2.1.1">0.98</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.2.m2.1c">0.98</annotation></semantics></math> <span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>The overall mAP of the model is calculated as an average of the the mAP’s of all classes.</span></span></span> on the test images of the reference dataset, while the FRCNN, RetinaNet and FCOS have mAPs of <math id="S3.SS2.p1.3.m3.1" class="ltx_Math" alttext="0.89" display="inline"><semantics id="S3.SS2.p1.3.m3.1a"><mn id="S3.SS2.p1.3.m3.1.1" xref="S3.SS2.p1.3.m3.1.1.cmml">0.89</mn><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.3.m3.1b"><cn type="float" id="S3.SS2.p1.3.m3.1.1.cmml" xref="S3.SS2.p1.3.m3.1.1">0.89</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.3.m3.1c">0.89</annotation></semantics></math>, <math id="S3.SS2.p1.4.m4.1" class="ltx_Math" alttext="0.89" display="inline"><semantics id="S3.SS2.p1.4.m4.1a"><mn id="S3.SS2.p1.4.m4.1.1" xref="S3.SS2.p1.4.m4.1.1.cmml">0.89</mn><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.4.m4.1b"><cn type="float" id="S3.SS2.p1.4.m4.1.1.cmml" xref="S3.SS2.p1.4.m4.1.1">0.89</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.4.m4.1c">0.89</annotation></semantics></math> and <math id="S3.SS2.p1.5.m5.1" class="ltx_Math" alttext="0.85" display="inline"><semantics id="S3.SS2.p1.5.m5.1a"><mn id="S3.SS2.p1.5.m5.1.1" xref="S3.SS2.p1.5.m5.1.1.cmml">0.85</mn><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.5.m5.1b"><cn type="float" id="S3.SS2.p1.5.m5.1.1.cmml" xref="S3.SS2.p1.5.m5.1.1">0.85</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.5.m5.1c">0.85</annotation></semantics></math> respectively. These performance scores are comparable to the one-class detection models, with approximately 2-3 points better mAP on the 4-class detection task. This shows that the models are able to capture the differences in patterns of healthy, flashed and broken disks. Some exemplary predictions of the models on reference dataset are illustrated in Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Task 1: Insulator detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a></p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.2" class="ltx_p">The target dataset also exhibits class imbalance across the disks and insulators. The number of healthy disks is about <math id="S3.SS2.p2.1.m1.1" class="ltx_Math" alttext="58" display="inline"><semantics id="S3.SS2.p2.1.m1.1a"><mn id="S3.SS2.p2.1.m1.1.1" xref="S3.SS2.p2.1.m1.1.1.cmml">58</mn><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.1.m1.1b"><cn type="integer" id="S3.SS2.p2.1.m1.1.1.cmml" xref="S3.SS2.p2.1.m1.1.1">58</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.1.m1.1c">58</annotation></semantics></math> and <math id="S3.SS2.p2.2.m2.1" class="ltx_Math" alttext="13" display="inline"><semantics id="S3.SS2.p2.2.m2.1a"><mn id="S3.SS2.p2.2.m2.1.1" xref="S3.SS2.p2.2.m2.1.1.cmml">13</mn><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.2.m2.1b"><cn type="integer" id="S3.SS2.p2.2.m2.1.1.cmml" xref="S3.SS2.p2.2.m2.1.1">13</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.2.m2.1c">13</annotation></semantics></math> times the number of flashed disks and insulators. This dataset does not have any broken disks. Table <a href="#S3.T3" title="Table 3 ‣ 3.2 Task 2: Insulator and disk detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> presents the mAP of the pre-trained and fine-tuned YOLOv5 models on the test images of target dataset for the four object types. It can be observed that the models have the worst performance for flashed disks, which are also the least frequent objects in the dataset. The fine-tuned model performs poorer than the target-trained model as also observed for Task 1, while the difference in overall mAP is less (9 points) compared to the one-class detection model.</p>
+</div>
+<figure id="S3.T3" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>mAP<sub id="S3.T3.4.1" class="ltx_sub"><span id="S3.T3.4.1.1" class="ltx_text ltx_font_italic">50</span></sub> of YOLOv5 models for Task 2 (insulator and disk detection) on target dataset</figcaption>
+<table id="S3.T3.5" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T3.5.1.1" class="ltx_tr">
+<th id="S3.T3.5.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T3.5.1.1.1.1" class="ltx_text" style="font-size:90%;">Object</span></th>
+<th id="S3.T3.5.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T3.5.1.1.2.1" class="ltx_text" style="font-size:90%;">Trained from scratch</span></th>
+<th id="S3.T3.5.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T3.5.1.1.3.1" class="ltx_text" style="font-size:90%;">Fine-tuned</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T3.5.2.1" class="ltx_tr">
+<td id="S3.T3.5.2.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T3.5.2.1.1.1" class="ltx_text" style="font-size:90%;">Insulator</span></td>
+<td id="S3.T3.5.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T3.5.2.1.2.1" class="ltx_text" style="font-size:90%;">0.87</span></td>
+<td id="S3.T3.5.2.1.3" class="ltx_td ltx_align_center ltx_border_tt"><span id="S3.T3.5.2.1.3.1" class="ltx_text" style="font-size:90%;">0.74</span></td>
+</tr>
+<tr id="S3.T3.5.3.2" class="ltx_tr">
+<td id="S3.T3.5.3.2.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T3.5.3.2.1.1" class="ltx_text" style="font-size:90%;">Disk (H)</span></td>
+<td id="S3.T3.5.3.2.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T3.5.3.2.2.1" class="ltx_text" style="font-size:90%;">0.76</span></td>
+<td id="S3.T3.5.3.2.3" class="ltx_td ltx_align_center"><span id="S3.T3.5.3.2.3.1" class="ltx_text" style="font-size:90%;">0.72</span></td>
+</tr>
+<tr id="S3.T3.5.4.3" class="ltx_tr">
+<td id="S3.T3.5.4.3.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T3.5.4.3.1.1" class="ltx_text" style="font-size:90%;">Disk (F)</span></td>
+<td id="S3.T3.5.4.3.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T3.5.4.3.2.1" class="ltx_text" style="font-size:90%;">0.22</span></td>
+<td id="S3.T3.5.4.3.3" class="ltx_td ltx_align_center"><span id="S3.T3.5.4.3.3.1" class="ltx_text" style="font-size:90%;">0.13</span></td>
+</tr>
+<tr id="S3.T3.5.5.4" class="ltx_tr">
+<td id="S3.T3.5.5.4.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T3.5.5.4.1.1" class="ltx_text" style="font-size:90%;">Disk (B)</span></td>
+<td id="S3.T3.5.5.4.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T3.5.5.4.2.1" class="ltx_text" style="font-size:90%;">–</span></td>
+<td id="S3.T3.5.5.4.3" class="ltx_td ltx_align_center"><span id="S3.T3.5.5.4.3.1" class="ltx_text" style="font-size:90%;">–</span></td>
+</tr>
+<tr id="S3.T3.5.6.5" class="ltx_tr">
+<td id="S3.T3.5.6.5.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T3.5.6.5.1.1" class="ltx_text" style="font-size:90%;">Overall</span></td>
+<td id="S3.T3.5.6.5.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T3.5.6.5.2.1" class="ltx_text" style="font-size:90%;">0.62</span></td>
+<td id="S3.T3.5.6.5.3" class="ltx_td ltx_align_center ltx_border_b"><span id="S3.T3.5.6.5.3.1" class="ltx_text" style="font-size:90%;">0.53</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Task 3: Multiple object detection</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.4" class="ltx_p">The third and final task involves detection of six objects and is the most difficult task. Both the reference and target datasets have severe class imbalance for bird nests in addition to the flashed and broken disks. The Stockbridge dampers are also the smallest objects as well as up to five times less frequent than the healthy disks. The mAP of the pre-trained models on the test images of reference dataset are <math id="S3.SS3.p1.1.m1.1" class="ltx_Math" alttext="0.85" display="inline"><semantics id="S3.SS3.p1.1.m1.1a"><mn id="S3.SS3.p1.1.m1.1.1" xref="S3.SS3.p1.1.m1.1.1.cmml">0.85</mn><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.1.m1.1b"><cn type="float" id="S3.SS3.p1.1.m1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1">0.85</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.1.m1.1c">0.85</annotation></semantics></math>, <math id="S3.SS3.p1.2.m2.1" class="ltx_Math" alttext="0.85" display="inline"><semantics id="S3.SS3.p1.2.m2.1a"><mn id="S3.SS3.p1.2.m2.1.1" xref="S3.SS3.p1.2.m2.1.1.cmml">0.85</mn><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.2.m2.1b"><cn type="float" id="S3.SS3.p1.2.m2.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1">0.85</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.2.m2.1c">0.85</annotation></semantics></math>, <math id="S3.SS3.p1.3.m3.1" class="ltx_Math" alttext="0.79" display="inline"><semantics id="S3.SS3.p1.3.m3.1a"><mn id="S3.SS3.p1.3.m3.1.1" xref="S3.SS3.p1.3.m3.1.1.cmml">0.79</mn><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.3.m3.1b"><cn type="float" id="S3.SS3.p1.3.m3.1.1.cmml" xref="S3.SS3.p1.3.m3.1.1">0.79</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.3.m3.1c">0.79</annotation></semantics></math> and <math id="S3.SS3.p1.4.m4.1" class="ltx_Math" alttext="0.85" display="inline"><semantics id="S3.SS3.p1.4.m4.1a"><mn id="S3.SS3.p1.4.m4.1.1" xref="S3.SS3.p1.4.m4.1.1.cmml">0.85</mn><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.4.m4.1b"><cn type="float" id="S3.SS3.p1.4.m4.1.1.cmml" xref="S3.SS3.p1.4.m4.1.1">0.85</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.4.m4.1c">0.85</annotation></semantics></math> for the FRCNN, RetinaNet, FCOS and YOLOv5 models. These scores are also comparable to the one-class and four-class models, allowing for detection of multiple assets from the aerial images.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.1" class="ltx_p">Table <a href="#S3.T4" title="Table 4 ‣ 3.3 Task 3: Multiple object detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> summarises the mAP of the target trained and fine-tuned YOLOv5 models. It can be observed that the the difference in performance between the two models is much more severe than the one-class and four-class models. Specifically, the overall mAP of the fine-tuned models is 18 points lower than that of the target-trained model, the insulator and bird nest being the biggest contributors to this difference. This can potentially be due to the nature of these objects. Specifically, the bird nest is always occluded by structures of the tower and might be difficult to detect - even by humans. The insulator, on the other other hand is the largest object, which stands out from all the other objects that are relatively small. This difference in size compared to all other classes in addition to the class imbalance might potentially lead the model to emphasise more on predicting objects at a smaller scale than at a larger scale. This can potentially be addressed by appropriately weighing the contributions of the objects to the loss function. Figure <a href="#S3.F3" title="Figure 3 ‣ 3.3 Task 3: Multiple object detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> shows the predictions of the model on two sample test images of target dataset. The bounding boxes predicted by the model for different objects are shown in different colours. It can be seen that the model is able to detect all the healthy disks, dampers, insulators and a bird nest in the images. However, in the right image, the model misclassifies a flashed disk as healthy, which explains its poor performance in detecting flashed disks on target dataset (see Table <a href="#S3.T4" title="Table 4 ‣ 3.3 Task 3: Multiple object detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>).</p>
+</div>
+<figure id="S3.F3" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/yolo_Task3_Cropped_.jpg" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="281" height="211" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2212.11017/assets/yolo_Task32_.png" id="S3.F3.g2" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="281" height="211" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Predictions of YOLOv5 model trained from scratch on Task 3 (multiple object detection) on test images of target dataset (orange: insulator, red: healthy disks, green: Stockbridge dampers, yellow: bird nest)</figcaption>
+</figure>
+<figure id="S3.T4" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>mAP<sub id="S3.T4.4.1" class="ltx_sub"><span id="S3.T4.4.1.1" class="ltx_text ltx_font_italic">50</span></sub> of YOLOv5 models for Task 3 (multiple object detection) on target dataset</figcaption>
+<table id="S3.T4.5" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T4.5.1.1" class="ltx_tr">
+<th id="S3.T4.5.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T4.5.1.1.1.1" class="ltx_text" style="font-size:90%;">Object</span></th>
+<th id="S3.T4.5.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T4.5.1.1.2.1" class="ltx_text" style="font-size:90%;">Trained from scratch</span></th>
+<th id="S3.T4.5.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T4.5.1.1.3.1" class="ltx_text" style="font-size:90%;">Fine-tuned</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T4.5.2.1" class="ltx_tr">
+<td id="S3.T4.5.2.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T4.5.2.1.1.1" class="ltx_text" style="font-size:90%;">Insulator</span></td>
+<td id="S3.T4.5.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T4.5.2.1.2.1" class="ltx_text" style="font-size:90%;">0.90</span></td>
+<td id="S3.T4.5.2.1.3" class="ltx_td ltx_align_center ltx_border_tt"><span id="S3.T4.5.2.1.3.1" class="ltx_text" style="font-size:90%;">0.67</span></td>
+</tr>
+<tr id="S3.T4.5.3.2" class="ltx_tr">
+<td id="S3.T4.5.3.2.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.3.2.1.1" class="ltx_text" style="font-size:90%;">Disk (H)</span></td>
+<td id="S3.T4.5.3.2.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.3.2.2.1" class="ltx_text" style="font-size:90%;">0.77</span></td>
+<td id="S3.T4.5.3.2.3" class="ltx_td ltx_align_center"><span id="S3.T4.5.3.2.3.1" class="ltx_text" style="font-size:90%;">0.70</span></td>
+</tr>
+<tr id="S3.T4.5.4.3" class="ltx_tr">
+<td id="S3.T4.5.4.3.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.4.3.1.1" class="ltx_text" style="font-size:90%;">Disk (F)</span></td>
+<td id="S3.T4.5.4.3.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.4.3.2.1" class="ltx_text" style="font-size:90%;">0.18</span></td>
+<td id="S3.T4.5.4.3.3" class="ltx_td ltx_align_center"><span id="S3.T4.5.4.3.3.1" class="ltx_text" style="font-size:90%;">0.14</span></td>
+</tr>
+<tr id="S3.T4.5.5.4" class="ltx_tr">
+<td id="S3.T4.5.5.4.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.5.4.1.1" class="ltx_text" style="font-size:90%;">Disk (B)</span></td>
+<td id="S3.T4.5.5.4.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.5.4.2.1" class="ltx_text" style="font-size:90%;">–</span></td>
+<td id="S3.T4.5.5.4.3" class="ltx_td ltx_align_center"><span id="S3.T4.5.5.4.3.1" class="ltx_text" style="font-size:90%;">–</span></td>
+</tr>
+<tr id="S3.T4.5.6.5" class="ltx_tr">
+<td id="S3.T4.5.6.5.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.6.5.1.1" class="ltx_text" style="font-size:90%;">Nest</span></td>
+<td id="S3.T4.5.6.5.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.6.5.2.1" class="ltx_text" style="font-size:90%;">0.87</span></td>
+<td id="S3.T4.5.6.5.3" class="ltx_td ltx_align_center"><span id="S3.T4.5.6.5.3.1" class="ltx_text" style="font-size:90%;">0.48</span></td>
+</tr>
+<tr id="S3.T4.5.7.6" class="ltx_tr">
+<td id="S3.T4.5.7.6.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.7.6.1.1" class="ltx_text" style="font-size:90%;">Damper</span></td>
+<td id="S3.T4.5.7.6.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T4.5.7.6.2.1" class="ltx_text" style="font-size:90%;">0.71</span></td>
+<td id="S3.T4.5.7.6.3" class="ltx_td ltx_align_center"><span id="S3.T4.5.7.6.3.1" class="ltx_text" style="font-size:90%;">0.50</span></td>
+</tr>
+<tr id="S3.T4.5.8.7" class="ltx_tr">
+<td id="S3.T4.5.8.7.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T4.5.8.7.1.1" class="ltx_text" style="font-size:90%;">Overall</span></td>
+<td id="S3.T4.5.8.7.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T4.5.8.7.2.1" class="ltx_text" style="font-size:90%;">0.68</span></td>
+<td id="S3.T4.5.8.7.3" class="ltx_td ltx_align_center ltx_border_b"><span id="S3.T4.5.8.7.3.1" class="ltx_text" style="font-size:90%;">0.50</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span>Sensitivity analysis</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.9" class="ltx_p">In the previous sections, we presented the performance of the fine-tuned models that used <math id="S3.SS4.p1.1.m1.1" class="ltx_Math" alttext="30\%" display="inline"><semantics id="S3.SS4.p1.1.m1.1a"><mrow id="S3.SS4.p1.1.m1.1.1" xref="S3.SS4.p1.1.m1.1.1.cmml"><mn id="S3.SS4.p1.1.m1.1.1.2" xref="S3.SS4.p1.1.m1.1.1.2.cmml">30</mn><mo id="S3.SS4.p1.1.m1.1.1.1" xref="S3.SS4.p1.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.1.m1.1b"><apply id="S3.SS4.p1.1.m1.1.1.cmml" xref="S3.SS4.p1.1.m1.1.1"><csymbol cd="latexml" id="S3.SS4.p1.1.m1.1.1.1.cmml" xref="S3.SS4.p1.1.m1.1.1.1">percent</csymbol><cn type="integer" id="S3.SS4.p1.1.m1.1.1.2.cmml" xref="S3.SS4.p1.1.m1.1.1.2">30</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.1.m1.1c">30\%</annotation></semantics></math> of target dataset for training. On the other hand, the model trained from scratch uses <math id="S3.SS4.p1.2.m2.1" class="ltx_Math" alttext="70\%" display="inline"><semantics id="S3.SS4.p1.2.m2.1a"><mrow id="S3.SS4.p1.2.m2.1.1" xref="S3.SS4.p1.2.m2.1.1.cmml"><mn id="S3.SS4.p1.2.m2.1.1.2" xref="S3.SS4.p1.2.m2.1.1.2.cmml">70</mn><mo id="S3.SS4.p1.2.m2.1.1.1" xref="S3.SS4.p1.2.m2.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.2.m2.1b"><apply id="S3.SS4.p1.2.m2.1.1.cmml" xref="S3.SS4.p1.2.m2.1.1"><csymbol cd="latexml" id="S3.SS4.p1.2.m2.1.1.1.cmml" xref="S3.SS4.p1.2.m2.1.1.1">percent</csymbol><cn type="integer" id="S3.SS4.p1.2.m2.1.1.2.cmml" xref="S3.SS4.p1.2.m2.1.1.2">70</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.2.m2.1c">70\%</annotation></semantics></math> of the target dataset. It is common practice to use a smaller portion of the target dataset for fine tuning, and is one of the key advantages of using a pre-trained model. However, we observe that in this application, many of the fine-tuned models perform significantly worse than the target-trained models, as seen in Table <a href="#S3.T2" title="Table 2 ‣ 3.1 Task 1: Insulator detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, thus discouraging the use of pre-training and fine-tuning. We perform a sensitivity analysis to examine whether the amount of training data has any impact on the performance of the fine-tuned models. We use <math id="S3.SS4.p1.3.m3.1" class="ltx_Math" alttext="10\%" display="inline"><semantics id="S3.SS4.p1.3.m3.1a"><mrow id="S3.SS4.p1.3.m3.1.1" xref="S3.SS4.p1.3.m3.1.1.cmml"><mn id="S3.SS4.p1.3.m3.1.1.2" xref="S3.SS4.p1.3.m3.1.1.2.cmml">10</mn><mo id="S3.SS4.p1.3.m3.1.1.1" xref="S3.SS4.p1.3.m3.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.3.m3.1b"><apply id="S3.SS4.p1.3.m3.1.1.cmml" xref="S3.SS4.p1.3.m3.1.1"><csymbol cd="latexml" id="S3.SS4.p1.3.m3.1.1.1.cmml" xref="S3.SS4.p1.3.m3.1.1.1">percent</csymbol><cn type="integer" id="S3.SS4.p1.3.m3.1.1.2.cmml" xref="S3.SS4.p1.3.m3.1.1.2">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.3.m3.1c">10\%</annotation></semantics></math>, <math id="S3.SS4.p1.4.m4.1" class="ltx_Math" alttext="30\%" display="inline"><semantics id="S3.SS4.p1.4.m4.1a"><mrow id="S3.SS4.p1.4.m4.1.1" xref="S3.SS4.p1.4.m4.1.1.cmml"><mn id="S3.SS4.p1.4.m4.1.1.2" xref="S3.SS4.p1.4.m4.1.1.2.cmml">30</mn><mo id="S3.SS4.p1.4.m4.1.1.1" xref="S3.SS4.p1.4.m4.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.4.m4.1b"><apply id="S3.SS4.p1.4.m4.1.1.cmml" xref="S3.SS4.p1.4.m4.1.1"><csymbol cd="latexml" id="S3.SS4.p1.4.m4.1.1.1.cmml" xref="S3.SS4.p1.4.m4.1.1.1">percent</csymbol><cn type="integer" id="S3.SS4.p1.4.m4.1.1.2.cmml" xref="S3.SS4.p1.4.m4.1.1.2">30</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.4.m4.1c">30\%</annotation></semantics></math> and <math id="S3.SS4.p1.5.m5.1" class="ltx_Math" alttext="70\%" display="inline"><semantics id="S3.SS4.p1.5.m5.1a"><mrow id="S3.SS4.p1.5.m5.1.1" xref="S3.SS4.p1.5.m5.1.1.cmml"><mn id="S3.SS4.p1.5.m5.1.1.2" xref="S3.SS4.p1.5.m5.1.1.2.cmml">70</mn><mo id="S3.SS4.p1.5.m5.1.1.1" xref="S3.SS4.p1.5.m5.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.5.m5.1b"><apply id="S3.SS4.p1.5.m5.1.1.cmml" xref="S3.SS4.p1.5.m5.1.1"><csymbol cd="latexml" id="S3.SS4.p1.5.m5.1.1.1.cmml" xref="S3.SS4.p1.5.m5.1.1.1">percent</csymbol><cn type="integer" id="S3.SS4.p1.5.m5.1.1.2.cmml" xref="S3.SS4.p1.5.m5.1.1.2">70</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.5.m5.1c">70\%</annotation></semantics></math> of the target dataset for fine-tuning and record the performance of the models on the remaining images. Table <a href="#S3.T5" title="Table 5 ‣ 3.4 Sensitivity analysis ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> lists the object-wise mAP of these fine tuned YOLOv5 models. Table <a href="#S3.T5" title="Table 5 ‣ 3.4 Sensitivity analysis ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> shows that even with <math id="S3.SS4.p1.6.m6.1" class="ltx_Math" alttext="10\%" display="inline"><semantics id="S3.SS4.p1.6.m6.1a"><mrow id="S3.SS4.p1.6.m6.1.1" xref="S3.SS4.p1.6.m6.1.1.cmml"><mn id="S3.SS4.p1.6.m6.1.1.2" xref="S3.SS4.p1.6.m6.1.1.2.cmml">10</mn><mo id="S3.SS4.p1.6.m6.1.1.1" xref="S3.SS4.p1.6.m6.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.6.m6.1b"><apply id="S3.SS4.p1.6.m6.1.1.cmml" xref="S3.SS4.p1.6.m6.1.1"><csymbol cd="latexml" id="S3.SS4.p1.6.m6.1.1.1.cmml" xref="S3.SS4.p1.6.m6.1.1.1">percent</csymbol><cn type="integer" id="S3.SS4.p1.6.m6.1.1.2.cmml" xref="S3.SS4.p1.6.m6.1.1.2">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.6.m6.1c">10\%</annotation></semantics></math> of the data, i.e., <math id="S3.SS4.p1.7.m7.1" class="ltx_Math" alttext="8" display="inline"><semantics id="S3.SS4.p1.7.m7.1a"><mn id="S3.SS4.p1.7.m7.1.1" xref="S3.SS4.p1.7.m7.1.1.cmml">8</mn><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.7.m7.1b"><cn type="integer" id="S3.SS4.p1.7.m7.1.1.cmml" xref="S3.SS4.p1.7.m7.1.1">8</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.7.m7.1c">8</annotation></semantics></math> images used for fine-tuning, the model has mAPs of <math id="S3.SS4.p1.8.m8.1" class="ltx_Math" alttext="0.63" display="inline"><semantics id="S3.SS4.p1.8.m8.1a"><mn id="S3.SS4.p1.8.m8.1.1" xref="S3.SS4.p1.8.m8.1.1.cmml">0.63</mn><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.8.m8.1b"><cn type="float" id="S3.SS4.p1.8.m8.1.1.cmml" xref="S3.SS4.p1.8.m8.1.1">0.63</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.8.m8.1c">0.63</annotation></semantics></math> and <math id="S3.SS4.p1.9.m9.1" class="ltx_Math" alttext="0.7" display="inline"><semantics id="S3.SS4.p1.9.m9.1a"><mn id="S3.SS4.p1.9.m9.1.1" xref="S3.SS4.p1.9.m9.1.1.cmml">0.7</mn><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.9.m9.1b"><cn type="float" id="S3.SS4.p1.9.m9.1.1.cmml" xref="S3.SS4.p1.9.m9.1.1">0.7</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.9.m9.1c">0.7</annotation></semantics></math> for the insulator and healthy disk respectively. This can be attributed to the large size of insulators and high frequency of healthy disks. The detection of rare classes is unsurprisingly poor in the beginning, but improves significantly with addition of more images. The last model uses the same number of images for fine-tuning as the model trained from scratch. These two models differ only in the initial parameters before training, i.e., while the former starts with parameters learnt from the reference dataset, the latter starts with a random initialisation. A comparison of the two models (Table <a href="#S3.T4" title="Table 4 ‣ 3.3 Task 3: Multiple object detection ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> and Table <a href="#S3.T5" title="Table 5 ‣ 3.4 Sensitivity analysis ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>) reveals that the fine-tuned model has poor performance compared to the target-trained model even when trained on the same images. We observe the opposite behaviour for the Faster RCNN, RetinaNet and FCOS models across all tasks, with approximately 5 points improvement in mAP compared to the target-trained model. This difference in behaviour can potentially be due to the different data processing pipeline of YOLOv5.</p>
+</div>
+<figure id="S3.T5" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>mAP<sub id="S3.T5.4.1" class="ltx_sub"><span id="S3.T5.4.1.1" class="ltx_text ltx_font_italic">50</span></sub> of target-trained and fine-tuned YOLOv5 models trained with different fractions of target dataset for Task 3 (multiple object detection); (TT: target-trained, FT: fine-tuned).</figcaption>
+<table id="S3.T5.5" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T5.5.1.1" class="ltx_tr">
+<th id="S3.T5.5.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" rowspan="2"><span id="S3.T5.5.1.1.1.1" class="ltx_text" style="font-size:90%;">Object</span></th>
+<th id="S3.T5.5.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" colspan="2"><span id="S3.T5.5.1.1.2.1" class="ltx_text" style="font-size:90%;">0.1</span></th>
+<th id="S3.T5.5.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" colspan="2"><span id="S3.T5.5.1.1.3.1" class="ltx_text" style="font-size:90%;">0.3</span></th>
+<th id="S3.T5.5.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" colspan="2"><span id="S3.T5.5.1.1.4.1" class="ltx_text" style="font-size:90%;">0.7</span></th>
+</tr>
+<tr id="S3.T5.5.2.2" class="ltx_tr">
+<th id="S3.T5.5.2.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T5.5.2.2.1.1" class="ltx_text" style="font-size:90%;">TT</span></th>
+<th id="S3.T5.5.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T5.5.2.2.2.1" class="ltx_text" style="font-size:90%;">FT</span></th>
+<th id="S3.T5.5.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T5.5.2.2.3.1" class="ltx_text" style="font-size:90%;">TT</span></th>
+<th id="S3.T5.5.2.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T5.5.2.2.4.1" class="ltx_text" style="font-size:90%;">FT</span></th>
+<th id="S3.T5.5.2.2.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T5.5.2.2.5.1" class="ltx_text" style="font-size:90%;">TT</span></th>
+<th id="S3.T5.5.2.2.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T5.5.2.2.6.1" class="ltx_text" style="font-size:90%;">FT</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T5.5.3.1" class="ltx_tr">
+<td id="S3.T5.5.3.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T5.5.3.1.1.1" class="ltx_text" style="font-size:90%;">Insulator</span></td>
+<td id="S3.T5.5.3.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T5.5.3.1.2.1" class="ltx_text" style="font-size:90%;">0.74</span></td>
+<td id="S3.T5.5.3.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T5.5.3.1.3.1" class="ltx_text" style="font-size:90%;">0.63</span></td>
+<td id="S3.T5.5.3.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T5.5.3.1.4.1" class="ltx_text" style="font-size:90%;">0.70</span></td>
+<td id="S3.T5.5.3.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T5.5.3.1.5.1" class="ltx_text" style="font-size:90%;">0.67</span></td>
+<td id="S3.T5.5.3.1.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T5.5.3.1.6.1" class="ltx_text" style="font-size:90%;">0.90</span></td>
+<td id="S3.T5.5.3.1.7" class="ltx_td ltx_align_center ltx_border_tt"><span id="S3.T5.5.3.1.7.1" class="ltx_text" style="font-size:90%;">0.82</span></td>
+</tr>
+<tr id="S3.T5.5.4.2" class="ltx_tr">
+<td id="S3.T5.5.4.2.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.4.2.1.1" class="ltx_text" style="font-size:90%;">Disk (H)</span></td>
+<td id="S3.T5.5.4.2.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.4.2.2.1" class="ltx_text" style="font-size:90%;">0.62</span></td>
+<td id="S3.T5.5.4.2.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.4.2.3.1" class="ltx_text" style="font-size:90%;">0.70</span></td>
+<td id="S3.T5.5.4.2.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.4.2.4.1" class="ltx_text" style="font-size:90%;">0.77</span></td>
+<td id="S3.T5.5.4.2.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.4.2.5.1" class="ltx_text" style="font-size:90%;">0.70</span></td>
+<td id="S3.T5.5.4.2.6" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.4.2.6.1" class="ltx_text" style="font-size:90%;">0.77</span></td>
+<td id="S3.T5.5.4.2.7" class="ltx_td ltx_align_center"><span id="S3.T5.5.4.2.7.1" class="ltx_text" style="font-size:90%;">0.60</span></td>
+</tr>
+<tr id="S3.T5.5.5.3" class="ltx_tr">
+<td id="S3.T5.5.5.3.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.5.3.1.1" class="ltx_text" style="font-size:90%;">Disk (F)</span></td>
+<td id="S3.T5.5.5.3.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.5.3.2.1" class="ltx_text" style="font-size:90%;">0.04</span></td>
+<td id="S3.T5.5.5.3.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.5.3.3.1" class="ltx_text" style="font-size:90%;">0.08</span></td>
+<td id="S3.T5.5.5.3.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.5.3.4.1" class="ltx_text" style="font-size:90%;">0.07</span></td>
+<td id="S3.T5.5.5.3.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.5.3.5.1" class="ltx_text" style="font-size:90%;">0.14</span></td>
+<td id="S3.T5.5.5.3.6" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.5.3.6.1" class="ltx_text" style="font-size:90%;">0.18</span></td>
+<td id="S3.T5.5.5.3.7" class="ltx_td ltx_align_center"><span id="S3.T5.5.5.3.7.1" class="ltx_text" style="font-size:90%;">0.19</span></td>
+</tr>
+<tr id="S3.T5.5.6.4" class="ltx_tr">
+<td id="S3.T5.5.6.4.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.6.4.1.1" class="ltx_text" style="font-size:90%;">Disk (B)</span></td>
+<td id="S3.T5.5.6.4.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.6.4.2.1" class="ltx_text" style="font-size:90%;">–</span></td>
+<td id="S3.T5.5.6.4.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.6.4.3.1" class="ltx_text" style="font-size:90%;">–</span></td>
+<td id="S3.T5.5.6.4.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.6.4.4.1" class="ltx_text" style="font-size:90%;">–</span></td>
+<td id="S3.T5.5.6.4.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.6.4.5.1" class="ltx_text" style="font-size:90%;">–</span></td>
+<td id="S3.T5.5.6.4.6" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.6.4.6.1" class="ltx_text" style="font-size:90%;">–</span></td>
+<td id="S3.T5.5.6.4.7" class="ltx_td ltx_align_center"><span id="S3.T5.5.6.4.7.1" class="ltx_text" style="font-size:90%;">–</span></td>
+</tr>
+<tr id="S3.T5.5.7.5" class="ltx_tr">
+<td id="S3.T5.5.7.5.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.7.5.1.1" class="ltx_text" style="font-size:90%;">Nest</span></td>
+<td id="S3.T5.5.7.5.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.7.5.2.1" class="ltx_text" style="font-size:90%;">0.11</span></td>
+<td id="S3.T5.5.7.5.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.7.5.3.1" class="ltx_text" style="font-size:90%;">0.29</span></td>
+<td id="S3.T5.5.7.5.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.7.5.4.1" class="ltx_text" style="font-size:90%;">0.47</span></td>
+<td id="S3.T5.5.7.5.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.7.5.5.1" class="ltx_text" style="font-size:90%;">0.48</span></td>
+<td id="S3.T5.5.7.5.6" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.7.5.6.1" class="ltx_text" style="font-size:90%;">0.87</span></td>
+<td id="S3.T5.5.7.5.7" class="ltx_td ltx_align_center"><span id="S3.T5.5.7.5.7.1" class="ltx_text" style="font-size:90%;">0.66</span></td>
+</tr>
+<tr id="S3.T5.5.8.6" class="ltx_tr">
+<td id="S3.T5.5.8.6.1" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.8.6.1.1" class="ltx_text" style="font-size:90%;">Damper</span></td>
+<td id="S3.T5.5.8.6.2" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.8.6.2.1" class="ltx_text" style="font-size:90%;">0.06</span></td>
+<td id="S3.T5.5.8.6.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.8.6.3.1" class="ltx_text" style="font-size:90%;">0.07</span></td>
+<td id="S3.T5.5.8.6.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.8.6.4.1" class="ltx_text" style="font-size:90%;">0.83</span></td>
+<td id="S3.T5.5.8.6.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.8.6.5.1" class="ltx_text" style="font-size:90%;">0.50</span></td>
+<td id="S3.T5.5.8.6.6" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T5.5.8.6.6.1" class="ltx_text" style="font-size:90%;">0.71</span></td>
+<td id="S3.T5.5.8.6.7" class="ltx_td ltx_align_center"><span id="S3.T5.5.8.6.7.1" class="ltx_text" style="font-size:90%;">0.58</span></td>
+</tr>
+<tr id="S3.T5.5.9.7" class="ltx_tr">
+<td id="S3.T5.5.9.7.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T5.5.9.7.1.1" class="ltx_text" style="font-size:90%;">Overall</span></td>
+<td id="S3.T5.5.9.7.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T5.5.9.7.2.1" class="ltx_text" style="font-size:90%;">0.31</span></td>
+<td id="S3.T5.5.9.7.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T5.5.9.7.3.1" class="ltx_text" style="font-size:90%;">0.36</span></td>
+<td id="S3.T5.5.9.7.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T5.5.9.7.4.1" class="ltx_text" style="font-size:90%;">0.57</span></td>
+<td id="S3.T5.5.9.7.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T5.5.9.7.5.1" class="ltx_text" style="font-size:90%;">0.50</span></td>
+<td id="S3.T5.5.9.7.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S3.T5.5.9.7.6.1" class="ltx_text" style="font-size:90%;">0.68</span></td>
+<td id="S3.T5.5.9.7.7" class="ltx_td ltx_align_center ltx_border_b"><span id="S3.T5.5.9.7.7.1" class="ltx_text" style="font-size:90%;">0.57</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.1" class="ltx_p">Figure <a href="#S3.F4" title="Figure 4 ‣ 3.4 Sensitivity analysis ‣ 3 Results ‣ Object detection-based inspection of power line insulators: Incipient fault detection in the low data-regime" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> compares the performance of fine-tuned FRCNN and YOLOv5 models for Task 3 with different fractions of target dataset. We observe that the YOLOv5 model performs much better in the extremely low-data part of the plot. This can potentially be attributed to the data augmentation-heavy pipeline of YOLOv5, which adds significant value with <math id="S3.SS4.p2.1.m1.1" class="ltx_Math" alttext="40\%" display="inline"><semantics id="S3.SS4.p2.1.m1.1a"><mrow id="S3.SS4.p2.1.m1.1.1" xref="S3.SS4.p2.1.m1.1.1.cmml"><mn id="S3.SS4.p2.1.m1.1.1.2" xref="S3.SS4.p2.1.m1.1.1.2.cmml">40</mn><mo id="S3.SS4.p2.1.m1.1.1.1" xref="S3.SS4.p2.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.1.m1.1b"><apply id="S3.SS4.p2.1.m1.1.1.cmml" xref="S3.SS4.p2.1.m1.1.1"><csymbol cd="latexml" id="S3.SS4.p2.1.m1.1.1.1.cmml" xref="S3.SS4.p2.1.m1.1.1.1">percent</csymbol><cn type="integer" id="S3.SS4.p2.1.m1.1.1.2.cmml" xref="S3.SS4.p2.1.m1.1.1.2">40</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.1.m1.1c">40\%</annotation></semantics></math> and smaller fractions of datasets used for training. On the other hand, the FRCNN model has very poor performance in the beginning and performs comparably with the YOLOv5 model when more data is available.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2212.11017/assets/yolo_frcnn_sensitivity_v2.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="275" height="220" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Test performance of FRCNN and YOLOv5 models (Task 3) fine-tuned with different fractions of target dataset</figcaption>
+</figure>
+</section>
+<section id="S3.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.5 </span>Discussion</h3>
+
+<div id="S3.SS5.p1" class="ltx_para">
+<p id="S3.SS5.p1.1" class="ltx_p">In this section we discuss a few insights from the results and outline key aspects that can be addressed in the future. We performed pre-training with a feature-rich reference dataset with four different object detection models for three detection tasks and found that all models performed well on detection tasks with varying levels of difficulty. This suggests that object detection models can be used to detect difficult patterns such as flashed and broken disks compared to those previously studied in the literature. Detecting these incipient faults can prove helpful to system operators for planning maintenance activities. We also found that YOLOv5 performed better in most tasks, with the Faster RCNN model performing comparably for multiple asset detection.</p>
+</div>
+<div id="S3.SS5.p2" class="ltx_para">
+<p id="S3.SS5.p2.1" class="ltx_p">We used the pre-trained model to fine-tune to a small target dataset and examined if transfer learning adds value compared to training from scratch in a low data-regime. The models trained from scratch performed better than those obtained with fine-tuning. On the other hand, Both types of training resulted in poor performance for under-represented classes in terms of both frequency and size of the objects. While the imbalance in frequency is addressed by the focal loss in RetinaNet, the multi-scale detection pipeline of YOLOv5 allows detecting objects of different sizes. Despite these features, these models performed relatively poorly on the under-represented objects.</p>
+</div>
+<div id="S3.SS5.p3" class="ltx_para">
+<p id="S3.SS5.p3.1" class="ltx_p">We performed a sensitivity analysis and found that the impact of amount of data depends on the type of the model. Specifically, using as much data as training from scratch to fine tune a pre-trained model results in an improvement in performance by about 5 points for Faster RCNN, RetinaNet and FCOS models. However, the YOLOv5 models exhibit the opposite behaviour with the target-trained model always performing better than the fine-tuned models. This is of particular importance and suitable for extremely low data applications, where the target dataset has very few samples. We also observed that the augmentation-heavy YOLOv5 model outperforms FRCNN for small fractions of dataset, while the latter catches up with availability of more images. In addition, these results also validate the importance of the reference dataset used for obtaining the pre-trained models.</p>
+</div>
+<div id="S3.SS5.p4" class="ltx_para">
+<p id="S3.SS5.p4.1" class="ltx_p">The above results can further be improved in several ways. First, the reference dataset consists of three different sources, and therefore has incomplete labels. The IDID has labels for different types of disks, while BND and STN-PLAD do not have labels for any disks. As a result, the pre-trained model learns to identify disks for the former dataset, and at the same time not to predict the disks of the latter two datasets. This can be addressed by completing the labels of all the images in the reference dataset. Second, the target dataset does not have any broken disks, and as a result the effect of different training methods on the mAP of detecting them has not been studied. This can be pursued in the future. Third, no architectural modifications have been made to the object detection models. This can be explored further to identify models that better capture the objects at different scales occurring in different frequencies. Finally, the use of state-of-the-art generative models for augmenting the target dataset in a low data-regime, and incorporating these synthetic images in the training and fine-tuning can be explored.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Conclusion</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">In this article, we present the results of object detection-based inspection of insulators from aerial images. We identify flashed and broken disks as important types of incipient faults in insulators, that are difficult to detect compared to the faults considered in the literature (missing caps). We collect and curate a reference dataset from three different repositories that exhibit rich features of the objects of interest, as well as variations in the background. We train four object detection models that are able to detect these incipient faults with very good accuracy.</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">We perform three inspection tasks with four types of object detection models trained from scratch on a small target dataset, as well as pre-trained on the reference dataset followed by fine-tuning on the target dataset. Our experiments reveal that the YOLOv5 model outperforms the Faster RCNN, RetinaNet and FCOS models. Sensitivity analysis of the amount of data used for fine-tuning suggests that YOLOv5 derives its better performance from a data augmentation-heavy pipeline, which is important in the low data-regime. We also identified that the impact of dataset size for fine-tuning depends on the type of object detection model used. The findings of the article highlight the value of using pre-training in low data-regimes, identify frequency and size imbalance as the major causes of poor performance, and point out potential directions for future research to improve the state-of-the-art in object detection-based insulator inspection in the low data-regime.</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">Acknowledgements</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">This work was supported by the Swiss Federal Office of Energy: “IMAGE - Intelligent Maintenance of Transmission Grid Assets” (Project Nr. SI/502073-01). The authors would additionally like to thank the student assistants, Ms. Manon Prairie and Mr. Tyler Anderson for generating the ground truth labels for the target dataset.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+M. M. Werneck, D. M. dos Santos, C. C. de Carvalho, F. V. B. de Nazaré,
+R. C. d. S. B. Allil, Detection and monitoring of leakage currents in power
+transmission insulators, IEEE sensors journal 15 (3) (2014) 1338–1346.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+J. Li, W. Sima, C. Sun, S. A. Sebo, Use of leakage currents of insulators to
+determine the stage characteristics of the flashover process and
+contamination level prediction, IEEE Transactions on Dielectrics and
+Electrical Insulation 17 (2) (2010) 490–501.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/TDEI.2010.5448105" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/TDEI.2010.5448105</span></a>.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+I. Ramirez, R. Hernandez, G. Montoya, Measurement of leakage current for
+monitoring the performance of outdoor insulators in polluted environments,
+IEEE Electrical Insulation Magazine 28 (4) (2012) 29–34.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.1109/MEI.2012.6232007" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.1109/MEI.2012.6232007</span></a>.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+J. Li, C. Sun, W. Sima, Q. Yang, Stage pre-warning based on leakage current
+characteristics before contamination flashover of porcelain and glass
+insulators, IET Generation, Transmission &amp; Distribution 3 (2009)
+605–615(10).
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+B. Gjorgiev, L. Das, S. Merkel, M. Rohrer, E. Auger, G. Sansavini,
+Simulation-driven deep learning for locating faulty insulators in a power
+line, Reliability Engineering &amp; System Safety 231 (2023) 108989.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/https://doi.org/10.1016/j.ress.2022.108989" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:https://doi.org/10.1016/j.ress.2022.108989</span></a>.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+L. Junfeng, L. Min, W. Qinruo, A novel insulator detection method for aerial
+images, in: Proceedings of the 9th International Conference on Computer and
+Automation Engineering, 2017, pp. 141–144.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+X. Liu, H. Jiang, J. Chen, J. Chen, S. Zhuang, X. Miao, Insulator detection in
+aerial images based on faster regions with convolutional neural network, in:
+2018 IEEE 14th International Conference on Control and Automation (ICCA),
+IEEE, 2018, pp. 1082–1086.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+H. Jiang, X. Qiu, J. Chen, X. Liu, X. Miao, S. Zhuang, Insulator fault
+detection in aerial images based on ensemble learning with multi-level
+perception, IEEE Access 7 (2019) 61797–61810.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+J. Han, Z. Yang, Q. Zhang, C. Chen, H. Li, S. Lai, G. Hu, C. Xu, H. Xu,
+D. Wang, et al., A method of insulator faults detection in aerial images for
+high-voltage transmission lines inspection, Applied Sciences 9 (10) (2019)
+2009.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+C. Liu, Y. Wu, J. Liu, Z. Sun, H. Xu, Insulator faults detection in aerial
+images from high-voltage transmission lines based on deep learning model,
+Applied Sciences 11 (10) (2021) 4647.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+C. Liu, Y. Wu, J. Liu, Z. Sun, Improved yolov3 network for insulator detection
+in aerial images with diverse background interference, Electronics 10 (7)
+(2021) 771.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+H. Xia, B. Yang, Y. Li, B. Wang, An improved centernet model for insulator
+defect detection using aerial imagery, Sensors 22 (8) (2022) 2850.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+J. Han, Z. Yang, H. Xu, G. Hu, C. Zhang, H. Li, S. Lai, H. Zeng, Search like an
+eagle: A cascaded model for insulator missing faults detection in aerial
+images, Energies 13 (3) (2020) 713.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+C. Shi, Y. Huang, Cap-count guided weakly supervised insulator cap missing
+detection in aerial images, IEEE Sensors Journal 21 (1) (2020) 685–691.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+F. Li, J. Xin, T. Chen, L. Xin, Z. Wei, Y. Li, Y. Zhang, H. Jin, Y. Tu,
+X. Zhou, et al., An automatic detection method of bird’s nest on
+transmission line tower based on faster_rcnn, IEEE Access 8 (2020)
+164214–164221.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+M. Chen, C. Xu, Bird’s nest detection method on electricity transmission line
+tower based on deeply convolutional neural networks, in: 2020 IEEE 4th
+Information Technology, Networking, Electronic and Automation Control
+Conference (ITNEC), Vol. 1, IEEE, 2020, pp. 2309–2312.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+S. Rong, L. He, A joint faster rcnn and stereovision algorithm for vegetation
+encroachment detection in power line corridors, in: 2020 IEEE Power &amp; Energy
+Society General Meeting (PESGM), IEEE, 2020, pp. 1–5.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, L. Fei-Fei, Imagenet: A
+large-scale hierarchical image database, in: 2009 IEEE conference on computer
+vision and pattern recognition, Ieee, 2009, pp. 248–255.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan,
+P. Dollár, C. L. Zitnick, Microsoft coco: Common objects in context, in:
+European conference on computer vision, Springer, 2014, pp. 740–755.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+P. Kulkarni, T. Shaw, D. Lewis, Insulator defect image dataset - version 1.2:
+Documentation EPRI, Palo Alto, CA: 2020. 3002017949.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+D. Lewis, P. Kulkarni, <a target="_blank" href="https://dx.doi.org/10.21227/vkdw-x769" title="" class="ltx_ref ltx_href">Insulator
+defect detection</a> (2021).
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.21227/vkdw-x769" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.21227/vkdw-x769</span></a>.
+
+<br class="ltx_break">URL <a target="_blank" href="https://dx.doi.org/10.21227/vkdw-x769" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://dx.doi.org/10.21227/vkdw-x769</a>
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+J. Li, D. Yan, K. Luan, Z. Li, H. Liang, Deep learning-based bird’s nest
+detection on transmission lines using uav imagery, Applied Sciences 10 (18)
+(2020) 6147.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+J. Li, D. Yan, K. Luan, Z. Li, H. Liang,
+<a target="_blank" href="https://doi.org/10.5281/zenodo.4015912" title="" class="ltx_ref ltx_href">Supplementary Files: Deep
+Learning-Based Bird’s Nest Detection on Transmission Lines Using UAV
+Imagery</a> (Sep. 2020).
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.5281/zenodo.4015912" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.5281/zenodo.4015912</span></a>.
+
+<br class="ltx_break">URL <a target="_blank" href="https://doi.org/10.5281/zenodo.4015912" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://doi.org/10.5281/zenodo.4015912</a>
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+A. L. B. Vieira-e Silva, H. de Castro Felix, T. de Menezes Chaves, F. P. M.
+Simões, V. Teichrieb, M. M. dos Santos, H. da Cunha Santiago, V. A. C.
+Sgotti, H. B. D. T. L. Neto, Stn plad: A dataset for multi-size power line
+assets detection in high-resolution uav images, in: 2021 34th SIBGRAPI
+Conference on Graphics, Patterns and Images (SIBGRAPI), IEEE, 2021, pp.
+215–222.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+MATLAB, 9.10.0.1851785 (R2021a), The MathWorks Inc., Natick, Massachusetts,
+2021.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+L. Studio, <a target="_blank" href="https://github.com/heartexlabs/labelImg" title="" class="ltx_ref ltx_href">LabelImg</a>.
+
+<br class="ltx_break">URL <a target="_blank" href="https://github.com/heartexlabs/labelImg" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/heartexlabs/labelImg</a>
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+M. Lan, Y. Zhang, L. Zhang, B. Du, Defect detection from uav images based on
+region-based cnns, in: 2018 IEEE International Conference on Data Mining
+Workshops (ICDMW), IEEE, 2018, pp. 385–390.
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+L. Ma, C. Xu, G. Zuo, B. Bo, F. Tao, Detection method of insulator based on
+faster r-cnn, in: 2017 IEEE 7th Annual International Conference on CYBER
+Technology in Automation, Control, and Intelligent Systems (CYBER), IEEE,
+2017, pp. 1410–1414.
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+Z. Tian, C. Shen, H. Chen, T. He, Fcos: Fully convolutional one-stage object
+detection, in: Proceedings of the IEEE/CVF international conference on
+computer vision, 2019, pp. 9627–9636.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+G. Jocher, A. Chaurasia, A. Stoken, J. Borovec, NanoCode012, Y. Kwon, TaoXie,
+J. Fang, imyhxy, K. Michael, Lorna, A. V, D. Montes, J. Nadar, Laughing,
+tkianai, yxNONG, P. Skalski, Z. Wang, A. Hogan, C. Fati, L. Mammana,
+AlexWang1900, D. Patel, D. Yiwei, F. You, J. Hajek, L. Diaconu, M. T. Minh,
+<a target="_blank" href="https://doi.org/10.5281/zenodo.6222936" title="" class="ltx_ref ltx_href">ultralytics/yolov5: v6.1 -
+TensorRT, TensorFlow Edge TPU and OpenVINO Export and Inference</a> (Feb.
+2022).
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://doi.org/10.5281/zenodo.6222936" title="" class="ltx_ref ltx_href"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter">doi:10.5281/zenodo.6222936</span></a>.
+
+<br class="ltx_break">URL <a target="_blank" href="https://doi.org/10.5281/zenodo.6222936" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://doi.org/10.5281/zenodo.6222936</a>
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2212.11016" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2212.11017" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2212.11017">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2212.11017" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2212.11018" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Fri Mar  1 10:55:22 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

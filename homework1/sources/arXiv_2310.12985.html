@@ -1,0 +1,758 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2310.12985] Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in Spiking Neural Networks</title><meta property="og:description" content="Spiking Neural Networks (SNNs) are a biologically plausible neural network model with significant advantages in both event-driven processing and spatio-temporal information processing, rendering SNNs an appealing choic…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in Spiking Neural Networks">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in Spiking Neural Networks">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2310.12985">
+
+<!--Generated on Tue Feb 27 23:38:40 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in
+Spiking Neural Networks</h1>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.1" class="ltx_p">Spiking Neural Networks (SNNs) are a biologically plausible neural network model with significant advantages in both event-driven processing and spatio-temporal information processing, rendering SNNs an appealing choice for energy-efficient object detection. However, the non-differentiability of the biological neuronal dynamics model presents a challenge during the training of SNNs. Furthermore, a suitable decoding strategy for object detection in SNNs is currently lacking. In this study, we introduce the Current Mean Decoding (CMD) method, which solves the regression problem to facilitate the training of deep SNNs for object detection tasks. Based on the gradient surrogate and CMD, we propose the SNN-YOLOv3 model for object detection. Our experiments
+<br class="ltx_break">demonstrate that SNN-YOLOv3 achieves a remarkable performance with an mAP of 61.87% on the PASCAL VOC dataset, requiring only 6 time steps. Compared to Spiking-YOLO, we have managed to increase mAP by nearly 10% while reducing energy consumption by two orders of magnit-
+
+<br class="ltx_break">ude<sup id="id1.1.1" class="ltx_sup">1</sup>.</p>
+</div>
+<div id="p1" class="ltx_para">
+<p id="p1.1" class="ltx_p"><span id="p1.1.1" class="ltx_text ltx_font_bold ltx_font_italic">Index Terms<span id="p1.1.1.1" class="ltx_text ltx_font_upright">— </span></span>
+Energy-Efficient, Object Detection, Spiking Neural Networks, Surrogate Gradient</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">As a third-generation artificial neural network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, Spiking Neural Networks (SNNs) are promising for implementing low-power artificial intelligence algorithms using event-driven neuromorphic hardware <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. Based on biological plausibility <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, SNNs emulate information processing mechanisms observed in the biological neural system, where computation and information transfer between neurons occur through discrete binary events <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>. Despite the attractive energy efficiency of spiking neural networks, training SNNs remains a significant challenge. One of the primary reasons for this challenge is the complexity of the dynamics model and the non-differentiability of spiking neurons, typically modeled as IF or LIF neurons, which makes performing gradient descent-based backpropagation difficult <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2310.12985/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="511" height="207" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S1.F1.2.1.1" class="ltx_text ltx_font_bold">Fig. 1</span>: </span>Traditional rate decoding and proposed current mean decoding (CMD) in SNN-YOLOv3. The left part shows that the input of the image is coded by a direct encoding way and the activation layer in the network is replaced with IF neurons. The last layer is the decoding layer, and the right part shows the different decoding methods used in the decoding layer.</figcaption>
+</figure>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Several researchers have proposed training SNNs using ANN-to-SNN conversion method <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, in which ANNs (Artificial Neural Networks) with ReLU activation function are initially trained via gradient descent and then converted into SNNs with integrate-and-fire neurons by applying appropriate threshold balancing techniques <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>.
+However, SNNs obtained through ANN-to-SNN methods generally occur 2000-3000 time steps to achieve acceptable accuracy. Here, a time step denotes the time unit for the forward propagation of a single layer, effectively represents network latency <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">To reduce the latency, the gradient surrogate-based backpropagation algorithm <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> has been introduced for end-to-end gradient descent learning on spiking train. Within these algorithms, the non-differentiable neuron model completes the backpropagation process by specifying a surrogate gradient as a continuous approximation of the actual gradient <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>. Training SNNs with gradient surrogate substantially decreases the inference latency by nearly 100x (e.g., only requiring fewer than 30 time steps). Despite the appealing property of SNNs, previous research has mainly focused on less complex tasks (image classification) and small-scale datasets (MNIST and CIFAR10), with relatively shallow network structures (&lt;30 layers) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">In this study, we investigate more complex machine learning problems (object detection) in deep SNNs, using the gradient surrogate approach. Object detection is considered a demanding and challenging task in computer vision, aiming to recognize multiple objects and calculate the exact coordinates of the bounding box in images or videos. Unlike image classification tasks, when predicting the output values of a neural network, object detection requires predicting continuous numerical or real outputs, rather than just selecting the category with the highest probability (using the argmax function), as is typically done in image classification tasks. Our contributions can be summarized as follows:</p>
+</div>
+<div id="S1.p5" class="ltx_para ltx_noindent">
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">We present the first SNN model that implement object detection using surrogate gradient to achieve the state-of-the-art performance (61.87% mAP) on the non-trivial dataset of PASCAL VOC.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;padding-top:5.0pt;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">We introduce the Current Mean Decoding (CMD) method, which solve the regression problem to facilitate the training of deep SNNs for object detection tasks.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>methods</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Surrogate gradient for spiking neuron models </h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Unlike ANNs, SNNs utilize spike trains for computation and information transmission among neurons. The dynamics of the classic IF neuron model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> can be described as follows:</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<table id="S2.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E1.m1.8" class="ltx_Math" alttext="V_{mem,j}^{l}\ [t]=V_{mem,j}^{l}[t-1]+I_{j}^{l}[t]-V_{th}s_{j}^{l}[t]" display="block"><semantics id="S2.E1.m1.8a"><mrow id="S2.E1.m1.8.8" xref="S2.E1.m1.8.8.cmml"><mrow id="S2.E1.m1.8.8.3" xref="S2.E1.m1.8.8.3.cmml"><msubsup id="S2.E1.m1.8.8.3.2" xref="S2.E1.m1.8.8.3.2.cmml"><mi id="S2.E1.m1.8.8.3.2.2.2" xref="S2.E1.m1.8.8.3.2.2.2.cmml">V</mi><mrow id="S2.E1.m1.2.2.2.2" xref="S2.E1.m1.2.2.2.3.cmml"><mrow id="S2.E1.m1.2.2.2.2.1" xref="S2.E1.m1.2.2.2.2.1.cmml"><mi id="S2.E1.m1.2.2.2.2.1.2" xref="S2.E1.m1.2.2.2.2.1.2.cmml">m</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1" xref="S2.E1.m1.2.2.2.2.1.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.3" xref="S2.E1.m1.2.2.2.2.1.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.2.2.2.2.1.1a" xref="S2.E1.m1.2.2.2.2.1.1.cmml">​</mo><mi id="S2.E1.m1.2.2.2.2.1.4" xref="S2.E1.m1.2.2.2.2.1.4.cmml">m</mi></mrow><mo id="S2.E1.m1.2.2.2.2.2" xref="S2.E1.m1.2.2.2.3.cmml">,</mo><mi id="S2.E1.m1.1.1.1.1" xref="S2.E1.m1.1.1.1.1.cmml">j</mi></mrow><mi id="S2.E1.m1.8.8.3.2.3" xref="S2.E1.m1.8.8.3.2.3.cmml">l</mi></msubsup><mo lspace="0.500em" rspace="0em" id="S2.E1.m1.8.8.3.1" xref="S2.E1.m1.8.8.3.1.cmml">​</mo><mrow id="S2.E1.m1.8.8.3.3.2" xref="S2.E1.m1.8.8.3.3.1.cmml"><mo stretchy="false" id="S2.E1.m1.8.8.3.3.2.1" xref="S2.E1.m1.8.8.3.3.1.1.cmml">[</mo><mi id="S2.E1.m1.5.5" xref="S2.E1.m1.5.5.cmml">t</mi><mo stretchy="false" id="S2.E1.m1.8.8.3.3.2.2" xref="S2.E1.m1.8.8.3.3.1.1.cmml">]</mo></mrow></mrow><mo id="S2.E1.m1.8.8.2" xref="S2.E1.m1.8.8.2.cmml">=</mo><mrow id="S2.E1.m1.8.8.1" xref="S2.E1.m1.8.8.1.cmml"><mrow id="S2.E1.m1.8.8.1.1" xref="S2.E1.m1.8.8.1.1.cmml"><mrow id="S2.E1.m1.8.8.1.1.1" xref="S2.E1.m1.8.8.1.1.1.cmml"><msubsup id="S2.E1.m1.8.8.1.1.1.3" xref="S2.E1.m1.8.8.1.1.1.3.cmml"><mi id="S2.E1.m1.8.8.1.1.1.3.2.2" xref="S2.E1.m1.8.8.1.1.1.3.2.2.cmml">V</mi><mrow id="S2.E1.m1.4.4.2.2" xref="S2.E1.m1.4.4.2.3.cmml"><mrow id="S2.E1.m1.4.4.2.2.1" xref="S2.E1.m1.4.4.2.2.1.cmml"><mi id="S2.E1.m1.4.4.2.2.1.2" xref="S2.E1.m1.4.4.2.2.1.2.cmml">m</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.4.4.2.2.1.1" xref="S2.E1.m1.4.4.2.2.1.1.cmml">​</mo><mi id="S2.E1.m1.4.4.2.2.1.3" xref="S2.E1.m1.4.4.2.2.1.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.4.4.2.2.1.1a" xref="S2.E1.m1.4.4.2.2.1.1.cmml">​</mo><mi id="S2.E1.m1.4.4.2.2.1.4" xref="S2.E1.m1.4.4.2.2.1.4.cmml">m</mi></mrow><mo id="S2.E1.m1.4.4.2.2.2" xref="S2.E1.m1.4.4.2.3.cmml">,</mo><mi id="S2.E1.m1.3.3.1.1" xref="S2.E1.m1.3.3.1.1.cmml">j</mi></mrow><mi id="S2.E1.m1.8.8.1.1.1.3.3" xref="S2.E1.m1.8.8.1.1.1.3.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.E1.m1.8.8.1.1.1.2" xref="S2.E1.m1.8.8.1.1.1.2.cmml">​</mo><mrow id="S2.E1.m1.8.8.1.1.1.1.1" xref="S2.E1.m1.8.8.1.1.1.1.2.cmml"><mo stretchy="false" id="S2.E1.m1.8.8.1.1.1.1.1.2" xref="S2.E1.m1.8.8.1.1.1.1.2.1.cmml">[</mo><mrow id="S2.E1.m1.8.8.1.1.1.1.1.1" xref="S2.E1.m1.8.8.1.1.1.1.1.1.cmml"><mi id="S2.E1.m1.8.8.1.1.1.1.1.1.2" xref="S2.E1.m1.8.8.1.1.1.1.1.1.2.cmml">t</mi><mo id="S2.E1.m1.8.8.1.1.1.1.1.1.1" xref="S2.E1.m1.8.8.1.1.1.1.1.1.1.cmml">−</mo><mn id="S2.E1.m1.8.8.1.1.1.1.1.1.3" xref="S2.E1.m1.8.8.1.1.1.1.1.1.3.cmml">1</mn></mrow><mo stretchy="false" id="S2.E1.m1.8.8.1.1.1.1.1.3" xref="S2.E1.m1.8.8.1.1.1.1.2.1.cmml">]</mo></mrow></mrow><mo id="S2.E1.m1.8.8.1.1.2" xref="S2.E1.m1.8.8.1.1.2.cmml">+</mo><mrow id="S2.E1.m1.8.8.1.1.3" xref="S2.E1.m1.8.8.1.1.3.cmml"><msubsup id="S2.E1.m1.8.8.1.1.3.2" xref="S2.E1.m1.8.8.1.1.3.2.cmml"><mi id="S2.E1.m1.8.8.1.1.3.2.2.2" xref="S2.E1.m1.8.8.1.1.3.2.2.2.cmml">I</mi><mi id="S2.E1.m1.8.8.1.1.3.2.2.3" xref="S2.E1.m1.8.8.1.1.3.2.2.3.cmml">j</mi><mi id="S2.E1.m1.8.8.1.1.3.2.3" xref="S2.E1.m1.8.8.1.1.3.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.E1.m1.8.8.1.1.3.1" xref="S2.E1.m1.8.8.1.1.3.1.cmml">​</mo><mrow id="S2.E1.m1.8.8.1.1.3.3.2" xref="S2.E1.m1.8.8.1.1.3.3.1.cmml"><mo stretchy="false" id="S2.E1.m1.8.8.1.1.3.3.2.1" xref="S2.E1.m1.8.8.1.1.3.3.1.1.cmml">[</mo><mi id="S2.E1.m1.6.6" xref="S2.E1.m1.6.6.cmml">t</mi><mo stretchy="false" id="S2.E1.m1.8.8.1.1.3.3.2.2" xref="S2.E1.m1.8.8.1.1.3.3.1.1.cmml">]</mo></mrow></mrow></mrow><mo id="S2.E1.m1.8.8.1.2" xref="S2.E1.m1.8.8.1.2.cmml">−</mo><mrow id="S2.E1.m1.8.8.1.3" xref="S2.E1.m1.8.8.1.3.cmml"><msub id="S2.E1.m1.8.8.1.3.2" xref="S2.E1.m1.8.8.1.3.2.cmml"><mi id="S2.E1.m1.8.8.1.3.2.2" xref="S2.E1.m1.8.8.1.3.2.2.cmml">V</mi><mrow id="S2.E1.m1.8.8.1.3.2.3" xref="S2.E1.m1.8.8.1.3.2.3.cmml"><mi id="S2.E1.m1.8.8.1.3.2.3.2" xref="S2.E1.m1.8.8.1.3.2.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.8.8.1.3.2.3.1" xref="S2.E1.m1.8.8.1.3.2.3.1.cmml">​</mo><mi id="S2.E1.m1.8.8.1.3.2.3.3" xref="S2.E1.m1.8.8.1.3.2.3.3.cmml">h</mi></mrow></msub><mo lspace="0em" rspace="0em" id="S2.E1.m1.8.8.1.3.1" xref="S2.E1.m1.8.8.1.3.1.cmml">​</mo><msubsup id="S2.E1.m1.8.8.1.3.3" xref="S2.E1.m1.8.8.1.3.3.cmml"><mi id="S2.E1.m1.8.8.1.3.3.2.2" xref="S2.E1.m1.8.8.1.3.3.2.2.cmml">s</mi><mi id="S2.E1.m1.8.8.1.3.3.2.3" xref="S2.E1.m1.8.8.1.3.3.2.3.cmml">j</mi><mi id="S2.E1.m1.8.8.1.3.3.3" xref="S2.E1.m1.8.8.1.3.3.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.E1.m1.8.8.1.3.1a" xref="S2.E1.m1.8.8.1.3.1.cmml">​</mo><mrow id="S2.E1.m1.8.8.1.3.4.2" xref="S2.E1.m1.8.8.1.3.4.1.cmml"><mo stretchy="false" id="S2.E1.m1.8.8.1.3.4.2.1" xref="S2.E1.m1.8.8.1.3.4.1.1.cmml">[</mo><mi id="S2.E1.m1.7.7" xref="S2.E1.m1.7.7.cmml">t</mi><mo stretchy="false" id="S2.E1.m1.8.8.1.3.4.2.2" xref="S2.E1.m1.8.8.1.3.4.1.1.cmml">]</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E1.m1.8b"><apply id="S2.E1.m1.8.8.cmml" xref="S2.E1.m1.8.8"><eq id="S2.E1.m1.8.8.2.cmml" xref="S2.E1.m1.8.8.2"></eq><apply id="S2.E1.m1.8.8.3.cmml" xref="S2.E1.m1.8.8.3"><times id="S2.E1.m1.8.8.3.1.cmml" xref="S2.E1.m1.8.8.3.1"></times><apply id="S2.E1.m1.8.8.3.2.cmml" xref="S2.E1.m1.8.8.3.2"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.3.2.1.cmml" xref="S2.E1.m1.8.8.3.2">superscript</csymbol><apply id="S2.E1.m1.8.8.3.2.2.cmml" xref="S2.E1.m1.8.8.3.2"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.3.2.2.1.cmml" xref="S2.E1.m1.8.8.3.2">subscript</csymbol><ci id="S2.E1.m1.8.8.3.2.2.2.cmml" xref="S2.E1.m1.8.8.3.2.2.2">𝑉</ci><list id="S2.E1.m1.2.2.2.3.cmml" xref="S2.E1.m1.2.2.2.2"><apply id="S2.E1.m1.2.2.2.2.1.cmml" xref="S2.E1.m1.2.2.2.2.1"><times id="S2.E1.m1.2.2.2.2.1.1.cmml" xref="S2.E1.m1.2.2.2.2.1.1"></times><ci id="S2.E1.m1.2.2.2.2.1.2.cmml" xref="S2.E1.m1.2.2.2.2.1.2">𝑚</ci><ci id="S2.E1.m1.2.2.2.2.1.3.cmml" xref="S2.E1.m1.2.2.2.2.1.3">𝑒</ci><ci id="S2.E1.m1.2.2.2.2.1.4.cmml" xref="S2.E1.m1.2.2.2.2.1.4">𝑚</ci></apply><ci id="S2.E1.m1.1.1.1.1.cmml" xref="S2.E1.m1.1.1.1.1">𝑗</ci></list></apply><ci id="S2.E1.m1.8.8.3.2.3.cmml" xref="S2.E1.m1.8.8.3.2.3">𝑙</ci></apply><apply id="S2.E1.m1.8.8.3.3.1.cmml" xref="S2.E1.m1.8.8.3.3.2"><csymbol cd="latexml" id="S2.E1.m1.8.8.3.3.1.1.cmml" xref="S2.E1.m1.8.8.3.3.2.1">delimited-[]</csymbol><ci id="S2.E1.m1.5.5.cmml" xref="S2.E1.m1.5.5">𝑡</ci></apply></apply><apply id="S2.E1.m1.8.8.1.cmml" xref="S2.E1.m1.8.8.1"><minus id="S2.E1.m1.8.8.1.2.cmml" xref="S2.E1.m1.8.8.1.2"></minus><apply id="S2.E1.m1.8.8.1.1.cmml" xref="S2.E1.m1.8.8.1.1"><plus id="S2.E1.m1.8.8.1.1.2.cmml" xref="S2.E1.m1.8.8.1.1.2"></plus><apply id="S2.E1.m1.8.8.1.1.1.cmml" xref="S2.E1.m1.8.8.1.1.1"><times id="S2.E1.m1.8.8.1.1.1.2.cmml" xref="S2.E1.m1.8.8.1.1.1.2"></times><apply id="S2.E1.m1.8.8.1.1.1.3.cmml" xref="S2.E1.m1.8.8.1.1.1.3"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.1.1.1.3.1.cmml" xref="S2.E1.m1.8.8.1.1.1.3">superscript</csymbol><apply id="S2.E1.m1.8.8.1.1.1.3.2.cmml" xref="S2.E1.m1.8.8.1.1.1.3"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.1.1.1.3.2.1.cmml" xref="S2.E1.m1.8.8.1.1.1.3">subscript</csymbol><ci id="S2.E1.m1.8.8.1.1.1.3.2.2.cmml" xref="S2.E1.m1.8.8.1.1.1.3.2.2">𝑉</ci><list id="S2.E1.m1.4.4.2.3.cmml" xref="S2.E1.m1.4.4.2.2"><apply id="S2.E1.m1.4.4.2.2.1.cmml" xref="S2.E1.m1.4.4.2.2.1"><times id="S2.E1.m1.4.4.2.2.1.1.cmml" xref="S2.E1.m1.4.4.2.2.1.1"></times><ci id="S2.E1.m1.4.4.2.2.1.2.cmml" xref="S2.E1.m1.4.4.2.2.1.2">𝑚</ci><ci id="S2.E1.m1.4.4.2.2.1.3.cmml" xref="S2.E1.m1.4.4.2.2.1.3">𝑒</ci><ci id="S2.E1.m1.4.4.2.2.1.4.cmml" xref="S2.E1.m1.4.4.2.2.1.4">𝑚</ci></apply><ci id="S2.E1.m1.3.3.1.1.cmml" xref="S2.E1.m1.3.3.1.1">𝑗</ci></list></apply><ci id="S2.E1.m1.8.8.1.1.1.3.3.cmml" xref="S2.E1.m1.8.8.1.1.1.3.3">𝑙</ci></apply><apply id="S2.E1.m1.8.8.1.1.1.1.2.cmml" xref="S2.E1.m1.8.8.1.1.1.1.1"><csymbol cd="latexml" id="S2.E1.m1.8.8.1.1.1.1.2.1.cmml" xref="S2.E1.m1.8.8.1.1.1.1.1.2">delimited-[]</csymbol><apply id="S2.E1.m1.8.8.1.1.1.1.1.1.cmml" xref="S2.E1.m1.8.8.1.1.1.1.1.1"><minus id="S2.E1.m1.8.8.1.1.1.1.1.1.1.cmml" xref="S2.E1.m1.8.8.1.1.1.1.1.1.1"></minus><ci id="S2.E1.m1.8.8.1.1.1.1.1.1.2.cmml" xref="S2.E1.m1.8.8.1.1.1.1.1.1.2">𝑡</ci><cn type="integer" id="S2.E1.m1.8.8.1.1.1.1.1.1.3.cmml" xref="S2.E1.m1.8.8.1.1.1.1.1.1.3">1</cn></apply></apply></apply><apply id="S2.E1.m1.8.8.1.1.3.cmml" xref="S2.E1.m1.8.8.1.1.3"><times id="S2.E1.m1.8.8.1.1.3.1.cmml" xref="S2.E1.m1.8.8.1.1.3.1"></times><apply id="S2.E1.m1.8.8.1.1.3.2.cmml" xref="S2.E1.m1.8.8.1.1.3.2"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.1.1.3.2.1.cmml" xref="S2.E1.m1.8.8.1.1.3.2">superscript</csymbol><apply id="S2.E1.m1.8.8.1.1.3.2.2.cmml" xref="S2.E1.m1.8.8.1.1.3.2"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.1.1.3.2.2.1.cmml" xref="S2.E1.m1.8.8.1.1.3.2">subscript</csymbol><ci id="S2.E1.m1.8.8.1.1.3.2.2.2.cmml" xref="S2.E1.m1.8.8.1.1.3.2.2.2">𝐼</ci><ci id="S2.E1.m1.8.8.1.1.3.2.2.3.cmml" xref="S2.E1.m1.8.8.1.1.3.2.2.3">𝑗</ci></apply><ci id="S2.E1.m1.8.8.1.1.3.2.3.cmml" xref="S2.E1.m1.8.8.1.1.3.2.3">𝑙</ci></apply><apply id="S2.E1.m1.8.8.1.1.3.3.1.cmml" xref="S2.E1.m1.8.8.1.1.3.3.2"><csymbol cd="latexml" id="S2.E1.m1.8.8.1.1.3.3.1.1.cmml" xref="S2.E1.m1.8.8.1.1.3.3.2.1">delimited-[]</csymbol><ci id="S2.E1.m1.6.6.cmml" xref="S2.E1.m1.6.6">𝑡</ci></apply></apply></apply><apply id="S2.E1.m1.8.8.1.3.cmml" xref="S2.E1.m1.8.8.1.3"><times id="S2.E1.m1.8.8.1.3.1.cmml" xref="S2.E1.m1.8.8.1.3.1"></times><apply id="S2.E1.m1.8.8.1.3.2.cmml" xref="S2.E1.m1.8.8.1.3.2"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.1.3.2.1.cmml" xref="S2.E1.m1.8.8.1.3.2">subscript</csymbol><ci id="S2.E1.m1.8.8.1.3.2.2.cmml" xref="S2.E1.m1.8.8.1.3.2.2">𝑉</ci><apply id="S2.E1.m1.8.8.1.3.2.3.cmml" xref="S2.E1.m1.8.8.1.3.2.3"><times id="S2.E1.m1.8.8.1.3.2.3.1.cmml" xref="S2.E1.m1.8.8.1.3.2.3.1"></times><ci id="S2.E1.m1.8.8.1.3.2.3.2.cmml" xref="S2.E1.m1.8.8.1.3.2.3.2">𝑡</ci><ci id="S2.E1.m1.8.8.1.3.2.3.3.cmml" xref="S2.E1.m1.8.8.1.3.2.3.3">ℎ</ci></apply></apply><apply id="S2.E1.m1.8.8.1.3.3.cmml" xref="S2.E1.m1.8.8.1.3.3"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.1.3.3.1.cmml" xref="S2.E1.m1.8.8.1.3.3">superscript</csymbol><apply id="S2.E1.m1.8.8.1.3.3.2.cmml" xref="S2.E1.m1.8.8.1.3.3"><csymbol cd="ambiguous" id="S2.E1.m1.8.8.1.3.3.2.1.cmml" xref="S2.E1.m1.8.8.1.3.3">subscript</csymbol><ci id="S2.E1.m1.8.8.1.3.3.2.2.cmml" xref="S2.E1.m1.8.8.1.3.3.2.2">𝑠</ci><ci id="S2.E1.m1.8.8.1.3.3.2.3.cmml" xref="S2.E1.m1.8.8.1.3.3.2.3">𝑗</ci></apply><ci id="S2.E1.m1.8.8.1.3.3.3.cmml" xref="S2.E1.m1.8.8.1.3.3.3">𝑙</ci></apply><apply id="S2.E1.m1.8.8.1.3.4.1.cmml" xref="S2.E1.m1.8.8.1.3.4.2"><csymbol cd="latexml" id="S2.E1.m1.8.8.1.3.4.1.1.cmml" xref="S2.E1.m1.8.8.1.3.4.2.1">delimited-[]</csymbol><ci id="S2.E1.m1.7.7.cmml" xref="S2.E1.m1.7.7">𝑡</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E1.m1.8c">V_{mem,j}^{l}\ [t]=V_{mem,j}^{l}[t-1]+I_{j}^{l}[t]-V_{th}s_{j}^{l}[t]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S2.SS1.p2.4" class="ltx_p">where <math id="S2.SS1.p2.1.m1.1" class="ltx_Math" alttext="s_{j}^{l}[t]" display="inline"><semantics id="S2.SS1.p2.1.m1.1a"><mrow id="S2.SS1.p2.1.m1.1.2" xref="S2.SS1.p2.1.m1.1.2.cmml"><msubsup id="S2.SS1.p2.1.m1.1.2.2" xref="S2.SS1.p2.1.m1.1.2.2.cmml"><mi id="S2.SS1.p2.1.m1.1.2.2.2.2" xref="S2.SS1.p2.1.m1.1.2.2.2.2.cmml">s</mi><mi id="S2.SS1.p2.1.m1.1.2.2.2.3" xref="S2.SS1.p2.1.m1.1.2.2.2.3.cmml">j</mi><mi id="S2.SS1.p2.1.m1.1.2.2.3" xref="S2.SS1.p2.1.m1.1.2.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.SS1.p2.1.m1.1.2.1" xref="S2.SS1.p2.1.m1.1.2.1.cmml">​</mo><mrow id="S2.SS1.p2.1.m1.1.2.3.2" xref="S2.SS1.p2.1.m1.1.2.3.1.cmml"><mo stretchy="false" id="S2.SS1.p2.1.m1.1.2.3.2.1" xref="S2.SS1.p2.1.m1.1.2.3.1.1.cmml">[</mo><mi id="S2.SS1.p2.1.m1.1.1" xref="S2.SS1.p2.1.m1.1.1.cmml">t</mi><mo stretchy="false" id="S2.SS1.p2.1.m1.1.2.3.2.2" xref="S2.SS1.p2.1.m1.1.2.3.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.1.m1.1b"><apply id="S2.SS1.p2.1.m1.1.2.cmml" xref="S2.SS1.p2.1.m1.1.2"><times id="S2.SS1.p2.1.m1.1.2.1.cmml" xref="S2.SS1.p2.1.m1.1.2.1"></times><apply id="S2.SS1.p2.1.m1.1.2.2.cmml" xref="S2.SS1.p2.1.m1.1.2.2"><csymbol cd="ambiguous" id="S2.SS1.p2.1.m1.1.2.2.1.cmml" xref="S2.SS1.p2.1.m1.1.2.2">superscript</csymbol><apply id="S2.SS1.p2.1.m1.1.2.2.2.cmml" xref="S2.SS1.p2.1.m1.1.2.2"><csymbol cd="ambiguous" id="S2.SS1.p2.1.m1.1.2.2.2.1.cmml" xref="S2.SS1.p2.1.m1.1.2.2">subscript</csymbol><ci id="S2.SS1.p2.1.m1.1.2.2.2.2.cmml" xref="S2.SS1.p2.1.m1.1.2.2.2.2">𝑠</ci><ci id="S2.SS1.p2.1.m1.1.2.2.2.3.cmml" xref="S2.SS1.p2.1.m1.1.2.2.2.3">𝑗</ci></apply><ci id="S2.SS1.p2.1.m1.1.2.2.3.cmml" xref="S2.SS1.p2.1.m1.1.2.2.3">𝑙</ci></apply><apply id="S2.SS1.p2.1.m1.1.2.3.1.cmml" xref="S2.SS1.p2.1.m1.1.2.3.2"><csymbol cd="latexml" id="S2.SS1.p2.1.m1.1.2.3.1.1.cmml" xref="S2.SS1.p2.1.m1.1.2.3.2.1">delimited-[]</csymbol><ci id="S2.SS1.p2.1.m1.1.1.cmml" xref="S2.SS1.p2.1.m1.1.1">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.1.m1.1c">s_{j}^{l}[t]</annotation></semantics></math> represents the spike state of the j-th neuron in the l-th layer at time step t. <math id="S2.SS1.p2.2.m2.1" class="ltx_Math" alttext="x_{j}^{l}[t]" display="inline"><semantics id="S2.SS1.p2.2.m2.1a"><mrow id="S2.SS1.p2.2.m2.1.2" xref="S2.SS1.p2.2.m2.1.2.cmml"><msubsup id="S2.SS1.p2.2.m2.1.2.2" xref="S2.SS1.p2.2.m2.1.2.2.cmml"><mi id="S2.SS1.p2.2.m2.1.2.2.2.2" xref="S2.SS1.p2.2.m2.1.2.2.2.2.cmml">x</mi><mi id="S2.SS1.p2.2.m2.1.2.2.2.3" xref="S2.SS1.p2.2.m2.1.2.2.2.3.cmml">j</mi><mi id="S2.SS1.p2.2.m2.1.2.2.3" xref="S2.SS1.p2.2.m2.1.2.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.SS1.p2.2.m2.1.2.1" xref="S2.SS1.p2.2.m2.1.2.1.cmml">​</mo><mrow id="S2.SS1.p2.2.m2.1.2.3.2" xref="S2.SS1.p2.2.m2.1.2.3.1.cmml"><mo stretchy="false" id="S2.SS1.p2.2.m2.1.2.3.2.1" xref="S2.SS1.p2.2.m2.1.2.3.1.1.cmml">[</mo><mi id="S2.SS1.p2.2.m2.1.1" xref="S2.SS1.p2.2.m2.1.1.cmml">t</mi><mo stretchy="false" id="S2.SS1.p2.2.m2.1.2.3.2.2" xref="S2.SS1.p2.2.m2.1.2.3.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.2.m2.1b"><apply id="S2.SS1.p2.2.m2.1.2.cmml" xref="S2.SS1.p2.2.m2.1.2"><times id="S2.SS1.p2.2.m2.1.2.1.cmml" xref="S2.SS1.p2.2.m2.1.2.1"></times><apply id="S2.SS1.p2.2.m2.1.2.2.cmml" xref="S2.SS1.p2.2.m2.1.2.2"><csymbol cd="ambiguous" id="S2.SS1.p2.2.m2.1.2.2.1.cmml" xref="S2.SS1.p2.2.m2.1.2.2">superscript</csymbol><apply id="S2.SS1.p2.2.m2.1.2.2.2.cmml" xref="S2.SS1.p2.2.m2.1.2.2"><csymbol cd="ambiguous" id="S2.SS1.p2.2.m2.1.2.2.2.1.cmml" xref="S2.SS1.p2.2.m2.1.2.2">subscript</csymbol><ci id="S2.SS1.p2.2.m2.1.2.2.2.2.cmml" xref="S2.SS1.p2.2.m2.1.2.2.2.2">𝑥</ci><ci id="S2.SS1.p2.2.m2.1.2.2.2.3.cmml" xref="S2.SS1.p2.2.m2.1.2.2.2.3">𝑗</ci></apply><ci id="S2.SS1.p2.2.m2.1.2.2.3.cmml" xref="S2.SS1.p2.2.m2.1.2.2.3">𝑙</ci></apply><apply id="S2.SS1.p2.2.m2.1.2.3.1.cmml" xref="S2.SS1.p2.2.m2.1.2.3.2"><csymbol cd="latexml" id="S2.SS1.p2.2.m2.1.2.3.1.1.cmml" xref="S2.SS1.p2.2.m2.1.2.3.2.1">delimited-[]</csymbol><ci id="S2.SS1.p2.2.m2.1.1.cmml" xref="S2.SS1.p2.2.m2.1.1">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.2.m2.1c">x_{j}^{l}[t]</annotation></semantics></math> represents the input membrane potential, and <math id="S2.SS1.p2.3.m3.3" class="ltx_Math" alttext="V_{mem,j}^{l}[t]" display="inline"><semantics id="S2.SS1.p2.3.m3.3a"><mrow id="S2.SS1.p2.3.m3.3.4" xref="S2.SS1.p2.3.m3.3.4.cmml"><msubsup id="S2.SS1.p2.3.m3.3.4.2" xref="S2.SS1.p2.3.m3.3.4.2.cmml"><mi id="S2.SS1.p2.3.m3.3.4.2.2.2" xref="S2.SS1.p2.3.m3.3.4.2.2.2.cmml">V</mi><mrow id="S2.SS1.p2.3.m3.2.2.2.2" xref="S2.SS1.p2.3.m3.2.2.2.3.cmml"><mrow id="S2.SS1.p2.3.m3.2.2.2.2.1" xref="S2.SS1.p2.3.m3.2.2.2.2.1.cmml"><mi id="S2.SS1.p2.3.m3.2.2.2.2.1.2" xref="S2.SS1.p2.3.m3.2.2.2.2.1.2.cmml">m</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.3.m3.2.2.2.2.1.1" xref="S2.SS1.p2.3.m3.2.2.2.2.1.1.cmml">​</mo><mi id="S2.SS1.p2.3.m3.2.2.2.2.1.3" xref="S2.SS1.p2.3.m3.2.2.2.2.1.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.3.m3.2.2.2.2.1.1a" xref="S2.SS1.p2.3.m3.2.2.2.2.1.1.cmml">​</mo><mi id="S2.SS1.p2.3.m3.2.2.2.2.1.4" xref="S2.SS1.p2.3.m3.2.2.2.2.1.4.cmml">m</mi></mrow><mo id="S2.SS1.p2.3.m3.2.2.2.2.2" xref="S2.SS1.p2.3.m3.2.2.2.3.cmml">,</mo><mi id="S2.SS1.p2.3.m3.1.1.1.1" xref="S2.SS1.p2.3.m3.1.1.1.1.cmml">j</mi></mrow><mi id="S2.SS1.p2.3.m3.3.4.2.3" xref="S2.SS1.p2.3.m3.3.4.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.SS1.p2.3.m3.3.4.1" xref="S2.SS1.p2.3.m3.3.4.1.cmml">​</mo><mrow id="S2.SS1.p2.3.m3.3.4.3.2" xref="S2.SS1.p2.3.m3.3.4.3.1.cmml"><mo stretchy="false" id="S2.SS1.p2.3.m3.3.4.3.2.1" xref="S2.SS1.p2.3.m3.3.4.3.1.1.cmml">[</mo><mi id="S2.SS1.p2.3.m3.3.3" xref="S2.SS1.p2.3.m3.3.3.cmml">t</mi><mo stretchy="false" id="S2.SS1.p2.3.m3.3.4.3.2.2" xref="S2.SS1.p2.3.m3.3.4.3.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.3.m3.3b"><apply id="S2.SS1.p2.3.m3.3.4.cmml" xref="S2.SS1.p2.3.m3.3.4"><times id="S2.SS1.p2.3.m3.3.4.1.cmml" xref="S2.SS1.p2.3.m3.3.4.1"></times><apply id="S2.SS1.p2.3.m3.3.4.2.cmml" xref="S2.SS1.p2.3.m3.3.4.2"><csymbol cd="ambiguous" id="S2.SS1.p2.3.m3.3.4.2.1.cmml" xref="S2.SS1.p2.3.m3.3.4.2">superscript</csymbol><apply id="S2.SS1.p2.3.m3.3.4.2.2.cmml" xref="S2.SS1.p2.3.m3.3.4.2"><csymbol cd="ambiguous" id="S2.SS1.p2.3.m3.3.4.2.2.1.cmml" xref="S2.SS1.p2.3.m3.3.4.2">subscript</csymbol><ci id="S2.SS1.p2.3.m3.3.4.2.2.2.cmml" xref="S2.SS1.p2.3.m3.3.4.2.2.2">𝑉</ci><list id="S2.SS1.p2.3.m3.2.2.2.3.cmml" xref="S2.SS1.p2.3.m3.2.2.2.2"><apply id="S2.SS1.p2.3.m3.2.2.2.2.1.cmml" xref="S2.SS1.p2.3.m3.2.2.2.2.1"><times id="S2.SS1.p2.3.m3.2.2.2.2.1.1.cmml" xref="S2.SS1.p2.3.m3.2.2.2.2.1.1"></times><ci id="S2.SS1.p2.3.m3.2.2.2.2.1.2.cmml" xref="S2.SS1.p2.3.m3.2.2.2.2.1.2">𝑚</ci><ci id="S2.SS1.p2.3.m3.2.2.2.2.1.3.cmml" xref="S2.SS1.p2.3.m3.2.2.2.2.1.3">𝑒</ci><ci id="S2.SS1.p2.3.m3.2.2.2.2.1.4.cmml" xref="S2.SS1.p2.3.m3.2.2.2.2.1.4">𝑚</ci></apply><ci id="S2.SS1.p2.3.m3.1.1.1.1.cmml" xref="S2.SS1.p2.3.m3.1.1.1.1">𝑗</ci></list></apply><ci id="S2.SS1.p2.3.m3.3.4.2.3.cmml" xref="S2.SS1.p2.3.m3.3.4.2.3">𝑙</ci></apply><apply id="S2.SS1.p2.3.m3.3.4.3.1.cmml" xref="S2.SS1.p2.3.m3.3.4.3.2"><csymbol cd="latexml" id="S2.SS1.p2.3.m3.3.4.3.1.1.cmml" xref="S2.SS1.p2.3.m3.3.4.3.2.1">delimited-[]</csymbol><ci id="S2.SS1.p2.3.m3.3.3.cmml" xref="S2.SS1.p2.3.m3.3.3">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.3.m3.3c">V_{mem,j}^{l}[t]</annotation></semantics></math> represents the membrane potential of the j-th neuron in the l-th layer. The description of <math id="S2.SS1.p2.4.m4.1" class="ltx_Math" alttext="I_{j}^{l}[t]" display="inline"><semantics id="S2.SS1.p2.4.m4.1a"><mrow id="S2.SS1.p2.4.m4.1.2" xref="S2.SS1.p2.4.m4.1.2.cmml"><msubsup id="S2.SS1.p2.4.m4.1.2.2" xref="S2.SS1.p2.4.m4.1.2.2.cmml"><mi id="S2.SS1.p2.4.m4.1.2.2.2.2" xref="S2.SS1.p2.4.m4.1.2.2.2.2.cmml">I</mi><mi id="S2.SS1.p2.4.m4.1.2.2.2.3" xref="S2.SS1.p2.4.m4.1.2.2.2.3.cmml">j</mi><mi id="S2.SS1.p2.4.m4.1.2.2.3" xref="S2.SS1.p2.4.m4.1.2.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.SS1.p2.4.m4.1.2.1" xref="S2.SS1.p2.4.m4.1.2.1.cmml">​</mo><mrow id="S2.SS1.p2.4.m4.1.2.3.2" xref="S2.SS1.p2.4.m4.1.2.3.1.cmml"><mo stretchy="false" id="S2.SS1.p2.4.m4.1.2.3.2.1" xref="S2.SS1.p2.4.m4.1.2.3.1.1.cmml">[</mo><mi id="S2.SS1.p2.4.m4.1.1" xref="S2.SS1.p2.4.m4.1.1.cmml">t</mi><mo stretchy="false" id="S2.SS1.p2.4.m4.1.2.3.2.2" xref="S2.SS1.p2.4.m4.1.2.3.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.4.m4.1b"><apply id="S2.SS1.p2.4.m4.1.2.cmml" xref="S2.SS1.p2.4.m4.1.2"><times id="S2.SS1.p2.4.m4.1.2.1.cmml" xref="S2.SS1.p2.4.m4.1.2.1"></times><apply id="S2.SS1.p2.4.m4.1.2.2.cmml" xref="S2.SS1.p2.4.m4.1.2.2"><csymbol cd="ambiguous" id="S2.SS1.p2.4.m4.1.2.2.1.cmml" xref="S2.SS1.p2.4.m4.1.2.2">superscript</csymbol><apply id="S2.SS1.p2.4.m4.1.2.2.2.cmml" xref="S2.SS1.p2.4.m4.1.2.2"><csymbol cd="ambiguous" id="S2.SS1.p2.4.m4.1.2.2.2.1.cmml" xref="S2.SS1.p2.4.m4.1.2.2">subscript</csymbol><ci id="S2.SS1.p2.4.m4.1.2.2.2.2.cmml" xref="S2.SS1.p2.4.m4.1.2.2.2.2">𝐼</ci><ci id="S2.SS1.p2.4.m4.1.2.2.2.3.cmml" xref="S2.SS1.p2.4.m4.1.2.2.2.3">𝑗</ci></apply><ci id="S2.SS1.p2.4.m4.1.2.2.3.cmml" xref="S2.SS1.p2.4.m4.1.2.2.3">𝑙</ci></apply><apply id="S2.SS1.p2.4.m4.1.2.3.1.cmml" xref="S2.SS1.p2.4.m4.1.2.3.2"><csymbol cd="latexml" id="S2.SS1.p2.4.m4.1.2.3.1.1.cmml" xref="S2.SS1.p2.4.m4.1.2.3.2.1">delimited-[]</csymbol><ci id="S2.SS1.p2.4.m4.1.1.cmml" xref="S2.SS1.p2.4.m4.1.1">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.4.m4.1c">I_{j}^{l}[t]</annotation></semantics></math> can be expressed as follows:</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<table id="S2.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E2.m1.4" class="ltx_Math" alttext="I_{j}^{l}\left[t\right]=\sum_{i}{w_{i,j}^{l}s_{i}^{l-1}\left[t\right]+b_{j}^{l}}" display="block"><semantics id="S2.E2.m1.4a"><mrow id="S2.E2.m1.4.5" xref="S2.E2.m1.4.5.cmml"><mrow id="S2.E2.m1.4.5.2" xref="S2.E2.m1.4.5.2.cmml"><msubsup id="S2.E2.m1.4.5.2.2" xref="S2.E2.m1.4.5.2.2.cmml"><mi id="S2.E2.m1.4.5.2.2.2.2" xref="S2.E2.m1.4.5.2.2.2.2.cmml">I</mi><mi id="S2.E2.m1.4.5.2.2.2.3" xref="S2.E2.m1.4.5.2.2.2.3.cmml">j</mi><mi id="S2.E2.m1.4.5.2.2.3" xref="S2.E2.m1.4.5.2.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mrow id="S2.E2.m1.4.5.2.3.2" xref="S2.E2.m1.4.5.2.3.1.cmml"><mo id="S2.E2.m1.4.5.2.3.2.1" xref="S2.E2.m1.4.5.2.3.1.1.cmml">[</mo><mi id="S2.E2.m1.3.3" xref="S2.E2.m1.3.3.cmml">t</mi><mo id="S2.E2.m1.4.5.2.3.2.2" xref="S2.E2.m1.4.5.2.3.1.1.cmml">]</mo></mrow></mrow><mo rspace="0.111em" id="S2.E2.m1.4.5.1" xref="S2.E2.m1.4.5.1.cmml">=</mo><mrow id="S2.E2.m1.4.5.3" xref="S2.E2.m1.4.5.3.cmml"><mrow id="S2.E2.m1.4.5.3.2" xref="S2.E2.m1.4.5.3.2.cmml"><munder id="S2.E2.m1.4.5.3.2.1" xref="S2.E2.m1.4.5.3.2.1.cmml"><mo movablelimits="false" id="S2.E2.m1.4.5.3.2.1.2" xref="S2.E2.m1.4.5.3.2.1.2.cmml">∑</mo><mi id="S2.E2.m1.4.5.3.2.1.3" xref="S2.E2.m1.4.5.3.2.1.3.cmml">i</mi></munder><mrow id="S2.E2.m1.4.5.3.2.2" xref="S2.E2.m1.4.5.3.2.2.cmml"><msubsup id="S2.E2.m1.4.5.3.2.2.2" xref="S2.E2.m1.4.5.3.2.2.2.cmml"><mi id="S2.E2.m1.4.5.3.2.2.2.2.2" xref="S2.E2.m1.4.5.3.2.2.2.2.2.cmml">w</mi><mrow id="S2.E2.m1.2.2.2.4" xref="S2.E2.m1.2.2.2.3.cmml"><mi id="S2.E2.m1.1.1.1.1" xref="S2.E2.m1.1.1.1.1.cmml">i</mi><mo id="S2.E2.m1.2.2.2.4.1" xref="S2.E2.m1.2.2.2.3.cmml">,</mo><mi id="S2.E2.m1.2.2.2.2" xref="S2.E2.m1.2.2.2.2.cmml">j</mi></mrow><mi id="S2.E2.m1.4.5.3.2.2.2.3" xref="S2.E2.m1.4.5.3.2.2.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.3.2.2.1" xref="S2.E2.m1.4.5.3.2.2.1.cmml">​</mo><msubsup id="S2.E2.m1.4.5.3.2.2.3" xref="S2.E2.m1.4.5.3.2.2.3.cmml"><mi id="S2.E2.m1.4.5.3.2.2.3.2.2" xref="S2.E2.m1.4.5.3.2.2.3.2.2.cmml">s</mi><mi id="S2.E2.m1.4.5.3.2.2.3.2.3" xref="S2.E2.m1.4.5.3.2.2.3.2.3.cmml">i</mi><mrow id="S2.E2.m1.4.5.3.2.2.3.3" xref="S2.E2.m1.4.5.3.2.2.3.3.cmml"><mi id="S2.E2.m1.4.5.3.2.2.3.3.2" xref="S2.E2.m1.4.5.3.2.2.3.3.2.cmml">l</mi><mo id="S2.E2.m1.4.5.3.2.2.3.3.1" xref="S2.E2.m1.4.5.3.2.2.3.3.1.cmml">−</mo><mn id="S2.E2.m1.4.5.3.2.2.3.3.3" xref="S2.E2.m1.4.5.3.2.2.3.3.3.cmml">1</mn></mrow></msubsup><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.3.2.2.1a" xref="S2.E2.m1.4.5.3.2.2.1.cmml">​</mo><mrow id="S2.E2.m1.4.5.3.2.2.4.2" xref="S2.E2.m1.4.5.3.2.2.4.1.cmml"><mo id="S2.E2.m1.4.5.3.2.2.4.2.1" xref="S2.E2.m1.4.5.3.2.2.4.1.1.cmml">[</mo><mi id="S2.E2.m1.4.4" xref="S2.E2.m1.4.4.cmml">t</mi><mo id="S2.E2.m1.4.5.3.2.2.4.2.2" xref="S2.E2.m1.4.5.3.2.2.4.1.1.cmml">]</mo></mrow></mrow></mrow><mo id="S2.E2.m1.4.5.3.1" xref="S2.E2.m1.4.5.3.1.cmml">+</mo><msubsup id="S2.E2.m1.4.5.3.3" xref="S2.E2.m1.4.5.3.3.cmml"><mi id="S2.E2.m1.4.5.3.3.2.2" xref="S2.E2.m1.4.5.3.3.2.2.cmml">b</mi><mi id="S2.E2.m1.4.5.3.3.2.3" xref="S2.E2.m1.4.5.3.3.2.3.cmml">j</mi><mi id="S2.E2.m1.4.5.3.3.3" xref="S2.E2.m1.4.5.3.3.3.cmml">l</mi></msubsup></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E2.m1.4b"><apply id="S2.E2.m1.4.5.cmml" xref="S2.E2.m1.4.5"><eq id="S2.E2.m1.4.5.1.cmml" xref="S2.E2.m1.4.5.1"></eq><apply id="S2.E2.m1.4.5.2.cmml" xref="S2.E2.m1.4.5.2"><times id="S2.E2.m1.4.5.2.1.cmml" xref="S2.E2.m1.4.5.2.1"></times><apply id="S2.E2.m1.4.5.2.2.cmml" xref="S2.E2.m1.4.5.2.2"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.2.2.1.cmml" xref="S2.E2.m1.4.5.2.2">superscript</csymbol><apply id="S2.E2.m1.4.5.2.2.2.cmml" xref="S2.E2.m1.4.5.2.2"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.2.2.2.1.cmml" xref="S2.E2.m1.4.5.2.2">subscript</csymbol><ci id="S2.E2.m1.4.5.2.2.2.2.cmml" xref="S2.E2.m1.4.5.2.2.2.2">𝐼</ci><ci id="S2.E2.m1.4.5.2.2.2.3.cmml" xref="S2.E2.m1.4.5.2.2.2.3">𝑗</ci></apply><ci id="S2.E2.m1.4.5.2.2.3.cmml" xref="S2.E2.m1.4.5.2.2.3">𝑙</ci></apply><apply id="S2.E2.m1.4.5.2.3.1.cmml" xref="S2.E2.m1.4.5.2.3.2"><csymbol cd="latexml" id="S2.E2.m1.4.5.2.3.1.1.cmml" xref="S2.E2.m1.4.5.2.3.2.1">delimited-[]</csymbol><ci id="S2.E2.m1.3.3.cmml" xref="S2.E2.m1.3.3">𝑡</ci></apply></apply><apply id="S2.E2.m1.4.5.3.cmml" xref="S2.E2.m1.4.5.3"><plus id="S2.E2.m1.4.5.3.1.cmml" xref="S2.E2.m1.4.5.3.1"></plus><apply id="S2.E2.m1.4.5.3.2.cmml" xref="S2.E2.m1.4.5.3.2"><apply id="S2.E2.m1.4.5.3.2.1.cmml" xref="S2.E2.m1.4.5.3.2.1"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.3.2.1.1.cmml" xref="S2.E2.m1.4.5.3.2.1">subscript</csymbol><sum id="S2.E2.m1.4.5.3.2.1.2.cmml" xref="S2.E2.m1.4.5.3.2.1.2"></sum><ci id="S2.E2.m1.4.5.3.2.1.3.cmml" xref="S2.E2.m1.4.5.3.2.1.3">𝑖</ci></apply><apply id="S2.E2.m1.4.5.3.2.2.cmml" xref="S2.E2.m1.4.5.3.2.2"><times id="S2.E2.m1.4.5.3.2.2.1.cmml" xref="S2.E2.m1.4.5.3.2.2.1"></times><apply id="S2.E2.m1.4.5.3.2.2.2.cmml" xref="S2.E2.m1.4.5.3.2.2.2"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.3.2.2.2.1.cmml" xref="S2.E2.m1.4.5.3.2.2.2">superscript</csymbol><apply id="S2.E2.m1.4.5.3.2.2.2.2.cmml" xref="S2.E2.m1.4.5.3.2.2.2"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.3.2.2.2.2.1.cmml" xref="S2.E2.m1.4.5.3.2.2.2">subscript</csymbol><ci id="S2.E2.m1.4.5.3.2.2.2.2.2.cmml" xref="S2.E2.m1.4.5.3.2.2.2.2.2">𝑤</ci><list id="S2.E2.m1.2.2.2.3.cmml" xref="S2.E2.m1.2.2.2.4"><ci id="S2.E2.m1.1.1.1.1.cmml" xref="S2.E2.m1.1.1.1.1">𝑖</ci><ci id="S2.E2.m1.2.2.2.2.cmml" xref="S2.E2.m1.2.2.2.2">𝑗</ci></list></apply><ci id="S2.E2.m1.4.5.3.2.2.2.3.cmml" xref="S2.E2.m1.4.5.3.2.2.2.3">𝑙</ci></apply><apply id="S2.E2.m1.4.5.3.2.2.3.cmml" xref="S2.E2.m1.4.5.3.2.2.3"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.3.2.2.3.1.cmml" xref="S2.E2.m1.4.5.3.2.2.3">superscript</csymbol><apply id="S2.E2.m1.4.5.3.2.2.3.2.cmml" xref="S2.E2.m1.4.5.3.2.2.3"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.3.2.2.3.2.1.cmml" xref="S2.E2.m1.4.5.3.2.2.3">subscript</csymbol><ci id="S2.E2.m1.4.5.3.2.2.3.2.2.cmml" xref="S2.E2.m1.4.5.3.2.2.3.2.2">𝑠</ci><ci id="S2.E2.m1.4.5.3.2.2.3.2.3.cmml" xref="S2.E2.m1.4.5.3.2.2.3.2.3">𝑖</ci></apply><apply id="S2.E2.m1.4.5.3.2.2.3.3.cmml" xref="S2.E2.m1.4.5.3.2.2.3.3"><minus id="S2.E2.m1.4.5.3.2.2.3.3.1.cmml" xref="S2.E2.m1.4.5.3.2.2.3.3.1"></minus><ci id="S2.E2.m1.4.5.3.2.2.3.3.2.cmml" xref="S2.E2.m1.4.5.3.2.2.3.3.2">𝑙</ci><cn type="integer" id="S2.E2.m1.4.5.3.2.2.3.3.3.cmml" xref="S2.E2.m1.4.5.3.2.2.3.3.3">1</cn></apply></apply><apply id="S2.E2.m1.4.5.3.2.2.4.1.cmml" xref="S2.E2.m1.4.5.3.2.2.4.2"><csymbol cd="latexml" id="S2.E2.m1.4.5.3.2.2.4.1.1.cmml" xref="S2.E2.m1.4.5.3.2.2.4.2.1">delimited-[]</csymbol><ci id="S2.E2.m1.4.4.cmml" xref="S2.E2.m1.4.4">𝑡</ci></apply></apply></apply><apply id="S2.E2.m1.4.5.3.3.cmml" xref="S2.E2.m1.4.5.3.3"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.3.3.1.cmml" xref="S2.E2.m1.4.5.3.3">superscript</csymbol><apply id="S2.E2.m1.4.5.3.3.2.cmml" xref="S2.E2.m1.4.5.3.3"><csymbol cd="ambiguous" id="S2.E2.m1.4.5.3.3.2.1.cmml" xref="S2.E2.m1.4.5.3.3">subscript</csymbol><ci id="S2.E2.m1.4.5.3.3.2.2.cmml" xref="S2.E2.m1.4.5.3.3.2.2">𝑏</ci><ci id="S2.E2.m1.4.5.3.3.2.3.cmml" xref="S2.E2.m1.4.5.3.3.2.3">𝑗</ci></apply><ci id="S2.E2.m1.4.5.3.3.3.cmml" xref="S2.E2.m1.4.5.3.3.3">𝑙</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E2.m1.4c">I_{j}^{l}\left[t\right]=\sum_{i}{w_{i,j}^{l}s_{i}^{l-1}\left[t\right]+b_{j}^{l}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S2.SS1.p3.5" class="ltx_p">where <math id="S2.SS1.p3.1.m1.1" class="ltx_Math" alttext="w" display="inline"><semantics id="S2.SS1.p3.1.m1.1a"><mi id="S2.SS1.p3.1.m1.1.1" xref="S2.SS1.p3.1.m1.1.1.cmml">w</mi><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.1.m1.1b"><ci id="S2.SS1.p3.1.m1.1.1.cmml" xref="S2.SS1.p3.1.m1.1.1">𝑤</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.1.m1.1c">w</annotation></semantics></math> and <math id="S2.SS1.p3.2.m2.1" class="ltx_Math" alttext="b" display="inline"><semantics id="S2.SS1.p3.2.m2.1a"><mi id="S2.SS1.p3.2.m2.1.1" xref="S2.SS1.p3.2.m2.1.1.cmml">b</mi><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.2.m2.1b"><ci id="S2.SS1.p3.2.m2.1.1.cmml" xref="S2.SS1.p3.2.m2.1.1">𝑏</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.2.m2.1c">b</annotation></semantics></math> represent the synaptic weights and bias, respectively. When the membrane potential <math id="S2.SS1.p3.3.m3.3" class="ltx_Math" alttext="V_{mem,j}^{l}[t]" display="inline"><semantics id="S2.SS1.p3.3.m3.3a"><mrow id="S2.SS1.p3.3.m3.3.4" xref="S2.SS1.p3.3.m3.3.4.cmml"><msubsup id="S2.SS1.p3.3.m3.3.4.2" xref="S2.SS1.p3.3.m3.3.4.2.cmml"><mi id="S2.SS1.p3.3.m3.3.4.2.2.2" xref="S2.SS1.p3.3.m3.3.4.2.2.2.cmml">V</mi><mrow id="S2.SS1.p3.3.m3.2.2.2.2" xref="S2.SS1.p3.3.m3.2.2.2.3.cmml"><mrow id="S2.SS1.p3.3.m3.2.2.2.2.1" xref="S2.SS1.p3.3.m3.2.2.2.2.1.cmml"><mi id="S2.SS1.p3.3.m3.2.2.2.2.1.2" xref="S2.SS1.p3.3.m3.2.2.2.2.1.2.cmml">m</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p3.3.m3.2.2.2.2.1.1" xref="S2.SS1.p3.3.m3.2.2.2.2.1.1.cmml">​</mo><mi id="S2.SS1.p3.3.m3.2.2.2.2.1.3" xref="S2.SS1.p3.3.m3.2.2.2.2.1.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p3.3.m3.2.2.2.2.1.1a" xref="S2.SS1.p3.3.m3.2.2.2.2.1.1.cmml">​</mo><mi id="S2.SS1.p3.3.m3.2.2.2.2.1.4" xref="S2.SS1.p3.3.m3.2.2.2.2.1.4.cmml">m</mi></mrow><mo id="S2.SS1.p3.3.m3.2.2.2.2.2" xref="S2.SS1.p3.3.m3.2.2.2.3.cmml">,</mo><mi id="S2.SS1.p3.3.m3.1.1.1.1" xref="S2.SS1.p3.3.m3.1.1.1.1.cmml">j</mi></mrow><mi id="S2.SS1.p3.3.m3.3.4.2.3" xref="S2.SS1.p3.3.m3.3.4.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.SS1.p3.3.m3.3.4.1" xref="S2.SS1.p3.3.m3.3.4.1.cmml">​</mo><mrow id="S2.SS1.p3.3.m3.3.4.3.2" xref="S2.SS1.p3.3.m3.3.4.3.1.cmml"><mo stretchy="false" id="S2.SS1.p3.3.m3.3.4.3.2.1" xref="S2.SS1.p3.3.m3.3.4.3.1.1.cmml">[</mo><mi id="S2.SS1.p3.3.m3.3.3" xref="S2.SS1.p3.3.m3.3.3.cmml">t</mi><mo stretchy="false" id="S2.SS1.p3.3.m3.3.4.3.2.2" xref="S2.SS1.p3.3.m3.3.4.3.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.3.m3.3b"><apply id="S2.SS1.p3.3.m3.3.4.cmml" xref="S2.SS1.p3.3.m3.3.4"><times id="S2.SS1.p3.3.m3.3.4.1.cmml" xref="S2.SS1.p3.3.m3.3.4.1"></times><apply id="S2.SS1.p3.3.m3.3.4.2.cmml" xref="S2.SS1.p3.3.m3.3.4.2"><csymbol cd="ambiguous" id="S2.SS1.p3.3.m3.3.4.2.1.cmml" xref="S2.SS1.p3.3.m3.3.4.2">superscript</csymbol><apply id="S2.SS1.p3.3.m3.3.4.2.2.cmml" xref="S2.SS1.p3.3.m3.3.4.2"><csymbol cd="ambiguous" id="S2.SS1.p3.3.m3.3.4.2.2.1.cmml" xref="S2.SS1.p3.3.m3.3.4.2">subscript</csymbol><ci id="S2.SS1.p3.3.m3.3.4.2.2.2.cmml" xref="S2.SS1.p3.3.m3.3.4.2.2.2">𝑉</ci><list id="S2.SS1.p3.3.m3.2.2.2.3.cmml" xref="S2.SS1.p3.3.m3.2.2.2.2"><apply id="S2.SS1.p3.3.m3.2.2.2.2.1.cmml" xref="S2.SS1.p3.3.m3.2.2.2.2.1"><times id="S2.SS1.p3.3.m3.2.2.2.2.1.1.cmml" xref="S2.SS1.p3.3.m3.2.2.2.2.1.1"></times><ci id="S2.SS1.p3.3.m3.2.2.2.2.1.2.cmml" xref="S2.SS1.p3.3.m3.2.2.2.2.1.2">𝑚</ci><ci id="S2.SS1.p3.3.m3.2.2.2.2.1.3.cmml" xref="S2.SS1.p3.3.m3.2.2.2.2.1.3">𝑒</ci><ci id="S2.SS1.p3.3.m3.2.2.2.2.1.4.cmml" xref="S2.SS1.p3.3.m3.2.2.2.2.1.4">𝑚</ci></apply><ci id="S2.SS1.p3.3.m3.1.1.1.1.cmml" xref="S2.SS1.p3.3.m3.1.1.1.1">𝑗</ci></list></apply><ci id="S2.SS1.p3.3.m3.3.4.2.3.cmml" xref="S2.SS1.p3.3.m3.3.4.2.3">𝑙</ci></apply><apply id="S2.SS1.p3.3.m3.3.4.3.1.cmml" xref="S2.SS1.p3.3.m3.3.4.3.2"><csymbol cd="latexml" id="S2.SS1.p3.3.m3.3.4.3.1.1.cmml" xref="S2.SS1.p3.3.m3.3.4.3.2.1">delimited-[]</csymbol><ci id="S2.SS1.p3.3.m3.3.3.cmml" xref="S2.SS1.p3.3.m3.3.3">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.3.m3.3c">V_{mem,j}^{l}[t]</annotation></semantics></math> of the j-th neuron in the l-th layer exceeds the threshold voltage <math id="S2.SS1.p3.4.m4.1" class="ltx_Math" alttext="V_{th}" display="inline"><semantics id="S2.SS1.p3.4.m4.1a"><msub id="S2.SS1.p3.4.m4.1.1" xref="S2.SS1.p3.4.m4.1.1.cmml"><mi id="S2.SS1.p3.4.m4.1.1.2" xref="S2.SS1.p3.4.m4.1.1.2.cmml">V</mi><mrow id="S2.SS1.p3.4.m4.1.1.3" xref="S2.SS1.p3.4.m4.1.1.3.cmml"><mi id="S2.SS1.p3.4.m4.1.1.3.2" xref="S2.SS1.p3.4.m4.1.1.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p3.4.m4.1.1.3.1" xref="S2.SS1.p3.4.m4.1.1.3.1.cmml">​</mo><mi id="S2.SS1.p3.4.m4.1.1.3.3" xref="S2.SS1.p3.4.m4.1.1.3.3.cmml">h</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.4.m4.1b"><apply id="S2.SS1.p3.4.m4.1.1.cmml" xref="S2.SS1.p3.4.m4.1.1"><csymbol cd="ambiguous" id="S2.SS1.p3.4.m4.1.1.1.cmml" xref="S2.SS1.p3.4.m4.1.1">subscript</csymbol><ci id="S2.SS1.p3.4.m4.1.1.2.cmml" xref="S2.SS1.p3.4.m4.1.1.2">𝑉</ci><apply id="S2.SS1.p3.4.m4.1.1.3.cmml" xref="S2.SS1.p3.4.m4.1.1.3"><times id="S2.SS1.p3.4.m4.1.1.3.1.cmml" xref="S2.SS1.p3.4.m4.1.1.3.1"></times><ci id="S2.SS1.p3.4.m4.1.1.3.2.cmml" xref="S2.SS1.p3.4.m4.1.1.3.2">𝑡</ci><ci id="S2.SS1.p3.4.m4.1.1.3.3.cmml" xref="S2.SS1.p3.4.m4.1.1.3.3">ℎ</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.4.m4.1c">V_{th}</annotation></semantics></math>, a spike <math id="S2.SS1.p3.5.m5.1" class="ltx_Math" alttext="s_{j}^{l}[t]" display="inline"><semantics id="S2.SS1.p3.5.m5.1a"><mrow id="S2.SS1.p3.5.m5.1.2" xref="S2.SS1.p3.5.m5.1.2.cmml"><msubsup id="S2.SS1.p3.5.m5.1.2.2" xref="S2.SS1.p3.5.m5.1.2.2.cmml"><mi id="S2.SS1.p3.5.m5.1.2.2.2.2" xref="S2.SS1.p3.5.m5.1.2.2.2.2.cmml">s</mi><mi id="S2.SS1.p3.5.m5.1.2.2.2.3" xref="S2.SS1.p3.5.m5.1.2.2.2.3.cmml">j</mi><mi id="S2.SS1.p3.5.m5.1.2.2.3" xref="S2.SS1.p3.5.m5.1.2.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.SS1.p3.5.m5.1.2.1" xref="S2.SS1.p3.5.m5.1.2.1.cmml">​</mo><mrow id="S2.SS1.p3.5.m5.1.2.3.2" xref="S2.SS1.p3.5.m5.1.2.3.1.cmml"><mo stretchy="false" id="S2.SS1.p3.5.m5.1.2.3.2.1" xref="S2.SS1.p3.5.m5.1.2.3.1.1.cmml">[</mo><mi id="S2.SS1.p3.5.m5.1.1" xref="S2.SS1.p3.5.m5.1.1.cmml">t</mi><mo stretchy="false" id="S2.SS1.p3.5.m5.1.2.3.2.2" xref="S2.SS1.p3.5.m5.1.2.3.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p3.5.m5.1b"><apply id="S2.SS1.p3.5.m5.1.2.cmml" xref="S2.SS1.p3.5.m5.1.2"><times id="S2.SS1.p3.5.m5.1.2.1.cmml" xref="S2.SS1.p3.5.m5.1.2.1"></times><apply id="S2.SS1.p3.5.m5.1.2.2.cmml" xref="S2.SS1.p3.5.m5.1.2.2"><csymbol cd="ambiguous" id="S2.SS1.p3.5.m5.1.2.2.1.cmml" xref="S2.SS1.p3.5.m5.1.2.2">superscript</csymbol><apply id="S2.SS1.p3.5.m5.1.2.2.2.cmml" xref="S2.SS1.p3.5.m5.1.2.2"><csymbol cd="ambiguous" id="S2.SS1.p3.5.m5.1.2.2.2.1.cmml" xref="S2.SS1.p3.5.m5.1.2.2">subscript</csymbol><ci id="S2.SS1.p3.5.m5.1.2.2.2.2.cmml" xref="S2.SS1.p3.5.m5.1.2.2.2.2">𝑠</ci><ci id="S2.SS1.p3.5.m5.1.2.2.2.3.cmml" xref="S2.SS1.p3.5.m5.1.2.2.2.3">𝑗</ci></apply><ci id="S2.SS1.p3.5.m5.1.2.2.3.cmml" xref="S2.SS1.p3.5.m5.1.2.2.3">𝑙</ci></apply><apply id="S2.SS1.p3.5.m5.1.2.3.1.cmml" xref="S2.SS1.p3.5.m5.1.2.3.2"><csymbol cd="latexml" id="S2.SS1.p3.5.m5.1.2.3.1.1.cmml" xref="S2.SS1.p3.5.m5.1.2.3.2.1">delimited-[]</csymbol><ci id="S2.SS1.p3.5.m5.1.1.cmml" xref="S2.SS1.p3.5.m5.1.1">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p3.5.m5.1c">s_{j}^{l}[t]</annotation></semantics></math> is emitted. The mathematical formula is as follows:</p>
+</div>
+<div id="S2.SS1.p4" class="ltx_para">
+<table id="S2.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E3.m1.5" class="ltx_Math" alttext="s_{j}^{l}\left[t\right]=H\left(V_{mem,j}^{l}\left[t\right]-V_{th}\right)" display="block"><semantics id="S2.E3.m1.5a"><mrow id="S2.E3.m1.5.5" xref="S2.E3.m1.5.5.cmml"><mrow id="S2.E3.m1.5.5.3" xref="S2.E3.m1.5.5.3.cmml"><msubsup id="S2.E3.m1.5.5.3.2" xref="S2.E3.m1.5.5.3.2.cmml"><mi id="S2.E3.m1.5.5.3.2.2.2" xref="S2.E3.m1.5.5.3.2.2.2.cmml">s</mi><mi id="S2.E3.m1.5.5.3.2.2.3" xref="S2.E3.m1.5.5.3.2.2.3.cmml">j</mi><mi id="S2.E3.m1.5.5.3.2.3" xref="S2.E3.m1.5.5.3.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.E3.m1.5.5.3.1" xref="S2.E3.m1.5.5.3.1.cmml">​</mo><mrow id="S2.E3.m1.5.5.3.3.2" xref="S2.E3.m1.5.5.3.3.1.cmml"><mo id="S2.E3.m1.5.5.3.3.2.1" xref="S2.E3.m1.5.5.3.3.1.1.cmml">[</mo><mi id="S2.E3.m1.3.3" xref="S2.E3.m1.3.3.cmml">t</mi><mo id="S2.E3.m1.5.5.3.3.2.2" xref="S2.E3.m1.5.5.3.3.1.1.cmml">]</mo></mrow></mrow><mo id="S2.E3.m1.5.5.2" xref="S2.E3.m1.5.5.2.cmml">=</mo><mrow id="S2.E3.m1.5.5.1" xref="S2.E3.m1.5.5.1.cmml"><mi id="S2.E3.m1.5.5.1.3" xref="S2.E3.m1.5.5.1.3.cmml">H</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.5.5.1.2" xref="S2.E3.m1.5.5.1.2.cmml">​</mo><mrow id="S2.E3.m1.5.5.1.1.1" xref="S2.E3.m1.5.5.1.1.1.1.cmml"><mo id="S2.E3.m1.5.5.1.1.1.2" xref="S2.E3.m1.5.5.1.1.1.1.cmml">(</mo><mrow id="S2.E3.m1.5.5.1.1.1.1" xref="S2.E3.m1.5.5.1.1.1.1.cmml"><mrow id="S2.E3.m1.5.5.1.1.1.1.2" xref="S2.E3.m1.5.5.1.1.1.1.2.cmml"><msubsup id="S2.E3.m1.5.5.1.1.1.1.2.2" xref="S2.E3.m1.5.5.1.1.1.1.2.2.cmml"><mi id="S2.E3.m1.5.5.1.1.1.1.2.2.2.2" xref="S2.E3.m1.5.5.1.1.1.1.2.2.2.2.cmml">V</mi><mrow id="S2.E3.m1.2.2.2.2" xref="S2.E3.m1.2.2.2.3.cmml"><mrow id="S2.E3.m1.2.2.2.2.1" xref="S2.E3.m1.2.2.2.2.1.cmml"><mi id="S2.E3.m1.2.2.2.2.1.2" xref="S2.E3.m1.2.2.2.2.1.2.cmml">m</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.2.2.2.2.1.1" xref="S2.E3.m1.2.2.2.2.1.1.cmml">​</mo><mi id="S2.E3.m1.2.2.2.2.1.3" xref="S2.E3.m1.2.2.2.2.1.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.2.2.2.2.1.1a" xref="S2.E3.m1.2.2.2.2.1.1.cmml">​</mo><mi id="S2.E3.m1.2.2.2.2.1.4" xref="S2.E3.m1.2.2.2.2.1.4.cmml">m</mi></mrow><mo id="S2.E3.m1.2.2.2.2.2" xref="S2.E3.m1.2.2.2.3.cmml">,</mo><mi id="S2.E3.m1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.cmml">j</mi></mrow><mi id="S2.E3.m1.5.5.1.1.1.1.2.2.3" xref="S2.E3.m1.5.5.1.1.1.1.2.2.3.cmml">l</mi></msubsup><mo lspace="0em" rspace="0em" id="S2.E3.m1.5.5.1.1.1.1.2.1" xref="S2.E3.m1.5.5.1.1.1.1.2.1.cmml">​</mo><mrow id="S2.E3.m1.5.5.1.1.1.1.2.3.2" xref="S2.E3.m1.5.5.1.1.1.1.2.3.1.cmml"><mo id="S2.E3.m1.5.5.1.1.1.1.2.3.2.1" xref="S2.E3.m1.5.5.1.1.1.1.2.3.1.1.cmml">[</mo><mi id="S2.E3.m1.4.4" xref="S2.E3.m1.4.4.cmml">t</mi><mo id="S2.E3.m1.5.5.1.1.1.1.2.3.2.2" xref="S2.E3.m1.5.5.1.1.1.1.2.3.1.1.cmml">]</mo></mrow></mrow><mo id="S2.E3.m1.5.5.1.1.1.1.1" xref="S2.E3.m1.5.5.1.1.1.1.1.cmml">−</mo><msub id="S2.E3.m1.5.5.1.1.1.1.3" xref="S2.E3.m1.5.5.1.1.1.1.3.cmml"><mi id="S2.E3.m1.5.5.1.1.1.1.3.2" xref="S2.E3.m1.5.5.1.1.1.1.3.2.cmml">V</mi><mrow id="S2.E3.m1.5.5.1.1.1.1.3.3" xref="S2.E3.m1.5.5.1.1.1.1.3.3.cmml"><mi id="S2.E3.m1.5.5.1.1.1.1.3.3.2" xref="S2.E3.m1.5.5.1.1.1.1.3.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.5.5.1.1.1.1.3.3.1" xref="S2.E3.m1.5.5.1.1.1.1.3.3.1.cmml">​</mo><mi id="S2.E3.m1.5.5.1.1.1.1.3.3.3" xref="S2.E3.m1.5.5.1.1.1.1.3.3.3.cmml">h</mi></mrow></msub></mrow><mo id="S2.E3.m1.5.5.1.1.1.3" xref="S2.E3.m1.5.5.1.1.1.1.cmml">)</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E3.m1.5b"><apply id="S2.E3.m1.5.5.cmml" xref="S2.E3.m1.5.5"><eq id="S2.E3.m1.5.5.2.cmml" xref="S2.E3.m1.5.5.2"></eq><apply id="S2.E3.m1.5.5.3.cmml" xref="S2.E3.m1.5.5.3"><times id="S2.E3.m1.5.5.3.1.cmml" xref="S2.E3.m1.5.5.3.1"></times><apply id="S2.E3.m1.5.5.3.2.cmml" xref="S2.E3.m1.5.5.3.2"><csymbol cd="ambiguous" id="S2.E3.m1.5.5.3.2.1.cmml" xref="S2.E3.m1.5.5.3.2">superscript</csymbol><apply id="S2.E3.m1.5.5.3.2.2.cmml" xref="S2.E3.m1.5.5.3.2"><csymbol cd="ambiguous" id="S2.E3.m1.5.5.3.2.2.1.cmml" xref="S2.E3.m1.5.5.3.2">subscript</csymbol><ci id="S2.E3.m1.5.5.3.2.2.2.cmml" xref="S2.E3.m1.5.5.3.2.2.2">𝑠</ci><ci id="S2.E3.m1.5.5.3.2.2.3.cmml" xref="S2.E3.m1.5.5.3.2.2.3">𝑗</ci></apply><ci id="S2.E3.m1.5.5.3.2.3.cmml" xref="S2.E3.m1.5.5.3.2.3">𝑙</ci></apply><apply id="S2.E3.m1.5.5.3.3.1.cmml" xref="S2.E3.m1.5.5.3.3.2"><csymbol cd="latexml" id="S2.E3.m1.5.5.3.3.1.1.cmml" xref="S2.E3.m1.5.5.3.3.2.1">delimited-[]</csymbol><ci id="S2.E3.m1.3.3.cmml" xref="S2.E3.m1.3.3">𝑡</ci></apply></apply><apply id="S2.E3.m1.5.5.1.cmml" xref="S2.E3.m1.5.5.1"><times id="S2.E3.m1.5.5.1.2.cmml" xref="S2.E3.m1.5.5.1.2"></times><ci id="S2.E3.m1.5.5.1.3.cmml" xref="S2.E3.m1.5.5.1.3">𝐻</ci><apply id="S2.E3.m1.5.5.1.1.1.1.cmml" xref="S2.E3.m1.5.5.1.1.1"><minus id="S2.E3.m1.5.5.1.1.1.1.1.cmml" xref="S2.E3.m1.5.5.1.1.1.1.1"></minus><apply id="S2.E3.m1.5.5.1.1.1.1.2.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2"><times id="S2.E3.m1.5.5.1.1.1.1.2.1.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.1"></times><apply id="S2.E3.m1.5.5.1.1.1.1.2.2.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.2"><csymbol cd="ambiguous" id="S2.E3.m1.5.5.1.1.1.1.2.2.1.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.2">superscript</csymbol><apply id="S2.E3.m1.5.5.1.1.1.1.2.2.2.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.2"><csymbol cd="ambiguous" id="S2.E3.m1.5.5.1.1.1.1.2.2.2.1.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.2">subscript</csymbol><ci id="S2.E3.m1.5.5.1.1.1.1.2.2.2.2.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.2.2.2">𝑉</ci><list id="S2.E3.m1.2.2.2.3.cmml" xref="S2.E3.m1.2.2.2.2"><apply id="S2.E3.m1.2.2.2.2.1.cmml" xref="S2.E3.m1.2.2.2.2.1"><times id="S2.E3.m1.2.2.2.2.1.1.cmml" xref="S2.E3.m1.2.2.2.2.1.1"></times><ci id="S2.E3.m1.2.2.2.2.1.2.cmml" xref="S2.E3.m1.2.2.2.2.1.2">𝑚</ci><ci id="S2.E3.m1.2.2.2.2.1.3.cmml" xref="S2.E3.m1.2.2.2.2.1.3">𝑒</ci><ci id="S2.E3.m1.2.2.2.2.1.4.cmml" xref="S2.E3.m1.2.2.2.2.1.4">𝑚</ci></apply><ci id="S2.E3.m1.1.1.1.1.cmml" xref="S2.E3.m1.1.1.1.1">𝑗</ci></list></apply><ci id="S2.E3.m1.5.5.1.1.1.1.2.2.3.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.2.3">𝑙</ci></apply><apply id="S2.E3.m1.5.5.1.1.1.1.2.3.1.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.3.2"><csymbol cd="latexml" id="S2.E3.m1.5.5.1.1.1.1.2.3.1.1.cmml" xref="S2.E3.m1.5.5.1.1.1.1.2.3.2.1">delimited-[]</csymbol><ci id="S2.E3.m1.4.4.cmml" xref="S2.E3.m1.4.4">𝑡</ci></apply></apply><apply id="S2.E3.m1.5.5.1.1.1.1.3.cmml" xref="S2.E3.m1.5.5.1.1.1.1.3"><csymbol cd="ambiguous" id="S2.E3.m1.5.5.1.1.1.1.3.1.cmml" xref="S2.E3.m1.5.5.1.1.1.1.3">subscript</csymbol><ci id="S2.E3.m1.5.5.1.1.1.1.3.2.cmml" xref="S2.E3.m1.5.5.1.1.1.1.3.2">𝑉</ci><apply id="S2.E3.m1.5.5.1.1.1.1.3.3.cmml" xref="S2.E3.m1.5.5.1.1.1.1.3.3"><times id="S2.E3.m1.5.5.1.1.1.1.3.3.1.cmml" xref="S2.E3.m1.5.5.1.1.1.1.3.3.1"></times><ci id="S2.E3.m1.5.5.1.1.1.1.3.3.2.cmml" xref="S2.E3.m1.5.5.1.1.1.1.3.3.2">𝑡</ci><ci id="S2.E3.m1.5.5.1.1.1.1.3.3.3.cmml" xref="S2.E3.m1.5.5.1.1.1.1.3.3.3">ℎ</ci></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E3.m1.5c">s_{j}^{l}\left[t\right]=H\left(V_{mem,j}^{l}\left[t\right]-V_{th}\right)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p id="S2.SS1.p4.1" class="ltx_p">the mathematical description of <math id="S2.SS1.p4.1.m1.1" class="ltx_Math" alttext="H(\cdot)" display="inline"><semantics id="S2.SS1.p4.1.m1.1a"><mrow id="S2.SS1.p4.1.m1.1.2" xref="S2.SS1.p4.1.m1.1.2.cmml"><mi id="S2.SS1.p4.1.m1.1.2.2" xref="S2.SS1.p4.1.m1.1.2.2.cmml">H</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p4.1.m1.1.2.1" xref="S2.SS1.p4.1.m1.1.2.1.cmml">​</mo><mrow id="S2.SS1.p4.1.m1.1.2.3.2" xref="S2.SS1.p4.1.m1.1.2.cmml"><mo stretchy="false" id="S2.SS1.p4.1.m1.1.2.3.2.1" xref="S2.SS1.p4.1.m1.1.2.cmml">(</mo><mo lspace="0em" rspace="0em" id="S2.SS1.p4.1.m1.1.1" xref="S2.SS1.p4.1.m1.1.1.cmml">⋅</mo><mo stretchy="false" id="S2.SS1.p4.1.m1.1.2.3.2.2" xref="S2.SS1.p4.1.m1.1.2.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p4.1.m1.1b"><apply id="S2.SS1.p4.1.m1.1.2.cmml" xref="S2.SS1.p4.1.m1.1.2"><times id="S2.SS1.p4.1.m1.1.2.1.cmml" xref="S2.SS1.p4.1.m1.1.2.1"></times><ci id="S2.SS1.p4.1.m1.1.2.2.cmml" xref="S2.SS1.p4.1.m1.1.2.2">𝐻</ci><ci id="S2.SS1.p4.1.m1.1.1.cmml" xref="S2.SS1.p4.1.m1.1.1">⋅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p4.1.m1.1c">H(\cdot)</annotation></semantics></math> is the Heaviside step function. This function produces a value of 1 when x is greater than or equal to 0, and 0 otherwise. Due to the non-differentiability of Heaviside unit step function, the surrogate gradient method is used to estimate gradient computations during backpropagation. The fundamental idea of surrogate gradient is to update the weights using gradient backpropagation via a surrogate gradient function rather than the unit step function. In this research, we have chosen the arctangent function as our surrogate gradient function. Its mathematical expression is illustrated below:</p>
+</div>
+<div id="S2.SS1.p5" class="ltx_para">
+<table id="S2.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E4.m1.3" class="ltx_Math" alttext="g\left(x\right)=\ \frac{1}{\pi}\arctan\left(\frac{\pi}{2}\alpha x\right)+\frac{1}{2}" display="block"><semantics id="S2.E4.m1.3a"><mrow id="S2.E4.m1.3.3" xref="S2.E4.m1.3.3.cmml"><mrow id="S2.E4.m1.3.3.3" xref="S2.E4.m1.3.3.3.cmml"><mi id="S2.E4.m1.3.3.3.2" xref="S2.E4.m1.3.3.3.2.cmml">g</mi><mo lspace="0em" rspace="0em" id="S2.E4.m1.3.3.3.1" xref="S2.E4.m1.3.3.3.1.cmml">​</mo><mrow id="S2.E4.m1.3.3.3.3.2" xref="S2.E4.m1.3.3.3.cmml"><mo id="S2.E4.m1.3.3.3.3.2.1" xref="S2.E4.m1.3.3.3.cmml">(</mo><mi id="S2.E4.m1.1.1" xref="S2.E4.m1.1.1.cmml">x</mi><mo id="S2.E4.m1.3.3.3.3.2.2" xref="S2.E4.m1.3.3.3.cmml">)</mo></mrow></mrow><mo rspace="0.778em" id="S2.E4.m1.3.3.2" xref="S2.E4.m1.3.3.2.cmml">=</mo><mrow id="S2.E4.m1.3.3.1" xref="S2.E4.m1.3.3.1.cmml"><mrow id="S2.E4.m1.3.3.1.1" xref="S2.E4.m1.3.3.1.1.cmml"><mfrac id="S2.E4.m1.3.3.1.1.3" xref="S2.E4.m1.3.3.1.1.3.cmml"><mn id="S2.E4.m1.3.3.1.1.3.2" xref="S2.E4.m1.3.3.1.1.3.2.cmml">1</mn><mi id="S2.E4.m1.3.3.1.1.3.3" xref="S2.E4.m1.3.3.1.1.3.3.cmml">π</mi></mfrac><mo lspace="0.167em" rspace="0em" id="S2.E4.m1.3.3.1.1.2" xref="S2.E4.m1.3.3.1.1.2.cmml">​</mo><mrow id="S2.E4.m1.3.3.1.1.1.1" xref="S2.E4.m1.3.3.1.1.1.2.cmml"><mi id="S2.E4.m1.2.2" xref="S2.E4.m1.2.2.cmml">arctan</mi><mo id="S2.E4.m1.3.3.1.1.1.1a" xref="S2.E4.m1.3.3.1.1.1.2.cmml">⁡</mo><mrow id="S2.E4.m1.3.3.1.1.1.1.1" xref="S2.E4.m1.3.3.1.1.1.2.cmml"><mo id="S2.E4.m1.3.3.1.1.1.1.1.2" xref="S2.E4.m1.3.3.1.1.1.2.cmml">(</mo><mrow id="S2.E4.m1.3.3.1.1.1.1.1.1" xref="S2.E4.m1.3.3.1.1.1.1.1.1.cmml"><mfrac id="S2.E4.m1.3.3.1.1.1.1.1.1.2" xref="S2.E4.m1.3.3.1.1.1.1.1.1.2.cmml"><mi id="S2.E4.m1.3.3.1.1.1.1.1.1.2.2" xref="S2.E4.m1.3.3.1.1.1.1.1.1.2.2.cmml">π</mi><mn id="S2.E4.m1.3.3.1.1.1.1.1.1.2.3" xref="S2.E4.m1.3.3.1.1.1.1.1.1.2.3.cmml">2</mn></mfrac><mo lspace="0em" rspace="0em" id="S2.E4.m1.3.3.1.1.1.1.1.1.1" xref="S2.E4.m1.3.3.1.1.1.1.1.1.1.cmml">​</mo><mi id="S2.E4.m1.3.3.1.1.1.1.1.1.3" xref="S2.E4.m1.3.3.1.1.1.1.1.1.3.cmml">α</mi><mo lspace="0em" rspace="0em" id="S2.E4.m1.3.3.1.1.1.1.1.1.1a" xref="S2.E4.m1.3.3.1.1.1.1.1.1.1.cmml">​</mo><mi id="S2.E4.m1.3.3.1.1.1.1.1.1.4" xref="S2.E4.m1.3.3.1.1.1.1.1.1.4.cmml">x</mi></mrow><mo id="S2.E4.m1.3.3.1.1.1.1.1.3" xref="S2.E4.m1.3.3.1.1.1.2.cmml">)</mo></mrow></mrow></mrow><mo id="S2.E4.m1.3.3.1.2" xref="S2.E4.m1.3.3.1.2.cmml">+</mo><mfrac id="S2.E4.m1.3.3.1.3" xref="S2.E4.m1.3.3.1.3.cmml"><mn id="S2.E4.m1.3.3.1.3.2" xref="S2.E4.m1.3.3.1.3.2.cmml">1</mn><mn id="S2.E4.m1.3.3.1.3.3" xref="S2.E4.m1.3.3.1.3.3.cmml">2</mn></mfrac></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E4.m1.3b"><apply id="S2.E4.m1.3.3.cmml" xref="S2.E4.m1.3.3"><eq id="S2.E4.m1.3.3.2.cmml" xref="S2.E4.m1.3.3.2"></eq><apply id="S2.E4.m1.3.3.3.cmml" xref="S2.E4.m1.3.3.3"><times id="S2.E4.m1.3.3.3.1.cmml" xref="S2.E4.m1.3.3.3.1"></times><ci id="S2.E4.m1.3.3.3.2.cmml" xref="S2.E4.m1.3.3.3.2">𝑔</ci><ci id="S2.E4.m1.1.1.cmml" xref="S2.E4.m1.1.1">𝑥</ci></apply><apply id="S2.E4.m1.3.3.1.cmml" xref="S2.E4.m1.3.3.1"><plus id="S2.E4.m1.3.3.1.2.cmml" xref="S2.E4.m1.3.3.1.2"></plus><apply id="S2.E4.m1.3.3.1.1.cmml" xref="S2.E4.m1.3.3.1.1"><times id="S2.E4.m1.3.3.1.1.2.cmml" xref="S2.E4.m1.3.3.1.1.2"></times><apply id="S2.E4.m1.3.3.1.1.3.cmml" xref="S2.E4.m1.3.3.1.1.3"><divide id="S2.E4.m1.3.3.1.1.3.1.cmml" xref="S2.E4.m1.3.3.1.1.3"></divide><cn type="integer" id="S2.E4.m1.3.3.1.1.3.2.cmml" xref="S2.E4.m1.3.3.1.1.3.2">1</cn><ci id="S2.E4.m1.3.3.1.1.3.3.cmml" xref="S2.E4.m1.3.3.1.1.3.3">𝜋</ci></apply><apply id="S2.E4.m1.3.3.1.1.1.2.cmml" xref="S2.E4.m1.3.3.1.1.1.1"><arctan id="S2.E4.m1.2.2.cmml" xref="S2.E4.m1.2.2"></arctan><apply id="S2.E4.m1.3.3.1.1.1.1.1.1.cmml" xref="S2.E4.m1.3.3.1.1.1.1.1.1"><times id="S2.E4.m1.3.3.1.1.1.1.1.1.1.cmml" xref="S2.E4.m1.3.3.1.1.1.1.1.1.1"></times><apply id="S2.E4.m1.3.3.1.1.1.1.1.1.2.cmml" xref="S2.E4.m1.3.3.1.1.1.1.1.1.2"><divide id="S2.E4.m1.3.3.1.1.1.1.1.1.2.1.cmml" xref="S2.E4.m1.3.3.1.1.1.1.1.1.2"></divide><ci id="S2.E4.m1.3.3.1.1.1.1.1.1.2.2.cmml" xref="S2.E4.m1.3.3.1.1.1.1.1.1.2.2">𝜋</ci><cn type="integer" id="S2.E4.m1.3.3.1.1.1.1.1.1.2.3.cmml" xref="S2.E4.m1.3.3.1.1.1.1.1.1.2.3">2</cn></apply><ci id="S2.E4.m1.3.3.1.1.1.1.1.1.3.cmml" xref="S2.E4.m1.3.3.1.1.1.1.1.1.3">𝛼</ci><ci id="S2.E4.m1.3.3.1.1.1.1.1.1.4.cmml" xref="S2.E4.m1.3.3.1.1.1.1.1.1.4">𝑥</ci></apply></apply></apply><apply id="S2.E4.m1.3.3.1.3.cmml" xref="S2.E4.m1.3.3.1.3"><divide id="S2.E4.m1.3.3.1.3.1.cmml" xref="S2.E4.m1.3.3.1.3"></divide><cn type="integer" id="S2.E4.m1.3.3.1.3.2.cmml" xref="S2.E4.m1.3.3.1.3.2">1</cn><cn type="integer" id="S2.E4.m1.3.3.1.3.3.cmml" xref="S2.E4.m1.3.3.1.3.3">2</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E4.m1.3c">g\left(x\right)=\ \frac{1}{\pi}\arctan\left(\frac{\pi}{2}\alpha x\right)+\frac{1}{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+<p id="S2.SS1.p5.1" class="ltx_p">Its derivative is represented as follows:</p>
+<table id="S2.E5" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E5.m1.2" class="ltx_Math" alttext="g^{{}^{\prime}}\left(x\right)=\frac{\alpha}{2\left(1+\left(\frac{\pi}{2}\alpha x\right)^{2}\right)}" display="block"><semantics id="S2.E5.m1.2a"><mrow id="S2.E5.m1.2.3" xref="S2.E5.m1.2.3.cmml"><mrow id="S2.E5.m1.2.3.2" xref="S2.E5.m1.2.3.2.cmml"><msup id="S2.E5.m1.2.3.2.2" xref="S2.E5.m1.2.3.2.2.cmml"><mi id="S2.E5.m1.2.3.2.2.2" xref="S2.E5.m1.2.3.2.2.2.cmml">g</mi><msup id="S2.E5.m1.2.3.2.2.3" xref="S2.E5.m1.2.3.2.2.3.cmml"><mi id="S2.E5.m1.2.3.2.2.3a" xref="S2.E5.m1.2.3.2.2.3.cmml"></mi><mo id="S2.E5.m1.2.3.2.2.3.1" xref="S2.E5.m1.2.3.2.2.3.1.cmml">′</mo></msup></msup><mo lspace="0em" rspace="0em" id="S2.E5.m1.2.3.2.1" xref="S2.E5.m1.2.3.2.1.cmml">​</mo><mrow id="S2.E5.m1.2.3.2.3.2" xref="S2.E5.m1.2.3.2.cmml"><mo id="S2.E5.m1.2.3.2.3.2.1" xref="S2.E5.m1.2.3.2.cmml">(</mo><mi id="S2.E5.m1.2.2" xref="S2.E5.m1.2.2.cmml">x</mi><mo id="S2.E5.m1.2.3.2.3.2.2" xref="S2.E5.m1.2.3.2.cmml">)</mo></mrow></mrow><mo id="S2.E5.m1.2.3.1" xref="S2.E5.m1.2.3.1.cmml">=</mo><mfrac id="S2.E5.m1.1.1" xref="S2.E5.m1.1.1.cmml"><mi id="S2.E5.m1.1.1.3" xref="S2.E5.m1.1.1.3.cmml">α</mi><mrow id="S2.E5.m1.1.1.1" xref="S2.E5.m1.1.1.1.cmml"><mn id="S2.E5.m1.1.1.1.3" xref="S2.E5.m1.1.1.1.3.cmml">2</mn><mo lspace="0em" rspace="0em" id="S2.E5.m1.1.1.1.2" xref="S2.E5.m1.1.1.1.2.cmml">​</mo><mrow id="S2.E5.m1.1.1.1.1.1" xref="S2.E5.m1.1.1.1.1.1.1.cmml"><mo id="S2.E5.m1.1.1.1.1.1.2" xref="S2.E5.m1.1.1.1.1.1.1.cmml">(</mo><mrow id="S2.E5.m1.1.1.1.1.1.1" xref="S2.E5.m1.1.1.1.1.1.1.cmml"><mn id="S2.E5.m1.1.1.1.1.1.1.3" xref="S2.E5.m1.1.1.1.1.1.1.3.cmml">1</mn><mo id="S2.E5.m1.1.1.1.1.1.1.2" xref="S2.E5.m1.1.1.1.1.1.1.2.cmml">+</mo><msup id="S2.E5.m1.1.1.1.1.1.1.1" xref="S2.E5.m1.1.1.1.1.1.1.1.cmml"><mrow id="S2.E5.m1.1.1.1.1.1.1.1.1.1" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mo id="S2.E5.m1.1.1.1.1.1.1.1.1.1.2" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mfrac id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">π</mi><mn id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml">2</mn></mfrac><mo lspace="0em" rspace="0em" id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">​</mo><mi id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.3.cmml">α</mi><mo lspace="0em" rspace="0em" id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.1a" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">​</mo><mi id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.4" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.4.cmml">x</mi></mrow><mo id="S2.E5.m1.1.1.1.1.1.1.1.1.1.3" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mn id="S2.E5.m1.1.1.1.1.1.1.1.3" xref="S2.E5.m1.1.1.1.1.1.1.1.3.cmml">2</mn></msup></mrow><mo id="S2.E5.m1.1.1.1.1.1.3" xref="S2.E5.m1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S2.E5.m1.2b"><apply id="S2.E5.m1.2.3.cmml" xref="S2.E5.m1.2.3"><eq id="S2.E5.m1.2.3.1.cmml" xref="S2.E5.m1.2.3.1"></eq><apply id="S2.E5.m1.2.3.2.cmml" xref="S2.E5.m1.2.3.2"><times id="S2.E5.m1.2.3.2.1.cmml" xref="S2.E5.m1.2.3.2.1"></times><apply id="S2.E5.m1.2.3.2.2.cmml" xref="S2.E5.m1.2.3.2.2"><csymbol cd="ambiguous" id="S2.E5.m1.2.3.2.2.1.cmml" xref="S2.E5.m1.2.3.2.2">superscript</csymbol><ci id="S2.E5.m1.2.3.2.2.2.cmml" xref="S2.E5.m1.2.3.2.2.2">𝑔</ci><apply id="S2.E5.m1.2.3.2.2.3.cmml" xref="S2.E5.m1.2.3.2.2.3"><ci id="S2.E5.m1.2.3.2.2.3.1.cmml" xref="S2.E5.m1.2.3.2.2.3.1">′</ci></apply></apply><ci id="S2.E5.m1.2.2.cmml" xref="S2.E5.m1.2.2">𝑥</ci></apply><apply id="S2.E5.m1.1.1.cmml" xref="S2.E5.m1.1.1"><divide id="S2.E5.m1.1.1.2.cmml" xref="S2.E5.m1.1.1"></divide><ci id="S2.E5.m1.1.1.3.cmml" xref="S2.E5.m1.1.1.3">𝛼</ci><apply id="S2.E5.m1.1.1.1.cmml" xref="S2.E5.m1.1.1.1"><times id="S2.E5.m1.1.1.1.2.cmml" xref="S2.E5.m1.1.1.1.2"></times><cn type="integer" id="S2.E5.m1.1.1.1.3.cmml" xref="S2.E5.m1.1.1.1.3">2</cn><apply id="S2.E5.m1.1.1.1.1.1.1.cmml" xref="S2.E5.m1.1.1.1.1.1"><plus id="S2.E5.m1.1.1.1.1.1.1.2.cmml" xref="S2.E5.m1.1.1.1.1.1.1.2"></plus><cn type="integer" id="S2.E5.m1.1.1.1.1.1.1.3.cmml" xref="S2.E5.m1.1.1.1.1.1.1.3">1</cn><apply id="S2.E5.m1.1.1.1.1.1.1.1.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S2.E5.m1.1.1.1.1.1.1.1.2.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1">superscript</csymbol><apply id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1"><times id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.1"></times><apply id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2"><divide id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2"></divide><ci id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.2">𝜋</ci><cn type="integer" id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.2.3">2</cn></apply><ci id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.3">𝛼</ci><ci id="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.4.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.1.1.1.4">𝑥</ci></apply><cn type="integer" id="S2.E5.m1.1.1.1.1.1.1.1.3.cmml" xref="S2.E5.m1.1.1.1.1.1.1.1.3">2</cn></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E5.m1.2c">g^{{}^{\prime}}\left(x\right)=\frac{\alpha}{2\left(1+\left(\frac{\pi}{2}\alpha x\right)^{2}\right)}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Current mean decoding (CMD)</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Rate decoding is a commonly used approach to transder information in spiking neural networks that decodes information intensity dependent on the rate of neuron spike emissions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>. Nonetheless, in specific tasks, particularly those concerned with regression problems like object detection, rate decoding will struggle and require more advanced decoding strategies.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Object detection generally involves two primary tasks: classification and regression. In the classification task, the classification result can be determined by the max magnitude of the output neuron spike firing rate (rate decoding) in SNNs. However, it is often necessary to predict the location, size and shape of the object in regression tasks, which requires the output value space of network to be real-valued. Nevertheless, the discrete spikes employed for rate decoding are not directly mapped to a continuous numerical space, resulting in the network output being discrete. Consequently, the discrete event of rate decoding might lead to a loss of accuracy when representing continuous outputs. While continuous values may be approximated through rate decoding, this approximation need a compromise between precision and time step.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">For this reason, we introduce current mean decoding(here-after abbreviated as CMD) in spiking neural networks, which is a more powerful decoding technique that exploits the dynamic properties of neurons. Fig.<a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in Spiking Neural Networks" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> illustrates a schematic diagram of CMD, which collects the currents produced at synapses upon neuron spike event. Subsequently, it accomplishes information decoding by computing the mean value of input current, which is defined as follows.</p>
+</div>
+<div id="S2.SS2.p4" class="ltx_para">
+<table id="S2.E6" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E6.m1.1" class="ltx_Math" alttext="Output=\frac{\sum\limits_{t=1}^{T}{\sum\limits_{i=1}^{n}{x_{i}\left[t\right]\times w_{i}}}}{Timestep}" display="block"><semantics id="S2.E6.m1.1a"><mrow id="S2.E6.m1.1.2" xref="S2.E6.m1.1.2.cmml"><mrow id="S2.E6.m1.1.2.2" xref="S2.E6.m1.1.2.2.cmml"><mi id="S2.E6.m1.1.2.2.2" xref="S2.E6.m1.1.2.2.2.cmml">O</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.2.2.1" xref="S2.E6.m1.1.2.2.1.cmml">​</mo><mi id="S2.E6.m1.1.2.2.3" xref="S2.E6.m1.1.2.2.3.cmml">u</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.2.2.1a" xref="S2.E6.m1.1.2.2.1.cmml">​</mo><mi id="S2.E6.m1.1.2.2.4" xref="S2.E6.m1.1.2.2.4.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.2.2.1b" xref="S2.E6.m1.1.2.2.1.cmml">​</mo><mi id="S2.E6.m1.1.2.2.5" xref="S2.E6.m1.1.2.2.5.cmml">p</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.2.2.1c" xref="S2.E6.m1.1.2.2.1.cmml">​</mo><mi id="S2.E6.m1.1.2.2.6" xref="S2.E6.m1.1.2.2.6.cmml">u</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.2.2.1d" xref="S2.E6.m1.1.2.2.1.cmml">​</mo><mi id="S2.E6.m1.1.2.2.7" xref="S2.E6.m1.1.2.2.7.cmml">t</mi></mrow><mo id="S2.E6.m1.1.2.1" xref="S2.E6.m1.1.2.1.cmml">=</mo><mfrac id="S2.E6.m1.1.1" xref="S2.E6.m1.1.1.cmml"><mrow id="S2.E6.m1.1.1.1" xref="S2.E6.m1.1.1.1.cmml"><munderover id="S2.E6.m1.1.1.1.2" xref="S2.E6.m1.1.1.1.2.cmml"><mo movablelimits="false" id="S2.E6.m1.1.1.1.2.2.2" xref="S2.E6.m1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S2.E6.m1.1.1.1.2.2.3" xref="S2.E6.m1.1.1.1.2.2.3.cmml"><mi id="S2.E6.m1.1.1.1.2.2.3.2" xref="S2.E6.m1.1.1.1.2.2.3.2.cmml">t</mi><mo id="S2.E6.m1.1.1.1.2.2.3.1" xref="S2.E6.m1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S2.E6.m1.1.1.1.2.2.3.3" xref="S2.E6.m1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S2.E6.m1.1.1.1.2.3" xref="S2.E6.m1.1.1.1.2.3.cmml">T</mi></munderover><mrow id="S2.E6.m1.1.1.1.3" xref="S2.E6.m1.1.1.1.3.cmml"><munderover id="S2.E6.m1.1.1.1.3.1" xref="S2.E6.m1.1.1.1.3.1.cmml"><mo lspace="0.167em" movablelimits="false" id="S2.E6.m1.1.1.1.3.1.2.2" xref="S2.E6.m1.1.1.1.3.1.2.2.cmml">∑</mo><mrow id="S2.E6.m1.1.1.1.3.1.2.3" xref="S2.E6.m1.1.1.1.3.1.2.3.cmml"><mi id="S2.E6.m1.1.1.1.3.1.2.3.2" xref="S2.E6.m1.1.1.1.3.1.2.3.2.cmml">i</mi><mo id="S2.E6.m1.1.1.1.3.1.2.3.1" xref="S2.E6.m1.1.1.1.3.1.2.3.1.cmml">=</mo><mn id="S2.E6.m1.1.1.1.3.1.2.3.3" xref="S2.E6.m1.1.1.1.3.1.2.3.3.cmml">1</mn></mrow><mi id="S2.E6.m1.1.1.1.3.1.3" xref="S2.E6.m1.1.1.1.3.1.3.cmml">n</mi></munderover><mrow id="S2.E6.m1.1.1.1.3.2" xref="S2.E6.m1.1.1.1.3.2.cmml"><mrow id="S2.E6.m1.1.1.1.3.2.2" xref="S2.E6.m1.1.1.1.3.2.2.cmml"><msub id="S2.E6.m1.1.1.1.3.2.2.2" xref="S2.E6.m1.1.1.1.3.2.2.2.cmml"><mi id="S2.E6.m1.1.1.1.3.2.2.2.2" xref="S2.E6.m1.1.1.1.3.2.2.2.2.cmml">x</mi><mi id="S2.E6.m1.1.1.1.3.2.2.2.3" xref="S2.E6.m1.1.1.1.3.2.2.2.3.cmml">i</mi></msub><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.1.1.3.2.2.1" xref="S2.E6.m1.1.1.1.3.2.2.1.cmml">​</mo><mrow id="S2.E6.m1.1.1.1.3.2.2.3.2" xref="S2.E6.m1.1.1.1.3.2.2.3.1.cmml"><mo id="S2.E6.m1.1.1.1.3.2.2.3.2.1" xref="S2.E6.m1.1.1.1.3.2.2.3.1.1.cmml">[</mo><mi id="S2.E6.m1.1.1.1.1" xref="S2.E6.m1.1.1.1.1.cmml">t</mi><mo rspace="0.055em" id="S2.E6.m1.1.1.1.3.2.2.3.2.2" xref="S2.E6.m1.1.1.1.3.2.2.3.1.1.cmml">]</mo></mrow></mrow><mo rspace="0.222em" id="S2.E6.m1.1.1.1.3.2.1" xref="S2.E6.m1.1.1.1.3.2.1.cmml">×</mo><msub id="S2.E6.m1.1.1.1.3.2.3" xref="S2.E6.m1.1.1.1.3.2.3.cmml"><mi id="S2.E6.m1.1.1.1.3.2.3.2" xref="S2.E6.m1.1.1.1.3.2.3.2.cmml">w</mi><mi id="S2.E6.m1.1.1.1.3.2.3.3" xref="S2.E6.m1.1.1.1.3.2.3.3.cmml">i</mi></msub></mrow></mrow></mrow><mrow id="S2.E6.m1.1.1.3" xref="S2.E6.m1.1.1.3.cmml"><mi id="S2.E6.m1.1.1.3.2" xref="S2.E6.m1.1.1.3.2.cmml">T</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.1.3.1" xref="S2.E6.m1.1.1.3.1.cmml">​</mo><mi id="S2.E6.m1.1.1.3.3" xref="S2.E6.m1.1.1.3.3.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.1.3.1a" xref="S2.E6.m1.1.1.3.1.cmml">​</mo><mi id="S2.E6.m1.1.1.3.4" xref="S2.E6.m1.1.1.3.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.1.3.1b" xref="S2.E6.m1.1.1.3.1.cmml">​</mo><mi id="S2.E6.m1.1.1.3.5" xref="S2.E6.m1.1.1.3.5.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.1.3.1c" xref="S2.E6.m1.1.1.3.1.cmml">​</mo><mi id="S2.E6.m1.1.1.3.6" xref="S2.E6.m1.1.1.3.6.cmml">s</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.1.3.1d" xref="S2.E6.m1.1.1.3.1.cmml">​</mo><mi id="S2.E6.m1.1.1.3.7" xref="S2.E6.m1.1.1.3.7.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.1.3.1e" xref="S2.E6.m1.1.1.3.1.cmml">​</mo><mi id="S2.E6.m1.1.1.3.8" xref="S2.E6.m1.1.1.3.8.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E6.m1.1.1.3.1f" xref="S2.E6.m1.1.1.3.1.cmml">​</mo><mi id="S2.E6.m1.1.1.3.9" xref="S2.E6.m1.1.1.3.9.cmml">p</mi></mrow></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S2.E6.m1.1b"><apply id="S2.E6.m1.1.2.cmml" xref="S2.E6.m1.1.2"><eq id="S2.E6.m1.1.2.1.cmml" xref="S2.E6.m1.1.2.1"></eq><apply id="S2.E6.m1.1.2.2.cmml" xref="S2.E6.m1.1.2.2"><times id="S2.E6.m1.1.2.2.1.cmml" xref="S2.E6.m1.1.2.2.1"></times><ci id="S2.E6.m1.1.2.2.2.cmml" xref="S2.E6.m1.1.2.2.2">𝑂</ci><ci id="S2.E6.m1.1.2.2.3.cmml" xref="S2.E6.m1.1.2.2.3">𝑢</ci><ci id="S2.E6.m1.1.2.2.4.cmml" xref="S2.E6.m1.1.2.2.4">𝑡</ci><ci id="S2.E6.m1.1.2.2.5.cmml" xref="S2.E6.m1.1.2.2.5">𝑝</ci><ci id="S2.E6.m1.1.2.2.6.cmml" xref="S2.E6.m1.1.2.2.6">𝑢</ci><ci id="S2.E6.m1.1.2.2.7.cmml" xref="S2.E6.m1.1.2.2.7">𝑡</ci></apply><apply id="S2.E6.m1.1.1.cmml" xref="S2.E6.m1.1.1"><divide id="S2.E6.m1.1.1.2.cmml" xref="S2.E6.m1.1.1"></divide><apply id="S2.E6.m1.1.1.1.cmml" xref="S2.E6.m1.1.1.1"><apply id="S2.E6.m1.1.1.1.2.cmml" xref="S2.E6.m1.1.1.1.2"><csymbol cd="ambiguous" id="S2.E6.m1.1.1.1.2.1.cmml" xref="S2.E6.m1.1.1.1.2">superscript</csymbol><apply id="S2.E6.m1.1.1.1.2.2.cmml" xref="S2.E6.m1.1.1.1.2"><csymbol cd="ambiguous" id="S2.E6.m1.1.1.1.2.2.1.cmml" xref="S2.E6.m1.1.1.1.2">subscript</csymbol><sum id="S2.E6.m1.1.1.1.2.2.2.cmml" xref="S2.E6.m1.1.1.1.2.2.2"></sum><apply id="S2.E6.m1.1.1.1.2.2.3.cmml" xref="S2.E6.m1.1.1.1.2.2.3"><eq id="S2.E6.m1.1.1.1.2.2.3.1.cmml" xref="S2.E6.m1.1.1.1.2.2.3.1"></eq><ci id="S2.E6.m1.1.1.1.2.2.3.2.cmml" xref="S2.E6.m1.1.1.1.2.2.3.2">𝑡</ci><cn type="integer" id="S2.E6.m1.1.1.1.2.2.3.3.cmml" xref="S2.E6.m1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S2.E6.m1.1.1.1.2.3.cmml" xref="S2.E6.m1.1.1.1.2.3">𝑇</ci></apply><apply id="S2.E6.m1.1.1.1.3.cmml" xref="S2.E6.m1.1.1.1.3"><apply id="S2.E6.m1.1.1.1.3.1.cmml" xref="S2.E6.m1.1.1.1.3.1"><csymbol cd="ambiguous" id="S2.E6.m1.1.1.1.3.1.1.cmml" xref="S2.E6.m1.1.1.1.3.1">superscript</csymbol><apply id="S2.E6.m1.1.1.1.3.1.2.cmml" xref="S2.E6.m1.1.1.1.3.1"><csymbol cd="ambiguous" id="S2.E6.m1.1.1.1.3.1.2.1.cmml" xref="S2.E6.m1.1.1.1.3.1">subscript</csymbol><sum id="S2.E6.m1.1.1.1.3.1.2.2.cmml" xref="S2.E6.m1.1.1.1.3.1.2.2"></sum><apply id="S2.E6.m1.1.1.1.3.1.2.3.cmml" xref="S2.E6.m1.1.1.1.3.1.2.3"><eq id="S2.E6.m1.1.1.1.3.1.2.3.1.cmml" xref="S2.E6.m1.1.1.1.3.1.2.3.1"></eq><ci id="S2.E6.m1.1.1.1.3.1.2.3.2.cmml" xref="S2.E6.m1.1.1.1.3.1.2.3.2">𝑖</ci><cn type="integer" id="S2.E6.m1.1.1.1.3.1.2.3.3.cmml" xref="S2.E6.m1.1.1.1.3.1.2.3.3">1</cn></apply></apply><ci id="S2.E6.m1.1.1.1.3.1.3.cmml" xref="S2.E6.m1.1.1.1.3.1.3">𝑛</ci></apply><apply id="S2.E6.m1.1.1.1.3.2.cmml" xref="S2.E6.m1.1.1.1.3.2"><times id="S2.E6.m1.1.1.1.3.2.1.cmml" xref="S2.E6.m1.1.1.1.3.2.1"></times><apply id="S2.E6.m1.1.1.1.3.2.2.cmml" xref="S2.E6.m1.1.1.1.3.2.2"><times id="S2.E6.m1.1.1.1.3.2.2.1.cmml" xref="S2.E6.m1.1.1.1.3.2.2.1"></times><apply id="S2.E6.m1.1.1.1.3.2.2.2.cmml" xref="S2.E6.m1.1.1.1.3.2.2.2"><csymbol cd="ambiguous" id="S2.E6.m1.1.1.1.3.2.2.2.1.cmml" xref="S2.E6.m1.1.1.1.3.2.2.2">subscript</csymbol><ci id="S2.E6.m1.1.1.1.3.2.2.2.2.cmml" xref="S2.E6.m1.1.1.1.3.2.2.2.2">𝑥</ci><ci id="S2.E6.m1.1.1.1.3.2.2.2.3.cmml" xref="S2.E6.m1.1.1.1.3.2.2.2.3">𝑖</ci></apply><apply id="S2.E6.m1.1.1.1.3.2.2.3.1.cmml" xref="S2.E6.m1.1.1.1.3.2.2.3.2"><csymbol cd="latexml" id="S2.E6.m1.1.1.1.3.2.2.3.1.1.cmml" xref="S2.E6.m1.1.1.1.3.2.2.3.2.1">delimited-[]</csymbol><ci id="S2.E6.m1.1.1.1.1.cmml" xref="S2.E6.m1.1.1.1.1">𝑡</ci></apply></apply><apply id="S2.E6.m1.1.1.1.3.2.3.cmml" xref="S2.E6.m1.1.1.1.3.2.3"><csymbol cd="ambiguous" id="S2.E6.m1.1.1.1.3.2.3.1.cmml" xref="S2.E6.m1.1.1.1.3.2.3">subscript</csymbol><ci id="S2.E6.m1.1.1.1.3.2.3.2.cmml" xref="S2.E6.m1.1.1.1.3.2.3.2">𝑤</ci><ci id="S2.E6.m1.1.1.1.3.2.3.3.cmml" xref="S2.E6.m1.1.1.1.3.2.3.3">𝑖</ci></apply></apply></apply></apply><apply id="S2.E6.m1.1.1.3.cmml" xref="S2.E6.m1.1.1.3"><times id="S2.E6.m1.1.1.3.1.cmml" xref="S2.E6.m1.1.1.3.1"></times><ci id="S2.E6.m1.1.1.3.2.cmml" xref="S2.E6.m1.1.1.3.2">𝑇</ci><ci id="S2.E6.m1.1.1.3.3.cmml" xref="S2.E6.m1.1.1.3.3">𝑖</ci><ci id="S2.E6.m1.1.1.3.4.cmml" xref="S2.E6.m1.1.1.3.4">𝑚</ci><ci id="S2.E6.m1.1.1.3.5.cmml" xref="S2.E6.m1.1.1.3.5">𝑒</ci><ci id="S2.E6.m1.1.1.3.6.cmml" xref="S2.E6.m1.1.1.3.6">𝑠</ci><ci id="S2.E6.m1.1.1.3.7.cmml" xref="S2.E6.m1.1.1.3.7">𝑡</ci><ci id="S2.E6.m1.1.1.3.8.cmml" xref="S2.E6.m1.1.1.3.8">𝑒</ci><ci id="S2.E6.m1.1.1.3.9.cmml" xref="S2.E6.m1.1.1.3.9">𝑝</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E6.m1.1c">Output=\frac{\sum\limits_{t=1}^{T}{\sum\limits_{i=1}^{n}{x_{i}\left[t\right]\times w_{i}}}}{Timestep}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S2.SS2.p5" class="ltx_para">
+<p id="S2.SS2.p5.4" class="ltx_p">where <math id="S2.SS2.p5.1.m1.1" class="ltx_Math" alttext="x_{i}[t]" display="inline"><semantics id="S2.SS2.p5.1.m1.1a"><mrow id="S2.SS2.p5.1.m1.1.2" xref="S2.SS2.p5.1.m1.1.2.cmml"><msub id="S2.SS2.p5.1.m1.1.2.2" xref="S2.SS2.p5.1.m1.1.2.2.cmml"><mi id="S2.SS2.p5.1.m1.1.2.2.2" xref="S2.SS2.p5.1.m1.1.2.2.2.cmml">x</mi><mi id="S2.SS2.p5.1.m1.1.2.2.3" xref="S2.SS2.p5.1.m1.1.2.2.3.cmml">i</mi></msub><mo lspace="0em" rspace="0em" id="S2.SS2.p5.1.m1.1.2.1" xref="S2.SS2.p5.1.m1.1.2.1.cmml">​</mo><mrow id="S2.SS2.p5.1.m1.1.2.3.2" xref="S2.SS2.p5.1.m1.1.2.3.1.cmml"><mo stretchy="false" id="S2.SS2.p5.1.m1.1.2.3.2.1" xref="S2.SS2.p5.1.m1.1.2.3.1.1.cmml">[</mo><mi id="S2.SS2.p5.1.m1.1.1" xref="S2.SS2.p5.1.m1.1.1.cmml">t</mi><mo stretchy="false" id="S2.SS2.p5.1.m1.1.2.3.2.2" xref="S2.SS2.p5.1.m1.1.2.3.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS2.p5.1.m1.1b"><apply id="S2.SS2.p5.1.m1.1.2.cmml" xref="S2.SS2.p5.1.m1.1.2"><times id="S2.SS2.p5.1.m1.1.2.1.cmml" xref="S2.SS2.p5.1.m1.1.2.1"></times><apply id="S2.SS2.p5.1.m1.1.2.2.cmml" xref="S2.SS2.p5.1.m1.1.2.2"><csymbol cd="ambiguous" id="S2.SS2.p5.1.m1.1.2.2.1.cmml" xref="S2.SS2.p5.1.m1.1.2.2">subscript</csymbol><ci id="S2.SS2.p5.1.m1.1.2.2.2.cmml" xref="S2.SS2.p5.1.m1.1.2.2.2">𝑥</ci><ci id="S2.SS2.p5.1.m1.1.2.2.3.cmml" xref="S2.SS2.p5.1.m1.1.2.2.3">𝑖</ci></apply><apply id="S2.SS2.p5.1.m1.1.2.3.1.cmml" xref="S2.SS2.p5.1.m1.1.2.3.2"><csymbol cd="latexml" id="S2.SS2.p5.1.m1.1.2.3.1.1.cmml" xref="S2.SS2.p5.1.m1.1.2.3.2.1">delimited-[]</csymbol><ci id="S2.SS2.p5.1.m1.1.1.cmml" xref="S2.SS2.p5.1.m1.1.1">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p5.1.m1.1c">x_{i}[t]</annotation></semantics></math> represents the spike firing spike state of the <math id="S2.SS2.p5.2.m2.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S2.SS2.p5.2.m2.1a"><mi id="S2.SS2.p5.2.m2.1.1" xref="S2.SS2.p5.2.m2.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S2.SS2.p5.2.m2.1b"><ci id="S2.SS2.p5.2.m2.1.1.cmml" xref="S2.SS2.p5.2.m2.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p5.2.m2.1c">i</annotation></semantics></math>-th neuron of the presynaptic neuron at time step <math id="S2.SS2.p5.3.m3.1" class="ltx_Math" alttext="t" display="inline"><semantics id="S2.SS2.p5.3.m3.1a"><mi id="S2.SS2.p5.3.m3.1.1" xref="S2.SS2.p5.3.m3.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="S2.SS2.p5.3.m3.1b"><ci id="S2.SS2.p5.3.m3.1.1.cmml" xref="S2.SS2.p5.3.m3.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p5.3.m3.1c">t</annotation></semantics></math>, and <math id="S2.SS2.p5.4.m4.1" class="ltx_Math" alttext="w_{i}" display="inline"><semantics id="S2.SS2.p5.4.m4.1a"><msub id="S2.SS2.p5.4.m4.1.1" xref="S2.SS2.p5.4.m4.1.1.cmml"><mi id="S2.SS2.p5.4.m4.1.1.2" xref="S2.SS2.p5.4.m4.1.1.2.cmml">w</mi><mi id="S2.SS2.p5.4.m4.1.1.3" xref="S2.SS2.p5.4.m4.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S2.SS2.p5.4.m4.1b"><apply id="S2.SS2.p5.4.m4.1.1.cmml" xref="S2.SS2.p5.4.m4.1.1"><csymbol cd="ambiguous" id="S2.SS2.p5.4.m4.1.1.1.cmml" xref="S2.SS2.p5.4.m4.1.1">subscript</csymbol><ci id="S2.SS2.p5.4.m4.1.1.2.cmml" xref="S2.SS2.p5.4.m4.1.1.2">𝑤</ci><ci id="S2.SS2.p5.4.m4.1.1.3.cmml" xref="S2.SS2.p5.4.m4.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p5.4.m4.1c">w_{i}</annotation></semantics></math> represents the weight associated with the corresponding neuron. These values are multiplied to yield the synaptic current.</p>
+</div>
+<div id="S2.SS2.p6" class="ltx_para">
+<p id="S2.SS2.p6.1" class="ltx_p">On the comparison with rate decoding, this decoding method provides a better approximation of continuous values and offers better accuracy and flexibility for regression problems.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2310.12985/assets/x2.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="269" height="202" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.2.1.1" class="ltx_text ltx_font_bold">Fig. 2</span>: </span>Experimental results of SNN-YOLOv3 on PASCAL VOC dataset for various time step; maximum mAP is in parentheses.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>EXPERIMENTS</h2>
+
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Experimental setup</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">In this experiment, we choose the classical version of the YOLOv3 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> real-time object detection network for validating the effectiveness of the CMD method. SNN-YOLOv3 was tested on the PASCAL VOC datasets <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> with simulations based on the PyTorch platform and all experiments were done on NVIDIA Tesla V100 GPUs. The SNN-YOLOv3 obtains more efficiency and robust spike feature trains by using the first convolutional set as the encoding layer without additional encoding layers.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.2" class="ltx_p">During the training process, we adopt a stochastic gradient descent optimiser with a momentum parameter of 0.9 and a cosine decay scheduler for fine-tuning the learning rate. we set the weight decay for the upper bound parameter <math id="S3.SS1.p2.1.m1.1" class="ltx_Math" alttext="\theta" display="inline"><semantics id="S3.SS1.p2.1.m1.1a"><mi id="S3.SS1.p2.1.m1.1.1" xref="S3.SS1.p2.1.m1.1.1.cmml">θ</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.1.m1.1b"><ci id="S3.SS1.p2.1.m1.1.1.cmml" xref="S3.SS1.p2.1.m1.1.1">𝜃</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.1.m1.1c">\theta</annotation></semantics></math> of SNN-YOLOv3 to <math id="S3.SS1.p2.2.m2.1" class="ltx_Math" alttext="5\times 10^{-3}" display="inline"><semantics id="S3.SS1.p2.2.m2.1a"><mrow id="S3.SS1.p2.2.m2.1.1" xref="S3.SS1.p2.2.m2.1.1.cmml"><mn id="S3.SS1.p2.2.m2.1.1.2" xref="S3.SS1.p2.2.m2.1.1.2.cmml">5</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p2.2.m2.1.1.1" xref="S3.SS1.p2.2.m2.1.1.1.cmml">×</mo><msup id="S3.SS1.p2.2.m2.1.1.3" xref="S3.SS1.p2.2.m2.1.1.3.cmml"><mn id="S3.SS1.p2.2.m2.1.1.3.2" xref="S3.SS1.p2.2.m2.1.1.3.2.cmml">10</mn><mrow id="S3.SS1.p2.2.m2.1.1.3.3" xref="S3.SS1.p2.2.m2.1.1.3.3.cmml"><mo id="S3.SS1.p2.2.m2.1.1.3.3a" xref="S3.SS1.p2.2.m2.1.1.3.3.cmml">−</mo><mn id="S3.SS1.p2.2.m2.1.1.3.3.2" xref="S3.SS1.p2.2.m2.1.1.3.3.2.cmml">3</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.2.m2.1b"><apply id="S3.SS1.p2.2.m2.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1"><times id="S3.SS1.p2.2.m2.1.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1.1"></times><cn type="integer" id="S3.SS1.p2.2.m2.1.1.2.cmml" xref="S3.SS1.p2.2.m2.1.1.2">5</cn><apply id="S3.SS1.p2.2.m2.1.1.3.cmml" xref="S3.SS1.p2.2.m2.1.1.3"><csymbol cd="ambiguous" id="S3.SS1.p2.2.m2.1.1.3.1.cmml" xref="S3.SS1.p2.2.m2.1.1.3">superscript</csymbol><cn type="integer" id="S3.SS1.p2.2.m2.1.1.3.2.cmml" xref="S3.SS1.p2.2.m2.1.1.3.2">10</cn><apply id="S3.SS1.p2.2.m2.1.1.3.3.cmml" xref="S3.SS1.p2.2.m2.1.1.3.3"><minus id="S3.SS1.p2.2.m2.1.1.3.3.1.cmml" xref="S3.SS1.p2.2.m2.1.1.3.3"></minus><cn type="integer" id="S3.SS1.p2.2.m2.1.1.3.3.2.cmml" xref="S3.SS1.p2.2.m2.1.1.3.3.2">3</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.2.m2.1c">5\times 10^{-3}</annotation></semantics></math>. Furthermore, We used normalization and horizontal flipping method for data augmentation.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Experimental results</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">In order to verify and analyse the effectiveness of our proposed method, we evaluate the performance of our methods for object detection tasks on PASCAL VOC datasets.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F3.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2310.12985/assets/Photo/1.png" id="S3.F3.1.g1" class="ltx_graphics ltx_img_landscape" width="161" height="107" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F3.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2310.12985/assets/Photo/2.png" id="S3.F3.2.g1" class="ltx_graphics ltx_img_landscape" width="161" height="107" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F3.3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2310.12985/assets/Photo/3.png" id="S3.F3.3.g1" class="ltx_graphics ltx_img_landscape" width="161" height="121" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F3.4" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2310.12985/assets/Photo/4.png" id="S3.F3.4.g1" class="ltx_graphics ltx_img_landscape" width="161" height="121" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F3.6.1.1" class="ltx_text ltx_font_bold">Fig. 3</span>: </span>Object detection results on PASCAL VOC dataset.</figcaption>
+</figure>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.3" class="ltx_p">Fig. <a href="#S2.F2" title="Figure 2 ‣ 2.2 Current mean decoding (CMD) ‣ 2 methods ‣ Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in Spiking Neural Networks" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> shows the object detection performance of SNN-YOLOv3 as the number of training epochs increases. In the figure, the green and red curves represent the performance trends for the CMD method with <math id="S3.SS2.p2.1.m1.1" class="ltx_Math" alttext="T=4" display="inline"><semantics id="S3.SS2.p2.1.m1.1a"><mrow id="S3.SS2.p2.1.m1.1.1" xref="S3.SS2.p2.1.m1.1.1.cmml"><mi id="S3.SS2.p2.1.m1.1.1.2" xref="S3.SS2.p2.1.m1.1.1.2.cmml">T</mi><mo id="S3.SS2.p2.1.m1.1.1.1" xref="S3.SS2.p2.1.m1.1.1.1.cmml">=</mo><mn id="S3.SS2.p2.1.m1.1.1.3" xref="S3.SS2.p2.1.m1.1.1.3.cmml">4</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.1.m1.1b"><apply id="S3.SS2.p2.1.m1.1.1.cmml" xref="S3.SS2.p2.1.m1.1.1"><eq id="S3.SS2.p2.1.m1.1.1.1.cmml" xref="S3.SS2.p2.1.m1.1.1.1"></eq><ci id="S3.SS2.p2.1.m1.1.1.2.cmml" xref="S3.SS2.p2.1.m1.1.1.2">𝑇</ci><cn type="integer" id="S3.SS2.p2.1.m1.1.1.3.cmml" xref="S3.SS2.p2.1.m1.1.1.3">4</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.1.m1.1c">T=4</annotation></semantics></math> and <math id="S3.SS2.p2.2.m2.1" class="ltx_Math" alttext="T=6" display="inline"><semantics id="S3.SS2.p2.2.m2.1a"><mrow id="S3.SS2.p2.2.m2.1.1" xref="S3.SS2.p2.2.m2.1.1.cmml"><mi id="S3.SS2.p2.2.m2.1.1.2" xref="S3.SS2.p2.2.m2.1.1.2.cmml">T</mi><mo id="S3.SS2.p2.2.m2.1.1.1" xref="S3.SS2.p2.2.m2.1.1.1.cmml">=</mo><mn id="S3.SS2.p2.2.m2.1.1.3" xref="S3.SS2.p2.2.m2.1.1.3.cmml">6</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.2.m2.1b"><apply id="S3.SS2.p2.2.m2.1.1.cmml" xref="S3.SS2.p2.2.m2.1.1"><eq id="S3.SS2.p2.2.m2.1.1.1.cmml" xref="S3.SS2.p2.2.m2.1.1.1"></eq><ci id="S3.SS2.p2.2.m2.1.1.2.cmml" xref="S3.SS2.p2.2.m2.1.1.2">𝑇</ci><cn type="integer" id="S3.SS2.p2.2.m2.1.1.3.cmml" xref="S3.SS2.p2.2.m2.1.1.3">6</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.2.m2.1c">T=6</annotation></semantics></math>, respectively, while the blue curves illustrate the accuracy variation for the rate decoding method with <math id="S3.SS2.p2.3.m3.1" class="ltx_Math" alttext="T=6" display="inline"><semantics id="S3.SS2.p2.3.m3.1a"><mrow id="S3.SS2.p2.3.m3.1.1" xref="S3.SS2.p2.3.m3.1.1.cmml"><mi id="S3.SS2.p2.3.m3.1.1.2" xref="S3.SS2.p2.3.m3.1.1.2.cmml">T</mi><mo id="S3.SS2.p2.3.m3.1.1.1" xref="S3.SS2.p2.3.m3.1.1.1.cmml">=</mo><mn id="S3.SS2.p2.3.m3.1.1.3" xref="S3.SS2.p2.3.m3.1.1.3.cmml">6</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.3.m3.1b"><apply id="S3.SS2.p2.3.m3.1.1.cmml" xref="S3.SS2.p2.3.m3.1.1"><eq id="S3.SS2.p2.3.m3.1.1.1.cmml" xref="S3.SS2.p2.3.m3.1.1.1"></eq><ci id="S3.SS2.p2.3.m3.1.1.2.cmml" xref="S3.SS2.p2.3.m3.1.1.2">𝑇</ci><cn type="integer" id="S3.SS2.p2.3.m3.1.1.3.cmml" xref="S3.SS2.p2.3.m3.1.1.3">6</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.3.m3.1c">T=6</annotation></semantics></math>. From the experimental results, we observe the following conclusions: (1) In general, CMD brings higher performance compared to rate decoding. (2) As the current mean decoded SNN is trained with a larger number of time steps, its performance will further increase. The results clearly indicate that when utilizing rate decoding, the SNN network struggles to learn, leading to consistently low accuracy. In contrast, the CMD method shows a remarkable ability to improve accuracy with increasing number of training iterations. This illustrate the exceptional effectiveness of the CMD method for object detection tasks in SNNs.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.1" class="ltx_p">Moreover, the remarkable performance of SNN-YOLOv3 is also shown in the other examples in Fig. <a href="#S3.F3" title="Figure 3 ‣ 3.2 Experimental results ‣ 3 EXPERIMENTS ‣ Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in Spiking Neural Networks" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>. The SNN-YOLOv3 precisely locates and classifies various object categories within images, including person, cars, and bicycles which proves its excellent object localisation capability.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>SNN-YOLOv3 energy efficiency</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">In order to assess the outstanding energy efficiency of SNN-YOLOv3, we compare the computational operations of SNN-YOLOv3 and YOLOv3 within the realm of digital signal processing. Within convolutional deep neural networks, the convolutional layer is the main computational region, where the multiply-accumulate (MAC) operation is the main executive operation.
+However, the operation performed in the spiking neural network is an accumulation (AC) operation because spiking events are binary events. The input current is integrated or accumulated into the membrane potential only when the neuron received a spike. For a fair comparison, we focus on the number of MACs and ACs consumed during single-image object detection. According to the literature <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>, 32-bit floating-point MAC operations consume 4.6 pJ and 32-bit floating-point AC operations consume 0.9 pJ.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2310.12985/assets/x3.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="242" height="181" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F4.2.1.1" class="ltx_text ltx_font_bold">Fig. 4</span>: </span>The normalized energy comparison of YOLOv3 and SNN-YOLOv3 for MAC and AC operations.</figcaption>
+</figure>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.4" class="ltx_p">Based on these operation energy results, we calculated the energy consumption of YOLOv3 and SNN-YOLOv3 by multiplying the FLOPs (floating point operations) and the energy consumption per MAC or AC operation. if it is a SNN model, it needs to be further multiplied by time step. According our simulations, the FLOPs for ANN-YOLOv3 and SNN-YOLOv3 were <math id="S3.SS3.p2.1.m1.1" class="ltx_Math" alttext="66.19" display="inline"><semantics id="S3.SS3.p2.1.m1.1a"><mn id="S3.SS3.p2.1.m1.1.1" xref="S3.SS3.p2.1.m1.1.1.cmml">66.19</mn><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.1.m1.1b"><cn type="float" id="S3.SS3.p2.1.m1.1.1.cmml" xref="S3.SS3.p2.1.m1.1.1">66.19</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.1.m1.1c">66.19</annotation></semantics></math> and <math id="S3.SS3.p2.2.m2.1" class="ltx_Math" alttext="0.425" display="inline"><semantics id="S3.SS3.p2.2.m2.1a"><mn id="S3.SS3.p2.2.m2.1.1" xref="S3.SS3.p2.2.m2.1.1.cmml">0.425</mn><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.2.m2.1b"><cn type="float" id="S3.SS3.p2.2.m2.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1">0.425</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.2.m2.1c">0.425</annotation></semantics></math> GFLOPs, respectively. Fig. <a href="#S3.F4" title="Figure 4 ‣ 3.3 SNN-YOLOv3 energy efficiency ‣ 3 EXPERIMENTS ‣ Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in Spiking Neural Networks" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> shows the results, where SNN-YOLOv3 is more than 158 times energy efficient than YOLOv3 in 32-bit FL operations both under the <math id="S3.SS3.p2.3.m3.1" class="ltx_Math" alttext="T=4" display="inline"><semantics id="S3.SS3.p2.3.m3.1a"><mrow id="S3.SS3.p2.3.m3.1.1" xref="S3.SS3.p2.3.m3.1.1.cmml"><mi id="S3.SS3.p2.3.m3.1.1.2" xref="S3.SS3.p2.3.m3.1.1.2.cmml">T</mi><mo id="S3.SS3.p2.3.m3.1.1.1" xref="S3.SS3.p2.3.m3.1.1.1.cmml">=</mo><mn id="S3.SS3.p2.3.m3.1.1.3" xref="S3.SS3.p2.3.m3.1.1.3.cmml">4</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.3.m3.1b"><apply id="S3.SS3.p2.3.m3.1.1.cmml" xref="S3.SS3.p2.3.m3.1.1"><eq id="S3.SS3.p2.3.m3.1.1.1.cmml" xref="S3.SS3.p2.3.m3.1.1.1"></eq><ci id="S3.SS3.p2.3.m3.1.1.2.cmml" xref="S3.SS3.p2.3.m3.1.1.2">𝑇</ci><cn type="integer" id="S3.SS3.p2.3.m3.1.1.3.cmml" xref="S3.SS3.p2.3.m3.1.1.3">4</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.3.m3.1c">T=4</annotation></semantics></math> and <math id="S3.SS3.p2.4.m4.1" class="ltx_Math" alttext="T=6" display="inline"><semantics id="S3.SS3.p2.4.m4.1a"><mrow id="S3.SS3.p2.4.m4.1.1" xref="S3.SS3.p2.4.m4.1.1.cmml"><mi id="S3.SS3.p2.4.m4.1.1.2" xref="S3.SS3.p2.4.m4.1.1.2.cmml">T</mi><mo id="S3.SS3.p2.4.m4.1.1.1" xref="S3.SS3.p2.4.m4.1.1.1.cmml">=</mo><mn id="S3.SS3.p2.4.m4.1.1.3" xref="S3.SS3.p2.4.m4.1.1.3.cmml">6</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.4.m4.1b"><apply id="S3.SS3.p2.4.m4.1.1.cmml" xref="S3.SS3.p2.4.m4.1.1"><eq id="S3.SS3.p2.4.m4.1.1.1.cmml" xref="S3.SS3.p2.4.m4.1.1.1"></eq><ci id="S3.SS3.p2.4.m4.1.1.2.cmml" xref="S3.SS3.p2.4.m4.1.1.2">𝑇</ci><cn type="integer" id="S3.SS3.p2.4.m4.1.1.3.cmml" xref="S3.SS3.p2.4.m4.1.1.3">6</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.4.m4.1c">T=6</annotation></semantics></math>.</p>
+</div>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span>Comparison with the State-of-the-Art</h3>
+
+<figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span id="S3.T1.2.1.1" class="ltx_text ltx_font_bold">Table 1</span>: </span>Performance and energy consumption comparison between the proposed method and previous work on PASCAL VOC dataset.</figcaption>
+<table id="S3.T1.3" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.3.1" class="ltx_tr">
+<td id="S3.T1.3.1.1" class="ltx_td ltx_align_center ltx_border_tt" style="padding:3pt 4.8pt;" colspan="5"><span id="S3.T1.3.1.1.1" class="ltx_text ltx_font_bold">SNN-YOLOv3 (Ours)</span></td>
+</tr>
+<tr id="S3.T1.3.2" class="ltx_tr">
+<td id="S3.T1.3.2.1" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">Method</td>
+<td id="S3.T1.3.2.2" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">mAP(%)</td>
+<td id="S3.T1.3.2.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">Time step</td>
+<td id="S3.T1.3.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding:3pt 4.8pt;">FLOPs</td>
+<td id="S3.T1.3.2.5" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">Energy</td>
+</tr>
+<tr id="S3.T1.3.3" class="ltx_tr">
+<td id="S3.T1.3.3.1" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">SG+CMD</td>
+<td id="S3.T1.3.3.2" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;"><span id="S3.T1.3.3.2.1" class="ltx_text ltx_font_bold">61.87</span></td>
+<td id="S3.T1.3.3.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;"><span id="S3.T1.3.3.3.1" class="ltx_text ltx_font_bold">6</span></td>
+<td id="S3.T1.3.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding:3pt 4.8pt;">4.25E+08</td>
+<td id="S3.T1.3.3.5" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;"><span id="S3.T1.3.3.5.1" class="ltx_text ltx_font_bold">6.38E-06</span></td>
+</tr>
+<tr id="S3.T1.3.4" class="ltx_tr">
+<td id="S3.T1.3.4.1" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;" colspan="5"><span id="S3.T1.3.4.1.1" class="ltx_text ltx_font_bold">Spiking-YOLO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite></span></td>
+</tr>
+<tr id="S3.T1.3.5" class="ltx_tr">
+<td id="S3.T1.3.5.1" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">Method</td>
+<td id="S3.T1.3.5.2" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">mAP(%)</td>
+<td id="S3.T1.3.5.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">Time step</td>
+<td id="S3.T1.3.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding:3pt 4.8pt;">FLOPs</td>
+<td id="S3.T1.3.5.5" class="ltx_td ltx_align_center ltx_border_t" style="padding:3pt 4.8pt;">Energy</td>
+</tr>
+<tr id="S3.T1.3.6" class="ltx_tr">
+<td id="S3.T1.3.6.1" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" style="padding:3pt 4.8pt;">ANN-SNN</td>
+<td id="S3.T1.3.6.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" style="padding:3pt 4.8pt;">51.83</td>
+<td id="S3.T1.3.6.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" style="padding:3pt 4.8pt;">3500</td>
+<td id="S3.T1.3.6.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t" style="padding:3pt 4.8pt;">4.90E+07</td>
+<td id="S3.T1.3.6.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" style="padding:3pt 4.8pt;">4.29E-04</td>
+</tr>
+</table>
+</figure>
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.1" class="ltx_p">We compare our approach with other state-of-the-art ANN-to-SNN conversion methods on the PASCAL VOC dataset to achieve SNN object detection on non-trivial datasets. Our calculation result as shown in Table <a href="#S3.T1" title="Table 1 ‣ 3.4 Comparison with the State-of-the-Art ‣ 3 EXPERIMENTS ‣ Enabling Energy-Efficient Object Detection with Surrogate Gradient Descent in Spiking Neural Networks" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. We calculated the energy consumption of SNN-YOLOv3 running on a neuromorphic chip (TrueNorth) and compared it to Spiking YOLO. the GFLOPS/W of TrueNorth is 300 GFLOPs/W, and we defined a time step as 1 ms (1 kHz synchronization signal in TrueNorth) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. For SNN-YOLOv3, ours proposed method can achieve 61.87% mAP using only 6 time steps. Compare to Spiking-YOLO, we have nearly 10% increase in mAP while requiring nearly two orders of magnitude less energy consumption. Considering that the TrueNorth chip was initially introduced in 2014, we can expect increased energy and computational efficiency as neuromorphic chips advance and produce better results.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Conclusion</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">In this paper, we introduce the energy-efficient SNN-YOLOv3, which is the first SNN model that implement object detection using surrogate gradient. It achieves the state-of-the-art performance (61.87% mAP) on the PASCAL VOC dataset using only 6 time steps. Compared to previous work, we can accomplish object detection with less energy consumption. In addition, we proposed current mean decoding method for solving regression problem in SNN, which provides a different approach to work out more advanced machine learning problems with deep SNNs.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Wolfgang Maass,
+
+</span>
+<span class="ltx_bibblock">“Networks of spiking neurons: the third generation of neural network
+models,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text ltx_font_italic">Neural networks</span>, vol. 10, no. 9, pp. 1659–1671, 1997.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Paul A Merolla, John V Arthur, Rodrigo Alvarez-Icaza, Andrew S Cassidy, Jun
+Sawada, Filipp Akopyan, Bryan L Jackson, Nabil Imam, Chen Guo, Yutaka
+Nakamura, et al.,
+
+</span>
+<span class="ltx_bibblock">“A million spiking-neuron integrated circuit with a scalable
+communication network and interface,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text ltx_font_italic">Science</span>, vol. 345, no. 6197, pp. 668–673, 2014.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Jing Pei, Lei Deng, Sen Song, Mingguo Zhao, Youhui Zhang, Shuang Wu, Guanrui
+Wang, Zhe Zou, Zhenzhi Wu, Wei He, et al.,
+
+</span>
+<span class="ltx_bibblock">“Towards artificial general intelligence with hybrid tianjic chip
+architecture,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text ltx_font_italic">Nature</span>, vol. 572, no. 7767, pp. 106–111, 2019.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Giacomo Indiveri, Federico Corradi, and Ning Qiao,
+
+</span>
+<span class="ltx_bibblock">“Neuromorphic architectures for spiking deep neural networks,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib4.1.1" class="ltx_text ltx_font_italic">2015 IEEE International Electron Devices Meeting (IEDM)</span>.
+IEEE, 2015, pp. 4–2.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Zachary F Mainen and Terrence J Sejnowski,
+
+</span>
+<span class="ltx_bibblock">“Reliability of spike timing in neocortical neurons,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text ltx_font_italic">Science</span>, vol. 268, no. 5216, pp. 1503–1506, 1995.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Kaushik Roy, Akhilesh Jaiswal, and Priyadarshini Panda,
+
+</span>
+<span class="ltx_bibblock">“Towards spike-based machine intelligence with neuromorphic
+computing,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text ltx_font_italic">Nature</span>, vol. 575, no. 7784, pp. 607–617, 2019.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Jun Haeng Lee, Tobi Delbruck, and Michael Pfeiffer,
+
+</span>
+<span class="ltx_bibblock">“Training deep spiking neural networks using backpropagation,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text ltx_font_italic">Frontiers in neuroscience</span>, vol. 10, pp. 508, 2016.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Sumit B Shrestha and Garrick Orchard,
+
+</span>
+<span class="ltx_bibblock">“Slayer: Spike layer error reassignment in time,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text ltx_font_italic">Advances in neural information processing systems</span>, vol. 31,
+2018.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Peter U Diehl, Daniel Neil, Jonathan Binas, Matthew Cook, Shih-Chii Liu, and
+Michael Pfeiffer,
+
+</span>
+<span class="ltx_bibblock">“Fast-classifying, high-accuracy spiking deep networks through
+weight and threshold balancing,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib9.1.1" class="ltx_text ltx_font_italic">2015 International joint conference on neural networks
+(IJCNN)</span>. ieee, 2015, pp. 1–8.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Abhronil Sengupta, Yuting Ye, Robert Wang, Chiao Liu, and Kaushik Roy,
+
+</span>
+<span class="ltx_bibblock">“Going deeper in spiking neural networks: Vgg and residual
+architectures,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.1.1" class="ltx_text ltx_font_italic">Frontiers in neuroscience</span>, vol. 13, pp. 95, 2019.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Bodo Rueckauer, Iulia-Alexandra Lungu, Yuhuang Hu, Michael Pfeiffer, and
+Shih-Chii Liu,
+
+</span>
+<span class="ltx_bibblock">“Conversion of continuous-valued deep networks to efficient
+event-driven networks for image classification,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.1.1" class="ltx_text ltx_font_italic">Frontiers in neuroscience</span>, vol. 11, pp. 682, 2017.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Seijoon Kim, Seongsik Park, Byunggook Na, and Sungroh Yoon,
+
+</span>
+<span class="ltx_bibblock">“Spiking-yolo: spiking neural network for energy-efficient object
+detection,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib12.1.1" class="ltx_text ltx_font_italic">Proceedings of the AAAI conference on artificial
+intelligence</span>, 2020, vol. 34, pp. 11270–11277.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Emre O Neftci, Hesham Mostafa, and Friedemann Zenke,
+
+</span>
+<span class="ltx_bibblock">“Surrogate gradient learning in spiking neural networks: Bringing
+the power of gradient-based optimization to spiking neural networks,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text ltx_font_italic">IEEE Signal Processing Magazine</span>, vol. 36, no. 6, pp. 51–63,
+2019.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Yujie Wu, Lei Deng, Guoqi Li, Jun Zhu, and Luping Shi,
+
+</span>
+<span class="ltx_bibblock">“Spatio-temporal backpropagation for training high-performance
+spiking neural networks,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text ltx_font_italic">Frontiers in neuroscience</span>, vol. 12, pp. 331, 2018.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Saeed Reza Kheradpisheh and Timothée Masquelier,
+
+</span>
+<span class="ltx_bibblock">“Temporal backpropagation for spiking neural networks with one spike
+per neuron,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.1.1" class="ltx_text ltx_font_italic">International Journal of Neural Systems</span>, vol. 30, no. 06, pp.
+2050027, 2020.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Shibo Zhou, Xiaohua Li, Ying Chen, Sanjeev T Chandrasekaran, and Arindam
+Sanyal,
+
+</span>
+<span class="ltx_bibblock">“Temporal-coded deep spiking neural network with easy training and
+robust performance,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib16.1.1" class="ltx_text ltx_font_italic">Proceedings of the AAAI conference on artificial
+intelligence</span>, 2021, vol. 35, pp. 11143–11151.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Yongqiang Cao, Yang Chen, and Deepak Khosla,
+
+</span>
+<span class="ltx_bibblock">“Spiking deep convolutional neural networks for energy-efficient
+object recognition,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.1.1" class="ltx_text ltx_font_italic">International Journal of Computer Vision</span>, vol. 113, pp. 54–66,
+2015.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Bing Han, Gopalakrishnan Srinivasan, and Kaushik Roy,
+
+</span>
+<span class="ltx_bibblock">“Rmp-snn: Residual membrane potential neuron for enabling deeper
+high-accuracy and low-latency spiking neural network,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib18.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE/CVF conference on computer vision and
+pattern recognition</span>, 2020, pp. 13558–13567.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Daniel Auge, Julian Hille, Etienne Mueller, and Alois Knoll,
+
+</span>
+<span class="ltx_bibblock">“A survey of encoding techniques for signal processing in spiking
+neural networks,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text ltx_font_italic">Neural Processing Letters</span>, vol. 53, no. 6, pp. 4693–4710,
+2021.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Peter U Diehl and Matthew Cook,
+
+</span>
+<span class="ltx_bibblock">“Unsupervised learning of digit recognition using
+spike-timing-dependent plasticity,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text ltx_font_italic">Frontiers in computational neuroscience</span>, vol. 9, pp. 99, 2015.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Joseph Redmon and Ali Farhadi,
+
+</span>
+<span class="ltx_bibblock">“Yolov3: An incremental improvement,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text ltx_font_italic">arXiv:1804.02767</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Mark Everingham, Luc Van Gool, Christopher KI Williams, John Winn, and Andrew
+Zisserman,
+
+</span>
+<span class="ltx_bibblock">“The pascal visual object classes (voc) challenge,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.1.1" class="ltx_text ltx_font_italic">International journal of computer vision</span>, vol. 88, pp.
+303–338, 2010.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+Mark Horowitz,
+
+</span>
+<span class="ltx_bibblock">“1.1 computing’s energy problem (and what we can do about it),”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib23.1.1" class="ltx_text ltx_font_italic">2014 IEEE international solid-state circuits conference
+digest of technical papers (ISSCC)</span>. IEEE, 2014, pp. 10–14.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2310.12984" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2310.12985" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2310.12985">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2310.12985" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2310.12986" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Tue Feb 27 23:38:40 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

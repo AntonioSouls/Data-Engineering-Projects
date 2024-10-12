@@ -1,0 +1,1345 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2306.17536] DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions</title><meta property="og:description" content="Can knowing where you are assist in perceiving objects in your surroundings, especially under adverse weather and lighting conditions? In this work we investigate whether a prior map can be leveraged to aid in the dete…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2306.17536">
+
+<!--Generated on Wed Feb 28 21:07:09 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document" style="font-size:173%;">
+<span id="id3.id1" class="ltx_text ltx_font_medium" style="font-size:58%;">
+</span>DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Stephen Hausler2, Sourav Garg2, Punarjay Chakravarty4, 
+<br class="ltx_break">Shubham Shrivastava3, Ankit Vora3 and Michael Milford<sup id="id4.3.id1" class="ltx_sup">∗</sup>2
+</span><span class="ltx_author_notes">2The authors are with the QUT Centre for Robotics, School of Electrical Engineering and Robotics at the Queensland University of Technology.<sup id="id5.4.id1" class="ltx_sup">∗</sup>E-mail: <em id="id6.5.id2" class="ltx_emph ltx_font_italic">firstname</em>.<em id="id7.6.id3" class="ltx_emph ltx_font_italic">lastname</em>@qut.edu.au.3The authors are with the Ford Motor Company.4This work was conducted while the author was at the Ford Motor Company.This research has been supported by the Ford-QUT Alliance, NVIDIA, the QUT Centre for Robotics and ARC Laureate Fellowship FL210100156.</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id8.id1" class="ltx_p">Can knowing where you are assist in perceiving objects in your surroundings, especially under adverse weather and lighting conditions? In this work we investigate whether a prior map can be leveraged to aid in the detection of dynamic objects in a scene without the need for a 3D map or pixel-level map-query correspondences. We contribute an algorithm which refines an initial set of candidate object detections and produces a refined subset of highly accurate detections using a prior map. We begin by using visual place recognition (VPR) to retrieve a reference map image for a given query image, then use a binary classification neural network that compares the query and mapping image regions to validate the query detection. Once our classification network is trained, on approximately 1000 query-map image pairs, it is able to improve the performance of vehicle detection when combined with an existing off-the-shelf vehicle detector.
+We demonstrate our approach using standard datasets across two cities (Oxford and Zurich) under different settings of train-test separation of map-query traverse pairs. We further emphasize the performance gains of our approach against alternative design choices and show that VPR suffices for the task, eliminating the need for precise ground truth localization.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">Introduction</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Perception is a key component of autonomous vehicles, necessary in order to detect and track vehicles and pedestrians in the environment around the vehicle for its safe operation. This can be a very challenging task, especially when the driving conditions deteriorate and visibility is reduced such as at night-time <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Localization is another key requirement for autonomous vehicles. Localization can be divided into coarse localization using GPS or Visual Place Recognition (VPR) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> and fine-grained 6-DoF metric localization using techniques based on 3D reconstruction <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> and local feature matching <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>. Furthermore, a duality exists between perception and localization: knowing where you are can aid perception and vice-versa.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2306.17536/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="332" height="161" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>The aim of this work is to distinguish between true and false positive vehicle detections based on the similarity between the currently observed scene and a prior map, assuming successful localization through visual place recognition.</figcaption>
+</figure>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">In this work, we consider whether localization can aid in the detection of potentially dynamic objects such as vehicles, particularly for safe AV operations under adverse weather and lighting conditions. How can knowing where you are improve perception? Localization grants access to a prior map of a given location, which could be as simple as a reference database image. This can then be used to estimate which parts of the currently observed scene are the same as the prior map – a dynamic vehicle will appear as a deviation from the prior map. However, a caveat exists: the current scene may change due to other effects, such as structural changes to the environment or a different viewpoint of the scene than that experienced during mapping. Furthermore, this map comparison or change detection process also needs to be invariant to changes induced by weather and lighting effects. In this paper, we approach the problem of dynamic vehicle detection from an appearance-invariant, repeated-route place recognition perspective, posed as a problem of change detection between the query and its recognized reference image.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Our proposed approach uses an existing off-the-shelf 2D vehicle detection method to detect a large initial set of candidate vehicles. We then improve the precision of this high-recall detector through a lightweight MLP (Multi-Layer Perceptron) that compares the query image detection regions with the corresponding regions in the reference map image, obtained through VPR. Our comparator function trained only on the Oxford Robotcar dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> is tested on three different settings of map-query traverse pairs: revisiting the train route, a route geographically disparate from the train route but in the same city (Oxford), and finally, in a different city (Zurich) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Related works</span>
+</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS1.5.1.1" class="ltx_text">II-A</span> </span><span id="S2.SS1.6.2" class="ltx_text ltx_font_italic">Visual Place Recognition and Localization</span>
+</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Both visual place recognition and visual localization are highly active areas of research, with recent respective benchmarks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> demonstrating high recognition performance. Local feature matching <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> is key to such performance, typically preceded by compact global descriptor based fast retrieval of candidate matches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>. While the output of a 6-DoF localization system is a 3D pose, the aim of VPR is to find the most similar-appearing image from the reference database (map). Since we focus on 2D object detection from images in this work, we use Patch-NetVLAD as our VPR technique to retrieve a map image, which is then used to improve object detection in the query image.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS2.5.1.1" class="ltx_text">II-B</span> </span><span id="S2.SS2.6.2" class="ltx_text ltx_font_italic">2D Object Detection</span>
+</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">2D Object detection from monocular images is a well-studied problem with recent advances heavily relying on deep learning <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, including popular earlier methods like Faster RCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> and YOLO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>. Some of the existing works focus on detecting 3D bounding boxes, where the input can be 3D point clouds <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> or a 2D image alone <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>, <a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>. More recent work has focused on improving object detection under adverse weather conditions such as night, rain, snow and fog. This includes adversarial training of domain-invariant features <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>, learning weather-specific priors <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>, multi-scale feature learning per domain <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>, image-level feature alignment for single stage detectors <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>, image enhancement before object detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>, <a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite> which includes approaches specific to hazy <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>, <a href="#bib.bib31" title="" class="ltx_ref">31</a>, <a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite> and low light conditions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> as well as using multiple differentiable image pre-processing units in sequence <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite> or parallel <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite>. These research efforts have been further fostered by the availability of annotated datasets for adverse conditions (e.g., BDD100K <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite>), leading to robust supervised methods such as YOLOP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite>. Despite training on adverse conditions, this problem still remains challenging. In the autonomous driving scenario, where a vehicle repeatedly traverses the same route with similar viewpoints of places but under different weather conditions, it is possible to use the prior map to enhance object detection when revisiting that place, especially for detecting dynamic vehicles to avoid collisions.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS3.5.1.1" class="ltx_text">II-C</span> </span><span id="S2.SS3.6.2" class="ltx_text ltx_font_italic">Prior Maps for Perception</span>
+</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">Using prior maps to improve perception during deployment has been explored before, as demonstrated on depth estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite>, semantic segmentation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>, 3D object detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>, <a href="#bib.bib41" title="" class="ltx_ref">41</a>, <a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite>, visual odometry <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite>, motion planning <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib44" title="" class="ltx_ref">44</a>, <a href="#bib.bib45" title="" class="ltx_ref">45</a>]</cite>, ego-lane detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib46" title="" class="ltx_ref">46</a>]</cite> and change detection for road infrastructure either using 3D maps <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib47" title="" class="ltx_ref">47</a>, <a href="#bib.bib48" title="" class="ltx_ref">48</a>, <a href="#bib.bib49" title="" class="ltx_ref">49</a>]</cite> or through image-to-image comparison <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib50" title="" class="ltx_ref">50</a>, <a href="#bib.bib51" title="" class="ltx_ref">51</a>]</cite>. Despite the rapidly growing literature, existing approaches have limitations: they either rely on 3D maps (with significant variations in what map elements are used) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>, <a href="#bib.bib40" title="" class="ltx_ref">40</a>, <a href="#bib.bib41" title="" class="ltx_ref">41</a>, <a href="#bib.bib42" title="" class="ltx_ref">42</a>, <a href="#bib.bib52" title="" class="ltx_ref">52</a>]</cite>; only focus on updating static parts of the map <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib46" title="" class="ltx_ref">46</a>, <a href="#bib.bib47" title="" class="ltx_ref">47</a>, <a href="#bib.bib48" title="" class="ltx_ref">48</a>, <a href="#bib.bib49" title="" class="ltx_ref">49</a>]</cite>; require information from multiple prior traverses at test time <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib52" title="" class="ltx_ref">52</a>]</cite>; or require pixel-level correspondences when using image-to-image setting <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>, <a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite>
+In this work, for the task of dynamic vehicle detection in 2D, we consider a repeated route scenario for an autonomous vehicle. Thus, without needing a 3D map or pixel-level correspondences (especially under adverse conditions), we show how dynamic vehicle detections in the query image can be validated by comparing corresponding regions in the query and the reference image obtained through VPR.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Methodology</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">In this work, our objective is to enhance the ability of an autonomous vehicle to detect vehicles in the surrounding environment, even in visually challenging situations such as at night-time. We propose that, by knowing where an autonomous vehicle is located, we can leverage prior maps of the environment to better detect dynamic vehicles in the environment.
+More specifically, our approach can be summarized as follows. Given a candidate region in the query image, produced by an off-the-shelf object detector, we propose to compare it with its corresponding region in the reference map image to determine whether this region appears the same, or different, to the prior map. If this candidate detection is a false detection, then the visual appearance of this region is likely to be the same as that in the prior map.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">However, naively comparing the pixel data between a query and a mapping image is problematic as the visual appearance between these images may change due to appearance changes induced by weather, seasonal or lighting conditions. Therefore, we propose to utilize the deep features of a VPR method (which is used to localize the autonomous vehicle) as an appearance-invariant representation of image regions. We then contribute a lightweight MLP as a map matching neural network, which classifies whether a given detection candidate is correct or not, based on the similarity between the query and the map regions.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS1.5.1.1" class="ltx_text">III-A</span> </span><span id="S3.SS1.6.2" class="ltx_text ltx_font_italic">Localization Component</span>
+</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">We use visual place recognition (VPR) to coarsely localize the autonomous vehicle in the prior map. Our approach can use any existing deep-learnt VPR technique, e.g., global descriptor methods such as NetVLAD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> or CosPlace <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, or local descriptor methods such as DELG <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> or Patch-NetVLAD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>. For all our experimental results, we use Patch-NetVLAD for retrieving the reference map image for a given query image. In our classifier network (described later), we reuse the backbone features of our VPR method, which
+avoids the requirement of a separate encoder and saves compute time.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS2.5.1.1" class="ltx_text">III-B</span> </span><span id="S3.SS2.6.2" class="ltx_text ltx_font_italic">Object Detection</span>
+</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">We propose to use an off-the-shelf object detection method to extract a large set of potential candidate vehicles in the images observed by the autonomous vehicle. In our experiments, we use the recent vehicle detection network YOLOP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite>. YOLOP is a variant of YOLO that has been trained on BDD100K <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite> to perform the tasks of vehicle detection, lane line segmentation and driveable area segmentation. Because YOLOP has been trained solely to detect vehicles, it is already a high-performing baseline detector. Additionally, BDD100K contains data collected during adverse environmental conditions, which allows YOLOP to operate well even under challenging conditions such as night-time and snow.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">We modify YOLOP by reducing its default detection threshold – this is to ensure that the recall of the detector is as high as possible, since any missed detections at this stage will not be recoverable. Our core premise is to use this high-recall detector to improve its detection precision by removing false positives using our proposed map matching classifier.</p>
+</div>
+<figure id="S3.F2" class="ltx_figure"><img src="/html/2306.17536/assets/x2.png" id="S3.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="266" height="130" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>System diagram of our proposed approach.</figcaption>
+</figure>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS3.5.1.1" class="ltx_text">III-C</span> </span><span id="S3.SS3.6.2" class="ltx_text ltx_font_italic">Map Matching Classifier</span>
+</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.11" class="ltx_p">Given an individual detection from YOLOP and whole-image deep features <math id="S3.SS3.p1.1.m1.1" class="ltx_Math" alttext="F_{q}" display="inline"><semantics id="S3.SS3.p1.1.m1.1a"><msub id="S3.SS3.p1.1.m1.1.1" xref="S3.SS3.p1.1.m1.1.1.cmml"><mi id="S3.SS3.p1.1.m1.1.1.2" xref="S3.SS3.p1.1.m1.1.1.2.cmml">F</mi><mi id="S3.SS3.p1.1.m1.1.1.3" xref="S3.SS3.p1.1.m1.1.1.3.cmml">q</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.1.m1.1b"><apply id="S3.SS3.p1.1.m1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.1.m1.1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.p1.1.m1.1.1.2.cmml" xref="S3.SS3.p1.1.m1.1.1.2">𝐹</ci><ci id="S3.SS3.p1.1.m1.1.1.3.cmml" xref="S3.SS3.p1.1.m1.1.1.3">𝑞</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.1.m1.1c">F_{q}</annotation></semantics></math> (query image) and <math id="S3.SS3.p1.2.m2.1" class="ltx_Math" alttext="F_{m}" display="inline"><semantics id="S3.SS3.p1.2.m2.1a"><msub id="S3.SS3.p1.2.m2.1.1" xref="S3.SS3.p1.2.m2.1.1.cmml"><mi id="S3.SS3.p1.2.m2.1.1.2" xref="S3.SS3.p1.2.m2.1.1.2.cmml">F</mi><mi id="S3.SS3.p1.2.m2.1.1.3" xref="S3.SS3.p1.2.m2.1.1.3.cmml">m</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.2.m2.1b"><apply id="S3.SS3.p1.2.m2.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.2.m2.1.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.p1.2.m2.1.1.2.cmml" xref="S3.SS3.p1.2.m2.1.1.2">𝐹</ci><ci id="S3.SS3.p1.2.m2.1.1.3.cmml" xref="S3.SS3.p1.2.m2.1.1.3">𝑚</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.2.m2.1c">F_{m}</annotation></semantics></math> (reference map image) from our VPR neural network, we want to decide whether this detection is correct or not. We begin by resizing the detection bounding box (in pixel coordinates) to fit the (smaller) scale size of the feature map <math id="S3.SS3.p1.3.m3.1" class="ltx_Math" alttext="F_{q}" display="inline"><semantics id="S3.SS3.p1.3.m3.1a"><msub id="S3.SS3.p1.3.m3.1.1" xref="S3.SS3.p1.3.m3.1.1.cmml"><mi id="S3.SS3.p1.3.m3.1.1.2" xref="S3.SS3.p1.3.m3.1.1.2.cmml">F</mi><mi id="S3.SS3.p1.3.m3.1.1.3" xref="S3.SS3.p1.3.m3.1.1.3.cmml">q</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.3.m3.1b"><apply id="S3.SS3.p1.3.m3.1.1.cmml" xref="S3.SS3.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.3.m3.1.1.1.cmml" xref="S3.SS3.p1.3.m3.1.1">subscript</csymbol><ci id="S3.SS3.p1.3.m3.1.1.2.cmml" xref="S3.SS3.p1.3.m3.1.1.2">𝐹</ci><ci id="S3.SS3.p1.3.m3.1.1.3.cmml" xref="S3.SS3.p1.3.m3.1.1.3">𝑞</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.3.m3.1c">F_{q}</annotation></semantics></math>. We then extract a subset of <math id="S3.SS3.p1.4.m4.1" class="ltx_Math" alttext="F_{q}" display="inline"><semantics id="S3.SS3.p1.4.m4.1a"><msub id="S3.SS3.p1.4.m4.1.1" xref="S3.SS3.p1.4.m4.1.1.cmml"><mi id="S3.SS3.p1.4.m4.1.1.2" xref="S3.SS3.p1.4.m4.1.1.2.cmml">F</mi><mi id="S3.SS3.p1.4.m4.1.1.3" xref="S3.SS3.p1.4.m4.1.1.3.cmml">q</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.4.m4.1b"><apply id="S3.SS3.p1.4.m4.1.1.cmml" xref="S3.SS3.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.4.m4.1.1.1.cmml" xref="S3.SS3.p1.4.m4.1.1">subscript</csymbol><ci id="S3.SS3.p1.4.m4.1.1.2.cmml" xref="S3.SS3.p1.4.m4.1.1.2">𝐹</ci><ci id="S3.SS3.p1.4.m4.1.1.3.cmml" xref="S3.SS3.p1.4.m4.1.1.3">𝑞</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.4.m4.1c">F_{q}</annotation></semantics></math>, denoted as <math id="S3.SS3.p1.5.m5.1" class="ltx_Math" alttext="F_{q}^{n}" display="inline"><semantics id="S3.SS3.p1.5.m5.1a"><msubsup id="S3.SS3.p1.5.m5.1.1" xref="S3.SS3.p1.5.m5.1.1.cmml"><mi id="S3.SS3.p1.5.m5.1.1.2.2" xref="S3.SS3.p1.5.m5.1.1.2.2.cmml">F</mi><mi id="S3.SS3.p1.5.m5.1.1.2.3" xref="S3.SS3.p1.5.m5.1.1.2.3.cmml">q</mi><mi id="S3.SS3.p1.5.m5.1.1.3" xref="S3.SS3.p1.5.m5.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.5.m5.1b"><apply id="S3.SS3.p1.5.m5.1.1.cmml" xref="S3.SS3.p1.5.m5.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.5.m5.1.1.1.cmml" xref="S3.SS3.p1.5.m5.1.1">superscript</csymbol><apply id="S3.SS3.p1.5.m5.1.1.2.cmml" xref="S3.SS3.p1.5.m5.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.5.m5.1.1.2.1.cmml" xref="S3.SS3.p1.5.m5.1.1">subscript</csymbol><ci id="S3.SS3.p1.5.m5.1.1.2.2.cmml" xref="S3.SS3.p1.5.m5.1.1.2.2">𝐹</ci><ci id="S3.SS3.p1.5.m5.1.1.2.3.cmml" xref="S3.SS3.p1.5.m5.1.1.2.3">𝑞</ci></apply><ci id="S3.SS3.p1.5.m5.1.1.3.cmml" xref="S3.SS3.p1.5.m5.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.5.m5.1c">F_{q}^{n}</annotation></semantics></math>, where <math id="S3.SS3.p1.6.m6.1" class="ltx_Math" alttext="n" display="inline"><semantics id="S3.SS3.p1.6.m6.1a"><mi id="S3.SS3.p1.6.m6.1.1" xref="S3.SS3.p1.6.m6.1.1.cmml">n</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.6.m6.1b"><ci id="S3.SS3.p1.6.m6.1.1.cmml" xref="S3.SS3.p1.6.m6.1.1">𝑛</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.6.m6.1c">n</annotation></semantics></math> is the detection index in the current query image; this subset is the area of <math id="S3.SS3.p1.7.m7.1" class="ltx_Math" alttext="F_{q}" display="inline"><semantics id="S3.SS3.p1.7.m7.1a"><msub id="S3.SS3.p1.7.m7.1.1" xref="S3.SS3.p1.7.m7.1.1.cmml"><mi id="S3.SS3.p1.7.m7.1.1.2" xref="S3.SS3.p1.7.m7.1.1.2.cmml">F</mi><mi id="S3.SS3.p1.7.m7.1.1.3" xref="S3.SS3.p1.7.m7.1.1.3.cmml">q</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.7.m7.1b"><apply id="S3.SS3.p1.7.m7.1.1.cmml" xref="S3.SS3.p1.7.m7.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.7.m7.1.1.1.cmml" xref="S3.SS3.p1.7.m7.1.1">subscript</csymbol><ci id="S3.SS3.p1.7.m7.1.1.2.cmml" xref="S3.SS3.p1.7.m7.1.1.2">𝐹</ci><ci id="S3.SS3.p1.7.m7.1.1.3.cmml" xref="S3.SS3.p1.7.m7.1.1.3">𝑞</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.7.m7.1c">F_{q}</annotation></semantics></math> that overlaps with the resized detection bounding box. We then extract a subset of <math id="S3.SS3.p1.8.m8.1" class="ltx_Math" alttext="F_{m}" display="inline"><semantics id="S3.SS3.p1.8.m8.1a"><msub id="S3.SS3.p1.8.m8.1.1" xref="S3.SS3.p1.8.m8.1.1.cmml"><mi id="S3.SS3.p1.8.m8.1.1.2" xref="S3.SS3.p1.8.m8.1.1.2.cmml">F</mi><mi id="S3.SS3.p1.8.m8.1.1.3" xref="S3.SS3.p1.8.m8.1.1.3.cmml">m</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.8.m8.1b"><apply id="S3.SS3.p1.8.m8.1.1.cmml" xref="S3.SS3.p1.8.m8.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.8.m8.1.1.1.cmml" xref="S3.SS3.p1.8.m8.1.1">subscript</csymbol><ci id="S3.SS3.p1.8.m8.1.1.2.cmml" xref="S3.SS3.p1.8.m8.1.1.2">𝐹</ci><ci id="S3.SS3.p1.8.m8.1.1.3.cmml" xref="S3.SS3.p1.8.m8.1.1.3">𝑚</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.8.m8.1c">F_{m}</annotation></semantics></math> at the same position as <math id="S3.SS3.p1.9.m9.1" class="ltx_Math" alttext="F_{q}^{n}" display="inline"><semantics id="S3.SS3.p1.9.m9.1a"><msubsup id="S3.SS3.p1.9.m9.1.1" xref="S3.SS3.p1.9.m9.1.1.cmml"><mi id="S3.SS3.p1.9.m9.1.1.2.2" xref="S3.SS3.p1.9.m9.1.1.2.2.cmml">F</mi><mi id="S3.SS3.p1.9.m9.1.1.2.3" xref="S3.SS3.p1.9.m9.1.1.2.3.cmml">q</mi><mi id="S3.SS3.p1.9.m9.1.1.3" xref="S3.SS3.p1.9.m9.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.9.m9.1b"><apply id="S3.SS3.p1.9.m9.1.1.cmml" xref="S3.SS3.p1.9.m9.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.9.m9.1.1.1.cmml" xref="S3.SS3.p1.9.m9.1.1">superscript</csymbol><apply id="S3.SS3.p1.9.m9.1.1.2.cmml" xref="S3.SS3.p1.9.m9.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.9.m9.1.1.2.1.cmml" xref="S3.SS3.p1.9.m9.1.1">subscript</csymbol><ci id="S3.SS3.p1.9.m9.1.1.2.2.cmml" xref="S3.SS3.p1.9.m9.1.1.2.2">𝐹</ci><ci id="S3.SS3.p1.9.m9.1.1.2.3.cmml" xref="S3.SS3.p1.9.m9.1.1.2.3">𝑞</ci></apply><ci id="S3.SS3.p1.9.m9.1.1.3.cmml" xref="S3.SS3.p1.9.m9.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.9.m9.1c">F_{q}^{n}</annotation></semantics></math>, denoted as <math id="S3.SS3.p1.10.m10.1" class="ltx_Math" alttext="F_{m}^{n}" display="inline"><semantics id="S3.SS3.p1.10.m10.1a"><msubsup id="S3.SS3.p1.10.m10.1.1" xref="S3.SS3.p1.10.m10.1.1.cmml"><mi id="S3.SS3.p1.10.m10.1.1.2.2" xref="S3.SS3.p1.10.m10.1.1.2.2.cmml">F</mi><mi id="S3.SS3.p1.10.m10.1.1.2.3" xref="S3.SS3.p1.10.m10.1.1.2.3.cmml">m</mi><mi id="S3.SS3.p1.10.m10.1.1.3" xref="S3.SS3.p1.10.m10.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.10.m10.1b"><apply id="S3.SS3.p1.10.m10.1.1.cmml" xref="S3.SS3.p1.10.m10.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.10.m10.1.1.1.cmml" xref="S3.SS3.p1.10.m10.1.1">superscript</csymbol><apply id="S3.SS3.p1.10.m10.1.1.2.cmml" xref="S3.SS3.p1.10.m10.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.10.m10.1.1.2.1.cmml" xref="S3.SS3.p1.10.m10.1.1">subscript</csymbol><ci id="S3.SS3.p1.10.m10.1.1.2.2.cmml" xref="S3.SS3.p1.10.m10.1.1.2.2">𝐹</ci><ci id="S3.SS3.p1.10.m10.1.1.2.3.cmml" xref="S3.SS3.p1.10.m10.1.1.2.3">𝑚</ci></apply><ci id="S3.SS3.p1.10.m10.1.1.3.cmml" xref="S3.SS3.p1.10.m10.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.10.m10.1c">F_{m}^{n}</annotation></semantics></math>. We repeat this process for all detections <math id="S3.SS3.p1.11.m11.1" class="ltx_Math" alttext="n\in N" display="inline"><semantics id="S3.SS3.p1.11.m11.1a"><mrow id="S3.SS3.p1.11.m11.1.1" xref="S3.SS3.p1.11.m11.1.1.cmml"><mi id="S3.SS3.p1.11.m11.1.1.2" xref="S3.SS3.p1.11.m11.1.1.2.cmml">n</mi><mo id="S3.SS3.p1.11.m11.1.1.1" xref="S3.SS3.p1.11.m11.1.1.1.cmml">∈</mo><mi id="S3.SS3.p1.11.m11.1.1.3" xref="S3.SS3.p1.11.m11.1.1.3.cmml">N</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.11.m11.1b"><apply id="S3.SS3.p1.11.m11.1.1.cmml" xref="S3.SS3.p1.11.m11.1.1"><in id="S3.SS3.p1.11.m11.1.1.1.cmml" xref="S3.SS3.p1.11.m11.1.1.1"></in><ci id="S3.SS3.p1.11.m11.1.1.2.cmml" xref="S3.SS3.p1.11.m11.1.1.2">𝑛</ci><ci id="S3.SS3.p1.11.m11.1.1.3.cmml" xref="S3.SS3.p1.11.m11.1.1.3">𝑁</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.11.m11.1c">n\in N</annotation></semantics></math>.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.2" class="ltx_p">In our experiments, we leverage the fact that images are collected at a high-frame rate for AV operations, thus for a repeated-route similar-viewpoint scenario, we can assume that a given downsized bounding box can be replicated at the same pixel location on both <math id="S3.SS3.p2.1.m1.1" class="ltx_Math" alttext="F_{m}" display="inline"><semantics id="S3.SS3.p2.1.m1.1a"><msub id="S3.SS3.p2.1.m1.1.1" xref="S3.SS3.p2.1.m1.1.1.cmml"><mi id="S3.SS3.p2.1.m1.1.1.2" xref="S3.SS3.p2.1.m1.1.1.2.cmml">F</mi><mi id="S3.SS3.p2.1.m1.1.1.3" xref="S3.SS3.p2.1.m1.1.1.3.cmml">m</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.1.m1.1b"><apply id="S3.SS3.p2.1.m1.1.1.cmml" xref="S3.SS3.p2.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p2.1.m1.1.1.1.cmml" xref="S3.SS3.p2.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.p2.1.m1.1.1.2.cmml" xref="S3.SS3.p2.1.m1.1.1.2">𝐹</ci><ci id="S3.SS3.p2.1.m1.1.1.3.cmml" xref="S3.SS3.p2.1.m1.1.1.3">𝑚</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.1.m1.1c">F_{m}</annotation></semantics></math> and <math id="S3.SS3.p2.2.m2.1" class="ltx_Math" alttext="F_{q}" display="inline"><semantics id="S3.SS3.p2.2.m2.1a"><msub id="S3.SS3.p2.2.m2.1.1" xref="S3.SS3.p2.2.m2.1.1.cmml"><mi id="S3.SS3.p2.2.m2.1.1.2" xref="S3.SS3.p2.2.m2.1.1.2.cmml">F</mi><mi id="S3.SS3.p2.2.m2.1.1.3" xref="S3.SS3.p2.2.m2.1.1.3.cmml">q</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.2.m2.1b"><apply id="S3.SS3.p2.2.m2.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.p2.2.m2.1.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.p2.2.m2.1.1.2.cmml" xref="S3.SS3.p2.2.m2.1.1.2">𝐹</ci><ci id="S3.SS3.p2.2.m2.1.1.3.cmml" xref="S3.SS3.p2.2.m2.1.1.3">𝑞</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.2.m2.1c">F_{q}</annotation></semantics></math>.
+We assume here that localization is successful, since incorrect localization will cause this system to fail (see Table <a href="#S5.T4" title="TABLE IV ‣ V-D Ablation Study - with Ground Truth Localization ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a> for a corresponding ablation study), although we note that additional modalities such as GPS can be used to improve the reliability of the localization component.</p>
+</div>
+<div id="S3.SS3.p3" class="ltx_para">
+<p id="S3.SS3.p3.2" class="ltx_p">We propose to use a classification network to decide whether <math id="S3.SS3.p3.1.m1.1" class="ltx_Math" alttext="F_{q}^{n}" display="inline"><semantics id="S3.SS3.p3.1.m1.1a"><msubsup id="S3.SS3.p3.1.m1.1.1" xref="S3.SS3.p3.1.m1.1.1.cmml"><mi id="S3.SS3.p3.1.m1.1.1.2.2" xref="S3.SS3.p3.1.m1.1.1.2.2.cmml">F</mi><mi id="S3.SS3.p3.1.m1.1.1.2.3" xref="S3.SS3.p3.1.m1.1.1.2.3.cmml">q</mi><mi id="S3.SS3.p3.1.m1.1.1.3" xref="S3.SS3.p3.1.m1.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p3.1.m1.1b"><apply id="S3.SS3.p3.1.m1.1.1.cmml" xref="S3.SS3.p3.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p3.1.m1.1.1.1.cmml" xref="S3.SS3.p3.1.m1.1.1">superscript</csymbol><apply id="S3.SS3.p3.1.m1.1.1.2.cmml" xref="S3.SS3.p3.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p3.1.m1.1.1.2.1.cmml" xref="S3.SS3.p3.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.p3.1.m1.1.1.2.2.cmml" xref="S3.SS3.p3.1.m1.1.1.2.2">𝐹</ci><ci id="S3.SS3.p3.1.m1.1.1.2.3.cmml" xref="S3.SS3.p3.1.m1.1.1.2.3">𝑞</ci></apply><ci id="S3.SS3.p3.1.m1.1.1.3.cmml" xref="S3.SS3.p3.1.m1.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p3.1.m1.1c">F_{q}^{n}</annotation></semantics></math> and <math id="S3.SS3.p3.2.m2.1" class="ltx_Math" alttext="F_{m}^{n}" display="inline"><semantics id="S3.SS3.p3.2.m2.1a"><msubsup id="S3.SS3.p3.2.m2.1.1" xref="S3.SS3.p3.2.m2.1.1.cmml"><mi id="S3.SS3.p3.2.m2.1.1.2.2" xref="S3.SS3.p3.2.m2.1.1.2.2.cmml">F</mi><mi id="S3.SS3.p3.2.m2.1.1.2.3" xref="S3.SS3.p3.2.m2.1.1.2.3.cmml">m</mi><mi id="S3.SS3.p3.2.m2.1.1.3" xref="S3.SS3.p3.2.m2.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p3.2.m2.1b"><apply id="S3.SS3.p3.2.m2.1.1.cmml" xref="S3.SS3.p3.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.p3.2.m2.1.1.1.cmml" xref="S3.SS3.p3.2.m2.1.1">superscript</csymbol><apply id="S3.SS3.p3.2.m2.1.1.2.cmml" xref="S3.SS3.p3.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.p3.2.m2.1.1.2.1.cmml" xref="S3.SS3.p3.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.p3.2.m2.1.1.2.2.cmml" xref="S3.SS3.p3.2.m2.1.1.2.2">𝐹</ci><ci id="S3.SS3.p3.2.m2.1.1.2.3.cmml" xref="S3.SS3.p3.2.m2.1.1.2.3">𝑚</ci></apply><ci id="S3.SS3.p3.2.m2.1.1.3.cmml" xref="S3.SS3.p3.2.m2.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p3.2.m2.1c">F_{m}^{n}</annotation></semantics></math> are the same or a dynamic vehicle is present in the query image. It is also worth noting that vehicles located in the mapping images can potentially show up as map differences, however, a neural network can learn to emphasise vehicles located in the query images.</p>
+</div>
+<section id="S3.SS3.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS3.SSS1.5.1.1" class="ltx_text">III-C</span>1 </span>Classification Network Architecture</h4>
+
+<div id="S3.SS3.SSS1.p1" class="ltx_para">
+<p id="S3.SS3.SSS1.p1.7" class="ltx_p">Our map matching network consists of two heads, taking in both <math id="S3.SS3.SSS1.p1.1.m1.1" class="ltx_Math" alttext="F_{q}^{n}" display="inline"><semantics id="S3.SS3.SSS1.p1.1.m1.1a"><msubsup id="S3.SS3.SSS1.p1.1.m1.1.1" xref="S3.SS3.SSS1.p1.1.m1.1.1.cmml"><mi id="S3.SS3.SSS1.p1.1.m1.1.1.2.2" xref="S3.SS3.SSS1.p1.1.m1.1.1.2.2.cmml">F</mi><mi id="S3.SS3.SSS1.p1.1.m1.1.1.2.3" xref="S3.SS3.SSS1.p1.1.m1.1.1.2.3.cmml">q</mi><mi id="S3.SS3.SSS1.p1.1.m1.1.1.3" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.1.m1.1b"><apply id="S3.SS3.SSS1.p1.1.m1.1.1.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.1.m1.1.1.1.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1">superscript</csymbol><apply id="S3.SS3.SSS1.p1.1.m1.1.1.2.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.1.m1.1.1.2.1.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.1.m1.1.1.2.2.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.2.2">𝐹</ci><ci id="S3.SS3.SSS1.p1.1.m1.1.1.2.3.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.2.3">𝑞</ci></apply><ci id="S3.SS3.SSS1.p1.1.m1.1.1.3.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.1.m1.1c">F_{q}^{n}</annotation></semantics></math> and <math id="S3.SS3.SSS1.p1.2.m2.1" class="ltx_Math" alttext="F_{m}^{n}" display="inline"><semantics id="S3.SS3.SSS1.p1.2.m2.1a"><msubsup id="S3.SS3.SSS1.p1.2.m2.1.1" xref="S3.SS3.SSS1.p1.2.m2.1.1.cmml"><mi id="S3.SS3.SSS1.p1.2.m2.1.1.2.2" xref="S3.SS3.SSS1.p1.2.m2.1.1.2.2.cmml">F</mi><mi id="S3.SS3.SSS1.p1.2.m2.1.1.2.3" xref="S3.SS3.SSS1.p1.2.m2.1.1.2.3.cmml">m</mi><mi id="S3.SS3.SSS1.p1.2.m2.1.1.3" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.2.m2.1b"><apply id="S3.SS3.SSS1.p1.2.m2.1.1.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.2.m2.1.1.1.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1">superscript</csymbol><apply id="S3.SS3.SSS1.p1.2.m2.1.1.2.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.2.m2.1.1.2.1.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.2.m2.1.1.2.2.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.2.2">𝐹</ci><ci id="S3.SS3.SSS1.p1.2.m2.1.1.2.3.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.2.3">𝑚</ci></apply><ci id="S3.SS3.SSS1.p1.2.m2.1.1.3.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.2.m2.1c">F_{m}^{n}</annotation></semantics></math>. We GeM pool <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib53" title="" class="ltx_ref">53</a>]</cite> both <math id="S3.SS3.SSS1.p1.3.m3.1" class="ltx_Math" alttext="F_{q}^{n}" display="inline"><semantics id="S3.SS3.SSS1.p1.3.m3.1a"><msubsup id="S3.SS3.SSS1.p1.3.m3.1.1" xref="S3.SS3.SSS1.p1.3.m3.1.1.cmml"><mi id="S3.SS3.SSS1.p1.3.m3.1.1.2.2" xref="S3.SS3.SSS1.p1.3.m3.1.1.2.2.cmml">F</mi><mi id="S3.SS3.SSS1.p1.3.m3.1.1.2.3" xref="S3.SS3.SSS1.p1.3.m3.1.1.2.3.cmml">q</mi><mi id="S3.SS3.SSS1.p1.3.m3.1.1.3" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.3.m3.1b"><apply id="S3.SS3.SSS1.p1.3.m3.1.1.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.3.m3.1.1.1.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1">superscript</csymbol><apply id="S3.SS3.SSS1.p1.3.m3.1.1.2.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.3.m3.1.1.2.1.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.3.m3.1.1.2.2.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.2.2">𝐹</ci><ci id="S3.SS3.SSS1.p1.3.m3.1.1.2.3.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.2.3">𝑞</ci></apply><ci id="S3.SS3.SSS1.p1.3.m3.1.1.3.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.3.m3.1c">F_{q}^{n}</annotation></semantics></math> and <math id="S3.SS3.SSS1.p1.4.m4.1" class="ltx_Math" alttext="F_{m}^{n}" display="inline"><semantics id="S3.SS3.SSS1.p1.4.m4.1a"><msubsup id="S3.SS3.SSS1.p1.4.m4.1.1" xref="S3.SS3.SSS1.p1.4.m4.1.1.cmml"><mi id="S3.SS3.SSS1.p1.4.m4.1.1.2.2" xref="S3.SS3.SSS1.p1.4.m4.1.1.2.2.cmml">F</mi><mi id="S3.SS3.SSS1.p1.4.m4.1.1.2.3" xref="S3.SS3.SSS1.p1.4.m4.1.1.2.3.cmml">m</mi><mi id="S3.SS3.SSS1.p1.4.m4.1.1.3" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.4.m4.1b"><apply id="S3.SS3.SSS1.p1.4.m4.1.1.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.4.m4.1.1.1.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1">superscript</csymbol><apply id="S3.SS3.SSS1.p1.4.m4.1.1.2.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.4.m4.1.1.2.1.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.4.m4.1.1.2.2.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.2.2">𝐹</ci><ci id="S3.SS3.SSS1.p1.4.m4.1.1.2.3.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.2.3">𝑚</ci></apply><ci id="S3.SS3.SSS1.p1.4.m4.1.1.3.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.4.m4.1c">F_{m}^{n}</annotation></semantics></math> to produce individual <math id="S3.SS3.SSS1.p1.5.m5.1" class="ltx_Math" alttext="C" display="inline"><semantics id="S3.SS3.SSS1.p1.5.m5.1a"><mi id="S3.SS3.SSS1.p1.5.m5.1.1" xref="S3.SS3.SSS1.p1.5.m5.1.1.cmml">C</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.5.m5.1b"><ci id="S3.SS3.SSS1.p1.5.m5.1.1.cmml" xref="S3.SS3.SSS1.p1.5.m5.1.1">𝐶</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.5.m5.1c">C</annotation></semantics></math> dimensional vectors, where <math id="S3.SS3.SSS1.p1.6.m6.1" class="ltx_Math" alttext="C" display="inline"><semantics id="S3.SS3.SSS1.p1.6.m6.1a"><mi id="S3.SS3.SSS1.p1.6.m6.1.1" xref="S3.SS3.SSS1.p1.6.m6.1.1.cmml">C</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.6.m6.1b"><ci id="S3.SS3.SSS1.p1.6.m6.1.1.cmml" xref="S3.SS3.SSS1.p1.6.m6.1.1">𝐶</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.6.m6.1c">C</annotation></semantics></math> is the number of channels of the final conv layer of the VPR network. We concatenate both vectors together to produce the input encoding <math id="S3.SS3.SSS1.p1.7.m7.1" class="ltx_Math" alttext="E" display="inline"><semantics id="S3.SS3.SSS1.p1.7.m7.1a"><mi id="S3.SS3.SSS1.p1.7.m7.1.1" xref="S3.SS3.SSS1.p1.7.m7.1.1.cmml">E</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.7.m7.1b"><ci id="S3.SS3.SSS1.p1.7.m7.1.1.cmml" xref="S3.SS3.SSS1.p1.7.m7.1.1">𝐸</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.7.m7.1c">E</annotation></semantics></math>. We then use an MLP as a three layer fully connected network with intermediate ReLU activations and dropout, and a sigmoid activation layer at the end (see Figure <a href="#S3.F2" title="Figure 2 ‣ III-B Object Detection ‣ III Methodology ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>). The sigmoid activation ensures the output range between 0 and 1. The network is trained using binary cross entropy loss:</p>
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1.2" class="ltx_Math" alttext="BCE=y_{n}\log x_{n}+(1-y_{n})\log(1-x_{n})," display="block"><semantics id="S3.E1.m1.2a"><mrow id="S3.E1.m1.2.2.1" xref="S3.E1.m1.2.2.1.1.cmml"><mrow id="S3.E1.m1.2.2.1.1" xref="S3.E1.m1.2.2.1.1.cmml"><mrow id="S3.E1.m1.2.2.1.1.4" xref="S3.E1.m1.2.2.1.1.4.cmml"><mi id="S3.E1.m1.2.2.1.1.4.2" xref="S3.E1.m1.2.2.1.1.4.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.2.2.1.1.4.1" xref="S3.E1.m1.2.2.1.1.4.1.cmml">​</mo><mi id="S3.E1.m1.2.2.1.1.4.3" xref="S3.E1.m1.2.2.1.1.4.3.cmml">C</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.2.2.1.1.4.1a" xref="S3.E1.m1.2.2.1.1.4.1.cmml">​</mo><mi id="S3.E1.m1.2.2.1.1.4.4" xref="S3.E1.m1.2.2.1.1.4.4.cmml">E</mi></mrow><mo id="S3.E1.m1.2.2.1.1.3" xref="S3.E1.m1.2.2.1.1.3.cmml">=</mo><mrow id="S3.E1.m1.2.2.1.1.2" xref="S3.E1.m1.2.2.1.1.2.cmml"><mrow id="S3.E1.m1.2.2.1.1.2.4" xref="S3.E1.m1.2.2.1.1.2.4.cmml"><msub id="S3.E1.m1.2.2.1.1.2.4.2" xref="S3.E1.m1.2.2.1.1.2.4.2.cmml"><mi id="S3.E1.m1.2.2.1.1.2.4.2.2" xref="S3.E1.m1.2.2.1.1.2.4.2.2.cmml">y</mi><mi id="S3.E1.m1.2.2.1.1.2.4.2.3" xref="S3.E1.m1.2.2.1.1.2.4.2.3.cmml">n</mi></msub><mo lspace="0.167em" rspace="0em" id="S3.E1.m1.2.2.1.1.2.4.1" xref="S3.E1.m1.2.2.1.1.2.4.1.cmml">​</mo><mrow id="S3.E1.m1.2.2.1.1.2.4.3" xref="S3.E1.m1.2.2.1.1.2.4.3.cmml"><mi id="S3.E1.m1.2.2.1.1.2.4.3.1" xref="S3.E1.m1.2.2.1.1.2.4.3.1.cmml">log</mi><mo lspace="0.167em" id="S3.E1.m1.2.2.1.1.2.4.3a" xref="S3.E1.m1.2.2.1.1.2.4.3.cmml">⁡</mo><msub id="S3.E1.m1.2.2.1.1.2.4.3.2" xref="S3.E1.m1.2.2.1.1.2.4.3.2.cmml"><mi id="S3.E1.m1.2.2.1.1.2.4.3.2.2" xref="S3.E1.m1.2.2.1.1.2.4.3.2.2.cmml">x</mi><mi id="S3.E1.m1.2.2.1.1.2.4.3.2.3" xref="S3.E1.m1.2.2.1.1.2.4.3.2.3.cmml">n</mi></msub></mrow></mrow><mo id="S3.E1.m1.2.2.1.1.2.3" xref="S3.E1.m1.2.2.1.1.2.3.cmml">+</mo><mrow id="S3.E1.m1.2.2.1.1.2.2" xref="S3.E1.m1.2.2.1.1.2.2.cmml"><mrow id="S3.E1.m1.2.2.1.1.1.1.1.1" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E1.m1.2.2.1.1.1.1.1.1.2" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E1.m1.2.2.1.1.1.1.1.1.1" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.cmml"><mn id="S3.E1.m1.2.2.1.1.1.1.1.1.1.2" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.2.cmml">1</mn><mo id="S3.E1.m1.2.2.1.1.1.1.1.1.1.1" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S3.E1.m1.2.2.1.1.1.1.1.1.1.3" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.cmml"><mi id="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.2" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.2.cmml">y</mi><mi id="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.3" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.3.cmml">n</mi></msub></mrow><mo stretchy="false" id="S3.E1.m1.2.2.1.1.1.1.1.1.3" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo lspace="0.167em" rspace="0em" id="S3.E1.m1.2.2.1.1.2.2.3" xref="S3.E1.m1.2.2.1.1.2.2.3.cmml">​</mo><mrow id="S3.E1.m1.2.2.1.1.2.2.2.1" xref="S3.E1.m1.2.2.1.1.2.2.2.2.cmml"><mi id="S3.E1.m1.1.1" xref="S3.E1.m1.1.1.cmml">log</mi><mo id="S3.E1.m1.2.2.1.1.2.2.2.1a" xref="S3.E1.m1.2.2.1.1.2.2.2.2.cmml">⁡</mo><mrow id="S3.E1.m1.2.2.1.1.2.2.2.1.1" xref="S3.E1.m1.2.2.1.1.2.2.2.2.cmml"><mo stretchy="false" id="S3.E1.m1.2.2.1.1.2.2.2.1.1.2" xref="S3.E1.m1.2.2.1.1.2.2.2.2.cmml">(</mo><mrow id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.cmml"><mn id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.2" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.2.cmml">1</mn><mo id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.1" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.1.cmml">−</mo><msub id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.cmml"><mi id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.2" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.2.cmml">x</mi><mi id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.3" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.3.cmml">n</mi></msub></mrow><mo stretchy="false" id="S3.E1.m1.2.2.1.1.2.2.2.1.1.3" xref="S3.E1.m1.2.2.1.1.2.2.2.2.cmml">)</mo></mrow></mrow></mrow></mrow></mrow><mo id="S3.E1.m1.2.2.1.2" xref="S3.E1.m1.2.2.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.2b"><apply id="S3.E1.m1.2.2.1.1.cmml" xref="S3.E1.m1.2.2.1"><eq id="S3.E1.m1.2.2.1.1.3.cmml" xref="S3.E1.m1.2.2.1.1.3"></eq><apply id="S3.E1.m1.2.2.1.1.4.cmml" xref="S3.E1.m1.2.2.1.1.4"><times id="S3.E1.m1.2.2.1.1.4.1.cmml" xref="S3.E1.m1.2.2.1.1.4.1"></times><ci id="S3.E1.m1.2.2.1.1.4.2.cmml" xref="S3.E1.m1.2.2.1.1.4.2">𝐵</ci><ci id="S3.E1.m1.2.2.1.1.4.3.cmml" xref="S3.E1.m1.2.2.1.1.4.3">𝐶</ci><ci id="S3.E1.m1.2.2.1.1.4.4.cmml" xref="S3.E1.m1.2.2.1.1.4.4">𝐸</ci></apply><apply id="S3.E1.m1.2.2.1.1.2.cmml" xref="S3.E1.m1.2.2.1.1.2"><plus id="S3.E1.m1.2.2.1.1.2.3.cmml" xref="S3.E1.m1.2.2.1.1.2.3"></plus><apply id="S3.E1.m1.2.2.1.1.2.4.cmml" xref="S3.E1.m1.2.2.1.1.2.4"><times id="S3.E1.m1.2.2.1.1.2.4.1.cmml" xref="S3.E1.m1.2.2.1.1.2.4.1"></times><apply id="S3.E1.m1.2.2.1.1.2.4.2.cmml" xref="S3.E1.m1.2.2.1.1.2.4.2"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.1.1.2.4.2.1.cmml" xref="S3.E1.m1.2.2.1.1.2.4.2">subscript</csymbol><ci id="S3.E1.m1.2.2.1.1.2.4.2.2.cmml" xref="S3.E1.m1.2.2.1.1.2.4.2.2">𝑦</ci><ci id="S3.E1.m1.2.2.1.1.2.4.2.3.cmml" xref="S3.E1.m1.2.2.1.1.2.4.2.3">𝑛</ci></apply><apply id="S3.E1.m1.2.2.1.1.2.4.3.cmml" xref="S3.E1.m1.2.2.1.1.2.4.3"><log id="S3.E1.m1.2.2.1.1.2.4.3.1.cmml" xref="S3.E1.m1.2.2.1.1.2.4.3.1"></log><apply id="S3.E1.m1.2.2.1.1.2.4.3.2.cmml" xref="S3.E1.m1.2.2.1.1.2.4.3.2"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.1.1.2.4.3.2.1.cmml" xref="S3.E1.m1.2.2.1.1.2.4.3.2">subscript</csymbol><ci id="S3.E1.m1.2.2.1.1.2.4.3.2.2.cmml" xref="S3.E1.m1.2.2.1.1.2.4.3.2.2">𝑥</ci><ci id="S3.E1.m1.2.2.1.1.2.4.3.2.3.cmml" xref="S3.E1.m1.2.2.1.1.2.4.3.2.3">𝑛</ci></apply></apply></apply><apply id="S3.E1.m1.2.2.1.1.2.2.cmml" xref="S3.E1.m1.2.2.1.1.2.2"><times id="S3.E1.m1.2.2.1.1.2.2.3.cmml" xref="S3.E1.m1.2.2.1.1.2.2.3"></times><apply id="S3.E1.m1.2.2.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.2.2.1.1.1.1.1.1"><minus id="S3.E1.m1.2.2.1.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.1"></minus><cn type="integer" id="S3.E1.m1.2.2.1.1.1.1.1.1.1.2.cmml" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.2">1</cn><apply id="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.cmml" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.2">𝑦</ci><ci id="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E1.m1.2.2.1.1.1.1.1.1.1.3.3">𝑛</ci></apply></apply><apply id="S3.E1.m1.2.2.1.1.2.2.2.2.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2.1"><log id="S3.E1.m1.1.1.cmml" xref="S3.E1.m1.1.1"></log><apply id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1"><minus id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.1.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.1"></minus><cn type="integer" id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.2.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.2">1</cn><apply id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.1.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3">subscript</csymbol><ci id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.2.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.2">𝑥</ci><ci id="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.3.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2.1.1.1.3.3">𝑛</ci></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.2c">BCE=y_{n}\log x_{n}+(1-y_{n})\log(1-x_{n}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.SSS1.p1.10" class="ltx_p">where <math id="S3.SS3.SSS1.p1.8.m1.1" class="ltx_Math" alttext="y_{n}" display="inline"><semantics id="S3.SS3.SSS1.p1.8.m1.1a"><msub id="S3.SS3.SSS1.p1.8.m1.1.1" xref="S3.SS3.SSS1.p1.8.m1.1.1.cmml"><mi id="S3.SS3.SSS1.p1.8.m1.1.1.2" xref="S3.SS3.SSS1.p1.8.m1.1.1.2.cmml">y</mi><mi id="S3.SS3.SSS1.p1.8.m1.1.1.3" xref="S3.SS3.SSS1.p1.8.m1.1.1.3.cmml">n</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.8.m1.1b"><apply id="S3.SS3.SSS1.p1.8.m1.1.1.cmml" xref="S3.SS3.SSS1.p1.8.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.8.m1.1.1.1.cmml" xref="S3.SS3.SSS1.p1.8.m1.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.8.m1.1.1.2.cmml" xref="S3.SS3.SSS1.p1.8.m1.1.1.2">𝑦</ci><ci id="S3.SS3.SSS1.p1.8.m1.1.1.3.cmml" xref="S3.SS3.SSS1.p1.8.m1.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.8.m1.1c">y_{n}</annotation></semantics></math> is the ground truth for a given detection candidate <math id="S3.SS3.SSS1.p1.9.m2.1" class="ltx_Math" alttext="n" display="inline"><semantics id="S3.SS3.SSS1.p1.9.m2.1a"><mi id="S3.SS3.SSS1.p1.9.m2.1.1" xref="S3.SS3.SSS1.p1.9.m2.1.1.cmml">n</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.9.m2.1b"><ci id="S3.SS3.SSS1.p1.9.m2.1.1.cmml" xref="S3.SS3.SSS1.p1.9.m2.1.1">𝑛</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.9.m2.1c">n</annotation></semantics></math>, and <math id="S3.SS3.SSS1.p1.10.m3.1" class="ltx_Math" alttext="x_{n}" display="inline"><semantics id="S3.SS3.SSS1.p1.10.m3.1a"><msub id="S3.SS3.SSS1.p1.10.m3.1.1" xref="S3.SS3.SSS1.p1.10.m3.1.1.cmml"><mi id="S3.SS3.SSS1.p1.10.m3.1.1.2" xref="S3.SS3.SSS1.p1.10.m3.1.1.2.cmml">x</mi><mi id="S3.SS3.SSS1.p1.10.m3.1.1.3" xref="S3.SS3.SSS1.p1.10.m3.1.1.3.cmml">n</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.10.m3.1b"><apply id="S3.SS3.SSS1.p1.10.m3.1.1.cmml" xref="S3.SS3.SSS1.p1.10.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.10.m3.1.1.1.cmml" xref="S3.SS3.SSS1.p1.10.m3.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.10.m3.1.1.2.cmml" xref="S3.SS3.SSS1.p1.10.m3.1.1.2">𝑥</ci><ci id="S3.SS3.SSS1.p1.10.m3.1.1.3.cmml" xref="S3.SS3.SSS1.p1.10.m3.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.10.m3.1c">x_{n}</annotation></semantics></math> is the predicted likelihood for a detection, where 1 denotes a true detection.</p>
+</div>
+</section>
+<section id="S3.SS3.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS3.SSS2.5.1.1" class="ltx_text">III-C</span>2 </span>Final Decision</h4>
+
+<div id="S3.SS3.SSS2.p1" class="ltx_para">
+<p id="S3.SS3.SSS2.p1.8" class="ltx_p">At this point, we could just use the output of our classification network to decide whether a detection candidate is correct or not. However, that approach would discard the detection confidence scores produced by our underlying object detector. Through experimentation, we observed that combining the confidence scores of both the map comparison classification network and from YOLOP led to more accurate vehicle detections than either confidence score in isolation. Therefore, for the final detection decision, we average the output of the classification network and the initial YOLOP detection score together:</p>
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E2.m1.1" class="ltx_Math" alttext="S^{n}=0.5(S_{c}^{n}+S_{d}^{n})" display="block"><semantics id="S3.E2.m1.1a"><mrow id="S3.E2.m1.1.1" xref="S3.E2.m1.1.1.cmml"><msup id="S3.E2.m1.1.1.3" xref="S3.E2.m1.1.1.3.cmml"><mi id="S3.E2.m1.1.1.3.2" xref="S3.E2.m1.1.1.3.2.cmml">S</mi><mi id="S3.E2.m1.1.1.3.3" xref="S3.E2.m1.1.1.3.3.cmml">n</mi></msup><mo id="S3.E2.m1.1.1.2" xref="S3.E2.m1.1.1.2.cmml">=</mo><mrow id="S3.E2.m1.1.1.1" xref="S3.E2.m1.1.1.1.cmml"><mn id="S3.E2.m1.1.1.1.3" xref="S3.E2.m1.1.1.1.3.cmml">0.5</mn><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.1.2" xref="S3.E2.m1.1.1.1.2.cmml">​</mo><mrow id="S3.E2.m1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E2.m1.1.1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E2.m1.1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.cmml"><msubsup id="S3.E2.m1.1.1.1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.1.1.2.cmml"><mi id="S3.E2.m1.1.1.1.1.1.1.2.2.2" xref="S3.E2.m1.1.1.1.1.1.1.2.2.2.cmml">S</mi><mi id="S3.E2.m1.1.1.1.1.1.1.2.2.3" xref="S3.E2.m1.1.1.1.1.1.1.2.2.3.cmml">c</mi><mi id="S3.E2.m1.1.1.1.1.1.1.2.3" xref="S3.E2.m1.1.1.1.1.1.1.2.3.cmml">n</mi></msubsup><mo id="S3.E2.m1.1.1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.1.cmml">+</mo><msubsup id="S3.E2.m1.1.1.1.1.1.1.3" xref="S3.E2.m1.1.1.1.1.1.1.3.cmml"><mi id="S3.E2.m1.1.1.1.1.1.1.3.2.2" xref="S3.E2.m1.1.1.1.1.1.1.3.2.2.cmml">S</mi><mi id="S3.E2.m1.1.1.1.1.1.1.3.2.3" xref="S3.E2.m1.1.1.1.1.1.1.3.2.3.cmml">d</mi><mi id="S3.E2.m1.1.1.1.1.1.1.3.3" xref="S3.E2.m1.1.1.1.1.1.1.3.3.cmml">n</mi></msubsup></mrow><mo stretchy="false" id="S3.E2.m1.1.1.1.1.1.3" xref="S3.E2.m1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E2.m1.1b"><apply id="S3.E2.m1.1.1.cmml" xref="S3.E2.m1.1.1"><eq id="S3.E2.m1.1.1.2.cmml" xref="S3.E2.m1.1.1.2"></eq><apply id="S3.E2.m1.1.1.3.cmml" xref="S3.E2.m1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.3.1.cmml" xref="S3.E2.m1.1.1.3">superscript</csymbol><ci id="S3.E2.m1.1.1.3.2.cmml" xref="S3.E2.m1.1.1.3.2">𝑆</ci><ci id="S3.E2.m1.1.1.3.3.cmml" xref="S3.E2.m1.1.1.3.3">𝑛</ci></apply><apply id="S3.E2.m1.1.1.1.cmml" xref="S3.E2.m1.1.1.1"><times id="S3.E2.m1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.2"></times><cn type="float" id="S3.E2.m1.1.1.1.3.cmml" xref="S3.E2.m1.1.1.1.3">0.5</cn><apply id="S3.E2.m1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1"><plus id="S3.E2.m1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1"></plus><apply id="S3.E2.m1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2">superscript</csymbol><apply id="S3.E2.m1.1.1.1.1.1.1.2.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.2.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S3.E2.m1.1.1.1.1.1.1.2.2.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.2.2">𝑆</ci><ci id="S3.E2.m1.1.1.1.1.1.1.2.2.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.2.3">𝑐</ci></apply><ci id="S3.E2.m1.1.1.1.1.1.1.2.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.3">𝑛</ci></apply><apply id="S3.E2.m1.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.3">superscript</csymbol><apply id="S3.E2.m1.1.1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E2.m1.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.3.2.2">𝑆</ci><ci id="S3.E2.m1.1.1.1.1.1.1.3.2.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.3.2.3">𝑑</ci></apply><ci id="S3.E2.m1.1.1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.3.3">𝑛</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m1.1c">S^{n}=0.5(S_{c}^{n}+S_{d}^{n})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.SSS2.p1.7" class="ltx_p">where <math id="S3.SS3.SSS2.p1.1.m1.1" class="ltx_Math" alttext="S_{c}^{n}" display="inline"><semantics id="S3.SS3.SSS2.p1.1.m1.1a"><msubsup id="S3.SS3.SSS2.p1.1.m1.1.1" xref="S3.SS3.SSS2.p1.1.m1.1.1.cmml"><mi id="S3.SS3.SSS2.p1.1.m1.1.1.2.2" xref="S3.SS3.SSS2.p1.1.m1.1.1.2.2.cmml">S</mi><mi id="S3.SS3.SSS2.p1.1.m1.1.1.2.3" xref="S3.SS3.SSS2.p1.1.m1.1.1.2.3.cmml">c</mi><mi id="S3.SS3.SSS2.p1.1.m1.1.1.3" xref="S3.SS3.SSS2.p1.1.m1.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p1.1.m1.1b"><apply id="S3.SS3.SSS2.p1.1.m1.1.1.cmml" xref="S3.SS3.SSS2.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS2.p1.1.m1.1.1.1.cmml" xref="S3.SS3.SSS2.p1.1.m1.1.1">superscript</csymbol><apply id="S3.SS3.SSS2.p1.1.m1.1.1.2.cmml" xref="S3.SS3.SSS2.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS2.p1.1.m1.1.1.2.1.cmml" xref="S3.SS3.SSS2.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.SSS2.p1.1.m1.1.1.2.2.cmml" xref="S3.SS3.SSS2.p1.1.m1.1.1.2.2">𝑆</ci><ci id="S3.SS3.SSS2.p1.1.m1.1.1.2.3.cmml" xref="S3.SS3.SSS2.p1.1.m1.1.1.2.3">𝑐</ci></apply><ci id="S3.SS3.SSS2.p1.1.m1.1.1.3.cmml" xref="S3.SS3.SSS2.p1.1.m1.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p1.1.m1.1c">S_{c}^{n}</annotation></semantics></math> is the value from the classification network and <math id="S3.SS3.SSS2.p1.2.m2.1" class="ltx_Math" alttext="S_{d}^{n}" display="inline"><semantics id="S3.SS3.SSS2.p1.2.m2.1a"><msubsup id="S3.SS3.SSS2.p1.2.m2.1.1" xref="S3.SS3.SSS2.p1.2.m2.1.1.cmml"><mi id="S3.SS3.SSS2.p1.2.m2.1.1.2.2" xref="S3.SS3.SSS2.p1.2.m2.1.1.2.2.cmml">S</mi><mi id="S3.SS3.SSS2.p1.2.m2.1.1.2.3" xref="S3.SS3.SSS2.p1.2.m2.1.1.2.3.cmml">d</mi><mi id="S3.SS3.SSS2.p1.2.m2.1.1.3" xref="S3.SS3.SSS2.p1.2.m2.1.1.3.cmml">n</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p1.2.m2.1b"><apply id="S3.SS3.SSS2.p1.2.m2.1.1.cmml" xref="S3.SS3.SSS2.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS2.p1.2.m2.1.1.1.cmml" xref="S3.SS3.SSS2.p1.2.m2.1.1">superscript</csymbol><apply id="S3.SS3.SSS2.p1.2.m2.1.1.2.cmml" xref="S3.SS3.SSS2.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS2.p1.2.m2.1.1.2.1.cmml" xref="S3.SS3.SSS2.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.SSS2.p1.2.m2.1.1.2.2.cmml" xref="S3.SS3.SSS2.p1.2.m2.1.1.2.2">𝑆</ci><ci id="S3.SS3.SSS2.p1.2.m2.1.1.2.3.cmml" xref="S3.SS3.SSS2.p1.2.m2.1.1.2.3">𝑑</ci></apply><ci id="S3.SS3.SSS2.p1.2.m2.1.1.3.cmml" xref="S3.SS3.SSS2.p1.2.m2.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p1.2.m2.1c">S_{d}^{n}</annotation></semantics></math> is the detection confidence from YOLOP for the initial detection <math id="S3.SS3.SSS2.p1.3.m3.1" class="ltx_Math" alttext="n" display="inline"><semantics id="S3.SS3.SSS2.p1.3.m3.1a"><mi id="S3.SS3.SSS2.p1.3.m3.1.1" xref="S3.SS3.SSS2.p1.3.m3.1.1.cmml">n</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p1.3.m3.1b"><ci id="S3.SS3.SSS2.p1.3.m3.1.1.cmml" xref="S3.SS3.SSS2.p1.3.m3.1.1">𝑛</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p1.3.m3.1c">n</annotation></semantics></math>.
+We can then make a refined detection decision on the basis of the value of <math id="S3.SS3.SSS2.p1.4.m4.1" class="ltx_Math" alttext="S^{n}" display="inline"><semantics id="S3.SS3.SSS2.p1.4.m4.1a"><msup id="S3.SS3.SSS2.p1.4.m4.1.1" xref="S3.SS3.SSS2.p1.4.m4.1.1.cmml"><mi id="S3.SS3.SSS2.p1.4.m4.1.1.2" xref="S3.SS3.SSS2.p1.4.m4.1.1.2.cmml">S</mi><mi id="S3.SS3.SSS2.p1.4.m4.1.1.3" xref="S3.SS3.SSS2.p1.4.m4.1.1.3.cmml">n</mi></msup><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p1.4.m4.1b"><apply id="S3.SS3.SSS2.p1.4.m4.1.1.cmml" xref="S3.SS3.SSS2.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS2.p1.4.m4.1.1.1.cmml" xref="S3.SS3.SSS2.p1.4.m4.1.1">superscript</csymbol><ci id="S3.SS3.SSS2.p1.4.m4.1.1.2.cmml" xref="S3.SS3.SSS2.p1.4.m4.1.1.2">𝑆</ci><ci id="S3.SS3.SSS2.p1.4.m4.1.1.3.cmml" xref="S3.SS3.SSS2.p1.4.m4.1.1.3">𝑛</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p1.4.m4.1c">S^{n}</annotation></semantics></math>, thresholded by <math id="S3.SS3.SSS2.p1.5.m5.1" class="ltx_Math" alttext="\tau" display="inline"><semantics id="S3.SS3.SSS2.p1.5.m5.1a"><mi id="S3.SS3.SSS2.p1.5.m5.1.1" xref="S3.SS3.SSS2.p1.5.m5.1.1.cmml">τ</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p1.5.m5.1b"><ci id="S3.SS3.SSS2.p1.5.m5.1.1.cmml" xref="S3.SS3.SSS2.p1.5.m5.1.1">𝜏</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p1.5.m5.1c">\tau</annotation></semantics></math>. This process is repeated for each detection <math id="S3.SS3.SSS2.p1.6.m6.1" class="ltx_Math" alttext="n\in N" display="inline"><semantics id="S3.SS3.SSS2.p1.6.m6.1a"><mrow id="S3.SS3.SSS2.p1.6.m6.1.1" xref="S3.SS3.SSS2.p1.6.m6.1.1.cmml"><mi id="S3.SS3.SSS2.p1.6.m6.1.1.2" xref="S3.SS3.SSS2.p1.6.m6.1.1.2.cmml">n</mi><mo id="S3.SS3.SSS2.p1.6.m6.1.1.1" xref="S3.SS3.SSS2.p1.6.m6.1.1.1.cmml">∈</mo><mi id="S3.SS3.SSS2.p1.6.m6.1.1.3" xref="S3.SS3.SSS2.p1.6.m6.1.1.3.cmml">N</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p1.6.m6.1b"><apply id="S3.SS3.SSS2.p1.6.m6.1.1.cmml" xref="S3.SS3.SSS2.p1.6.m6.1.1"><in id="S3.SS3.SSS2.p1.6.m6.1.1.1.cmml" xref="S3.SS3.SSS2.p1.6.m6.1.1.1"></in><ci id="S3.SS3.SSS2.p1.6.m6.1.1.2.cmml" xref="S3.SS3.SSS2.p1.6.m6.1.1.2">𝑛</ci><ci id="S3.SS3.SSS2.p1.6.m6.1.1.3.cmml" xref="S3.SS3.SSS2.p1.6.m6.1.1.3">𝑁</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p1.6.m6.1c">n\in N</annotation></semantics></math>, where <math id="S3.SS3.SSS2.p1.7.m7.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S3.SS3.SSS2.p1.7.m7.1a"><mi id="S3.SS3.SSS2.p1.7.m7.1.1" xref="S3.SS3.SSS2.p1.7.m7.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p1.7.m7.1b"><ci id="S3.SS3.SSS2.p1.7.m7.1.1.cmml" xref="S3.SS3.SSS2.p1.7.m7.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p1.7.m7.1c">N</annotation></semantics></math> is the initial larger set of noisy detection candidates produced by YOLOP.</p>
+</div>
+</section>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Experimental Setup</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">Here, we present details of the two public benchmark datasets that we used, our object annotation procedure for Oxford, evaluation metrics and other implementation details.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.5.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.6.2" class="ltx_text ltx_font_italic">Datasets</span>
+</h3>
+
+<section id="S4.SS1.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS1.SSS1.5.1.1" class="ltx_text">IV-A</span>1 </span>Oxford RobotCar</h4>
+
+<div id="S4.SS1.SSS1.p1" class="ltx_para">
+<p id="S4.SS1.SSS1.p1.1" class="ltx_p">The RobotCar dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> consists of a collection of vehicle traverses through Oxford, recorded over multiple times of day and across seasons. From this dataset, a standard 6-DoF localization benchmark exists, called RobotCar Seasons v2 (RCSv2) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>. The RCSv2 dataset contains multiple traverses of the same driving route, with images collected from the left, right and rear cameras on the vehicles. The dataset contains a mapping traverse, which was collected during overcast daytime conditions during winter (in 2014); we continue to use this traverse for all our map images. We then use the different query conditions in the training and test sets of RCSv2, with our own custom train, validation and test splits.</p>
+</div>
+<div id="S4.SS1.SSS1.p2" class="ltx_para">
+<p id="S4.SS1.SSS1.p2.1" class="ltx_p">Our training conditions are sun, overcast summer, snow, dawn and night-rain (all rear camera). In total, our training set contains 1122 image pairs, that is one image from a query condition and the second from the mapping set (overcast-reference). Our validation condition is dusk, using the rear camera. All images for training and validation are from the ‘training’ set of RCSv2.</p>
+</div>
+<div id="S4.SS1.SSS1.p3" class="ltx_para">
+<p id="S4.SS1.SSS1.p3.1" class="ltx_p">Our test traverses are collected from both the training and test sets of RCSv2, for the conditions overcast-winter, rain, night and dusk and using different cameras. It is important to note that any query images from the training set use the same mapping images as the neural network was trained on. In our results, these traverses include the suffix <em id="S4.SS1.SSS1.p3.1.1" class="ltx_emph ltx_font_italic">same map</em>. This setting allows us to evaluate a ‘map-specific repeated route’ operation of an autonomous vehicle. To show complete separation between training and test sets, we experiment using query images from the test set of RCSv2, where the mapping images are unseen by the classification neural network. These traverses include the suffix <em id="S4.SS1.SSS1.p3.1.2" class="ltx_emph ltx_font_italic">geosep</em>. Since RCSv2 does not include the front camera, we have also added traverse <em id="S4.SS1.SSS1.p3.1.3" class="ltx_emph ltx_font_italic">2015/11/13</em> from the original RobotCar dataset, which is the same timestamp as overcast-winter in RCSv2.</p>
+</div>
+</section>
+<section id="S4.SS1.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS1.SSS2.5.1.1" class="ltx_text">IV-A</span>2 </span>Dark Zurich</h4>
+
+<div id="S4.SS1.SSS2.p1" class="ltx_para">
+<p id="S4.SS1.SSS2.p1.1" class="ltx_p">The Dark Zurich dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> is a driving dataset collected around Zurich, across three different times of day; denoted as daytime, twilight and nighttime. All three times of day use the same driving route. We use the daytime traverse as our mapping set, and use the nighttime traverse as our query set, where our objective is to improve the baseline detection performance of YOLOP. We <span id="S4.SS1.SSS2.p1.1.1" class="ltx_text ltx_font_italic">do not</span> fine-tune our network on Dark Zurich and use the network that was trained on RCSv2. The Dark Zurich also contains pixel-wise semantic segmentation annotations, which we only use to evaluate our vehicle detection performance.</p>
+</div>
+</section>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.5.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.6.2" class="ltx_text ltx_font_italic">Annotation Procedure to Generate the Ground Truth</span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">Since the RobotCar Seasons dataset does not provide ground truth object detections or semantic segmentation, we produced our own manually-annotated vehicle detections for query images in the RobotCar Seasons dataset. In this work, we only consider whether a given detection is correct or not, we do not analyse whether the bounding box shape is exactly the right size. Our objective is to decide whether a given detection bounding box contains the observable centroid of the true vehicle in the image. Our annotation consists of a one pixel binary flag, where each observed vehicle in an image is given a single flag located at the centroid of each vehicle. This weak annotation procedure allows for rapid annotation. We only annotate vehicles, specifically the Cityscapes classes: car, truck and bus. We do not consider motorcycle, bicycle, or pedestrian detection in this work.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS3.5.1.1" class="ltx_text">IV-C</span> </span><span id="S4.SS3.6.2" class="ltx_text ltx_font_italic">Implementation Details</span>
+</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">In this section we provide specific details on our configurations of each subsystem in this work.</p>
+</div>
+<section id="S4.SS3.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS1.5.1.1" class="ltx_text">IV-C</span>1 </span>Detection</h4>
+
+<div id="S4.SS3.SSS1.p1" class="ltx_para">
+<p id="S4.SS3.SSS1.p1.1" class="ltx_p">For our proposed method, we modify YOLOP by reducing the default detection threshold to <math id="S4.SS3.SSS1.p1.1.m1.1" class="ltx_Math" alttext="0.1" display="inline"><semantics id="S4.SS3.SSS1.p1.1.m1.1a"><mn id="S4.SS3.SSS1.p1.1.m1.1.1" xref="S4.SS3.SSS1.p1.1.m1.1.1.cmml">0.1</mn><annotation-xml encoding="MathML-Content" id="S4.SS3.SSS1.p1.1.m1.1b"><cn type="float" id="S4.SS3.SSS1.p1.1.m1.1.1.cmml" xref="S4.SS3.SSS1.p1.1.m1.1.1">0.1</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.SSS1.p1.1.m1.1c">0.1</annotation></semantics></math> to increase its recall. We also consider the application of autonomous navigation, and note that very far away vehicles are less important for short-term perception and navigation decisions. Therefore, we add in a bounding box size limit filter, removing candidate detections that are less than 0.08% of the whole image pixel area. This initial filter has two purposes - first, it removes a number of very small false positives, and second the accuracy of our manual annotation reduces below this size.</p>
+</div>
+</section>
+<section id="S4.SS3.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS2.5.1.1" class="ltx_text">IV-C</span>2 </span>Localization</h4>
+
+<div id="S4.SS3.SSS2.p1" class="ltx_para">
+<p id="S4.SS3.SSS2.p1.1" class="ltx_p">The RCSv2 dataset is divided into 49 submaps; we follow the standard practice of limiting our VPR retrieval to the submap <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>. We perform visual place recognition using the ‘performance variant’ of Patch-NetVLAD.</p>
+</div>
+<div id="S4.SS3.SSS2.p2" class="ltx_para">
+<p id="S4.SS3.SSS2.p2.1" class="ltx_p">During our ablation studies, we also show results where it is assumed that localization is perfect. To do so, we use the ground truth poses provided in the training set of the RCSv2 dataset. We also use the ground truth poses during training, to ensure that the network is trained with the correct corresponding mapping image for each query training image.</p>
+</div>
+</section>
+<section id="S4.SS3.SSS3" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS3.5.1.1" class="ltx_text">IV-C</span>3 </span>Ablation Study Configurations</h4>
+
+<div id="S4.SS3.SSS3.p1" class="ltx_para">
+<p id="S4.SS3.SSS3.p1.1" class="ltx_p">To accurately determine the ideal classifier configuration, we trained several different networks with different designs and also show results with simpler classification architectures. Our ablation systems are listed below:</p>
+<ul id="S4.I1" class="ltx_itemize">
+<li id="S4.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i1.p1" class="ltx_para">
+<p id="S4.I1.i1.p1.1" class="ltx_p"><span id="S4.I1.i1.p1.1.1" class="ltx_text ltx_font_italic">Mean L2 distance</span> between bounding box features</p>
+</div>
+</li>
+<li id="S4.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i2.p1" class="ltx_para">
+<p id="S4.I1.i2.p1.1" class="ltx_p">Trained classifier network on GeM pooled <span id="S4.I1.i2.p1.1.1" class="ltx_text ltx_font_italic">disparity features</span></p>
+</div>
+</li>
+<li id="S4.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S4.I1.i3.p1" class="ltx_para">
+<p id="S4.I1.i3.p1.1" class="ltx_p">Trained classifier network using <span id="S4.I1.i3.p1.1.1" class="ltx_text ltx_font_italic">query-only features</span></p>
+</div>
+</li>
+</ul>
+<p id="S4.SS3.SSS3.p1.2" class="ltx_p">where disparity features are the subtraction of the pooled query and mapping bounding box embeddings (instead of concatenation). The L2 distance is the Euclidean difference of the place recognition neural network features that are located within a bounding box.</p>
+</div>
+</section>
+<section id="S4.SS3.SSS4" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS4.5.1.1" class="ltx_text">IV-C</span>4 </span>Training Parameters</h4>
+
+<div id="S4.SS3.SSS4.p1" class="ltx_para">
+<p id="S4.SS3.SSS4.p1.1" class="ltx_p">When training all our classifier network configurations, we used a learning rate of 0.0005 with the Adam optimizer and dropout was set to 0.25. We trained our network with early stopping criterion on the validation F1 score (at detection threshold, <math id="S4.SS3.SSS4.p1.1.m1.1" class="ltx_Math" alttext="\tau=0.25" display="inline"><semantics id="S4.SS3.SSS4.p1.1.m1.1a"><mrow id="S4.SS3.SSS4.p1.1.m1.1.1" xref="S4.SS3.SSS4.p1.1.m1.1.1.cmml"><mi id="S4.SS3.SSS4.p1.1.m1.1.1.2" xref="S4.SS3.SSS4.p1.1.m1.1.1.2.cmml">τ</mi><mo id="S4.SS3.SSS4.p1.1.m1.1.1.1" xref="S4.SS3.SSS4.p1.1.m1.1.1.1.cmml">=</mo><mn id="S4.SS3.SSS4.p1.1.m1.1.1.3" xref="S4.SS3.SSS4.p1.1.m1.1.1.3.cmml">0.25</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.SSS4.p1.1.m1.1b"><apply id="S4.SS3.SSS4.p1.1.m1.1.1.cmml" xref="S4.SS3.SSS4.p1.1.m1.1.1"><eq id="S4.SS3.SSS4.p1.1.m1.1.1.1.cmml" xref="S4.SS3.SSS4.p1.1.m1.1.1.1"></eq><ci id="S4.SS3.SSS4.p1.1.m1.1.1.2.cmml" xref="S4.SS3.SSS4.p1.1.m1.1.1.2">𝜏</ci><cn type="float" id="S4.SS3.SSS4.p1.1.m1.1.1.3.cmml" xref="S4.SS3.SSS4.p1.1.m1.1.1.3">0.25</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.SSS4.p1.1.m1.1c">\tau=0.25</annotation></semantics></math>), which stopped training when no improvement is observed for two epochs in a row. We use the model corresponding to the epoch with the highest validation F1 score.</p>
+</div>
+</section>
+<section id="S4.SS3.SSS5" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S4.SS3.SSS5.5.1.1" class="ltx_text">IV-C</span>5 </span>Evaluation Metrics</h4>
+
+<div id="S4.SS3.SSS5.p1" class="ltx_para">
+<p id="S4.SS3.SSS5.p1.2" class="ltx_p">In this work, our focus is on whether or not a given vehicle is detected or not. Our objective is to maximise the number of correct vehicle detections, while minimising the number of false detections. Therefore, we use precision and recall as our metrics, for a given detection threshold. We show precision-recall curves of each classifier, sweeping across different detection thresholds. We also show the system operating point, that is, the precision and recall at the detection decision threshold <math id="S4.SS3.SSS5.p1.1.m1.1" class="ltx_Math" alttext="\tau" display="inline"><semantics id="S4.SS3.SSS5.p1.1.m1.1a"><mi id="S4.SS3.SSS5.p1.1.m1.1.1" xref="S4.SS3.SSS5.p1.1.m1.1.1.cmml">τ</mi><annotation-xml encoding="MathML-Content" id="S4.SS3.SSS5.p1.1.m1.1b"><ci id="S4.SS3.SSS5.p1.1.m1.1.1.cmml" xref="S4.SS3.SSS5.p1.1.m1.1.1">𝜏</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.SSS5.p1.1.m1.1c">\tau</annotation></semantics></math>, which is set to <math id="S4.SS3.SSS5.p1.2.m2.1" class="ltx_Math" alttext="0.25" display="inline"><semantics id="S4.SS3.SSS5.p1.2.m2.1a"><mn id="S4.SS3.SSS5.p1.2.m2.1.1" xref="S4.SS3.SSS5.p1.2.m2.1.1.cmml">0.25</mn><annotation-xml encoding="MathML-Content" id="S4.SS3.SSS5.p1.2.m2.1b"><cn type="float" id="S4.SS3.SSS5.p1.2.m2.1.1.cmml" xref="S4.SS3.SSS5.p1.2.m2.1.1">0.25</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.SSS5.p1.2.m2.1c">0.25</annotation></semantics></math> for all our experiments, and is also the same detection threshold as YOLOP with default settings. We summarize the PR curves with four summary statistics: F1 score at the operating point, AUC, maximum F1 score and precision at 95% recall.</p>
+</div>
+</section>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Results</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this section, we show the performance of our proposed map matching object detection system on multiple traverses of Oxford RobotCar along with Dark Zurich, and also discuss different ablation studies.</p>
+</div>
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS1.5.1.1" class="ltx_text">V-A</span> </span><span id="S5.SS1.6.2" class="ltx_text ltx_font_italic">Performance of Map Matching Object Detection on Oxford RobotCar</span>
+</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.1" class="ltx_p">In Figure <a href="#S5.F3" title="Figure 3 ‣ V-A Performance of Map Matching Object Detection on Oxford RobotCar ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, we show the PR curves of our classifier system, which combines the detection scores of both YOLOP and our map matching classifier network. We compare against vanilla YOLOP. We mark the system operating point as a star on each PR curve (<math id="S5.SS1.p1.1.m1.1" class="ltx_Math" alttext="\tau=0.25" display="inline"><semantics id="S5.SS1.p1.1.m1.1a"><mrow id="S5.SS1.p1.1.m1.1.1" xref="S5.SS1.p1.1.m1.1.1.cmml"><mi id="S5.SS1.p1.1.m1.1.1.2" xref="S5.SS1.p1.1.m1.1.1.2.cmml">τ</mi><mo id="S5.SS1.p1.1.m1.1.1.1" xref="S5.SS1.p1.1.m1.1.1.1.cmml">=</mo><mn id="S5.SS1.p1.1.m1.1.1.3" xref="S5.SS1.p1.1.m1.1.1.3.cmml">0.25</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.SS1.p1.1.m1.1b"><apply id="S5.SS1.p1.1.m1.1.1.cmml" xref="S5.SS1.p1.1.m1.1.1"><eq id="S5.SS1.p1.1.m1.1.1.1.cmml" xref="S5.SS1.p1.1.m1.1.1.1"></eq><ci id="S5.SS1.p1.1.m1.1.1.2.cmml" xref="S5.SS1.p1.1.m1.1.1.2">𝜏</ci><cn type="float" id="S5.SS1.p1.1.m1.1.1.3.cmml" xref="S5.SS1.p1.1.m1.1.1.3">0.25</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS1.p1.1.m1.1c">\tau=0.25</annotation></semantics></math> for both methods). We show results on eight different traverses through the Oxford RobotCar Seasons dataset, across different conditions, cameras and routes (where <em id="S5.SS1.p1.1.1" class="ltx_emph ltx_font_italic">geosep</em> means that the reference map and query images are completely unseen).</p>
+</div>
+<div id="S5.SS1.p2" class="ltx_para">
+<p id="S5.SS1.p2.1" class="ltx_p">As expected, we observe that our approach has a consistent improvement in the precision at high recall, for all eight traverses. This shows that our system is able to remove false positives while still detecting almost every vehicle in each image. This is especially important for autonomous vehicle applications where missing any vehicle detections could have severe consequences. We note that the improvement with our approach is especially large for the traverse <em id="S5.SS1.p2.1.1" class="ltx_emph ltx_font_italic">night, rear, same map</em>. This is a challenging condition for YOLOP by itself, and the map matching network can leverage the mapping images to compensate for these challenging conditions. When the train-test generalization gap increases for <em id="S5.SS1.p2.1.2" class="ltx_emph ltx_font_italic">night, rear, geosep</em>, this improvement reduces in magnitude but still has value.</p>
+</div>
+<div id="S5.SS1.p3" class="ltx_para">
+<p id="S5.SS1.p3.1" class="ltx_p">In Table <a href="#S5.T1" title="TABLE I ‣ V-A Performance of Map Matching Object Detection on Oxford RobotCar ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>, we provide summary statistics for these traverses, including the F1 Score at the operating point (marked with stars in Fig <a href="#S5.F3" title="Figure 3 ‣ V-A Performance of Map Matching Object Detection on Oxford RobotCar ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>). Our system has a consistent improvement over YOLOP for all traverses and all metrics. The precision at 95% recall has the most clear improvement, with the average precision (across all traverses) increasing from 73.3% to 81.1%. The greatest improvement is in the traverse <em id="S5.SS1.p3.1.1" class="ltx_emph ltx_font_italic">night, rear, same map</em>, while the smallest improvement is for <em id="S5.SS1.p3.1.2" class="ltx_emph ltx_font_italic">overcast-winter, front, geosep</em>. Since the training data only consisted of images from the rear camera, a larger generalization gap exists for this traverse where front camera images are used instead. While we used rear camera to align with the standard RCSv2 benchmark, front camera results can be expected to improve with front camera training, based on the performance patterns observed for the rear camera.</p>
+</div>
+<figure id="S5.F3" class="ltx_figure"><img src="/html/2306.17536/assets/x3.png" id="S5.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="332" height="116" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Precision recall curves for eight traverses of Oxford RobotCar. <em id="S5.F3.2.1" class="ltx_emph ltx_font_italic">Detailed legend:</em> Geosep means that the classifier network has not been trained on the deployment environment. Same map means that the classifier network has seen the deployment environment. The red star is the performance of YOLOP out of the box. The blue star is the performance of the new map-matching addition, building upon the performance of the red star.</figcaption>
+</figure>
+<figure id="S5.T1" class="ltx_table">
+<figcaption class="ltx_caption" style="font-size:80%;"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Detection Performance using different metrics and dataset traverses.</figcaption>
+<div id="S5.T1.3" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:298.9pt;height:198pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p id="S5.T1.3.1" class="ltx_p"><span id="S5.T1.3.1.1" class="ltx_text" style="font-size:80%;">
+<span id="S5.T1.3.1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<span class="ltx_thead">
+<span id="S5.T1.3.1.1.1.1.1" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.1.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_th ltx_th_row ltx_border_tt" style="padding-left:1.4pt;padding-right:1.4pt;"></span>
+<span id="S5.T1.3.1.1.1.1.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_2" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.1.1.2.1" class="ltx_text ltx_font_bold">F1 Score</span></span>
+<span id="S5.T1.3.1.1.1.1.1.3" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_2" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.1.1.3.1" class="ltx_text ltx_font_bold">AUC</span></span>
+<span id="S5.T1.3.1.1.1.1.1.4" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_2" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.1.1.4.1" class="ltx_text ltx_font_bold">Max F1 Score</span></span>
+<span id="S5.T1.3.1.1.1.1.1.5" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_2" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.1.1.5.1" class="ltx_text ltx_font_bold">P@95%R</span></span></span>
+<span id="S5.T1.3.1.1.1.2.2" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.2.2.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_column ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.2.2.1.1" class="ltx_text ltx_font_bold">Condition,Cam,Geo</span></span>
+<span id="S5.T1.3.1.1.1.2.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">YOLOP</span>
+<span id="S5.T1.3.1.1.1.2.2.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Ours</span>
+<span id="S5.T1.3.1.1.1.2.2.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">YOLOP</span>
+<span id="S5.T1.3.1.1.1.2.2.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Ours</span>
+<span id="S5.T1.3.1.1.1.2.2.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">YOLOP</span>
+<span id="S5.T1.3.1.1.1.2.2.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Ours</span>
+<span id="S5.T1.3.1.1.1.2.2.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">YOLOP</span>
+<span id="S5.T1.3.1.1.1.2.2.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Ours</span></span>
+</span>
+<span class="ltx_tbody">
+<span id="S5.T1.3.1.1.1.3.1" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.3.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Winter, Rear, Geosep</span>
+<span id="S5.T1.3.1.1.1.3.1.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">90.7</span>
+<span id="S5.T1.3.1.1.1.3.1.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.3.1.3.1" class="ltx_text ltx_font_bold">95.3</span></span>
+<span id="S5.T1.3.1.1.1.3.1.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">97.7</span>
+<span id="S5.T1.3.1.1.1.3.1.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.3.1.5.1" class="ltx_text ltx_font_bold">98.0</span></span>
+<span id="S5.T1.3.1.1.1.3.1.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">92.2</span>
+<span id="S5.T1.3.1.1.1.3.1.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.3.1.7.1" class="ltx_text ltx_font_bold">95.3</span></span>
+<span id="S5.T1.3.1.1.1.3.1.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">89.0</span>
+<span id="S5.T1.3.1.1.1.3.1.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.3.1.9.1" class="ltx_text ltx_font_bold">94.2</span></span></span>
+<span id="S5.T1.3.1.1.1.4.2" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.4.2.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Winter, Rear, Same map</span>
+<span id="S5.T1.3.1.1.1.4.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">86.3</span>
+<span id="S5.T1.3.1.1.1.4.2.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.4.2.3.1" class="ltx_text ltx_font_bold">90.4</span></span>
+<span id="S5.T1.3.1.1.1.4.2.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">96.1</span>
+<span id="S5.T1.3.1.1.1.4.2.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.4.2.5.1" class="ltx_text ltx_font_bold">97.0</span></span>
+<span id="S5.T1.3.1.1.1.4.2.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">87.3</span>
+<span id="S5.T1.3.1.1.1.4.2.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.4.2.7.1" class="ltx_text ltx_font_bold">91.4</span></span>
+<span id="S5.T1.3.1.1.1.4.2.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">77.6</span>
+<span id="S5.T1.3.1.1.1.4.2.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.4.2.9.1" class="ltx_text ltx_font_bold">88.0</span></span></span>
+<span id="S5.T1.3.1.1.1.5.3" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.5.3.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Winter, Front, Geosep</span>
+<span id="S5.T1.3.1.1.1.5.3.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">88.8</span>
+<span id="S5.T1.3.1.1.1.5.3.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.5.3.3.1" class="ltx_text ltx_font_bold">91.3</span></span>
+<span id="S5.T1.3.1.1.1.5.3.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">97.4</span>
+<span id="S5.T1.3.1.1.1.5.3.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.5.3.5.1" class="ltx_text ltx_font_bold">97.5</span></span>
+<span id="S5.T1.3.1.1.1.5.3.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">90.6</span>
+<span id="S5.T1.3.1.1.1.5.3.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.5.3.7.1" class="ltx_text ltx_font_bold">91.8</span></span>
+<span id="S5.T1.3.1.1.1.5.3.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">85.9</span>
+<span id="S5.T1.3.1.1.1.5.3.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.5.3.9.1" class="ltx_text ltx_font_bold">88.6</span></span></span>
+<span id="S5.T1.3.1.1.1.6.4" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.6.4.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Rain, Rear, Geosep</span>
+<span id="S5.T1.3.1.1.1.6.4.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">87.7</span>
+<span id="S5.T1.3.1.1.1.6.4.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.6.4.3.1" class="ltx_text ltx_font_bold">89.6</span></span>
+<span id="S5.T1.3.1.1.1.6.4.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">96.3</span>
+<span id="S5.T1.3.1.1.1.6.4.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.6.4.5.1" class="ltx_text ltx_font_bold">97.5</span></span>
+<span id="S5.T1.3.1.1.1.6.4.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">88.0</span>
+<span id="S5.T1.3.1.1.1.6.4.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.6.4.7.1" class="ltx_text ltx_font_bold">90.4</span></span>
+<span id="S5.T1.3.1.1.1.6.4.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">80.0</span>
+<span id="S5.T1.3.1.1.1.6.4.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.6.4.9.1" class="ltx_text ltx_font_bold">85.6</span></span></span>
+<span id="S5.T1.3.1.1.1.7.5" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.7.5.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Rain, Rear, Same map</span>
+<span id="S5.T1.3.1.1.1.7.5.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">89.7</span>
+<span id="S5.T1.3.1.1.1.7.5.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.7.5.3.1" class="ltx_text ltx_font_bold">92.0</span></span>
+<span id="S5.T1.3.1.1.1.7.5.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">97.6</span>
+<span id="S5.T1.3.1.1.1.7.5.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.7.5.5.1" class="ltx_text ltx_font_bold">97.8</span></span>
+<span id="S5.T1.3.1.1.1.7.5.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">91.6</span>
+<span id="S5.T1.3.1.1.1.7.5.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.7.5.7.1" class="ltx_text ltx_font_bold">93.1</span></span>
+<span id="S5.T1.3.1.1.1.7.5.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">85.4</span>
+<span id="S5.T1.3.1.1.1.7.5.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.7.5.9.1" class="ltx_text ltx_font_bold">89.8</span></span></span>
+<span id="S5.T1.3.1.1.1.8.6" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.8.6.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Night, Rear, Geosep</span>
+<span id="S5.T1.3.1.1.1.8.6.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">81.6</span>
+<span id="S5.T1.3.1.1.1.8.6.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.8.6.3.1" class="ltx_text ltx_font_bold">83.0</span></span>
+<span id="S5.T1.3.1.1.1.8.6.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">93.1</span>
+<span id="S5.T1.3.1.1.1.8.6.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.8.6.5.1" class="ltx_text ltx_font_bold">93.2</span></span>
+<span id="S5.T1.3.1.1.1.8.6.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">82.8</span>
+<span id="S5.T1.3.1.1.1.8.6.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.8.6.7.1" class="ltx_text ltx_font_bold">83.5</span></span>
+<span id="S5.T1.3.1.1.1.8.6.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">68.1</span>
+<span id="S5.T1.3.1.1.1.8.6.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.8.6.9.1" class="ltx_text ltx_font_bold">73.5</span></span></span>
+<span id="S5.T1.3.1.1.1.9.7" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.9.7.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Night, Rear, Same map</span>
+<span id="S5.T1.3.1.1.1.9.7.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">60.4</span>
+<span id="S5.T1.3.1.1.1.9.7.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.9.7.3.1" class="ltx_text ltx_font_bold">68.6</span></span>
+<span id="S5.T1.3.1.1.1.9.7.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">77.8</span>
+<span id="S5.T1.3.1.1.1.9.7.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.9.7.5.1" class="ltx_text ltx_font_bold">88.9</span></span>
+<span id="S5.T1.3.1.1.1.9.7.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">70.9</span>
+<span id="S5.T1.3.1.1.1.9.7.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.9.7.7.1" class="ltx_text ltx_font_bold">79.2</span></span>
+<span id="S5.T1.3.1.1.1.9.7.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">36.4</span>
+<span id="S5.T1.3.1.1.1.9.7.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.9.7.9.1" class="ltx_text ltx_font_bold">55.8</span></span></span>
+<span id="S5.T1.3.1.1.1.10.8" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.10.8.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Dusk, Right, Geosep</span>
+<span id="S5.T1.3.1.1.1.10.8.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">80.7</span>
+<span id="S5.T1.3.1.1.1.10.8.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.10.8.3.1" class="ltx_text ltx_font_bold">86.0</span></span>
+<span id="S5.T1.3.1.1.1.10.8.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">94.4</span>
+<span id="S5.T1.3.1.1.1.10.8.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.10.8.5.1" class="ltx_text ltx_font_bold">95.0</span></span>
+<span id="S5.T1.3.1.1.1.10.8.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">86.3</span>
+<span id="S5.T1.3.1.1.1.10.8.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.10.8.7.1" class="ltx_text ltx_font_bold">87.5</span></span>
+<span id="S5.T1.3.1.1.1.10.8.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">64.1</span>
+<span id="S5.T1.3.1.1.1.10.8.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.10.8.9.1" class="ltx_text ltx_font_bold">73.0</span></span></span>
+<span id="S5.T1.3.1.1.1.11.9" class="ltx_tr">
+<span id="S5.T1.3.1.1.1.11.9.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Averaged results</span>
+<span id="S5.T1.3.1.1.1.11.9.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">83.2</span>
+<span id="S5.T1.3.1.1.1.11.9.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.11.9.3.1" class="ltx_text ltx_font_bold">87.0</span></span>
+<span id="S5.T1.3.1.1.1.11.9.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">93.8</span>
+<span id="S5.T1.3.1.1.1.11.9.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.11.9.5.1" class="ltx_text ltx_font_bold">95.6</span></span>
+<span id="S5.T1.3.1.1.1.11.9.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">86.2</span>
+<span id="S5.T1.3.1.1.1.11.9.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.11.9.7.1" class="ltx_text ltx_font_bold">89.0</span></span>
+<span id="S5.T1.3.1.1.1.11.9.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">73.3</span>
+<span id="S5.T1.3.1.1.1.11.9.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T1.3.1.1.1.11.9.9.1" class="ltx_text ltx_font_bold">81.1</span></span></span>
+</span>
+</span></span></p>
+</span></div>
+</figure>
+</section>
+<section id="S5.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS2.5.1.1" class="ltx_text">V-B</span> </span><span id="S5.SS2.6.2" class="ltx_text ltx_font_italic">Performance on Dark Zurich</span>
+</h3>
+
+<div id="S5.SS2.p1" class="ltx_para">
+<p id="S5.SS2.p1.3" class="ltx_p">To further demonstrate the generalization capabilities of our approach, we tested our system on the Dark Zurich dataset. We show summary statistics in Table <a href="#S5.T2" title="TABLE II ‣ V-B Performance on Dark Zurich ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>.
+Despite different camera types and viewing angle in Dark Zurich as compared to the Oxford Robotcar dataset, we can observe that our method is still effective at the default operating point (the F1 Score) and at higher levels of recall, with the precision at <math id="S5.SS2.p1.1.m1.1" class="ltx_Math" alttext="95\%" display="inline"><semantics id="S5.SS2.p1.1.m1.1a"><mrow id="S5.SS2.p1.1.m1.1.1" xref="S5.SS2.p1.1.m1.1.1.cmml"><mn id="S5.SS2.p1.1.m1.1.1.2" xref="S5.SS2.p1.1.m1.1.1.2.cmml">95</mn><mo id="S5.SS2.p1.1.m1.1.1.1" xref="S5.SS2.p1.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.1.m1.1b"><apply id="S5.SS2.p1.1.m1.1.1.cmml" xref="S5.SS2.p1.1.m1.1.1"><csymbol cd="latexml" id="S5.SS2.p1.1.m1.1.1.1.cmml" xref="S5.SS2.p1.1.m1.1.1.1">percent</csymbol><cn type="integer" id="S5.SS2.p1.1.m1.1.1.2.cmml" xref="S5.SS2.p1.1.m1.1.1.2">95</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.1.m1.1c">95\%</annotation></semantics></math> recall increasing from <math id="S5.SS2.p1.2.m2.1" class="ltx_Math" alttext="70.8\%" display="inline"><semantics id="S5.SS2.p1.2.m2.1a"><mrow id="S5.SS2.p1.2.m2.1.1" xref="S5.SS2.p1.2.m2.1.1.cmml"><mn id="S5.SS2.p1.2.m2.1.1.2" xref="S5.SS2.p1.2.m2.1.1.2.cmml">70.8</mn><mo id="S5.SS2.p1.2.m2.1.1.1" xref="S5.SS2.p1.2.m2.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.2.m2.1b"><apply id="S5.SS2.p1.2.m2.1.1.cmml" xref="S5.SS2.p1.2.m2.1.1"><csymbol cd="latexml" id="S5.SS2.p1.2.m2.1.1.1.cmml" xref="S5.SS2.p1.2.m2.1.1.1">percent</csymbol><cn type="float" id="S5.SS2.p1.2.m2.1.1.2.cmml" xref="S5.SS2.p1.2.m2.1.1.2">70.8</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.2.m2.1c">70.8\%</annotation></semantics></math> with YOLOP to <math id="S5.SS2.p1.3.m3.1" class="ltx_Math" alttext="74.5\%" display="inline"><semantics id="S5.SS2.p1.3.m3.1a"><mrow id="S5.SS2.p1.3.m3.1.1" xref="S5.SS2.p1.3.m3.1.1.cmml"><mn id="S5.SS2.p1.3.m3.1.1.2" xref="S5.SS2.p1.3.m3.1.1.2.cmml">74.5</mn><mo id="S5.SS2.p1.3.m3.1.1.1" xref="S5.SS2.p1.3.m3.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.3.m3.1b"><apply id="S5.SS2.p1.3.m3.1.1.cmml" xref="S5.SS2.p1.3.m3.1.1"><csymbol cd="latexml" id="S5.SS2.p1.3.m3.1.1.1.cmml" xref="S5.SS2.p1.3.m3.1.1.1">percent</csymbol><cn type="float" id="S5.SS2.p1.3.m3.1.1.2.cmml" xref="S5.SS2.p1.3.m3.1.1.2">74.5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.3.m3.1c">74.5\%</annotation></semantics></math> when we utilize the prior map. We argue that despite a lower overall AUC, for an autonomous vehicle to operate safely without missing detections, a higher value of P@95% recall is more crucial.</p>
+</div>
+<figure id="S5.T2" class="ltx_table">
+<figcaption class="ltx_caption" style="font-size:80%;"><span class="ltx_tag ltx_tag_table">TABLE II: </span>Detection Generalization on the Dark Zurich Dataset</figcaption>
+<table id="S5.T2.3" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S5.T2.3.1.1" class="ltx_tr">
+<th id="S5.T2.3.1.1.1" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:1.4pt;padding-right:1.4pt;" colspan="2"><span id="S5.T2.3.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:80%;">F1 Score</span></th>
+<th id="S5.T2.3.1.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:1.4pt;padding-right:1.4pt;" colspan="2"><span id="S5.T2.3.1.1.2.1" class="ltx_text ltx_font_bold" style="font-size:80%;">AUC</span></th>
+<th id="S5.T2.3.1.1.3" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:1.4pt;padding-right:1.4pt;" colspan="2"><span id="S5.T2.3.1.1.3.1" class="ltx_text ltx_font_bold" style="font-size:80%;">Max F1</span></th>
+<th id="S5.T2.3.1.1.4" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:1.4pt;padding-right:1.4pt;" colspan="2"><span id="S5.T2.3.1.1.4.1" class="ltx_text ltx_font_bold" style="font-size:80%;">P@95%R</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S5.T2.3.2.1" class="ltx_tr">
+<td id="S5.T2.3.2.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.2.1.1.1" class="ltx_text" style="font-size:80%;">YOLOP</span></td>
+<td id="S5.T2.3.2.1.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.2.1.2.1" class="ltx_text" style="font-size:80%;">Ours</span></td>
+<td id="S5.T2.3.2.1.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.2.1.3.1" class="ltx_text" style="font-size:80%;">YOLOP</span></td>
+<td id="S5.T2.3.2.1.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.2.1.4.1" class="ltx_text" style="font-size:80%;">Ours</span></td>
+<td id="S5.T2.3.2.1.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.2.1.5.1" class="ltx_text" style="font-size:80%;">YOLOP</span></td>
+<td id="S5.T2.3.2.1.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.2.1.6.1" class="ltx_text" style="font-size:80%;">Ours</span></td>
+<td id="S5.T2.3.2.1.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.2.1.7.1" class="ltx_text" style="font-size:80%;">YOLOP</span></td>
+<td id="S5.T2.3.2.1.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.2.1.8.1" class="ltx_text" style="font-size:80%;">Ours</span></td>
+</tr>
+<tr id="S5.T2.3.3.2" class="ltx_tr">
+<td id="S5.T2.3.3.2.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.3.2.1.1" class="ltx_text" style="font-size:80%;">71.8</span></td>
+<td id="S5.T2.3.3.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.3.2.2.1" class="ltx_text ltx_font_bold" style="font-size:80%;">74.3</span></td>
+<td id="S5.T2.3.3.2.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.3.2.3.1" class="ltx_text ltx_font_bold" style="font-size:80%;">87.5</span></td>
+<td id="S5.T2.3.3.2.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.3.2.4.1" class="ltx_text" style="font-size:80%;">81.9</span></td>
+<td id="S5.T2.3.3.2.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.3.2.5.1" class="ltx_text ltx_font_bold" style="font-size:80%;">82.9</span></td>
+<td id="S5.T2.3.3.2.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.3.2.6.1" class="ltx_text ltx_font_bold" style="font-size:80%;">82.9</span></td>
+<td id="S5.T2.3.3.2.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.3.2.7.1" class="ltx_text" style="font-size:80%;">70.8</span></td>
+<td id="S5.T2.3.3.2.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T2.3.3.2.8.1" class="ltx_text ltx_font_bold" style="font-size:80%;">74.5</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S5.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS3.5.1.1" class="ltx_text">V-C</span> </span><span id="S5.SS3.6.2" class="ltx_text ltx_font_italic">Ablation Study - Different Map Comparison Techniques</span>
+</h3>
+
+<div id="S5.SS3.p1" class="ltx_para">
+<p id="S5.SS3.p1.1" class="ltx_p">We ran an ablation study to validate whether or not having access to the prior map is actually beneficial or not, for object detection. It is known that any classification neural network can be taught to detect vehicles in the query image alone, and therefore a prior mapping image may not be required. This can be best analysed by exactly repeating our training process using a network that only ever sees the query images, that is, it will learn to detect objects (without the map) under adverse conditions specific to Oxford’s urban environment. We also show ablations using alternative, simpler map comparison techniques: L2 distance and disparity network. These results are shown in Table <a href="#S5.T3" title="TABLE III ‣ V-C Ablation Study - Different Map Comparison Techniques ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">III</span></a>. We use the F1 score at the detection decision operating point (marked star in Fig <a href="#S5.F3" title="Figure 3 ‣ V-A Performance of Map Matching Object Detection on Oxford RobotCar ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) as one of our metrics for comparing these different ablations. Our second metric is the precision at <math id="S5.SS3.p1.1.m1.1" class="ltx_Math" alttext="95\%" display="inline"><semantics id="S5.SS3.p1.1.m1.1a"><mrow id="S5.SS3.p1.1.m1.1.1" xref="S5.SS3.p1.1.m1.1.1.cmml"><mn id="S5.SS3.p1.1.m1.1.1.2" xref="S5.SS3.p1.1.m1.1.1.2.cmml">95</mn><mo id="S5.SS3.p1.1.m1.1.1.1" xref="S5.SS3.p1.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS3.p1.1.m1.1b"><apply id="S5.SS3.p1.1.m1.1.1.cmml" xref="S5.SS3.p1.1.m1.1.1"><csymbol cd="latexml" id="S5.SS3.p1.1.m1.1.1.1.cmml" xref="S5.SS3.p1.1.m1.1.1.1">percent</csymbol><cn type="integer" id="S5.SS3.p1.1.m1.1.1.2.cmml" xref="S5.SS3.p1.1.m1.1.1.2">95</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p1.1.m1.1c">95\%</annotation></semantics></math> recall.</p>
+</div>
+<div id="S5.SS3.p2" class="ltx_para">
+<p id="S5.SS3.p2.7" class="ltx_p">Observing the averaged results, our proposed approach has a higher F1 score at the operating point (<math id="S5.SS3.p2.1.m1.1" class="ltx_Math" alttext="87.0" display="inline"><semantics id="S5.SS3.p2.1.m1.1a"><mn id="S5.SS3.p2.1.m1.1.1" xref="S5.SS3.p2.1.m1.1.1.cmml">87.0</mn><annotation-xml encoding="MathML-Content" id="S5.SS3.p2.1.m1.1b"><cn type="float" id="S5.SS3.p2.1.m1.1.1.cmml" xref="S5.SS3.p2.1.m1.1.1">87.0</cn></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p2.1.m1.1c">87.0</annotation></semantics></math>) and a higher precision at <math id="S5.SS3.p2.2.m2.1" class="ltx_Math" alttext="95\%" display="inline"><semantics id="S5.SS3.p2.2.m2.1a"><mrow id="S5.SS3.p2.2.m2.1.1" xref="S5.SS3.p2.2.m2.1.1.cmml"><mn id="S5.SS3.p2.2.m2.1.1.2" xref="S5.SS3.p2.2.m2.1.1.2.cmml">95</mn><mo id="S5.SS3.p2.2.m2.1.1.1" xref="S5.SS3.p2.2.m2.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS3.p2.2.m2.1b"><apply id="S5.SS3.p2.2.m2.1.1.cmml" xref="S5.SS3.p2.2.m2.1.1"><csymbol cd="latexml" id="S5.SS3.p2.2.m2.1.1.1.cmml" xref="S5.SS3.p2.2.m2.1.1.1">percent</csymbol><cn type="integer" id="S5.SS3.p2.2.m2.1.1.2.cmml" xref="S5.SS3.p2.2.m2.1.1.2">95</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p2.2.m2.1c">95\%</annotation></semantics></math> recall (<math id="S5.SS3.p2.3.m3.1" class="ltx_Math" alttext="81.1\%" display="inline"><semantics id="S5.SS3.p2.3.m3.1a"><mrow id="S5.SS3.p2.3.m3.1.1" xref="S5.SS3.p2.3.m3.1.1.cmml"><mn id="S5.SS3.p2.3.m3.1.1.2" xref="S5.SS3.p2.3.m3.1.1.2.cmml">81.1</mn><mo id="S5.SS3.p2.3.m3.1.1.1" xref="S5.SS3.p2.3.m3.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS3.p2.3.m3.1b"><apply id="S5.SS3.p2.3.m3.1.1.cmml" xref="S5.SS3.p2.3.m3.1.1"><csymbol cd="latexml" id="S5.SS3.p2.3.m3.1.1.1.cmml" xref="S5.SS3.p2.3.m3.1.1.1">percent</csymbol><cn type="float" id="S5.SS3.p2.3.m3.1.1.2.cmml" xref="S5.SS3.p2.3.m3.1.1.2">81.1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p2.3.m3.1c">81.1\%</annotation></semantics></math>) compared to the alternative design choices. The second-best performing method is the query-only network. In most instances, the addition of the prior map data provides an improvement in the precision at <math id="S5.SS3.p2.4.m4.1" class="ltx_Math" alttext="95\%" display="inline"><semantics id="S5.SS3.p2.4.m4.1a"><mrow id="S5.SS3.p2.4.m4.1.1" xref="S5.SS3.p2.4.m4.1.1.cmml"><mn id="S5.SS3.p2.4.m4.1.1.2" xref="S5.SS3.p2.4.m4.1.1.2.cmml">95</mn><mo id="S5.SS3.p2.4.m4.1.1.1" xref="S5.SS3.p2.4.m4.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS3.p2.4.m4.1b"><apply id="S5.SS3.p2.4.m4.1.1.cmml" xref="S5.SS3.p2.4.m4.1.1"><csymbol cd="latexml" id="S5.SS3.p2.4.m4.1.1.1.cmml" xref="S5.SS3.p2.4.m4.1.1.1">percent</csymbol><cn type="integer" id="S5.SS3.p2.4.m4.1.1.2.cmml" xref="S5.SS3.p2.4.m4.1.1.2">95</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p2.4.m4.1c">95\%</annotation></semantics></math> recall of up to <math id="S5.SS3.p2.5.m5.1" class="ltx_Math" alttext="5\%" display="inline"><semantics id="S5.SS3.p2.5.m5.1a"><mrow id="S5.SS3.p2.5.m5.1.1" xref="S5.SS3.p2.5.m5.1.1.cmml"><mn id="S5.SS3.p2.5.m5.1.1.2" xref="S5.SS3.p2.5.m5.1.1.2.cmml">5</mn><mo id="S5.SS3.p2.5.m5.1.1.1" xref="S5.SS3.p2.5.m5.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS3.p2.5.m5.1b"><apply id="S5.SS3.p2.5.m5.1.1.cmml" xref="S5.SS3.p2.5.m5.1.1"><csymbol cd="latexml" id="S5.SS3.p2.5.m5.1.1.1.cmml" xref="S5.SS3.p2.5.m5.1.1.1">percent</csymbol><cn type="integer" id="S5.SS3.p2.5.m5.1.1.2.cmml" xref="S5.SS3.p2.5.m5.1.1.2">5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p2.5.m5.1c">5\%</annotation></semantics></math>. We note the <em id="S5.SS3.p2.7.1" class="ltx_emph ltx_font_italic">dusk, right, geosep</em> traverse is an outlier, where the query only network has a precision of <math id="S5.SS3.p2.6.m6.1" class="ltx_Math" alttext="80.6\%" display="inline"><semantics id="S5.SS3.p2.6.m6.1a"><mrow id="S5.SS3.p2.6.m6.1.1" xref="S5.SS3.p2.6.m6.1.1.cmml"><mn id="S5.SS3.p2.6.m6.1.1.2" xref="S5.SS3.p2.6.m6.1.1.2.cmml">80.6</mn><mo id="S5.SS3.p2.6.m6.1.1.1" xref="S5.SS3.p2.6.m6.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS3.p2.6.m6.1b"><apply id="S5.SS3.p2.6.m6.1.1.cmml" xref="S5.SS3.p2.6.m6.1.1"><csymbol cd="latexml" id="S5.SS3.p2.6.m6.1.1.1.cmml" xref="S5.SS3.p2.6.m6.1.1.1">percent</csymbol><cn type="float" id="S5.SS3.p2.6.m6.1.1.2.cmml" xref="S5.SS3.p2.6.m6.1.1.2">80.6</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p2.6.m6.1c">80.6\%</annotation></semantics></math> at <math id="S5.SS3.p2.7.m7.1" class="ltx_Math" alttext="95\%" display="inline"><semantics id="S5.SS3.p2.7.m7.1a"><mrow id="S5.SS3.p2.7.m7.1.1" xref="S5.SS3.p2.7.m7.1.1.cmml"><mn id="S5.SS3.p2.7.m7.1.1.2" xref="S5.SS3.p2.7.m7.1.1.2.cmml">95</mn><mo id="S5.SS3.p2.7.m7.1.1.1" xref="S5.SS3.p2.7.m7.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.SS3.p2.7.m7.1b"><apply id="S5.SS3.p2.7.m7.1.1.cmml" xref="S5.SS3.p2.7.m7.1.1"><csymbol cd="latexml" id="S5.SS3.p2.7.m7.1.1.1.cmml" xref="S5.SS3.p2.7.m7.1.1.1">percent</csymbol><cn type="integer" id="S5.SS3.p2.7.m7.1.1.2.cmml" xref="S5.SS3.p2.7.m7.1.1.2">95</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p2.7.m7.1c">95\%</annotation></semantics></math> recall. This shows that there is future scope for further inclusion of side-view cameras in the training of our matcher network.
+In the disparity network, after query and map features are subtracted, the original feature information is lost, whereas with concatenation the network can leverage the original features to make a more accurate decision, thus performing better than the disparity network.</p>
+</div>
+<figure id="S5.T3" class="ltx_table">
+<figcaption class="ltx_caption" style="font-size:80%;"><span class="ltx_tag ltx_tag_table">TABLE III: </span>Ablating different method designs for map matching</figcaption>
+<div id="S5.T3.3" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:308.6pt;height:198pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p id="S5.T3.3.1" class="ltx_p"><span id="S5.T3.3.1.1" class="ltx_text" style="font-size:80%;">
+<span id="S5.T3.3.1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<span class="ltx_thead">
+<span id="S5.T3.3.1.1.1.1.1" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.1.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_th ltx_th_row ltx_border_tt" style="padding-left:1.4pt;padding-right:1.4pt;"></span>
+<span id="S5.T3.3.1.1.1.1.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_5" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.1.1.2.1" class="ltx_text ltx_font_bold">F1 Score at Operating Point</span></span>
+<span id="S5.T3.3.1.1.1.1.1.3" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_5" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.1.1.3.1" class="ltx_text ltx_font_bold">Prec @ 95% Recall</span></span></span>
+<span id="S5.T3.3.1.1.1.2.2" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.2.2.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_column ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.2.2.1.1" class="ltx_text ltx_font_bold">Condition,Cam,Geo</span></span>
+<span id="S5.T3.3.1.1.1.2.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">YoloP</span>
+<span id="S5.T3.3.1.1.1.2.2.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Ours</span>
+<span id="S5.T3.3.1.1.1.2.2.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">L2</span>
+<span id="S5.T3.3.1.1.1.2.2.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">QOnly</span>
+<span id="S5.T3.3.1.1.1.2.2.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Disp.</span>
+<span id="S5.T3.3.1.1.1.2.2.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">YoloP</span>
+<span id="S5.T3.3.1.1.1.2.2.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Ours</span>
+<span id="S5.T3.3.1.1.1.2.2.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">L2</span>
+<span id="S5.T3.3.1.1.1.2.2.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">QOnly</span>
+<span id="S5.T3.3.1.1.1.2.2.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Disp.</span></span>
+</span>
+<span class="ltx_tbody">
+<span id="S5.T3.3.1.1.1.3.1" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.3.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Winter, Rear, Geosep</span>
+<span id="S5.T3.3.1.1.1.3.1.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">90.7</span>
+<span id="S5.T3.3.1.1.1.3.1.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.3.1.3.1" class="ltx_text ltx_font_bold">95.3</span></span>
+<span id="S5.T3.3.1.1.1.3.1.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">91.0</span>
+<span id="S5.T3.3.1.1.1.3.1.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">94.5</span>
+<span id="S5.T3.3.1.1.1.3.1.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">92.3</span>
+<span id="S5.T3.3.1.1.1.3.1.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">89.0</span>
+<span id="S5.T3.3.1.1.1.3.1.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.3.1.8.1" class="ltx_text ltx_font_bold">94.2</span></span>
+<span id="S5.T3.3.1.1.1.3.1.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">87.9</span>
+<span id="S5.T3.3.1.1.1.3.1.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">92.8</span>
+<span id="S5.T3.3.1.1.1.3.1.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">91.2</span></span>
+<span id="S5.T3.3.1.1.1.4.2" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.4.2.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Winter, Rear, Same map</span>
+<span id="S5.T3.3.1.1.1.4.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">86.3</span>
+<span id="S5.T3.3.1.1.1.4.2.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.4.2.3.1" class="ltx_text ltx_font_bold">90.4</span></span>
+<span id="S5.T3.3.1.1.1.4.2.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">82.5</span>
+<span id="S5.T3.3.1.1.1.4.2.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">87.5</span>
+<span id="S5.T3.3.1.1.1.4.2.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">88.7</span>
+<span id="S5.T3.3.1.1.1.4.2.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">77.6</span>
+<span id="S5.T3.3.1.1.1.4.2.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.4.2.8.1" class="ltx_text ltx_font_bold">88.0</span></span>
+<span id="S5.T3.3.1.1.1.4.2.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">72.9</span>
+<span id="S5.T3.3.1.1.1.4.2.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">83.6</span>
+<span id="S5.T3.3.1.1.1.4.2.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">82.5</span></span>
+<span id="S5.T3.3.1.1.1.5.3" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.5.3.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Winter, Front, Geosep</span>
+<span id="S5.T3.3.1.1.1.5.3.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">88.8</span>
+<span id="S5.T3.3.1.1.1.5.3.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.5.3.3.1" class="ltx_text ltx_font_bold">91.3</span></span>
+<span id="S5.T3.3.1.1.1.5.3.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">89.6</span>
+<span id="S5.T3.3.1.1.1.5.3.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.5.3.5.1" class="ltx_text ltx_font_bold">91.3</span></span>
+<span id="S5.T3.3.1.1.1.5.3.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">86.9</span>
+<span id="S5.T3.3.1.1.1.5.3.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">85.9</span>
+<span id="S5.T3.3.1.1.1.5.3.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.5.3.8.1" class="ltx_text ltx_font_bold">88.6</span></span>
+<span id="S5.T3.3.1.1.1.5.3.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">81.9</span>
+<span id="S5.T3.3.1.1.1.5.3.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">88.5</span>
+<span id="S5.T3.3.1.1.1.5.3.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">83.9</span></span>
+<span id="S5.T3.3.1.1.1.6.4" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.6.4.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Rain, Rear, Geosep</span>
+<span id="S5.T3.3.1.1.1.6.4.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">87.7</span>
+<span id="S5.T3.3.1.1.1.6.4.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.6.4.3.1" class="ltx_text ltx_font_bold">89.6</span></span>
+<span id="S5.T3.3.1.1.1.6.4.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">86.8</span>
+<span id="S5.T3.3.1.1.1.6.4.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">88.1</span>
+<span id="S5.T3.3.1.1.1.6.4.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">87.7</span>
+<span id="S5.T3.3.1.1.1.6.4.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">80.0</span>
+<span id="S5.T3.3.1.1.1.6.4.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.6.4.8.1" class="ltx_text ltx_font_bold">85.6</span></span>
+<span id="S5.T3.3.1.1.1.6.4.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">79.9</span>
+<span id="S5.T3.3.1.1.1.6.4.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">83.8</span>
+<span id="S5.T3.3.1.1.1.6.4.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">80.4</span></span>
+<span id="S5.T3.3.1.1.1.7.5" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.7.5.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Rain, Rear, Same map</span>
+<span id="S5.T3.3.1.1.1.7.5.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">89.7</span>
+<span id="S5.T3.3.1.1.1.7.5.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.7.5.3.1" class="ltx_text ltx_font_bold">92.0</span></span>
+<span id="S5.T3.3.1.1.1.7.5.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">85.7</span>
+<span id="S5.T3.3.1.1.1.7.5.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">88.8</span>
+<span id="S5.T3.3.1.1.1.7.5.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">91.1</span>
+<span id="S5.T3.3.1.1.1.7.5.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">85.4</span>
+<span id="S5.T3.3.1.1.1.7.5.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">89.8</span>
+<span id="S5.T3.3.1.1.1.7.5.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">79.7</span>
+<span id="S5.T3.3.1.1.1.7.5.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.7.5.10.1" class="ltx_text ltx_font_bold">91.3</span></span>
+<span id="S5.T3.3.1.1.1.7.5.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">88.0</span></span>
+<span id="S5.T3.3.1.1.1.8.6" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.8.6.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Night, Rear, Geosep</span>
+<span id="S5.T3.3.1.1.1.8.6.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">81.6</span>
+<span id="S5.T3.3.1.1.1.8.6.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.8.6.3.1" class="ltx_text ltx_font_bold">83.0</span></span>
+<span id="S5.T3.3.1.1.1.8.6.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">74.3</span>
+<span id="S5.T3.3.1.1.1.8.6.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">80.1</span>
+<span id="S5.T3.3.1.1.1.8.6.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">80.0</span>
+<span id="S5.T3.3.1.1.1.8.6.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">68.1</span>
+<span id="S5.T3.3.1.1.1.8.6.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.8.6.8.1" class="ltx_text ltx_font_bold">73.5</span></span>
+<span id="S5.T3.3.1.1.1.8.6.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">64.1</span>
+<span id="S5.T3.3.1.1.1.8.6.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">72.4</span>
+<span id="S5.T3.3.1.1.1.8.6.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">66.5</span></span>
+<span id="S5.T3.3.1.1.1.9.7" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.9.7.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Night, Rear, Same map</span>
+<span id="S5.T3.3.1.1.1.9.7.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">60.4</span>
+<span id="S5.T3.3.1.1.1.9.7.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.9.7.3.1" class="ltx_text ltx_font_bold">68.6</span></span>
+<span id="S5.T3.3.1.1.1.9.7.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">49.2</span>
+<span id="S5.T3.3.1.1.1.9.7.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">62.8</span>
+<span id="S5.T3.3.1.1.1.9.7.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">67.3</span>
+<span id="S5.T3.3.1.1.1.9.7.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">36.4</span>
+<span id="S5.T3.3.1.1.1.9.7.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.9.7.8.1" class="ltx_text ltx_font_bold">55.8</span></span>
+<span id="S5.T3.3.1.1.1.9.7.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">34.5</span>
+<span id="S5.T3.3.1.1.1.9.7.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">53.8</span>
+<span id="S5.T3.3.1.1.1.9.7.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">49.7</span></span>
+<span id="S5.T3.3.1.1.1.10.8" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.10.8.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row" style="padding-left:1.4pt;padding-right:1.4pt;">Dusk, Right, Geosep</span>
+<span id="S5.T3.3.1.1.1.10.8.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">80.7</span>
+<span id="S5.T3.3.1.1.1.10.8.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.10.8.3.1" class="ltx_text ltx_font_bold">86.0</span></span>
+<span id="S5.T3.3.1.1.1.10.8.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">75.3</span>
+<span id="S5.T3.3.1.1.1.10.8.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">83.7</span>
+<span id="S5.T3.3.1.1.1.10.8.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">81.4</span>
+<span id="S5.T3.3.1.1.1.10.8.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">64.1</span>
+<span id="S5.T3.3.1.1.1.10.8.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">73.0</span>
+<span id="S5.T3.3.1.1.1.10.8.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">64.1</span>
+<span id="S5.T3.3.1.1.1.10.8.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.10.8.10.1" class="ltx_text ltx_font_bold">80.6</span></span>
+<span id="S5.T3.3.1.1.1.10.8.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.4pt;padding-right:1.4pt;">67.2</span></span>
+<span id="S5.T3.3.1.1.1.11.9" class="ltx_tr">
+<span id="S5.T3.3.1.1.1.11.9.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">Averaged results</span>
+<span id="S5.T3.3.1.1.1.11.9.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">83.2</span>
+<span id="S5.T3.3.1.1.1.11.9.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.11.9.3.1" class="ltx_text ltx_font_bold">87.0</span></span>
+<span id="S5.T3.3.1.1.1.11.9.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">79.0</span>
+<span id="S5.T3.3.1.1.1.11.9.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">84.6</span>
+<span id="S5.T3.3.1.1.1.11.9.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">84.4</span>
+<span id="S5.T3.3.1.1.1.11.9.7" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">73.3</span>
+<span id="S5.T3.3.1.1.1.11.9.8" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;"><span id="S5.T3.3.1.1.1.11.9.8.1" class="ltx_text ltx_font_bold">81.1</span></span>
+<span id="S5.T3.3.1.1.1.11.9.9" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">70.6</span>
+<span id="S5.T3.3.1.1.1.11.9.10" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">80.9</span>
+<span id="S5.T3.3.1.1.1.11.9.11" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" style="padding-left:1.4pt;padding-right:1.4pt;">76.2</span></span>
+</span>
+</span></span></p>
+</span></div>
+</figure>
+</section>
+<section id="S5.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS4.5.1.1" class="ltx_text">V-D</span> </span><span id="S5.SS4.6.2" class="ltx_text ltx_font_italic">Ablation Study - with Ground Truth Localization</span>
+</h3>
+
+<div id="S5.SS4.p1" class="ltx_para">
+<p id="S5.SS4.p1.1" class="ltx_p">In this study, we replace the visual place recognition localization with the six degree of freedom ground truth (GT) poses provided by the RobotCar Seasons v2 dataset. This ensures that the detection performance is not reduced due to incorrect retrieval by VPR. We show the vehicle detection performance <span id="S5.SS4.p1.1.1" class="ltx_text ltx_font_italic">with VPR</span> versus <span id="S5.SS4.p1.1.2" class="ltx_text ltx_font_italic">with GT</span> in Table <a href="#S5.T4" title="TABLE IV ‣ V-D Ablation Study - with Ground Truth Localization ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a>. We use the <em id="S5.SS4.p1.1.3" class="ltx_emph ltx_font_italic">same map</em> setting for this study. We observe little difference in the detection performance, with a slight improvement across all metrics when ground truth poses are used. Interestingly, in some cases, VPR coincidentally performs better than GT, where the detection region of an incorrect reference image happened to match more with the query region than deeming it as false positive. Overall, this study shows that using a VPR system instead of requiring ground truth localization is a viable solution for map-based vehicle detection.</p>
+</div>
+<figure id="S5.T4" class="ltx_table">
+<figcaption class="ltx_caption" style="font-size:80%;"><span class="ltx_tag ltx_tag_table">TABLE IV: </span>Detection performance with VPR localization versus ground truth localization for rear camera and same map setting.</figcaption>
+<div id="S5.T4.3" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:240.4pt;height:90pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1,1) ;">
+<p id="S5.T4.3.1" class="ltx_p"><span id="S5.T4.3.1.1" class="ltx_text" style="font-size:80%;">
+<span id="S5.T4.3.1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<span class="ltx_thead">
+<span id="S5.T4.3.1.1.1.1.1" class="ltx_tr">
+<span id="S5.T4.3.1.1.1.1.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_tt" style="padding-left:4.3pt;padding-right:4.3pt;"></span>
+<span id="S5.T4.3.1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_2" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.1.1.2.1" class="ltx_text ltx_font_bold">F1 Score</span></span>
+<span id="S5.T4.3.1.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_2" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.1.1.3.1" class="ltx_text ltx_font_bold">AUC</span></span>
+<span id="S5.T4.3.1.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_2" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.1.1.4.1" class="ltx_text ltx_font_bold">Max F1</span></span>
+<span id="S5.T4.3.1.1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt ltx_colspan ltx_colspan_2" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.1.1.5.1" class="ltx_text ltx_font_bold">P@95%R</span></span></span>
+<span id="S5.T4.3.1.1.1.2.2" class="ltx_tr">
+<span id="S5.T4.3.1.1.1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.2.2.1.1" class="ltx_text ltx_font_bold">Condition</span></span>
+<span id="S5.T4.3.1.1.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">VPR</span>
+<span id="S5.T4.3.1.1.1.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">GT</span>
+<span id="S5.T4.3.1.1.1.2.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">VPR</span>
+<span id="S5.T4.3.1.1.1.2.2.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">GT</span>
+<span id="S5.T4.3.1.1.1.2.2.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">VPR</span>
+<span id="S5.T4.3.1.1.1.2.2.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">GT</span>
+<span id="S5.T4.3.1.1.1.2.2.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">VPR</span>
+<span id="S5.T4.3.1.1.1.2.2.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">GT</span></span>
+</span>
+<span class="ltx_tbody">
+<span id="S5.T4.3.1.1.1.3.1" class="ltx_tr">
+<span id="S5.T4.3.1.1.1.3.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">Winter</span>
+<span id="S5.T4.3.1.1.1.3.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.3.1.2.1" class="ltx_text ltx_font_bold">90.4</span></span>
+<span id="S5.T4.3.1.1.1.3.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">90.3</span>
+<span id="S5.T4.3.1.1.1.3.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">97.0</span>
+<span id="S5.T4.3.1.1.1.3.1.5" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.3.1.5.1" class="ltx_text ltx_font_bold">97.1</span></span>
+<span id="S5.T4.3.1.1.1.3.1.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">91.4</span>
+<span id="S5.T4.3.1.1.1.3.1.7" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.3.1.7.1" class="ltx_text ltx_font_bold">91.7</span></span>
+<span id="S5.T4.3.1.1.1.3.1.8" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.3.1.8.1" class="ltx_text ltx_font_bold">88.0</span></span>
+<span id="S5.T4.3.1.1.1.3.1.9" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.3pt;padding-right:4.3pt;">87.4</span></span>
+<span id="S5.T4.3.1.1.1.4.2" class="ltx_tr">
+<span id="S5.T4.3.1.1.1.4.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-left:4.3pt;padding-right:4.3pt;">Rain</span>
+<span id="S5.T4.3.1.1.1.4.2.2" class="ltx_td ltx_align_center" style="padding-left:4.3pt;padding-right:4.3pt;">92.0</span>
+<span id="S5.T4.3.1.1.1.4.2.3" class="ltx_td ltx_align_center" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.4.2.3.1" class="ltx_text ltx_font_bold">92.2</span></span>
+<span id="S5.T4.3.1.1.1.4.2.4" class="ltx_td ltx_align_center" style="padding-left:4.3pt;padding-right:4.3pt;">97.8</span>
+<span id="S5.T4.3.1.1.1.4.2.5" class="ltx_td ltx_align_center" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.4.2.5.1" class="ltx_text ltx_font_bold">97.9</span></span>
+<span id="S5.T4.3.1.1.1.4.2.6" class="ltx_td ltx_align_center" style="padding-left:4.3pt;padding-right:4.3pt;">93.1</span>
+<span id="S5.T4.3.1.1.1.4.2.7" class="ltx_td ltx_align_center" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.4.2.7.1" class="ltx_text ltx_font_bold">93.5</span></span>
+<span id="S5.T4.3.1.1.1.4.2.8" class="ltx_td ltx_align_center" style="padding-left:4.3pt;padding-right:4.3pt;">89.8</span>
+<span id="S5.T4.3.1.1.1.4.2.9" class="ltx_td ltx_align_center" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.4.2.9.1" class="ltx_text ltx_font_bold">90.0</span></span></span>
+<span id="S5.T4.3.1.1.1.5.3" class="ltx_tr">
+<span id="S5.T4.3.1.1.1.5.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;">Night</span>
+<span id="S5.T4.3.1.1.1.5.3.2" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;">68.6</span>
+<span id="S5.T4.3.1.1.1.5.3.3" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.5.3.3.1" class="ltx_text ltx_font_bold">69.8</span></span>
+<span id="S5.T4.3.1.1.1.5.3.4" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;">88.9</span>
+<span id="S5.T4.3.1.1.1.5.3.5" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.5.3.5.1" class="ltx_text ltx_font_bold">89.2</span></span>
+<span id="S5.T4.3.1.1.1.5.3.6" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.5.3.6.1" class="ltx_text ltx_font_bold">79.2</span></span>
+<span id="S5.T4.3.1.1.1.5.3.7" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;">78.9</span>
+<span id="S5.T4.3.1.1.1.5.3.8" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;">55.8</span>
+<span id="S5.T4.3.1.1.1.5.3.9" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.3pt;padding-right:4.3pt;"><span id="S5.T4.3.1.1.1.5.3.9.1" class="ltx_text ltx_font_bold">58.2</span></span></span>
+</span>
+</span></span></p>
+</span></div>
+</figure>
+<figure id="S5.F4" class="ltx_figure"><img src="/html/2306.17536/assets/x4.png" id="S5.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="332" height="171" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>We show six example image pairs from the Oxford Robotcar dataset, displaying the operation of our proposed map aided object detector. In each image pair, the left image shows the query image with detection bounding boxes and the right image shows the map image used for the current query. A blue box denotes a ground truth detection, a red box denotes a detection from YOLOP (at the standard operating point) and a green box denotes a detection from our approach. We show four success examples and two failure cases.</figcaption>
+</figure>
+</section>
+<section id="S5.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS5.5.1.1" class="ltx_text">V-E</span> </span><span id="S5.SS5.6.2" class="ltx_text ltx_font_italic">Qualitative Results</span>
+</h3>
+
+<div id="S5.SS5.p1" class="ltx_para">
+<p id="S5.SS5.p1.1" class="ltx_p">In Figure <a href="#S5.F4" title="Figure 4 ‣ V-D Ablation Study - with Ground Truth Localization ‣ V Results ‣ DisPlacing Objects: Improving Dynamic Vehicle Detection via Visual Place Recognition under Adverse Conditions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, we show six example image pairs of our system in action. In example A, YOLOP experiences several false positives, while our detector has fewer false positives and also detects a vehicle that YOLOP missed. In example B, YOLOP misses a vehicle with severe motion blur and also has a false positive detection. In example C, two far away vehicles are missed by YOLOP but detected with our method. In example D, both systems are equal in performance. Example E shows a failure case, where localization has failed and the wrong map image is being used. As expected, our approach performs poorly when this occurs. In the final example (F), both YOLOP and our map matching classifier incorrectly classify a group of pedestrians as a vehicle; note, the pedestrians are also technically a map difference and therefore this situation is a natural byproduct of training to detect map differences.</p>
+</div>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span id="S6.1.1" class="ltx_text ltx_font_smallcaps">Conclusion</span>
+</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">A key takeaway from this work is that dynamic object detection – the detection of objects that are move-able – can be considered not just as a task based on live observation, but one with location-grounding, where the observed scene differs from the previously observed scene in the prior reference map. Essentially, the prior map can be seen as a prior that specifies locations where dynamic objects are most likely to be located. This then leads to the future work question as to whether an object detector can be trained in entirety with inputs from both the current query and the matching map image, for improved recognition of dynamic objects.</p>
+</div>
+<div id="S6.p2" class="ltx_para">
+<p id="S6.p2.1" class="ltx_p">In this work, we demonstrate and provide a method for improving the ability to detect vehicles in an autonomous driving scenario, above the performance of an existing state-of-the-art vehicle detector.
+Our two-stage approach is an add-on to an existing object detector, which uses an initial large set of detection candidates and then refines these candidates based on a confidence score that utilises the prior map. In summary, we show that localization can be utilized to boost the performance of dynamic object detection, and we experimentally demonstrate using an autonomous driving scenario on the public datasets: Oxford RobotCar and Dark Zurich.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+W. Maddern, G. Pascoe, <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “1 year, 1000 km: The Oxford RobotCar
+dataset,” <em id="bib.bib1.2.2" class="ltx_emph ltx_font_italic">International Journal of Robotics Research</em>, vol. 36,
+no. 1, pp. 3–15, 2017.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+A. Lengyel, S. Garg, <em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Zero-shot day-night domain adaptation
+with a physics prior,” in <em id="bib.bib2.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF International
+Conference on Computer Vision</em>, 2021, pp. 4399–4409.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+S. Lowry, N. Sünderhauf, <em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Visual Place Recognition: A
+Survey,” <em id="bib.bib3.2.2" class="ltx_emph ltx_font_italic">IEEE Transactions on Robotics</em>, vol. 32, no. 1, pp. 1–19,
+2016.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+R. Arandjelović, P. Gronat, <em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “NetVLAD: CNN architecture
+for weakly supervised place recognition,” in <em id="bib.bib4.2.2" class="ltx_emph ltx_font_italic">IEEE/CVF Conference on
+Computer Vision and Pattern Recognition</em>, 2016, pp. 5297–5307.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+S. Hausler, S. Garg, <em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Patch-netvlad: Multi-scale fusion of
+locally-global descriptors for place recognition,” in <em id="bib.bib5.2.2" class="ltx_emph ltx_font_italic">Proceedings of
+the IEEE/CVF Conference on Computer Vision and Pattern Recognition</em>, 2021,
+pp. 14 141–14 152.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+J. L. Schönberger and J.-M. Frahm, “Structure-from-motion revisited,” in
+<em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">Conference on Computer Vision and Pattern Recognition (CVPR)</em>, 2016.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+P. Sarlin, C. Cadena, <em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “From Coarse to Fine: Robust
+Hierarchical Localization at Large Scale,” in <em id="bib.bib7.2.2" class="ltx_emph ltx_font_italic">IEEE/CVF Conference on
+Computer Vision and Pattern Recognition</em>, 2019, pp. 12 708–12 717.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+C. Sakaridis, D. Dai, and L. Van Gool, “Map-guided curriculum domain
+adaptation and uncertainty-aware evaluation for semantic nighttime image
+segmentation,” <em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">IEEE Transactions on Pattern Analysis and Machine
+Intelligence</em>, 2020.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+C. Toft, W. Maddern, <em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Long-term visual localization
+revisited,” <em id="bib.bib9.2.2" class="ltx_emph ltx_font_italic">IEEE Transactions on Pattern Analysis and Machine
+Intelligence</em>, vol. 44, no. 4, pp. 2074–2088, 2020.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+G. Berton, R. Mereu, <em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Deep visual geo-localization benchmark,”
+in <em id="bib.bib10.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition</em>, 2022, pp. 5396–5407.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+D. DeTone, T. Malisiewicz, and A. Rabinovich, “SuperPoint:
+Self-Supervised Interest Point Detection and Description,” in
+<em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic">IEEE/CVF Conference on Computer Vision and Pattern Recognition
+Workshops</em>, 2018, pp. 337–33 712.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+P.-E. Sarlin, D. DeTone, <em id="bib.bib12.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Superglue: Learning feature matching
+with graph neural networks,” in <em id="bib.bib12.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference
+on Computer Vision and Pattern Recognition</em>, 2020, pp. 4938–4947.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+B. Cao, A. Araujo, and J. Sim, “Unifying deep local and global features for
+image search,” in <em id="bib.bib13.1.1" class="ltx_emph ltx_font_italic">European Conference on Computer Vision</em>, 2020, pp.
+726–743.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+G. Berton, C. Masone, and B. Caputo, “Rethinking visual geo-localization for
+large-scale applications,” in <em id="bib.bib14.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference
+on Computer Vision and Pattern Recognition</em>, 2022, pp. 4878–4888.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Z. Zou, K. Chen, <em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Object detection in 20 years: A survey,”
+<em id="bib.bib15.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE</em>, 2023.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+L. Liu, W. Ouyang, <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Deep learning for generic object detection:
+A survey,” <em id="bib.bib16.2.2" class="ltx_emph ltx_font_italic">International journal of computer vision</em>, vol. 128, pp.
+261–318, 2020.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+S. Garg, N. Sünderhauf, <em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Semantics for robotic mapping,
+perception and interaction: A survey,” <em id="bib.bib17.2.2" class="ltx_emph ltx_font_italic">Foundations and
+Trends® in Robotics</em>, vol. 8, no. 1–2, pp. 1–224, 2020.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+R. Girshick, “Fast r-cnn,” in <em id="bib.bib18.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE international
+conference on computer vision</em>, 2015, pp. 1440–1448.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+J. Redmon, S. Divvala, <em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “You only look once: Unified, real-time
+object detection,” in <em id="bib.bib19.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer
+vision and pattern recognition</em>, 2016, pp. 779–788.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+B. Yang, W. Luo, and R. Urtasun, “Pixor: Real-time 3d object detection from
+point clouds,” in <em id="bib.bib20.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on Computer
+Vision and Pattern Recognition</em>, 2018, pp. 7652–7660.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+X. Pan, Z. Xia, <em id="bib.bib21.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “3d object detection with pointformer,” in
+<em id="bib.bib21.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern
+Recognition</em>, 2021, pp. 7463–7472.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+X. Chen, K. Kundu, <em id="bib.bib22.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Monocular 3d object detection for
+autonomous driving,” in <em id="bib.bib22.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer
+vision and pattern recognition</em>, 2016, pp. 2147–2156.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+B. Xu and Z. Chen, “Multi-level fusion based 3d object detection from
+monocular images,” in <em id="bib.bib23.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer
+vision and pattern recognition</em>, 2018, pp. 2345–2353.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Y. Chen, W. Li, <em id="bib.bib24.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Domain adaptive faster r-cnn for object
+detection in the wild,” in <em id="bib.bib24.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on
+computer vision and pattern recognition</em>, 2018, pp. 3339–3348.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+V. A. Sindagi, P. Oza, <em id="bib.bib25.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Prior-based domain adaptive object
+detection for hazy and rainy conditions,” in <em id="bib.bib25.2.2" class="ltx_emph ltx_font_italic">Computer Vision–ECCV
+2020: 16th European Conference, Glasgow, UK, August 23–28, 2020,
+Proceedings, Part XIV 16</em>.   Springer,
+2020, pp. 763–780.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+M. Hnewa and H. Radha, “Multiscale domain adaptive yolo for cross-domain
+object detection,” in <em id="bib.bib26.1.1" class="ltx_emph ltx_font_italic">2021 IEEE International Conference on Image
+Processing (ICIP)</em>.   IEEE, 2021, pp.
+3323–3327.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+S. Zhang, H. Tuo, <em id="bib.bib27.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Domain adaptive yolo for one-stage
+cross-domain detection,” in <em id="bib.bib27.2.2" class="ltx_emph ltx_font_italic">Asian Conference on Machine
+Learning</em>.   PMLR, 2021, pp. 785–797.
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+Y. Hu, H. He, <em id="bib.bib28.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Exposure: A white-box photo post-processing
+framework,” <em id="bib.bib28.2.2" class="ltx_emph ltx_font_italic">ACM Transactions on Graphics (TOG)</em>, vol. 37, no. 2, pp.
+1–17, 2018.
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+S.-C. Huang, T.-H. Le, and D.-W. Jaw, “Dsnet: Joint semantic learning for
+object detection in inclement weather conditions,” <em id="bib.bib29.1.1" class="ltx_emph ltx_font_italic">IEEE transactions
+on pattern analysis and machine intelligence</em>, vol. 43, no. 8, pp.
+2623–2633, 2020.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+B. Li, X. Peng, <em id="bib.bib30.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Aod-net: All-in-one dehazing network,” in
+<em id="bib.bib30.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE international conference on computer vision</em>,
+2017, pp. 4770–4778.
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+X. Liu, Y. Ma, <em id="bib.bib31.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Griddehazenet: Attention-based multi-scale
+network for image dehazing,” in <em id="bib.bib31.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF
+international conference on computer vision</em>, 2019, pp. 7314–7323.
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+H. Dong, J. Pan, <em id="bib.bib32.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Multi-scale boosted dehazing network with
+dense feature fusion,” in <em id="bib.bib32.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF conference on
+computer vision and pattern recognition</em>, 2020, pp. 2157–2167.
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+K. He, J. Sun, and X. Tang, “Single image haze removal using dark channel
+prior,” <em id="bib.bib33.1.1" class="ltx_emph ltx_font_italic">IEEE transactions on pattern analysis and machine
+intelligence</em>, vol. 33, no. 12, pp. 2341–2353, 2010.
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+W. Liu, G. Ren, <em id="bib.bib34.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Image-adaptive yolo for object detection in
+adverse weather conditions,” in <em id="bib.bib34.2.2" class="ltx_emph ltx_font_italic">Proceedings of the AAAI Conference on
+Artificial Intelligence</em>, vol. 36, no. 2, 2022, pp. 1792–1800.
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+S. Kalwar, D. Patel, <em id="bib.bib35.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Gdip: Gated differentiable image
+processing for object-detection in adverse conditions,” <em id="bib.bib35.2.2" class="ltx_emph ltx_font_italic">arXiv preprint
+arXiv:2209.14922</em>, 2022.
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+F. Yu, H. Chen, <em id="bib.bib36.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “BDD100K: A Diverse Driving Dataset for
+Heterogeneous Multitask Learning,” in <em id="bib.bib36.2.2" class="ltx_emph ltx_font_italic">2020 IEEE/CVF Conference on
+Computer Vision and Pattern Recognition (CVPR)</em>, 2020.
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+D. Wu, M. Liao, <em id="bib.bib37.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “YOLOP: You Only Look Once for Panoptic
+Driving Perception,” <em id="bib.bib37.2.2" class="ltx_emph ltx_font_italic">Machine Intelligence Research</em>, vol. 19, pp.
+550–562, aug 2022. [Online]. Available:
+<a target="_blank" href="https://github.com/hustvl/YOLOP" title="" class="ltx_ref ltx_url">https://github.com/hustvl/YOLOP</a>
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+V. Patil, A. Liniger, <em id="bib.bib38.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Improving depth estimation using
+map-based depth priors,” <em id="bib.bib38.2.2" class="ltx_emph ltx_font_italic">IEEE Robotics and Automation Letters</em>,
+vol. 7, no. 2, pp. 3640–3647, 2022.
+
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock">
+C. Sakaridis, D. Dai, and L. Van Gool, “Map-guided curriculum domain
+adaptation and uncertainty-aware evaluation for semantic nighttime image
+segmentation,” <em id="bib.bib39.1.1" class="ltx_emph ltx_font_italic">IEEE Transactions on Pattern Analysis and Machine
+Intelligence</em>, vol. 44, no. 6, pp. 3139–3153, 2020.
+
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock">
+T. Fujimoto, S. Tanaka, and S. Kato, “Lanefusion: 3d object detection with
+rasterized lane map,” in <em id="bib.bib40.1.1" class="ltx_emph ltx_font_italic">2022 IEEE Intelligent Vehicles Symposium
+(IV)</em>.   IEEE, 2022, pp. 396–403.
+
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock">
+J. Carrillo and S. Waslander, “Urbannet: Leveraging urban maps for long range
+3d object detection,” in <em id="bib.bib41.1.1" class="ltx_emph ltx_font_italic">2021 IEEE International Intelligent
+Transportation Systems Conference (ITSC)</em>.   IEEE, 2021, pp. 3799–3806.
+
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock">
+B. Ravi Kiran, L. Roldao, <em id="bib.bib42.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Real-time dynamic object detection
+for autonomous driving using prior 3d-maps,” in <em id="bib.bib42.2.2" class="ltx_emph ltx_font_italic">Proceedings of the
+European Conference on Computer Vision (ECCV) Workshops</em>, 2018, pp. 0–0.
+
+</span>
+</li>
+<li id="bib.bib43" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[43]</span>
+<span class="ltx_bibblock">
+D. Barnes, W. Maddern, <em id="bib.bib43.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Driven to distraction: Self-supervised
+distractor learning for robust monocular visual odometry in urban
+environments,” in <em id="bib.bib43.2.2" class="ltx_emph ltx_font_italic">2018 IEEE International Conference on Robotics and
+Automation (ICRA)</em>, 2018, pp. 1894–1900.
+
+</span>
+</li>
+<li id="bib.bib44" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[44]</span>
+<span class="ltx_bibblock">
+D. Chen, B. Zhou, <em id="bib.bib44.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Learning by cheating,” in <em id="bib.bib44.2.2" class="ltx_emph ltx_font_italic">Conference
+on Robot Learning</em>.   PMLR, 2020, pp.
+66–75.
+
+</span>
+</li>
+<li id="bib.bib45" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[45]</span>
+<span class="ltx_bibblock">
+W. Zeng, W. Luo, <em id="bib.bib45.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “End-to-end interpretable neural motion
+planner,” in <em id="bib.bib45.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision
+and Pattern Recognition</em>, 2019, pp. 8660–8669.
+
+</span>
+</li>
+<li id="bib.bib46" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[46]</span>
+<span class="ltx_bibblock">
+X. Wang, Y. Qian, <em id="bib.bib46.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Map-enhanced ego-lane detection in the
+missing feature scenarios,” <em id="bib.bib46.2.2" class="ltx_emph ltx_font_italic">IEEE Access</em>, vol. 8, pp.
+107 958–107 968, 2020.
+
+</span>
+</li>
+<li id="bib.bib47" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[47]</span>
+<span class="ltx_bibblock">
+J. Lambert and J. Hays, “Trust, but verify: Cross-modality fusion for hd map
+change detection,” in <em id="bib.bib47.1.1" class="ltx_emph ltx_font_italic">Thirty-fifth Conference on Neural Information
+Processing Systems Datasets and Benchmarks Track (Round 2)</em>.
+
+</span>
+</li>
+<li id="bib.bib48" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[48]</span>
+<span class="ltx_bibblock">
+D. Pannen, M. Liebner, and W. Burgard, “Hd map change detection with a boosted
+particle filter,” in <em id="bib.bib48.1.1" class="ltx_emph ltx_font_italic">2019 International Conference on Robotics and
+Automation (ICRA)</em>.   IEEE, 2019, pp.
+2561–2567.
+
+</span>
+</li>
+<li id="bib.bib49" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[49]</span>
+<span class="ltx_bibblock">
+M. Heo, J. Kim, and S. Kim, “Hd map change detection with cross-domain deep
+metric learning,” in <em id="bib.bib49.1.1" class="ltx_emph ltx_font_italic">2020 IEEE/RSJ International Conference on
+Intelligent Robots and Systems (IROS)</em>.   IEEE, 2020, pp. 10 218–10 224.
+
+</span>
+</li>
+<li id="bib.bib50" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[50]</span>
+<span class="ltx_bibblock">
+Y. Wang, P.-M. Jodoin, <em id="bib.bib50.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Cdnet 2014: An expanded change
+detection benchmark dataset,” in <em id="bib.bib50.2.2" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on
+computer vision and pattern recognition workshops</em>, 2014, pp. 387–394.
+
+</span>
+</li>
+<li id="bib.bib51" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[51]</span>
+<span class="ltx_bibblock">
+P. F. Alcantarilla, S. Stent, <em id="bib.bib51.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Street-view change detection
+with deconvolutional networks,” <em id="bib.bib51.2.2" class="ltx_emph ltx_font_italic">Autonomous Robots</em>, vol. 42, pp.
+1301–1322, 2018.
+
+</span>
+</li>
+<li id="bib.bib52" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[52]</span>
+<span class="ltx_bibblock">
+Y. You, K. Z. Luo, <em id="bib.bib52.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Hindsight is 20/20: Leveraging Past
+Traversals to Aid 3D Perception,” mar 2022. [Online]. Available:
+<a target="_blank" href="http://arxiv.org/abs/2203.11405" title="" class="ltx_ref ltx_url">http://arxiv.org/abs/2203.11405</a>
+
+</span>
+</li>
+<li id="bib.bib53" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[53]</span>
+<span class="ltx_bibblock">
+F. Radenović, G. Tolias, and O. Chum, “Fine-tuning cnn image retrieval with
+no human annotation,” <em id="bib.bib53.1.1" class="ltx_emph ltx_font_italic">IEEE Transactions on Pattern Analysis and
+Machine Intelligence</em>, vol. 41, no. 7, pp. 1655–1668, 2019.
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2306.17535" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2306.17536" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2306.17536">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2306.17536" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2306.17537" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Feb 28 21:07:09 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>
