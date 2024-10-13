@@ -1,0 +1,891 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2111.02500] Improving Pose Estimation through Contextual Activity Fusion</title><meta property="og:description" content="This research presents the idea of activity fusion into existing Pose Estimation architectures to enhance their predictive ability. This is motivated by the rise in higher level concepts found in modern machine learnin…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Improving Pose Estimation through Contextual Activity Fusion">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Improving Pose Estimation through Contextual Activity Fusion">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2111.02500">
+
+<!--Generated on Tue Mar 19 16:06:51 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="keywords" lang="en" content="
+pose estimation,  computer vision,  fully convolution neural networks,  context fusion
+">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Improving Pose Estimation through Contextual Activity Fusion</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">David Poulton
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id1.1.id1" class="ltx_text ltx_font_italic">School of Computer Science and Applied Mathematics</span>
+<br class="ltx_break"><span id="id2.2.id2" class="ltx_text ltx_font_italic">University of the Witwatersrand
+<br class="ltx_break"></span>Johannesburg, South Africa 
+<br class="ltx_break">1662476@students.wits.ac.za
+</span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Richard Klein
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id3.1.id1" class="ltx_text ltx_font_italic">School of Computer Science and Applied Mathematics</span>
+<br class="ltx_break"><span id="id4.2.id2" class="ltx_text ltx_font_italic">University of the Witwatersrand
+<br class="ltx_break"></span>Johannesburg, South Africa 
+<br class="ltx_break">richard.klein@wits.ac.za
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id5.id1" class="ltx_p">This research presents the idea of activity fusion into existing Pose Estimation architectures to enhance their predictive ability. This is motivated by the rise in higher level concepts found in modern machine learning architectures, and the belief that activity context is a useful piece of information for the problem of pose estimation. To analyse this concept we take an existing deep learning architecture and augment it with an additional 1x1 convolution to fuse activity information into the model. We perform evaluation and comparison on a common pose estimation dataset, and show a performance improvement over our baseline model, especially in uncommon poses and on typically difficult joints. Additionally, we perform an ablative analysis to indicate that the performance improvement does in fact draw from the activity information.</p>
+</div>
+<div class="ltx_keywords">
+<h6 class="ltx_title ltx_title_keywords">Index Terms: </h6>
+pose estimation, computer vision, fully convolution neural networks, context fusion
+
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">Introduction</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Human Pose Estimation (HPE) is a widely studied field of Machine Learning focused on finding the joint positions of humans in an image. Initially researchers developed models which functioned through the use of hand crafted features, which yielded some success, however the incredible complexity of the problem limited the viability of such methods. Some examples of pose estimation annotations can be seen in Figure <a href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, composed of the predictions of our final model on images randomly selected from the test set.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Over time, since the inception of neural networks, and specifically Convolutional Neural Networks (CNNs), models began to shift towards fully learned knowledge without the need for human crafted features or prior information. CNNs enabled models to effectively handle image data due to the nature of their design, which suited HPE and propelled model accuracies and speeds, with networks becoming larger and more carefully structured. Architectures such as DeepPose <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> and Stacked Hourglass <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> were forerunners of deep learning for HPE.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">The more complex structures that fell under deep learning began enabling models to capture higher level concepts such as whole objects and bodies, above local features or individual limbs <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, improving their accuracies. This indicates that modern architectures are capable of utilising these concepts, and designing them with this in mind can yield high performing models. Following on from that, we predict that the use of contextual information within pose estimators can further improve performance.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">In humans, different activities generally tend to contain markedly different poses, and in turn different poses tend to be found more amongst certain activities, and so we choose activity as our contextual information of choice. Our goal here is to determine whether knowing an image contains a certain activity can drive the model to certain biases that improve its ability to estimate poses. For example, knowing an image comes from a rugby game may inform a pose estimator that it will likely encounter more running, diving, and kicking, rather than sitting.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">However, we also need to consider how images are categorised to activities, which is not straightforward. Using one set of activities may be more reasonable conceptually, where using another may better segment poses but be less useful. For example, using “Playing soccer” is more practical than decomposing it into “Running”, “Kicking”, and “Tackling”, even though the latter decomposition may better separate the poses we expect to see.</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p">Even finding an effective way to fuse this activity information into the current deep learning networks available is not a trivial design choice due to the complex nature of modern architectures. Above that, where to provide this information to models requires some thought as well. We hope to address at least some of these concerns through this research.</p>
+</div>
+<div id="S1.p7" class="ltx_para">
+<p id="S1.p7.1" class="ltx_p">The remainder of the paper is structured as follows: Section <a href="#S2" title="II Related Work ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a> explores some of the existing work in the field of pose estimation, as well as related concepts of context fusion in imagery. Section <a href="#S3" title="III Architecture ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">III</span></a> then covers the architectural design choices for the research. Section <a href="#S4" title="IV Training ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a> provides detail on how our chosen models were trained, followed by the results thereof in Section <a href="#S5" title="V Results ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">V</span></a>, including an ablative analysis of our method. We then provide some concepts for future work in Section <a href="#S6" title="VI Future Work ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">VI</span></a>, followed by our conclusion in Section <a href="#S7" title="VII Conclusion ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">VII</span></a>.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2111.02500/assets/images/examples_new.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="628" height="236" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Some annotated examples from the test set, indicating the complexity of the problem, and the large variety of poses the model is capable of handling. The effect of having the target in the center of the image can also be noticed in images where there are several people, even in close proximity. Images are from the MPII dataset <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.</figcaption>
+</figure>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Related Work</span>
+</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">Early models of HPE utilised largely parts based models <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>, which were successful at the time but fall well short of the accuracies enjoyed by modern deep learning networks, and are not well suited to higher level conceptual learning.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2111.02500/assets/images/original_hourglass.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="707" height="236" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>A visualisation of the original Stacked Hourglass architecture, taken from <cite class="ltx_cite ltx_citemacro_citet">Newell et al. [<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>.</figcaption>
+</figure>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p">Modern networks are far better suited to the task, and fall largely into one of two categories, namely regression based or heatmap based models. DeepPose <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> was a forerunning regression based model. It utilised a holistic method to determine initial pose estimates, and then followed up with a series of cascading CNNs to refine predictions on a per-joint basis.</p>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.1" class="ltx_p">On the other hand, models such as the Stacked Hourglass model <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> utilise heatmaps entirely for joint predictions. The Hourglass model takes advantage of contractions and expansions, as well as residuals, to find a good balance between holistic, global features, and smaller, localised details in images. Wei et al. <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> developed a similar concept of a repeated sequence of sub-CNN modules which each produce a heatmap that is passed on to the next module, inspired by <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>. This structure also displayed improvements in the ability of the model to capture both global and local contextual pose information.</p>
+</div>
+<div id="S2.p4" class="ltx_para">
+<p id="S2.p4.1" class="ltx_p">Some approaches also utilised model-based learning to restrict pose estimates to realistic spaces. <cite class="ltx_cite ltx_citemacro_citet">Sun et al. [<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> implemented a bone-based representation that allowed for learning of skeletal structure, rather than directly predicting joint positions. They also adapted their loss functions to account for errors specific to joints, and errors caused by misalignment of bones between the root and current joint. Both these alterations successfully increased accuracy over model-free methods seen before. <cite class="ltx_cite ltx_citemacro_citet">Bourached et al. [<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> utilise a model-based generative architecture to try improve out-of-distribution poses, enhancing the models ability to generalise, rather than focus on more accurate predictions for known distributions.</p>
+</div>
+<div id="S2.p5" class="ltx_para">
+<p id="S2.p5.1" class="ltx_p">Rather than using repeated stages of differing refinements, <cite class="ltx_cite ltx_citemacro_citet">Chen et al. [<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> attempt to ensure realistic poses by utilising a GAN system, where adversaries are used to determine how reasonable the generated pose and confidence maps are. An ablative study indicates the GAN structure is indeed contributory to accuracy improvements. <cite class="ltx_cite ltx_citemacro_citet">Bin et al. [<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> also utilise a GAN network to augment inputs and make them easier to predict on, yielding the best performance achieved on the MPII dataset.</p>
+</div>
+<div id="S2.p6" class="ltx_para">
+<p id="S2.p6.1" class="ltx_p">As for the concept of activity fusion, it appears that the available literature is relatively sparse. <cite class="ltx_cite ltx_citemacro_citet">Rafi et al. [<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> explores the concept of semantic and contextual information by utilising a depth-based pose estimator which is capable of identifying objects in the scene and using them for context, however this only used a small set of objects. <cite class="ltx_cite ltx_citemacro_citet">Vu et al. [<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> also uses contextual scene information in its estimation process which improved performance, however the model is only applicable for head estimations, whereas our focus is on full body poses.</p>
+</div>
+<div id="S2.p7" class="ltx_para">
+<p id="S2.p7.1" class="ltx_p">Utilising depth information in their approach, <cite class="ltx_cite ltx_citemacro_citet">Jalal et al. [<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> extracts skeletal information in order to produce an activity estimate, however their activity classifications are much finer grained than those utilised here, using classes such as walking or sitting rather than exercising. Rather than depth, <cite class="ltx_cite ltx_citemacro_citet">Gowda [<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> uses RGB imagery and extracts poses to be used for broader activity estimates, which is more relevant to the topic, and indicates there is a possible relationship of significance between pose and activity.</p>
+</div>
+<div id="S2.p8" class="ltx_para">
+<p id="S2.p8.1" class="ltx_p"><cite class="ltx_cite ltx_citemacro_citet">Lan et al. [<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> explores a similar concept of utilising contextual information around an image, however in their use case it is applied to road image segmentation rather than human poses. Their approach still yielded favourable results, and is encouraging for our concept.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Architecture</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">The utilised architecture was based off of the Stacked Hourglass model <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> with some added layers for the activity fusion. The Stacked Hourglass model was selected because of its high base accuracy, inherently flexible modular design, and balance at finding global and local pose cues. It also maintains the same shape of features throughout the majority of the model, specifically <math id="S3.p1.1.m1.1" class="ltx_Math" alttext="64\times 64\times 256" display="inline"><semantics id="S3.p1.1.m1.1a"><mrow id="S3.p1.1.m1.1.1" xref="S3.p1.1.m1.1.1.cmml"><mn id="S3.p1.1.m1.1.1.2" xref="S3.p1.1.m1.1.1.2.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p1.1.m1.1.1.1" xref="S3.p1.1.m1.1.1.1.cmml">×</mo><mn id="S3.p1.1.m1.1.1.3" xref="S3.p1.1.m1.1.1.3.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p1.1.m1.1.1.1a" xref="S3.p1.1.m1.1.1.1.cmml">×</mo><mn id="S3.p1.1.m1.1.1.4" xref="S3.p1.1.m1.1.1.4.cmml">256</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p1.1.m1.1b"><apply id="S3.p1.1.m1.1.1.cmml" xref="S3.p1.1.m1.1.1"><times id="S3.p1.1.m1.1.1.1.cmml" xref="S3.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.p1.1.m1.1.1.2.cmml" xref="S3.p1.1.m1.1.1.2">64</cn><cn type="integer" id="S3.p1.1.m1.1.1.3.cmml" xref="S3.p1.1.m1.1.1.3">64</cn><cn type="integer" id="S3.p1.1.m1.1.1.4.cmml" xref="S3.p1.1.m1.1.1.4">256</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.1.m1.1c">64\times 64\times 256</annotation></semantics></math>, making testing various fusion sites more straightforward.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Because the Hourglass network is already designed with capturing global context in mind, it was also of interest to see if explicitly providing the context would have a significant impact, or if the model itself was already capable of extracting the context in some sense.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">We use the final version of the Stacked Hourglass model initially presented in <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> as our baseline, composed of eight glasses, and utilising intermediate supervision for training. A rough visualisation of the original network can be seen in Figure <a href="#S2.F2" title="Figure 2 ‣ II Related Work ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.1" class="ltx_p">Our baseline model still makes use of the initial down-convolution segment of the network, as well as the intermediate bottlenecks and final remapping convolutions, and regularisation and frequent batch normalisation. We then had three sets of models, each composed of an ablative model and a contextual model. The ablative models were the same as our baseline, however with a single extra one-by-one convolution inserted at a specific point in the network. The contextual model involved stacking the activity tensor on top of the existing tensor in the model at the point, followed by a one-by-one convolution, yielding the so called fused image that is then propagated normally through the remainder of the network.</p>
+</div>
+<div id="S3.p5" class="ltx_para">
+<p id="S3.p5.1" class="ltx_p">We make use of the one-by-one convolution in order to correct the number of layers in the tensor after we have stacked our activity onto the previous output. Throughout the majority of the network there are 256 channels in the output of the layers, and so stacking our 21 channel activity tensor brings the tensor to 277 channels. In order to minimise the changes needed to the network, we then convolve the tensor back down to 256 layers. This method also ideally allows the convolution to learn an effective mapping to merge our context into the tensor, without having to rely on the existing layers in the network. A diagram of this context block can be seen in Figure <a href="#S3.F4" title="Figure 4 ‣ III Architecture ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, compared to the original hourglass block in Figure <a href="#S3.F3" title="Figure 3 ‣ III Architecture ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+<div id="S3.p6" class="ltx_para">
+<p id="S3.p6.1" class="ltx_p">We utilise both an ablative and contextual version to verify that any possible changes in the accuracy of the model are due to the impact of our activity fusion, rather than the increase in the size of the model over the baseline. Any increase in size or alteration to the flow of the network may be significant enough to noticeably improve the network’s ability to learn features, regardless of whether we provide activity context or not. Only testing our contextual augmentations would not reveal the source of improvement. This means we need to test both the contextual augmentation, as well as an ablative version without the activity, to determine if any accuracy changes are resultant from the one-by-one convolution itself, from the contextual information, or from both. If our contextual augmentation outperforms our ablative model, we can have confidence that the improvement is owing to the context itself.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2111.02500/assets/images/OrigHourglass.png" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="255" height="118" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>The original hourglass block format. The input to the module comes from previous layer of the network, and the block produces output for the next block as well as an intermediate heatmap prediction.</figcaption>
+</figure>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2111.02500/assets/images/ContextHourglass.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="314" height="118" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>The context hourglass block used for our fusions. The input to the module comes from the stacking of the activity tensor and the previous layer in the regular network. The ablative version leaves out the activity tensor stacking.</figcaption>
+</figure>
+<div id="S3.p7" class="ltx_para">
+<p id="S3.p7.1" class="ltx_p">For simplicity we refer to the three different augmented networks as A-, B-, and C-Form, lettered from left-to-right according to their injection points, as can be seen in Figure <a href="#S3.F5" title="Figure 5 ‣ III Architecture ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>. A-Form has the fusion before the first hourglass, B-Form before the fourth, and C-Form before the eighth. Their matching ablative models are referred to as A-, B-, and C-Form Ablative. Each line in the figure indicates a position where we tested our augmentation. Note that only a single fusion point was used at a time for each model.</p>
+</div>
+<div id="S3.p8" class="ltx_para">
+<p id="S3.p8.2" class="ltx_p">The decision of how to fuse the activity was made difficult by the convolutional nature of the network, which stopped us from simply concatenating on a one-hot encoded vector to our input. To get around this our context took the form of a one-hot encoded activity tensor of size <math id="S3.p8.1.m1.1" class="ltx_Math" alttext="64\times 64\times 21" display="inline"><semantics id="S3.p8.1.m1.1a"><mrow id="S3.p8.1.m1.1.1" xref="S3.p8.1.m1.1.1.cmml"><mn id="S3.p8.1.m1.1.1.2" xref="S3.p8.1.m1.1.1.2.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p8.1.m1.1.1.1" xref="S3.p8.1.m1.1.1.1.cmml">×</mo><mn id="S3.p8.1.m1.1.1.3" xref="S3.p8.1.m1.1.1.3.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p8.1.m1.1.1.1a" xref="S3.p8.1.m1.1.1.1.cmml">×</mo><mn id="S3.p8.1.m1.1.1.4" xref="S3.p8.1.m1.1.1.4.cmml">21</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p8.1.m1.1b"><apply id="S3.p8.1.m1.1.1.cmml" xref="S3.p8.1.m1.1.1"><times id="S3.p8.1.m1.1.1.1.cmml" xref="S3.p8.1.m1.1.1.1"></times><cn type="integer" id="S3.p8.1.m1.1.1.2.cmml" xref="S3.p8.1.m1.1.1.2">64</cn><cn type="integer" id="S3.p8.1.m1.1.1.3.cmml" xref="S3.p8.1.m1.1.1.3">64</cn><cn type="integer" id="S3.p8.1.m1.1.1.4.cmml" xref="S3.p8.1.m1.1.1.4">21</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.1.m1.1c">64\times 64\times 21</annotation></semantics></math>, where 21 is the number of activities present in the dataset, and <math id="S3.p8.2.m2.1" class="ltx_Math" alttext="64\times 64" display="inline"><semantics id="S3.p8.2.m2.1a"><mrow id="S3.p8.2.m2.1.1" xref="S3.p8.2.m2.1.1.cmml"><mn id="S3.p8.2.m2.1.1.2" xref="S3.p8.2.m2.1.1.2.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p8.2.m2.1.1.1" xref="S3.p8.2.m2.1.1.1.cmml">×</mo><mn id="S3.p8.2.m2.1.1.3" xref="S3.p8.2.m2.1.1.3.cmml">64</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p8.2.m2.1b"><apply id="S3.p8.2.m2.1.1.cmml" xref="S3.p8.2.m2.1.1"><times id="S3.p8.2.m2.1.1.1.cmml" xref="S3.p8.2.m2.1.1.1"></times><cn type="integer" id="S3.p8.2.m2.1.1.2.cmml" xref="S3.p8.2.m2.1.1.2">64</cn><cn type="integer" id="S3.p8.2.m2.1.1.3.cmml" xref="S3.p8.2.m2.1.1.3">64</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.2.m2.1c">64\times 64</annotation></semantics></math> is the shape of the image features as they move through the network.</p>
+</div>
+<figure id="S3.F5" class="ltx_figure"><img src="/html/2111.02500/assets/images/Original.png" id="S3.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="628" height="177" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>The augmented network, with lines indicating the three tested fusion points. The input to the fusion modules come from the activity tensor and the previous layer before the insertion point.</figcaption>
+</figure>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Training</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">Training was performed in a similar manner to that of the original paper <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> for the MPII Human Pose dataset <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> only. The MPII dataset provides approximately 25k images (2.5k of which are withheld as their own hidden test set), leaving 22.5k images for use. Of those, approximately 18k (80%) were used for training, with the remaining split evenly between a validation and test set of 2.25k (10%) each.</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">The dataset provides a 2D ground-truth pose with joint visibility flags, an approximate scale, and an approximate center position, among other data not relevant to our analysis, for each person within an image. Images also have an activity classification which is used for our context, which many other datasets do not provide, making MPII particularly valuable. While MPII provides more fine grained activity sub-classifications than the 21 activity categories utilised, we did not use them as our context tensors would become intractably large, and many of the sub-classifications had few or no samples.</p>
+</div>
+<div id="S4.p3" class="ltx_para">
+<p id="S4.p3.3" class="ltx_p">Because images can contain more than one person, we follow the method of <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> by cropping the image around the center of the target so the model knows which person to estimate on, The images are cropped based on the provided scale and the provided center coordinates of the target, and the crop is then scaled to <math id="S4.p3.1.m1.1" class="ltx_Math" alttext="256\times 256" display="inline"><semantics id="S4.p3.1.m1.1a"><mrow id="S4.p3.1.m1.1.1" xref="S4.p3.1.m1.1.1.cmml"><mn id="S4.p3.1.m1.1.1.2" xref="S4.p3.1.m1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S4.p3.1.m1.1.1.1" xref="S4.p3.1.m1.1.1.1.cmml">×</mo><mn id="S4.p3.1.m1.1.1.3" xref="S4.p3.1.m1.1.1.3.cmml">256</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.p3.1.m1.1b"><apply id="S4.p3.1.m1.1.1.cmml" xref="S4.p3.1.m1.1.1"><times id="S4.p3.1.m1.1.1.1.cmml" xref="S4.p3.1.m1.1.1.1"></times><cn type="integer" id="S4.p3.1.m1.1.1.2.cmml" xref="S4.p3.1.m1.1.1.2">256</cn><cn type="integer" id="S4.p3.1.m1.1.1.3.cmml" xref="S4.p3.1.m1.1.1.3">256</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.p3.1.m1.1c">256\times 256</annotation></semantics></math>. Cropped images also undergo some additional rotation (in <math id="S4.p3.2.m2.2" class="ltx_Math" alttext="[-30,30]" display="inline"><semantics id="S4.p3.2.m2.2a"><mrow id="S4.p3.2.m2.2.2.1" xref="S4.p3.2.m2.2.2.2.cmml"><mo stretchy="false" id="S4.p3.2.m2.2.2.1.2" xref="S4.p3.2.m2.2.2.2.cmml">[</mo><mrow id="S4.p3.2.m2.2.2.1.1" xref="S4.p3.2.m2.2.2.1.1.cmml"><mo id="S4.p3.2.m2.2.2.1.1a" xref="S4.p3.2.m2.2.2.1.1.cmml">−</mo><mn id="S4.p3.2.m2.2.2.1.1.2" xref="S4.p3.2.m2.2.2.1.1.2.cmml">30</mn></mrow><mo id="S4.p3.2.m2.2.2.1.3" xref="S4.p3.2.m2.2.2.2.cmml">,</mo><mn id="S4.p3.2.m2.1.1" xref="S4.p3.2.m2.1.1.cmml">30</mn><mo stretchy="false" id="S4.p3.2.m2.2.2.1.4" xref="S4.p3.2.m2.2.2.2.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.p3.2.m2.2b"><interval closure="closed" id="S4.p3.2.m2.2.2.2.cmml" xref="S4.p3.2.m2.2.2.1"><apply id="S4.p3.2.m2.2.2.1.1.cmml" xref="S4.p3.2.m2.2.2.1.1"><minus id="S4.p3.2.m2.2.2.1.1.1.cmml" xref="S4.p3.2.m2.2.2.1.1"></minus><cn type="integer" id="S4.p3.2.m2.2.2.1.1.2.cmml" xref="S4.p3.2.m2.2.2.1.1.2">30</cn></apply><cn type="integer" id="S4.p3.2.m2.1.1.cmml" xref="S4.p3.2.m2.1.1">30</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.p3.2.m2.2c">[-30,30]</annotation></semantics></math>) and scaling (in <math id="S4.p3.3.m3.2" class="ltx_Math" alttext="[0.75,1.25]" display="inline"><semantics id="S4.p3.3.m3.2a"><mrow id="S4.p3.3.m3.2.3.2" xref="S4.p3.3.m3.2.3.1.cmml"><mo stretchy="false" id="S4.p3.3.m3.2.3.2.1" xref="S4.p3.3.m3.2.3.1.cmml">[</mo><mn id="S4.p3.3.m3.1.1" xref="S4.p3.3.m3.1.1.cmml">0.75</mn><mo id="S4.p3.3.m3.2.3.2.2" xref="S4.p3.3.m3.2.3.1.cmml">,</mo><mn id="S4.p3.3.m3.2.2" xref="S4.p3.3.m3.2.2.cmml">1.25</mn><mo stretchy="false" id="S4.p3.3.m3.2.3.2.3" xref="S4.p3.3.m3.2.3.1.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.p3.3.m3.2b"><interval closure="closed" id="S4.p3.3.m3.2.3.1.cmml" xref="S4.p3.3.m3.2.3.2"><cn type="float" id="S4.p3.3.m3.1.1.cmml" xref="S4.p3.3.m3.1.1">0.75</cn><cn type="float" id="S4.p3.3.m3.2.2.cmml" xref="S4.p3.3.m3.2.2">1.25</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.p3.3.m3.2c">[0.75,1.25]</annotation></semantics></math>) to provide augmentation to the dataset.</p>
+</div>
+<div id="S4.p4" class="ltx_para">
+<p id="S4.p4.1" class="ltx_p">One issue encountered with the dataset was that utilising the scale provided for each person did not always result in the full pose being in frame. The scale value indicates a box of width 200px around the center of the target, however even using <math id="S4.p4.1.m1.1" class="ltx_math_unparsed" alttext="1.5\times" display="inline"><semantics id="S4.p4.1.m1.1a"><mrow id="S4.p4.1.m1.1b"><mn id="S4.p4.1.m1.1.1">1.5</mn><mo lspace="0.222em" id="S4.p4.1.m1.1.2">×</mo></mrow><annotation encoding="application/x-tex" id="S4.p4.1.m1.1c">1.5\times</annotation></semantics></math> the scale occasionally resulted in extremities such as ankles or wrists not appearing in the final crop, which may lead to a decrease in accuracy and increases the difficulty of identifying the already challenging joints. Regardless, utilising the scale value as-is has been the approach taken by several papers that utilise the MPII dataset <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, and so we follow the same approach.</p>
+</div>
+<div id="S4.p5" class="ltx_para">
+<p id="S4.p5.1" class="ltx_p">The cropping and augmentation can also result in black pixels appearing in the final image provided to the network, as black background pixels can be included from outside the bounds of the image. Obviously this is not very realistic, however the complex networks are likely capable of learning to ignore this anomaly. As a possible alternative, mirror padding could be used when cropping, however, again, the simple background inclusion is the approach taken by several papers <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, and so we use the same method.</p>
+</div>
+<div id="S4.p6" class="ltx_para">
+<p id="S4.p6.1" class="ltx_p">The baseline model was provided with images cropped around the center of the person with small random rotations and scaling modifications, and a heatmap was generated for each joint of the target pose as ground-truth for the model. The augmented models were provided both with the image crop, and the one-hot encoded tensor for the activity representation.</p>
+</div>
+<div id="S4.p7" class="ltx_para">
+<p id="S4.p7.1" class="ltx_p">All models were trained with an MSE loss function over the ground-truth heatmap and predicted heatmap set. The model makes heavy use of batch normalisation <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> to improve training speed and performance. This allowed us to use a relatively high learning rate of <math id="S4.p7.1.m1.1" class="ltx_Math" alttext="2.5^{-4}" display="inline"><semantics id="S4.p7.1.m1.1a"><msup id="S4.p7.1.m1.1.1" xref="S4.p7.1.m1.1.1.cmml"><mn id="S4.p7.1.m1.1.1.2" xref="S4.p7.1.m1.1.1.2.cmml">2.5</mn><mrow id="S4.p7.1.m1.1.1.3" xref="S4.p7.1.m1.1.1.3.cmml"><mo id="S4.p7.1.m1.1.1.3a" xref="S4.p7.1.m1.1.1.3.cmml">−</mo><mn id="S4.p7.1.m1.1.1.3.2" xref="S4.p7.1.m1.1.1.3.2.cmml">4</mn></mrow></msup><annotation-xml encoding="MathML-Content" id="S4.p7.1.m1.1b"><apply id="S4.p7.1.m1.1.1.cmml" xref="S4.p7.1.m1.1.1"><csymbol cd="ambiguous" id="S4.p7.1.m1.1.1.1.cmml" xref="S4.p7.1.m1.1.1">superscript</csymbol><cn type="float" id="S4.p7.1.m1.1.1.2.cmml" xref="S4.p7.1.m1.1.1.2">2.5</cn><apply id="S4.p7.1.m1.1.1.3.cmml" xref="S4.p7.1.m1.1.1.3"><minus id="S4.p7.1.m1.1.1.3.1.cmml" xref="S4.p7.1.m1.1.1.3"></minus><cn type="integer" id="S4.p7.1.m1.1.1.3.2.cmml" xref="S4.p7.1.m1.1.1.3.2">4</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.p7.1.m1.1c">2.5^{-4}</annotation></semantics></math> with the RMSprop optimiser, taken from the original Stacked Hourglass paper <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>. We utilised our validation set to select the best model as that with the lowest validation loss at any point of training.</p>
+</div>
+<div id="S4.p8" class="ltx_para">
+<p id="S4.p8.1" class="ltx_p">Training of the models took approximately three days using an RTX3080 and a batch size of 8, which was the largest we could achieve given the complexity of the network. This meant a prediction time of  60ms per image. This was for both our baseline model and our augmented model set, indicating that our context pipeline has a negligible overhead.</p>
+</div>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Results</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">While it does not imply an increase or decrease in accuracy, it should be noted that results were evaluated using our own withheld test set comprised of the released annotations, not the official MPII test set. This is due to the now publicly available test set not having associated activities, and attempts at getting activity annotations being unsuccessful. We utilised the common PCKh@0.5 metric, which represents the percentage of correct keypoints, where a correct keypoint is defined as being within a threshold, specifically half the normalised distance between the top of the neck and the top of the head, of the ground-truth keypoint.</p>
+</div>
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS1.5.1.1" class="ltx_text">V-A</span> </span><span id="S5.SS1.6.2" class="ltx_text ltx_font_italic">Evaluation</span>
+</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.1" class="ltx_p">Our final total accuracy for the best model, the C-Form model, was 90.3%, an improvement of 2.7 percentage points over our baseline model’s performance of 87.6%. The contextual information was particularly impactful on some conventionally difficult joints such as ankles, knees, and wrists, where the contextual model improved over the baseline by 7.6%, 3.3%, and 1.5% respectively. The accuracies of the different models can be seen in Table <a href="#S5.T1" title="TABLE I ‣ V-A Evaluation ‣ V Results ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>.</p>
+</div>
+<figure id="S5.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Joint and total accuracies of different networks when run on our own test set.</figcaption>
+<table id="S5.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S5.T1.1.1.1" class="ltx_tr">
+<th id="S5.T1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.1.1" class="ltx_text ltx_font_bold">Model</span></th>
+<th id="S5.T1.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.2.1" class="ltx_text ltx_font_bold">Head</span></th>
+<th id="S5.T1.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.3.1" class="ltx_text ltx_font_bold">Neck</span></th>
+<th id="S5.T1.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.4.1" class="ltx_text ltx_font_bold">Torso</span></th>
+<th id="S5.T1.1.1.1.5" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.5.1" class="ltx_text ltx_font_bold">Pelvis</span></th>
+<th id="S5.T1.1.1.1.6" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.6.1" class="ltx_text ltx_font_bold">Shoulder</span></th>
+<th id="S5.T1.1.1.1.7" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.7.1" class="ltx_text ltx_font_bold">Elbow</span></th>
+<th id="S5.T1.1.1.1.8" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.8.1" class="ltx_text ltx_font_bold">Wrist</span></th>
+<th id="S5.T1.1.1.1.9" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.9.1" class="ltx_text ltx_font_bold">Hip</span></th>
+<th id="S5.T1.1.1.1.10" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.10.1" class="ltx_text ltx_font_bold">Knee</span></th>
+<th id="S5.T1.1.1.1.11" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.11.1" class="ltx_text ltx_font_bold">Ankle</span></th>
+<th id="S5.T1.1.1.1.12" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.1.1.12.1" class="ltx_text ltx_font_bold">PCK@0.5</span></th>
+</tr>
+<tr id="S5.T1.1.2.2" class="ltx_tr">
+<th id="S5.T1.1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.2.2.1.1" class="ltx_text ltx_font_bold">Baseline</span></th>
+<th id="S5.T1.1.2.2.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">91.6</th>
+<th id="S5.T1.1.2.2.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">97.2</th>
+<th id="S5.T1.1.2.2.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">98.0</th>
+<th id="S5.T1.1.2.2.5" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">92.7</th>
+<th id="S5.T1.1.2.2.6" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">93.5</th>
+<th id="S5.T1.1.2.2.7" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">91.1</th>
+<th id="S5.T1.1.2.2.8" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">88.7</th>
+<th id="S5.T1.1.2.2.9" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">88.7</th>
+<th id="S5.T1.1.2.2.10" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">83.2</th>
+<th id="S5.T1.1.2.2.11" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">55.9</th>
+<th id="S5.T1.1.2.2.12" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">87.6</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S5.T1.1.3.1" class="ltx_tr">
+<th id="S5.T1.1.3.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.3.1.1.1" class="ltx_text ltx_font_bold">A-Form</span></th>
+<td id="S5.T1.1.3.1.2" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">93.5</td>
+<td id="S5.T1.1.3.1.3" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.3.1.3.1" class="ltx_text ltx_font_bold">98.1</span></td>
+<td id="S5.T1.1.3.1.4" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">99.1</td>
+<td id="S5.T1.1.3.1.5" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">93.7</td>
+<td id="S5.T1.1.3.1.6" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">95.3</td>
+<td id="S5.T1.1.3.1.7" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">92.1</td>
+<td id="S5.T1.1.3.1.8" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">90.1</td>
+<td id="S5.T1.1.3.1.9" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">90.8</td>
+<td id="S5.T1.1.3.1.10" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">86.0</td>
+<td id="S5.T1.1.3.1.11" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">58.8</td>
+<td id="S5.T1.1.3.1.12" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">89.4</td>
+</tr>
+<tr id="S5.T1.1.4.2" class="ltx_tr">
+<th id="S5.T1.1.4.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.4.2.1.1" class="ltx_text ltx_font_bold">A-Form Ablative</span></th>
+<td id="S5.T1.1.4.2.2" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">92.8</td>
+<td id="S5.T1.1.4.2.3" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">97.7</td>
+<td id="S5.T1.1.4.2.4" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">98.8</td>
+<td id="S5.T1.1.4.2.5" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">94.2</td>
+<td id="S5.T1.1.4.2.6" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">94.6</td>
+<td id="S5.T1.1.4.2.7" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">91.7</td>
+<td id="S5.T1.1.4.2.8" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">89.9</td>
+<td id="S5.T1.1.4.2.9" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">90.6</td>
+<td id="S5.T1.1.4.2.10" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">86.4</td>
+<td id="S5.T1.1.4.2.11" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">60.9</td>
+<td id="S5.T1.1.4.2.12" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">89.3</td>
+</tr>
+<tr id="S5.T1.1.5.3" class="ltx_tr">
+<th id="S5.T1.1.5.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.5.3.1.1" class="ltx_text ltx_font_bold">B-Form</span></th>
+<td id="S5.T1.1.5.3.2" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.5.3.2.1" class="ltx_text ltx_font_bold">94.0</span></td>
+<td id="S5.T1.1.5.3.3" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">97.9</td>
+<td id="S5.T1.1.5.3.4" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.5.3.4.1" class="ltx_text ltx_font_bold">99.3</span></td>
+<td id="S5.T1.1.5.3.5" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">94.5</td>
+<td id="S5.T1.1.5.3.6" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">95.1</td>
+<td id="S5.T1.1.5.3.7" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">92.4</td>
+<td id="S5.T1.1.5.3.8" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">90.1</td>
+<td id="S5.T1.1.5.3.9" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">91.3</td>
+<td id="S5.T1.1.5.3.10" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.5.3.10.1" class="ltx_text ltx_font_bold">86.9</span></td>
+<td id="S5.T1.1.5.3.11" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">63.3</td>
+<td id="S5.T1.1.5.3.12" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">90.0</td>
+</tr>
+<tr id="S5.T1.1.6.4" class="ltx_tr">
+<th id="S5.T1.1.6.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.6.4.1.1" class="ltx_text ltx_font_bold">B-Form Ablative</span></th>
+<td id="S5.T1.1.6.4.2" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">92.2</td>
+<td id="S5.T1.1.6.4.3" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.6.4.3.1" class="ltx_text ltx_font_bold">98.1</span></td>
+<td id="S5.T1.1.6.4.4" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">99.0</td>
+<td id="S5.T1.1.6.4.5" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">94.2</td>
+<td id="S5.T1.1.6.4.6" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">95.0</td>
+<td id="S5.T1.1.6.4.7" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">92.5</td>
+<td id="S5.T1.1.6.4.8" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">89.9</td>
+<td id="S5.T1.1.6.4.9" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">90.7</td>
+<td id="S5.T1.1.6.4.10" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.6.4.10.1" class="ltx_text ltx_font_bold">86.9</span></td>
+<td id="S5.T1.1.6.4.11" class="ltx_td ltx_align_left" style="padding-top:1.5pt;padding-bottom:1.5pt;">60.8</td>
+<td id="S5.T1.1.6.4.12" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">89.5</td>
+</tr>
+<tr id="S5.T1.1.7.5" class="ltx_tr">
+<th id="S5.T1.1.7.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.7.5.1.1" class="ltx_text ltx_font_bold">C-Form</span></th>
+<td id="S5.T1.1.7.5.2" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">93.7</td>
+<td id="S5.T1.1.7.5.3" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">98.0</td>
+<td id="S5.T1.1.7.5.4" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">99.2</td>
+<td id="S5.T1.1.7.5.5" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.7.5.5.1" class="ltx_text ltx_font_bold">95.3</span></td>
+<td id="S5.T1.1.7.5.6" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.7.5.6.1" class="ltx_text ltx_font_bold">96.0</span></td>
+<td id="S5.T1.1.7.5.7" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.7.5.7.1" class="ltx_text ltx_font_bold">92.7</span></td>
+<td id="S5.T1.1.7.5.8" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.7.5.8.1" class="ltx_text ltx_font_bold">90.2</span></td>
+<td id="S5.T1.1.7.5.9" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.7.5.9.1" class="ltx_text ltx_font_bold">91.7</span></td>
+<td id="S5.T1.1.7.5.10" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">86.5</td>
+<td id="S5.T1.1.7.5.11" class="ltx_td ltx_align_left ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.7.5.11.1" class="ltx_text ltx_font_bold">63.5</span></td>
+<td id="S5.T1.1.7.5.12" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.7.5.12.1" class="ltx_text ltx_font_bold">90.3</span></td>
+</tr>
+<tr id="S5.T1.1.8.6" class="ltx_tr">
+<th id="S5.T1.1.8.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span id="S5.T1.1.8.6.1.1" class="ltx_text ltx_font_bold">C-Form Ablative</span></th>
+<td id="S5.T1.1.8.6.2" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">92.4</td>
+<td id="S5.T1.1.8.6.3" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">96.1</td>
+<td id="S5.T1.1.8.6.4" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">97.1</td>
+<td id="S5.T1.1.8.6.5" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">94.1</td>
+<td id="S5.T1.1.8.6.6" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">93.2</td>
+<td id="S5.T1.1.8.6.7" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">88.0</td>
+<td id="S5.T1.1.8.6.8" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">85.2</td>
+<td id="S5.T1.1.8.6.9" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">88.4</td>
+<td id="S5.T1.1.8.6.10" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">78.8</td>
+<td id="S5.T1.1.8.6.11" class="ltx_td ltx_align_left ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">56.8</td>
+<td id="S5.T1.1.8.6.12" class="ltx_td ltx_align_left ltx_border_b ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">86.2</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S5.SS1.p2" class="ltx_para">
+<p id="S5.SS1.p2.1" class="ltx_p">In terms of per-activity accuracies, our C-Form model showed noticeable improvements on most activities, faring better in activities with more data points. The average activity improvement was 2.5%. The apparent variance in improvements per activity is likely due to the nature of the activities and their compilations. For example, our model saw the largest improvement in the “Water Activities” classification of 6.3%, where the poses are very different from those found in other activities, with some subjects being in unusual stances, obscured in scuba gear, or even upside down. A comparison on this activity between the Baseline and C-Form model can be seen in Figure <a href="#S5.F7" title="Figure 7 ‣ V-A Evaluation ‣ V Results ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>. The “Miscellaneous” and “Bicycling” classifications on the other hand showed minimal improvement, likely due to the relatively random grouping, and already common poses that require minimal context, respectively. The different per-activity accuracies can be seen in Figure <a href="#S5.F6" title="Figure 6 ‣ V-A Evaluation ‣ V Results ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.</p>
+</div>
+<figure id="S5.F6" class="ltx_figure"><img src="/html/2111.02500/assets/images/activity_comparison.png" id="S5.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="314" height="197" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>The different activity accuracies for our baseline (blue), B-Form Ablative (orange), and best augmented model, the C-Form model (green). Activities are sorted left to right by the number of images in the test set, ranging from 600+ (leftmost) to fewer than 10 (rightmost).</figcaption>
+</figure>
+<figure id="S5.F7" class="ltx_figure"><img src="/html/2111.02500/assets/images/water_examples.png" id="S5.F7.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="471" height="236" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Images from our test set showcasing how the C-Form model (bottom) is better capable of handling the relatively uncommon poses that fall under the “Water Activities” classification, compared to the Baseline model (top).</figcaption>
+</figure>
+<div id="S5.SS1.p3" class="ltx_para">
+<p id="S5.SS1.p3.1" class="ltx_p">Our C-Form model also shows consistent improvement over the baseline when evaluating at varying PCKh thresholds, having a higher accuracy at every value. This indicates that the performance improvement is actually caused by overall better predictions, rather than by chance that a set of keypoints moved within the threshold distance only for a specific value. This can be seen in Figure <a href="#S5.F8" title="Figure 8 ‣ V-A Evaluation ‣ V Results ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>.</p>
+</div>
+<figure id="S5.F8" class="ltx_figure"><img src="/html/2111.02500/assets/images/pck_comparison.png" id="S5.F8.g1" class="ltx_graphics ltx_centering ltx_img_square" width="236" height="197" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>The different accuracies when varying PCKh thresholds for our baseline, best ablative model, and best contextual model</figcaption>
+</figure>
+<div id="S5.SS1.p4" class="ltx_para">
+<p id="S5.SS1.p4.1" class="ltx_p">This indicates that our method of activity fusion may very well be useful if our activities are structured well enough to segment very different poses and cluster similar ones. Naturally this is in itself a challenging task, but nevertheless means there may be room for improvement.</p>
+</div>
+<div id="S5.SS1.p5" class="ltx_para">
+<p id="S5.SS1.p5.1" class="ltx_p">Interestingly, our results indicate some level of sensitivity of the method to the fusion position. Our ablative models experienced a sharp decline in performance towards the end of the model, with the C-Form actually performing worse than our baseline. Alternatively, our contextual models performed progressively better with fusions towards the end of the model. Only providing context at the beginning of the network may be too early to enable the model to effectively utilise the information for the final predictions, with the signal from the context having diminished by the time it reaches the later hourglasses.</p>
+</div>
+<div id="S5.SS1.p6" class="ltx_para">
+<p id="S5.SS1.p6.1" class="ltx_p">In comparison to state of the art methods, our model seems to perform slightly below the state of the art accuracies reported on the MPII test set <cite class="ltx_cite ltx_citemacro_citep">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. Again, this is not an entirely useful comparison however, as our research was unable to make use of the official test set, and so our true test result is unknown. Nevertheless, the intent of the research was to indicate the usefulness of activity fusion, which was apparent in our noticeable accuracy improvements.</p>
+</div>
+</section>
+<section id="S5.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS2.5.1.1" class="ltx_text">V-B</span> </span><span id="S5.SS2.6.2" class="ltx_text ltx_font_italic">Ablative Experiments</span>
+</h3>
+
+<div id="S5.SS2.p1" class="ltx_para">
+<p id="S5.SS2.p1.1" class="ltx_p">All of our contextual models fairly significantly outperformed the baseline model in their overall accuracy, however we needed to perform an ablative test to ensure the contextual information itself is actually contributory to our results.</p>
+</div>
+<div id="S5.SS2.p2" class="ltx_para">
+<p id="S5.SS2.p2.1" class="ltx_p">Our testing indicated that adding the additional one-by-one convolutions does, in some cases, increase the performance of the network, namely the A-Form Ablative and B-Form Ablative models. However, performance degrades in the C-Form Ablative model, and so clearly the increase in the C-Form contextual model’s accuracy is not only attributable to the additional convolution.</p>
+</div>
+<div id="S5.SS2.p3" class="ltx_para">
+<p id="S5.SS2.p3.1" class="ltx_p">The best ablative model, the B-Form Ablative, showed a performance improvement of 1.9% over the baseline. While such a margin may simply be caused by variability in training, the consistent trend amongst the different augmentation sets seems to indicate at least some level of impact by both the architectural changes, as well as the provision of context. The overall accuracies for each model can be seen in Table <a href="#S5.T2" title="TABLE II ‣ V-B Ablative Experiments ‣ V Results ‣ Improving Pose Estimation through Contextual Activity Fusion" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>.</p>
+</div>
+<figure id="S5.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE II: </span>Total accuracies for each model on our own test set.</figcaption>
+<table id="S5.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S5.T2.1.1.1" class="ltx_tr">
+<th id="S5.T2.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;"><span id="S5.T2.1.1.1.1.1" class="ltx_text ltx_font_bold">Model</span></th>
+<th id="S5.T2.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;"><span id="S5.T2.1.1.1.2.1" class="ltx_text ltx_font_bold">Accuracy</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S5.T2.1.2.1" class="ltx_tr">
+<td id="S5.T2.1.2.1.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;">Baseline</td>
+<td id="S5.T2.1.2.1.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;">87.6</td>
+</tr>
+<tr id="S5.T2.1.3.2" class="ltx_tr">
+<td id="S5.T2.1.3.2.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;">A-Form</td>
+<td id="S5.T2.1.3.2.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;">89.4</td>
+</tr>
+<tr id="S5.T2.1.4.3" class="ltx_tr">
+<td id="S5.T2.1.4.3.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r" style="padding-top:1pt;padding-bottom:1pt;">A-Form Ablative</td>
+<td id="S5.T2.1.4.3.2" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:1pt;padding-bottom:1pt;">89.3</td>
+</tr>
+<tr id="S5.T2.1.5.4" class="ltx_tr">
+<td id="S5.T2.1.5.4.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;">B-Form</td>
+<td id="S5.T2.1.5.4.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;">90.0</td>
+</tr>
+<tr id="S5.T2.1.6.5" class="ltx_tr">
+<td id="S5.T2.1.6.5.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r" style="padding-top:1pt;padding-bottom:1pt;">B-Form Ablative</td>
+<td id="S5.T2.1.6.5.2" class="ltx_td ltx_align_left ltx_border_r" style="padding-top:1pt;padding-bottom:1pt;">89.5</td>
+</tr>
+<tr id="S5.T2.1.7.6" class="ltx_tr">
+<td id="S5.T2.1.7.6.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;">C-Form</td>
+<td id="S5.T2.1.7.6.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t" style="padding-top:1pt;padding-bottom:1pt;"><span id="S5.T2.1.7.6.2.1" class="ltx_text ltx_font_bold">90.3</span></td>
+</tr>
+<tr id="S5.T2.1.8.7" class="ltx_tr">
+<td id="S5.T2.1.8.7.1" class="ltx_td ltx_align_left ltx_border_b ltx_border_l ltx_border_r" style="padding-top:1pt;padding-bottom:1pt;">C-Form Ablative</td>
+<td id="S5.T2.1.8.7.2" class="ltx_td ltx_align_left ltx_border_b ltx_border_r" style="padding-top:1pt;padding-bottom:1pt;">86.2</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S5.SS2.p4" class="ltx_para">
+<p id="S5.SS2.p4.1" class="ltx_p">It should be noted that the C-Form Ablative model also consistently performed worse than the baseline model, which is unusual as the model could simply learn an identity mapping and have no affect on our predictions. This drop in accuracy could possibly be due to the degrading of gradients during back-propagation, as the Stacked Hourglass makes extensive use of residuals, and adding extra convolutions without skip layers may hinder this.</p>
+</div>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span id="S6.1.1" class="ltx_text ltx_font_smallcaps">Future Work</span>
+</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">While we have explored the basic concept of activity fusion in this report, there are already numerous apparent avenues to continue analysing in various domains.</p>
+</div>
+<div id="S6.p2" class="ltx_para">
+<p id="S6.p2.1" class="ltx_p">In terms of the model utilised, this paper focused on a relatively conceptually simple deep learning model, however in the future we could rather make use of even newer state-of-the-art performers. Additionally we could design our own network centered around the concept of activity fusion.</p>
+</div>
+<div id="S6.p3" class="ltx_para">
+<p id="S6.p3.1" class="ltx_p">We can also perform more rigorous testing of our results, performing cross-fold validation to account for the official test set not being usable, which would eliminate the concern of random variance. Furthermore we could analyse how our activity affects the features our model learns and makes use of, should it have a significant impact.</p>
+</div>
+<div id="S6.p4" class="ltx_para">
+<p id="S6.p4.1" class="ltx_p">Exploring more methods of encoding and fusing our context would also be useful, as we only focused on straightforward one-hot encoding with concatenation and a <math id="S6.p4.1.m1.1" class="ltx_Math" alttext="1\times 1" display="inline"><semantics id="S6.p4.1.m1.1a"><mrow id="S6.p4.1.m1.1.1" xref="S6.p4.1.m1.1.1.cmml"><mn id="S6.p4.1.m1.1.1.2" xref="S6.p4.1.m1.1.1.2.cmml">1</mn><mo lspace="0.222em" rspace="0.222em" id="S6.p4.1.m1.1.1.1" xref="S6.p4.1.m1.1.1.1.cmml">×</mo><mn id="S6.p4.1.m1.1.1.3" xref="S6.p4.1.m1.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S6.p4.1.m1.1b"><apply id="S6.p4.1.m1.1.1.cmml" xref="S6.p4.1.m1.1.1"><times id="S6.p4.1.m1.1.1.1.cmml" xref="S6.p4.1.m1.1.1.1"></times><cn type="integer" id="S6.p4.1.m1.1.1.2.cmml" xref="S6.p4.1.m1.1.1.2">1</cn><cn type="integer" id="S6.p4.1.m1.1.1.3.cmml" xref="S6.p4.1.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p4.1.m1.1c">1\times 1</annotation></semantics></math> convolution to fuse the information. Alternatives could involve using auto-encoders before providing the input to the network, or other latent space methodologies. We could also investigate different methods of fusing involving a more thorough merging strategy rather than just a single convolution layer.</p>
+</div>
+<div id="S6.p5" class="ltx_para">
+<p id="S6.p5.1" class="ltx_p">Finally we could explore the usefulness of context in other deep learning fields. While pose estimation seems like a useful field for context provision, there may be many others, such as image segmentation, or translation systems.</p>
+</div>
+</section>
+<section id="S7" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VII </span><span id="S7.1.1" class="ltx_text ltx_font_smallcaps">Conclusion</span>
+</h2>
+
+<div id="S7.p1" class="ltx_para">
+<p id="S7.p1.1" class="ltx_p">In this paper we explored the concept of fusing contextual activity information into the existing Stacked Hourglass model. We show that even with rudimentary organising of images into activities, and using straightforward fusing methods, our method is capable of providing performance gains over a baseline model. Above this our method introduced no significant overhead into the training or prediction process.</p>
+</div>
+<div id="S7.p2" class="ltx_para">
+<p id="S7.p2.1" class="ltx_p">Our method was capable of improving accuracy on typically difficult joints, and is especially useful in activity classifications where poses are unusual in comparison to the available training data. We also provide various avenues for further exploration, and are hopeful that context fusion is a viable addition to improving deep learning models in the field and beyond.</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_font_smallcaps ltx_title_section">Acknowledgments</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">We acknowledge the Centre for High Performance Computing (CHPC),
+South Africa, for providing computational resources to this research project. Additionally, this work is based on research supported in part by the National
+Research Foundation of South Africa (Grant Numbers: 118075 and 117808).</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Andriluka et al. [2014a]</span>
+<span class="ltx_bibblock">
+M. Andriluka, L. Pishchulin, P. Gehler, and B. Schiele.
+
+</span>
+<span class="ltx_bibblock">2d human pose estimation: New benchmark and state of the art
+analysis.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</em>, June 2014a.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Andriluka et al. [2014b]</span>
+<span class="ltx_bibblock">
+Mykhaylo Andriluka, Leonid Pishchulin, Peter Gehler, and Bernt Schiele.
+
+</span>
+<span class="ltx_bibblock">MPII Human Pose Dataset Results.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="http://human-pose.mpi-inf.mpg.de/#results" title="" class="ltx_ref ltx_url ltx_font_typewriter">http://human-pose.mpi-inf.mpg.de/#results</a> (November
+2020), 2014b.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bin et al. [2020]</span>
+<span class="ltx_bibblock">
+Yanrui Bin, Xuan Cao, Xinya Chen, Yanhao Ge, Ying Tai, Chengjie Wang, Jilin Li,
+Feiyue Huang, Changxin Gao, and Nong Sang.
+
+</span>
+<span class="ltx_bibblock">Adversarial semantic data augmentation for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic">European Conference on Computer Vision</em>, pages 606–622.
+Springer, 2020.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bourached et al. [2020]</span>
+<span class="ltx_bibblock">
+Anthony Bourached, Ryan-Rhys Griffiths, Robert Gray, Ashwani Jha, and Parashkev
+Nachev.
+
+</span>
+<span class="ltx_bibblock">Generative model-enhanced human motion prediction.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2010.11699</em>, 2020.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al. [2017]</span>
+<span class="ltx_bibblock">
+Y. Chen, C. Shen, X.-S. Wei, L. Liu, and J. Yang.
+
+</span>
+<span class="ltx_bibblock">Adversarial posenet: A structure-aware convolutional network for
+human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE International Conference on Computer
+Vision</em>, pages 1212–1221, 2017.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gowda [2017]</span>
+<span class="ltx_bibblock">
+S. N. Gowda.
+
+</span>
+<span class="ltx_bibblock">Human activity recognition using combinatorial deep belief networks.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">The IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR) Workshops</em>, July 2017.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ioffe and Szegedy [2015]</span>
+<span class="ltx_bibblock">
+Sergey Ioffe and Christian Szegedy.
+
+</span>
+<span class="ltx_bibblock">Batch normalization: Accelerating deep network training by reducing
+internal covariate shift.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1502.03167</em>, 2015.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jalal et al. [2017]</span>
+<span class="ltx_bibblock">
+A. Jalal, Y.-H. Kim, Y.-J. Kim, S. Kamal, and D. Kim.
+
+</span>
+<span class="ltx_bibblock">Robust human activity recognition from depth video using
+spatiotemporal multi-fused features.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">Pattern Recognition</em>, 61:295 – 308, 2017.
+
+</span>
+<span class="ltx_bibblock">ISSN 0031-3203.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">https://doi.org/10.1016/j.patcog.2016.08.003</span>.
+
+</span>
+<span class="ltx_bibblock">URL
+<a target="_blank" href="http://www.sciencedirect.com/science/article/pii/S0031320316302126" title="" class="ltx_ref ltx_url ltx_font_typewriter">http://www.sciencedirect.com/science/article/pii/S0031320316302126</a>.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lan et al. [2020]</span>
+<span class="ltx_bibblock">
+Meng Lan, Yipeng Zhang, Lefei Zhang, and Bo Du.
+
+</span>
+<span class="ltx_bibblock">Global context based automatic road segmentation via dilated
+convolutional neural network.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">Information Sciences</em>, 535:156 – 171, 2020.
+
+</span>
+<span class="ltx_bibblock">ISSN 0020-0255.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">https://doi.org/10.1016/j.ins.2020.05.062</span>.
+
+</span>
+<span class="ltx_bibblock">URL
+<a target="_blank" href="http://www.sciencedirect.com/science/article/pii/S0020025520304862" title="" class="ltx_ref ltx_url ltx_font_typewriter">http://www.sciencedirect.com/science/article/pii/S0020025520304862</a>.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Newell et al. [2016]</span>
+<span class="ltx_bibblock">
+A. Newell, K. Yang, and J. Deng.
+
+</span>
+<span class="ltx_bibblock">Stacked hourglass networks for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">European conference on computer vision</em>, pages 483–499.
+Springer, 2016.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rafi et al. [2015]</span>
+<span class="ltx_bibblock">
+U. Rafi, J. Gall, and B. Leibe.
+
+</span>
+<span class="ltx_bibblock">A semantic occlusion model for human pose estimation from a single
+depth image.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition Workshops</em>, pages 67–74, 2015.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rafi et al. [2016]</span>
+<span class="ltx_bibblock">
+Umer Rafi, Bastian Leibe, Juergen Gall, and Ilya Kostrikov.
+
+</span>
+<span class="ltx_bibblock">An efficient convolutional network for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib12.1.1" class="ltx_emph ltx_font_italic">BMVC</em>, volume 1, page 2, 2016.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Shakhnarovich et al. [2003]</span>
+<span class="ltx_bibblock">
+G. Shakhnarovich, P. Viola, and T. Darrell.
+
+</span>
+<span class="ltx_bibblock">Fast pose estimation with parameter-sensitive hashing.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib13.1.1" class="ltx_emph ltx_font_italic">null</em>, page 750. IEEE, 2003.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sun et al. [2017]</span>
+<span class="ltx_bibblock">
+X. Sun, J. Shang, S. Liang, and Y. Wei.
+
+</span>
+<span class="ltx_bibblock">Compositional human pose regression.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib14.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE International Conference on Computer
+Vision</em>, pages 2602–2611, 2017.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Tang et al. [2018]</span>
+<span class="ltx_bibblock">
+Zhiqiang Tang, Xi Peng, Shijie Geng, Lingfei Wu, Shaoting Zhang, and Dimitris
+Metaxas.
+
+</span>
+<span class="ltx_bibblock">Quantized densely connected u-nets for efficient landmark
+localization.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic">Proceedings of the European Conference on Computer Vision
+(ECCV)</em>, pages 339–354, 2018.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Tompson et al. [2015]</span>
+<span class="ltx_bibblock">
+Jonathan Tompson, Ross Goroshin, Arjun Jain, Yann LeCun, and Christoph Bregler.
+
+</span>
+<span class="ltx_bibblock">Efficient object localization using convolutional networks.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</em>, pages 648–656, 2015.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Toshev and Szegedy [2014]</span>
+<span class="ltx_bibblock">
+A. Toshev and C. Szegedy.
+
+</span>
+<span class="ltx_bibblock">Deeppose: Human pose estimation via deep neural networks.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</em>, pages 1653–1660, 2014.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Vu et al. [2015]</span>
+<span class="ltx_bibblock">
+T.-H. Vu, A. Osokin, and I. Laptev.
+
+</span>
+<span class="ltx_bibblock">Context-aware cnns for person head detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib18.1.1" class="ltx_emph ltx_font_italic">The IEEE International Conference on Computer Vision
+(ICCV)</em>, December 2015.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wei et al. [2016]</span>
+<span class="ltx_bibblock">
+S.-E. Wei, V. Ramakrishna, T. Kanade, and Y. Sheikh.
+
+</span>
+<span class="ltx_bibblock">Convolutional pose machines.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on Computer Vision and
+Pattern Recognition</em>, pages 4724–4732, 2016.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. [2017]</span>
+<span class="ltx_bibblock">
+Wei Yang, Shuang Li, Wanli Ouyang, Hongsheng Li, and Xiaogang Wang.
+
+</span>
+<span class="ltx_bibblock">Learning feature pyramids for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib20.1.1" class="ltx_emph ltx_font_italic">proceedings of the IEEE international conference on computer
+vision</em>, pages 1281–1290, 2017.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang and Ramanan [2011]</span>
+<span class="ltx_bibblock">
+Y. Yang and D. Ramanan.
+
+</span>
+<span class="ltx_bibblock">Articulated pose estimation with flexible mixtures-of-parts.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib21.1.1" class="ltx_emph ltx_font_italic">CVPR 2011</em>, pages 1385–1392, 2011.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2111.02499" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2111.02500" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2111.02500">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2111.02500" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2111.02501" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Tue Mar 19 16:06:51 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

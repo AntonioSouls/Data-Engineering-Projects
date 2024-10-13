@@ -1,0 +1,453 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2011.02172] Leveraging Temporal Joint Depths for Improving 3D Human Pose Estimation in Video</title><meta property="og:description" content="The effectiveness of the approaches to predict 3D poses from 2D poses estimated in each frame of a video has been demonstrated for 3D human pose estimation. However, 2D poses without appearance information of persons h…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Leveraging Temporal Joint Depths for Improving 3D Human Pose Estimation in Video">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Leveraging Temporal Joint Depths for Improving 3D Human Pose Estimation in Video">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2011.02172">
+
+<!--Generated on Tue Mar 19 04:29:48 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="keywords" lang="en" content="
+video analysis,  3D human pose estimation
+">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Leveraging Temporal Joint Depths for 
+<br class="ltx_break">Improving 3D Human Pose Estimation in Video
+<br class="ltx_break">
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Naoki Kato
+
+
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id1.1.id1" class="ltx_text ltx_font_italic">Mobility Technologies Co., Ltd.
+<br class="ltx_break"></span>naoki.kato@mo-t.com
+
+</span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Hiroto Honda
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id2.1.id1" class="ltx_text ltx_font_italic">Mobility Technologies Co., Ltd.
+<br class="ltx_break"></span>hiroto.honda@mo-t.com
+
+</span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yusuke Uchida
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id3.1.id1" class="ltx_text ltx_font_italic">Mobility Technologies Co., Ltd.
+<br class="ltx_break"></span>yusuke.uchida@mo-t.com
+
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id4.id1" class="ltx_p">The effectiveness of the approaches to predict 3D poses from 2D poses estimated in each frame of a video has been demonstrated for 3D human pose estimation. However, 2D poses without appearance information of persons have much ambiguity with respect to the joint depths. In this paper, we propose to estimate a 3D pose in each frame of a video and refine it considering temporal information. The proposed approach reduces the ambiguity of the joint depths and improves the 3D pose estimation accuracy.</p>
+</div>
+<div class="ltx_keywords">
+<h6 class="ltx_title ltx_title_keywords">Index Terms: </h6>
+video analysis, 3D human pose estimation
+
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">Introduction</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">3D human pose estimation aims to localize human joints in a 3D coordinate system. It is important for many applications including AR/VR, human action analysis, and in-vehicle camera video analysis.
+One of the difficulties of this task is that there is ambiguity in the estimation of the depth of the joints from an image.
+In recent years, there has been an increasing number of studies on the use of temporal information in video. The most common approach in those studies is to utilize 2D poses estimated in each frame to predict final 3D pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">However, since 2D pose does not include the appearance information, there is large ambiguity with respect to the depths of the joints. The experiments by Pavllo et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> suggest that estimating the 3D pose from the 2D pose is likely to have limited accuracy, even if the ground-truth 2D poses are used.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">In this paper, we propose a novel 3D pose estimation approach that first estimates a 3D pose for each frame (first stage) and then aggregates the multi-frame predictions for estimating the final 3D poses (second stage). This method is based on the assumption that the joint depths can be estimated more correctly from an image, which has more information than 2D pose. Unlike using 2D poses intermediately, it is possible to perform inferences that do not lose the joint depth information.
+We demonstrate the effectiveness of the proposed method through experiments on a public dataset.
+</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2011.02172/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="368" height="227" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Overview of our approach.</figcaption>
+</figure>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Proposed Method</span>
+</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.8" class="ltx_p">We show a schematic diagram of the proposed method in Figure <a href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ Leveraging Temporal Joint Depths for Improving 3D Human Pose Estimation in Video" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+Given a video <math id="S2.p1.1.m1.1" class="ltx_Math" alttext="\{I_{t}\}" display="inline"><semantics id="S2.p1.1.m1.1a"><mrow id="S2.p1.1.m1.1.1.1" xref="S2.p1.1.m1.1.1.2.cmml"><mo stretchy="false" id="S2.p1.1.m1.1.1.1.2" xref="S2.p1.1.m1.1.1.2.cmml">{</mo><msub id="S2.p1.1.m1.1.1.1.1" xref="S2.p1.1.m1.1.1.1.1.cmml"><mi id="S2.p1.1.m1.1.1.1.1.2" xref="S2.p1.1.m1.1.1.1.1.2.cmml">I</mi><mi id="S2.p1.1.m1.1.1.1.1.3" xref="S2.p1.1.m1.1.1.1.1.3.cmml">t</mi></msub><mo stretchy="false" id="S2.p1.1.m1.1.1.1.3" xref="S2.p1.1.m1.1.1.2.cmml">}</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.1.m1.1b"><set id="S2.p1.1.m1.1.1.2.cmml" xref="S2.p1.1.m1.1.1.1"><apply id="S2.p1.1.m1.1.1.1.1.cmml" xref="S2.p1.1.m1.1.1.1.1"><csymbol cd="ambiguous" id="S2.p1.1.m1.1.1.1.1.1.cmml" xref="S2.p1.1.m1.1.1.1.1">subscript</csymbol><ci id="S2.p1.1.m1.1.1.1.1.2.cmml" xref="S2.p1.1.m1.1.1.1.1.2">𝐼</ci><ci id="S2.p1.1.m1.1.1.1.1.3.cmml" xref="S2.p1.1.m1.1.1.1.1.3">𝑡</ci></apply></set></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.1.m1.1c">\{I_{t}\}</annotation></semantics></math> (<math id="S2.p1.2.m2.3" class="ltx_Math" alttext="t\in\{1,...,T\}" display="inline"><semantics id="S2.p1.2.m2.3a"><mrow id="S2.p1.2.m2.3.4" xref="S2.p1.2.m2.3.4.cmml"><mi id="S2.p1.2.m2.3.4.2" xref="S2.p1.2.m2.3.4.2.cmml">t</mi><mo id="S2.p1.2.m2.3.4.1" xref="S2.p1.2.m2.3.4.1.cmml">∈</mo><mrow id="S2.p1.2.m2.3.4.3.2" xref="S2.p1.2.m2.3.4.3.1.cmml"><mo stretchy="false" id="S2.p1.2.m2.3.4.3.2.1" xref="S2.p1.2.m2.3.4.3.1.cmml">{</mo><mn id="S2.p1.2.m2.1.1" xref="S2.p1.2.m2.1.1.cmml">1</mn><mo id="S2.p1.2.m2.3.4.3.2.2" xref="S2.p1.2.m2.3.4.3.1.cmml">,</mo><mi mathvariant="normal" id="S2.p1.2.m2.2.2" xref="S2.p1.2.m2.2.2.cmml">…</mi><mo id="S2.p1.2.m2.3.4.3.2.3" xref="S2.p1.2.m2.3.4.3.1.cmml">,</mo><mi id="S2.p1.2.m2.3.3" xref="S2.p1.2.m2.3.3.cmml">T</mi><mo stretchy="false" id="S2.p1.2.m2.3.4.3.2.4" xref="S2.p1.2.m2.3.4.3.1.cmml">}</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.2.m2.3b"><apply id="S2.p1.2.m2.3.4.cmml" xref="S2.p1.2.m2.3.4"><in id="S2.p1.2.m2.3.4.1.cmml" xref="S2.p1.2.m2.3.4.1"></in><ci id="S2.p1.2.m2.3.4.2.cmml" xref="S2.p1.2.m2.3.4.2">𝑡</ci><set id="S2.p1.2.m2.3.4.3.1.cmml" xref="S2.p1.2.m2.3.4.3.2"><cn type="integer" id="S2.p1.2.m2.1.1.cmml" xref="S2.p1.2.m2.1.1">1</cn><ci id="S2.p1.2.m2.2.2.cmml" xref="S2.p1.2.m2.2.2">…</ci><ci id="S2.p1.2.m2.3.3.cmml" xref="S2.p1.2.m2.3.3">𝑇</ci></set></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.2.m2.3c">t\in\{1,...,T\}</annotation></semantics></math>) of length <math id="S2.p1.3.m3.1" class="ltx_Math" alttext="T" display="inline"><semantics id="S2.p1.3.m3.1a"><mi id="S2.p1.3.m3.1.1" xref="S2.p1.3.m3.1.1.cmml">T</mi><annotation-xml encoding="MathML-Content" id="S2.p1.3.m3.1b"><ci id="S2.p1.3.m3.1.1.cmml" xref="S2.p1.3.m3.1.1">𝑇</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.3.m3.1c">T</annotation></semantics></math> containing a human image <math id="S2.p1.4.m4.1" class="ltx_Math" alttext="I_{t}\in\mathbb{R}^{H\times W\times 3}" display="inline"><semantics id="S2.p1.4.m4.1a"><mrow id="S2.p1.4.m4.1.1" xref="S2.p1.4.m4.1.1.cmml"><msub id="S2.p1.4.m4.1.1.2" xref="S2.p1.4.m4.1.1.2.cmml"><mi id="S2.p1.4.m4.1.1.2.2" xref="S2.p1.4.m4.1.1.2.2.cmml">I</mi><mi id="S2.p1.4.m4.1.1.2.3" xref="S2.p1.4.m4.1.1.2.3.cmml">t</mi></msub><mo id="S2.p1.4.m4.1.1.1" xref="S2.p1.4.m4.1.1.1.cmml">∈</mo><msup id="S2.p1.4.m4.1.1.3" xref="S2.p1.4.m4.1.1.3.cmml"><mi id="S2.p1.4.m4.1.1.3.2" xref="S2.p1.4.m4.1.1.3.2.cmml">ℝ</mi><mrow id="S2.p1.4.m4.1.1.3.3" xref="S2.p1.4.m4.1.1.3.3.cmml"><mi id="S2.p1.4.m4.1.1.3.3.2" xref="S2.p1.4.m4.1.1.3.3.2.cmml">H</mi><mo lspace="0.222em" rspace="0.222em" id="S2.p1.4.m4.1.1.3.3.1" xref="S2.p1.4.m4.1.1.3.3.1.cmml">×</mo><mi id="S2.p1.4.m4.1.1.3.3.3" xref="S2.p1.4.m4.1.1.3.3.3.cmml">W</mi><mo lspace="0.222em" rspace="0.222em" id="S2.p1.4.m4.1.1.3.3.1a" xref="S2.p1.4.m4.1.1.3.3.1.cmml">×</mo><mn id="S2.p1.4.m4.1.1.3.3.4" xref="S2.p1.4.m4.1.1.3.3.4.cmml">3</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.4.m4.1b"><apply id="S2.p1.4.m4.1.1.cmml" xref="S2.p1.4.m4.1.1"><in id="S2.p1.4.m4.1.1.1.cmml" xref="S2.p1.4.m4.1.1.1"></in><apply id="S2.p1.4.m4.1.1.2.cmml" xref="S2.p1.4.m4.1.1.2"><csymbol cd="ambiguous" id="S2.p1.4.m4.1.1.2.1.cmml" xref="S2.p1.4.m4.1.1.2">subscript</csymbol><ci id="S2.p1.4.m4.1.1.2.2.cmml" xref="S2.p1.4.m4.1.1.2.2">𝐼</ci><ci id="S2.p1.4.m4.1.1.2.3.cmml" xref="S2.p1.4.m4.1.1.2.3">𝑡</ci></apply><apply id="S2.p1.4.m4.1.1.3.cmml" xref="S2.p1.4.m4.1.1.3"><csymbol cd="ambiguous" id="S2.p1.4.m4.1.1.3.1.cmml" xref="S2.p1.4.m4.1.1.3">superscript</csymbol><ci id="S2.p1.4.m4.1.1.3.2.cmml" xref="S2.p1.4.m4.1.1.3.2">ℝ</ci><apply id="S2.p1.4.m4.1.1.3.3.cmml" xref="S2.p1.4.m4.1.1.3.3"><times id="S2.p1.4.m4.1.1.3.3.1.cmml" xref="S2.p1.4.m4.1.1.3.3.1"></times><ci id="S2.p1.4.m4.1.1.3.3.2.cmml" xref="S2.p1.4.m4.1.1.3.3.2">𝐻</ci><ci id="S2.p1.4.m4.1.1.3.3.3.cmml" xref="S2.p1.4.m4.1.1.3.3.3">𝑊</ci><cn type="integer" id="S2.p1.4.m4.1.1.3.3.4.cmml" xref="S2.p1.4.m4.1.1.3.3.4">3</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.4.m4.1c">I_{t}\in\mathbb{R}^{H\times W\times 3}</annotation></semantics></math> of size <math id="S2.p1.5.m5.1" class="ltx_Math" alttext="H\times W" display="inline"><semantics id="S2.p1.5.m5.1a"><mrow id="S2.p1.5.m5.1.1" xref="S2.p1.5.m5.1.1.cmml"><mi id="S2.p1.5.m5.1.1.2" xref="S2.p1.5.m5.1.1.2.cmml">H</mi><mo lspace="0.222em" rspace="0.222em" id="S2.p1.5.m5.1.1.1" xref="S2.p1.5.m5.1.1.1.cmml">×</mo><mi id="S2.p1.5.m5.1.1.3" xref="S2.p1.5.m5.1.1.3.cmml">W</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.5.m5.1b"><apply id="S2.p1.5.m5.1.1.cmml" xref="S2.p1.5.m5.1.1"><times id="S2.p1.5.m5.1.1.1.cmml" xref="S2.p1.5.m5.1.1.1"></times><ci id="S2.p1.5.m5.1.1.2.cmml" xref="S2.p1.5.m5.1.1.2">𝐻</ci><ci id="S2.p1.5.m5.1.1.3.cmml" xref="S2.p1.5.m5.1.1.3">𝑊</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.5.m5.1c">H\times W</annotation></semantics></math> at frame <math id="S2.p1.6.m6.1" class="ltx_Math" alttext="t" display="inline"><semantics id="S2.p1.6.m6.1a"><mi id="S2.p1.6.m6.1.1" xref="S2.p1.6.m6.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="S2.p1.6.m6.1b"><ci id="S2.p1.6.m6.1.1.cmml" xref="S2.p1.6.m6.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.6.m6.1c">t</annotation></semantics></math>, our objective is to estimate 3D coordinates of the human joints <math id="S2.p1.7.m7.1" class="ltx_Math" alttext="y_{t}\in\mathbb{R}^{3J}" display="inline"><semantics id="S2.p1.7.m7.1a"><mrow id="S2.p1.7.m7.1.1" xref="S2.p1.7.m7.1.1.cmml"><msub id="S2.p1.7.m7.1.1.2" xref="S2.p1.7.m7.1.1.2.cmml"><mi id="S2.p1.7.m7.1.1.2.2" xref="S2.p1.7.m7.1.1.2.2.cmml">y</mi><mi id="S2.p1.7.m7.1.1.2.3" xref="S2.p1.7.m7.1.1.2.3.cmml">t</mi></msub><mo id="S2.p1.7.m7.1.1.1" xref="S2.p1.7.m7.1.1.1.cmml">∈</mo><msup id="S2.p1.7.m7.1.1.3" xref="S2.p1.7.m7.1.1.3.cmml"><mi id="S2.p1.7.m7.1.1.3.2" xref="S2.p1.7.m7.1.1.3.2.cmml">ℝ</mi><mrow id="S2.p1.7.m7.1.1.3.3" xref="S2.p1.7.m7.1.1.3.3.cmml"><mn id="S2.p1.7.m7.1.1.3.3.2" xref="S2.p1.7.m7.1.1.3.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S2.p1.7.m7.1.1.3.3.1" xref="S2.p1.7.m7.1.1.3.3.1.cmml">​</mo><mi id="S2.p1.7.m7.1.1.3.3.3" xref="S2.p1.7.m7.1.1.3.3.3.cmml">J</mi></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.7.m7.1b"><apply id="S2.p1.7.m7.1.1.cmml" xref="S2.p1.7.m7.1.1"><in id="S2.p1.7.m7.1.1.1.cmml" xref="S2.p1.7.m7.1.1.1"></in><apply id="S2.p1.7.m7.1.1.2.cmml" xref="S2.p1.7.m7.1.1.2"><csymbol cd="ambiguous" id="S2.p1.7.m7.1.1.2.1.cmml" xref="S2.p1.7.m7.1.1.2">subscript</csymbol><ci id="S2.p1.7.m7.1.1.2.2.cmml" xref="S2.p1.7.m7.1.1.2.2">𝑦</ci><ci id="S2.p1.7.m7.1.1.2.3.cmml" xref="S2.p1.7.m7.1.1.2.3">𝑡</ci></apply><apply id="S2.p1.7.m7.1.1.3.cmml" xref="S2.p1.7.m7.1.1.3"><csymbol cd="ambiguous" id="S2.p1.7.m7.1.1.3.1.cmml" xref="S2.p1.7.m7.1.1.3">superscript</csymbol><ci id="S2.p1.7.m7.1.1.3.2.cmml" xref="S2.p1.7.m7.1.1.3.2">ℝ</ci><apply id="S2.p1.7.m7.1.1.3.3.cmml" xref="S2.p1.7.m7.1.1.3.3"><times id="S2.p1.7.m7.1.1.3.3.1.cmml" xref="S2.p1.7.m7.1.1.3.3.1"></times><cn type="integer" id="S2.p1.7.m7.1.1.3.3.2.cmml" xref="S2.p1.7.m7.1.1.3.3.2">3</cn><ci id="S2.p1.7.m7.1.1.3.3.3.cmml" xref="S2.p1.7.m7.1.1.3.3.3">𝐽</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.7.m7.1c">y_{t}\in\mathbb{R}^{3J}</annotation></semantics></math> for each frame where <math id="S2.p1.8.m8.1" class="ltx_Math" alttext="J" display="inline"><semantics id="S2.p1.8.m8.1a"><mi id="S2.p1.8.m8.1.1" xref="S2.p1.8.m8.1.1.cmml">J</mi><annotation-xml encoding="MathML-Content" id="S2.p1.8.m8.1b"><ci id="S2.p1.8.m8.1.1.cmml" xref="S2.p1.8.m8.1.1">𝐽</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.8.m8.1c">J</annotation></semantics></math> is the number of the joints.
+The target 3D coordinates of the joints are defined as relative coordinates from a root joint (usually hip is employed <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>).</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p">One of the existing approaches for estimating 3D poses in video is to estimate the 3D poses from the 2D pose sequences estimated at each frame <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. This simplifies the task and the effectiveness of exploiting temporal information has been demonstrated. However, since 2D poses used as intermediate representations of human poses in this approach lack the depth information of the joints, 3D pose estimation from 2D pose has the large ambiguity of joint depths. To resolve the issue, it is a natural choice to estimate the joint depths from images which have rich person appearance information.</p>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.5" class="ltx_p">Based on the above considerations, we propose to use the depths of joints as an intermediate representation in the framework of the above two-stage method. The first stage predicts a 3D pose <math id="S2.p3.1.m1.1" class="ltx_Math" alttext="x_{t}\in\mathbb{R}^{3J}" display="inline"><semantics id="S2.p3.1.m1.1a"><mrow id="S2.p3.1.m1.1.1" xref="S2.p3.1.m1.1.1.cmml"><msub id="S2.p3.1.m1.1.1.2" xref="S2.p3.1.m1.1.1.2.cmml"><mi id="S2.p3.1.m1.1.1.2.2" xref="S2.p3.1.m1.1.1.2.2.cmml">x</mi><mi id="S2.p3.1.m1.1.1.2.3" xref="S2.p3.1.m1.1.1.2.3.cmml">t</mi></msub><mo id="S2.p3.1.m1.1.1.1" xref="S2.p3.1.m1.1.1.1.cmml">∈</mo><msup id="S2.p3.1.m1.1.1.3" xref="S2.p3.1.m1.1.1.3.cmml"><mi id="S2.p3.1.m1.1.1.3.2" xref="S2.p3.1.m1.1.1.3.2.cmml">ℝ</mi><mrow id="S2.p3.1.m1.1.1.3.3" xref="S2.p3.1.m1.1.1.3.3.cmml"><mn id="S2.p3.1.m1.1.1.3.3.2" xref="S2.p3.1.m1.1.1.3.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S2.p3.1.m1.1.1.3.3.1" xref="S2.p3.1.m1.1.1.3.3.1.cmml">​</mo><mi id="S2.p3.1.m1.1.1.3.3.3" xref="S2.p3.1.m1.1.1.3.3.3.cmml">J</mi></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.p3.1.m1.1b"><apply id="S2.p3.1.m1.1.1.cmml" xref="S2.p3.1.m1.1.1"><in id="S2.p3.1.m1.1.1.1.cmml" xref="S2.p3.1.m1.1.1.1"></in><apply id="S2.p3.1.m1.1.1.2.cmml" xref="S2.p3.1.m1.1.1.2"><csymbol cd="ambiguous" id="S2.p3.1.m1.1.1.2.1.cmml" xref="S2.p3.1.m1.1.1.2">subscript</csymbol><ci id="S2.p3.1.m1.1.1.2.2.cmml" xref="S2.p3.1.m1.1.1.2.2">𝑥</ci><ci id="S2.p3.1.m1.1.1.2.3.cmml" xref="S2.p3.1.m1.1.1.2.3">𝑡</ci></apply><apply id="S2.p3.1.m1.1.1.3.cmml" xref="S2.p3.1.m1.1.1.3"><csymbol cd="ambiguous" id="S2.p3.1.m1.1.1.3.1.cmml" xref="S2.p3.1.m1.1.1.3">superscript</csymbol><ci id="S2.p3.1.m1.1.1.3.2.cmml" xref="S2.p3.1.m1.1.1.3.2">ℝ</ci><apply id="S2.p3.1.m1.1.1.3.3.cmml" xref="S2.p3.1.m1.1.1.3.3"><times id="S2.p3.1.m1.1.1.3.3.1.cmml" xref="S2.p3.1.m1.1.1.3.3.1"></times><cn type="integer" id="S2.p3.1.m1.1.1.3.3.2.cmml" xref="S2.p3.1.m1.1.1.3.3.2">3</cn><ci id="S2.p3.1.m1.1.1.3.3.3.cmml" xref="S2.p3.1.m1.1.1.3.3.3">𝐽</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.1.m1.1c">x_{t}\in\mathbb{R}^{3J}</annotation></semantics></math> comprised of image coordinates and depths of joints in each frame <math id="S2.p3.2.m2.1" class="ltx_Math" alttext="I_{t}" display="inline"><semantics id="S2.p3.2.m2.1a"><msub id="S2.p3.2.m2.1.1" xref="S2.p3.2.m2.1.1.cmml"><mi id="S2.p3.2.m2.1.1.2" xref="S2.p3.2.m2.1.1.2.cmml">I</mi><mi id="S2.p3.2.m2.1.1.3" xref="S2.p3.2.m2.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S2.p3.2.m2.1b"><apply id="S2.p3.2.m2.1.1.cmml" xref="S2.p3.2.m2.1.1"><csymbol cd="ambiguous" id="S2.p3.2.m2.1.1.1.cmml" xref="S2.p3.2.m2.1.1">subscript</csymbol><ci id="S2.p3.2.m2.1.1.2.cmml" xref="S2.p3.2.m2.1.1.2">𝐼</ci><ci id="S2.p3.2.m2.1.1.3.cmml" xref="S2.p3.2.m2.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.2.m2.1c">I_{t}</annotation></semantics></math>, then the second stage predicts the final 3D pose <math id="S2.p3.3.m3.1" class="ltx_Math" alttext="y_{t}" display="inline"><semantics id="S2.p3.3.m3.1a"><msub id="S2.p3.3.m3.1.1" xref="S2.p3.3.m3.1.1.cmml"><mi id="S2.p3.3.m3.1.1.2" xref="S2.p3.3.m3.1.1.2.cmml">y</mi><mi id="S2.p3.3.m3.1.1.3" xref="S2.p3.3.m3.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S2.p3.3.m3.1b"><apply id="S2.p3.3.m3.1.1.cmml" xref="S2.p3.3.m3.1.1"><csymbol cd="ambiguous" id="S2.p3.3.m3.1.1.1.cmml" xref="S2.p3.3.m3.1.1">subscript</csymbol><ci id="S2.p3.3.m3.1.1.2.cmml" xref="S2.p3.3.m3.1.1.2">𝑦</ci><ci id="S2.p3.3.m3.1.1.3.cmml" xref="S2.p3.3.m3.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.3.m3.1c">y_{t}</annotation></semantics></math> from the 3D pose sequences <math id="S2.p3.4.m4.1" class="ltx_Math" alttext="\{x_{t}\}" display="inline"><semantics id="S2.p3.4.m4.1a"><mrow id="S2.p3.4.m4.1.1.1" xref="S2.p3.4.m4.1.1.2.cmml"><mo stretchy="false" id="S2.p3.4.m4.1.1.1.2" xref="S2.p3.4.m4.1.1.2.cmml">{</mo><msub id="S2.p3.4.m4.1.1.1.1" xref="S2.p3.4.m4.1.1.1.1.cmml"><mi id="S2.p3.4.m4.1.1.1.1.2" xref="S2.p3.4.m4.1.1.1.1.2.cmml">x</mi><mi id="S2.p3.4.m4.1.1.1.1.3" xref="S2.p3.4.m4.1.1.1.1.3.cmml">t</mi></msub><mo stretchy="false" id="S2.p3.4.m4.1.1.1.3" xref="S2.p3.4.m4.1.1.2.cmml">}</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.p3.4.m4.1b"><set id="S2.p3.4.m4.1.1.2.cmml" xref="S2.p3.4.m4.1.1.1"><apply id="S2.p3.4.m4.1.1.1.1.cmml" xref="S2.p3.4.m4.1.1.1.1"><csymbol cd="ambiguous" id="S2.p3.4.m4.1.1.1.1.1.cmml" xref="S2.p3.4.m4.1.1.1.1">subscript</csymbol><ci id="S2.p3.4.m4.1.1.1.1.2.cmml" xref="S2.p3.4.m4.1.1.1.1.2">𝑥</ci><ci id="S2.p3.4.m4.1.1.1.1.3.cmml" xref="S2.p3.4.m4.1.1.1.1.3">𝑡</ci></apply></set></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.4.m4.1c">\{x_{t}\}</annotation></semantics></math> (<math id="S2.p3.5.m5.3" class="ltx_Math" alttext="t\in\{1,...,T\}" display="inline"><semantics id="S2.p3.5.m5.3a"><mrow id="S2.p3.5.m5.3.4" xref="S2.p3.5.m5.3.4.cmml"><mi id="S2.p3.5.m5.3.4.2" xref="S2.p3.5.m5.3.4.2.cmml">t</mi><mo id="S2.p3.5.m5.3.4.1" xref="S2.p3.5.m5.3.4.1.cmml">∈</mo><mrow id="S2.p3.5.m5.3.4.3.2" xref="S2.p3.5.m5.3.4.3.1.cmml"><mo stretchy="false" id="S2.p3.5.m5.3.4.3.2.1" xref="S2.p3.5.m5.3.4.3.1.cmml">{</mo><mn id="S2.p3.5.m5.1.1" xref="S2.p3.5.m5.1.1.cmml">1</mn><mo id="S2.p3.5.m5.3.4.3.2.2" xref="S2.p3.5.m5.3.4.3.1.cmml">,</mo><mi mathvariant="normal" id="S2.p3.5.m5.2.2" xref="S2.p3.5.m5.2.2.cmml">…</mi><mo id="S2.p3.5.m5.3.4.3.2.3" xref="S2.p3.5.m5.3.4.3.1.cmml">,</mo><mi id="S2.p3.5.m5.3.3" xref="S2.p3.5.m5.3.3.cmml">T</mi><mo stretchy="false" id="S2.p3.5.m5.3.4.3.2.4" xref="S2.p3.5.m5.3.4.3.1.cmml">}</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.p3.5.m5.3b"><apply id="S2.p3.5.m5.3.4.cmml" xref="S2.p3.5.m5.3.4"><in id="S2.p3.5.m5.3.4.1.cmml" xref="S2.p3.5.m5.3.4.1"></in><ci id="S2.p3.5.m5.3.4.2.cmml" xref="S2.p3.5.m5.3.4.2">𝑡</ci><set id="S2.p3.5.m5.3.4.3.1.cmml" xref="S2.p3.5.m5.3.4.3.2"><cn type="integer" id="S2.p3.5.m5.1.1.cmml" xref="S2.p3.5.m5.1.1">1</cn><ci id="S2.p3.5.m5.2.2.cmml" xref="S2.p3.5.m5.2.2">…</ci><ci id="S2.p3.5.m5.3.3.cmml" xref="S2.p3.5.m5.3.3">𝑇</ci></set></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.5.m5.3c">t\in\{1,...,T\}</annotation></semantics></math>) estimated by the first stage.
+This approach can be regarded as refining 3D poses using temporal information.
+The advantage of the method is that the joint depth information is not lost in the middle of the inference, unlike the approach which uses only 2D poses as an intermediate representation.</p>
+</div>
+<div id="S2.p4" class="ltx_para ltx_noindent">
+<p id="S2.p4.8" class="ltx_p"><span id="S2.p4.8.1" class="ltx_text ltx_font_bold">First stage.</span> 
+We employ Integral Regression <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> for the first stage, which predicts 3D pose in each frame. Given a human image, this model outputs a 3D heatmap of size <math id="S2.p4.1.m1.1" class="ltx_Math" alttext="w\times h\times d" display="inline"><semantics id="S2.p4.1.m1.1a"><mrow id="S2.p4.1.m1.1.1" xref="S2.p4.1.m1.1.1.cmml"><mi id="S2.p4.1.m1.1.1.2" xref="S2.p4.1.m1.1.1.2.cmml">w</mi><mo lspace="0.222em" rspace="0.222em" id="S2.p4.1.m1.1.1.1" xref="S2.p4.1.m1.1.1.1.cmml">×</mo><mi id="S2.p4.1.m1.1.1.3" xref="S2.p4.1.m1.1.1.3.cmml">h</mi><mo lspace="0.222em" rspace="0.222em" id="S2.p4.1.m1.1.1.1a" xref="S2.p4.1.m1.1.1.1.cmml">×</mo><mi id="S2.p4.1.m1.1.1.4" xref="S2.p4.1.m1.1.1.4.cmml">d</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.1.m1.1b"><apply id="S2.p4.1.m1.1.1.cmml" xref="S2.p4.1.m1.1.1"><times id="S2.p4.1.m1.1.1.1.cmml" xref="S2.p4.1.m1.1.1.1"></times><ci id="S2.p4.1.m1.1.1.2.cmml" xref="S2.p4.1.m1.1.1.2">𝑤</ci><ci id="S2.p4.1.m1.1.1.3.cmml" xref="S2.p4.1.m1.1.1.3">ℎ</ci><ci id="S2.p4.1.m1.1.1.4.cmml" xref="S2.p4.1.m1.1.1.4">𝑑</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.1.m1.1c">w\times h\times d</annotation></semantics></math> for each joint. Here, the <math id="S2.p4.2.m2.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S2.p4.2.m2.1a"><mi id="S2.p4.2.m2.1.1" xref="S2.p4.2.m2.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S2.p4.2.m2.1b"><ci id="S2.p4.2.m2.1.1.cmml" xref="S2.p4.2.m2.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.2.m2.1c">x</annotation></semantics></math>-<math id="S2.p4.3.m3.1" class="ltx_Math" alttext="y" display="inline"><semantics id="S2.p4.3.m3.1a"><mi id="S2.p4.3.m3.1.1" xref="S2.p4.3.m3.1.1.cmml">y</mi><annotation-xml encoding="MathML-Content" id="S2.p4.3.m3.1b"><ci id="S2.p4.3.m3.1.1.cmml" xref="S2.p4.3.m3.1.1">𝑦</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.3.m3.1c">y</annotation></semantics></math> grid uniformly discretize the image coordinates and the <math id="S2.p4.4.m4.1" class="ltx_Math" alttext="z" display="inline"><semantics id="S2.p4.4.m4.1a"><mi id="S2.p4.4.m4.1.1" xref="S2.p4.4.m4.1.1.cmml">z</mi><annotation-xml encoding="MathML-Content" id="S2.p4.4.m4.1b"><ci id="S2.p4.4.m4.1.1.cmml" xref="S2.p4.4.m4.1.1">𝑧</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.4.m4.1c">z</annotation></semantics></math> grid uniformly discretize <math id="S2.p4.5.m5.2" class="ltx_Math" alttext="[-D/2,D/2]" display="inline"><semantics id="S2.p4.5.m5.2a"><mrow id="S2.p4.5.m5.2.2.2" xref="S2.p4.5.m5.2.2.3.cmml"><mo stretchy="false" id="S2.p4.5.m5.2.2.2.3" xref="S2.p4.5.m5.2.2.3.cmml">[</mo><mrow id="S2.p4.5.m5.1.1.1.1" xref="S2.p4.5.m5.1.1.1.1.cmml"><mo id="S2.p4.5.m5.1.1.1.1a" xref="S2.p4.5.m5.1.1.1.1.cmml">−</mo><mrow id="S2.p4.5.m5.1.1.1.1.2" xref="S2.p4.5.m5.1.1.1.1.2.cmml"><mi id="S2.p4.5.m5.1.1.1.1.2.2" xref="S2.p4.5.m5.1.1.1.1.2.2.cmml">D</mi><mo id="S2.p4.5.m5.1.1.1.1.2.1" xref="S2.p4.5.m5.1.1.1.1.2.1.cmml">/</mo><mn id="S2.p4.5.m5.1.1.1.1.2.3" xref="S2.p4.5.m5.1.1.1.1.2.3.cmml">2</mn></mrow></mrow><mo id="S2.p4.5.m5.2.2.2.4" xref="S2.p4.5.m5.2.2.3.cmml">,</mo><mrow id="S2.p4.5.m5.2.2.2.2" xref="S2.p4.5.m5.2.2.2.2.cmml"><mi id="S2.p4.5.m5.2.2.2.2.2" xref="S2.p4.5.m5.2.2.2.2.2.cmml">D</mi><mo id="S2.p4.5.m5.2.2.2.2.1" xref="S2.p4.5.m5.2.2.2.2.1.cmml">/</mo><mn id="S2.p4.5.m5.2.2.2.2.3" xref="S2.p4.5.m5.2.2.2.2.3.cmml">2</mn></mrow><mo stretchy="false" id="S2.p4.5.m5.2.2.2.5" xref="S2.p4.5.m5.2.2.3.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.5.m5.2b"><interval closure="closed" id="S2.p4.5.m5.2.2.3.cmml" xref="S2.p4.5.m5.2.2.2"><apply id="S2.p4.5.m5.1.1.1.1.cmml" xref="S2.p4.5.m5.1.1.1.1"><minus id="S2.p4.5.m5.1.1.1.1.1.cmml" xref="S2.p4.5.m5.1.1.1.1"></minus><apply id="S2.p4.5.m5.1.1.1.1.2.cmml" xref="S2.p4.5.m5.1.1.1.1.2"><divide id="S2.p4.5.m5.1.1.1.1.2.1.cmml" xref="S2.p4.5.m5.1.1.1.1.2.1"></divide><ci id="S2.p4.5.m5.1.1.1.1.2.2.cmml" xref="S2.p4.5.m5.1.1.1.1.2.2">𝐷</ci><cn type="integer" id="S2.p4.5.m5.1.1.1.1.2.3.cmml" xref="S2.p4.5.m5.1.1.1.1.2.3">2</cn></apply></apply><apply id="S2.p4.5.m5.2.2.2.2.cmml" xref="S2.p4.5.m5.2.2.2.2"><divide id="S2.p4.5.m5.2.2.2.2.1.cmml" xref="S2.p4.5.m5.2.2.2.2.1"></divide><ci id="S2.p4.5.m5.2.2.2.2.2.cmml" xref="S2.p4.5.m5.2.2.2.2.2">𝐷</ci><cn type="integer" id="S2.p4.5.m5.2.2.2.2.3.cmml" xref="S2.p4.5.m5.2.2.2.2.3">2</cn></apply></interval></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.5.m5.2c">[-D/2,D/2]</annotation></semantics></math> mm centered at the root joint. The final estimates of the joint coordinates are computed from the centroids of the heatmaps. The model can be trained using both 2D and 3D datasets. By utilizing a 2D dataset which is diverse in appearance, we can mitigate overfitting which is problematic when training on 3D datasets.
+We use ResNet-50 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> as the backbone and apply three deconvolution layers of kernel size 4 to output 3D heatmaps where the number of channels for the <math id="S2.p4.6.m6.1" class="ltx_Math" alttext="z" display="inline"><semantics id="S2.p4.6.m6.1a"><mi id="S2.p4.6.m6.1.1" xref="S2.p4.6.m6.1.1.cmml">z</mi><annotation-xml encoding="MathML-Content" id="S2.p4.6.m6.1b"><ci id="S2.p4.6.m6.1.1.cmml" xref="S2.p4.6.m6.1.1">𝑧</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.6.m6.1c">z</annotation></semantics></math> axis is <math id="S2.p4.7.m7.1" class="ltx_Math" alttext="d=72" display="inline"><semantics id="S2.p4.7.m7.1a"><mrow id="S2.p4.7.m7.1.1" xref="S2.p4.7.m7.1.1.cmml"><mi id="S2.p4.7.m7.1.1.2" xref="S2.p4.7.m7.1.1.2.cmml">d</mi><mo id="S2.p4.7.m7.1.1.1" xref="S2.p4.7.m7.1.1.1.cmml">=</mo><mn id="S2.p4.7.m7.1.1.3" xref="S2.p4.7.m7.1.1.3.cmml">72</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.7.m7.1b"><apply id="S2.p4.7.m7.1.1.cmml" xref="S2.p4.7.m7.1.1"><eq id="S2.p4.7.m7.1.1.1.cmml" xref="S2.p4.7.m7.1.1.1"></eq><ci id="S2.p4.7.m7.1.1.2.cmml" xref="S2.p4.7.m7.1.1.2">𝑑</ci><cn type="integer" id="S2.p4.7.m7.1.1.3.cmml" xref="S2.p4.7.m7.1.1.3">72</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.7.m7.1c">d=72</annotation></semantics></math>. We set <math id="S2.p4.8.m8.1" class="ltx_Math" alttext="D=1500" display="inline"><semantics id="S2.p4.8.m8.1a"><mrow id="S2.p4.8.m8.1.1" xref="S2.p4.8.m8.1.1.cmml"><mi id="S2.p4.8.m8.1.1.2" xref="S2.p4.8.m8.1.1.2.cmml">D</mi><mo id="S2.p4.8.m8.1.1.1" xref="S2.p4.8.m8.1.1.1.cmml">=</mo><mn id="S2.p4.8.m8.1.1.3" xref="S2.p4.8.m8.1.1.3.cmml">1500</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.8.m8.1b"><apply id="S2.p4.8.m8.1.1.cmml" xref="S2.p4.8.m8.1.1"><eq id="S2.p4.8.m8.1.1.1.cmml" xref="S2.p4.8.m8.1.1.1"></eq><ci id="S2.p4.8.m8.1.1.2.cmml" xref="S2.p4.8.m8.1.1.2">𝐷</ci><cn type="integer" id="S2.p4.8.m8.1.1.3.cmml" xref="S2.p4.8.m8.1.1.3">1500</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.8.m8.1c">D=1500</annotation></semantics></math> mm.</p>
+</div>
+<div id="S2.p5" class="ltx_para ltx_noindent">
+<p id="S2.p5.12" class="ltx_p"><span id="S2.p5.12.1" class="ltx_text ltx_font_bold">Second stage.</span> 
+We employ 1D ConvNet as the second stage, which is effective for exploiting 2D pose sequences <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. The input layer is a temporal convolution with kernel size <math id="S2.p5.1.m1.1" class="ltx_Math" alttext="W" display="inline"><semantics id="S2.p5.1.m1.1a"><mi id="S2.p5.1.m1.1.1" xref="S2.p5.1.m1.1.1.cmml">W</mi><annotation-xml encoding="MathML-Content" id="S2.p5.1.m1.1b"><ci id="S2.p5.1.m1.1.1.cmml" xref="S2.p5.1.m1.1.1">𝑊</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.1.m1.1c">W</annotation></semantics></math> and output channels <math id="S2.p5.2.m2.1" class="ltx_Math" alttext="C" display="inline"><semantics id="S2.p5.2.m2.1a"><mi id="S2.p5.2.m2.1.1" xref="S2.p5.2.m2.1.1.cmml">C</mi><annotation-xml encoding="MathML-Content" id="S2.p5.2.m2.1b"><ci id="S2.p5.2.m2.1.1.cmml" xref="S2.p5.2.m2.1.1">𝐶</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.2.m2.1c">C</annotation></semantics></math>. This is followed by <math id="S2.p5.3.m3.1" class="ltx_Math" alttext="B" display="inline"><semantics id="S2.p5.3.m3.1a"><mi id="S2.p5.3.m3.1.1" xref="S2.p5.3.m3.1.1.cmml">B</mi><annotation-xml encoding="MathML-Content" id="S2.p5.3.m3.1b"><ci id="S2.p5.3.m3.1.1.cmml" xref="S2.p5.3.m3.1.1">𝐵</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.3.m3.1c">B</annotation></semantics></math> residual blocks, each of which is composed of a 1D convolution with kernel size <math id="S2.p5.4.m4.1" class="ltx_Math" alttext="W" display="inline"><semantics id="S2.p5.4.m4.1a"><mi id="S2.p5.4.m4.1.1" xref="S2.p5.4.m4.1.1.cmml">W</mi><annotation-xml encoding="MathML-Content" id="S2.p5.4.m4.1b"><ci id="S2.p5.4.m4.1.1.cmml" xref="S2.p5.4.m4.1.1">𝑊</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.4.m4.1c">W</annotation></semantics></math>, dilation <math id="S2.p5.5.m5.1" class="ltx_Math" alttext="D=W^{B}" display="inline"><semantics id="S2.p5.5.m5.1a"><mrow id="S2.p5.5.m5.1.1" xref="S2.p5.5.m5.1.1.cmml"><mi id="S2.p5.5.m5.1.1.2" xref="S2.p5.5.m5.1.1.2.cmml">D</mi><mo id="S2.p5.5.m5.1.1.1" xref="S2.p5.5.m5.1.1.1.cmml">=</mo><msup id="S2.p5.5.m5.1.1.3" xref="S2.p5.5.m5.1.1.3.cmml"><mi id="S2.p5.5.m5.1.1.3.2" xref="S2.p5.5.m5.1.1.3.2.cmml">W</mi><mi id="S2.p5.5.m5.1.1.3.3" xref="S2.p5.5.m5.1.1.3.3.cmml">B</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.p5.5.m5.1b"><apply id="S2.p5.5.m5.1.1.cmml" xref="S2.p5.5.m5.1.1"><eq id="S2.p5.5.m5.1.1.1.cmml" xref="S2.p5.5.m5.1.1.1"></eq><ci id="S2.p5.5.m5.1.1.2.cmml" xref="S2.p5.5.m5.1.1.2">𝐷</ci><apply id="S2.p5.5.m5.1.1.3.cmml" xref="S2.p5.5.m5.1.1.3"><csymbol cd="ambiguous" id="S2.p5.5.m5.1.1.3.1.cmml" xref="S2.p5.5.m5.1.1.3">superscript</csymbol><ci id="S2.p5.5.m5.1.1.3.2.cmml" xref="S2.p5.5.m5.1.1.3.2">𝑊</ci><ci id="S2.p5.5.m5.1.1.3.3.cmml" xref="S2.p5.5.m5.1.1.3.3">𝐵</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.5.m5.1c">D=W^{B}</annotation></semantics></math> and another convolution with kernel size 1. The output layer is a convolution with kernel size 1, which outputs an estimated pose with <math id="S2.p5.6.m6.1" class="ltx_Math" alttext="3J" display="inline"><semantics id="S2.p5.6.m6.1a"><mrow id="S2.p5.6.m6.1.1" xref="S2.p5.6.m6.1.1.cmml"><mn id="S2.p5.6.m6.1.1.2" xref="S2.p5.6.m6.1.1.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S2.p5.6.m6.1.1.1" xref="S2.p5.6.m6.1.1.1.cmml">​</mo><mi id="S2.p5.6.m6.1.1.3" xref="S2.p5.6.m6.1.1.3.cmml">J</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.p5.6.m6.1b"><apply id="S2.p5.6.m6.1.1.cmml" xref="S2.p5.6.m6.1.1"><times id="S2.p5.6.m6.1.1.1.cmml" xref="S2.p5.6.m6.1.1.1"></times><cn type="integer" id="S2.p5.6.m6.1.1.2.cmml" xref="S2.p5.6.m6.1.1.2">3</cn><ci id="S2.p5.6.m6.1.1.3.cmml" xref="S2.p5.6.m6.1.1.3">𝐽</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.6.m6.1c">3J</annotation></semantics></math> channels for each frame. All the convolutional layers except the last layer are followed by batch normalization, ReLU and a dropout layer with a dropout rate <math id="S2.p5.7.m7.1" class="ltx_Math" alttext="p" display="inline"><semantics id="S2.p5.7.m7.1a"><mi id="S2.p5.7.m7.1.1" xref="S2.p5.7.m7.1.1.cmml">p</mi><annotation-xml encoding="MathML-Content" id="S2.p5.7.m7.1b"><ci id="S2.p5.7.m7.1.1.cmml" xref="S2.p5.7.m7.1.1">𝑝</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.7.m7.1c">p</annotation></semantics></math>. The temporal receptive fields of this model is <math id="S2.p5.8.m8.1" class="ltx_Math" alttext="W^{B+1}" display="inline"><semantics id="S2.p5.8.m8.1a"><msup id="S2.p5.8.m8.1.1" xref="S2.p5.8.m8.1.1.cmml"><mi id="S2.p5.8.m8.1.1.2" xref="S2.p5.8.m8.1.1.2.cmml">W</mi><mrow id="S2.p5.8.m8.1.1.3" xref="S2.p5.8.m8.1.1.3.cmml"><mi id="S2.p5.8.m8.1.1.3.2" xref="S2.p5.8.m8.1.1.3.2.cmml">B</mi><mo id="S2.p5.8.m8.1.1.3.1" xref="S2.p5.8.m8.1.1.3.1.cmml">+</mo><mn id="S2.p5.8.m8.1.1.3.3" xref="S2.p5.8.m8.1.1.3.3.cmml">1</mn></mrow></msup><annotation-xml encoding="MathML-Content" id="S2.p5.8.m8.1b"><apply id="S2.p5.8.m8.1.1.cmml" xref="S2.p5.8.m8.1.1"><csymbol cd="ambiguous" id="S2.p5.8.m8.1.1.1.cmml" xref="S2.p5.8.m8.1.1">superscript</csymbol><ci id="S2.p5.8.m8.1.1.2.cmml" xref="S2.p5.8.m8.1.1.2">𝑊</ci><apply id="S2.p5.8.m8.1.1.3.cmml" xref="S2.p5.8.m8.1.1.3"><plus id="S2.p5.8.m8.1.1.3.1.cmml" xref="S2.p5.8.m8.1.1.3.1"></plus><ci id="S2.p5.8.m8.1.1.3.2.cmml" xref="S2.p5.8.m8.1.1.3.2">𝐵</ci><cn type="integer" id="S2.p5.8.m8.1.1.3.3.cmml" xref="S2.p5.8.m8.1.1.3.3">1</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.8.m8.1c">W^{B+1}</annotation></semantics></math>. Unless otherwise noted, we set <math id="S2.p5.9.m9.1" class="ltx_Math" alttext="W=3" display="inline"><semantics id="S2.p5.9.m9.1a"><mrow id="S2.p5.9.m9.1.1" xref="S2.p5.9.m9.1.1.cmml"><mi id="S2.p5.9.m9.1.1.2" xref="S2.p5.9.m9.1.1.2.cmml">W</mi><mo id="S2.p5.9.m9.1.1.1" xref="S2.p5.9.m9.1.1.1.cmml">=</mo><mn id="S2.p5.9.m9.1.1.3" xref="S2.p5.9.m9.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p5.9.m9.1b"><apply id="S2.p5.9.m9.1.1.cmml" xref="S2.p5.9.m9.1.1"><eq id="S2.p5.9.m9.1.1.1.cmml" xref="S2.p5.9.m9.1.1.1"></eq><ci id="S2.p5.9.m9.1.1.2.cmml" xref="S2.p5.9.m9.1.1.2">𝑊</ci><cn type="integer" id="S2.p5.9.m9.1.1.3.cmml" xref="S2.p5.9.m9.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.9.m9.1c">W=3</annotation></semantics></math>, <math id="S2.p5.10.m10.1" class="ltx_Math" alttext="B=4" display="inline"><semantics id="S2.p5.10.m10.1a"><mrow id="S2.p5.10.m10.1.1" xref="S2.p5.10.m10.1.1.cmml"><mi id="S2.p5.10.m10.1.1.2" xref="S2.p5.10.m10.1.1.2.cmml">B</mi><mo id="S2.p5.10.m10.1.1.1" xref="S2.p5.10.m10.1.1.1.cmml">=</mo><mn id="S2.p5.10.m10.1.1.3" xref="S2.p5.10.m10.1.1.3.cmml">4</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p5.10.m10.1b"><apply id="S2.p5.10.m10.1.1.cmml" xref="S2.p5.10.m10.1.1"><eq id="S2.p5.10.m10.1.1.1.cmml" xref="S2.p5.10.m10.1.1.1"></eq><ci id="S2.p5.10.m10.1.1.2.cmml" xref="S2.p5.10.m10.1.1.2">𝐵</ci><cn type="integer" id="S2.p5.10.m10.1.1.3.cmml" xref="S2.p5.10.m10.1.1.3">4</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.10.m10.1c">B=4</annotation></semantics></math>, <math id="S2.p5.11.m11.1" class="ltx_Math" alttext="C=1024" display="inline"><semantics id="S2.p5.11.m11.1a"><mrow id="S2.p5.11.m11.1.1" xref="S2.p5.11.m11.1.1.cmml"><mi id="S2.p5.11.m11.1.1.2" xref="S2.p5.11.m11.1.1.2.cmml">C</mi><mo id="S2.p5.11.m11.1.1.1" xref="S2.p5.11.m11.1.1.1.cmml">=</mo><mn id="S2.p5.11.m11.1.1.3" xref="S2.p5.11.m11.1.1.3.cmml">1024</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p5.11.m11.1b"><apply id="S2.p5.11.m11.1.1.cmml" xref="S2.p5.11.m11.1.1"><eq id="S2.p5.11.m11.1.1.1.cmml" xref="S2.p5.11.m11.1.1.1"></eq><ci id="S2.p5.11.m11.1.1.2.cmml" xref="S2.p5.11.m11.1.1.2">𝐶</ci><cn type="integer" id="S2.p5.11.m11.1.1.3.cmml" xref="S2.p5.11.m11.1.1.3">1024</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.11.m11.1c">C=1024</annotation></semantics></math>, and <math id="S2.p5.12.m12.1" class="ltx_Math" alttext="p=0.25" display="inline"><semantics id="S2.p5.12.m12.1a"><mrow id="S2.p5.12.m12.1.1" xref="S2.p5.12.m12.1.1.cmml"><mi id="S2.p5.12.m12.1.1.2" xref="S2.p5.12.m12.1.1.2.cmml">p</mi><mo id="S2.p5.12.m12.1.1.1" xref="S2.p5.12.m12.1.1.1.cmml">=</mo><mn id="S2.p5.12.m12.1.1.3" xref="S2.p5.12.m12.1.1.3.cmml">0.25</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p5.12.m12.1b"><apply id="S2.p5.12.m12.1.1.cmml" xref="S2.p5.12.m12.1.1"><eq id="S2.p5.12.m12.1.1.1.cmml" xref="S2.p5.12.m12.1.1.1"></eq><ci id="S2.p5.12.m12.1.1.2.cmml" xref="S2.p5.12.m12.1.1.2">𝑝</ci><cn type="float" id="S2.p5.12.m12.1.1.3.cmml" xref="S2.p5.12.m12.1.1.3">0.25</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.12.m12.1c">p=0.25</annotation></semantics></math>.</p>
+</div>
+<div id="S2.p6" class="ltx_para">
+<p id="S2.p6.1" class="ltx_p">We use the predictions of the first stage to train the second stage. In this case, the input of the second stage at training time is the predictions from the model which has been supervised by the training data for the first stage. However at test time, the input is the predictions on unseen data, so there is a concern that the distribution of the input data at training and test time may deviate and the performance of the model may be degraded. Therefore, we apply data augmentation that adds Gaussian noise to the input 2D poses and depths during training of the second stage, to reproduce the test-time predictions of the first stage to enhance model performance.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Experiments</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para ltx_noindent">
+<p id="S3.p1.1" class="ltx_p"><span id="S3.p1.1.1" class="ltx_text ltx_font_bold">Datasets and Evaluation Metrics.</span> 
+We conduct experiments using Human3.6M <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>.
+Following the standard evaluation protocol <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, we use 5 subjects (S1, S5, S6, S7, S8) for training and 2 subjects (S9, S11) for evaluation.
+Along with Human3.6M, we use 2D datasets of COCO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> and MPII <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> to train Integral Regression.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">We consider two evaluation protocols commonly used for the evaluation on Human3.6M. Protocol 1 is Mean Per Joint Position Error (MPJPE) calculated by averaging the distances between the predicted and ground-truth coordinates. Protocol 2 is also MPJPE but after alignment with the ground-truth in translation, rotation, and scale.</p>
+</div>
+<figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Impact on MPJPE by input and receptive field.</figcaption>
+<table id="S3.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T1.1.2.1" class="ltx_tr">
+<th id="S3.T1.1.2.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row" rowspan="2"><span id="S3.T1.1.2.1.1.1" class="ltx_text">Input</span></th>
+<th id="S3.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l" colspan="4">Receptive field</th>
+</tr>
+<tr id="S3.T1.1.3.2" class="ltx_tr">
+<th id="S3.T1.1.3.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">1</th>
+<th id="S3.T1.1.3.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">27</th>
+<th id="S3.T1.1.3.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">81</th>
+<th id="S3.T1.1.3.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">243</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T1.1.4.1" class="ltx_tr">
+<th id="S3.T1.1.4.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_tt">2D pose</th>
+<td id="S3.T1.1.4.1.2" class="ltx_td ltx_align_center ltx_border_tt">49.5</td>
+<td id="S3.T1.1.4.1.3" class="ltx_td ltx_align_center ltx_border_tt">48.8</td>
+<td id="S3.T1.1.4.1.4" class="ltx_td ltx_align_center ltx_border_tt">47.7</td>
+<td id="S3.T1.1.4.1.5" class="ltx_td ltx_align_center ltx_border_tt">47.6</td>
+</tr>
+<tr id="S3.T1.1.5.2" class="ltx_tr">
+<th id="S3.T1.1.5.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">2D pose + depth</th>
+<td id="S3.T1.1.5.2.2" class="ltx_td ltx_align_center">50.4</td>
+<td id="S3.T1.1.5.2.3" class="ltx_td ltx_align_center">48.5</td>
+<td id="S3.T1.1.5.2.4" class="ltx_td ltx_align_center">48.4</td>
+<td id="S3.T1.1.5.2.5" class="ltx_td ltx_align_center">47.8</td>
+</tr>
+<tr id="S3.T1.1.1" class="ltx_tr">
+<th id="S3.T1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">2D pose + depth (<math id="S3.T1.1.1.1.m1.1" class="ltx_Math" alttext="\sigma=0.1" display="inline"><semantics id="S3.T1.1.1.1.m1.1a"><mrow id="S3.T1.1.1.1.m1.1.1" xref="S3.T1.1.1.1.m1.1.1.cmml"><mi id="S3.T1.1.1.1.m1.1.1.2" xref="S3.T1.1.1.1.m1.1.1.2.cmml">σ</mi><mo id="S3.T1.1.1.1.m1.1.1.1" xref="S3.T1.1.1.1.m1.1.1.1.cmml">=</mo><mn id="S3.T1.1.1.1.m1.1.1.3" xref="S3.T1.1.1.1.m1.1.1.3.cmml">0.1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.1.1.1.m1.1b"><apply id="S3.T1.1.1.1.m1.1.1.cmml" xref="S3.T1.1.1.1.m1.1.1"><eq id="S3.T1.1.1.1.m1.1.1.1.cmml" xref="S3.T1.1.1.1.m1.1.1.1"></eq><ci id="S3.T1.1.1.1.m1.1.1.2.cmml" xref="S3.T1.1.1.1.m1.1.1.2">𝜎</ci><cn type="float" id="S3.T1.1.1.1.m1.1.1.3.cmml" xref="S3.T1.1.1.1.m1.1.1.3">0.1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.1.1.1.m1.1c">\sigma=0.1</annotation></semantics></math>)</th>
+<td id="S3.T1.1.1.2" class="ltx_td ltx_align_center">48.4</td>
+<td id="S3.T1.1.1.3" class="ltx_td ltx_align_center">46.4</td>
+<td id="S3.T1.1.1.4" class="ltx_td ltx_align_center">45.9</td>
+<td id="S3.T1.1.1.5" class="ltx_td ltx_align_center">45.6</td>
+</tr>
+<tr id="S3.T1.1.6.3" class="ltx_tr">
+<th id="S3.T1.1.6.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">GT 2D pose</th>
+<td id="S3.T1.1.6.3.2" class="ltx_td ltx_align_center">38.7</td>
+<td id="S3.T1.1.6.3.3" class="ltx_td ltx_align_center">37.3</td>
+<td id="S3.T1.1.6.3.4" class="ltx_td ltx_align_center">-</td>
+<td id="S3.T1.1.6.3.5" class="ltx_td ltx_align_center">36.3</td>
+</tr>
+<tr id="S3.T1.1.7.4" class="ltx_tr">
+<th id="S3.T1.1.7.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r">GT 2D pose + GT depth</th>
+<td id="S3.T1.1.7.4.2" class="ltx_td ltx_align_center">20.2</td>
+<td id="S3.T1.1.7.4.3" class="ltx_td ltx_align_center">13.4</td>
+<td id="S3.T1.1.7.4.4" class="ltx_td ltx_align_center">-</td>
+<td id="S3.T1.1.7.4.5" class="ltx_td ltx_align_center">15.9</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S3.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE II: </span>The evaluation results on Human3.6M dataset.</figcaption>
+<table id="S3.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T2.1.1.1" class="ltx_tr">
+<th id="S3.T2.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row">Method</th>
+<th id="S3.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column">Protocol 1</th>
+<th id="S3.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column">Protocol 2</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T2.1.2.1" class="ltx_tr">
+<th id="S3.T2.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt">Martinez et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>
+</th>
+<td id="S3.T2.1.2.1.2" class="ltx_td ltx_align_center ltx_border_tt">62.9</td>
+<td id="S3.T2.1.2.1.3" class="ltx_td ltx_align_center ltx_border_tt">47.7</td>
+</tr>
+<tr id="S3.T2.1.3.2" class="ltx_tr">
+<th id="S3.T2.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">Sun et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>
+</th>
+<td id="S3.T2.1.3.2.2" class="ltx_td ltx_align_center">49.6</td>
+<td id="S3.T2.1.3.2.3" class="ltx_td ltx_align_center">40.6</td>
+</tr>
+<tr id="S3.T2.1.4.3" class="ltx_tr">
+<th id="S3.T2.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">Cai et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>
+</th>
+<td id="S3.T2.1.4.3.2" class="ltx_td ltx_align_center">48.8</td>
+<td id="S3.T2.1.4.3.3" class="ltx_td ltx_align_center">39.0</td>
+</tr>
+<tr id="S3.T2.1.5.4" class="ltx_tr">
+<th id="S3.T2.1.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">Pavllo et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>
+</th>
+<td id="S3.T2.1.5.4.2" class="ltx_td ltx_align_center">46.8</td>
+<td id="S3.T2.1.5.4.3" class="ltx_td ltx_align_center">36.5</td>
+</tr>
+<tr id="S3.T2.1.6.5" class="ltx_tr">
+<th id="S3.T2.1.6.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">Ours</th>
+<td id="S3.T2.1.6.5.2" class="ltx_td ltx_align_center ltx_border_t"><span id="S3.T2.1.6.5.2.1" class="ltx_text ltx_font_bold">45.6</span></td>
+<td id="S3.T2.1.6.5.3" class="ltx_td ltx_align_center ltx_border_t"><span id="S3.T2.1.6.5.3.1" class="ltx_text ltx_font_bold">34.8</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S3.p3" class="ltx_para ltx_noindent">
+<p id="S3.p3.5" class="ltx_p"><span id="S3.p3.5.1" class="ltx_text ltx_font_bold">Results.</span> 
+The evaluation results for different input types and temporal receptive fields of the second-stage model are shown in Table <a href="#S3.T1" title="TABLE I ‣ III Experiments ‣ Leveraging Temporal Joint Depths for Improving 3D Human Pose Estimation in Video" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>. The models with receptive fields of 1, 27, 81, and 243 in the table have <math id="S3.p3.1.m1.2" class="ltx_Math" alttext="(W,B)" display="inline"><semantics id="S3.p3.1.m1.2a"><mrow id="S3.p3.1.m1.2.3.2" xref="S3.p3.1.m1.2.3.1.cmml"><mo stretchy="false" id="S3.p3.1.m1.2.3.2.1" xref="S3.p3.1.m1.2.3.1.cmml">(</mo><mi id="S3.p3.1.m1.1.1" xref="S3.p3.1.m1.1.1.cmml">W</mi><mo id="S3.p3.1.m1.2.3.2.2" xref="S3.p3.1.m1.2.3.1.cmml">,</mo><mi id="S3.p3.1.m1.2.2" xref="S3.p3.1.m1.2.2.cmml">B</mi><mo stretchy="false" id="S3.p3.1.m1.2.3.2.3" xref="S3.p3.1.m1.2.3.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.p3.1.m1.2b"><interval closure="open" id="S3.p3.1.m1.2.3.1.cmml" xref="S3.p3.1.m1.2.3.2"><ci id="S3.p3.1.m1.1.1.cmml" xref="S3.p3.1.m1.1.1">𝑊</ci><ci id="S3.p3.1.m1.2.2.cmml" xref="S3.p3.1.m1.2.2">𝐵</ci></interval></annotation-xml><annotation encoding="application/x-tex" id="S3.p3.1.m1.2c">(W,B)</annotation></semantics></math> of <math id="S3.p3.2.m2.2" class="ltx_Math" alttext="(1,2)" display="inline"><semantics id="S3.p3.2.m2.2a"><mrow id="S3.p3.2.m2.2.3.2" xref="S3.p3.2.m2.2.3.1.cmml"><mo stretchy="false" id="S3.p3.2.m2.2.3.2.1" xref="S3.p3.2.m2.2.3.1.cmml">(</mo><mn id="S3.p3.2.m2.1.1" xref="S3.p3.2.m2.1.1.cmml">1</mn><mo id="S3.p3.2.m2.2.3.2.2" xref="S3.p3.2.m2.2.3.1.cmml">,</mo><mn id="S3.p3.2.m2.2.2" xref="S3.p3.2.m2.2.2.cmml">2</mn><mo stretchy="false" id="S3.p3.2.m2.2.3.2.3" xref="S3.p3.2.m2.2.3.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.p3.2.m2.2b"><interval closure="open" id="S3.p3.2.m2.2.3.1.cmml" xref="S3.p3.2.m2.2.3.2"><cn type="integer" id="S3.p3.2.m2.1.1.cmml" xref="S3.p3.2.m2.1.1">1</cn><cn type="integer" id="S3.p3.2.m2.2.2.cmml" xref="S3.p3.2.m2.2.2">2</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S3.p3.2.m2.2c">(1,2)</annotation></semantics></math>, <math id="S3.p3.3.m3.2" class="ltx_Math" alttext="(3,2)" display="inline"><semantics id="S3.p3.3.m3.2a"><mrow id="S3.p3.3.m3.2.3.2" xref="S3.p3.3.m3.2.3.1.cmml"><mo stretchy="false" id="S3.p3.3.m3.2.3.2.1" xref="S3.p3.3.m3.2.3.1.cmml">(</mo><mn id="S3.p3.3.m3.1.1" xref="S3.p3.3.m3.1.1.cmml">3</mn><mo id="S3.p3.3.m3.2.3.2.2" xref="S3.p3.3.m3.2.3.1.cmml">,</mo><mn id="S3.p3.3.m3.2.2" xref="S3.p3.3.m3.2.2.cmml">2</mn><mo stretchy="false" id="S3.p3.3.m3.2.3.2.3" xref="S3.p3.3.m3.2.3.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.p3.3.m3.2b"><interval closure="open" id="S3.p3.3.m3.2.3.1.cmml" xref="S3.p3.3.m3.2.3.2"><cn type="integer" id="S3.p3.3.m3.1.1.cmml" xref="S3.p3.3.m3.1.1">3</cn><cn type="integer" id="S3.p3.3.m3.2.2.cmml" xref="S3.p3.3.m3.2.2">2</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S3.p3.3.m3.2c">(3,2)</annotation></semantics></math>, <math id="S3.p3.4.m4.2" class="ltx_Math" alttext="(3,3)" display="inline"><semantics id="S3.p3.4.m4.2a"><mrow id="S3.p3.4.m4.2.3.2" xref="S3.p3.4.m4.2.3.1.cmml"><mo stretchy="false" id="S3.p3.4.m4.2.3.2.1" xref="S3.p3.4.m4.2.3.1.cmml">(</mo><mn id="S3.p3.4.m4.1.1" xref="S3.p3.4.m4.1.1.cmml">3</mn><mo id="S3.p3.4.m4.2.3.2.2" xref="S3.p3.4.m4.2.3.1.cmml">,</mo><mn id="S3.p3.4.m4.2.2" xref="S3.p3.4.m4.2.2.cmml">3</mn><mo stretchy="false" id="S3.p3.4.m4.2.3.2.3" xref="S3.p3.4.m4.2.3.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.p3.4.m4.2b"><interval closure="open" id="S3.p3.4.m4.2.3.1.cmml" xref="S3.p3.4.m4.2.3.2"><cn type="integer" id="S3.p3.4.m4.1.1.cmml" xref="S3.p3.4.m4.1.1">3</cn><cn type="integer" id="S3.p3.4.m4.2.2.cmml" xref="S3.p3.4.m4.2.2">3</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S3.p3.4.m4.2c">(3,3)</annotation></semantics></math> and <math id="S3.p3.5.m5.2" class="ltx_Math" alttext="(3,4)" display="inline"><semantics id="S3.p3.5.m5.2a"><mrow id="S3.p3.5.m5.2.3.2" xref="S3.p3.5.m5.2.3.1.cmml"><mo stretchy="false" id="S3.p3.5.m5.2.3.2.1" xref="S3.p3.5.m5.2.3.1.cmml">(</mo><mn id="S3.p3.5.m5.1.1" xref="S3.p3.5.m5.1.1.cmml">3</mn><mo id="S3.p3.5.m5.2.3.2.2" xref="S3.p3.5.m5.2.3.1.cmml">,</mo><mn id="S3.p3.5.m5.2.2" xref="S3.p3.5.m5.2.2.cmml">4</mn><mo stretchy="false" id="S3.p3.5.m5.2.3.2.3" xref="S3.p3.5.m5.2.3.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.p3.5.m5.2b"><interval closure="open" id="S3.p3.5.m5.2.3.1.cmml" xref="S3.p3.5.m5.2.3.2"><cn type="integer" id="S3.p3.5.m5.1.1.cmml" xref="S3.p3.5.m5.1.1">3</cn><cn type="integer" id="S3.p3.5.m5.2.2.cmml" xref="S3.p3.5.m5.2.2">4</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S3.p3.5.m5.2c">(3,4)</annotation></semantics></math> respectively. When joint depths are directly added to the inputs without data augmentation, the error is comparable to the result when only 2D poses are used as input. This may be due to overfitting caused by a discrepancy between the distribution of depths during training and test time. On the other hand, the model trained with Gaussian noise on depths resulted in lower errors in all receptive fields than 2D poses. This result demonstrates the effectiveness of using depths as inputs of the second stage with an appropriate data augmentation.</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.1" class="ltx_p">Our implementation of Integral Regression has MPJPE of 48.9 mm at the first stage, and the errors are reduced by up to 3.3 mm at the second stage, showing that the prediction results of a single-frame 3D pose estimator can be properly refined by utilizing temporal information.</p>
+</div>
+<div id="S3.p5" class="ltx_para">
+<p id="S3.p5.1" class="ltx_p">The lowest error when using the ground-truth 2D pose as input is 36.3 mm, showing that the error of the system is greatly reduced by the accurate 2D pose. Adding ground-truth depths further reduce errors by 63%, indicating that exploiting the depths significantly reduces the lower bound of errors.</p>
+</div>
+<div id="S3.p6" class="ltx_para">
+<p id="S3.p6.1" class="ltx_p">The evaluation results of our method and existing monocular methods are shown in Table <a href="#S3.T2" title="TABLE II ‣ III Experiments ‣ Leveraging Temporal Joint Depths for Improving 3D Human Pose Estimation in Video" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>. For both protocols, our approach outperforms all the comparative methods.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Conclusion</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">In this paper we proposed a two-stage 3D pose estimation pipeline in video that uses a joint depth sequence as an intermediate representation for the human pose in addition to a 2D pose sequence. In the evaluation experiments, we observe that adding depth to the input of the second stage reduces the 3D joint localization error, indicating that our pipeline appropriately refine 3D poses leveraging temporal information.
+</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+M. Rayat Imtiaz Hossain and J. J. Little, “Exploiting temporal information for
+3d human pose estimation,” in <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">ECCV</em>, 2018.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+D. Pavllo, C. Feichtenhofer, D. Grangier, and M. Auli, “3d human pose
+estimation in video with temporal convolutions and semi-supervised
+training,” in <em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">CVPR</em>, 2019.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Y. Cai, L. Ge, J. Liu, J. Cai, T.-J. Cham, J. Yuan, and N. M. Thalmann,
+“Exploiting spatial-temporal relationships for 3d pose estimation via graph
+convolutional networks,” in <em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic">ICCV</em>, 2019.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+J. Martinez, R. Hossain, J. Romero, and J. J. Little, “A simple yet effective
+baseline for 3d human pose estimation,” in <em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">CVPR</em>, 2017.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+X. Sun, B. Xiao, F. Wei, S. Liang, and Y. Wei, “Integral human pose
+regression,” in <em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">ECCV</em>, 2018.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image
+recognition,” in <em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">CVPR</em>, 2016.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+C. Ionescu, D. Papava, V. Olaru, and C. Sminchisescu, “Human3. 6m: Large scale
+datasets and predictive methods for 3d human sensing in natural
+environments,” <em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">TPAMI</em>, 2013.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan,
+P. Dollár, and C. L. Zitnick, “Microsoft coco: Common objects in
+context,” in <em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">ECCV</em>, 2014.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+M. Andriluka, L. Pishchulin, P. Gehler, and B. Schiele, “2d human pose
+estimation: New benchmark and state of the art analysis,” in <em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">CVPR</em>,
+2014.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2011.02171" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2011.02172" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2011.02172">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2011.02172" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2011.02173" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Tue Mar 19 04:29:48 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

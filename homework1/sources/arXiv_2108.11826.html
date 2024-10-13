@@ -1,0 +1,1019 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2108.11826] Fast and Flexible Human Pose Estimation with HyperPose</title><meta property="og:description" content="Estimating human pose is an important yet challenging task in multimedia applications.
+Existing pose estimation libraries target reproducing standard pose estimation algorithms.
+When it comes to customising these algor…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Fast and Flexible Human Pose Estimation with HyperPose">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Fast and Flexible Human Pose Estimation with HyperPose">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2108.11826">
+
+<!--Generated on Sun Mar  3 22:46:27 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="keywords" lang="en" content="Pose Estimation,  Computer Vision,  High-performance Computing">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line ltx_leqno">
+<h1 class="ltx_title ltx_title_document">Fast and Flexible Human Pose Estimation with HyperPose</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yixiao Guo
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id2.1.id1" class="ltx_text ltx_affiliation_institution">Peking University</span><span id="id3.2.id2" class="ltx_text ltx_affiliation_state">Beijing</span><span id="id4.3.id3" class="ltx_text ltx_affiliation_country">China</span>
+</span></span></span>
+<span class="ltx_author_before">, </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jiawei Liu
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id5.1.id1" class="ltx_text ltx_affiliation_institution">Tongji University</span><span id="id6.2.id2" class="ltx_text ltx_affiliation_state">Shanghai</span><span id="id7.3.id3" class="ltx_text ltx_affiliation_country">China</span>
+</span></span></span>
+<span class="ltx_author_before">, </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Guo Li
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id8.1.id1" class="ltx_text ltx_affiliation_institution">Imperial College London</span><span id="id9.2.id2" class="ltx_text ltx_affiliation_city">London</span><span id="id10.3.id3" class="ltx_text ltx_affiliation_country">United Kingdom</span>
+</span></span></span>
+<span class="ltx_author_before">, </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Luo Mai
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id11.1.id1" class="ltx_text ltx_affiliation_institution">University of Edinburgh</span><span id="id12.2.id2" class="ltx_text ltx_affiliation_city">Edinburgh</span><span id="id13.3.id3" class="ltx_text ltx_affiliation_country">United Kingdom</span>
+</span></span></span>
+<span class="ltx_author_before"> and </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Hao Dong
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id14.1.id1" class="ltx_text ltx_affiliation_institution">Peking University</span><span id="id15.2.id2" class="ltx_text ltx_affiliation_state">Beijing</span><span id="id16.3.id3" class="ltx_text ltx_affiliation_country">China</span>
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract.</h6>
+<p id="id1.1" class="ltx_p">Estimating human pose is an important yet challenging task in multimedia applications.
+Existing pose estimation libraries target reproducing standard pose estimation algorithms.
+When it comes to customising these algorithms for real-world applications, none of the existing libraries can offer both the flexibility of developing custom pose estimation algorithms and the high-performance of executing these algorithms on commodity devices.
+In this paper, we introduce HyperPose, a novel flexible and high-performance pose estimation library. HyperPose provides expressive Python APIs that enable developers to easily customise pose estimation algorithms for their applications.
+It further provides a model inference engine highly optimised for real-time pose estimation. This engine can dynamically dispatch carefully designed pose estimation tasks to CPUs and GPUs, thus automatically achieving high utilisation of hardware resources irrespective of deployment environments.
+Extensive evaluation results show that HyperPose can achieve up to 3.1x<math id="id1.1.m1.1" class="ltx_Math" alttext="\sim" display="inline"><semantics id="id1.1.m1.1a"><mo id="id1.1.m1.1.1" xref="id1.1.m1.1.1.cmml">∼</mo><annotation-xml encoding="MathML-Content" id="id1.1.m1.1b"><csymbol cd="latexml" id="id1.1.m1.1.1.cmml" xref="id1.1.m1.1.1">similar-to</csymbol></annotation-xml><annotation encoding="application/x-tex" id="id1.1.m1.1c">\sim</annotation></semantics></math>7.3x higher pose estimation throughput compared to state-of-the-art pose estimation libraries without compromising estimation accuracy.
+By 2021, HyperPose has received over 1000 stars on <a target="_blank" href="https://github.com/tensorlayer/hyperpose" title="" class="ltx_ref ltx_href">GitHub</a> and attracted users from both industry and academy.<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>The published version of this work is at https://doi.org/10.1145/3474085.3478325</span></span></span></p>
+</div>
+<div class="ltx_keywords">Pose Estimation, Computer Vision, High-performance Computing
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1. </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Multimedia applications, such as interactive gaming, augmented reality and self-driving cars, can greatly benefit from accurate and fast human pose estimation.
+State-Of-The-Art (SOTA) pose estimation algorithms (<em id="S1.p1.1.1" class="ltx_emph ltx_font_italic">e.g.,</em> OpenPose <cite class="ltx_cite ltx_citemacro_citep">(Cao
+et al<span class="ltx_text">.</span>, <a href="#bib.bib2" title="" class="ltx_ref">2017</a>)</cite>, PoseProposal <cite class="ltx_cite ltx_citemacro_citep">(Sekii, <a href="#bib.bib15" title="" class="ltx_ref">2018</a>)</cite>, and PifPaf <cite class="ltx_cite ltx_citemacro_citep">(Kreiss
+et al<span class="ltx_text">.</span>, <a href="#bib.bib11" title="" class="ltx_ref">2019</a>)</cite>)
+pre-process video streams, use neural networks to infer human anatomical key points, and then estimate the human pose topology.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">In practice, achieving both high accuracy and high-performance in pose estimation is however difficult.
+On the one hand, achieving high-accuracy pose estimation requires users to deeply customise standard pose estimation algorithms (e.g., OpenPose and PifPaf), so that these algorithms can accurately reflect the characteristics of user-specific deployment environments (e.g., object size, illumination, number of humans), thus achieving high accuracy.
+On the other hand, deeply customised pose estimation algorithms can contain various <em id="S1.p2.1.1" class="ltx_emph ltx_font_italic">non-standard</em> computational operators in pre-processing and post-processing data, making such algorithms difficult to always exhibit high performance in using commodity embedded platforms (e.g., NVIDIA Jetson and Google TPU Edge)</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">When using existing pose estimation libraries to develop custom applications, users often report several challenges. High-performance C++-based libraries such as OpenPose <cite class="ltx_cite ltx_citemacro_citep">(Cao
+et al<span class="ltx_text">.</span>, <a href="#bib.bib2" title="" class="ltx_ref">2017</a>)</cite> and AlphaPose <cite class="ltx_cite ltx_citemacro_citep">(Fang
+et al<span class="ltx_text">.</span>, <a href="#bib.bib4" title="" class="ltx_ref">2017</a>)</cite> focus on specific pose estimation algorithms.
+They do not provide intuitive APIs for users to customise pose estimation algorithms based on the requirements of their specific deployment environments.
+These libraries are also optimised for certain hardware platforms. When re-targeting them to new hardware platforms, users must largely modify their internal execution runtime, which is non-trivial for most pose estimation algorithm developers.
+Furthermore, users could also use high-level pose estimation libraries such as TF-Pose <cite class="ltx_cite ltx_citemacro_citep">(Ildoo Kim, <a href="#bib.bib9" title="" class="ltx_ref">2019</a>)</cite> and PyTorch-Pose <cite class="ltx_cite ltx_citemacro_citep">(Yang, <a href="#bib.bib19" title="" class="ltx_ref">2019</a>)</cite>.
+These libraries offer users with Python APIs to easily declare various pose estimation algorithms. However, this easiness comes with a large performance overhead, making these libraries incapable of handling real-world deployment where high-resolution images are ingested at high speed <cite class="ltx_cite ltx_citemacro_citep">(Xu et al<span class="ltx_text">.</span>, <a href="#bib.bib18" title="" class="ltx_ref">2021</a>)</cite>.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">In this paper, we introduce HyperPose,
+a flexible and fast library for human pose estimation.
+The design and implementation of HyperPose makes the following contributions:</p>
+</div>
+<div id="S1.p5" class="ltx_para ltx_noindent">
+<p id="S1.p5.1" class="ltx_p"><span id="S1.p5.1.1" class="ltx_text ltx_font_bold">(i) Flexible APIs for developing custom pose estimation algorithms.</span>
+HyperPose provides flexible Python APIs for developing custom pose estimation algorithms. These APIs consist of those for customising the pipelines of pose estimation algorithms, the architectures of deep neural networks, training datasets, training hyper-parameters <cite class="ltx_cite ltx_citemacro_citep">(Mai
+et al<span class="ltx_text">.</span>, <a href="#bib.bib12" title="" class="ltx_ref">2019</a>)</cite>, data pre-processing pipelines, data post-processing pipelines, and the strategy of paralleling neural network training on GPUs. We show that,
+using these APIs, users can declare a wide range of commonly used pose estimation algorithms while customising these algorithms for high estimation accuracy.</p>
+</div>
+<div id="S1.p6" class="ltx_para ltx_noindent">
+<p id="S1.p6.1" class="ltx_p"><span id="S1.p6.1.1" class="ltx_text ltx_font_bold">(ii) High-performance model inference engine for executing custom pose estimation algorithms.</span>
+HyperPose can achieve high-performance in executing custom pose estimation algorithms. This is achieved through a novel <em id="S1.p6.1.2" class="ltx_emph ltx_font_italic">high-performance algorithm execution engine</em>. This engine
+is designed as a streaming dataflow <cite class="ltx_cite ltx_citemacro_citep">(Mai et al<span class="ltx_text">.</span>, <a href="#bib.bib14" title="" class="ltx_ref">2018</a>)</cite>.
+This dataflow can take custom computational operators for implementing custom pose estimation logic. These operators can be dynamically dispatched onto parallel CPUs and GPUs, thus keeping computational resources always busy, irrespective of model architectures and hardware platforms. The implementations of these operators are also highly optimised, mainly by carefully leveraging the optimised computer-vision library: OpenCV, and the high-performance model inference library: TensorRT.</p>
+</div>
+<div id="S1.p7" class="ltx_para">
+<p id="S1.p7.1" class="ltx_p">We study both the API easiness and the performance of HyperPose.
+The API study shows that
+HyperPose can provide
+better flexibility via building and customising pose estimation algorithms.
+The test-bed experiments further show that HyperPose can out-perform
+the state-of-the-art optimised pose estimation framework: OpenPose by to up to 3.1x in terms of the processing throughput of high-resolution images.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2. </span>Design and Implementation</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">In this section, we present the design principles and implementation details of HyperPose.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1. </span>Expressive Programming APIs</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">HyperPose aims to support different types of users in developing pose estimation algorithms.
+There are users who would like to find suitable algorithms and adapt them for their applications. To support this, HyperPose allows users to customise the pipeline of a typical pose estimation algorithm.
+Other users would like to further modify the components in a pose estimation pipeline. For example, they often need to control how a deep neural network is being trained, and the data pre-processing/post-processing operators being used. To support them, HyperPose allow users to plug in user-defined components in a pose estimation pipeline.</p>
+</div>
+<section id="S2.SS1.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.1.1. </span>Algorithm development APIs</h4>
+
+<div id="S2.SS1.SSS1.p1" class="ltx_para">
+<p id="S2.SS1.SSS1.p1.1" class="ltx_p">HyperPose provides a set of high-level APIs <span id="footnote2" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span><a target="_blank" href="https://hyperpose.readthedocs.io/en/latest/" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://hyperpose.readthedocs.io/en/latest/</a></span></span></span> to relieve users from the burden of assembling the complex pose estimation system. The APIs are in three modules, including <em id="S2.SS1.SSS1.p1.1.1" class="ltx_emph ltx_font_italic">Config</em>, <em id="S2.SS1.SSS1.p1.1.2" class="ltx_emph ltx_font_italic">Model</em>, and <em id="S2.SS1.SSS1.p1.1.3" class="ltx_emph ltx_font_italic">Dataset</em>. <em id="S2.SS1.SSS1.p1.1.4" class="ltx_emph ltx_font_italic">Config</em> exposures APIs to configure the pose estimation system, while <em id="S2.SS1.SSS1.p1.1.5" class="ltx_emph ltx_font_italic">Model</em> and <em id="S2.SS1.SSS1.p1.1.6" class="ltx_emph ltx_font_italic">Dataset</em> offer APIs to construct the concrete model, dataset, and the development pipeline. With each API, users can configure the architecture for different algorithms (<em id="S2.SS1.SSS1.p1.1.7" class="ltx_emph ltx_font_italic">e.g.,</em> OpenPose, PoseProposal), backbone networks (<em id="S2.SS1.SSS1.p1.1.8" class="ltx_emph ltx_font_italic">e.g.,</em> MobileNet <cite class="ltx_cite ltx_citemacro_citep">(Howard et al<span class="ltx_text">.</span>, <a href="#bib.bib8" title="" class="ltx_ref">2017</a>)</cite> and ResNet<cite class="ltx_cite ltx_citemacro_citep">(He
+et al<span class="ltx_text">.</span>, <a href="#bib.bib7" title="" class="ltx_ref">2016</a>)</cite>),
+and the training or evaluation datasets (<em id="S2.SS1.SSS1.p1.1.9" class="ltx_emph ltx_font_italic">e.g.,</em> COCO and MPII).
+For the development procedure,
+users can configure the hyper-parameters (<em id="S2.SS1.SSS1.p1.1.10" class="ltx_emph ltx_font_italic">e.g.,</em> learning rate and batch size), the distributed training via the KungFu library <cite class="ltx_cite ltx_citemacro_citep">(Mai et al<span class="ltx_text">.</span>, <a href="#bib.bib13" title="" class="ltx_ref">2020</a>)</cite> option (<em id="S2.SS1.SSS1.p1.1.11" class="ltx_emph ltx_font_italic">e.g.,</em> using
+a single or multiple GPUs), the training strategy (<em id="S2.SS1.SSS1.p1.1.12" class="ltx_emph ltx_font_italic">e.g.,</em> adopting pre-training and adaptation stage), and
+the format of storing a trained model for further deployment(<em id="S2.SS1.SSS1.p1.1.13" class="ltx_emph ltx_font_italic">e.g.,</em> ONNX and TensorRT UFF).
+The rich configuration options
+enable users to efficiently adapt the off-the-shelf models.</p>
+</div>
+</section>
+<section id="S2.SS1.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.1.2. </span>Algorithm customisation APIs</h4>
+
+<div id="S2.SS1.SSS2.p1" class="ltx_para">
+<p id="S2.SS1.SSS2.p1.1" class="ltx_p">HyperPose users can flexibly customise pose estimation algorithms to best fit in with their specific usage scenarios.
+This is achieved by providing common interfaces for key
+components in the algorithms.
+For example, to implement custom neural networks,
+users could inherit from the <span id="S2.SS1.SSS2.p1.1.1" class="ltx_text ltx_font_typewriter">Model</span> class defined in HyperPose,
+and warping the custom computation logic into the corresponding member functions.
+As long as use the self-defined model to replace the preset model options during configuration, the custom model is enabled. The same practice
+applies to enabling a custom dataset.
+These customised components are then automatically
+integrated into the pose estimation system by HyperPose.
+The <em id="S2.SS1.SSS2.p1.1.2" class="ltx_emph ltx_font_italic">Model</em> module further exposures processing modules including <span id="S2.SS1.SSS2.p1.1.3" class="ltx_text ltx_font_typewriter">preprocessor</span>, <span id="S2.SS1.SSS2.p1.1.4" class="ltx_text ltx_font_typewriter">postprocessor</span> and <span id="S2.SS1.SSS2.p1.1.5" class="ltx_text ltx_font_typewriter">visualizer</span>,
+which allow users to assemble their own development pipeline.
+By doing this, HyperPose makes its APIs flexible to support
+extensive customisation of its pose estimation algorithms.</p>
+</div>
+</section>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2. </span>High-performance Execution Engine</h3>
+
+<figure id="S2.F1" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2108.11826/assets/x1.png" id="S2.F1.g1" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="461" height="116" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1. </span>Architecture of the HyperPose C++ execution engine.</figcaption><div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1"><span id="S2.F1.1" class="ltx_ERROR ltx_centering ltx_figure_panel undefined">\Description</span></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<p id="S2.F1.2" class="ltx_p ltx_figure_panel ltx_align_center">HyperPose C++ execution engine models pose estimation algorithms as a data stream pipeline, abstracts the common computation of pose estimation algorithms as dataflow operators and uses a hybrid dataflow operator scheduler for maximising performance.</p>
+</div>
+</div>
+</figure>
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Designing a high-performance execution engine for human pose estimation is challenging.
+A human pose estimation pipeline consists of video stream ingesting, pre-processing (<em id="S2.SS2.p1.1.1" class="ltx_emph ltx_font_italic">e.g.,</em> resizing and data layout switching), GPU model inference, CPU post-processing, and result exportation (<em id="S2.SS2.p1.1.2" class="ltx_emph ltx_font_italic">e.g.,</em> visualisation).</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">These computation steps must be collaboratively completed using heterogeneous devices:
+CPUs, GPUs, and I/O devices (<em id="S2.SS2.p2.1.1" class="ltx_emph ltx_font_italic">e.g.,</em> disk, cameras,
+etc.).
+To achieve real-time inference,
+the engine must maximise the efficiency of using <em id="S2.SS2.p2.1.2" class="ltx_emph ltx_font_italic">all</em> these devices through parallelism.
+We make two key designs in our inference engine:</p>
+</div>
+<section id="S2.SS2.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.2.1. </span>Streaming pose estimation dataflow</h4>
+
+<div id="S2.SS2.SSS1.p1" class="ltx_para">
+<p id="S2.SS2.SSS1.p1.1" class="ltx_p">We abstract the computation
+steps shared by most pose estimation algorithms
+and implement these steps as
+<em id="S2.SS2.SSS1.p1.1.1" class="ltx_emph ltx_font_italic">dataflow operators</em>.
+The operators can be asynchronously executed in a streaming dataflow.
+The topology of the dataflow is implemented to be static for provisioning better optimisation, thus maximising the processing throughput.</p>
+</div>
+<div id="S2.SS2.SSS1.p2" class="ltx_para">
+<p id="S2.SS2.SSS1.p2.5" class="ltx_p">Figure <a href="#S2.F1" title="Figure 1 ‣ 2.2. High-performance Execution Engine ‣ 2. Design and Implementation ‣ Fast and Flexible Human Pose Estimation with HyperPose" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> illustrates the dataflow implemented in HyperPose.
+The source for the dataflow is often a video stream produced by a real-time device (<em id="S2.SS2.SSS1.p2.5.6" class="ltx_emph ltx_font_italic">e.g.,</em> camera).
+The dataflow ingests the images into
+a <em id="S2.SS2.SSS1.p2.5.7" class="ltx_emph ltx_font_italic">decoding operator</em> (see 
+<span id="S2.SS2.SSS1.p2.1.1" class="ltx_inline-block ltx_transformed_outer" style="width:10.3pt;height:7.7pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-1.5pt,1.1pt) scale(0.78,0.78) ;"><svg id="S2.SS2.SSS1.p2.1.1.pic1" class="ltx_picture" height="13.74" overflow="visible" version="1.1" width="13.74"><g transform="translate(0,13.74) matrix(1 0 0 -1 0 0) translate(6.87,0) translate(0,6.87)" fill="#000000" stroke="#000000" stroke-width="0.4pt"><g fill="#000000"><path d="M 6.59 0 C 6.59 3.64 3.64 6.59 0 6.59 C -3.64 6.59 -6.59 3.64 -6.59 0 C -6.59 -3.64 -3.64 -6.59 0 -6.59 C 3.64 -6.59 6.59 -3.64 6.59 0 Z M 0 0"></path></g><g transform="matrix(1.0 0.0 0.0 1.0 -3.46 -4.46)" fill="#000000" stroke="#000000"><foreignObject width="6.92" height="8.92" transform="matrix(1 0 0 -1 0 16.6)" overflow="visible"><span id="S2.SS2.SSS1.p2.1.1.pic1.1.1.1.1.1" class="ltx_text ltx_font_sansserif ltx_font_bold" style="color:#FFFFFF;">1</span></foreignObject></g></g></svg>
+</span></span>).
+The decoded images are resized and transformed to an expected data layout (<em id="S2.SS2.SSS1.p2.5.8" class="ltx_emph ltx_font_italic">e.g.,</em> channel-first) so that they can be fed into a neural network (see 
+<span id="S2.SS2.SSS1.p2.2.2" class="ltx_inline-block ltx_transformed_outer" style="width:10.3pt;height:7.7pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-1.5pt,1.1pt) scale(0.78,0.78) ;"><svg id="S2.SS2.SSS1.p2.2.2.pic1" class="ltx_picture" height="13.74" overflow="visible" version="1.1" width="13.74"><g transform="translate(0,13.74) matrix(1 0 0 -1 0 0) translate(6.87,0) translate(0,6.87)" fill="#000000" stroke="#000000" stroke-width="0.4pt"><g fill="#000000"><path d="M 6.59 0 C 6.59 3.64 3.64 6.59 0 6.59 C -3.64 6.59 -6.59 3.64 -6.59 0 C -6.59 -3.64 -3.64 -6.59 0 -6.59 C 3.64 -6.59 6.59 -3.64 6.59 0 Z M 0 0"></path></g><g transform="matrix(1.0 0.0 0.0 1.0 -3.46 -4.46)" fill="#000000" stroke="#000000"><foreignObject width="6.92" height="8.92" transform="matrix(1 0 0 -1 0 16.6)" overflow="visible"><span id="S2.SS2.SSS1.p2.2.2.pic1.1.1.1.1.1" class="ltx_text ltx_font_sansserif ltx_font_bold" style="color:#FFFFFF;">2</span></foreignObject></g></g></svg>
+</span></span>).
+This neural network is executed by an <em id="S2.SS2.SSS1.p2.5.9" class="ltx_emph ltx_font_italic">inference operator</em> (see 
+<span id="S2.SS2.SSS1.p2.3.3" class="ltx_inline-block ltx_transformed_outer" style="width:10.3pt;height:7.7pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-1.5pt,1.1pt) scale(0.78,0.78) ;"><svg id="S2.SS2.SSS1.p2.3.3.pic1" class="ltx_picture" height="13.74" overflow="visible" version="1.1" width="13.74"><g transform="translate(0,13.74) matrix(1 0 0 -1 0 0) translate(6.87,0) translate(0,6.87)" fill="#000000" stroke="#000000" stroke-width="0.4pt"><g fill="#000000"><path d="M 6.59 0 C 6.59 3.64 3.64 6.59 0 6.59 C -3.64 6.59 -6.59 3.64 -6.59 0 C -6.59 -3.64 -3.64 -6.59 0 -6.59 C 3.64 -6.59 6.59 -3.64 6.59 0 Z M 0 0"></path></g><g transform="matrix(1.0 0.0 0.0 1.0 -3.46 -4.46)" fill="#000000" stroke="#000000"><foreignObject width="6.92" height="8.92" transform="matrix(1 0 0 -1 0 16.6)" overflow="visible"><span id="S2.SS2.SSS1.p2.3.3.pic1.1.1.1.1.1" class="ltx_text ltx_font_sansserif ltx_font_bold" style="color:#FFFFFF;">3</span></foreignObject></g></g></svg>
+</span></span>) on GPU.
+This operator loads the checkpoint of a
+neural network trained by the HyperPose Python platform or other supported libraries.
+The computed activation map from the neural network is given to a <em id="S2.SS2.SSS1.p2.5.10" class="ltx_emph ltx_font_italic">post-processing operator</em> for
+parsing human pose topology (see 
+<span id="S2.SS2.SSS1.p2.4.4" class="ltx_inline-block ltx_transformed_outer" style="width:10.3pt;height:7.7pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-1.5pt,1.1pt) scale(0.78,0.78) ;"><svg id="S2.SS2.SSS1.p2.4.4.pic1" class="ltx_picture" height="13.74" overflow="visible" version="1.1" width="13.74"><g transform="translate(0,13.74) matrix(1 0 0 -1 0 0) translate(6.87,0) translate(0,6.87)" fill="#000000" stroke="#000000" stroke-width="0.4pt"><g fill="#000000"><path d="M 6.59 0 C 6.59 3.64 3.64 6.59 0 6.59 C -3.64 6.59 -6.59 3.64 -6.59 0 C -6.59 -3.64 -3.64 -6.59 0 -6.59 C 3.64 -6.59 6.59 -3.64 6.59 0 Z M 0 0"></path></g><g transform="matrix(1.0 0.0 0.0 1.0 -3.46 -4.46)" fill="#000000" stroke="#000000"><foreignObject width="6.92" height="8.92" transform="matrix(1 0 0 -1 0 16.6)" overflow="visible"><span id="S2.SS2.SSS1.p2.4.4.pic1.1.1.1.1.1" class="ltx_text ltx_font_sansserif ltx_font_bold" style="color:#FFFFFF;">4</span></foreignObject></g></g></svg>
+</span></span>).
+The topology is placed onto the original image
+at a <em id="S2.SS2.SSS1.p2.5.11" class="ltx_emph ltx_font_italic">visualisation operator</em> (see 
+<span id="S2.SS2.SSS1.p2.5.5" class="ltx_inline-block ltx_transformed_outer" style="width:10.3pt;height:7.7pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-1.5pt,1.1pt) scale(0.78,0.78) ;"><svg id="S2.SS2.SSS1.p2.5.5.pic1" class="ltx_picture" height="13.74" overflow="visible" version="1.1" width="13.74"><g transform="translate(0,13.74) matrix(1 0 0 -1 0 0) translate(6.87,0) translate(0,6.87)" fill="#000000" stroke="#000000" stroke-width="0.4pt"><g fill="#000000"><path d="M 6.59 0 C 6.59 3.64 3.64 6.59 0 6.59 C -3.64 6.59 -6.59 3.64 -6.59 0 C -6.59 -3.64 -3.64 -6.59 0 -6.59 C 3.64 -6.59 6.59 -3.64 6.59 0 Z M 0 0"></path></g><g transform="matrix(1.0 0.0 0.0 1.0 -3.46 -4.46)" fill="#000000" stroke="#000000"><foreignObject width="6.92" height="8.92" transform="matrix(1 0 0 -1 0 16.6)" overflow="visible"><span id="S2.SS2.SSS1.p2.5.5.pic1.1.1.1.1.1" class="ltx_text ltx_font_sansserif ltx_font_bold" style="color:#FFFFFF;">5</span></foreignObject></g></g></svg>
+</span></span>).</p>
+</div>
+<div id="S2.SS2.SSS1.p3" class="ltx_para">
+<p id="S2.SS2.SSS1.p3.1" class="ltx_p">Each operator pair shares a concurrent FIFO channel, manipulated by CPU threads.
+The operators only block when there is no incoming record and sleep until they are notified, thanks to the condition variable mechanism.
+Benefiting from this, HyperPose can ensure the pose estimation dataflow fully utilise parallel heterogeneous processors including CPUs and GPUs.
+Besides,
+HyperPose fully masks I/O latency (<em id="S2.SS2.SSS1.p3.1.1" class="ltx_emph ltx_font_italic">e.g.,</em> waiting for images
+from a camera) by overlapping I/O operations with computation operations.</p>
+</div>
+</section>
+<section id="S2.SS2.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.2.2. </span>Hybrid dataflow operator scheduler</h4>
+
+<div id="S2.SS2.SSS2.p1" class="ltx_para">
+<p id="S2.SS2.SSS2.p1.1" class="ltx_p">We design a <em id="S2.SS2.SSS2.p1.1.2" class="ltx_emph ltx_font_italic">hybrid dataflow operator scheduler</em>
+in the execution engine (see 
+<span id="S2.SS2.SSS2.p1.1.1" class="ltx_inline-block ltx_transformed_outer" style="width:10.3pt;height:7.7pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-1.5pt,1.1pt) scale(0.78,0.78) ;"><svg id="S2.SS2.SSS2.p1.1.1.pic1" class="ltx_picture" height="13.74" overflow="visible" version="1.1" width="13.74"><g transform="translate(0,13.74) matrix(1 0 0 -1 0 0) translate(6.87,0) translate(0,6.87)" fill="#000000" stroke="#000000" stroke-width="0.4pt"><g fill="#000000"><path d="M 6.59 0 C 6.59 3.64 3.64 6.59 0 6.59 C -3.64 6.59 -6.59 3.64 -6.59 0 C -6.59 -3.64 -3.64 -6.59 0 -6.59 C 3.64 -6.59 6.59 -3.64 6.59 0 Z M 0 0"></path></g><g transform="matrix(1.0 0.0 0.0 1.0 -3.46 -4.46)" fill="#000000" stroke="#000000"><foreignObject width="6.92" height="8.92" transform="matrix(1 0 0 -1 0 16.6)" overflow="visible"><span id="S2.SS2.SSS2.p1.1.1.pic1.1.1.1.1.1" class="ltx_text ltx_font_sansserif ltx_font_bold" style="color:#FFFFFF;">6</span></foreignObject></g></g></svg>
+</span></span> in Figure <a href="#S2.F1" title="Figure 1 ‣ 2.2. High-performance Execution Engine ‣ 2. Design and Implementation ‣ Fast and Flexible Human Pose Estimation with HyperPose" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>), for further improving the CPU/GPU utilisation in addition to the pipeline parallelism.
+Regarding GPU utilisation, we leverage dynamic batching in front of the inference operator, encouraging the inference operator to take a larger batch as input each time.
+In concert with the streaming dataflow mechanism, the batching slot only accumulates more input tensors when the GPU becomes the bottleneck.
+Such optimisation is beneficial since i) batching reduces the times of GPU kernel launch thus improving GPU processing throughput, ii) when the GPU is the bottleneck, batching gets enhanced to alleviate the congestion <cite class="ltx_cite ltx_citemacro_citep">(Koliousis et al<span class="ltx_text">.</span>, <a href="#bib.bib10" title="" class="ltx_ref">[n.d.]</a>)</cite>, and iii) when the GPU is not the bottleneck, batching gets weakened for not deteriorating the per-image response delay.
+As to CPU threads scheduling, we implemented an asynchronous thread-level communication mechanism based on conditional variables.
+When the bottleneck happens in a CPU-based operator (<em id="S2.SS2.SSS2.p1.1.3" class="ltx_emph ltx_font_italic">e.g.,</em> the post-processing operator), the working threads of non-blocking operators will fall asleep to save CPU cycles for the bottleneck until the next round starts.</p>
+</div>
+</section>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3. </span>Implementation and Compatibility</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">HyperPose supports 3 classes of pose estimation algorithms: 1) PAF<cite class="ltx_cite ltx_citemacro_citep">(Cao
+et al<span class="ltx_text">.</span>, <a href="#bib.bib2" title="" class="ltx_ref">2017</a>)</cite> (i.e., OpenPose), 2) PoseProposal<cite class="ltx_cite ltx_citemacro_citep">(Sekii, <a href="#bib.bib15" title="" class="ltx_ref">2018</a>)</cite>, and 3) PifPaf<cite class="ltx_cite ltx_citemacro_citep">(Kreiss
+et al<span class="ltx_text">.</span>, <a href="#bib.bib11" title="" class="ltx_ref">2019</a>)</cite>.</p>
+</div>
+<div id="S2.SS3.p2" class="ltx_para">
+<p id="S2.SS3.p2.1" class="ltx_p">Since developing and deploying pose estimation algorithms have different objectives, HyperPose separates the implementation for training and inference but makes their ecosystem well-compatible.</p>
+</div>
+<div id="S2.SS3.p3" class="ltx_para">
+<p id="S2.SS3.p3.1" class="ltx_p">The training library is a Python library implemented using Tensorflow and TensorLayer <cite class="ltx_cite ltx_citemacro_citep">(Dong et al<span class="ltx_text">.</span>, <a href="#bib.bib3" title="" class="ltx_ref">2017</a>)</cite> for DNN construction with Numpy and other common libraries for post-processing.</p>
+</div>
+<div id="S2.SS3.p4" class="ltx_para">
+<p id="S2.SS3.p4.1" class="ltx_p">For maximum performance, the whole inference engine is notably implemented in C++ 17 for massive low-level code optimisation and parallelism.
+The GPU inference operator is based on NVidia TensorRT, one of the fastest DNN inference libraries.
+The imaging-related operations are based on OpenCV,
+and the dataflow scheduler is implemented by the C++ standard thread library.</p>
+</div>
+<div id="S2.SS3.p5" class="ltx_para">
+<p id="S2.SS3.p5.1" class="ltx_p">The implementation of HyperPose is compatible with many pose estimation algorithms, such as DEKR <cite class="ltx_cite ltx_citemacro_citep">(Geng
+et al<span class="ltx_text">.</span>, <a href="#bib.bib5" title="" class="ltx_ref">2021</a>)</cite> and CenterNet <cite class="ltx_cite ltx_citemacro_citep">(Zhou
+et al<span class="ltx_text">.</span>, <a href="#bib.bib20" title="" class="ltx_ref">2019</a>)</cite>. These algorithms share the bottom-up architectures as those (e.g., OpenPose and PifPaf) implemented in
+HyperPose. They are thus easy to be implemented as extensions to HyperPose.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3. </span>Evaluation</h2>
+
+<figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1. </span>API study. * denotes single-human datasets only.</figcaption>
+<table id="S3.T1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T1.1.1.1" class="ltx_tr">
+<td id="S3.T1.1.1.1.1" class="ltx_td ltx_border_tt"></td>
+<th id="S3.T1.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">Algorithm</th>
+<th id="S3.T1.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">Dataset</th>
+<th id="S3.T1.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">DNN</th>
+<th id="S3.T1.1.1.1.5" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">Config.</th>
+<th id="S3.T1.1.1.1.6" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">Ext.</th>
+</tr>
+<tr id="S3.T1.1.2.2" class="ltx_tr">
+<td id="S3.T1.1.2.2.1" class="ltx_td ltx_align_left ltx_border_t">TF-Pose</td>
+<td id="S3.T1.1.2.2.2" class="ltx_td ltx_align_left ltx_border_t">1</td>
+<td id="S3.T1.1.2.2.3" class="ltx_td ltx_align_left ltx_border_t">1</td>
+<td id="S3.T1.1.2.2.4" class="ltx_td ltx_align_left ltx_border_t">5</td>
+<td id="S3.T1.1.2.2.5" class="ltx_td ltx_align_left ltx_border_t">5</td>
+<td id="S3.T1.1.2.2.6" class="ltx_td ltx_align_left ltx_border_t">✗</td>
+</tr>
+<tr id="S3.T1.1.3.3" class="ltx_tr">
+<td id="S3.T1.1.3.3.1" class="ltx_td ltx_align_left">PyTorch-Pose</td>
+<td id="S3.T1.1.3.3.2" class="ltx_td ltx_align_left">2</td>
+<td id="S3.T1.1.3.3.3" class="ltx_td ltx_align_left">3*</td>
+<td id="S3.T1.1.3.3.4" class="ltx_td ltx_align_left">13</td>
+<td id="S3.T1.1.3.3.5" class="ltx_td ltx_align_left">26</td>
+<td id="S3.T1.1.3.3.6" class="ltx_td ltx_align_left">✗</td>
+</tr>
+<tr id="S3.T1.1.4.4" class="ltx_tr">
+<td id="S3.T1.1.4.4.1" class="ltx_td ltx_align_left ltx_border_bb"><span id="S3.T1.1.4.4.1.1" class="ltx_text ltx_font_bold">HyperPose</span></td>
+<td id="S3.T1.1.4.4.2" class="ltx_td ltx_align_left ltx_border_bb">3</td>
+<td id="S3.T1.1.4.4.3" class="ltx_td ltx_align_left ltx_border_bb">2</td>
+<td id="S3.T1.1.4.4.4" class="ltx_td ltx_align_left ltx_border_bb">10</td>
+<td id="S3.T1.1.4.4.5" class="ltx_td ltx_align_left ltx_border_bb">30</td>
+<td id="S3.T1.1.4.4.6" class="ltx_td ltx_align_left ltx_border_bb">✓</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S3.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2. </span>Performance Evaluation of Inference Engine. <span id="footnote4" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">4</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">4</sup><span class="ltx_tag ltx_tag_note">4</span>For fair accuracy comparison, the weights are from PifPaf and PoseProposal libraries.</span></span></span></figcaption>
+<table id="S3.T2.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T2.1.1.1" class="ltx_tr">
+<th id="S3.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt">Configuration</th>
+<th id="S3.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<table id="S3.T2.1.1.1.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T2.1.1.1.2.1.1" class="ltx_tr">
+<td id="S3.T2.1.1.1.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Baseline</td>
+</tr>
+<tr id="S3.T2.1.1.1.2.1.2" class="ltx_tr">
+<td id="S3.T2.1.1.1.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">FPS</td>
+</tr>
+</table>
+</th>
+<th id="S3.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<table id="S3.T2.1.1.1.3.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T2.1.1.1.3.1.1" class="ltx_tr">
+<td id="S3.T2.1.1.1.3.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Our FPS</td>
+</tr>
+<tr id="S3.T2.1.1.1.3.1.2" class="ltx_tr">
+<td id="S3.T2.1.1.1.3.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">(Operators)</td>
+</tr>
+</table>
+</th>
+<th id="S3.T2.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<table id="S3.T2.1.1.1.4.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T2.1.1.1.4.1.1" class="ltx_tr">
+<td id="S3.T2.1.1.1.4.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Our FPS</td>
+</tr>
+<tr id="S3.T2.1.1.1.4.1.2" class="ltx_tr">
+<td id="S3.T2.1.1.1.4.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">(Scheduler)</td>
+</tr>
+</table>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T2.1.2.1" class="ltx_tr">
+<th id="S3.T2.1.2.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t">OpenPose (VGG19)</th>
+<td id="S3.T2.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">8<cite class="ltx_cite ltx_citemacro_citep">(Ginés Hidalgo, <a href="#bib.bib6" title="" class="ltx_ref">2020</a>)</cite>
+</td>
+<td id="S3.T2.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">19.78</td>
+<td id="S3.T2.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t"><span id="S3.T2.1.2.1.4.1" class="ltx_text ltx_font_bold">27.32</span></td>
+</tr>
+<tr id="S3.T2.1.3.2" class="ltx_tr">
+<th id="S3.T2.1.3.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">OpenPose (MobileNet)</th>
+<td id="S3.T2.1.3.2.2" class="ltx_td ltx_align_center">8.5<cite class="ltx_cite ltx_citemacro_citep">(Ildoo Kim, <a href="#bib.bib9" title="" class="ltx_ref">2019</a>)</cite>
+</td>
+<td id="S3.T2.1.3.2.3" class="ltx_td ltx_align_center">50.89</td>
+<td id="S3.T2.1.3.2.4" class="ltx_td ltx_align_center"><span id="S3.T2.1.3.2.4.1" class="ltx_text ltx_font_bold">84.32</span></td>
+</tr>
+<tr id="S3.T2.1.4.3" class="ltx_tr">
+<th id="S3.T2.1.4.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">LWOpenPose (ResNet50)</th>
+<td id="S3.T2.1.4.3.2" class="ltx_td ltx_align_center">N/A</td>
+<td id="S3.T2.1.4.3.3" class="ltx_td ltx_align_center">38.09</td>
+<td id="S3.T2.1.4.3.4" class="ltx_td ltx_align_center"><span id="S3.T2.1.4.3.4.1" class="ltx_text ltx_font_bold">63.52</span></td>
+</tr>
+<tr id="S3.T2.1.5.4" class="ltx_tr">
+<th id="S3.T2.1.5.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">LWOpenPose (TinyVGG)</th>
+<td id="S3.T2.1.5.4.2" class="ltx_td ltx_align_center">N/A</td>
+<td id="S3.T2.1.5.4.3" class="ltx_td ltx_align_center">66.62</td>
+<td id="S3.T2.1.5.4.4" class="ltx_td ltx_align_center"><span id="S3.T2.1.5.4.4.1" class="ltx_text ltx_font_bold">124.92</span></td>
+</tr>
+<tr id="S3.T2.1.6.5" class="ltx_tr">
+<th id="S3.T2.1.6.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">PoseProposal (ResNet18)</th>
+<td id="S3.T2.1.6.5.2" class="ltx_td ltx_align_center">47.6<cite class="ltx_cite ltx_citemacro_citep">(Terasaki, <a href="#bib.bib17" title="" class="ltx_ref">2018</a>)</cite>
+</td>
+<td id="S3.T2.1.6.5.3" class="ltx_td ltx_align_center">212.42</td>
+<td id="S3.T2.1.6.5.4" class="ltx_td ltx_align_center"><span id="S3.T2.1.6.5.4.1" class="ltx_text ltx_font_bold">349.17</span></td>
+</tr>
+<tr id="S3.T2.1.7.6" class="ltx_tr">
+<th id="S3.T2.1.7.6.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb">PifPaf (ResNet50)</th>
+<td id="S3.T2.1.7.6.2" class="ltx_td ltx_align_center ltx_border_bb">14.8<cite class="ltx_cite ltx_citemacro_citep">(Sven Kreiss, <a href="#bib.bib16" title="" class="ltx_ref">2021</a>)</cite>
+</td>
+<td id="S3.T2.1.7.6.3" class="ltx_td ltx_align_center ltx_border_bb">18.5</td>
+<td id="S3.T2.1.7.6.4" class="ltx_td ltx_align_center ltx_border_bb"><span id="S3.T2.1.7.6.4.1" class="ltx_text ltx_font_bold">44.13</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S3.T3" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 3. </span>Accuracy Evaluation of Development Platform.</figcaption>
+<table id="S3.T3.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T3.1.1.1" class="ltx_tr">
+<th id="S3.T3.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt">Configuration</th>
+<th id="S3.T3.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<table id="S3.T3.1.1.1.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T3.1.1.1.2.1.1" class="ltx_tr">
+<td id="S3.T3.1.1.1.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Original</td>
+</tr>
+<tr id="S3.T3.1.1.1.2.1.2" class="ltx_tr">
+<td id="S3.T3.1.1.1.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">Accuracy(map)</td>
+</tr>
+</table>
+</th>
+<th id="S3.T3.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">
+<table id="S3.T3.1.1.1.3.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T3.1.1.1.3.1.1" class="ltx_tr">
+<td id="S3.T3.1.1.1.3.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Our</td>
+</tr>
+<tr id="S3.T3.1.1.1.3.1.2" class="ltx_tr">
+<td id="S3.T3.1.1.1.3.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">Accuracy(map)</td>
+</tr>
+</table>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T3.1.2.1" class="ltx_tr">
+<th id="S3.T3.1.2.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t">OpenPose (VGG19)</th>
+<td id="S3.T3.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">58.4</td>
+<td id="S3.T3.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">57.0</td>
+</tr>
+<tr id="S3.T3.1.3.2" class="ltx_tr">
+<th id="S3.T3.1.3.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">OpenPose (MobileNet)</th>
+<td id="S3.T3.1.3.2.2" class="ltx_td ltx_align_center">28.1</td>
+<td id="S3.T3.1.3.2.3" class="ltx_td ltx_align_center">44.2</td>
+</tr>
+<tr id="S3.T3.1.4.3" class="ltx_tr">
+<th id="S3.T3.1.4.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">LWOpenPose (MobileNet)</th>
+<td id="S3.T3.1.4.3.2" class="ltx_td ltx_align_center">42.8</td>
+<td id="S3.T3.1.4.3.3" class="ltx_td ltx_align_center">46.1</td>
+</tr>
+<tr id="S3.T3.1.5.4" class="ltx_tr">
+<th id="S3.T3.1.5.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row">LWOpenPose (Resnet50)</th>
+<td id="S3.T3.1.5.4.2" class="ltx_td ltx_align_center">N/A</td>
+<td id="S3.T3.1.5.4.3" class="ltx_td ltx_align_center">48.2</td>
+</tr>
+<tr id="S3.T3.1.6.5" class="ltx_tr">
+<th id="S3.T3.1.6.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb">LWOpenPose (TinyVGG)</th>
+<td id="S3.T3.1.6.5.2" class="ltx_td ltx_align_center ltx_border_bb">N/A</td>
+<td id="S3.T3.1.6.5.3" class="ltx_td ltx_align_center ltx_border_bb">47.3</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">Our evaluation of HyperPose is driven by two questions:
+(i) How flexible is its API when developing and customising real-world pose estimation algorithms?
+(ii) How fast is its execution engine in practical deployment environments?</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1. </span>API Study</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">We compare our API design with existing Python pose estimation libraries: TF-Pose and PyTorch-Pose.
+Other libraries such as OpenPose and AlphaPose are dedicated algorithm implementations without customised extensions, we thus exclude them here.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">In Table <a href="#S3.T1" title="Table 1 ‣ 3. Evaluation ‣ Fast and Flexible Human Pose Estimation with HyperPose" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>,
+our comparison follows five metrics:
+(i) the number of pre-defined pose estimation algorithms, (ii) the number of pre-defined datasets,
+(iii) the number of pre-defined backbone deep neural networks (DNNs),
+(iv) the total number of pre-defined
+configurations of the pose estimation system, and (v) the ability
+to extend the library to support custom algorithms.</p>
+</div>
+<div id="S3.SS1.p3" class="ltx_para">
+<p id="S3.SS1.p3.1" class="ltx_p">TF-Pose only supports 1 algorithm, 1 dataset, and 5 DNNs, resulting in up to 5 configurations in its design space.
+PyTorch-Pose is more flexible, which supports 2 pose estimation algorithms, 3 datasets, and 13 DNNs, summing up to 26 system configurations. However, PyTorch-Pose only covers single-human scenarios. This is attributed to the insufficient performance of its algorithm execution engine in multi-human scenarios.
+Contrastingly, HyperPose provides 3 algorithms, 2 datasets, and 10 DNNs, thus supporting up to 30 system configurations. Moreover, in all these Python libraries, HyperPose is the only one that supports the extension of new pose estimation algorithms and provides abstract processing modules that allow users to build their own development pipeline.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2. </span>Performance Evaluation</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">Table <a href="#footnote4" title="footnote 4 ‣ Table 2 ‣ 3. Evaluation ‣ Fast and Flexible Human Pose Estimation with HyperPose" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> compares the existing libraries and HyperPose.
+All benchmarks are evaluated under the same configuration.
+The test-bed is of 6 CPU cores and 1 NVIDIA 1070Ti GPU.
+We measure the throughput of the pose estimation systems.
+The benchmark video stream comes from the <span id="S3.SS2.p1.1.1" class="ltx_text ltx_font_italic">Crazy Uptown Funk Flashmob in Sydney</span> which contains 7458 frames with 640x360 resolution.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">We first compare the performance of HyperPose with the OpenPose framework <cite class="ltx_cite ltx_citemacro_citep">(Cao
+et al<span class="ltx_text">.</span>, <a href="#bib.bib2" title="" class="ltx_ref">2017</a>)</cite>,
+which leverages Caffe as its backend and uses C++ for implementing pre-processing and post-processing.
+As is shown in Table <a href="#footnote4" title="footnote 4 ‣ Table 2 ‣ 3. Evaluation ‣ Fast and Flexible Human Pose Estimation with HyperPose" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, OpenPose is only able to achieve 8 FPS on 1070 Ti, which HyperPose can reach 27.32 FPS, outperforming the baseline by 3.1x.
+On one hand, this improvement is attributed to the careful use of the TensorRT library as the implementation of the inference operator.
+On the other hand, the hybrid dataflow operator scheduler makes the execution of HyperPose even 1.38x faster than the non-scheduled one.
+TF-Pose <cite class="ltx_cite ltx_citemacro_citep">(Ildoo Kim, <a href="#bib.bib9" title="" class="ltx_ref">2019</a>)</cite> leverages TensorFlow as its inference engine and its post-processing is implemented in C++ as well.
+When executing MobileNet-based OpenPose, it only achieves 8.5 FPS, which is 10x slower than HyperPose.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.1" class="ltx_p">In addition to OpenPose-based algorithms, HyperPose also outperforms Chainer’s <cite class="ltx_cite ltx_citemacro_citep">(Terasaki, <a href="#bib.bib17" title="" class="ltx_ref">2018</a>)</cite> implementation of Pose Proposal Network by 8 times.
+We verified the performance consistency by replacing the backbones and post-processing methods. For example, HyperPose also beats OpenPose when evaluating a smaller model (<em id="S3.SS2.p3.1.1" class="ltx_emph ltx_font_italic">i.e.,</em> MobileNet).
+This proves that the execution engine design is generic so that its benefits should be shared by all custom algorithms. Table <a href="#S3.T3" title="Table 3 ‣ 3. Evaluation ‣ Fast and Flexible Human Pose Estimation with HyperPose" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> shows the accuracy evaluation result of HyperPose.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4. </span>Conclusion</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">When operating pose estimation in the wild, developers often
+find it challenging to customise pose estimation algorithms for high accuracy,
+while achieving real-time pose estimation using commodity CPUs and GPUs.
+This paper introduces HyperPose, a library for fast and flexible human pose estimation. HyperPose provides users with expressive APIs for declaring custom pose estimation algorithms. It also provides a high-performance model inference engine
+that can efficiently utilise all parallel CPUs and GPUs. This engine enables HyperPose to achieve 3.1x better performance than existing libraries, while achieving the same accuracy in challenging pose estimation tasks.</p>
+</div>
+<div class="ltx_acknowledgements">
+<h6 class="ltx_title ltx_title_acknowledgements">Acknowledgements.</h6>
+This project was supported by National Key R&amp;D Program of China (2020AAA0103501).
+
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(1)</span>
+<span class="ltx_bibblock">        
+
+
+
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Cao
+et al<span id="bib.bib2.2.2.1" class="ltx_text">.</span> (2017)</span>
+<span class="ltx_bibblock">
+Zhe Cao, Tomas Simon,
+Shih-En Wei, and Yaser Sheikh.
+2017.
+
+</span>
+<span class="ltx_bibblock">Realtime multi-person 2d pose estimation using part
+affinity fields. In <em id="bib.bib2.3.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE
+conference on computer vision and pattern recognition</em>.
+7291–7299.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dong et al<span id="bib.bib3.2.2.1" class="ltx_text">.</span> (2017)</span>
+<span class="ltx_bibblock">
+Hao Dong, Akara Supratak,
+Luo Mai, Fangde Liu,
+Axel Oehmichen, Simiao Yu, and
+Yike Guo. 2017.
+
+</span>
+<span class="ltx_bibblock">TensorLayer: A Versatile Library for Efficient Deep
+Learning Development. In <em id="bib.bib3.3.1" class="ltx_emph ltx_font_italic">Proceedings of the 25th
+ACM International Conference on Multimedia</em> (Mountain View, California, USA)
+<em id="bib.bib3.4.2" class="ltx_emph ltx_font_italic">(MM ’17)</em>. Association for
+Computing Machinery, New York, NY, USA,
+1201–1204.
+
+</span>
+<span class="ltx_bibblock">
+
+<a target="_blank" href="https://doi.org/10.1145/3123266.3129391" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://doi.org/10.1145/3123266.3129391</a>
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Fang
+et al<span id="bib.bib4.2.2.1" class="ltx_text">.</span> (2017)</span>
+<span class="ltx_bibblock">
+Hao-Shu Fang, Shuqin Xie,
+Yu-Wing Tai, and Cewu Lu.
+2017.
+
+</span>
+<span class="ltx_bibblock">Rmpe: Regional multi-person pose estimation. In
+<em id="bib.bib4.3.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE international conference on
+computer vision</em>. 2334–2343.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Geng
+et al<span id="bib.bib5.2.2.1" class="ltx_text">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Zigang Geng, Ke Sun,
+Bin Xiao, Zhaoxiang Zhang, and
+Jingdong Wang. 2021.
+
+</span>
+<span class="ltx_bibblock">Bottom-Up Human Pose Estimation via Disentangled
+Keypoint Regression. In <em id="bib.bib5.3.1" class="ltx_emph ltx_font_italic">Proceedings of the
+IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>.
+14676–14686.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ginés Hidalgo (2020)</span>
+<span class="ltx_bibblock">
+Ginés Hidalgo 2020.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">OpenPose: Real-time multi-person keypoint
+detection library</em>.
+
+</span>
+<span class="ltx_bibblock">
+<a target="_blank" href="https://github.com/CMU-Perceptual-Computing-Lab/openpose" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/CMU-Perceptual-Computing-Lab/openpose</a>
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">He
+et al<span id="bib.bib7.2.2.1" class="ltx_text">.</span> (2016)</span>
+<span class="ltx_bibblock">
+Kaiming He, Xiangyu
+Zhang, Shaoqing Ren, and Jian Sun.
+2016.
+
+</span>
+<span class="ltx_bibblock">Deep Residual Learning for Image Recognition. In
+<em id="bib.bib7.3.1" class="ltx_emph ltx_font_italic">The IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Howard et al<span id="bib.bib8.2.2.1" class="ltx_text">.</span> (2017)</span>
+<span class="ltx_bibblock">
+Andrew G Howard, Menglong
+Zhu, Bo Chen, Dmitry Kalenichenko,
+Weijun Wang, Tobias Weyand,
+Marco Andreetto, and Hartwig Adam.
+2017.
+
+</span>
+<span class="ltx_bibblock">Mobilenets: Efficient convolutional neural networks
+for mobile vision applications.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib8.3.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1704.04861</em>
+(2017).
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ildoo Kim (2019)</span>
+<span class="ltx_bibblock">
+Dongwoo Kim Ildoo Kim.
+2019.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">tf-pose-estimation</em>.
+
+</span>
+<span class="ltx_bibblock">
+Retrieved June 7, 2021 from <a target="_blank" href="https://github.com/ildoonet/tf-pose-estimation" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/ildoonet/tf-pose-estimation</a>
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Koliousis et al<span id="bib.bib10.2.2.1" class="ltx_text">.</span> ([n.d.])</span>
+<span class="ltx_bibblock">
+Alexandros Koliousis,
+Pijika Watcharapichat, Matthias Weidlich,
+Luo Mai, Paolo Costa, and
+Peter Pietzuch. [n.d.].
+
+</span>
+<span class="ltx_bibblock">CROSSBOW: Scaling Deep Learning with Small Batch
+Sizes on Multi-GPU Servers.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib10.3.1" class="ltx_emph ltx_font_italic">Proceedings of the VLDB Endowment</em>
+12, 11 ([n. d.]).
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kreiss
+et al<span id="bib.bib11.2.2.1" class="ltx_text">.</span> (2019)</span>
+<span class="ltx_bibblock">
+Sven Kreiss, Lorenzo
+Bertoni, and Alexandre Alahi.
+2019.
+
+</span>
+<span class="ltx_bibblock">Pifpaf: Composite fields for human pose
+estimation. In <em id="bib.bib11.3.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE/CVF
+Conference on Computer Vision and Pattern Recognition</em>.
+11977–11986.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mai
+et al<span id="bib.bib12.2.2.1" class="ltx_text">.</span> (2019)</span>
+<span class="ltx_bibblock">
+Luo Mai, Alexandros
+Koliousis, Guo Li, Andrei-Octavian
+Brabete, and Peter Pietzuch.
+2019.
+
+</span>
+<span class="ltx_bibblock">Taming hyper-parameters in deep learning systems.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib12.3.1" class="ltx_emph ltx_font_italic">ACM SIGOPS Operating Systems Review</em>
+53, 1 (2019),
+52–58.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mai et al<span id="bib.bib13.2.2.1" class="ltx_text">.</span> (2020)</span>
+<span class="ltx_bibblock">
+Luo Mai, Guo Li,
+Marcel Wagenländer, Konstantinos
+Fertakis, Andrei-Octavian Brabete, and
+Peter Pietzuch. 2020.
+
+</span>
+<span class="ltx_bibblock">KungFu: Making Training in Distributed Machine
+Learning Adaptive. In <em id="bib.bib13.3.1" class="ltx_emph ltx_font_italic">14th USENIX Symposium on
+Operating Systems Design and Implementation (OSDI 20)</em>.
+937–954.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mai et al<span id="bib.bib14.3.3.1" class="ltx_text">.</span> (2018)</span>
+<span class="ltx_bibblock">
+Luo Mai, Kai Zeng,
+Rahul Potharaju, Le Xu,
+Steve Suh, Shivaram Venkataraman,
+Paolo Costa, Terry Kim,
+Saravanan Muthukrishnan, Vamsi Kuppa,
+et al<span id="bib.bib14.4.1" class="ltx_text">.</span> 2018.
+
+</span>
+<span class="ltx_bibblock">Chi: A scalable and programmable control plane for
+distributed stream processing systems.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib14.5.1" class="ltx_emph ltx_font_italic">Proceedings of the VLDB Endowment</em>
+11, 10 (2018),
+1303–1316.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sekii (2018)</span>
+<span class="ltx_bibblock">
+Taiki Sekii.
+2018.
+
+</span>
+<span class="ltx_bibblock">Pose proposal networks. In
+<em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic">Proceedings of the European Conference on Computer
+Vision (ECCV)</em>. 342–357.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sven Kreiss (2021)</span>
+<span class="ltx_bibblock">
+Sven Kreiss 2021.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">OpenPifPaf: Composite Fields for Semantic
+Keypoint Detection and Spatio-Temporal Association</em>.
+
+</span>
+<span class="ltx_bibblock">
+<a target="_blank" href="https://github.com/openpifpaf/openpifpaf" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/openpifpaf/openpifpaf</a>
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Terasaki (2018)</span>
+<span class="ltx_bibblock">
+Satoshi Terasaki.
+2018.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic">Chainer implementation of Pose Proposal
+Networks</em>.
+
+</span>
+<span class="ltx_bibblock">
+<a target="_blank" href="https://github.com/Idein/chainer-pose-proposal-net" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/Idein/chainer-pose-proposal-net</a>
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xu et al<span id="bib.bib18.6.2.1" class="ltx_text">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Le Xu, Shivaram
+Venkataraman, Indranil Gupta, Luo Mai,
+and Rahul Potharaju. 2021.
+
+</span>
+<span class="ltx_bibblock">Move Fast and Meet Deadlines: Fine-grained
+Real-time Stream Processing with Cameo. In <em id="bib.bib18.4.4" class="ltx_emph ltx_font_italic">18th
+<math id="bib.bib18.1.1.m1.1" class="ltx_Math" alttext="\{" display="inline"><semantics id="bib.bib18.1.1.m1.1a"><mo stretchy="false" id="bib.bib18.1.1.m1.1.1" xref="bib.bib18.1.1.m1.1.1.cmml">{</mo><annotation-xml encoding="MathML-Content" id="bib.bib18.1.1.m1.1b"><ci id="bib.bib18.1.1.m1.1.1.cmml" xref="bib.bib18.1.1.m1.1.1">{</ci></annotation-xml><annotation encoding="application/x-tex" id="bib.bib18.1.1.m1.1c">\{</annotation></semantics></math>USENIX<math id="bib.bib18.2.2.m2.1" class="ltx_Math" alttext="\}" display="inline"><semantics id="bib.bib18.2.2.m2.1a"><mo stretchy="false" id="bib.bib18.2.2.m2.1.1" xref="bib.bib18.2.2.m2.1.1.cmml">}</mo><annotation-xml encoding="MathML-Content" id="bib.bib18.2.2.m2.1b"><ci id="bib.bib18.2.2.m2.1.1.cmml" xref="bib.bib18.2.2.m2.1.1">}</ci></annotation-xml><annotation encoding="application/x-tex" id="bib.bib18.2.2.m2.1c">\}</annotation></semantics></math> Symposium on Networked Systems Design and Implementation
+(<math id="bib.bib18.3.3.m3.1" class="ltx_Math" alttext="\{" display="inline"><semantics id="bib.bib18.3.3.m3.1a"><mo stretchy="false" id="bib.bib18.3.3.m3.1.1" xref="bib.bib18.3.3.m3.1.1.cmml">{</mo><annotation-xml encoding="MathML-Content" id="bib.bib18.3.3.m3.1b"><ci id="bib.bib18.3.3.m3.1.1.cmml" xref="bib.bib18.3.3.m3.1.1">{</ci></annotation-xml><annotation encoding="application/x-tex" id="bib.bib18.3.3.m3.1c">\{</annotation></semantics></math>NSDI<math id="bib.bib18.4.4.m4.1" class="ltx_Math" alttext="\}" display="inline"><semantics id="bib.bib18.4.4.m4.1a"><mo stretchy="false" id="bib.bib18.4.4.m4.1.1" xref="bib.bib18.4.4.m4.1.1.cmml">}</mo><annotation-xml encoding="MathML-Content" id="bib.bib18.4.4.m4.1b"><ci id="bib.bib18.4.4.m4.1.1.cmml" xref="bib.bib18.4.4.m4.1.1">}</ci></annotation-xml><annotation encoding="application/x-tex" id="bib.bib18.4.4.m4.1c">\}</annotation></semantics></math> 21)</em>. 389–405.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang (2019)</span>
+<span class="ltx_bibblock">
+Wei Yang. 2019.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic">pytorch-pose</em>.
+
+</span>
+<span class="ltx_bibblock">
+<a target="_blank" href="https://github.com/bearpaw/pytorch-pose" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/bearpaw/pytorch-pose</a>
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhou
+et al<span id="bib.bib20.2.2.1" class="ltx_text">.</span> (2019)</span>
+<span class="ltx_bibblock">
+Xingyi Zhou, Dequan Wang,
+and Philipp Krähenbühl.
+2019.
+
+</span>
+<span class="ltx_bibblock">Objects as points.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib20.3.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1904.07850</em>
+(2019).
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2108.11824" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2108.11826" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2108.11826">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2108.11826" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2108.11827" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Sun Mar  3 22:46:27 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

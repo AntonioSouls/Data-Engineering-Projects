@@ -1,0 +1,1295 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2012.03316] Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping</title><meta property="og:description" content="In this paper, we propose efficient and effective methods for 2D human pose estimation. A new ResBlock is proposed based on depthwise separable convolution and is utilized instead of the original one in Hourglass netwo…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2012.03316">
+
+<!--Generated on Thu Mar 14 08:18:12 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="keywords" lang="en" content="Human Pose Estimation Depthwise separable convolution Hourglass network Joint Grouping">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span id="id1" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">institutetext: </span>School of Computer Science and Engineering,
+<br class="ltx_break">University of Electronic Science and Technology of China,
+<br class="ltx_break">Chengdu 611731, China
+<br class="ltx_break"><span id="id1.1" class="ltx_note ltx_role_email"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">email: </span>oujieww6@gmail.com, hwu@uestc.edu.cn</span></span></span>
+<br class="ltx_break"></span></span></span>
+<h1 class="ltx_title ltx_title_document">Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jie Ou 
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Hong Wu
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">In this paper, we propose efficient and effective methods for 2D human pose estimation. A new ResBlock is proposed based on depthwise separable convolution and is utilized instead of the original one in Hourglass network. It can be further enhanced by replacing the vanilla depthwise convolution with a mixed depthwise convolution. Based on it, we propose a bottom-up multi-person pose estimation method. A rooted tree is used to represent human pose by introducing person centroid as the root which connects to all body joints directly or hierarchically. Two branches of sub-networks are used to predict the centroids, body joints and their offsets to their parent nodes. Joints are grouped by tracing along their offsets to the closest centroids. Experimental results on the MPII human dataset and the LSP dataset show that both our single-person and multi-person pose estimation methods can achieve competitive accuracies with low computational costs.</p>
+</div>
+<div class="ltx_keywords">
+<h6 class="ltx_title ltx_title_keywords">Keywords: </h6>Human Pose Estimation Depthwise separable convolution Hourglass network Joint Grouping
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Human pose estimation aims to locate human body joints from a single monocular image. It is a challenge and fundamental task in many visual applications, e.g. surveillance, autonomous driving, human-computer interaction, etc. In the last few years, considerable progress on human pose estimation has been achieved by deep learning based approaches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib34" title="" class="ltx_ref">34</a>, <a href="#bib.bib29" title="" class="ltx_ref">29</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite>.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Most existing research works on human pose estimation focus on improving the accuracy and develop deep networks with large model size and low computational efficiency, which prohibits their practical application. To adopt deep networks in real-time applications and/or on limited resource devices, the model should be compact and computational efficient. Inception module <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite> is used to build deeper networks without increase model size and computational cost.
+Depthwise separable convolution <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>, has been utilized as the key building block in many successful efficient CNNs.
+In this paper, we follow these successful design principles to develop efficient deep networks for human pose estimation.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">For multi-person pose estimation, it is needed to distinguishing poses of different persons. The approaches can mainly be divided into two categories: top-down strategy and bottom-up strategy. The top-down approaches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib34" title="" class="ltx_ref">34</a>, <a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite> employ detectors to localize person instances and then apply joint detector to each person instance. Each step of top-down approaches requires a very large amount of calculations, and the run-time of the second step is proportional to the number of person. In contrast, the bottom-up approaches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>, <a href="#bib.bib24" title="" class="ltx_ref">24</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> detect all the body joints for only once and then group/allocate them into different persons. However, they suffer from very high complexity of joint grouping step, which usually involves solving a NP-hard graph partition problem. Different methods have been proposed to reduce the grouping time. Recently, some one-stage multi-person pose estimation approaches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>, <a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite> have been proposed, but their performance lag behind the two-stage ones. In this paper, we also focus on the bottom-up strategy.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">In this paper, we propose efficient and effective methods for 2D human pose estimation. A new ResBlock is proposed with two depthwise separable convolutions and a squeeze-and-excitation (SE) module and utilized in place of the original ResBlock in Hourglass network. Its representation capability is further enhanced by replacing the vanilla depthwise convolution with a mixed depthwise convolution. The new Hourglass networks is very light-weighted and can be directly applied to single-person pose estimation.
+Base on this backbone network, we further propose a new bottom-up multi-person pose estimation method. A rooted tree is used to represent human pose by introducing person centroid as the root which connecting to all the joints directly or hierarchically. Two branches of sub-networks are used to predict the centroids, body joints and their offsets to their parent nodes. Joints are grouped by tracing along their offsets to the closest centroids. Our single-person pose estimation method is evaluated on MPII Human Pose dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> and Leeds Sports Pose dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>. It achieves competitive accuracy with only 4.7 GFLOPs.
+Our multi-person pose estimation method is evaluated on MPII Human Pose Multi-Person dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, and achieves competitive accuracy with only 13.6 GFLOPs.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Works</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Efficient Neural Networks</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">To adopt deep neural networks in real-time applications and/or on resource-constrained devices, many research works have been devoted to build efficient neural networks with acceptable performance. Depthwise separable convolution was originally presented in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>. It can achieve a good balance between the representation capability and computational efficiency, and has been utilized as the key building block in many successful efficient CNNs, such as Xception <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, MobileNets <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite> and ENAS <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>. MixConv <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite> extends vanilla depthwise convolution by partitioning channels into multiple groups and apply different kernel sizes to each of them, and achieves better representation capability.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Multi-person pose estimation</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p"><span id="S2.SS2.p1.1.1" class="ltx_text ltx_font_bold">Top-down methods</span>. Top-down multi-person pose estimation methods first detect people by a human detector (<em id="S2.SS2.p1.1.2" class="ltx_emph ltx_font_italic">e.g.</em> Faster-RCNN<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite> ), then run a single-person pose estimator on the cropped image of each person to get the final pose predictions. Representative top-down methods include PoseNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>, RMPE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, Mask R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, CPN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> and MSRA <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>. However, top-down methods depend heavily on the human detector, and their inference time will significantly increase if many people appear together.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p"><span id="S2.SS2.p2.1.1" class="ltx_text ltx_font_bold">Bottom-up methods</span>. Bottom-up methods detect the human joints of all persons at once, and then allocate these joints to each person based on various joint grouping methods. However, they suffer from very high complexity of joint grouping step, which usually involves solving a NP-hard graph partition problem. DeepCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite> and DeeperCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> solve the joint grouping with an integer linear program which results in the order of hours to process a single image. Later works drastically reduce prediction time by using greedy decoders in combination with additional tools. Cao <em id="S2.SS2.p2.1.2" class="ltx_emph ltx_font_italic">et al.</em> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> proposed part affinity fields to encode location and orientation of limbs. Newell and Deng <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> presented the associative embedding for grouping joint candidates. PPN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> performs dense regressions from global joint candidates within a embedding space of person centroids to generate person detection and joint grouping. But it need to adopt the Agglomerative Clustering algorithm <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> to determine the person centroids. In this paper, we avoid the time-consuming clustering by regressing the person centroids together with body joints and using them to guide the joint grouping.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">Recently, Nie <em id="S2.SS2.p3.1.1" class="ltx_emph ltx_font_italic">et al.</em> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> proposed a one-stage multi-person pose estimation method (SPM) which predicts root joints (person centroids) and joint displacements directly. Although both SPM and our method predict person centroid, they use centroid plus displacements to recover joints and we use centroid to guide joint grouping. We argue that joints can be predicted more precisely than its displacements.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>The proposed light-weight Hourglass network</h2>
+
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Hourglass network</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">Although Hourglass network has been utilized in many human pose estimation methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>, it is hard to been adapted in practical applications due to its large model size. Original Hourglass network consists of eight stacked hourglass modules, whose structure is illustrated in Fig. <a href="#S3.F1" title="Figure 1 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. The ResBlock used in original Hourglass network has a bottleneck structure (Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(a)). In this paper, we try to improve the efficiency of Hourglass network by replacing the original ResBlocks with the light-weight ones (Fig. <a href="#S3.F1" title="Figure 1 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>). The proposed Hourglass network is called DS-Hourglass network. More details are given as follows.</p>
+</div>
+<figure id="S3.F1" class="ltx_figure"><img src="/html/2012.03316/assets/images/hourglass2.png" id="S3.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="471" height="92" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>An illustration of a Hourglass module, “/2” means downsampling operation and “x2” means upsampling operation.
+</figcaption>
+</figure>
+<figure id="S3.F2" class="ltx_figure"><img src="/html/2012.03316/assets/images/residual_37.png" id="S3.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="471" height="257" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Architecture of the ResBlocks. (a) The original ResBlock in Hourglass<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>. (b) another kind of ResBlock proposed in ResNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>. (c) DS-ResBlock corresponding to (b), (d) replace the DWConv in (c) with Mix-Cov.
+</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Depthwise Separable Convolutions</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">A depthwise separable convolution decomposes a standard convolutional operation into a depthwise convolution (capture the spatial correlation) followed by a pointwise convolution (capture the cross-channel correlation).</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.10" class="ltx_p">A standard convolution operation needs <math id="S3.SS2.p2.1.m1.1" class="ltx_Math" alttext="c_{1}\times c_{2}\times k\times k" display="inline"><semantics id="S3.SS2.p2.1.m1.1a"><mrow id="S3.SS2.p2.1.m1.1.1" xref="S3.SS2.p2.1.m1.1.1.cmml"><msub id="S3.SS2.p2.1.m1.1.1.2" xref="S3.SS2.p2.1.m1.1.1.2.cmml"><mi id="S3.SS2.p2.1.m1.1.1.2.2" xref="S3.SS2.p2.1.m1.1.1.2.2.cmml">c</mi><mn id="S3.SS2.p2.1.m1.1.1.2.3" xref="S3.SS2.p2.1.m1.1.1.2.3.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.1.m1.1.1.1" xref="S3.SS2.p2.1.m1.1.1.1.cmml">×</mo><msub id="S3.SS2.p2.1.m1.1.1.3" xref="S3.SS2.p2.1.m1.1.1.3.cmml"><mi id="S3.SS2.p2.1.m1.1.1.3.2" xref="S3.SS2.p2.1.m1.1.1.3.2.cmml">c</mi><mn id="S3.SS2.p2.1.m1.1.1.3.3" xref="S3.SS2.p2.1.m1.1.1.3.3.cmml">2</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.1.m1.1.1.1a" xref="S3.SS2.p2.1.m1.1.1.1.cmml">×</mo><mi id="S3.SS2.p2.1.m1.1.1.4" xref="S3.SS2.p2.1.m1.1.1.4.cmml">k</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.1.m1.1.1.1b" xref="S3.SS2.p2.1.m1.1.1.1.cmml">×</mo><mi id="S3.SS2.p2.1.m1.1.1.5" xref="S3.SS2.p2.1.m1.1.1.5.cmml">k</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.1.m1.1b"><apply id="S3.SS2.p2.1.m1.1.1.cmml" xref="S3.SS2.p2.1.m1.1.1"><times id="S3.SS2.p2.1.m1.1.1.1.cmml" xref="S3.SS2.p2.1.m1.1.1.1"></times><apply id="S3.SS2.p2.1.m1.1.1.2.cmml" xref="S3.SS2.p2.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.SS2.p2.1.m1.1.1.2.1.cmml" xref="S3.SS2.p2.1.m1.1.1.2">subscript</csymbol><ci id="S3.SS2.p2.1.m1.1.1.2.2.cmml" xref="S3.SS2.p2.1.m1.1.1.2.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.1.m1.1.1.2.3.cmml" xref="S3.SS2.p2.1.m1.1.1.2.3">1</cn></apply><apply id="S3.SS2.p2.1.m1.1.1.3.cmml" xref="S3.SS2.p2.1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.p2.1.m1.1.1.3.1.cmml" xref="S3.SS2.p2.1.m1.1.1.3">subscript</csymbol><ci id="S3.SS2.p2.1.m1.1.1.3.2.cmml" xref="S3.SS2.p2.1.m1.1.1.3.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.1.m1.1.1.3.3.cmml" xref="S3.SS2.p2.1.m1.1.1.3.3">2</cn></apply><ci id="S3.SS2.p2.1.m1.1.1.4.cmml" xref="S3.SS2.p2.1.m1.1.1.4">𝑘</ci><ci id="S3.SS2.p2.1.m1.1.1.5.cmml" xref="S3.SS2.p2.1.m1.1.1.5">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.1.m1.1c">c_{1}\times c_{2}\times k\times k</annotation></semantics></math> parameters and about <math id="S3.SS2.p2.2.m2.1" class="ltx_Math" alttext="h\times w\times c_{1}\times c_{2}\times k\times k" display="inline"><semantics id="S3.SS2.p2.2.m2.1a"><mrow id="S3.SS2.p2.2.m2.1.1" xref="S3.SS2.p2.2.m2.1.1.cmml"><mi id="S3.SS2.p2.2.m2.1.1.2" xref="S3.SS2.p2.2.m2.1.1.2.cmml">h</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.2.m2.1.1.1" xref="S3.SS2.p2.2.m2.1.1.1.cmml">×</mo><mi id="S3.SS2.p2.2.m2.1.1.3" xref="S3.SS2.p2.2.m2.1.1.3.cmml">w</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.2.m2.1.1.1a" xref="S3.SS2.p2.2.m2.1.1.1.cmml">×</mo><msub id="S3.SS2.p2.2.m2.1.1.4" xref="S3.SS2.p2.2.m2.1.1.4.cmml"><mi id="S3.SS2.p2.2.m2.1.1.4.2" xref="S3.SS2.p2.2.m2.1.1.4.2.cmml">c</mi><mn id="S3.SS2.p2.2.m2.1.1.4.3" xref="S3.SS2.p2.2.m2.1.1.4.3.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.2.m2.1.1.1b" xref="S3.SS2.p2.2.m2.1.1.1.cmml">×</mo><msub id="S3.SS2.p2.2.m2.1.1.5" xref="S3.SS2.p2.2.m2.1.1.5.cmml"><mi id="S3.SS2.p2.2.m2.1.1.5.2" xref="S3.SS2.p2.2.m2.1.1.5.2.cmml">c</mi><mn id="S3.SS2.p2.2.m2.1.1.5.3" xref="S3.SS2.p2.2.m2.1.1.5.3.cmml">2</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.2.m2.1.1.1c" xref="S3.SS2.p2.2.m2.1.1.1.cmml">×</mo><mi id="S3.SS2.p2.2.m2.1.1.6" xref="S3.SS2.p2.2.m2.1.1.6.cmml">k</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.2.m2.1.1.1d" xref="S3.SS2.p2.2.m2.1.1.1.cmml">×</mo><mi id="S3.SS2.p2.2.m2.1.1.7" xref="S3.SS2.p2.2.m2.1.1.7.cmml">k</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.2.m2.1b"><apply id="S3.SS2.p2.2.m2.1.1.cmml" xref="S3.SS2.p2.2.m2.1.1"><times id="S3.SS2.p2.2.m2.1.1.1.cmml" xref="S3.SS2.p2.2.m2.1.1.1"></times><ci id="S3.SS2.p2.2.m2.1.1.2.cmml" xref="S3.SS2.p2.2.m2.1.1.2">ℎ</ci><ci id="S3.SS2.p2.2.m2.1.1.3.cmml" xref="S3.SS2.p2.2.m2.1.1.3">𝑤</ci><apply id="S3.SS2.p2.2.m2.1.1.4.cmml" xref="S3.SS2.p2.2.m2.1.1.4"><csymbol cd="ambiguous" id="S3.SS2.p2.2.m2.1.1.4.1.cmml" xref="S3.SS2.p2.2.m2.1.1.4">subscript</csymbol><ci id="S3.SS2.p2.2.m2.1.1.4.2.cmml" xref="S3.SS2.p2.2.m2.1.1.4.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.2.m2.1.1.4.3.cmml" xref="S3.SS2.p2.2.m2.1.1.4.3">1</cn></apply><apply id="S3.SS2.p2.2.m2.1.1.5.cmml" xref="S3.SS2.p2.2.m2.1.1.5"><csymbol cd="ambiguous" id="S3.SS2.p2.2.m2.1.1.5.1.cmml" xref="S3.SS2.p2.2.m2.1.1.5">subscript</csymbol><ci id="S3.SS2.p2.2.m2.1.1.5.2.cmml" xref="S3.SS2.p2.2.m2.1.1.5.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.2.m2.1.1.5.3.cmml" xref="S3.SS2.p2.2.m2.1.1.5.3">2</cn></apply><ci id="S3.SS2.p2.2.m2.1.1.6.cmml" xref="S3.SS2.p2.2.m2.1.1.6">𝑘</ci><ci id="S3.SS2.p2.2.m2.1.1.7.cmml" xref="S3.SS2.p2.2.m2.1.1.7">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.2.m2.1c">h\times w\times c_{1}\times c_{2}\times k\times k</annotation></semantics></math> computational cost, where <math id="S3.SS2.p2.3.m3.1" class="ltx_Math" alttext="h\times w" display="inline"><semantics id="S3.SS2.p2.3.m3.1a"><mrow id="S3.SS2.p2.3.m3.1.1" xref="S3.SS2.p2.3.m3.1.1.cmml"><mi id="S3.SS2.p2.3.m3.1.1.2" xref="S3.SS2.p2.3.m3.1.1.2.cmml">h</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.3.m3.1.1.1" xref="S3.SS2.p2.3.m3.1.1.1.cmml">×</mo><mi id="S3.SS2.p2.3.m3.1.1.3" xref="S3.SS2.p2.3.m3.1.1.3.cmml">w</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.3.m3.1b"><apply id="S3.SS2.p2.3.m3.1.1.cmml" xref="S3.SS2.p2.3.m3.1.1"><times id="S3.SS2.p2.3.m3.1.1.1.cmml" xref="S3.SS2.p2.3.m3.1.1.1"></times><ci id="S3.SS2.p2.3.m3.1.1.2.cmml" xref="S3.SS2.p2.3.m3.1.1.2">ℎ</ci><ci id="S3.SS2.p2.3.m3.1.1.3.cmml" xref="S3.SS2.p2.3.m3.1.1.3">𝑤</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.3.m3.1c">h\times w</annotation></semantics></math>, <math id="S3.SS2.p2.4.m4.1" class="ltx_Math" alttext="c_{1}/c_{2}" display="inline"><semantics id="S3.SS2.p2.4.m4.1a"><mrow id="S3.SS2.p2.4.m4.1.1" xref="S3.SS2.p2.4.m4.1.1.cmml"><msub id="S3.SS2.p2.4.m4.1.1.2" xref="S3.SS2.p2.4.m4.1.1.2.cmml"><mi id="S3.SS2.p2.4.m4.1.1.2.2" xref="S3.SS2.p2.4.m4.1.1.2.2.cmml">c</mi><mn id="S3.SS2.p2.4.m4.1.1.2.3" xref="S3.SS2.p2.4.m4.1.1.2.3.cmml">1</mn></msub><mo id="S3.SS2.p2.4.m4.1.1.1" xref="S3.SS2.p2.4.m4.1.1.1.cmml">/</mo><msub id="S3.SS2.p2.4.m4.1.1.3" xref="S3.SS2.p2.4.m4.1.1.3.cmml"><mi id="S3.SS2.p2.4.m4.1.1.3.2" xref="S3.SS2.p2.4.m4.1.1.3.2.cmml">c</mi><mn id="S3.SS2.p2.4.m4.1.1.3.3" xref="S3.SS2.p2.4.m4.1.1.3.3.cmml">2</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.4.m4.1b"><apply id="S3.SS2.p2.4.m4.1.1.cmml" xref="S3.SS2.p2.4.m4.1.1"><divide id="S3.SS2.p2.4.m4.1.1.1.cmml" xref="S3.SS2.p2.4.m4.1.1.1"></divide><apply id="S3.SS2.p2.4.m4.1.1.2.cmml" xref="S3.SS2.p2.4.m4.1.1.2"><csymbol cd="ambiguous" id="S3.SS2.p2.4.m4.1.1.2.1.cmml" xref="S3.SS2.p2.4.m4.1.1.2">subscript</csymbol><ci id="S3.SS2.p2.4.m4.1.1.2.2.cmml" xref="S3.SS2.p2.4.m4.1.1.2.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.4.m4.1.1.2.3.cmml" xref="S3.SS2.p2.4.m4.1.1.2.3">1</cn></apply><apply id="S3.SS2.p2.4.m4.1.1.3.cmml" xref="S3.SS2.p2.4.m4.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.p2.4.m4.1.1.3.1.cmml" xref="S3.SS2.p2.4.m4.1.1.3">subscript</csymbol><ci id="S3.SS2.p2.4.m4.1.1.3.2.cmml" xref="S3.SS2.p2.4.m4.1.1.3.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.4.m4.1.1.3.3.cmml" xref="S3.SS2.p2.4.m4.1.1.3.3">2</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.4.m4.1c">c_{1}/c_{2}</annotation></semantics></math> and <math id="S3.SS2.p2.5.m5.1" class="ltx_Math" alttext="k\times k" display="inline"><semantics id="S3.SS2.p2.5.m5.1a"><mrow id="S3.SS2.p2.5.m5.1.1" xref="S3.SS2.p2.5.m5.1.1.cmml"><mi id="S3.SS2.p2.5.m5.1.1.2" xref="S3.SS2.p2.5.m5.1.1.2.cmml">k</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.5.m5.1.1.1" xref="S3.SS2.p2.5.m5.1.1.1.cmml">×</mo><mi id="S3.SS2.p2.5.m5.1.1.3" xref="S3.SS2.p2.5.m5.1.1.3.cmml">k</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.5.m5.1b"><apply id="S3.SS2.p2.5.m5.1.1.cmml" xref="S3.SS2.p2.5.m5.1.1"><times id="S3.SS2.p2.5.m5.1.1.1.cmml" xref="S3.SS2.p2.5.m5.1.1.1"></times><ci id="S3.SS2.p2.5.m5.1.1.2.cmml" xref="S3.SS2.p2.5.m5.1.1.2">𝑘</ci><ci id="S3.SS2.p2.5.m5.1.1.3.cmml" xref="S3.SS2.p2.5.m5.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.5.m5.1c">k\times k</annotation></semantics></math> are the spatial size of input and output feature maps, the number of input/output feature channels and the convolutional kernel size, respectively. While a depthwise separable convolution operation only needs <math id="S3.SS2.p2.6.m6.1" class="ltx_Math" alttext="c_{1}\times k\times k+c_{1}\times c_{2}" display="inline"><semantics id="S3.SS2.p2.6.m6.1a"><mrow id="S3.SS2.p2.6.m6.1.1" xref="S3.SS2.p2.6.m6.1.1.cmml"><mrow id="S3.SS2.p2.6.m6.1.1.2" xref="S3.SS2.p2.6.m6.1.1.2.cmml"><msub id="S3.SS2.p2.6.m6.1.1.2.2" xref="S3.SS2.p2.6.m6.1.1.2.2.cmml"><mi id="S3.SS2.p2.6.m6.1.1.2.2.2" xref="S3.SS2.p2.6.m6.1.1.2.2.2.cmml">c</mi><mn id="S3.SS2.p2.6.m6.1.1.2.2.3" xref="S3.SS2.p2.6.m6.1.1.2.2.3.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.6.m6.1.1.2.1" xref="S3.SS2.p2.6.m6.1.1.2.1.cmml">×</mo><mi id="S3.SS2.p2.6.m6.1.1.2.3" xref="S3.SS2.p2.6.m6.1.1.2.3.cmml">k</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.6.m6.1.1.2.1a" xref="S3.SS2.p2.6.m6.1.1.2.1.cmml">×</mo><mi id="S3.SS2.p2.6.m6.1.1.2.4" xref="S3.SS2.p2.6.m6.1.1.2.4.cmml">k</mi></mrow><mo id="S3.SS2.p2.6.m6.1.1.1" xref="S3.SS2.p2.6.m6.1.1.1.cmml">+</mo><mrow id="S3.SS2.p2.6.m6.1.1.3" xref="S3.SS2.p2.6.m6.1.1.3.cmml"><msub id="S3.SS2.p2.6.m6.1.1.3.2" xref="S3.SS2.p2.6.m6.1.1.3.2.cmml"><mi id="S3.SS2.p2.6.m6.1.1.3.2.2" xref="S3.SS2.p2.6.m6.1.1.3.2.2.cmml">c</mi><mn id="S3.SS2.p2.6.m6.1.1.3.2.3" xref="S3.SS2.p2.6.m6.1.1.3.2.3.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.6.m6.1.1.3.1" xref="S3.SS2.p2.6.m6.1.1.3.1.cmml">×</mo><msub id="S3.SS2.p2.6.m6.1.1.3.3" xref="S3.SS2.p2.6.m6.1.1.3.3.cmml"><mi id="S3.SS2.p2.6.m6.1.1.3.3.2" xref="S3.SS2.p2.6.m6.1.1.3.3.2.cmml">c</mi><mn id="S3.SS2.p2.6.m6.1.1.3.3.3" xref="S3.SS2.p2.6.m6.1.1.3.3.3.cmml">2</mn></msub></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.6.m6.1b"><apply id="S3.SS2.p2.6.m6.1.1.cmml" xref="S3.SS2.p2.6.m6.1.1"><plus id="S3.SS2.p2.6.m6.1.1.1.cmml" xref="S3.SS2.p2.6.m6.1.1.1"></plus><apply id="S3.SS2.p2.6.m6.1.1.2.cmml" xref="S3.SS2.p2.6.m6.1.1.2"><times id="S3.SS2.p2.6.m6.1.1.2.1.cmml" xref="S3.SS2.p2.6.m6.1.1.2.1"></times><apply id="S3.SS2.p2.6.m6.1.1.2.2.cmml" xref="S3.SS2.p2.6.m6.1.1.2.2"><csymbol cd="ambiguous" id="S3.SS2.p2.6.m6.1.1.2.2.1.cmml" xref="S3.SS2.p2.6.m6.1.1.2.2">subscript</csymbol><ci id="S3.SS2.p2.6.m6.1.1.2.2.2.cmml" xref="S3.SS2.p2.6.m6.1.1.2.2.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.6.m6.1.1.2.2.3.cmml" xref="S3.SS2.p2.6.m6.1.1.2.2.3">1</cn></apply><ci id="S3.SS2.p2.6.m6.1.1.2.3.cmml" xref="S3.SS2.p2.6.m6.1.1.2.3">𝑘</ci><ci id="S3.SS2.p2.6.m6.1.1.2.4.cmml" xref="S3.SS2.p2.6.m6.1.1.2.4">𝑘</ci></apply><apply id="S3.SS2.p2.6.m6.1.1.3.cmml" xref="S3.SS2.p2.6.m6.1.1.3"><times id="S3.SS2.p2.6.m6.1.1.3.1.cmml" xref="S3.SS2.p2.6.m6.1.1.3.1"></times><apply id="S3.SS2.p2.6.m6.1.1.3.2.cmml" xref="S3.SS2.p2.6.m6.1.1.3.2"><csymbol cd="ambiguous" id="S3.SS2.p2.6.m6.1.1.3.2.1.cmml" xref="S3.SS2.p2.6.m6.1.1.3.2">subscript</csymbol><ci id="S3.SS2.p2.6.m6.1.1.3.2.2.cmml" xref="S3.SS2.p2.6.m6.1.1.3.2.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.6.m6.1.1.3.2.3.cmml" xref="S3.SS2.p2.6.m6.1.1.3.2.3">1</cn></apply><apply id="S3.SS2.p2.6.m6.1.1.3.3.cmml" xref="S3.SS2.p2.6.m6.1.1.3.3"><csymbol cd="ambiguous" id="S3.SS2.p2.6.m6.1.1.3.3.1.cmml" xref="S3.SS2.p2.6.m6.1.1.3.3">subscript</csymbol><ci id="S3.SS2.p2.6.m6.1.1.3.3.2.cmml" xref="S3.SS2.p2.6.m6.1.1.3.3.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.6.m6.1.1.3.3.3.cmml" xref="S3.SS2.p2.6.m6.1.1.3.3.3">2</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.6.m6.1c">c_{1}\times k\times k+c_{1}\times c_{2}</annotation></semantics></math> parameters and about <math id="S3.SS2.p2.7.m7.1" class="ltx_Math" alttext="h\times w\times c_{1}(k^{2}+c_{2})" display="inline"><semantics id="S3.SS2.p2.7.m7.1a"><mrow id="S3.SS2.p2.7.m7.1.1" xref="S3.SS2.p2.7.m7.1.1.cmml"><mrow id="S3.SS2.p2.7.m7.1.1.3" xref="S3.SS2.p2.7.m7.1.1.3.cmml"><mi id="S3.SS2.p2.7.m7.1.1.3.2" xref="S3.SS2.p2.7.m7.1.1.3.2.cmml">h</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.7.m7.1.1.3.1" xref="S3.SS2.p2.7.m7.1.1.3.1.cmml">×</mo><mi id="S3.SS2.p2.7.m7.1.1.3.3" xref="S3.SS2.p2.7.m7.1.1.3.3.cmml">w</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p2.7.m7.1.1.3.1a" xref="S3.SS2.p2.7.m7.1.1.3.1.cmml">×</mo><msub id="S3.SS2.p2.7.m7.1.1.3.4" xref="S3.SS2.p2.7.m7.1.1.3.4.cmml"><mi id="S3.SS2.p2.7.m7.1.1.3.4.2" xref="S3.SS2.p2.7.m7.1.1.3.4.2.cmml">c</mi><mn id="S3.SS2.p2.7.m7.1.1.3.4.3" xref="S3.SS2.p2.7.m7.1.1.3.4.3.cmml">1</mn></msub></mrow><mo lspace="0em" rspace="0em" id="S3.SS2.p2.7.m7.1.1.2" xref="S3.SS2.p2.7.m7.1.1.2.cmml">​</mo><mrow id="S3.SS2.p2.7.m7.1.1.1.1" xref="S3.SS2.p2.7.m7.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.SS2.p2.7.m7.1.1.1.1.2" xref="S3.SS2.p2.7.m7.1.1.1.1.1.cmml">(</mo><mrow id="S3.SS2.p2.7.m7.1.1.1.1.1" xref="S3.SS2.p2.7.m7.1.1.1.1.1.cmml"><msup id="S3.SS2.p2.7.m7.1.1.1.1.1.2" xref="S3.SS2.p2.7.m7.1.1.1.1.1.2.cmml"><mi id="S3.SS2.p2.7.m7.1.1.1.1.1.2.2" xref="S3.SS2.p2.7.m7.1.1.1.1.1.2.2.cmml">k</mi><mn id="S3.SS2.p2.7.m7.1.1.1.1.1.2.3" xref="S3.SS2.p2.7.m7.1.1.1.1.1.2.3.cmml">2</mn></msup><mo id="S3.SS2.p2.7.m7.1.1.1.1.1.1" xref="S3.SS2.p2.7.m7.1.1.1.1.1.1.cmml">+</mo><msub id="S3.SS2.p2.7.m7.1.1.1.1.1.3" xref="S3.SS2.p2.7.m7.1.1.1.1.1.3.cmml"><mi id="S3.SS2.p2.7.m7.1.1.1.1.1.3.2" xref="S3.SS2.p2.7.m7.1.1.1.1.1.3.2.cmml">c</mi><mn id="S3.SS2.p2.7.m7.1.1.1.1.1.3.3" xref="S3.SS2.p2.7.m7.1.1.1.1.1.3.3.cmml">2</mn></msub></mrow><mo stretchy="false" id="S3.SS2.p2.7.m7.1.1.1.1.3" xref="S3.SS2.p2.7.m7.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.7.m7.1b"><apply id="S3.SS2.p2.7.m7.1.1.cmml" xref="S3.SS2.p2.7.m7.1.1"><times id="S3.SS2.p2.7.m7.1.1.2.cmml" xref="S3.SS2.p2.7.m7.1.1.2"></times><apply id="S3.SS2.p2.7.m7.1.1.3.cmml" xref="S3.SS2.p2.7.m7.1.1.3"><times id="S3.SS2.p2.7.m7.1.1.3.1.cmml" xref="S3.SS2.p2.7.m7.1.1.3.1"></times><ci id="S3.SS2.p2.7.m7.1.1.3.2.cmml" xref="S3.SS2.p2.7.m7.1.1.3.2">ℎ</ci><ci id="S3.SS2.p2.7.m7.1.1.3.3.cmml" xref="S3.SS2.p2.7.m7.1.1.3.3">𝑤</ci><apply id="S3.SS2.p2.7.m7.1.1.3.4.cmml" xref="S3.SS2.p2.7.m7.1.1.3.4"><csymbol cd="ambiguous" id="S3.SS2.p2.7.m7.1.1.3.4.1.cmml" xref="S3.SS2.p2.7.m7.1.1.3.4">subscript</csymbol><ci id="S3.SS2.p2.7.m7.1.1.3.4.2.cmml" xref="S3.SS2.p2.7.m7.1.1.3.4.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.7.m7.1.1.3.4.3.cmml" xref="S3.SS2.p2.7.m7.1.1.3.4.3">1</cn></apply></apply><apply id="S3.SS2.p2.7.m7.1.1.1.1.1.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1"><plus id="S3.SS2.p2.7.m7.1.1.1.1.1.1.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.1"></plus><apply id="S3.SS2.p2.7.m7.1.1.1.1.1.2.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.SS2.p2.7.m7.1.1.1.1.1.2.1.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.2">superscript</csymbol><ci id="S3.SS2.p2.7.m7.1.1.1.1.1.2.2.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.2.2">𝑘</ci><cn type="integer" id="S3.SS2.p2.7.m7.1.1.1.1.1.2.3.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.2.3">2</cn></apply><apply id="S3.SS2.p2.7.m7.1.1.1.1.1.3.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.p2.7.m7.1.1.1.1.1.3.1.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.3">subscript</csymbol><ci id="S3.SS2.p2.7.m7.1.1.1.1.1.3.2.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.3.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.7.m7.1.1.1.1.1.3.3.cmml" xref="S3.SS2.p2.7.m7.1.1.1.1.1.3.3">2</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.7.m7.1c">h\times w\times c_{1}(k^{2}+c_{2})</annotation></semantics></math> computational cost. For example, if we set <math id="S3.SS2.p2.8.m8.1" class="ltx_Math" alttext="k" display="inline"><semantics id="S3.SS2.p2.8.m8.1a"><mi id="S3.SS2.p2.8.m8.1.1" xref="S3.SS2.p2.8.m8.1.1.cmml">k</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.8.m8.1b"><ci id="S3.SS2.p2.8.m8.1.1.cmml" xref="S3.SS2.p2.8.m8.1.1">𝑘</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.8.m8.1c">k</annotation></semantics></math> to 3 and <math id="S3.SS2.p2.9.m9.1" class="ltx_Math" alttext="c_{2}" display="inline"><semantics id="S3.SS2.p2.9.m9.1a"><msub id="S3.SS2.p2.9.m9.1.1" xref="S3.SS2.p2.9.m9.1.1.cmml"><mi id="S3.SS2.p2.9.m9.1.1.2" xref="S3.SS2.p2.9.m9.1.1.2.cmml">c</mi><mn id="S3.SS2.p2.9.m9.1.1.3" xref="S3.SS2.p2.9.m9.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.9.m9.1b"><apply id="S3.SS2.p2.9.m9.1.1.cmml" xref="S3.SS2.p2.9.m9.1.1"><csymbol cd="ambiguous" id="S3.SS2.p2.9.m9.1.1.1.cmml" xref="S3.SS2.p2.9.m9.1.1">subscript</csymbol><ci id="S3.SS2.p2.9.m9.1.1.2.cmml" xref="S3.SS2.p2.9.m9.1.1.2">𝑐</ci><cn type="integer" id="S3.SS2.p2.9.m9.1.1.3.cmml" xref="S3.SS2.p2.9.m9.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.9.m9.1c">c_{2}</annotation></semantics></math> to 128, the number of parameters and the computational cost of the depthwise separable convolution is only about <math id="S3.SS2.p2.10.m10.1" class="ltx_Math" alttext="1/9" display="inline"><semantics id="S3.SS2.p2.10.m10.1a"><mrow id="S3.SS2.p2.10.m10.1.1" xref="S3.SS2.p2.10.m10.1.1.cmml"><mn id="S3.SS2.p2.10.m10.1.1.2" xref="S3.SS2.p2.10.m10.1.1.2.cmml">1</mn><mo id="S3.SS2.p2.10.m10.1.1.1" xref="S3.SS2.p2.10.m10.1.1.1.cmml">/</mo><mn id="S3.SS2.p2.10.m10.1.1.3" xref="S3.SS2.p2.10.m10.1.1.3.cmml">9</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.10.m10.1b"><apply id="S3.SS2.p2.10.m10.1.1.cmml" xref="S3.SS2.p2.10.m10.1.1"><divide id="S3.SS2.p2.10.m10.1.1.1.cmml" xref="S3.SS2.p2.10.m10.1.1.1"></divide><cn type="integer" id="S3.SS2.p2.10.m10.1.1.2.cmml" xref="S3.SS2.p2.10.m10.1.1.2">1</cn><cn type="integer" id="S3.SS2.p2.10.m10.1.1.3.cmml" xref="S3.SS2.p2.10.m10.1.1.3">9</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.10.m10.1c">1/9</annotation></semantics></math> of the corresponding standard convolution.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Light-weight ResBlock</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.4" class="ltx_p">To develop efficient ResBlock, we first reduce the number of its input/output feature channels from 256 to 128, and use two stacked <math id="S3.SS3.p1.1.m1.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S3.SS3.p1.1.m1.1a"><mrow id="S3.SS3.p1.1.m1.1.1" xref="S3.SS3.p1.1.m1.1.1.cmml"><mn id="S3.SS3.p1.1.m1.1.1.2" xref="S3.SS3.p1.1.m1.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS3.p1.1.m1.1.1.1" xref="S3.SS3.p1.1.m1.1.1.1.cmml">×</mo><mn id="S3.SS3.p1.1.m1.1.1.3" xref="S3.SS3.p1.1.m1.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.1.m1.1b"><apply id="S3.SS3.p1.1.m1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1"><times id="S3.SS3.p1.1.m1.1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.SS3.p1.1.m1.1.1.2.cmml" xref="S3.SS3.p1.1.m1.1.1.2">3</cn><cn type="integer" id="S3.SS3.p1.1.m1.1.1.3.cmml" xref="S3.SS3.p1.1.m1.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.1.m1.1c">3\times 3</annotation></semantics></math> convolutions (Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(b)). Then, we replace the two standard <math id="S3.SS3.p1.2.m2.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S3.SS3.p1.2.m2.1a"><mrow id="S3.SS3.p1.2.m2.1.1" xref="S3.SS3.p1.2.m2.1.1.cmml"><mn id="S3.SS3.p1.2.m2.1.1.2" xref="S3.SS3.p1.2.m2.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS3.p1.2.m2.1.1.1" xref="S3.SS3.p1.2.m2.1.1.1.cmml">×</mo><mn id="S3.SS3.p1.2.m2.1.1.3" xref="S3.SS3.p1.2.m2.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.2.m2.1b"><apply id="S3.SS3.p1.2.m2.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1"><times id="S3.SS3.p1.2.m2.1.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1.1"></times><cn type="integer" id="S3.SS3.p1.2.m2.1.1.2.cmml" xref="S3.SS3.p1.2.m2.1.1.2">3</cn><cn type="integer" id="S3.SS3.p1.2.m2.1.1.3.cmml" xref="S3.SS3.p1.2.m2.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.2.m2.1c">3\times 3</annotation></semantics></math> convolutions with two depthwise separable convolutions followed with a squeeze-and-excitation (SE) block to get a light-weight ResBlock (Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(c)). The SE block is very efficicent and used to relocate features and strengthen features. To capture the information of different scales, we further replace the depthwise convolution with a mixed depthwise convolution (MixConv <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>) to get another version of light-weight ResBlock (Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(d)). In MixConv, the input feature channels are first split into groups, then depthwise convolutions with different kernel sizes are applied to different groups, finally, the output of each depthwise convolution are concatenated. In this paper, we apply kernels of <math id="S3.SS3.p1.3.m3.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S3.SS3.p1.3.m3.1a"><mrow id="S3.SS3.p1.3.m3.1.1" xref="S3.SS3.p1.3.m3.1.1.cmml"><mn id="S3.SS3.p1.3.m3.1.1.2" xref="S3.SS3.p1.3.m3.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS3.p1.3.m3.1.1.1" xref="S3.SS3.p1.3.m3.1.1.1.cmml">×</mo><mn id="S3.SS3.p1.3.m3.1.1.3" xref="S3.SS3.p1.3.m3.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.3.m3.1b"><apply id="S3.SS3.p1.3.m3.1.1.cmml" xref="S3.SS3.p1.3.m3.1.1"><times id="S3.SS3.p1.3.m3.1.1.1.cmml" xref="S3.SS3.p1.3.m3.1.1.1"></times><cn type="integer" id="S3.SS3.p1.3.m3.1.1.2.cmml" xref="S3.SS3.p1.3.m3.1.1.2">3</cn><cn type="integer" id="S3.SS3.p1.3.m3.1.1.3.cmml" xref="S3.SS3.p1.3.m3.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.3.m3.1c">3\times 3</annotation></semantics></math> and <math id="S3.SS3.p1.4.m4.1" class="ltx_Math" alttext="5\times 5" display="inline"><semantics id="S3.SS3.p1.4.m4.1a"><mrow id="S3.SS3.p1.4.m4.1.1" xref="S3.SS3.p1.4.m4.1.1.cmml"><mn id="S3.SS3.p1.4.m4.1.1.2" xref="S3.SS3.p1.4.m4.1.1.2.cmml">5</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS3.p1.4.m4.1.1.1" xref="S3.SS3.p1.4.m4.1.1.1.cmml">×</mo><mn id="S3.SS3.p1.4.m4.1.1.3" xref="S3.SS3.p1.4.m4.1.1.3.cmml">5</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.4.m4.1b"><apply id="S3.SS3.p1.4.m4.1.1.cmml" xref="S3.SS3.p1.4.m4.1.1"><times id="S3.SS3.p1.4.m4.1.1.1.cmml" xref="S3.SS3.p1.4.m4.1.1.1"></times><cn type="integer" id="S3.SS3.p1.4.m4.1.1.2.cmml" xref="S3.SS3.p1.4.m4.1.1.2">5</cn><cn type="integer" id="S3.SS3.p1.4.m4.1.1.3.cmml" xref="S3.SS3.p1.4.m4.1.1.3">5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.4.m4.1c">5\times 5</annotation></semantics></math> to two groups of channels respectively to trade-off the representation capability and the computational costs. In our study, we found that adding a skip connection around the second depthwise separable convolution can make the training of this ResBlock (Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(d)) more stable.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Multi-Person Pose Estimation</h2>
+
+<figure id="S4.F3" class="ltx_figure"><img src="/html/2012.03316/assets/images/pipline_final.png" id="S4.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="471" height="182" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Our pipeline. Our method takes color image as input, the DS-Hourglass build with 8 stage and predict 2 sets, heatmaps and offsetmaps, finally return joints for each person in image at once by our efficient joint grouping algorithm.</figcaption>
+</figure>
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">Fig. <a href="#S4.F3" title="Figure 3 ‣ 4 Multi-Person Pose Estimation ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> illustrates the overall pipeline of our network. Our multi-person pose estimation method first predicts joints of all person at once, then the joint candidates are grouped into different persons. To improve the efficiency of joint grouping, a rooted tree is used to represent human pose by using person centroid as the root which
+connecting to all the joints directly or hierarchically. Another network branch is used to predict the offset from each joint to its parent node.
+The person centroid is treated as a pseudo joint and predicted together with body joints. After that, body joints are grouped by tracing along their offsets to the closed centroids.</p>
+</div>
+<figure id="S4.F4" class="ltx_figure"><img src="/html/2012.03316/assets/images/tree_im3.png" id="S4.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="255" height="177" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Pose representations: (a) kinematic structure; (b) centroid-rooted tree; (c) heirarchical centroid-rooted tree</figcaption>
+</figure>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Centroid-rooted tree structure to define the offsets</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">The centroid-rooted tree structure is illustrated in Fig. <a href="#S4.F4" title="Figure 4 ‣ 4 Multi-Person Pose Estimation ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>(b), where the person centriod (root node) directly connect to all body joints (leaf nodes). The drawback of this representation is that it leads to some long-range offsets which are hard to be precisely predicted, e.g. from ankle, knee and wrist to the centroid. To alleviate this problem, we further proposed a hierarchical centroid-rooted tree (Fig. <a href="#S4.F4" title="Figure 4 ‣ 4 Multi-Person Pose Estimation ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>(c)) based on the kinematic structure (Fig. <a href="#S4.F4" title="Figure 4 ‣ 4 Multi-Person Pose Estimation ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>(a)), where the long-range offsets are decomposed into short-range or middle-range offsets.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Joint and Offset Prediction</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">Our network has two branches of sub-networks for joint and offset prediction. Both sub-networks have only one <math id="S4.SS2.p1.1.m1.1" class="ltx_Math" alttext="1\times 1" display="inline"><semantics id="S4.SS2.p1.1.m1.1a"><mrow id="S4.SS2.p1.1.m1.1.1" xref="S4.SS2.p1.1.m1.1.1.cmml"><mn id="S4.SS2.p1.1.m1.1.1.2" xref="S4.SS2.p1.1.m1.1.1.2.cmml">1</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS2.p1.1.m1.1.1.1" xref="S4.SS2.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS2.p1.1.m1.1.1.3" xref="S4.SS2.p1.1.m1.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.1.m1.1b"><apply id="S4.SS2.p1.1.m1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1"><times id="S4.SS2.p1.1.m1.1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS2.p1.1.m1.1.1.2.cmml" xref="S4.SS2.p1.1.m1.1.1.2">1</cn><cn type="integer" id="S4.SS2.p1.1.m1.1.1.3.cmml" xref="S4.SS2.p1.1.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.1.m1.1c">1\times 1</annotation></semantics></math> convolution and share the same feature maps from hourglass module.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.6" class="ltx_p"><span id="S4.SS2.p2.6.1" class="ltx_text ltx_font_bold">Joint Prediction</span>. Our groud-truth heatmap is generated according to following equation,</p>
+<table id="S4.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E1.m1.7" class="ltx_Math" alttext="H_{j}(x,y)=min(\sum_{i=1}^{N}exp(-\frac{((x,y)-(x_{j}^{i},y_{j}^{i}))^{2}}{2\sigma^{2}}),1)," display="block"><semantics id="S4.E1.m1.7a"><mrow id="S4.E1.m1.7.7.1" xref="S4.E1.m1.7.7.1.1.cmml"><mrow id="S4.E1.m1.7.7.1.1" xref="S4.E1.m1.7.7.1.1.cmml"><mrow id="S4.E1.m1.7.7.1.1.3" xref="S4.E1.m1.7.7.1.1.3.cmml"><msub id="S4.E1.m1.7.7.1.1.3.2" xref="S4.E1.m1.7.7.1.1.3.2.cmml"><mi id="S4.E1.m1.7.7.1.1.3.2.2" xref="S4.E1.m1.7.7.1.1.3.2.2.cmml">H</mi><mi id="S4.E1.m1.7.7.1.1.3.2.3" xref="S4.E1.m1.7.7.1.1.3.2.3.cmml">j</mi></msub><mo lspace="0em" rspace="0em" id="S4.E1.m1.7.7.1.1.3.1" xref="S4.E1.m1.7.7.1.1.3.1.cmml">​</mo><mrow id="S4.E1.m1.7.7.1.1.3.3.2" xref="S4.E1.m1.7.7.1.1.3.3.1.cmml"><mo stretchy="false" id="S4.E1.m1.7.7.1.1.3.3.2.1" xref="S4.E1.m1.7.7.1.1.3.3.1.cmml">(</mo><mi id="S4.E1.m1.4.4" xref="S4.E1.m1.4.4.cmml">x</mi><mo id="S4.E1.m1.7.7.1.1.3.3.2.2" xref="S4.E1.m1.7.7.1.1.3.3.1.cmml">,</mo><mi id="S4.E1.m1.5.5" xref="S4.E1.m1.5.5.cmml">y</mi><mo stretchy="false" id="S4.E1.m1.7.7.1.1.3.3.2.3" xref="S4.E1.m1.7.7.1.1.3.3.1.cmml">)</mo></mrow></mrow><mo id="S4.E1.m1.7.7.1.1.2" xref="S4.E1.m1.7.7.1.1.2.cmml">=</mo><mrow id="S4.E1.m1.7.7.1.1.1" xref="S4.E1.m1.7.7.1.1.1.cmml"><mi id="S4.E1.m1.7.7.1.1.1.3" xref="S4.E1.m1.7.7.1.1.1.3.cmml">m</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.7.7.1.1.1.2" xref="S4.E1.m1.7.7.1.1.1.2.cmml">​</mo><mi id="S4.E1.m1.7.7.1.1.1.4" xref="S4.E1.m1.7.7.1.1.1.4.cmml">i</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.7.7.1.1.1.2a" xref="S4.E1.m1.7.7.1.1.1.2.cmml">​</mo><mi id="S4.E1.m1.7.7.1.1.1.5" xref="S4.E1.m1.7.7.1.1.1.5.cmml">n</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.7.7.1.1.1.2b" xref="S4.E1.m1.7.7.1.1.1.2.cmml">​</mo><mrow id="S4.E1.m1.7.7.1.1.1.1.1" xref="S4.E1.m1.7.7.1.1.1.1.2.cmml"><mo stretchy="false" id="S4.E1.m1.7.7.1.1.1.1.1.2" xref="S4.E1.m1.7.7.1.1.1.1.2.cmml">(</mo><mrow id="S4.E1.m1.7.7.1.1.1.1.1.1" xref="S4.E1.m1.7.7.1.1.1.1.1.1.cmml"><munderover id="S4.E1.m1.7.7.1.1.1.1.1.1.2" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.cmml"><mo lspace="0em" movablelimits="false" id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.2" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.cmml"><mi id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.2" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.2.cmml">i</mi><mo id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.1" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.3" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S4.E1.m1.7.7.1.1.1.1.1.1.2.3" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.3.cmml">N</mi></munderover><mrow id="S4.E1.m1.7.7.1.1.1.1.1.1.1" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.cmml"><mi id="S4.E1.m1.7.7.1.1.1.1.1.1.1.3" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.7.7.1.1.1.1.1.1.1.2" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.2.cmml">​</mo><mi id="S4.E1.m1.7.7.1.1.1.1.1.1.1.4" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.4.cmml">x</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.7.7.1.1.1.1.1.1.1.2a" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.2.cmml">​</mo><mi id="S4.E1.m1.7.7.1.1.1.1.1.1.1.5" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.5.cmml">p</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.7.7.1.1.1.1.1.1.1.2b" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.2.cmml">​</mo><mrow id="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.2" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1.cmml"><mo id="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1a" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1.cmml">−</mo><mfrac id="S4.E1.m1.3.3" xref="S4.E1.m1.3.3.cmml"><msup id="S4.E1.m1.3.3.3" xref="S4.E1.m1.3.3.3.cmml"><mrow id="S4.E1.m1.3.3.3.3.1" xref="S4.E1.m1.3.3.3.3.1.1.cmml"><mo stretchy="false" id="S4.E1.m1.3.3.3.3.1.2" xref="S4.E1.m1.3.3.3.3.1.1.cmml">(</mo><mrow id="S4.E1.m1.3.3.3.3.1.1" xref="S4.E1.m1.3.3.3.3.1.1.cmml"><mrow id="S4.E1.m1.3.3.3.3.1.1.4.2" xref="S4.E1.m1.3.3.3.3.1.1.4.1.cmml"><mo stretchy="false" id="S4.E1.m1.3.3.3.3.1.1.4.2.1" xref="S4.E1.m1.3.3.3.3.1.1.4.1.cmml">(</mo><mi id="S4.E1.m1.1.1.1.1" xref="S4.E1.m1.1.1.1.1.cmml">x</mi><mo id="S4.E1.m1.3.3.3.3.1.1.4.2.2" xref="S4.E1.m1.3.3.3.3.1.1.4.1.cmml">,</mo><mi id="S4.E1.m1.2.2.2.2" xref="S4.E1.m1.2.2.2.2.cmml">y</mi><mo stretchy="false" id="S4.E1.m1.3.3.3.3.1.1.4.2.3" xref="S4.E1.m1.3.3.3.3.1.1.4.1.cmml">)</mo></mrow><mo id="S4.E1.m1.3.3.3.3.1.1.3" xref="S4.E1.m1.3.3.3.3.1.1.3.cmml">−</mo><mrow id="S4.E1.m1.3.3.3.3.1.1.2.2" xref="S4.E1.m1.3.3.3.3.1.1.2.3.cmml"><mo stretchy="false" id="S4.E1.m1.3.3.3.3.1.1.2.2.3" xref="S4.E1.m1.3.3.3.3.1.1.2.3.cmml">(</mo><msubsup id="S4.E1.m1.3.3.3.3.1.1.1.1.1" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1.cmml"><mi id="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.2" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.2.cmml">x</mi><mi id="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.3" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.3.cmml">j</mi><mi id="S4.E1.m1.3.3.3.3.1.1.1.1.1.3" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1.3.cmml">i</mi></msubsup><mo id="S4.E1.m1.3.3.3.3.1.1.2.2.4" xref="S4.E1.m1.3.3.3.3.1.1.2.3.cmml">,</mo><msubsup id="S4.E1.m1.3.3.3.3.1.1.2.2.2" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2.cmml"><mi id="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.2" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.2.cmml">y</mi><mi id="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.3" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.3.cmml">j</mi><mi id="S4.E1.m1.3.3.3.3.1.1.2.2.2.3" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2.3.cmml">i</mi></msubsup><mo stretchy="false" id="S4.E1.m1.3.3.3.3.1.1.2.2.5" xref="S4.E1.m1.3.3.3.3.1.1.2.3.cmml">)</mo></mrow></mrow><mo stretchy="false" id="S4.E1.m1.3.3.3.3.1.3" xref="S4.E1.m1.3.3.3.3.1.1.cmml">)</mo></mrow><mn id="S4.E1.m1.3.3.3.5" xref="S4.E1.m1.3.3.3.5.cmml">2</mn></msup><mrow id="S4.E1.m1.3.3.5" xref="S4.E1.m1.3.3.5.cmml"><mn id="S4.E1.m1.3.3.5.2" xref="S4.E1.m1.3.3.5.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S4.E1.m1.3.3.5.1" xref="S4.E1.m1.3.3.5.1.cmml">​</mo><msup id="S4.E1.m1.3.3.5.3" xref="S4.E1.m1.3.3.5.3.cmml"><mi id="S4.E1.m1.3.3.5.3.2" xref="S4.E1.m1.3.3.5.3.2.cmml">σ</mi><mn id="S4.E1.m1.3.3.5.3.3" xref="S4.E1.m1.3.3.5.3.3.cmml">2</mn></msup></mrow></mfrac></mrow><mo stretchy="false" id="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.3" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow><mo id="S4.E1.m1.7.7.1.1.1.1.1.3" xref="S4.E1.m1.7.7.1.1.1.1.2.cmml">,</mo><mn id="S4.E1.m1.6.6" xref="S4.E1.m1.6.6.cmml">1</mn><mo stretchy="false" id="S4.E1.m1.7.7.1.1.1.1.1.4" xref="S4.E1.m1.7.7.1.1.1.1.2.cmml">)</mo></mrow></mrow></mrow><mo id="S4.E1.m1.7.7.1.2" xref="S4.E1.m1.7.7.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.E1.m1.7b"><apply id="S4.E1.m1.7.7.1.1.cmml" xref="S4.E1.m1.7.7.1"><eq id="S4.E1.m1.7.7.1.1.2.cmml" xref="S4.E1.m1.7.7.1.1.2"></eq><apply id="S4.E1.m1.7.7.1.1.3.cmml" xref="S4.E1.m1.7.7.1.1.3"><times id="S4.E1.m1.7.7.1.1.3.1.cmml" xref="S4.E1.m1.7.7.1.1.3.1"></times><apply id="S4.E1.m1.7.7.1.1.3.2.cmml" xref="S4.E1.m1.7.7.1.1.3.2"><csymbol cd="ambiguous" id="S4.E1.m1.7.7.1.1.3.2.1.cmml" xref="S4.E1.m1.7.7.1.1.3.2">subscript</csymbol><ci id="S4.E1.m1.7.7.1.1.3.2.2.cmml" xref="S4.E1.m1.7.7.1.1.3.2.2">𝐻</ci><ci id="S4.E1.m1.7.7.1.1.3.2.3.cmml" xref="S4.E1.m1.7.7.1.1.3.2.3">𝑗</ci></apply><interval closure="open" id="S4.E1.m1.7.7.1.1.3.3.1.cmml" xref="S4.E1.m1.7.7.1.1.3.3.2"><ci id="S4.E1.m1.4.4.cmml" xref="S4.E1.m1.4.4">𝑥</ci><ci id="S4.E1.m1.5.5.cmml" xref="S4.E1.m1.5.5">𝑦</ci></interval></apply><apply id="S4.E1.m1.7.7.1.1.1.cmml" xref="S4.E1.m1.7.7.1.1.1"><times id="S4.E1.m1.7.7.1.1.1.2.cmml" xref="S4.E1.m1.7.7.1.1.1.2"></times><ci id="S4.E1.m1.7.7.1.1.1.3.cmml" xref="S4.E1.m1.7.7.1.1.1.3">𝑚</ci><ci id="S4.E1.m1.7.7.1.1.1.4.cmml" xref="S4.E1.m1.7.7.1.1.1.4">𝑖</ci><ci id="S4.E1.m1.7.7.1.1.1.5.cmml" xref="S4.E1.m1.7.7.1.1.1.5">𝑛</ci><interval closure="open" id="S4.E1.m1.7.7.1.1.1.1.2.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1"><apply id="S4.E1.m1.7.7.1.1.1.1.1.1.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1"><apply id="S4.E1.m1.7.7.1.1.1.1.1.1.2.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E1.m1.7.7.1.1.1.1.1.1.2.1.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2">superscript</csymbol><apply id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.1.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2">subscript</csymbol><sum id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.2.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.2"></sum><apply id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3"><eq id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.1.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.1"></eq><ci id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.2.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.2">𝑖</ci><cn type="integer" id="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.3.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S4.E1.m1.7.7.1.1.1.1.1.1.2.3.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.2.3">𝑁</ci></apply><apply id="S4.E1.m1.7.7.1.1.1.1.1.1.1.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1"><times id="S4.E1.m1.7.7.1.1.1.1.1.1.1.2.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.2"></times><ci id="S4.E1.m1.7.7.1.1.1.1.1.1.1.3.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.3">𝑒</ci><ci id="S4.E1.m1.7.7.1.1.1.1.1.1.1.4.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.4">𝑥</ci><ci id="S4.E1.m1.7.7.1.1.1.1.1.1.1.5.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.5">𝑝</ci><apply id="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1"><minus id="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E1.m1.7.7.1.1.1.1.1.1.1.1.1"></minus><apply id="S4.E1.m1.3.3.cmml" xref="S4.E1.m1.3.3"><divide id="S4.E1.m1.3.3.4.cmml" xref="S4.E1.m1.3.3"></divide><apply id="S4.E1.m1.3.3.3.cmml" xref="S4.E1.m1.3.3.3"><csymbol cd="ambiguous" id="S4.E1.m1.3.3.3.4.cmml" xref="S4.E1.m1.3.3.3">superscript</csymbol><apply id="S4.E1.m1.3.3.3.3.1.1.cmml" xref="S4.E1.m1.3.3.3.3.1"><minus id="S4.E1.m1.3.3.3.3.1.1.3.cmml" xref="S4.E1.m1.3.3.3.3.1.1.3"></minus><interval closure="open" id="S4.E1.m1.3.3.3.3.1.1.4.1.cmml" xref="S4.E1.m1.3.3.3.3.1.1.4.2"><ci id="S4.E1.m1.1.1.1.1.cmml" xref="S4.E1.m1.1.1.1.1">𝑥</ci><ci id="S4.E1.m1.2.2.2.2.cmml" xref="S4.E1.m1.2.2.2.2">𝑦</ci></interval><interval closure="open" id="S4.E1.m1.3.3.3.3.1.1.2.3.cmml" xref="S4.E1.m1.3.3.3.3.1.1.2.2"><apply id="S4.E1.m1.3.3.3.3.1.1.1.1.1.cmml" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1"><csymbol cd="ambiguous" id="S4.E1.m1.3.3.3.3.1.1.1.1.1.1.cmml" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1">superscript</csymbol><apply id="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.cmml" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1"><csymbol cd="ambiguous" id="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.1.cmml" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1">subscript</csymbol><ci id="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.2.cmml" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.2">𝑥</ci><ci id="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.3.cmml" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1.2.3">𝑗</ci></apply><ci id="S4.E1.m1.3.3.3.3.1.1.1.1.1.3.cmml" xref="S4.E1.m1.3.3.3.3.1.1.1.1.1.3">𝑖</ci></apply><apply id="S4.E1.m1.3.3.3.3.1.1.2.2.2.cmml" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2"><csymbol cd="ambiguous" id="S4.E1.m1.3.3.3.3.1.1.2.2.2.1.cmml" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2">superscript</csymbol><apply id="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.cmml" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2"><csymbol cd="ambiguous" id="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.1.cmml" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2">subscript</csymbol><ci id="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.2.cmml" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.2">𝑦</ci><ci id="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.3.cmml" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2.2.3">𝑗</ci></apply><ci id="S4.E1.m1.3.3.3.3.1.1.2.2.2.3.cmml" xref="S4.E1.m1.3.3.3.3.1.1.2.2.2.3">𝑖</ci></apply></interval></apply><cn type="integer" id="S4.E1.m1.3.3.3.5.cmml" xref="S4.E1.m1.3.3.3.5">2</cn></apply><apply id="S4.E1.m1.3.3.5.cmml" xref="S4.E1.m1.3.3.5"><times id="S4.E1.m1.3.3.5.1.cmml" xref="S4.E1.m1.3.3.5.1"></times><cn type="integer" id="S4.E1.m1.3.3.5.2.cmml" xref="S4.E1.m1.3.3.5.2">2</cn><apply id="S4.E1.m1.3.3.5.3.cmml" xref="S4.E1.m1.3.3.5.3"><csymbol cd="ambiguous" id="S4.E1.m1.3.3.5.3.1.cmml" xref="S4.E1.m1.3.3.5.3">superscript</csymbol><ci id="S4.E1.m1.3.3.5.3.2.cmml" xref="S4.E1.m1.3.3.5.3.2">𝜎</ci><cn type="integer" id="S4.E1.m1.3.3.5.3.3.cmml" xref="S4.E1.m1.3.3.5.3.3">2</cn></apply></apply></apply></apply></apply></apply><cn type="integer" id="S4.E1.m1.6.6.cmml" xref="S4.E1.m1.6.6">1</cn></interval></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E1.m1.7c">H_{j}(x,y)=min(\sum_{i=1}^{N}exp(-\frac{((x,y)-(x_{j}^{i},y_{j}^{i}))^{2}}{2\sigma^{2}}),1),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S4.SS2.p2.5" class="ltx_p">where <math id="S4.SS2.p2.1.m1.2" class="ltx_Math" alttext="(x_{j}^{i},y_{j}^{i})" display="inline"><semantics id="S4.SS2.p2.1.m1.2a"><mrow id="S4.SS2.p2.1.m1.2.2.2" xref="S4.SS2.p2.1.m1.2.2.3.cmml"><mo stretchy="false" id="S4.SS2.p2.1.m1.2.2.2.3" xref="S4.SS2.p2.1.m1.2.2.3.cmml">(</mo><msubsup id="S4.SS2.p2.1.m1.1.1.1.1" xref="S4.SS2.p2.1.m1.1.1.1.1.cmml"><mi id="S4.SS2.p2.1.m1.1.1.1.1.2.2" xref="S4.SS2.p2.1.m1.1.1.1.1.2.2.cmml">x</mi><mi id="S4.SS2.p2.1.m1.1.1.1.1.2.3" xref="S4.SS2.p2.1.m1.1.1.1.1.2.3.cmml">j</mi><mi id="S4.SS2.p2.1.m1.1.1.1.1.3" xref="S4.SS2.p2.1.m1.1.1.1.1.3.cmml">i</mi></msubsup><mo id="S4.SS2.p2.1.m1.2.2.2.4" xref="S4.SS2.p2.1.m1.2.2.3.cmml">,</mo><msubsup id="S4.SS2.p2.1.m1.2.2.2.2" xref="S4.SS2.p2.1.m1.2.2.2.2.cmml"><mi id="S4.SS2.p2.1.m1.2.2.2.2.2.2" xref="S4.SS2.p2.1.m1.2.2.2.2.2.2.cmml">y</mi><mi id="S4.SS2.p2.1.m1.2.2.2.2.2.3" xref="S4.SS2.p2.1.m1.2.2.2.2.2.3.cmml">j</mi><mi id="S4.SS2.p2.1.m1.2.2.2.2.3" xref="S4.SS2.p2.1.m1.2.2.2.2.3.cmml">i</mi></msubsup><mo stretchy="false" id="S4.SS2.p2.1.m1.2.2.2.5" xref="S4.SS2.p2.1.m1.2.2.3.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.1.m1.2b"><interval closure="open" id="S4.SS2.p2.1.m1.2.2.3.cmml" xref="S4.SS2.p2.1.m1.2.2.2"><apply id="S4.SS2.p2.1.m1.1.1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1"><csymbol cd="ambiguous" id="S4.SS2.p2.1.m1.1.1.1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1">superscript</csymbol><apply id="S4.SS2.p2.1.m1.1.1.1.1.2.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1"><csymbol cd="ambiguous" id="S4.SS2.p2.1.m1.1.1.1.1.2.1.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1">subscript</csymbol><ci id="S4.SS2.p2.1.m1.1.1.1.1.2.2.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1.2.2">𝑥</ci><ci id="S4.SS2.p2.1.m1.1.1.1.1.2.3.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1.2.3">𝑗</ci></apply><ci id="S4.SS2.p2.1.m1.1.1.1.1.3.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1.3">𝑖</ci></apply><apply id="S4.SS2.p2.1.m1.2.2.2.2.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS2.p2.1.m1.2.2.2.2.1.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2">superscript</csymbol><apply id="S4.SS2.p2.1.m1.2.2.2.2.2.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS2.p2.1.m1.2.2.2.2.2.1.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2">subscript</csymbol><ci id="S4.SS2.p2.1.m1.2.2.2.2.2.2.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2.2.2">𝑦</ci><ci id="S4.SS2.p2.1.m1.2.2.2.2.2.3.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2.2.3">𝑗</ci></apply><ci id="S4.SS2.p2.1.m1.2.2.2.2.3.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2.3">𝑖</ci></apply></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.1.m1.2c">(x_{j}^{i},y_{j}^{i})</annotation></semantics></math> is the coordinate of joint <math id="S4.SS2.p2.2.m2.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S4.SS2.p2.2.m2.1a"><mi id="S4.SS2.p2.2.m2.1.1" xref="S4.SS2.p2.2.m2.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.2.m2.1b"><ci id="S4.SS2.p2.2.m2.1.1.cmml" xref="S4.SS2.p2.2.m2.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.2.m2.1c">j</annotation></semantics></math> of person <math id="S4.SS2.p2.3.m3.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S4.SS2.p2.3.m3.1a"><mi id="S4.SS2.p2.3.m3.1.1" xref="S4.SS2.p2.3.m3.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.3.m3.1b"><ci id="S4.SS2.p2.3.m3.1.1.cmml" xref="S4.SS2.p2.3.m3.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.3.m3.1c">i</annotation></semantics></math>, <math id="S4.SS2.p2.4.m4.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S4.SS2.p2.4.m4.1a"><mi id="S4.SS2.p2.4.m4.1.1" xref="S4.SS2.p2.4.m4.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.4.m4.1b"><ci id="S4.SS2.p2.4.m4.1.1.cmml" xref="S4.SS2.p2.4.m4.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.4.m4.1c">N</annotation></semantics></math> is the number of person in the image and <math id="S4.SS2.p2.5.m5.1" class="ltx_Math" alttext="\sigma" display="inline"><semantics id="S4.SS2.p2.5.m5.1a"><mi id="S4.SS2.p2.5.m5.1.1" xref="S4.SS2.p2.5.m5.1.1.cmml">σ</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.5.m5.1b"><ci id="S4.SS2.p2.5.m5.1.1.cmml" xref="S4.SS2.p2.5.m5.1.1">𝜎</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.5.m5.1c">\sigma</annotation></semantics></math> controls the spread of the peak, and minimum function is used to guarantee the value not greater than 1.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.3" class="ltx_p"><span id="S4.SS2.p3.3.1" class="ltx_text ltx_font_bold">Offset Prediction</span>. we construct a dense offset map for each body joint as the ground-truth for offset prediction. We first construct a offset map <math id="S4.SS2.p3.1.m1.1" class="ltx_Math" alttext="O_{j}^{i}" display="inline"><semantics id="S4.SS2.p3.1.m1.1a"><msubsup id="S4.SS2.p3.1.m1.1.1" xref="S4.SS2.p3.1.m1.1.1.cmml"><mi id="S4.SS2.p3.1.m1.1.1.2.2" xref="S4.SS2.p3.1.m1.1.1.2.2.cmml">O</mi><mi id="S4.SS2.p3.1.m1.1.1.2.3" xref="S4.SS2.p3.1.m1.1.1.2.3.cmml">j</mi><mi id="S4.SS2.p3.1.m1.1.1.3" xref="S4.SS2.p3.1.m1.1.1.3.cmml">i</mi></msubsup><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.1.m1.1b"><apply id="S4.SS2.p3.1.m1.1.1.cmml" xref="S4.SS2.p3.1.m1.1.1"><csymbol cd="ambiguous" id="S4.SS2.p3.1.m1.1.1.1.cmml" xref="S4.SS2.p3.1.m1.1.1">superscript</csymbol><apply id="S4.SS2.p3.1.m1.1.1.2.cmml" xref="S4.SS2.p3.1.m1.1.1"><csymbol cd="ambiguous" id="S4.SS2.p3.1.m1.1.1.2.1.cmml" xref="S4.SS2.p3.1.m1.1.1">subscript</csymbol><ci id="S4.SS2.p3.1.m1.1.1.2.2.cmml" xref="S4.SS2.p3.1.m1.1.1.2.2">𝑂</ci><ci id="S4.SS2.p3.1.m1.1.1.2.3.cmml" xref="S4.SS2.p3.1.m1.1.1.2.3">𝑗</ci></apply><ci id="S4.SS2.p3.1.m1.1.1.3.cmml" xref="S4.SS2.p3.1.m1.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.1.m1.1c">O_{j}^{i}</annotation></semantics></math> for joint <math id="S4.SS2.p3.2.m2.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S4.SS2.p3.2.m2.1a"><mi id="S4.SS2.p3.2.m2.1.1" xref="S4.SS2.p3.2.m2.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.2.m2.1b"><ci id="S4.SS2.p3.2.m2.1.1.cmml" xref="S4.SS2.p3.2.m2.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.2.m2.1c">j</annotation></semantics></math> of person <math id="S4.SS2.p3.3.m3.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S4.SS2.p3.3.m3.1a"><mi id="S4.SS2.p3.3.m3.1.1" xref="S4.SS2.p3.3.m3.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.3.m3.1b"><ci id="S4.SS2.p3.3.m3.1.1.cmml" xref="S4.SS2.p3.3.m3.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.3.m3.1c">i</annotation></semantics></math> as:</p>
+<table id="S4.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E2.m1.7" class="ltx_Math" alttext="O_{j}^{i}(x,y)=\left\{\begin{array}[]{ll}\frac{1}{Z}((x_{c}^{i},y_{c}^{i})-(x,y))&amp;\text{ if }(x,y)\in N_{j}^{i}\\
+0&amp;\text{ otherwise }\end{array}\right." display="block"><semantics id="S4.E2.m1.7a"><mrow id="S4.E2.m1.7.8" xref="S4.E2.m1.7.8.cmml"><mrow id="S4.E2.m1.7.8.2" xref="S4.E2.m1.7.8.2.cmml"><msubsup id="S4.E2.m1.7.8.2.2" xref="S4.E2.m1.7.8.2.2.cmml"><mi id="S4.E2.m1.7.8.2.2.2.2" xref="S4.E2.m1.7.8.2.2.2.2.cmml">O</mi><mi id="S4.E2.m1.7.8.2.2.2.3" xref="S4.E2.m1.7.8.2.2.2.3.cmml">j</mi><mi id="S4.E2.m1.7.8.2.2.3" xref="S4.E2.m1.7.8.2.2.3.cmml">i</mi></msubsup><mo lspace="0em" rspace="0em" id="S4.E2.m1.7.8.2.1" xref="S4.E2.m1.7.8.2.1.cmml">​</mo><mrow id="S4.E2.m1.7.8.2.3.2" xref="S4.E2.m1.7.8.2.3.1.cmml"><mo stretchy="false" id="S4.E2.m1.7.8.2.3.2.1" xref="S4.E2.m1.7.8.2.3.1.cmml">(</mo><mi id="S4.E2.m1.6.6" xref="S4.E2.m1.6.6.cmml">x</mi><mo id="S4.E2.m1.7.8.2.3.2.2" xref="S4.E2.m1.7.8.2.3.1.cmml">,</mo><mi id="S4.E2.m1.7.7" xref="S4.E2.m1.7.7.cmml">y</mi><mo stretchy="false" id="S4.E2.m1.7.8.2.3.2.3" xref="S4.E2.m1.7.8.2.3.1.cmml">)</mo></mrow></mrow><mo id="S4.E2.m1.7.8.1" xref="S4.E2.m1.7.8.1.cmml">=</mo><mrow id="S4.E2.m1.7.8.3.2" xref="S4.E2.m1.7.8.3.1.cmml"><mo id="S4.E2.m1.7.8.3.2.1" xref="S4.E2.m1.7.8.3.1.1.cmml">{</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt" id="S4.E2.m1.5.5" xref="S4.E2.m1.5.5.cmml"><mtr id="S4.E2.m1.5.5a" xref="S4.E2.m1.5.5.cmml"><mtd class="ltx_align_left" columnalign="left" id="S4.E2.m1.5.5b" xref="S4.E2.m1.5.5.cmml"><mrow id="S4.E2.m1.3.3.3.3.3" xref="S4.E2.m1.3.3.3.3.3.cmml"><mstyle displaystyle="false" id="S4.E2.m1.3.3.3.3.3.5" xref="S4.E2.m1.3.3.3.3.3.5.cmml"><mfrac id="S4.E2.m1.3.3.3.3.3.5a" xref="S4.E2.m1.3.3.3.3.3.5.cmml"><mn id="S4.E2.m1.3.3.3.3.3.5.2" xref="S4.E2.m1.3.3.3.3.3.5.2.cmml">1</mn><mi id="S4.E2.m1.3.3.3.3.3.5.3" xref="S4.E2.m1.3.3.3.3.3.5.3.cmml">Z</mi></mfrac></mstyle><mo lspace="0em" rspace="0em" id="S4.E2.m1.3.3.3.3.3.4" xref="S4.E2.m1.3.3.3.3.3.4.cmml">​</mo><mrow id="S4.E2.m1.3.3.3.3.3.3.1" xref="S4.E2.m1.3.3.3.3.3.3.1.1.cmml"><mo stretchy="false" id="S4.E2.m1.3.3.3.3.3.3.1.2" xref="S4.E2.m1.3.3.3.3.3.3.1.1.cmml">(</mo><mrow id="S4.E2.m1.3.3.3.3.3.3.1.1" xref="S4.E2.m1.3.3.3.3.3.3.1.1.cmml"><mrow id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.3.cmml"><mo stretchy="false" id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.3" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.3.cmml">(</mo><msubsup id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.cmml"><mi id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.2" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.2.cmml">x</mi><mi id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.3" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.3.cmml">c</mi><mi id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.3" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.3.cmml">i</mi></msubsup><mo id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.4" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.3.cmml">,</mo><msubsup id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.cmml"><mi id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.2" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.2.cmml">y</mi><mi id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.3" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.3.cmml">c</mi><mi id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.3" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.3.cmml">i</mi></msubsup><mo stretchy="false" id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.5" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.3.cmml">)</mo></mrow><mo id="S4.E2.m1.3.3.3.3.3.3.1.1.3" xref="S4.E2.m1.3.3.3.3.3.3.1.1.3.cmml">−</mo><mrow id="S4.E2.m1.3.3.3.3.3.3.1.1.4.2" xref="S4.E2.m1.3.3.3.3.3.3.1.1.4.1.cmml"><mo stretchy="false" id="S4.E2.m1.3.3.3.3.3.3.1.1.4.2.1" xref="S4.E2.m1.3.3.3.3.3.3.1.1.4.1.cmml">(</mo><mi id="S4.E2.m1.1.1.1.1.1.1" xref="S4.E2.m1.1.1.1.1.1.1.cmml">x</mi><mo id="S4.E2.m1.3.3.3.3.3.3.1.1.4.2.2" xref="S4.E2.m1.3.3.3.3.3.3.1.1.4.1.cmml">,</mo><mi id="S4.E2.m1.2.2.2.2.2.2" xref="S4.E2.m1.2.2.2.2.2.2.cmml">y</mi><mo stretchy="false" id="S4.E2.m1.3.3.3.3.3.3.1.1.4.2.3" xref="S4.E2.m1.3.3.3.3.3.3.1.1.4.1.cmml">)</mo></mrow></mrow><mo stretchy="false" id="S4.E2.m1.3.3.3.3.3.3.1.3" xref="S4.E2.m1.3.3.3.3.3.3.1.1.cmml">)</mo></mrow></mrow></mtd><mtd class="ltx_align_left" columnalign="left" id="S4.E2.m1.5.5c" xref="S4.E2.m1.5.5.cmml"><mrow id="S4.E2.m1.5.5.5.5.2" xref="S4.E2.m1.5.5.5.5.2.cmml"><mrow id="S4.E2.m1.5.5.5.5.2.4" xref="S4.E2.m1.5.5.5.5.2.4.cmml"><mtext id="S4.E2.m1.5.5.5.5.2.4.2" xref="S4.E2.m1.5.5.5.5.2.4.2a.cmml"> if </mtext><mo lspace="0em" rspace="0em" id="S4.E2.m1.5.5.5.5.2.4.1" xref="S4.E2.m1.5.5.5.5.2.4.1.cmml">​</mo><mrow id="S4.E2.m1.5.5.5.5.2.4.3.2" xref="S4.E2.m1.5.5.5.5.2.4.3.1.cmml"><mo stretchy="false" id="S4.E2.m1.5.5.5.5.2.4.3.2.1" xref="S4.E2.m1.5.5.5.5.2.4.3.1.cmml">(</mo><mi id="S4.E2.m1.4.4.4.4.1.1" xref="S4.E2.m1.4.4.4.4.1.1.cmml">x</mi><mo id="S4.E2.m1.5.5.5.5.2.4.3.2.2" xref="S4.E2.m1.5.5.5.5.2.4.3.1.cmml">,</mo><mi id="S4.E2.m1.5.5.5.5.2.2" xref="S4.E2.m1.5.5.5.5.2.2.cmml">y</mi><mo stretchy="false" id="S4.E2.m1.5.5.5.5.2.4.3.2.3" xref="S4.E2.m1.5.5.5.5.2.4.3.1.cmml">)</mo></mrow></mrow><mo id="S4.E2.m1.5.5.5.5.2.3" xref="S4.E2.m1.5.5.5.5.2.3.cmml">∈</mo><msubsup id="S4.E2.m1.5.5.5.5.2.5" xref="S4.E2.m1.5.5.5.5.2.5.cmml"><mi id="S4.E2.m1.5.5.5.5.2.5.2.2" xref="S4.E2.m1.5.5.5.5.2.5.2.2.cmml">N</mi><mi id="S4.E2.m1.5.5.5.5.2.5.2.3" xref="S4.E2.m1.5.5.5.5.2.5.2.3.cmml">j</mi><mi id="S4.E2.m1.5.5.5.5.2.5.3" xref="S4.E2.m1.5.5.5.5.2.5.3.cmml">i</mi></msubsup></mrow></mtd></mtr><mtr id="S4.E2.m1.5.5d" xref="S4.E2.m1.5.5.cmml"><mtd class="ltx_align_left" columnalign="left" id="S4.E2.m1.5.5e" xref="S4.E2.m1.5.5.cmml"><mn id="S4.E2.m1.5.5.6.1.1" xref="S4.E2.m1.5.5.6.1.1.cmml">0</mn></mtd><mtd class="ltx_align_left" columnalign="left" id="S4.E2.m1.5.5f" xref="S4.E2.m1.5.5.cmml"><mtext id="S4.E2.m1.5.5.6.2.1" xref="S4.E2.m1.5.5.6.2.1a.cmml"> otherwise </mtext></mtd></mtr></mtable><mi id="S4.E2.m1.7.8.3.2.2" xref="S4.E2.m1.7.8.3.1.1.cmml"></mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E2.m1.7b"><apply id="S4.E2.m1.7.8.cmml" xref="S4.E2.m1.7.8"><eq id="S4.E2.m1.7.8.1.cmml" xref="S4.E2.m1.7.8.1"></eq><apply id="S4.E2.m1.7.8.2.cmml" xref="S4.E2.m1.7.8.2"><times id="S4.E2.m1.7.8.2.1.cmml" xref="S4.E2.m1.7.8.2.1"></times><apply id="S4.E2.m1.7.8.2.2.cmml" xref="S4.E2.m1.7.8.2.2"><csymbol cd="ambiguous" id="S4.E2.m1.7.8.2.2.1.cmml" xref="S4.E2.m1.7.8.2.2">superscript</csymbol><apply id="S4.E2.m1.7.8.2.2.2.cmml" xref="S4.E2.m1.7.8.2.2"><csymbol cd="ambiguous" id="S4.E2.m1.7.8.2.2.2.1.cmml" xref="S4.E2.m1.7.8.2.2">subscript</csymbol><ci id="S4.E2.m1.7.8.2.2.2.2.cmml" xref="S4.E2.m1.7.8.2.2.2.2">𝑂</ci><ci id="S4.E2.m1.7.8.2.2.2.3.cmml" xref="S4.E2.m1.7.8.2.2.2.3">𝑗</ci></apply><ci id="S4.E2.m1.7.8.2.2.3.cmml" xref="S4.E2.m1.7.8.2.2.3">𝑖</ci></apply><interval closure="open" id="S4.E2.m1.7.8.2.3.1.cmml" xref="S4.E2.m1.7.8.2.3.2"><ci id="S4.E2.m1.6.6.cmml" xref="S4.E2.m1.6.6">𝑥</ci><ci id="S4.E2.m1.7.7.cmml" xref="S4.E2.m1.7.7">𝑦</ci></interval></apply><apply id="S4.E2.m1.7.8.3.1.cmml" xref="S4.E2.m1.7.8.3.2"><csymbol cd="latexml" id="S4.E2.m1.7.8.3.1.1.cmml" xref="S4.E2.m1.7.8.3.2.1">cases</csymbol><matrix id="S4.E2.m1.5.5.cmml" xref="S4.E2.m1.5.5"><matrixrow id="S4.E2.m1.5.5a.cmml" xref="S4.E2.m1.5.5"><apply id="S4.E2.m1.3.3.3.3.3.cmml" xref="S4.E2.m1.3.3.3.3.3"><times id="S4.E2.m1.3.3.3.3.3.4.cmml" xref="S4.E2.m1.3.3.3.3.3.4"></times><apply id="S4.E2.m1.3.3.3.3.3.5.cmml" xref="S4.E2.m1.3.3.3.3.3.5"><divide id="S4.E2.m1.3.3.3.3.3.5.1.cmml" xref="S4.E2.m1.3.3.3.3.3.5"></divide><cn type="integer" id="S4.E2.m1.3.3.3.3.3.5.2.cmml" xref="S4.E2.m1.3.3.3.3.3.5.2">1</cn><ci id="S4.E2.m1.3.3.3.3.3.5.3.cmml" xref="S4.E2.m1.3.3.3.3.3.5.3">𝑍</ci></apply><apply id="S4.E2.m1.3.3.3.3.3.3.1.1.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1"><minus id="S4.E2.m1.3.3.3.3.3.3.1.1.3.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.3"></minus><interval closure="open" id="S4.E2.m1.3.3.3.3.3.3.1.1.2.3.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2"><apply id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1"><csymbol cd="ambiguous" id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.1.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1">superscript</csymbol><apply id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1"><csymbol cd="ambiguous" id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.1.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1">subscript</csymbol><ci id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.2.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.2">𝑥</ci><ci id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.3.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.2.3">𝑐</ci></apply><ci id="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.3.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.1.1.1.3">𝑖</ci></apply><apply id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2"><csymbol cd="ambiguous" id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.1.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2">superscript</csymbol><apply id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2"><csymbol cd="ambiguous" id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.1.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2">subscript</csymbol><ci id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.2.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.2">𝑦</ci><ci id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.3.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.2.3">𝑐</ci></apply><ci id="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.3.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.2.2.2.3">𝑖</ci></apply></interval><interval closure="open" id="S4.E2.m1.3.3.3.3.3.3.1.1.4.1.cmml" xref="S4.E2.m1.3.3.3.3.3.3.1.1.4.2"><ci id="S4.E2.m1.1.1.1.1.1.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1">𝑥</ci><ci id="S4.E2.m1.2.2.2.2.2.2.cmml" xref="S4.E2.m1.2.2.2.2.2.2">𝑦</ci></interval></apply></apply><apply id="S4.E2.m1.5.5.5.5.2.cmml" xref="S4.E2.m1.5.5.5.5.2"><in id="S4.E2.m1.5.5.5.5.2.3.cmml" xref="S4.E2.m1.5.5.5.5.2.3"></in><apply id="S4.E2.m1.5.5.5.5.2.4.cmml" xref="S4.E2.m1.5.5.5.5.2.4"><times id="S4.E2.m1.5.5.5.5.2.4.1.cmml" xref="S4.E2.m1.5.5.5.5.2.4.1"></times><ci id="S4.E2.m1.5.5.5.5.2.4.2a.cmml" xref="S4.E2.m1.5.5.5.5.2.4.2"><mtext id="S4.E2.m1.5.5.5.5.2.4.2.cmml" xref="S4.E2.m1.5.5.5.5.2.4.2"> if </mtext></ci><interval closure="open" id="S4.E2.m1.5.5.5.5.2.4.3.1.cmml" xref="S4.E2.m1.5.5.5.5.2.4.3.2"><ci id="S4.E2.m1.4.4.4.4.1.1.cmml" xref="S4.E2.m1.4.4.4.4.1.1">𝑥</ci><ci id="S4.E2.m1.5.5.5.5.2.2.cmml" xref="S4.E2.m1.5.5.5.5.2.2">𝑦</ci></interval></apply><apply id="S4.E2.m1.5.5.5.5.2.5.cmml" xref="S4.E2.m1.5.5.5.5.2.5"><csymbol cd="ambiguous" id="S4.E2.m1.5.5.5.5.2.5.1.cmml" xref="S4.E2.m1.5.5.5.5.2.5">superscript</csymbol><apply id="S4.E2.m1.5.5.5.5.2.5.2.cmml" xref="S4.E2.m1.5.5.5.5.2.5"><csymbol cd="ambiguous" id="S4.E2.m1.5.5.5.5.2.5.2.1.cmml" xref="S4.E2.m1.5.5.5.5.2.5">subscript</csymbol><ci id="S4.E2.m1.5.5.5.5.2.5.2.2.cmml" xref="S4.E2.m1.5.5.5.5.2.5.2.2">𝑁</ci><ci id="S4.E2.m1.5.5.5.5.2.5.2.3.cmml" xref="S4.E2.m1.5.5.5.5.2.5.2.3">𝑗</ci></apply><ci id="S4.E2.m1.5.5.5.5.2.5.3.cmml" xref="S4.E2.m1.5.5.5.5.2.5.3">𝑖</ci></apply></apply></matrixrow><matrixrow id="S4.E2.m1.5.5b.cmml" xref="S4.E2.m1.5.5"><cn type="integer" id="S4.E2.m1.5.5.6.1.1.cmml" xref="S4.E2.m1.5.5.6.1.1">0</cn><ci id="S4.E2.m1.5.5.6.2.1a.cmml" xref="S4.E2.m1.5.5.6.2.1"><mtext id="S4.E2.m1.5.5.6.2.1.cmml" xref="S4.E2.m1.5.5.6.2.1"> otherwise </mtext></ci></matrixrow></matrix></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E2.m1.7c">O_{j}^{i}(x,y)=\left\{\begin{array}[]{ll}\frac{1}{Z}((x_{c}^{i},y_{c}^{i})-(x,y))&amp;\text{ if }(x,y)\in N_{j}^{i}\\
+0&amp;\text{ otherwise }\end{array}\right.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S4.SS2.p3.13" class="ltx_p">where <math id="S4.SS2.p3.4.m1.8" class="ltx_Math" alttext="N_{j}^{i}=\left\{(x,y)|\sqrt{(x,y)-(x_{j}^{i},y_{j}^{i})}\leq\tau\right\}" display="inline"><semantics id="S4.SS2.p3.4.m1.8a"><mrow id="S4.SS2.p3.4.m1.8.8" xref="S4.SS2.p3.4.m1.8.8.cmml"><msubsup id="S4.SS2.p3.4.m1.8.8.4" xref="S4.SS2.p3.4.m1.8.8.4.cmml"><mi id="S4.SS2.p3.4.m1.8.8.4.2.2" xref="S4.SS2.p3.4.m1.8.8.4.2.2.cmml">N</mi><mi id="S4.SS2.p3.4.m1.8.8.4.2.3" xref="S4.SS2.p3.4.m1.8.8.4.2.3.cmml">j</mi><mi id="S4.SS2.p3.4.m1.8.8.4.3" xref="S4.SS2.p3.4.m1.8.8.4.3.cmml">i</mi></msubsup><mo id="S4.SS2.p3.4.m1.8.8.3" xref="S4.SS2.p3.4.m1.8.8.3.cmml">=</mo><mrow id="S4.SS2.p3.4.m1.8.8.2.2" xref="S4.SS2.p3.4.m1.8.8.2.3.cmml"><mo id="S4.SS2.p3.4.m1.8.8.2.2.3" xref="S4.SS2.p3.4.m1.8.8.2.3.1.cmml">{</mo><mrow id="S4.SS2.p3.4.m1.7.7.1.1.1.2" xref="S4.SS2.p3.4.m1.7.7.1.1.1.1.cmml"><mo stretchy="false" id="S4.SS2.p3.4.m1.7.7.1.1.1.2.1" xref="S4.SS2.p3.4.m1.7.7.1.1.1.1.cmml">(</mo><mi id="S4.SS2.p3.4.m1.5.5" xref="S4.SS2.p3.4.m1.5.5.cmml">x</mi><mo id="S4.SS2.p3.4.m1.7.7.1.1.1.2.2" xref="S4.SS2.p3.4.m1.7.7.1.1.1.1.cmml">,</mo><mi id="S4.SS2.p3.4.m1.6.6" xref="S4.SS2.p3.4.m1.6.6.cmml">y</mi><mo stretchy="false" id="S4.SS2.p3.4.m1.7.7.1.1.1.2.3" xref="S4.SS2.p3.4.m1.7.7.1.1.1.1.cmml">)</mo></mrow><mo lspace="0em" rspace="0em" id="S4.SS2.p3.4.m1.8.8.2.2.4" xref="S4.SS2.p3.4.m1.8.8.2.3.1.cmml">|</mo><mrow id="S4.SS2.p3.4.m1.8.8.2.2.2" xref="S4.SS2.p3.4.m1.8.8.2.2.2.cmml"><msqrt id="S4.SS2.p3.4.m1.4.4" xref="S4.SS2.p3.4.m1.4.4.cmml"><mrow id="S4.SS2.p3.4.m1.4.4.4" xref="S4.SS2.p3.4.m1.4.4.4.cmml"><mrow id="S4.SS2.p3.4.m1.4.4.4.6.2" xref="S4.SS2.p3.4.m1.4.4.4.6.1.cmml"><mo stretchy="false" id="S4.SS2.p3.4.m1.4.4.4.6.2.1" xref="S4.SS2.p3.4.m1.4.4.4.6.1.cmml">(</mo><mi id="S4.SS2.p3.4.m1.1.1.1.1" xref="S4.SS2.p3.4.m1.1.1.1.1.cmml">x</mi><mo id="S4.SS2.p3.4.m1.4.4.4.6.2.2" xref="S4.SS2.p3.4.m1.4.4.4.6.1.cmml">,</mo><mi id="S4.SS2.p3.4.m1.2.2.2.2" xref="S4.SS2.p3.4.m1.2.2.2.2.cmml">y</mi><mo stretchy="false" id="S4.SS2.p3.4.m1.4.4.4.6.2.3" xref="S4.SS2.p3.4.m1.4.4.4.6.1.cmml">)</mo></mrow><mo id="S4.SS2.p3.4.m1.4.4.4.5" xref="S4.SS2.p3.4.m1.4.4.4.5.cmml">−</mo><mrow id="S4.SS2.p3.4.m1.4.4.4.4.2" xref="S4.SS2.p3.4.m1.4.4.4.4.3.cmml"><mo stretchy="false" id="S4.SS2.p3.4.m1.4.4.4.4.2.3" xref="S4.SS2.p3.4.m1.4.4.4.4.3.cmml">(</mo><msubsup id="S4.SS2.p3.4.m1.3.3.3.3.1.1" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1.cmml"><mi id="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.2" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.2.cmml">x</mi><mi id="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.3" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.3.cmml">j</mi><mi id="S4.SS2.p3.4.m1.3.3.3.3.1.1.3" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1.3.cmml">i</mi></msubsup><mo id="S4.SS2.p3.4.m1.4.4.4.4.2.4" xref="S4.SS2.p3.4.m1.4.4.4.4.3.cmml">,</mo><msubsup id="S4.SS2.p3.4.m1.4.4.4.4.2.2" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2.cmml"><mi id="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.2" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.2.cmml">y</mi><mi id="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.3" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.3.cmml">j</mi><mi id="S4.SS2.p3.4.m1.4.4.4.4.2.2.3" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2.3.cmml">i</mi></msubsup><mo stretchy="false" id="S4.SS2.p3.4.m1.4.4.4.4.2.5" xref="S4.SS2.p3.4.m1.4.4.4.4.3.cmml">)</mo></mrow></mrow></msqrt><mo id="S4.SS2.p3.4.m1.8.8.2.2.2.1" xref="S4.SS2.p3.4.m1.8.8.2.2.2.1.cmml">≤</mo><mi id="S4.SS2.p3.4.m1.8.8.2.2.2.2" xref="S4.SS2.p3.4.m1.8.8.2.2.2.2.cmml">τ</mi></mrow><mo id="S4.SS2.p3.4.m1.8.8.2.2.5" xref="S4.SS2.p3.4.m1.8.8.2.3.1.cmml">}</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.4.m1.8b"><apply id="S4.SS2.p3.4.m1.8.8.cmml" xref="S4.SS2.p3.4.m1.8.8"><eq id="S4.SS2.p3.4.m1.8.8.3.cmml" xref="S4.SS2.p3.4.m1.8.8.3"></eq><apply id="S4.SS2.p3.4.m1.8.8.4.cmml" xref="S4.SS2.p3.4.m1.8.8.4"><csymbol cd="ambiguous" id="S4.SS2.p3.4.m1.8.8.4.1.cmml" xref="S4.SS2.p3.4.m1.8.8.4">superscript</csymbol><apply id="S4.SS2.p3.4.m1.8.8.4.2.cmml" xref="S4.SS2.p3.4.m1.8.8.4"><csymbol cd="ambiguous" id="S4.SS2.p3.4.m1.8.8.4.2.1.cmml" xref="S4.SS2.p3.4.m1.8.8.4">subscript</csymbol><ci id="S4.SS2.p3.4.m1.8.8.4.2.2.cmml" xref="S4.SS2.p3.4.m1.8.8.4.2.2">𝑁</ci><ci id="S4.SS2.p3.4.m1.8.8.4.2.3.cmml" xref="S4.SS2.p3.4.m1.8.8.4.2.3">𝑗</ci></apply><ci id="S4.SS2.p3.4.m1.8.8.4.3.cmml" xref="S4.SS2.p3.4.m1.8.8.4.3">𝑖</ci></apply><apply id="S4.SS2.p3.4.m1.8.8.2.3.cmml" xref="S4.SS2.p3.4.m1.8.8.2.2"><csymbol cd="latexml" id="S4.SS2.p3.4.m1.8.8.2.3.1.cmml" xref="S4.SS2.p3.4.m1.8.8.2.2.3">conditional-set</csymbol><interval closure="open" id="S4.SS2.p3.4.m1.7.7.1.1.1.1.cmml" xref="S4.SS2.p3.4.m1.7.7.1.1.1.2"><ci id="S4.SS2.p3.4.m1.5.5.cmml" xref="S4.SS2.p3.4.m1.5.5">𝑥</ci><ci id="S4.SS2.p3.4.m1.6.6.cmml" xref="S4.SS2.p3.4.m1.6.6">𝑦</ci></interval><apply id="S4.SS2.p3.4.m1.8.8.2.2.2.cmml" xref="S4.SS2.p3.4.m1.8.8.2.2.2"><leq id="S4.SS2.p3.4.m1.8.8.2.2.2.1.cmml" xref="S4.SS2.p3.4.m1.8.8.2.2.2.1"></leq><apply id="S4.SS2.p3.4.m1.4.4.cmml" xref="S4.SS2.p3.4.m1.4.4"><root id="S4.SS2.p3.4.m1.4.4a.cmml" xref="S4.SS2.p3.4.m1.4.4"></root><apply id="S4.SS2.p3.4.m1.4.4.4.cmml" xref="S4.SS2.p3.4.m1.4.4.4"><minus id="S4.SS2.p3.4.m1.4.4.4.5.cmml" xref="S4.SS2.p3.4.m1.4.4.4.5"></minus><interval closure="open" id="S4.SS2.p3.4.m1.4.4.4.6.1.cmml" xref="S4.SS2.p3.4.m1.4.4.4.6.2"><ci id="S4.SS2.p3.4.m1.1.1.1.1.cmml" xref="S4.SS2.p3.4.m1.1.1.1.1">𝑥</ci><ci id="S4.SS2.p3.4.m1.2.2.2.2.cmml" xref="S4.SS2.p3.4.m1.2.2.2.2">𝑦</ci></interval><interval closure="open" id="S4.SS2.p3.4.m1.4.4.4.4.3.cmml" xref="S4.SS2.p3.4.m1.4.4.4.4.2"><apply id="S4.SS2.p3.4.m1.3.3.3.3.1.1.cmml" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1"><csymbol cd="ambiguous" id="S4.SS2.p3.4.m1.3.3.3.3.1.1.1.cmml" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1">superscript</csymbol><apply id="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.cmml" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1"><csymbol cd="ambiguous" id="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.1.cmml" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1">subscript</csymbol><ci id="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.2.cmml" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.2">𝑥</ci><ci id="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.3.cmml" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1.2.3">𝑗</ci></apply><ci id="S4.SS2.p3.4.m1.3.3.3.3.1.1.3.cmml" xref="S4.SS2.p3.4.m1.3.3.3.3.1.1.3">𝑖</ci></apply><apply id="S4.SS2.p3.4.m1.4.4.4.4.2.2.cmml" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2"><csymbol cd="ambiguous" id="S4.SS2.p3.4.m1.4.4.4.4.2.2.1.cmml" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2">superscript</csymbol><apply id="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.cmml" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2"><csymbol cd="ambiguous" id="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.1.cmml" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2">subscript</csymbol><ci id="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.2.cmml" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.2">𝑦</ci><ci id="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.3.cmml" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2.2.3">𝑗</ci></apply><ci id="S4.SS2.p3.4.m1.4.4.4.4.2.2.3.cmml" xref="S4.SS2.p3.4.m1.4.4.4.4.2.2.3">𝑖</ci></apply></interval></apply></apply><ci id="S4.SS2.p3.4.m1.8.8.2.2.2.2.cmml" xref="S4.SS2.p3.4.m1.8.8.2.2.2.2">𝜏</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.4.m1.8c">N_{j}^{i}=\left\{(x,y)|\sqrt{(x,y)-(x_{j}^{i},y_{j}^{i})}\leq\tau\right\}</annotation></semantics></math> denotes the area of neighbors of joint <math id="S4.SS2.p3.5.m2.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S4.SS2.p3.5.m2.1a"><mi id="S4.SS2.p3.5.m2.1.1" xref="S4.SS2.p3.5.m2.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.5.m2.1b"><ci id="S4.SS2.p3.5.m2.1.1.cmml" xref="S4.SS2.p3.5.m2.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.5.m2.1c">j</annotation></semantics></math> of person <math id="S4.SS2.p3.6.m3.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S4.SS2.p3.6.m3.1a"><mi id="S4.SS2.p3.6.m3.1.1" xref="S4.SS2.p3.6.m3.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.6.m3.1b"><ci id="S4.SS2.p3.6.m3.1.1.cmml" xref="S4.SS2.p3.6.m3.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.6.m3.1c">i</annotation></semantics></math>, <math id="S4.SS2.p3.7.m4.2" class="ltx_Math" alttext="(x_{c}^{i},y_{c}^{i})" display="inline"><semantics id="S4.SS2.p3.7.m4.2a"><mrow id="S4.SS2.p3.7.m4.2.2.2" xref="S4.SS2.p3.7.m4.2.2.3.cmml"><mo stretchy="false" id="S4.SS2.p3.7.m4.2.2.2.3" xref="S4.SS2.p3.7.m4.2.2.3.cmml">(</mo><msubsup id="S4.SS2.p3.7.m4.1.1.1.1" xref="S4.SS2.p3.7.m4.1.1.1.1.cmml"><mi id="S4.SS2.p3.7.m4.1.1.1.1.2.2" xref="S4.SS2.p3.7.m4.1.1.1.1.2.2.cmml">x</mi><mi id="S4.SS2.p3.7.m4.1.1.1.1.2.3" xref="S4.SS2.p3.7.m4.1.1.1.1.2.3.cmml">c</mi><mi id="S4.SS2.p3.7.m4.1.1.1.1.3" xref="S4.SS2.p3.7.m4.1.1.1.1.3.cmml">i</mi></msubsup><mo id="S4.SS2.p3.7.m4.2.2.2.4" xref="S4.SS2.p3.7.m4.2.2.3.cmml">,</mo><msubsup id="S4.SS2.p3.7.m4.2.2.2.2" xref="S4.SS2.p3.7.m4.2.2.2.2.cmml"><mi id="S4.SS2.p3.7.m4.2.2.2.2.2.2" xref="S4.SS2.p3.7.m4.2.2.2.2.2.2.cmml">y</mi><mi id="S4.SS2.p3.7.m4.2.2.2.2.2.3" xref="S4.SS2.p3.7.m4.2.2.2.2.2.3.cmml">c</mi><mi id="S4.SS2.p3.7.m4.2.2.2.2.3" xref="S4.SS2.p3.7.m4.2.2.2.2.3.cmml">i</mi></msubsup><mo stretchy="false" id="S4.SS2.p3.7.m4.2.2.2.5" xref="S4.SS2.p3.7.m4.2.2.3.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.7.m4.2b"><interval closure="open" id="S4.SS2.p3.7.m4.2.2.3.cmml" xref="S4.SS2.p3.7.m4.2.2.2"><apply id="S4.SS2.p3.7.m4.1.1.1.1.cmml" xref="S4.SS2.p3.7.m4.1.1.1.1"><csymbol cd="ambiguous" id="S4.SS2.p3.7.m4.1.1.1.1.1.cmml" xref="S4.SS2.p3.7.m4.1.1.1.1">superscript</csymbol><apply id="S4.SS2.p3.7.m4.1.1.1.1.2.cmml" xref="S4.SS2.p3.7.m4.1.1.1.1"><csymbol cd="ambiguous" id="S4.SS2.p3.7.m4.1.1.1.1.2.1.cmml" xref="S4.SS2.p3.7.m4.1.1.1.1">subscript</csymbol><ci id="S4.SS2.p3.7.m4.1.1.1.1.2.2.cmml" xref="S4.SS2.p3.7.m4.1.1.1.1.2.2">𝑥</ci><ci id="S4.SS2.p3.7.m4.1.1.1.1.2.3.cmml" xref="S4.SS2.p3.7.m4.1.1.1.1.2.3">𝑐</ci></apply><ci id="S4.SS2.p3.7.m4.1.1.1.1.3.cmml" xref="S4.SS2.p3.7.m4.1.1.1.1.3">𝑖</ci></apply><apply id="S4.SS2.p3.7.m4.2.2.2.2.cmml" xref="S4.SS2.p3.7.m4.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS2.p3.7.m4.2.2.2.2.1.cmml" xref="S4.SS2.p3.7.m4.2.2.2.2">superscript</csymbol><apply id="S4.SS2.p3.7.m4.2.2.2.2.2.cmml" xref="S4.SS2.p3.7.m4.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS2.p3.7.m4.2.2.2.2.2.1.cmml" xref="S4.SS2.p3.7.m4.2.2.2.2">subscript</csymbol><ci id="S4.SS2.p3.7.m4.2.2.2.2.2.2.cmml" xref="S4.SS2.p3.7.m4.2.2.2.2.2.2">𝑦</ci><ci id="S4.SS2.p3.7.m4.2.2.2.2.2.3.cmml" xref="S4.SS2.p3.7.m4.2.2.2.2.2.3">𝑐</ci></apply><ci id="S4.SS2.p3.7.m4.2.2.2.2.3.cmml" xref="S4.SS2.p3.7.m4.2.2.2.2.3">𝑖</ci></apply></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.7.m4.2c">(x_{c}^{i},y_{c}^{i})</annotation></semantics></math> is the coordinate of the centroid of the person <math id="S4.SS2.p3.8.m5.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S4.SS2.p3.8.m5.1a"><mi id="S4.SS2.p3.8.m5.1.1" xref="S4.SS2.p3.8.m5.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.8.m5.1b"><ci id="S4.SS2.p3.8.m5.1.1.cmml" xref="S4.SS2.p3.8.m5.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.8.m5.1c">i</annotation></semantics></math>, <math id="S4.SS2.p3.9.m6.2" class="ltx_Math" alttext="Z=\frac{1}{2}min(W,H)" display="inline"><semantics id="S4.SS2.p3.9.m6.2a"><mrow id="S4.SS2.p3.9.m6.2.3" xref="S4.SS2.p3.9.m6.2.3.cmml"><mi id="S4.SS2.p3.9.m6.2.3.2" xref="S4.SS2.p3.9.m6.2.3.2.cmml">Z</mi><mo id="S4.SS2.p3.9.m6.2.3.1" xref="S4.SS2.p3.9.m6.2.3.1.cmml">=</mo><mrow id="S4.SS2.p3.9.m6.2.3.3" xref="S4.SS2.p3.9.m6.2.3.3.cmml"><mfrac id="S4.SS2.p3.9.m6.2.3.3.2" xref="S4.SS2.p3.9.m6.2.3.3.2.cmml"><mn id="S4.SS2.p3.9.m6.2.3.3.2.2" xref="S4.SS2.p3.9.m6.2.3.3.2.2.cmml">1</mn><mn id="S4.SS2.p3.9.m6.2.3.3.2.3" xref="S4.SS2.p3.9.m6.2.3.3.2.3.cmml">2</mn></mfrac><mo lspace="0em" rspace="0em" id="S4.SS2.p3.9.m6.2.3.3.1" xref="S4.SS2.p3.9.m6.2.3.3.1.cmml">​</mo><mi id="S4.SS2.p3.9.m6.2.3.3.3" xref="S4.SS2.p3.9.m6.2.3.3.3.cmml">m</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p3.9.m6.2.3.3.1a" xref="S4.SS2.p3.9.m6.2.3.3.1.cmml">​</mo><mi id="S4.SS2.p3.9.m6.2.3.3.4" xref="S4.SS2.p3.9.m6.2.3.3.4.cmml">i</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p3.9.m6.2.3.3.1b" xref="S4.SS2.p3.9.m6.2.3.3.1.cmml">​</mo><mi id="S4.SS2.p3.9.m6.2.3.3.5" xref="S4.SS2.p3.9.m6.2.3.3.5.cmml">n</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p3.9.m6.2.3.3.1c" xref="S4.SS2.p3.9.m6.2.3.3.1.cmml">​</mo><mrow id="S4.SS2.p3.9.m6.2.3.3.6.2" xref="S4.SS2.p3.9.m6.2.3.3.6.1.cmml"><mo stretchy="false" id="S4.SS2.p3.9.m6.2.3.3.6.2.1" xref="S4.SS2.p3.9.m6.2.3.3.6.1.cmml">(</mo><mi id="S4.SS2.p3.9.m6.1.1" xref="S4.SS2.p3.9.m6.1.1.cmml">W</mi><mo id="S4.SS2.p3.9.m6.2.3.3.6.2.2" xref="S4.SS2.p3.9.m6.2.3.3.6.1.cmml">,</mo><mi id="S4.SS2.p3.9.m6.2.2" xref="S4.SS2.p3.9.m6.2.2.cmml">H</mi><mo stretchy="false" id="S4.SS2.p3.9.m6.2.3.3.6.2.3" xref="S4.SS2.p3.9.m6.2.3.3.6.1.cmml">)</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.9.m6.2b"><apply id="S4.SS2.p3.9.m6.2.3.cmml" xref="S4.SS2.p3.9.m6.2.3"><eq id="S4.SS2.p3.9.m6.2.3.1.cmml" xref="S4.SS2.p3.9.m6.2.3.1"></eq><ci id="S4.SS2.p3.9.m6.2.3.2.cmml" xref="S4.SS2.p3.9.m6.2.3.2">𝑍</ci><apply id="S4.SS2.p3.9.m6.2.3.3.cmml" xref="S4.SS2.p3.9.m6.2.3.3"><times id="S4.SS2.p3.9.m6.2.3.3.1.cmml" xref="S4.SS2.p3.9.m6.2.3.3.1"></times><apply id="S4.SS2.p3.9.m6.2.3.3.2.cmml" xref="S4.SS2.p3.9.m6.2.3.3.2"><divide id="S4.SS2.p3.9.m6.2.3.3.2.1.cmml" xref="S4.SS2.p3.9.m6.2.3.3.2"></divide><cn type="integer" id="S4.SS2.p3.9.m6.2.3.3.2.2.cmml" xref="S4.SS2.p3.9.m6.2.3.3.2.2">1</cn><cn type="integer" id="S4.SS2.p3.9.m6.2.3.3.2.3.cmml" xref="S4.SS2.p3.9.m6.2.3.3.2.3">2</cn></apply><ci id="S4.SS2.p3.9.m6.2.3.3.3.cmml" xref="S4.SS2.p3.9.m6.2.3.3.3">𝑚</ci><ci id="S4.SS2.p3.9.m6.2.3.3.4.cmml" xref="S4.SS2.p3.9.m6.2.3.3.4">𝑖</ci><ci id="S4.SS2.p3.9.m6.2.3.3.5.cmml" xref="S4.SS2.p3.9.m6.2.3.3.5">𝑛</ci><interval closure="open" id="S4.SS2.p3.9.m6.2.3.3.6.1.cmml" xref="S4.SS2.p3.9.m6.2.3.3.6.2"><ci id="S4.SS2.p3.9.m6.1.1.cmml" xref="S4.SS2.p3.9.m6.1.1">𝑊</ci><ci id="S4.SS2.p3.9.m6.2.2.cmml" xref="S4.SS2.p3.9.m6.2.2">𝐻</ci></interval></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.9.m6.2c">Z=\frac{1}{2}min(W,H)</annotation></semantics></math> is a normalization coefficient, <math id="S4.SS2.p3.10.m7.1" class="ltx_Math" alttext="W" display="inline"><semantics id="S4.SS2.p3.10.m7.1a"><mi id="S4.SS2.p3.10.m7.1.1" xref="S4.SS2.p3.10.m7.1.1.cmml">W</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.10.m7.1b"><ci id="S4.SS2.p3.10.m7.1.1.cmml" xref="S4.SS2.p3.10.m7.1.1">𝑊</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.10.m7.1c">W</annotation></semantics></math> and <math id="S4.SS2.p3.11.m8.1" class="ltx_Math" alttext="H" display="inline"><semantics id="S4.SS2.p3.11.m8.1a"><mi id="S4.SS2.p3.11.m8.1.1" xref="S4.SS2.p3.11.m8.1.1.cmml">H</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.11.m8.1b"><ci id="S4.SS2.p3.11.m8.1.1.cmml" xref="S4.SS2.p3.11.m8.1.1">𝐻</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.11.m8.1c">H</annotation></semantics></math> are the width and height of the input image. If a location belongs to multiple people, these vectors are averaged. If the hierarchical centroid-rooted tree is used to represent human pose, we only need to replace the centroid in equation (2) with the parent node of the joint <math id="S4.SS2.p3.12.m9.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S4.SS2.p3.12.m9.1a"><mi id="S4.SS2.p3.12.m9.1.1" xref="S4.SS2.p3.12.m9.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.12.m9.1b"><ci id="S4.SS2.p3.12.m9.1.1.cmml" xref="S4.SS2.p3.12.m9.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.12.m9.1c">j</annotation></semantics></math> of the person <math id="S4.SS2.p3.13.m10.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S4.SS2.p3.13.m10.1a"><mi id="S4.SS2.p3.13.m10.1.1" xref="S4.SS2.p3.13.m10.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.13.m10.1b"><ci id="S4.SS2.p3.13.m10.1.1.cmml" xref="S4.SS2.p3.13.m10.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.13.m10.1c">i</annotation></semantics></math>.</p>
+</div>
+<div id="S4.SS2.p4" class="ltx_para">
+<p id="S4.SS2.p4.1" class="ltx_p">The MSE Loss is used for joint prediction, and Smooth L1-Loss is used for offset prediction.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Centroid-guided joint grouping</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">Based on the predicted person centroids, we develop a greedy method for joint grouping. First, we apply NMS to the heatmaps of the last stage of DS-Hourglass to get the coordinates of all candidate joints, and sort them in descending order of their score.
+For the centroid-rooted tree representation, joint allocation is performed independently for each body joint. Given a candidate of joint <math id="S4.SS3.p1.1.m1.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S4.SS3.p1.1.m1.1a"><mi id="S4.SS3.p1.1.m1.1.1" xref="S4.SS3.p1.1.m1.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.1.m1.1b"><ci id="S4.SS3.p1.1.m1.1.1.cmml" xref="S4.SS3.p1.1.m1.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.1.m1.1c">j</annotation></semantics></math>, its centroid’s coordinate can be predicated as</p>
+<table id="S4.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E3.m1.7" class="ltx_Math" alttext="(\hat{x},\hat{y})_{c}=(x,y)+Z\times O_{j}(x,y)," display="block"><semantics id="S4.E3.m1.7a"><mrow id="S4.E3.m1.7.7.1" xref="S4.E3.m1.7.7.1.1.cmml"><mrow id="S4.E3.m1.7.7.1.1" xref="S4.E3.m1.7.7.1.1.cmml"><msub id="S4.E3.m1.7.7.1.1.2" xref="S4.E3.m1.7.7.1.1.2.cmml"><mrow id="S4.E3.m1.7.7.1.1.2.2.2" xref="S4.E3.m1.7.7.1.1.2.2.1.cmml"><mo stretchy="false" id="S4.E3.m1.7.7.1.1.2.2.2.1" xref="S4.E3.m1.7.7.1.1.2.2.1.cmml">(</mo><mover accent="true" id="S4.E3.m1.1.1" xref="S4.E3.m1.1.1.cmml"><mi id="S4.E3.m1.1.1.2" xref="S4.E3.m1.1.1.2.cmml">x</mi><mo id="S4.E3.m1.1.1.1" xref="S4.E3.m1.1.1.1.cmml">^</mo></mover><mo id="S4.E3.m1.7.7.1.1.2.2.2.2" xref="S4.E3.m1.7.7.1.1.2.2.1.cmml">,</mo><mover accent="true" id="S4.E3.m1.2.2" xref="S4.E3.m1.2.2.cmml"><mi id="S4.E3.m1.2.2.2" xref="S4.E3.m1.2.2.2.cmml">y</mi><mo id="S4.E3.m1.2.2.1" xref="S4.E3.m1.2.2.1.cmml">^</mo></mover><mo stretchy="false" id="S4.E3.m1.7.7.1.1.2.2.2.3" xref="S4.E3.m1.7.7.1.1.2.2.1.cmml">)</mo></mrow><mi id="S4.E3.m1.7.7.1.1.2.3" xref="S4.E3.m1.7.7.1.1.2.3.cmml">c</mi></msub><mo id="S4.E3.m1.7.7.1.1.1" xref="S4.E3.m1.7.7.1.1.1.cmml">=</mo><mrow id="S4.E3.m1.7.7.1.1.3" xref="S4.E3.m1.7.7.1.1.3.cmml"><mrow id="S4.E3.m1.7.7.1.1.3.2.2" xref="S4.E3.m1.7.7.1.1.3.2.1.cmml"><mo stretchy="false" id="S4.E3.m1.7.7.1.1.3.2.2.1" xref="S4.E3.m1.7.7.1.1.3.2.1.cmml">(</mo><mi id="S4.E3.m1.3.3" xref="S4.E3.m1.3.3.cmml">x</mi><mo id="S4.E3.m1.7.7.1.1.3.2.2.2" xref="S4.E3.m1.7.7.1.1.3.2.1.cmml">,</mo><mi id="S4.E3.m1.4.4" xref="S4.E3.m1.4.4.cmml">y</mi><mo stretchy="false" id="S4.E3.m1.7.7.1.1.3.2.2.3" xref="S4.E3.m1.7.7.1.1.3.2.1.cmml">)</mo></mrow><mo id="S4.E3.m1.7.7.1.1.3.1" xref="S4.E3.m1.7.7.1.1.3.1.cmml">+</mo><mrow id="S4.E3.m1.7.7.1.1.3.3" xref="S4.E3.m1.7.7.1.1.3.3.cmml"><mrow id="S4.E3.m1.7.7.1.1.3.3.2" xref="S4.E3.m1.7.7.1.1.3.3.2.cmml"><mi id="S4.E3.m1.7.7.1.1.3.3.2.2" xref="S4.E3.m1.7.7.1.1.3.3.2.2.cmml">Z</mi><mo lspace="0.222em" rspace="0.222em" id="S4.E3.m1.7.7.1.1.3.3.2.1" xref="S4.E3.m1.7.7.1.1.3.3.2.1.cmml">×</mo><msub id="S4.E3.m1.7.7.1.1.3.3.2.3" xref="S4.E3.m1.7.7.1.1.3.3.2.3.cmml"><mi id="S4.E3.m1.7.7.1.1.3.3.2.3.2" xref="S4.E3.m1.7.7.1.1.3.3.2.3.2.cmml">O</mi><mi id="S4.E3.m1.7.7.1.1.3.3.2.3.3" xref="S4.E3.m1.7.7.1.1.3.3.2.3.3.cmml">j</mi></msub></mrow><mo lspace="0em" rspace="0em" id="S4.E3.m1.7.7.1.1.3.3.1" xref="S4.E3.m1.7.7.1.1.3.3.1.cmml">​</mo><mrow id="S4.E3.m1.7.7.1.1.3.3.3.2" xref="S4.E3.m1.7.7.1.1.3.3.3.1.cmml"><mo stretchy="false" id="S4.E3.m1.7.7.1.1.3.3.3.2.1" xref="S4.E3.m1.7.7.1.1.3.3.3.1.cmml">(</mo><mi id="S4.E3.m1.5.5" xref="S4.E3.m1.5.5.cmml">x</mi><mo id="S4.E3.m1.7.7.1.1.3.3.3.2.2" xref="S4.E3.m1.7.7.1.1.3.3.3.1.cmml">,</mo><mi id="S4.E3.m1.6.6" xref="S4.E3.m1.6.6.cmml">y</mi><mo stretchy="false" id="S4.E3.m1.7.7.1.1.3.3.3.2.3" xref="S4.E3.m1.7.7.1.1.3.3.3.1.cmml">)</mo></mrow></mrow></mrow></mrow><mo id="S4.E3.m1.7.7.1.2" xref="S4.E3.m1.7.7.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.E3.m1.7b"><apply id="S4.E3.m1.7.7.1.1.cmml" xref="S4.E3.m1.7.7.1"><eq id="S4.E3.m1.7.7.1.1.1.cmml" xref="S4.E3.m1.7.7.1.1.1"></eq><apply id="S4.E3.m1.7.7.1.1.2.cmml" xref="S4.E3.m1.7.7.1.1.2"><csymbol cd="ambiguous" id="S4.E3.m1.7.7.1.1.2.1.cmml" xref="S4.E3.m1.7.7.1.1.2">subscript</csymbol><interval closure="open" id="S4.E3.m1.7.7.1.1.2.2.1.cmml" xref="S4.E3.m1.7.7.1.1.2.2.2"><apply id="S4.E3.m1.1.1.cmml" xref="S4.E3.m1.1.1"><ci id="S4.E3.m1.1.1.1.cmml" xref="S4.E3.m1.1.1.1">^</ci><ci id="S4.E3.m1.1.1.2.cmml" xref="S4.E3.m1.1.1.2">𝑥</ci></apply><apply id="S4.E3.m1.2.2.cmml" xref="S4.E3.m1.2.2"><ci id="S4.E3.m1.2.2.1.cmml" xref="S4.E3.m1.2.2.1">^</ci><ci id="S4.E3.m1.2.2.2.cmml" xref="S4.E3.m1.2.2.2">𝑦</ci></apply></interval><ci id="S4.E3.m1.7.7.1.1.2.3.cmml" xref="S4.E3.m1.7.7.1.1.2.3">𝑐</ci></apply><apply id="S4.E3.m1.7.7.1.1.3.cmml" xref="S4.E3.m1.7.7.1.1.3"><plus id="S4.E3.m1.7.7.1.1.3.1.cmml" xref="S4.E3.m1.7.7.1.1.3.1"></plus><interval closure="open" id="S4.E3.m1.7.7.1.1.3.2.1.cmml" xref="S4.E3.m1.7.7.1.1.3.2.2"><ci id="S4.E3.m1.3.3.cmml" xref="S4.E3.m1.3.3">𝑥</ci><ci id="S4.E3.m1.4.4.cmml" xref="S4.E3.m1.4.4">𝑦</ci></interval><apply id="S4.E3.m1.7.7.1.1.3.3.cmml" xref="S4.E3.m1.7.7.1.1.3.3"><times id="S4.E3.m1.7.7.1.1.3.3.1.cmml" xref="S4.E3.m1.7.7.1.1.3.3.1"></times><apply id="S4.E3.m1.7.7.1.1.3.3.2.cmml" xref="S4.E3.m1.7.7.1.1.3.3.2"><times id="S4.E3.m1.7.7.1.1.3.3.2.1.cmml" xref="S4.E3.m1.7.7.1.1.3.3.2.1"></times><ci id="S4.E3.m1.7.7.1.1.3.3.2.2.cmml" xref="S4.E3.m1.7.7.1.1.3.3.2.2">𝑍</ci><apply id="S4.E3.m1.7.7.1.1.3.3.2.3.cmml" xref="S4.E3.m1.7.7.1.1.3.3.2.3"><csymbol cd="ambiguous" id="S4.E3.m1.7.7.1.1.3.3.2.3.1.cmml" xref="S4.E3.m1.7.7.1.1.3.3.2.3">subscript</csymbol><ci id="S4.E3.m1.7.7.1.1.3.3.2.3.2.cmml" xref="S4.E3.m1.7.7.1.1.3.3.2.3.2">𝑂</ci><ci id="S4.E3.m1.7.7.1.1.3.3.2.3.3.cmml" xref="S4.E3.m1.7.7.1.1.3.3.2.3.3">𝑗</ci></apply></apply><interval closure="open" id="S4.E3.m1.7.7.1.1.3.3.3.1.cmml" xref="S4.E3.m1.7.7.1.1.3.3.3.2"><ci id="S4.E3.m1.5.5.cmml" xref="S4.E3.m1.5.5">𝑥</ci><ci id="S4.E3.m1.6.6.cmml" xref="S4.E3.m1.6.6">𝑦</ci></interval></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E3.m1.7c">(\hat{x},\hat{y})_{c}=(x,y)+Z\times O_{j}(x,y),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p id="S4.SS3.p1.5" class="ltx_p">where <math id="S4.SS3.p1.2.m1.2" class="ltx_Math" alttext="(x,y)" display="inline"><semantics id="S4.SS3.p1.2.m1.2a"><mrow id="S4.SS3.p1.2.m1.2.3.2" xref="S4.SS3.p1.2.m1.2.3.1.cmml"><mo stretchy="false" id="S4.SS3.p1.2.m1.2.3.2.1" xref="S4.SS3.p1.2.m1.2.3.1.cmml">(</mo><mi id="S4.SS3.p1.2.m1.1.1" xref="S4.SS3.p1.2.m1.1.1.cmml">x</mi><mo id="S4.SS3.p1.2.m1.2.3.2.2" xref="S4.SS3.p1.2.m1.2.3.1.cmml">,</mo><mi id="S4.SS3.p1.2.m1.2.2" xref="S4.SS3.p1.2.m1.2.2.cmml">y</mi><mo stretchy="false" id="S4.SS3.p1.2.m1.2.3.2.3" xref="S4.SS3.p1.2.m1.2.3.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.2.m1.2b"><interval closure="open" id="S4.SS3.p1.2.m1.2.3.1.cmml" xref="S4.SS3.p1.2.m1.2.3.2"><ci id="S4.SS3.p1.2.m1.1.1.cmml" xref="S4.SS3.p1.2.m1.1.1">𝑥</ci><ci id="S4.SS3.p1.2.m1.2.2.cmml" xref="S4.SS3.p1.2.m1.2.2">𝑦</ci></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.2.m1.2c">(x,y)</annotation></semantics></math> is the coordinate of the candidate joint, <math id="S4.SS3.p1.3.m2.2" class="ltx_Math" alttext="(\hat{x},\hat{y})_{c}" display="inline"><semantics id="S4.SS3.p1.3.m2.2a"><msub id="S4.SS3.p1.3.m2.2.3" xref="S4.SS3.p1.3.m2.2.3.cmml"><mrow id="S4.SS3.p1.3.m2.2.3.2.2" xref="S4.SS3.p1.3.m2.2.3.2.1.cmml"><mo stretchy="false" id="S4.SS3.p1.3.m2.2.3.2.2.1" xref="S4.SS3.p1.3.m2.2.3.2.1.cmml">(</mo><mover accent="true" id="S4.SS3.p1.3.m2.1.1" xref="S4.SS3.p1.3.m2.1.1.cmml"><mi id="S4.SS3.p1.3.m2.1.1.2" xref="S4.SS3.p1.3.m2.1.1.2.cmml">x</mi><mo id="S4.SS3.p1.3.m2.1.1.1" xref="S4.SS3.p1.3.m2.1.1.1.cmml">^</mo></mover><mo id="S4.SS3.p1.3.m2.2.3.2.2.2" xref="S4.SS3.p1.3.m2.2.3.2.1.cmml">,</mo><mover accent="true" id="S4.SS3.p1.3.m2.2.2" xref="S4.SS3.p1.3.m2.2.2.cmml"><mi id="S4.SS3.p1.3.m2.2.2.2" xref="S4.SS3.p1.3.m2.2.2.2.cmml">y</mi><mo id="S4.SS3.p1.3.m2.2.2.1" xref="S4.SS3.p1.3.m2.2.2.1.cmml">^</mo></mover><mo stretchy="false" id="S4.SS3.p1.3.m2.2.3.2.2.3" xref="S4.SS3.p1.3.m2.2.3.2.1.cmml">)</mo></mrow><mi id="S4.SS3.p1.3.m2.2.3.3" xref="S4.SS3.p1.3.m2.2.3.3.cmml">c</mi></msub><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.3.m2.2b"><apply id="S4.SS3.p1.3.m2.2.3.cmml" xref="S4.SS3.p1.3.m2.2.3"><csymbol cd="ambiguous" id="S4.SS3.p1.3.m2.2.3.1.cmml" xref="S4.SS3.p1.3.m2.2.3">subscript</csymbol><interval closure="open" id="S4.SS3.p1.3.m2.2.3.2.1.cmml" xref="S4.SS3.p1.3.m2.2.3.2.2"><apply id="S4.SS3.p1.3.m2.1.1.cmml" xref="S4.SS3.p1.3.m2.1.1"><ci id="S4.SS3.p1.3.m2.1.1.1.cmml" xref="S4.SS3.p1.3.m2.1.1.1">^</ci><ci id="S4.SS3.p1.3.m2.1.1.2.cmml" xref="S4.SS3.p1.3.m2.1.1.2">𝑥</ci></apply><apply id="S4.SS3.p1.3.m2.2.2.cmml" xref="S4.SS3.p1.3.m2.2.2"><ci id="S4.SS3.p1.3.m2.2.2.1.cmml" xref="S4.SS3.p1.3.m2.2.2.1">^</ci><ci id="S4.SS3.p1.3.m2.2.2.2.cmml" xref="S4.SS3.p1.3.m2.2.2.2">𝑦</ci></apply></interval><ci id="S4.SS3.p1.3.m2.2.3.3.cmml" xref="S4.SS3.p1.3.m2.2.3.3">𝑐</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.3.m2.2c">(\hat{x},\hat{y})_{c}</annotation></semantics></math> is the predicated coordinate of its person centroid, and <math id="S4.SS3.p1.4.m3.1" class="ltx_Math" alttext="O_{j}" display="inline"><semantics id="S4.SS3.p1.4.m3.1a"><msub id="S4.SS3.p1.4.m3.1.1" xref="S4.SS3.p1.4.m3.1.1.cmml"><mi id="S4.SS3.p1.4.m3.1.1.2" xref="S4.SS3.p1.4.m3.1.1.2.cmml">O</mi><mi id="S4.SS3.p1.4.m3.1.1.3" xref="S4.SS3.p1.4.m3.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.4.m3.1b"><apply id="S4.SS3.p1.4.m3.1.1.cmml" xref="S4.SS3.p1.4.m3.1.1"><csymbol cd="ambiguous" id="S4.SS3.p1.4.m3.1.1.1.cmml" xref="S4.SS3.p1.4.m3.1.1">subscript</csymbol><ci id="S4.SS3.p1.4.m3.1.1.2.cmml" xref="S4.SS3.p1.4.m3.1.1.2">𝑂</ci><ci id="S4.SS3.p1.4.m3.1.1.3.cmml" xref="S4.SS3.p1.4.m3.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.4.m3.1c">O_{j}</annotation></semantics></math> is the offset map of joint <math id="S4.SS3.p1.5.m4.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S4.SS3.p1.5.m4.1a"><mi id="S4.SS3.p1.5.m4.1.1" xref="S4.SS3.p1.5.m4.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.5.m4.1b"><ci id="S4.SS3.p1.5.m4.1.1.cmml" xref="S4.SS3.p1.5.m4.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.5.m4.1c">j</annotation></semantics></math>. Then the predicated centroid is compared to each person centroid generated from heatmap and allocated to the nearest one under the constrain that one person has only one instance for each joint category.</p>
+</div>
+<div id="S4.SS3.p2" class="ltx_para">
+<p id="S4.SS3.p2.1" class="ltx_p">For hierarchical centroid-rooted tree representation, the joints are also
+group-
+ed hierarchically. Base on the intuition that the joints close to the torso can be predicted more reliably. We classify joints into three levels, the first level contains <span id="S4.SS3.p2.1.1" class="ltx_text ltx_font_italic">shoulder</span>, <span id="S4.SS3.p2.1.2" class="ltx_text ltx_font_italic">hip</span>, and <span id="S4.SS3.p2.1.3" class="ltx_text ltx_font_italic">neck</span>, the second level contains <span id="S4.SS3.p2.1.4" class="ltx_text ltx_font_italic">head</span>, <span id="S4.SS3.p2.1.5" class="ltx_text ltx_font_italic">elbow</span> and <span id="S4.SS3.p2.1.6" class="ltx_text ltx_font_italic">knee</span>, and third level contains <span id="S4.SS3.p2.1.7" class="ltx_text ltx_font_italic">wirst</span> and <span id="S4.SS3.p2.1.8" class="ltx_text ltx_font_italic">ankle</span>. The joint allocation is performed from the first level to the third level, each joint candidate is associated to its parent node in the tree structure according to equation (3) and the nearest-neighbour rule.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Experiments</h2>
+
+<figure id="S5.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Comparison of ResBlocks on MPII single-person validation set</figcaption>
+<table id="S5.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S5.T1.1.1.1" class="ltx_tr">
+<th id="S5.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_rr ltx_border_t">Methods</th>
+<th id="S5.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">Mean</th>
+<th id="S5.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">Stages</th>
+<th id="S5.T1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">Param</th>
+<th id="S5.T1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">FLOPs</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S5.T1.1.2.1" class="ltx_tr">
+<td id="S5.T1.1.2.1.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">Hourglass <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>
+</td>
+<td id="S5.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">90.52</td>
+<td id="S5.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">8</td>
+<td id="S5.T1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">26M</td>
+<td id="S5.T1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_tt">26.2G</td>
+</tr>
+<tr id="S5.T1.1.3.2" class="ltx_tr">
+<td id="S5.T1.1.3.2.1" class="ltx_td ltx_align_center ltx_border_rr">SBN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>
+</td>
+<td id="S5.T1.1.3.2.2" class="ltx_td ltx_align_center ltx_border_r">89.6</td>
+<td id="S5.T1.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S5.T1.1.3.2.4" class="ltx_td ltx_align_center ltx_border_r">68.6M</td>
+<td id="S5.T1.1.3.2.5" class="ltx_td ltx_align_center">21G</td>
+</tr>
+<tr id="S5.T1.1.4.3" class="ltx_tr">
+<td id="S5.T1.1.4.3.1" class="ltx_td ltx_align_center ltx_border_rr">HRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>
+</td>
+<td id="S5.T1.1.4.3.2" class="ltx_td ltx_align_center ltx_border_r">90.3</td>
+<td id="S5.T1.1.4.3.3" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S5.T1.1.4.3.4" class="ltx_td ltx_align_center ltx_border_r">28.5M</td>
+<td id="S5.T1.1.4.3.5" class="ltx_td ltx_align_center">9.5G</td>
+</tr>
+<tr id="S5.T1.1.5.4" class="ltx_tr">
+<td id="S5.T1.1.5.4.1" class="ltx_td ltx_align_center ltx_border_rr">FPD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite>
+</td>
+<td id="S5.T1.1.5.4.2" class="ltx_td ltx_align_center ltx_border_r">89.04</td>
+<td id="S5.T1.1.5.4.3" class="ltx_td ltx_align_center ltx_border_r">4</td>
+<td id="S5.T1.1.5.4.4" class="ltx_td ltx_align_center ltx_border_r">3M</td>
+<td id="S5.T1.1.5.4.5" class="ltx_td ltx_align_center">3.6G</td>
+</tr>
+<tr id="S5.T1.1.6.5" class="ltx_tr">
+<td id="S5.T1.1.6.5.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">DS-Hourglass*</td>
+<td id="S5.T1.1.6.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">88.71</td>
+<td id="S5.T1.1.6.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">8</td>
+<td id="S5.T1.1.6.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2.9M</td>
+<td id="S5.T1.1.6.5.5" class="ltx_td ltx_align_center ltx_border_t">3.3G</td>
+</tr>
+<tr id="S5.T1.1.7.6" class="ltx_tr">
+<td id="S5.T1.1.7.6.1" class="ltx_td ltx_align_center ltx_border_rr">DS-Hourglass w/o SE</td>
+<td id="S5.T1.1.7.6.2" class="ltx_td ltx_align_center ltx_border_r">89.47</td>
+<td id="S5.T1.1.7.6.3" class="ltx_td ltx_align_center ltx_border_r">8</td>
+<td id="S5.T1.1.7.6.4" class="ltx_td ltx_align_center ltx_border_r">2.9M</td>
+<td id="S5.T1.1.7.6.5" class="ltx_td ltx_align_center">4.7G</td>
+</tr>
+<tr id="S5.T1.1.8.7" class="ltx_tr">
+<td id="S5.T1.1.8.7.1" class="ltx_td ltx_align_center ltx_border_rr">DS-Hourglass</td>
+<td id="S5.T1.1.8.7.2" class="ltx_td ltx_align_center ltx_border_r">89.87</td>
+<td id="S5.T1.1.8.7.3" class="ltx_td ltx_align_center ltx_border_r">8</td>
+<td id="S5.T1.1.8.7.4" class="ltx_td ltx_align_center ltx_border_r">4.2M</td>
+<td id="S5.T1.1.8.7.5" class="ltx_td ltx_align_center">4.7G</td>
+</tr>
+<tr id="S5.T1.1.9.8" class="ltx_tr">
+<td id="S5.T1.1.9.8.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_rr">DS-Hourglass(mix)</td>
+<td id="S5.T1.1.9.8.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">89.94</td>
+<td id="S5.T1.1.9.8.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">8</td>
+<td id="S5.T1.1.9.8.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">4.6M</td>
+<td id="S5.T1.1.9.8.5" class="ltx_td ltx_align_center ltx_border_b">4.8G</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span>Experiment setup</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.1" class="ltx_p"><span id="S5.SS1.p1.1.1" class="ltx_text ltx_font_bold">Datasets</span> MPII Single-Person Dataset consists of around 25k images with annotations for multiple people providing 40k annotated samples (28k training, 11k testing) for single-person pose estimation. The MPII Multi-Person dataset consists of 3,844 and 1,758 groups of multiple interacting persons for training and testing. The LSP dataset has 11K training samples and 1K test samples, with 14 annotated joints for a person.</p>
+</div>
+<div id="S5.SS1.p2" class="ltx_para">
+<p id="S5.SS1.p2.1" class="ltx_p"><span id="S5.SS1.p2.1.1" class="ltx_text ltx_font_bold">Training Details</span> We randomly augmente the samples with rotation degrees in [-40, 40], scaling factors in [0.7, 1.3], translation offset in [-40, 40] and horizontally mirror, adopt <math id="S5.SS1.p2.1.m1.1" class="ltx_Math" alttext="256\times 256" display="inline"><semantics id="S5.SS1.p2.1.m1.1a"><mrow id="S5.SS1.p2.1.m1.1.1" xref="S5.SS1.p2.1.m1.1.1.cmml"><mn id="S5.SS1.p2.1.m1.1.1.2" xref="S5.SS1.p2.1.m1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S5.SS1.p2.1.m1.1.1.1" xref="S5.SS1.p2.1.m1.1.1.1.cmml">×</mo><mn id="S5.SS1.p2.1.m1.1.1.3" xref="S5.SS1.p2.1.m1.1.1.3.cmml">256</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.SS1.p2.1.m1.1b"><apply id="S5.SS1.p2.1.m1.1.1.cmml" xref="S5.SS1.p2.1.m1.1.1"><times id="S5.SS1.p2.1.m1.1.1.1.cmml" xref="S5.SS1.p2.1.m1.1.1.1"></times><cn type="integer" id="S5.SS1.p2.1.m1.1.1.2.cmml" xref="S5.SS1.p2.1.m1.1.1.2">256</cn><cn type="integer" id="S5.SS1.p2.1.m1.1.1.3.cmml" xref="S5.SS1.p2.1.m1.1.1.3">256</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS1.p2.1.m1.1c">256\times 256</annotation></semantics></math> as training size. The initial learning rate is 0.0025, learning rate decay at step 150, 170, 200 and 230 with total 250 epochs by 0.5.</p>
+</div>
+</section>
+<section id="S5.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span>Ablation Study</h3>
+
+<div id="S5.SS2.p1" class="ltx_para">
+<p id="S5.SS2.p1.1" class="ltx_p"><span id="S5.SS2.p1.1.1" class="ltx_text ltx_font_bold">Ablation for ResBlocks</span> In Table 1, DS-Hourglass* uses Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(c) with only one depthwise separable convolution. DS-Hourglass w/o SE uses Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(c) without SE module. DS-Hourglass and DS-Hourglass(mix) use Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(c) and Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Hourglass network ‣ 3 The proposed light-weight Hourglass network ‣ Efficient Human Pose Estimation with Depthwise Separable Convolution and Person Centroid Guided Joint Grouping" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>(d) respectively. ResBlock with two depthwise separable convolution can improve 1.1% in PCKh than ResBlock with only one, but with 1.4 GFLOPs computational cost increased. SE model can imporve 0.4% in PCKh; Mixed depthwise convolution only bring very little improvement for single-person pose estimation. Compared with the excellent methods, our DS-Hourglass(mix) is 0.9% higher than FPD. And 0.36% lower than HRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>, However, the GFLOPs is only half of it and the parameters are only 16% of HRNet.</p>
+</div>
+<div id="S5.SS2.p2" class="ltx_para">
+<p id="S5.SS2.p2.1" class="ltx_p"><span id="S5.SS2.p2.1.1" class="ltx_text ltx_font_bold">Ablation for Assembly methods</span> Table 2 indicated that our centroid-guided method improves 0.4% over PPN, and our hierarchical centroid-guided method improves 1.8% over PPN. DS-Hourglass(mix) improves 1% over DS-Hourgalss with hierarchical centroid-guided assembly method, as it can handles multi-scale problem better, even better than PPN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> based on original Hourglass one (79.8% vs 79.4%), we can save 50GFLOPs and only need 21% parameters of PPN.</p>
+</div>
+<figure id="S5.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2: </span>Comparison of assembly methods on MPII multi-person validation set</figcaption>
+<table id="S5.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T2.1.1.1" class="ltx_tr">
+<th id="S5.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr ltx_border_t">Model</th>
+<th id="S5.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">Stage</th>
+<td id="S5.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Method</td>
+<td id="S5.T2.1.1.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Mean</td>
+<td id="S5.T2.1.1.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Param</td>
+<td id="S5.T2.1.1.1.6" class="ltx_td ltx_align_center ltx_border_t">FLOPs</td>
+</tr>
+<tr id="S5.T2.1.2.2" class="ltx_tr">
+<th id="S5.T2.1.2.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr ltx_border_tt">Hourglass</th>
+<th id="S5.T2.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_tt">8</th>
+<td id="S5.T2.1.2.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">PPN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>
+</td>
+<td id="S5.T2.1.2.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">79.4</td>
+<td id="S5.T2.1.2.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">22M</td>
+<td id="S5.T2.1.2.2.6" class="ltx_td ltx_align_center ltx_border_tt">62.9G</td>
+</tr>
+<tr id="S5.T2.1.3.3" class="ltx_tr">
+<th id="S5.T2.1.3.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr ltx_border_t">Hourglass</th>
+<th id="S5.T2.1.3.3.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">1</th>
+<td id="S5.T2.1.3.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">PPN</td>
+<td id="S5.T2.1.3.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">74.4</td>
+<td id="S5.T2.1.3.3.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">3.0M</td>
+<td id="S5.T2.1.3.3.6" class="ltx_td ltx_align_center ltx_border_t">10.8G</td>
+</tr>
+<tr id="S5.T2.1.4.4" class="ltx_tr">
+<th id="S5.T2.1.4.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr">Hourglass</th>
+<th id="S5.T2.1.4.4.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">1</th>
+<td id="S5.T2.1.4.4.3" class="ltx_td ltx_align_center ltx_border_r">Center</td>
+<td id="S5.T2.1.4.4.4" class="ltx_td ltx_align_center ltx_border_r">75.8</td>
+<td id="S5.T2.1.4.4.5" class="ltx_td ltx_align_center ltx_border_r">3.0M</td>
+<td id="S5.T2.1.4.4.6" class="ltx_td ltx_align_center">10.9G</td>
+</tr>
+<tr id="S5.T2.1.5.5" class="ltx_tr">
+<th id="S5.T2.1.5.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr">Hourglass</th>
+<th id="S5.T2.1.5.5.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">1</th>
+<td id="S5.T2.1.5.5.3" class="ltx_td ltx_align_center ltx_border_r">Cent.Hier.</td>
+<td id="S5.T2.1.5.5.4" class="ltx_td ltx_align_center ltx_border_r">76.2</td>
+<td id="S5.T2.1.5.5.5" class="ltx_td ltx_align_center ltx_border_r">3.0M</td>
+<td id="S5.T2.1.5.5.6" class="ltx_td ltx_align_center">10.9G</td>
+</tr>
+<tr id="S5.T2.1.6.6" class="ltx_tr">
+<th id="S5.T2.1.6.6.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_rr ltx_border_t">DS-Hourglass</th>
+<th id="S5.T2.1.6.6.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">8</th>
+<td id="S5.T2.1.6.6.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Cent.Hier.</td>
+<td id="S5.T2.1.6.6.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">78.8</td>
+<td id="S5.T2.1.6.6.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">4.4M</td>
+<td id="S5.T2.1.6.6.6" class="ltx_td ltx_align_center ltx_border_t">13.3G</td>
+</tr>
+<tr id="S5.T2.1.7.7" class="ltx_tr">
+<th id="S5.T2.1.7.7.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_rr">DS-Hourglass(mix)</th>
+<th id="S5.T2.1.7.7.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r">8</th>
+<td id="S5.T2.1.7.7.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">Cent.Hier.</td>
+<td id="S5.T2.1.7.7.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">79.8</td>
+<td id="S5.T2.1.7.7.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">4.6M</td>
+<td id="S5.T2.1.7.7.6" class="ltx_td ltx_align_center ltx_border_b">13.6G</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S5.T3" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Result on MPII Single-Person test set. <math id="S5.T3.2.2.m1.1" class="ltx_Math" alttext="*" display="inline"><semantics id="S5.T3.2.2.m1.1b"><mo id="S5.T3.2.2.m1.1.1" xref="S5.T3.2.2.m1.1.1.cmml">∗</mo><annotation-xml encoding="MathML-Content" id="S5.T3.2.2.m1.1c"><times id="S5.T3.2.2.m1.1.1.cmml" xref="S5.T3.2.2.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.2.2.m1.1d">*</annotation></semantics></math> means the use of extend dataset.</figcaption>
+<table id="S5.T3.18.18" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T3.18.18.17.1" class="ltx_tr">
+<td id="S5.T3.18.18.17.1.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">Method</td>
+<td id="S5.T3.18.18.17.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">PCKh</td>
+<td id="S5.T3.18.18.17.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S5.T3.18.18.17.1.3.1" class="ltx_text ltx_font_bold">Auxiliaries</span></td>
+<td id="S5.T3.18.18.17.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Stage</td>
+<td id="S5.T3.18.18.17.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S5.T3.18.18.17.1.5.1" class="ltx_text ltx_font_bold">Pre.</span></td>
+<td id="S5.T3.18.18.17.1.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Input size</td>
+<td id="S5.T3.18.18.17.1.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Out. size</td>
+<td id="S5.T3.18.18.17.1.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">FLOPs</td>
+<td id="S5.T3.18.18.17.1.9" class="ltx_td ltx_align_center ltx_border_t">#Param</td>
+</tr>
+<tr id="S5.T3.4.4.2" class="ltx_tr">
+<td id="S5.T3.4.4.2.3" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">DeeperCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>
+</td>
+<td id="S5.T3.4.4.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">88.5</td>
+<td id="S5.T3.4.4.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">-</td>
+<td id="S5.T3.4.4.2.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">-</td>
+<td id="S5.T3.4.4.2.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">yes</td>
+<td id="S5.T3.3.3.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><math id="S5.T3.3.3.1.1.m1.1" class="ltx_Math" alttext="344\times 344" display="inline"><semantics id="S5.T3.3.3.1.1.m1.1a"><mrow id="S5.T3.3.3.1.1.m1.1.1" xref="S5.T3.3.3.1.1.m1.1.1.cmml"><mn id="S5.T3.3.3.1.1.m1.1.1.2" xref="S5.T3.3.3.1.1.m1.1.1.2.cmml">344</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.3.3.1.1.m1.1.1.1" xref="S5.T3.3.3.1.1.m1.1.1.1.cmml">×</mo><mn id="S5.T3.3.3.1.1.m1.1.1.3" xref="S5.T3.3.3.1.1.m1.1.1.3.cmml">344</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.3.3.1.1.m1.1b"><apply id="S5.T3.3.3.1.1.m1.1.1.cmml" xref="S5.T3.3.3.1.1.m1.1.1"><times id="S5.T3.3.3.1.1.m1.1.1.1.cmml" xref="S5.T3.3.3.1.1.m1.1.1.1"></times><cn type="integer" id="S5.T3.3.3.1.1.m1.1.1.2.cmml" xref="S5.T3.3.3.1.1.m1.1.1.2">344</cn><cn type="integer" id="S5.T3.3.3.1.1.m1.1.1.3.cmml" xref="S5.T3.3.3.1.1.m1.1.1.3">344</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.3.3.1.1.m1.1c">344\times 344</annotation></semantics></math></td>
+<td id="S5.T3.4.4.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><math id="S5.T3.4.4.2.2.m1.1" class="ltx_Math" alttext="43\times 43" display="inline"><semantics id="S5.T3.4.4.2.2.m1.1a"><mrow id="S5.T3.4.4.2.2.m1.1.1" xref="S5.T3.4.4.2.2.m1.1.1.cmml"><mn id="S5.T3.4.4.2.2.m1.1.1.2" xref="S5.T3.4.4.2.2.m1.1.1.2.cmml">43</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.4.4.2.2.m1.1.1.1" xref="S5.T3.4.4.2.2.m1.1.1.1.cmml">×</mo><mn id="S5.T3.4.4.2.2.m1.1.1.3" xref="S5.T3.4.4.2.2.m1.1.1.3.cmml">43</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.4.4.2.2.m1.1b"><apply id="S5.T3.4.4.2.2.m1.1.1.cmml" xref="S5.T3.4.4.2.2.m1.1.1"><times id="S5.T3.4.4.2.2.m1.1.1.1.cmml" xref="S5.T3.4.4.2.2.m1.1.1.1"></times><cn type="integer" id="S5.T3.4.4.2.2.m1.1.1.2.cmml" xref="S5.T3.4.4.2.2.m1.1.1.2">43</cn><cn type="integer" id="S5.T3.4.4.2.2.m1.1.1.3.cmml" xref="S5.T3.4.4.2.2.m1.1.1.3">43</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.4.4.2.2.m1.1c">43\times 43</annotation></semantics></math></td>
+<td id="S5.T3.4.4.2.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">37G</td>
+<td id="S5.T3.4.4.2.9" class="ltx_td ltx_align_center ltx_border_tt">66M</td>
+</tr>
+<tr id="S5.T3.6.6.4" class="ltx_tr">
+<td id="S5.T3.6.6.4.3" class="ltx_td ltx_align_center ltx_border_rr">CPM* <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite>
+</td>
+<td id="S5.T3.6.6.4.4" class="ltx_td ltx_align_center ltx_border_r">88.5</td>
+<td id="S5.T3.6.6.4.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S5.T3.6.6.4.6" class="ltx_td ltx_align_center ltx_border_r">6</td>
+<td id="S5.T3.6.6.4.7" class="ltx_td ltx_align_center ltx_border_r">yes</td>
+<td id="S5.T3.5.5.3.1" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.5.5.3.1.m1.1" class="ltx_Math" alttext="368\times 368" display="inline"><semantics id="S5.T3.5.5.3.1.m1.1a"><mrow id="S5.T3.5.5.3.1.m1.1.1" xref="S5.T3.5.5.3.1.m1.1.1.cmml"><mn id="S5.T3.5.5.3.1.m1.1.1.2" xref="S5.T3.5.5.3.1.m1.1.1.2.cmml">368</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.5.5.3.1.m1.1.1.1" xref="S5.T3.5.5.3.1.m1.1.1.1.cmml">×</mo><mn id="S5.T3.5.5.3.1.m1.1.1.3" xref="S5.T3.5.5.3.1.m1.1.1.3.cmml">368</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.5.5.3.1.m1.1b"><apply id="S5.T3.5.5.3.1.m1.1.1.cmml" xref="S5.T3.5.5.3.1.m1.1.1"><times id="S5.T3.5.5.3.1.m1.1.1.1.cmml" xref="S5.T3.5.5.3.1.m1.1.1.1"></times><cn type="integer" id="S5.T3.5.5.3.1.m1.1.1.2.cmml" xref="S5.T3.5.5.3.1.m1.1.1.2">368</cn><cn type="integer" id="S5.T3.5.5.3.1.m1.1.1.3.cmml" xref="S5.T3.5.5.3.1.m1.1.1.3">368</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.5.5.3.1.m1.1c">368\times 368</annotation></semantics></math></td>
+<td id="S5.T3.6.6.4.2" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.6.6.4.2.m1.1" class="ltx_Math" alttext="46\times 46" display="inline"><semantics id="S5.T3.6.6.4.2.m1.1a"><mrow id="S5.T3.6.6.4.2.m1.1.1" xref="S5.T3.6.6.4.2.m1.1.1.cmml"><mn id="S5.T3.6.6.4.2.m1.1.1.2" xref="S5.T3.6.6.4.2.m1.1.1.2.cmml">46</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.6.6.4.2.m1.1.1.1" xref="S5.T3.6.6.4.2.m1.1.1.1.cmml">×</mo><mn id="S5.T3.6.6.4.2.m1.1.1.3" xref="S5.T3.6.6.4.2.m1.1.1.3.cmml">46</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.6.6.4.2.m1.1b"><apply id="S5.T3.6.6.4.2.m1.1.1.cmml" xref="S5.T3.6.6.4.2.m1.1.1"><times id="S5.T3.6.6.4.2.m1.1.1.1.cmml" xref="S5.T3.6.6.4.2.m1.1.1.1"></times><cn type="integer" id="S5.T3.6.6.4.2.m1.1.1.2.cmml" xref="S5.T3.6.6.4.2.m1.1.1.2">46</cn><cn type="integer" id="S5.T3.6.6.4.2.m1.1.1.3.cmml" xref="S5.T3.6.6.4.2.m1.1.1.3">46</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.6.6.4.2.m1.1c">46\times 46</annotation></semantics></math></td>
+<td id="S5.T3.6.6.4.8" class="ltx_td ltx_align_center ltx_border_r">175G</td>
+<td id="S5.T3.6.6.4.9" class="ltx_td ltx_align_center">31M</td>
+</tr>
+<tr id="S5.T3.8.8.6" class="ltx_tr">
+<td id="S5.T3.8.8.6.3" class="ltx_td ltx_align_center ltx_border_rr">SHG <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>
+</td>
+<td id="S5.T3.8.8.6.4" class="ltx_td ltx_align_center ltx_border_r">90.9</td>
+<td id="S5.T3.8.8.6.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S5.T3.8.8.6.6" class="ltx_td ltx_align_center ltx_border_r">8</td>
+<td id="S5.T3.8.8.6.7" class="ltx_td ltx_align_center ltx_border_r">no</td>
+<td id="S5.T3.7.7.5.1" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.7.7.5.1.m1.1" class="ltx_Math" alttext="256\times 256" display="inline"><semantics id="S5.T3.7.7.5.1.m1.1a"><mrow id="S5.T3.7.7.5.1.m1.1.1" xref="S5.T3.7.7.5.1.m1.1.1.cmml"><mn id="S5.T3.7.7.5.1.m1.1.1.2" xref="S5.T3.7.7.5.1.m1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.7.7.5.1.m1.1.1.1" xref="S5.T3.7.7.5.1.m1.1.1.1.cmml">×</mo><mn id="S5.T3.7.7.5.1.m1.1.1.3" xref="S5.T3.7.7.5.1.m1.1.1.3.cmml">256</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.7.7.5.1.m1.1b"><apply id="S5.T3.7.7.5.1.m1.1.1.cmml" xref="S5.T3.7.7.5.1.m1.1.1"><times id="S5.T3.7.7.5.1.m1.1.1.1.cmml" xref="S5.T3.7.7.5.1.m1.1.1.1"></times><cn type="integer" id="S5.T3.7.7.5.1.m1.1.1.2.cmml" xref="S5.T3.7.7.5.1.m1.1.1.2">256</cn><cn type="integer" id="S5.T3.7.7.5.1.m1.1.1.3.cmml" xref="S5.T3.7.7.5.1.m1.1.1.3">256</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.7.7.5.1.m1.1c">256\times 256</annotation></semantics></math></td>
+<td id="S5.T3.8.8.6.2" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.8.8.6.2.m1.1" class="ltx_Math" alttext="64\times 64" display="inline"><semantics id="S5.T3.8.8.6.2.m1.1a"><mrow id="S5.T3.8.8.6.2.m1.1.1" xref="S5.T3.8.8.6.2.m1.1.1.cmml"><mn id="S5.T3.8.8.6.2.m1.1.1.2" xref="S5.T3.8.8.6.2.m1.1.1.2.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.8.8.6.2.m1.1.1.1" xref="S5.T3.8.8.6.2.m1.1.1.1.cmml">×</mo><mn id="S5.T3.8.8.6.2.m1.1.1.3" xref="S5.T3.8.8.6.2.m1.1.1.3.cmml">64</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.8.8.6.2.m1.1b"><apply id="S5.T3.8.8.6.2.m1.1.1.cmml" xref="S5.T3.8.8.6.2.m1.1.1"><times id="S5.T3.8.8.6.2.m1.1.1.1.cmml" xref="S5.T3.8.8.6.2.m1.1.1.1"></times><cn type="integer" id="S5.T3.8.8.6.2.m1.1.1.2.cmml" xref="S5.T3.8.8.6.2.m1.1.1.2">64</cn><cn type="integer" id="S5.T3.8.8.6.2.m1.1.1.3.cmml" xref="S5.T3.8.8.6.2.m1.1.1.3">64</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.8.8.6.2.m1.1c">64\times 64</annotation></semantics></math></td>
+<td id="S5.T3.8.8.6.8" class="ltx_td ltx_align_center ltx_border_r">26.2G</td>
+<td id="S5.T3.8.8.6.9" class="ltx_td ltx_align_center">26M</td>
+</tr>
+<tr id="S5.T3.10.10.8" class="ltx_tr">
+<td id="S5.T3.10.10.8.3" class="ltx_td ltx_align_center ltx_border_rr">PIL <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>
+</td>
+<td id="S5.T3.10.10.8.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S5.T3.10.10.8.4.1" class="ltx_text ltx_font_bold">92.4</span></td>
+<td id="S5.T3.10.10.8.5" class="ltx_td ltx_align_center ltx_border_r">Segment</td>
+<td id="S5.T3.10.10.8.6" class="ltx_td ltx_align_center ltx_border_r">8</td>
+<td id="S5.T3.10.10.8.7" class="ltx_td ltx_align_center ltx_border_r">no</td>
+<td id="S5.T3.9.9.7.1" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.9.9.7.1.m1.1" class="ltx_Math" alttext="256\times 256" display="inline"><semantics id="S5.T3.9.9.7.1.m1.1a"><mrow id="S5.T3.9.9.7.1.m1.1.1" xref="S5.T3.9.9.7.1.m1.1.1.cmml"><mn id="S5.T3.9.9.7.1.m1.1.1.2" xref="S5.T3.9.9.7.1.m1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.9.9.7.1.m1.1.1.1" xref="S5.T3.9.9.7.1.m1.1.1.1.cmml">×</mo><mn id="S5.T3.9.9.7.1.m1.1.1.3" xref="S5.T3.9.9.7.1.m1.1.1.3.cmml">256</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.9.9.7.1.m1.1b"><apply id="S5.T3.9.9.7.1.m1.1.1.cmml" xref="S5.T3.9.9.7.1.m1.1.1"><times id="S5.T3.9.9.7.1.m1.1.1.1.cmml" xref="S5.T3.9.9.7.1.m1.1.1.1"></times><cn type="integer" id="S5.T3.9.9.7.1.m1.1.1.2.cmml" xref="S5.T3.9.9.7.1.m1.1.1.2">256</cn><cn type="integer" id="S5.T3.9.9.7.1.m1.1.1.3.cmml" xref="S5.T3.9.9.7.1.m1.1.1.3">256</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.9.9.7.1.m1.1c">256\times 256</annotation></semantics></math></td>
+<td id="S5.T3.10.10.8.2" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.10.10.8.2.m1.1" class="ltx_Math" alttext="64\times 64" display="inline"><semantics id="S5.T3.10.10.8.2.m1.1a"><mrow id="S5.T3.10.10.8.2.m1.1.1" xref="S5.T3.10.10.8.2.m1.1.1.cmml"><mn id="S5.T3.10.10.8.2.m1.1.1.2" xref="S5.T3.10.10.8.2.m1.1.1.2.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.10.10.8.2.m1.1.1.1" xref="S5.T3.10.10.8.2.m1.1.1.1.cmml">×</mo><mn id="S5.T3.10.10.8.2.m1.1.1.3" xref="S5.T3.10.10.8.2.m1.1.1.3.cmml">64</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.10.10.8.2.m1.1b"><apply id="S5.T3.10.10.8.2.m1.1.1.cmml" xref="S5.T3.10.10.8.2.m1.1.1"><times id="S5.T3.10.10.8.2.m1.1.1.1.cmml" xref="S5.T3.10.10.8.2.m1.1.1.1"></times><cn type="integer" id="S5.T3.10.10.8.2.m1.1.1.2.cmml" xref="S5.T3.10.10.8.2.m1.1.1.2">64</cn><cn type="integer" id="S5.T3.10.10.8.2.m1.1.1.3.cmml" xref="S5.T3.10.10.8.2.m1.1.1.3">64</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.10.10.8.2.m1.1c">64\times 64</annotation></semantics></math></td>
+<td id="S5.T3.10.10.8.8" class="ltx_td ltx_align_center ltx_border_r">29.2G</td>
+<td id="S5.T3.10.10.8.9" class="ltx_td ltx_align_center">26.4M</td>
+</tr>
+<tr id="S5.T3.12.12.10" class="ltx_tr">
+<td id="S5.T3.12.12.10.3" class="ltx_td ltx_align_center ltx_border_rr">Sekii <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>
+</td>
+<td id="S5.T3.12.12.10.4" class="ltx_td ltx_align_center ltx_border_r">88.1</td>
+<td id="S5.T3.12.12.10.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S5.T3.12.12.10.6" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S5.T3.12.12.10.7" class="ltx_td ltx_align_center ltx_border_r">yes</td>
+<td id="S5.T3.11.11.9.1" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.11.11.9.1.m1.1" class="ltx_Math" alttext="384\times 384" display="inline"><semantics id="S5.T3.11.11.9.1.m1.1a"><mrow id="S5.T3.11.11.9.1.m1.1.1" xref="S5.T3.11.11.9.1.m1.1.1.cmml"><mn id="S5.T3.11.11.9.1.m1.1.1.2" xref="S5.T3.11.11.9.1.m1.1.1.2.cmml">384</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.11.11.9.1.m1.1.1.1" xref="S5.T3.11.11.9.1.m1.1.1.1.cmml">×</mo><mn id="S5.T3.11.11.9.1.m1.1.1.3" xref="S5.T3.11.11.9.1.m1.1.1.3.cmml">384</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.11.11.9.1.m1.1b"><apply id="S5.T3.11.11.9.1.m1.1.1.cmml" xref="S5.T3.11.11.9.1.m1.1.1"><times id="S5.T3.11.11.9.1.m1.1.1.1.cmml" xref="S5.T3.11.11.9.1.m1.1.1.1"></times><cn type="integer" id="S5.T3.11.11.9.1.m1.1.1.2.cmml" xref="S5.T3.11.11.9.1.m1.1.1.2">384</cn><cn type="integer" id="S5.T3.11.11.9.1.m1.1.1.3.cmml" xref="S5.T3.11.11.9.1.m1.1.1.3">384</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.11.11.9.1.m1.1c">384\times 384</annotation></semantics></math></td>
+<td id="S5.T3.12.12.10.2" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.12.12.10.2.m1.1" class="ltx_Math" alttext="12\times 12" display="inline"><semantics id="S5.T3.12.12.10.2.m1.1a"><mrow id="S5.T3.12.12.10.2.m1.1.1" xref="S5.T3.12.12.10.2.m1.1.1.cmml"><mn id="S5.T3.12.12.10.2.m1.1.1.2" xref="S5.T3.12.12.10.2.m1.1.1.2.cmml">12</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.12.12.10.2.m1.1.1.1" xref="S5.T3.12.12.10.2.m1.1.1.1.cmml">×</mo><mn id="S5.T3.12.12.10.2.m1.1.1.3" xref="S5.T3.12.12.10.2.m1.1.1.3.cmml">12</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.12.12.10.2.m1.1b"><apply id="S5.T3.12.12.10.2.m1.1.1.cmml" xref="S5.T3.12.12.10.2.m1.1.1"><times id="S5.T3.12.12.10.2.m1.1.1.1.cmml" xref="S5.T3.12.12.10.2.m1.1.1.1"></times><cn type="integer" id="S5.T3.12.12.10.2.m1.1.1.2.cmml" xref="S5.T3.12.12.10.2.m1.1.1.2">12</cn><cn type="integer" id="S5.T3.12.12.10.2.m1.1.1.3.cmml" xref="S5.T3.12.12.10.2.m1.1.1.3">12</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.12.12.10.2.m1.1c">12\times 12</annotation></semantics></math></td>
+<td id="S5.T3.12.12.10.8" class="ltx_td ltx_align_center ltx_border_r">6G</td>
+<td id="S5.T3.12.12.10.9" class="ltx_td ltx_align_center">16M</td>
+</tr>
+<tr id="S5.T3.14.14.12" class="ltx_tr">
+<td id="S5.T3.14.14.12.3" class="ltx_td ltx_align_center ltx_border_rr">FPD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite>
+</td>
+<td id="S5.T3.14.14.12.4" class="ltx_td ltx_align_center ltx_border_r">91.1</td>
+<td id="S5.T3.14.14.12.5" class="ltx_td ltx_align_center ltx_border_r">Know. dist.</td>
+<td id="S5.T3.14.14.12.6" class="ltx_td ltx_align_center ltx_border_r">4</td>
+<td id="S5.T3.14.14.12.7" class="ltx_td ltx_align_center ltx_border_r">yes</td>
+<td id="S5.T3.13.13.11.1" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.13.13.11.1.m1.1" class="ltx_Math" alttext="256\times 256" display="inline"><semantics id="S5.T3.13.13.11.1.m1.1a"><mrow id="S5.T3.13.13.11.1.m1.1.1" xref="S5.T3.13.13.11.1.m1.1.1.cmml"><mn id="S5.T3.13.13.11.1.m1.1.1.2" xref="S5.T3.13.13.11.1.m1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.13.13.11.1.m1.1.1.1" xref="S5.T3.13.13.11.1.m1.1.1.1.cmml">×</mo><mn id="S5.T3.13.13.11.1.m1.1.1.3" xref="S5.T3.13.13.11.1.m1.1.1.3.cmml">256</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.13.13.11.1.m1.1b"><apply id="S5.T3.13.13.11.1.m1.1.1.cmml" xref="S5.T3.13.13.11.1.m1.1.1"><times id="S5.T3.13.13.11.1.m1.1.1.1.cmml" xref="S5.T3.13.13.11.1.m1.1.1.1"></times><cn type="integer" id="S5.T3.13.13.11.1.m1.1.1.2.cmml" xref="S5.T3.13.13.11.1.m1.1.1.2">256</cn><cn type="integer" id="S5.T3.13.13.11.1.m1.1.1.3.cmml" xref="S5.T3.13.13.11.1.m1.1.1.3">256</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.13.13.11.1.m1.1c">256\times 256</annotation></semantics></math></td>
+<td id="S5.T3.14.14.12.2" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.14.14.12.2.m1.1" class="ltx_Math" alttext="64\times 64" display="inline"><semantics id="S5.T3.14.14.12.2.m1.1a"><mrow id="S5.T3.14.14.12.2.m1.1.1" xref="S5.T3.14.14.12.2.m1.1.1.cmml"><mn id="S5.T3.14.14.12.2.m1.1.1.2" xref="S5.T3.14.14.12.2.m1.1.1.2.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.14.14.12.2.m1.1.1.1" xref="S5.T3.14.14.12.2.m1.1.1.1.cmml">×</mo><mn id="S5.T3.14.14.12.2.m1.1.1.3" xref="S5.T3.14.14.12.2.m1.1.1.3.cmml">64</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.14.14.12.2.m1.1b"><apply id="S5.T3.14.14.12.2.m1.1.1.cmml" xref="S5.T3.14.14.12.2.m1.1.1"><times id="S5.T3.14.14.12.2.m1.1.1.1.cmml" xref="S5.T3.14.14.12.2.m1.1.1.1"></times><cn type="integer" id="S5.T3.14.14.12.2.m1.1.1.2.cmml" xref="S5.T3.14.14.12.2.m1.1.1.2">64</cn><cn type="integer" id="S5.T3.14.14.12.2.m1.1.1.3.cmml" xref="S5.T3.14.14.12.2.m1.1.1.3">64</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.14.14.12.2.m1.1c">64\times 64</annotation></semantics></math></td>
+<td id="S5.T3.14.14.12.8" class="ltx_td ltx_align_center ltx_border_r"><span id="S5.T3.14.14.12.8.1" class="ltx_text ltx_font_bold">3.6G</span></td>
+<td id="S5.T3.14.14.12.9" class="ltx_td ltx_align_center"><span id="S5.T3.14.14.12.9.1" class="ltx_text ltx_font_bold">3.2M</span></td>
+</tr>
+<tr id="S5.T3.16.16.14" class="ltx_tr">
+<td id="S5.T3.16.16.14.3" class="ltx_td ltx_align_center ltx_border_rr">HRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>
+</td>
+<td id="S5.T3.16.16.14.4" class="ltx_td ltx_align_center ltx_border_r">92.3</td>
+<td id="S5.T3.16.16.14.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S5.T3.16.16.14.6" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S5.T3.16.16.14.7" class="ltx_td ltx_align_center ltx_border_r">yes</td>
+<td id="S5.T3.15.15.13.1" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.15.15.13.1.m1.1" class="ltx_Math" alttext="256\times 256" display="inline"><semantics id="S5.T3.15.15.13.1.m1.1a"><mrow id="S5.T3.15.15.13.1.m1.1.1" xref="S5.T3.15.15.13.1.m1.1.1.cmml"><mn id="S5.T3.15.15.13.1.m1.1.1.2" xref="S5.T3.15.15.13.1.m1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.15.15.13.1.m1.1.1.1" xref="S5.T3.15.15.13.1.m1.1.1.1.cmml">×</mo><mn id="S5.T3.15.15.13.1.m1.1.1.3" xref="S5.T3.15.15.13.1.m1.1.1.3.cmml">256</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.15.15.13.1.m1.1b"><apply id="S5.T3.15.15.13.1.m1.1.1.cmml" xref="S5.T3.15.15.13.1.m1.1.1"><times id="S5.T3.15.15.13.1.m1.1.1.1.cmml" xref="S5.T3.15.15.13.1.m1.1.1.1"></times><cn type="integer" id="S5.T3.15.15.13.1.m1.1.1.2.cmml" xref="S5.T3.15.15.13.1.m1.1.1.2">256</cn><cn type="integer" id="S5.T3.15.15.13.1.m1.1.1.3.cmml" xref="S5.T3.15.15.13.1.m1.1.1.3">256</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.15.15.13.1.m1.1c">256\times 256</annotation></semantics></math></td>
+<td id="S5.T3.16.16.14.2" class="ltx_td ltx_align_center ltx_border_r"><math id="S5.T3.16.16.14.2.m1.1" class="ltx_Math" alttext="64\times 64" display="inline"><semantics id="S5.T3.16.16.14.2.m1.1a"><mrow id="S5.T3.16.16.14.2.m1.1.1" xref="S5.T3.16.16.14.2.m1.1.1.cmml"><mn id="S5.T3.16.16.14.2.m1.1.1.2" xref="S5.T3.16.16.14.2.m1.1.1.2.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.16.16.14.2.m1.1.1.1" xref="S5.T3.16.16.14.2.m1.1.1.1.cmml">×</mo><mn id="S5.T3.16.16.14.2.m1.1.1.3" xref="S5.T3.16.16.14.2.m1.1.1.3.cmml">64</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.16.16.14.2.m1.1b"><apply id="S5.T3.16.16.14.2.m1.1.1.cmml" xref="S5.T3.16.16.14.2.m1.1.1"><times id="S5.T3.16.16.14.2.m1.1.1.1.cmml" xref="S5.T3.16.16.14.2.m1.1.1.1"></times><cn type="integer" id="S5.T3.16.16.14.2.m1.1.1.2.cmml" xref="S5.T3.16.16.14.2.m1.1.1.2">64</cn><cn type="integer" id="S5.T3.16.16.14.2.m1.1.1.3.cmml" xref="S5.T3.16.16.14.2.m1.1.1.3">64</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.16.16.14.2.m1.1c">64\times 64</annotation></semantics></math></td>
+<td id="S5.T3.16.16.14.8" class="ltx_td ltx_align_center ltx_border_r">9.5G</td>
+<td id="S5.T3.16.16.14.9" class="ltx_td ltx_align_center">28.5M</td>
+</tr>
+<tr id="S5.T3.18.18.16" class="ltx_tr">
+<td id="S5.T3.18.18.16.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_rr ltx_border_tt"><span id="S5.T3.18.18.16.3.1" class="ltx_text ltx_font_bold">DS-Hourglass</span></td>
+<td id="S5.T3.18.18.16.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">91.5</td>
+<td id="S5.T3.18.18.16.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">-</td>
+<td id="S5.T3.18.18.16.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">8</td>
+<td id="S5.T3.18.18.16.7" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">no</td>
+<td id="S5.T3.17.17.15.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt"><math id="S5.T3.17.17.15.1.m1.1" class="ltx_Math" alttext="256\times 256" display="inline"><semantics id="S5.T3.17.17.15.1.m1.1a"><mrow id="S5.T3.17.17.15.1.m1.1.1" xref="S5.T3.17.17.15.1.m1.1.1.cmml"><mn id="S5.T3.17.17.15.1.m1.1.1.2" xref="S5.T3.17.17.15.1.m1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.17.17.15.1.m1.1.1.1" xref="S5.T3.17.17.15.1.m1.1.1.1.cmml">×</mo><mn id="S5.T3.17.17.15.1.m1.1.1.3" xref="S5.T3.17.17.15.1.m1.1.1.3.cmml">256</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.17.17.15.1.m1.1b"><apply id="S5.T3.17.17.15.1.m1.1.1.cmml" xref="S5.T3.17.17.15.1.m1.1.1"><times id="S5.T3.17.17.15.1.m1.1.1.1.cmml" xref="S5.T3.17.17.15.1.m1.1.1.1"></times><cn type="integer" id="S5.T3.17.17.15.1.m1.1.1.2.cmml" xref="S5.T3.17.17.15.1.m1.1.1.2">256</cn><cn type="integer" id="S5.T3.17.17.15.1.m1.1.1.3.cmml" xref="S5.T3.17.17.15.1.m1.1.1.3">256</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.17.17.15.1.m1.1c">256\times 256</annotation></semantics></math></td>
+<td id="S5.T3.18.18.16.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt"><math id="S5.T3.18.18.16.2.m1.1" class="ltx_Math" alttext="64\times 64" display="inline"><semantics id="S5.T3.18.18.16.2.m1.1a"><mrow id="S5.T3.18.18.16.2.m1.1.1" xref="S5.T3.18.18.16.2.m1.1.1.cmml"><mn id="S5.T3.18.18.16.2.m1.1.1.2" xref="S5.T3.18.18.16.2.m1.1.1.2.cmml">64</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T3.18.18.16.2.m1.1.1.1" xref="S5.T3.18.18.16.2.m1.1.1.1.cmml">×</mo><mn id="S5.T3.18.18.16.2.m1.1.1.3" xref="S5.T3.18.18.16.2.m1.1.1.3.cmml">64</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T3.18.18.16.2.m1.1b"><apply id="S5.T3.18.18.16.2.m1.1.1.cmml" xref="S5.T3.18.18.16.2.m1.1.1"><times id="S5.T3.18.18.16.2.m1.1.1.1.cmml" xref="S5.T3.18.18.16.2.m1.1.1.1"></times><cn type="integer" id="S5.T3.18.18.16.2.m1.1.1.2.cmml" xref="S5.T3.18.18.16.2.m1.1.1.2">64</cn><cn type="integer" id="S5.T3.18.18.16.2.m1.1.1.3.cmml" xref="S5.T3.18.18.16.2.m1.1.1.3">64</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T3.18.18.16.2.m1.1c">64\times 64</annotation></semantics></math></td>
+<td id="S5.T3.18.18.16.8" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">4.7G</td>
+<td id="S5.T3.18.18.16.9" class="ltx_td ltx_align_center ltx_border_b ltx_border_tt">4.2M</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S5.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.3 </span>Comparisons to State-Of-The-Art Methods</h3>
+
+<div id="S5.SS3.p1" class="ltx_para">
+<p id="S5.SS3.p1.1" class="ltx_p"><span id="S5.SS3.p1.1.1" class="ltx_text ltx_font_bold">MPII Single-Person dataset</span> From Table 3, we can find that our method is very lightweight and efficient. Our model has greatly reduced the deployment cost, while still achieving a high PCKh of 91.5%. Compared our method with the best performer, PIL <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>, the DS-Hourglass needs only 16% of its computational cost but has only 0.9% drop in PCKh. Our method outperforms FPD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite> (91.5% vs 91.1% AP) which needs knowledge distillation and pretrained weights.</p>
+</div>
+<div id="S5.SS3.p2" class="ltx_para">
+<p id="S5.SS3.p2.1" class="ltx_p"><span id="S5.SS3.p2.1.1" class="ltx_text ltx_font_bold">LSP dataset</span> Our method also achieve the 90.8% PCK@0.2 accuracy on LSP dataset which is same as FPD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite>, without using extra dataset. Because space is limited, the comparison is not listed in the form of a table.</p>
+</div>
+<div id="S5.SS3.p3" class="ltx_para">
+<p id="S5.SS3.p3.1" class="ltx_p"><span id="S5.SS3.p3.1.1" class="ltx_text ltx_font_bold">MPII Multi-Person dataset</span> In Table 4, we compare our method with the leading methods in recent years. It should be noted that our method does not use single-person pose estimation to refine the results. Research works <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> have reported that the single-pose refinement can improve the result by about 2.6%. However, the refinement is always time-consuming, so we did not use it. We get very competitive result 77.4% achieve the state-of-the-art among the methods without refinement. Our model has only 4.6M parameters and needs 13.6 GFLOPs when using input size of <math id="S5.SS3.p3.1.m1.1" class="ltx_Math" alttext="384\times 384" display="inline"><semantics id="S5.SS3.p3.1.m1.1a"><mrow id="S5.SS3.p3.1.m1.1.1" xref="S5.SS3.p3.1.m1.1.1.cmml"><mn id="S5.SS3.p3.1.m1.1.1.2" xref="S5.SS3.p3.1.m1.1.1.2.cmml">384</mn><mo lspace="0.222em" rspace="0.222em" id="S5.SS3.p3.1.m1.1.1.1" xref="S5.SS3.p3.1.m1.1.1.1.cmml">×</mo><mn id="S5.SS3.p3.1.m1.1.1.3" xref="S5.SS3.p3.1.m1.1.1.3.cmml">384</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.SS3.p3.1.m1.1b"><apply id="S5.SS3.p3.1.m1.1.1.cmml" xref="S5.SS3.p3.1.m1.1.1"><times id="S5.SS3.p3.1.m1.1.1.1.cmml" xref="S5.SS3.p3.1.m1.1.1.1"></times><cn type="integer" id="S5.SS3.p3.1.m1.1.1.2.cmml" xref="S5.SS3.p3.1.m1.1.1.2">384</cn><cn type="integer" id="S5.SS3.p3.1.m1.1.1.3.cmml" xref="S5.SS3.p3.1.m1.1.1.3">384</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS3.p3.1.m1.1c">384\times 384</annotation></semantics></math>. To best of our knowledge, PPN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> is the state-of-the-art on MPII Multi-Person dataset, from our ablation Table 2, we can find that our method is better than PPN, and our method can reduced the computational cost by approximately 50GFLOPs.</p>
+</div>
+<div id="S5.SS3.p4" class="ltx_para">
+<p id="S5.SS3.p4.1" class="ltx_p">Table 5 lists the results on MPII 288 test set, and our method gets 81.0%, only 0.3% lower than the best one <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> which uses refinement. It can be found that our method has great advantages in the distal part of the body (<em id="S5.SS3.p4.1.1" class="ltx_emph ltx_font_italic">e.g.</em> wrist, knee, ankle, <em id="S5.SS3.p4.1.2" class="ltx_emph ltx_font_italic">etc</em>), as we use hierarchical centroid-rooted tree to avoid long-range offset predction.</p>
+</div>
+<figure id="S5.T4" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 4: </span>Results on the Full MPII Multi-Person test set.</figcaption>
+<table id="S5.T4.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T4.1.1.1" class="ltx_tr">
+<td id="S5.T4.1.1.1.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">Methods</td>
+<td id="S5.T4.1.1.1.2" class="ltx_td ltx_align_center ltx_border_t">Head</td>
+<td id="S5.T4.1.1.1.3" class="ltx_td ltx_align_center ltx_border_t">Shoulder</td>
+<td id="S5.T4.1.1.1.4" class="ltx_td ltx_align_center ltx_border_t">Elbow</td>
+<td id="S5.T4.1.1.1.5" class="ltx_td ltx_align_center ltx_border_t">Wrist</td>
+<td id="S5.T4.1.1.1.6" class="ltx_td ltx_align_center ltx_border_t">Hip</td>
+<td id="S5.T4.1.1.1.7" class="ltx_td ltx_align_center ltx_border_t">Knee</td>
+<td id="S5.T4.1.1.1.8" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">Ankle</td>
+<td id="S5.T4.1.1.1.9" class="ltx_td ltx_align_center ltx_border_t">Total</td>
+<td id="S5.T4.1.1.1.10" class="ltx_td ltx_align_center ltx_border_t"><span id="S5.T4.1.1.1.10.1" class="ltx_text ltx_font_bold">Refine.</span></td>
+</tr>
+<tr id="S5.T4.1.2.2" class="ltx_tr">
+<td id="S5.T4.1.2.2.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">CMU-Pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>
+</td>
+<td id="S5.T4.1.2.2.2" class="ltx_td ltx_align_center ltx_border_tt">91.2</td>
+<td id="S5.T4.1.2.2.3" class="ltx_td ltx_align_center ltx_border_tt">87.6</td>
+<td id="S5.T4.1.2.2.4" class="ltx_td ltx_align_center ltx_border_tt">77.7</td>
+<td id="S5.T4.1.2.2.5" class="ltx_td ltx_align_center ltx_border_tt">66.8</td>
+<td id="S5.T4.1.2.2.6" class="ltx_td ltx_align_center ltx_border_tt">75.4</td>
+<td id="S5.T4.1.2.2.7" class="ltx_td ltx_align_center ltx_border_tt">68.9</td>
+<td id="S5.T4.1.2.2.8" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">61.7</td>
+<td id="S5.T4.1.2.2.9" class="ltx_td ltx_align_center ltx_border_tt">75.6</td>
+<td id="S5.T4.1.2.2.10" class="ltx_td ltx_align_center ltx_border_tt">yes</td>
+</tr>
+<tr id="S5.T4.1.3.3" class="ltx_tr">
+<td id="S5.T4.1.3.3.1" class="ltx_td ltx_align_center ltx_border_rr">AE-Pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+</td>
+<td id="S5.T4.1.3.3.2" class="ltx_td ltx_align_center">92.1</td>
+<td id="S5.T4.1.3.3.3" class="ltx_td ltx_align_center">89.3</td>
+<td id="S5.T4.1.3.3.4" class="ltx_td ltx_align_center">78.9</td>
+<td id="S5.T4.1.3.3.5" class="ltx_td ltx_align_center">69.8</td>
+<td id="S5.T4.1.3.3.6" class="ltx_td ltx_align_center">76.2</td>
+<td id="S5.T4.1.3.3.7" class="ltx_td ltx_align_center">71.6</td>
+<td id="S5.T4.1.3.3.8" class="ltx_td ltx_align_center ltx_border_rr">64.7</td>
+<td id="S5.T4.1.3.3.9" class="ltx_td ltx_align_center">77.5</td>
+<td id="S5.T4.1.3.3.10" class="ltx_td ltx_align_center">yes</td>
+</tr>
+<tr id="S5.T4.1.4.4" class="ltx_tr">
+<td id="S5.T4.1.4.4.1" class="ltx_td ltx_align_center ltx_border_rr">RefinePose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>
+</td>
+<td id="S5.T4.1.4.4.2" class="ltx_td ltx_align_center">91.8</td>
+<td id="S5.T4.1.4.4.3" class="ltx_td ltx_align_center">89.5</td>
+<td id="S5.T4.1.4.4.4" class="ltx_td ltx_align_center">80.4</td>
+<td id="S5.T4.1.4.4.5" class="ltx_td ltx_align_center">69.6</td>
+<td id="S5.T4.1.4.4.6" class="ltx_td ltx_align_center">77.3</td>
+<td id="S5.T4.1.4.4.7" class="ltx_td ltx_align_center">71.7</td>
+<td id="S5.T4.1.4.4.8" class="ltx_td ltx_align_center ltx_border_rr">65.5</td>
+<td id="S5.T4.1.4.4.9" class="ltx_td ltx_align_center">78.0</td>
+<td id="S5.T4.1.4.4.10" class="ltx_td ltx_align_center">yes</td>
+</tr>
+<tr id="S5.T4.1.5.5" class="ltx_tr">
+<td id="S5.T4.1.5.5.1" class="ltx_td ltx_align_center ltx_border_rr">PPN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>
+</td>
+<td id="S5.T4.1.5.5.2" class="ltx_td ltx_align_center">92.2</td>
+<td id="S5.T4.1.5.5.3" class="ltx_td ltx_align_center">89.7</td>
+<td id="S5.T4.1.5.5.4" class="ltx_td ltx_align_center">82.1</td>
+<td id="S5.T4.1.5.5.5" class="ltx_td ltx_align_center">74.4</td>
+<td id="S5.T4.1.5.5.6" class="ltx_td ltx_align_center">78.6</td>
+<td id="S5.T4.1.5.5.7" class="ltx_td ltx_align_center">76.4</td>
+<td id="S5.T4.1.5.5.8" class="ltx_td ltx_align_center ltx_border_rr">69.3</td>
+<td id="S5.T4.1.5.5.9" class="ltx_td ltx_align_center">80.4</td>
+<td id="S5.T4.1.5.5.10" class="ltx_td ltx_align_center">yes</td>
+</tr>
+<tr id="S5.T4.1.6.6" class="ltx_tr">
+<td id="S5.T4.1.6.6.1" class="ltx_td ltx_align_center ltx_border_rr">SPM <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>
+</td>
+<td id="S5.T4.1.6.6.2" class="ltx_td ltx_align_center">89.7</td>
+<td id="S5.T4.1.6.6.3" class="ltx_td ltx_align_center">87.4</td>
+<td id="S5.T4.1.6.6.4" class="ltx_td ltx_align_center">80.4</td>
+<td id="S5.T4.1.6.6.5" class="ltx_td ltx_align_center">72.4</td>
+<td id="S5.T4.1.6.6.6" class="ltx_td ltx_align_center">76.7</td>
+<td id="S5.T4.1.6.6.7" class="ltx_td ltx_align_center">74.9</td>
+<td id="S5.T4.1.6.6.8" class="ltx_td ltx_align_center ltx_border_rr">68.3</td>
+<td id="S5.T4.1.6.6.9" class="ltx_td ltx_align_center">78.5</td>
+<td id="S5.T4.1.6.6.10" class="ltx_td ltx_align_center">yes</td>
+</tr>
+<tr id="S5.T4.1.7.7" class="ltx_tr">
+<td id="S5.T4.1.7.7.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">DeepCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>
+</td>
+<td id="S5.T4.1.7.7.2" class="ltx_td ltx_align_center ltx_border_tt">73.4</td>
+<td id="S5.T4.1.7.7.3" class="ltx_td ltx_align_center ltx_border_tt">71.8</td>
+<td id="S5.T4.1.7.7.4" class="ltx_td ltx_align_center ltx_border_tt">57.9</td>
+<td id="S5.T4.1.7.7.5" class="ltx_td ltx_align_center ltx_border_tt">39.9</td>
+<td id="S5.T4.1.7.7.6" class="ltx_td ltx_align_center ltx_border_tt">56.7</td>
+<td id="S5.T4.1.7.7.7" class="ltx_td ltx_align_center ltx_border_tt">44.0</td>
+<td id="S5.T4.1.7.7.8" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">32.0</td>
+<td id="S5.T4.1.7.7.9" class="ltx_td ltx_align_center ltx_border_tt">54.1</td>
+<td id="S5.T4.1.7.7.10" class="ltx_td ltx_align_center ltx_border_tt">no</td>
+</tr>
+<tr id="S5.T4.1.8.8" class="ltx_tr">
+<td id="S5.T4.1.8.8.1" class="ltx_td ltx_align_center ltx_border_rr">DeeperCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>
+</td>
+<td id="S5.T4.1.8.8.2" class="ltx_td ltx_align_center">89.4</td>
+<td id="S5.T4.1.8.8.3" class="ltx_td ltx_align_center">84.5</td>
+<td id="S5.T4.1.8.8.4" class="ltx_td ltx_align_center">70.4</td>
+<td id="S5.T4.1.8.8.5" class="ltx_td ltx_align_center">59.3</td>
+<td id="S5.T4.1.8.8.6" class="ltx_td ltx_align_center">68.9</td>
+<td id="S5.T4.1.8.8.7" class="ltx_td ltx_align_center">62.7</td>
+<td id="S5.T4.1.8.8.8" class="ltx_td ltx_align_center ltx_border_rr">54.6</td>
+<td id="S5.T4.1.8.8.9" class="ltx_td ltx_align_center">70.0</td>
+<td id="S5.T4.1.8.8.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T4.1.9.9" class="ltx_tr">
+<td id="S5.T4.1.9.9.1" class="ltx_td ltx_align_center ltx_border_rr">Levinkov <em id="S5.T4.1.9.9.1.1" class="ltx_emph ltx_font_italic">et al.</em> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>
+</td>
+<td id="S5.T4.1.9.9.2" class="ltx_td ltx_align_center">89.8</td>
+<td id="S5.T4.1.9.9.3" class="ltx_td ltx_align_center">85.2</td>
+<td id="S5.T4.1.9.9.4" class="ltx_td ltx_align_center">71.8</td>
+<td id="S5.T4.1.9.9.5" class="ltx_td ltx_align_center">59.6</td>
+<td id="S5.T4.1.9.9.6" class="ltx_td ltx_align_center">71.1</td>
+<td id="S5.T4.1.9.9.7" class="ltx_td ltx_align_center">63.0</td>
+<td id="S5.T4.1.9.9.8" class="ltx_td ltx_align_center ltx_border_rr">53.5</td>
+<td id="S5.T4.1.9.9.9" class="ltx_td ltx_align_center">70.6</td>
+<td id="S5.T4.1.9.9.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T4.1.10.10" class="ltx_tr">
+<td id="S5.T4.1.10.10.1" class="ltx_td ltx_align_center ltx_border_rr">ArtTrack <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>
+</td>
+<td id="S5.T4.1.10.10.2" class="ltx_td ltx_align_center">88.8</td>
+<td id="S5.T4.1.10.10.3" class="ltx_td ltx_align_center">87.0</td>
+<td id="S5.T4.1.10.10.4" class="ltx_td ltx_align_center">75.9</td>
+<td id="S5.T4.1.10.10.5" class="ltx_td ltx_align_center">64.9</td>
+<td id="S5.T4.1.10.10.6" class="ltx_td ltx_align_center">74.2</td>
+<td id="S5.T4.1.10.10.7" class="ltx_td ltx_align_center">68.8</td>
+<td id="S5.T4.1.10.10.8" class="ltx_td ltx_align_center ltx_border_rr">60.5</td>
+<td id="S5.T4.1.10.10.9" class="ltx_td ltx_align_center">74.3</td>
+<td id="S5.T4.1.10.10.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T4.1.11.11" class="ltx_tr">
+<td id="S5.T4.1.11.11.1" class="ltx_td ltx_align_center ltx_border_rr">RMPE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>
+</td>
+<td id="S5.T4.1.11.11.2" class="ltx_td ltx_align_center">88.4</td>
+<td id="S5.T4.1.11.11.3" class="ltx_td ltx_align_center">86.5</td>
+<td id="S5.T4.1.11.11.4" class="ltx_td ltx_align_center">78.6</td>
+<td id="S5.T4.1.11.11.5" class="ltx_td ltx_align_center">70.4</td>
+<td id="S5.T4.1.11.11.6" class="ltx_td ltx_align_center">74.4</td>
+<td id="S5.T4.1.11.11.7" class="ltx_td ltx_align_center">73.0</td>
+<td id="S5.T4.1.11.11.8" class="ltx_td ltx_align_center ltx_border_rr"><span id="S5.T4.1.11.11.8.1" class="ltx_text ltx_font_bold">65.8</span></td>
+<td id="S5.T4.1.11.11.9" class="ltx_td ltx_align_center">76.7</td>
+<td id="S5.T4.1.11.11.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T4.1.12.12" class="ltx_tr">
+<td id="S5.T4.1.12.12.1" class="ltx_td ltx_align_center ltx_border_rr">Sekii <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>
+</td>
+<td id="S5.T4.1.12.12.2" class="ltx_td ltx_align_center"><span id="S5.T4.1.12.12.2.1" class="ltx_text ltx_font_bold">93.9</span></td>
+<td id="S5.T4.1.12.12.3" class="ltx_td ltx_align_center"><span id="S5.T4.1.12.12.3.1" class="ltx_text ltx_font_bold">90.2</span></td>
+<td id="S5.T4.1.12.12.4" class="ltx_td ltx_align_center"><span id="S5.T4.1.12.12.4.1" class="ltx_text ltx_font_bold">79.0</span></td>
+<td id="S5.T4.1.12.12.5" class="ltx_td ltx_align_center"><span id="S5.T4.1.12.12.5.1" class="ltx_text ltx_font_bold">68.7</span></td>
+<td id="S5.T4.1.12.12.6" class="ltx_td ltx_align_center">74.8</td>
+<td id="S5.T4.1.12.12.7" class="ltx_td ltx_align_center">68.7</td>
+<td id="S5.T4.1.12.12.8" class="ltx_td ltx_align_center ltx_border_rr">60.5</td>
+<td id="S5.T4.1.12.12.9" class="ltx_td ltx_align_center">76.6</td>
+<td id="S5.T4.1.12.12.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T4.1.13.13" class="ltx_tr">
+<td id="S5.T4.1.13.13.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_rr ltx_border_t"><span id="S5.T4.1.13.13.1.1" class="ltx_text ltx_font_bold">DS-hourglass(mix)</span></td>
+<td id="S5.T4.1.13.13.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">91.6</td>
+<td id="S5.T4.1.13.13.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">88.3</td>
+<td id="S5.T4.1.13.13.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">78.0</td>
+<td id="S5.T4.1.13.13.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">68.3</td>
+<td id="S5.T4.1.13.13.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S5.T4.1.13.13.6.1" class="ltx_text ltx_font_bold">77.9</span></td>
+<td id="S5.T4.1.13.13.7" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S5.T4.1.13.13.7.1" class="ltx_text ltx_font_bold">72.5</span></td>
+<td id="S5.T4.1.13.13.8" class="ltx_td ltx_align_center ltx_border_b ltx_border_rr ltx_border_t">65.1</td>
+<td id="S5.T4.1.13.13.9" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S5.T4.1.13.13.9.1" class="ltx_text ltx_font_bold">77.4</span></td>
+<td id="S5.T4.1.13.13.10" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">no</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S5.T5" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 5: </span>Results on a set of 288 images from MPII Multi-Person test set.</figcaption>
+<table id="S5.T5.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T5.1.1.1" class="ltx_tr">
+<td id="S5.T5.1.1.1.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">Methods</td>
+<td id="S5.T5.1.1.1.2" class="ltx_td ltx_align_center ltx_border_t">Head</td>
+<td id="S5.T5.1.1.1.3" class="ltx_td ltx_align_center ltx_border_t">Shoulder</td>
+<td id="S5.T5.1.1.1.4" class="ltx_td ltx_align_center ltx_border_t">Elbow</td>
+<td id="S5.T5.1.1.1.5" class="ltx_td ltx_align_center ltx_border_t">Wrist</td>
+<td id="S5.T5.1.1.1.6" class="ltx_td ltx_align_center ltx_border_t">Hip</td>
+<td id="S5.T5.1.1.1.7" class="ltx_td ltx_align_center ltx_border_t">Knee</td>
+<td id="S5.T5.1.1.1.8" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">Ankle</td>
+<td id="S5.T5.1.1.1.9" class="ltx_td ltx_align_center ltx_border_t">Total</td>
+<td id="S5.T5.1.1.1.10" class="ltx_td ltx_align_center ltx_border_t"><span id="S5.T5.1.1.1.10.1" class="ltx_text ltx_font_bold">Refine.</span></td>
+</tr>
+<tr id="S5.T5.1.2.2" class="ltx_tr">
+<td id="S5.T5.1.2.2.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">CMU-Pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>
+</td>
+<td id="S5.T5.1.2.2.2" class="ltx_td ltx_align_center ltx_border_tt">92.9</td>
+<td id="S5.T5.1.2.2.3" class="ltx_td ltx_align_center ltx_border_tt">91.3</td>
+<td id="S5.T5.1.2.2.4" class="ltx_td ltx_align_center ltx_border_tt">82.3</td>
+<td id="S5.T5.1.2.2.5" class="ltx_td ltx_align_center ltx_border_tt">72.6</td>
+<td id="S5.T5.1.2.2.6" class="ltx_td ltx_align_center ltx_border_tt">76.0</td>
+<td id="S5.T5.1.2.2.7" class="ltx_td ltx_align_center ltx_border_tt">70.9</td>
+<td id="S5.T5.1.2.2.8" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">66.8</td>
+<td id="S5.T5.1.2.2.9" class="ltx_td ltx_align_center ltx_border_tt">79.0</td>
+<td id="S5.T5.1.2.2.10" class="ltx_td ltx_align_center ltx_border_tt">yes</td>
+</tr>
+<tr id="S5.T5.1.3.3" class="ltx_tr">
+<td id="S5.T5.1.3.3.1" class="ltx_td ltx_align_center ltx_border_rr">AE-Pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+</td>
+<td id="S5.T5.1.3.3.2" class="ltx_td ltx_align_center">91.5</td>
+<td id="S5.T5.1.3.3.3" class="ltx_td ltx_align_center">87.2</td>
+<td id="S5.T5.1.3.3.4" class="ltx_td ltx_align_center">75.9</td>
+<td id="S5.T5.1.3.3.5" class="ltx_td ltx_align_center">65.4</td>
+<td id="S5.T5.1.3.3.6" class="ltx_td ltx_align_center">72.2</td>
+<td id="S5.T5.1.3.3.7" class="ltx_td ltx_align_center">67.0</td>
+<td id="S5.T5.1.3.3.8" class="ltx_td ltx_align_center ltx_border_rr">62.1</td>
+<td id="S5.T5.1.3.3.9" class="ltx_td ltx_align_center">74.5</td>
+<td id="S5.T5.1.3.3.10" class="ltx_td ltx_align_center">yes</td>
+</tr>
+<tr id="S5.T5.1.4.4" class="ltx_tr">
+<td id="S5.T5.1.4.4.1" class="ltx_td ltx_align_center ltx_border_rr">RefinePose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>
+</td>
+<td id="S5.T5.1.4.4.2" class="ltx_td ltx_align_center">93.8</td>
+<td id="S5.T5.1.4.4.3" class="ltx_td ltx_align_center">91.6</td>
+<td id="S5.T5.1.4.4.4" class="ltx_td ltx_align_center">83.9</td>
+<td id="S5.T5.1.4.4.5" class="ltx_td ltx_align_center">75.2</td>
+<td id="S5.T5.1.4.4.6" class="ltx_td ltx_align_center">78.0</td>
+<td id="S5.T5.1.4.4.7" class="ltx_td ltx_align_center">75.6</td>
+<td id="S5.T5.1.4.4.8" class="ltx_td ltx_align_center ltx_border_rr">70.7</td>
+<td id="S5.T5.1.4.4.9" class="ltx_td ltx_align_center">81.3</td>
+<td id="S5.T5.1.4.4.10" class="ltx_td ltx_align_center">yes</td>
+</tr>
+<tr id="S5.T5.1.5.5" class="ltx_tr">
+<td id="S5.T5.1.5.5.1" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">DeepCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>
+</td>
+<td id="S5.T5.1.5.5.2" class="ltx_td ltx_align_center ltx_border_tt">73.1</td>
+<td id="S5.T5.1.5.5.3" class="ltx_td ltx_align_center ltx_border_tt">71.7</td>
+<td id="S5.T5.1.5.5.4" class="ltx_td ltx_align_center ltx_border_tt">58.0</td>
+<td id="S5.T5.1.5.5.5" class="ltx_td ltx_align_center ltx_border_tt">39.9</td>
+<td id="S5.T5.1.5.5.6" class="ltx_td ltx_align_center ltx_border_tt">56.1</td>
+<td id="S5.T5.1.5.5.7" class="ltx_td ltx_align_center ltx_border_tt">43.5</td>
+<td id="S5.T5.1.5.5.8" class="ltx_td ltx_align_center ltx_border_rr ltx_border_tt">31.9</td>
+<td id="S5.T5.1.5.5.9" class="ltx_td ltx_align_center ltx_border_tt">53.5</td>
+<td id="S5.T5.1.5.5.10" class="ltx_td ltx_align_center ltx_border_tt">no</td>
+</tr>
+<tr id="S5.T5.1.6.6" class="ltx_tr">
+<td id="S5.T5.1.6.6.1" class="ltx_td ltx_align_center ltx_border_rr">Iqbal and Gall <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>
+</td>
+<td id="S5.T5.1.6.6.2" class="ltx_td ltx_align_center">70.0</td>
+<td id="S5.T5.1.6.6.3" class="ltx_td ltx_align_center">65.2</td>
+<td id="S5.T5.1.6.6.4" class="ltx_td ltx_align_center">56.4</td>
+<td id="S5.T5.1.6.6.5" class="ltx_td ltx_align_center">46.1</td>
+<td id="S5.T5.1.6.6.6" class="ltx_td ltx_align_center">52.7</td>
+<td id="S5.T5.1.6.6.7" class="ltx_td ltx_align_center">47.9</td>
+<td id="S5.T5.1.6.6.8" class="ltx_td ltx_align_center ltx_border_rr">44.5</td>
+<td id="S5.T5.1.6.6.9" class="ltx_td ltx_align_center">54.7</td>
+<td id="S5.T5.1.6.6.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T5.1.7.7" class="ltx_tr">
+<td id="S5.T5.1.7.7.1" class="ltx_td ltx_align_center ltx_border_rr">DeeperCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>
+</td>
+<td id="S5.T5.1.7.7.2" class="ltx_td ltx_align_center">92.1</td>
+<td id="S5.T5.1.7.7.3" class="ltx_td ltx_align_center">88.5</td>
+<td id="S5.T5.1.7.7.4" class="ltx_td ltx_align_center">76.4</td>
+<td id="S5.T5.1.7.7.5" class="ltx_td ltx_align_center">67.8</td>
+<td id="S5.T5.1.7.7.6" class="ltx_td ltx_align_center">73.6</td>
+<td id="S5.T5.1.7.7.7" class="ltx_td ltx_align_center">68.7</td>
+<td id="S5.T5.1.7.7.8" class="ltx_td ltx_align_center ltx_border_rr">62.3</td>
+<td id="S5.T5.1.7.7.9" class="ltx_td ltx_align_center">75.6</td>
+<td id="S5.T5.1.7.7.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T5.1.8.8" class="ltx_tr">
+<td id="S5.T5.1.8.8.1" class="ltx_td ltx_align_center ltx_border_rr">ArtTrack <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>
+</td>
+<td id="S5.T5.1.8.8.2" class="ltx_td ltx_align_center">92.2</td>
+<td id="S5.T5.1.8.8.3" class="ltx_td ltx_align_center">91.3</td>
+<td id="S5.T5.1.8.8.4" class="ltx_td ltx_align_center">80.8</td>
+<td id="S5.T5.1.8.8.5" class="ltx_td ltx_align_center">71.4</td>
+<td id="S5.T5.1.8.8.6" class="ltx_td ltx_align_center">79.1</td>
+<td id="S5.T5.1.8.8.7" class="ltx_td ltx_align_center">72.6</td>
+<td id="S5.T5.1.8.8.8" class="ltx_td ltx_align_center ltx_border_rr">67.8</td>
+<td id="S5.T5.1.8.8.9" class="ltx_td ltx_align_center">79.3</td>
+<td id="S5.T5.1.8.8.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T5.1.9.9" class="ltx_tr">
+<td id="S5.T5.1.9.9.1" class="ltx_td ltx_align_center ltx_border_rr">RMPE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>
+</td>
+<td id="S5.T5.1.9.9.2" class="ltx_td ltx_align_center">89.4</td>
+<td id="S5.T5.1.9.9.3" class="ltx_td ltx_align_center">88.5</td>
+<td id="S5.T5.1.9.9.4" class="ltx_td ltx_align_center">81.0</td>
+<td id="S5.T5.1.9.9.5" class="ltx_td ltx_align_center">75.4</td>
+<td id="S5.T5.1.9.9.6" class="ltx_td ltx_align_center">73.7</td>
+<td id="S5.T5.1.9.9.7" class="ltx_td ltx_align_center">75.4</td>
+<td id="S5.T5.1.9.9.8" class="ltx_td ltx_align_center ltx_border_rr">66.5</td>
+<td id="S5.T5.1.9.9.9" class="ltx_td ltx_align_center">78.6</td>
+<td id="S5.T5.1.9.9.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T5.1.10.10" class="ltx_tr">
+<td id="S5.T5.1.10.10.1" class="ltx_td ltx_align_center ltx_border_rr">Sekii <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>
+</td>
+<td id="S5.T5.1.10.10.2" class="ltx_td ltx_align_center"><span id="S5.T5.1.10.10.2.1" class="ltx_text ltx_font_bold">95.2</span></td>
+<td id="S5.T5.1.10.10.3" class="ltx_td ltx_align_center"><span id="S5.T5.1.10.10.3.1" class="ltx_text ltx_font_bold">92.2</span></td>
+<td id="S5.T5.1.10.10.4" class="ltx_td ltx_align_center"><span id="S5.T5.1.10.10.4.1" class="ltx_text ltx_font_bold">83.2</span></td>
+<td id="S5.T5.1.10.10.5" class="ltx_td ltx_align_center">73.8</td>
+<td id="S5.T5.1.10.10.6" class="ltx_td ltx_align_center">74.8</td>
+<td id="S5.T5.1.10.10.7" class="ltx_td ltx_align_center">71.3</td>
+<td id="S5.T5.1.10.10.8" class="ltx_td ltx_align_center ltx_border_rr">63.4</td>
+<td id="S5.T5.1.10.10.9" class="ltx_td ltx_align_center">79.1</td>
+<td id="S5.T5.1.10.10.10" class="ltx_td ltx_align_center">no</td>
+</tr>
+<tr id="S5.T5.1.11.11" class="ltx_tr">
+<td id="S5.T5.1.11.11.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_rr ltx_border_t"><span id="S5.T5.1.11.11.1.1" class="ltx_text ltx_font_bold">DS-Hourglass(mix)</span></td>
+<td id="S5.T5.1.11.11.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">93.2</td>
+<td id="S5.T5.1.11.11.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">91.1</td>
+<td id="S5.T5.1.11.11.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">81.5</td>
+<td id="S5.T5.1.11.11.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S5.T5.1.11.11.5.1" class="ltx_text ltx_font_bold">74.7</span></td>
+<td id="S5.T5.1.11.11.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S5.T5.1.11.11.6.1" class="ltx_text ltx_font_bold">81.0</span></td>
+<td id="S5.T5.1.11.11.7" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S5.T5.1.11.11.7.1" class="ltx_text ltx_font_bold">75.5</span></td>
+<td id="S5.T5.1.11.11.8" class="ltx_td ltx_align_center ltx_border_b ltx_border_rr ltx_border_t"><span id="S5.T5.1.11.11.8.1" class="ltx_text ltx_font_bold">70.2</span></td>
+<td id="S5.T5.1.11.11.9" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S5.T5.1.11.11.9.1" class="ltx_text ltx_font_bold">81.0</span></td>
+<td id="S5.T5.1.11.11.10" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">no</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>Conclusions</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">In this paper, we develop a light-weight Hourglass network by applying depthwise separable convolution and mixed depthwise convolution. The new network can be directly applied to single-person pose estimation. Based on this backbone network, we further proposed an efficient multi-person pose estimation method. Both our single-person and multi-person pose estimation methods can achieve competitive accuracies on public datasets with low computational costs.
+
+</p>
+</div>
+</section>
+<section id="S7" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span>Acknowledgement</h2>
+
+<div id="S7.p1" class="ltx_para">
+<p id="S7.p1.1" class="ltx_p">This work was supported in part by the Sichuan Science and Technology Program, China, under grants No.2020YFS0057, and the Fundamental Research Funds for the Central Universities under Project ZYGX2019Z015.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Andriluka, M., Pishchulin, L., Gehler, P., Schiele, B.: 2d human pose
+estimation: New benchmark and state of the art analysis. In: Proceedings of
+the IEEE Conference on Computer Vision and Pattern Recognition. pp.
+3686–3693 (2014)
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Bourdev, L., Malik, J.: Poselets: Body part detectors trained using 3d human
+pose annotations. In: International Conference on Computer Vision. pp.
+1365–1372 (2009)
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Cao, Z., Simon, T., Wei, S.E., Sheikh, Y.: Realtime multi-person 2d pose
+estimation using part affinity fields. In: Proceedings of the IEEE Conference
+on Computer Vision and Pattern Recognition. pp. 7291–7299 (2017)
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Chen, Y., Wang, Z., Peng, Y., Zhang, Z., Yu, G., Sun, J.: Cascaded pyramid
+network for multi-person pose estimation. In: Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition. pp. 7103–7112 (2018)
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Chollet, F.: Xception: Deep learning with depthwise separable convolutions. In:
+Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition. pp. 1251–1258 (2017)
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Fang, H.S., Xie, S., Tai, Y.W., Lu, C.: Rmpe: Regional multi-person pose
+estimation. In: Proceedings of the IEEE International Conference on Computer
+Vision. pp. 2334–2343 (2017)
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Fieraru, M., Khoreva, A., Pishchulin, L., Schiele, B.: Learning to refine human
+pose estimation. In: Proceedings of the IEEE Conference on Computer Vision
+and Pattern Recognition Workshops. pp. 205–214 (2018)
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+He, K., Gkioxari, G., Dollár, P., Girshick, R.: Mask r-cnn. In: Proceedings
+of the IEEE International Conference on Computer Vision. pp. 2961–2969
+(2017)
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image
+recognition. In: Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition. pp. 770–778 (2016)
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Howard, A.G., Zhu, M., Chen, B., Kalenichenko, D., Wang, W., Weyand, T.,
+Andreetto, M., Adam, H.: Mobilenets: Efficient convolutional neural networks
+for mobile vision applications. arXiv preprint arXiv:1704.04861 (2017)
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Insafutdinov, E., Andriluka, M., Pishchulin, L., Tang, S., Levinkov, E.,
+Andres, B., Schiele, B.: Arttrack: Articulated multi-person tracking in the
+wild. In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition. pp. 6457–6465 (2017)
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Insafutdinov, E., Pishchulin, L., Andres, B., Andriluka, M., Schiele, B.:
+Deepercut: A deeper, stronger, and faster multi-person pose estimation model.
+In: European Conference on Computer Vision. pp. 34–50 (2016)
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Iqbal, U., Gall, J.: Multi-person pose estimation with local joint-to-person
+associations. In: European Conference on Computer Vision. pp. 627–642 (2016)
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Johnson, S., Everingham, M.: Clustered pose and nonlinear appearance models for
+human pose estimation. In: British Machine Vision Conference. vol. 2, p. 5
+(2010)
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Levinkov, E., Uhrig, J., Tang, S., Omran, M., Insafutdinov, E., Kirillov, A.,
+Rother, C., Brox, T., Schiele, B., Andres, B.: Joint graph decomposition &amp;
+node labeling: Problem, algorithms, applications. In: Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition. pp. 6012–6020 (2017)
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Newell, A., Huang, Z., Deng, J.: Associative embedding: End-to-end learning for
+joint detection and grouping. In: Advances in Neural Information Processing
+Systems. pp. 2277–2287 (2017)
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Newell, A., Yang, K., Deng, J.: Stacked hourglass networks for human pose
+estimation. In: European Conference on Computer Vision. pp. 483–499 (2016)
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Nie, X., Feng, J., Xing, J., Yan, S.: Pose partition networks for multi-person
+pose estimation. In: Proceedings of the European Conference on Computer
+Vision. pp. 684–699 (2018)
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Nie, X., Feng, J., Zhang, J., Yan, S.: Single-stage multi-person pose machines.
+In: Proceedings of the IEEE International Conference on Computer Vision. pp.
+6951–6960 (2019)
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Nie, X., Feng, J., Zuo, Y., Yan, S.: Human pose estimation with parsing induced
+learner. In: Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition. pp. 2100–2108 (2018)
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Papandreou, G., Zhu, T., Chen, L.C., Gidaris, S., Tompson, J., Murphy, K.:
+Personlab: Person pose estimation and instance segmentation with a bottom-up,
+part-based, geometric embedding model. In: Proceedings of the European
+Conference on Computer Vision. pp. 269–286 (2018)
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Papandreou, G., Zhu, T., Kanazawa, N., Toshev, A., Tompson, J., Bregler, C.,
+Murphy, K.: Towards accurate multi-person pose estimation in the wild. In:
+Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition. pp. 4903–4911 (2017)
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+Pham, H., Guan, M.Y., Zoph, B., Le, Q.V., Dean, J.: Efficient neural
+architecture search via parameter sharing. arXiv preprint arXiv:1802.03268
+(2018)
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Pishchulin, L., Insafutdinov, E., Tang, S., Andres, B., Andriluka, M., Gehler,
+P.V., Schiele, B.: Deepcut: Joint subset partition and labeling for multi
+person pose estimation. In: Proceedings of the IEEE Conference on Computer
+Vision and Pattern Recognition. pp. 4929–4937 (2016)
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+Ren, S., He, K., Girshick, R., Sun, J.: Faster r-cnn: Towards real-time object
+detection with region proposal networks. In: Proceedings of the International
+Conference on Neural Information Processing Systems. pp. 91–99 (2015)
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+Sandler, M., Howard, A., Zhu, M., Zhmoginov, A., Chen, L.C.: Mobilenetv2:
+Inverted residuals and linear bottlenecks. In: Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition. pp. 4510–4520 (2018)
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+Sekii, T.: Pose proposal networks. In: Proceedings of the European Conference
+on Computer Vision. pp. 342–357 (2018)
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+Sifre, L., Mallat, S.: Rigid-motion scattering for image classification. Ph. D.
+thesis (2014)
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+Sun, K., Xiao, B., Liu, D., Wang, J.: Deep high-resolution representation
+learning for human pose estimation. In: Proceedings of the IEEE Conference on
+Computer Vision and Pattern Recognition. pp. 5693–5703 (2019)
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+Szegedy, C., Vanhoucke, V., Ioffe, S., Shlens, J., Wojna, Z.: Rethinking the
+inception architecture for computer vision. In: Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition. pp. 2818–2826 (2016)
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+Tan, M., Le, Q.V.: Mixconv: Mixed depthwise convolutional kernels. arXiv
+preprint arXiv:1907.09595 (2019)
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+Tian, Z., Chen, H., Shen, C.: Directpose: Direct end-to-end multi-person pose
+estimation. arXiv preprint arXiv:1911.07451 (2019)
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+Wei, S.E., Ramakrishna, V., Kanade, T., Sheikh, Y.: Convolutional pose
+machines. In: Proceedings of the IEEE conference on Computer Vision and
+Pattern Recognition. pp. 4724–4732 (2016)
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+Xiao, B., Wu, H., Wei, Y.: Simple baselines for human pose estimation and
+tracking. In: Proceedings of the European Conference on Computer Vision. pp.
+466–481 (2018)
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+Zhang, F., Zhu, X., Ye, M.: Fast human pose estimation. In: Proceedings of the
+IEEE Conference on Computer Vision and Pattern Recognition. pp. 3517–3526
+(2019)
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2012.03315" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2012.03316" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2012.03316">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2012.03316" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2012.03319" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Thu Mar 14 08:18:12 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

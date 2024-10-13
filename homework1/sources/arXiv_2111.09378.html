@@ -1,0 +1,1762 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2111.09378] MPF6D: Masked Pyramid Fusion 6D Pose Estimation</title><meta property="og:description" content="Object pose estimation has multiple important applications, such as robotic grasping and augmented reality. We present a new method to estimate the 6D pose of objects that improves upon the accuracy of current proposal…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MPF6D: Masked Pyramid Fusion 6D Pose Estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="MPF6D: Masked Pyramid Fusion 6D Pose Estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2111.09378">
+
+<!--Generated on Fri Mar  1 22:04:55 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line ltx_fleqn">
+<div id="p1" class="ltx_para">
+<span id="p1.1" class="ltx_ERROR undefined">\jyear</span>
+<p id="p1.2" class="ltx_p">2022</p>
+</div>
+<div id="p2" class="ltx_para">
+<p id="p2.1" class="ltx_p">[1]<span id="p2.1.1" class="ltx_ERROR undefined">\fnm</span>Nuno <span id="p2.1.2" class="ltx_ERROR undefined">\sur</span>Pereira</p>
+</div>
+<div id="p3" class="ltx_para">
+<p id="p3.1" class="ltx_p">[1]<span id="p3.1.1" class="ltx_ERROR undefined">\orgdiv</span>, <span id="p3.1.2" class="ltx_ERROR undefined">\orgname</span>Departamento de Informática and NOVA LINCS, Universidade da Beira Interior, <span id="p3.1.3" class="ltx_ERROR undefined">\orgaddress</span><span id="p3.1.4" class="ltx_ERROR undefined">\street</span>Rua Marquês de Ávila e Bolama, Convento de Santo António, <span id="p3.1.5" class="ltx_ERROR undefined">\city</span>Covilhã, <span id="p3.1.6" class="ltx_ERROR undefined">\postcode</span>6200-001, <span id="p3.1.7" class="ltx_ERROR undefined">\state</span>Castelo Branco, <span id="p3.1.8" class="ltx_ERROR undefined">\country</span>Portugal</p>
+</div>
+<h1 class="ltx_title ltx_title_document">MPF6D: Masked Pyramid Fusion 6D Pose Estimation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_email"><a href="mailto:nuno.pereira@ubi.pt">nuno.pereira@ubi.pt</a>
+</span></span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"><span id="id1.1.id1" class="ltx_ERROR undefined">\fnm</span>Luís <span id="id2.2.id2" class="ltx_ERROR undefined">\sur</span>A. Alexandre
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_email"><a href="mailto:luis.alexandre@ubi.pt">luis.alexandre@ubi.pt</a>
+</span>
+<span class="ltx_contact ltx_role_affiliation">*
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id3.id1" class="ltx_p">Object pose estimation has multiple important applications, such as robotic grasping and augmented reality. We present a new method to estimate the 6D pose of objects that improves upon the accuracy of current proposals and can still be used in real-time. Our method uses RGB-D data as input to segment objects and estimate their pose. It uses a neural network with multiple heads to identify the objects in the scene, generate the appropriate masks and estimate the values of the translation vectors and the quaternion that represents the objects’ rotation. These heads leverage a pyramid architecture used during feature extraction and feature fusion. We conduct an empirical evaluation using the two most common datasets in the area, and compare against state-of-the-art approaches, illustrating the capabilities of MPF6D. Our method can be used in real-time with its low inference time and high accuracy.</p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification">keywords: </h6>6D Pose, Semantic Segmentation, RGB-D, Robotics, Computer Vision, Pattern Recognition.
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">In the context of Industry 4.0, robotic systems require adaptation to handle unconstrained pick and place tasks, human-robot interaction and collaboration, and autonomous robot movement. These environments and tasks are dependent on methods that perform object detection, object localization, object segmentation, and object pose estimation. To have accurate robotic manipulation, unconstrained pick and place, and scene understanding, accurate object detection and pose estimation methods are needed. These methods are used in other contexts like augmented reality, for example, where badly placed objects into the real-world break the experience of augmented reality. Another application example is the use of augmented reality in the industry to train new and competent workers where virtual objects need to be placed in the correct positions to look like real objects or simulate their placement in the correct positions.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">6D pose estimation is a hard problem to tackle due to the possible scene cluttering, illumination variability, object truncations, and different shapes, sizes, textures, and similarities between objects.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">We present a new 6D pose estimation method that has low pose estimation error and can be used in real-time. Our method is a complete pipeline that can detect, segment, and estimate the 6D pose of known objects presented in the scene.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Some methods, like MaskedFusion<cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib1" title="" class="ltx_ref">maskedfusion </a></cite> or DenseFusion <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib2" title="" class="ltx_ref">densefusion </a></cite>, have two individual traning steps, one to train the detection and segmentation neural network and another for training the neural network responsible for estimating the objects’ pose. This last neural networks needs to have the previous step trained. MPF6D, on the other hand is trained as a single method. Besides having a simpler and faster training MPF6D achieves higher accuracy due to the new architecture that leverages a pyramid neural network to use object features extracted at different resolutions.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">The main contributions are:</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">A new high accuracy 6D pose estimation method;</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">A simpler pipeline for 6D pose estimation that can be trained as a single method, this facilitates the use of MPF6D in different scenarios, datasets or type of objects;</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">A fast method that can be used in real-time, achieving 8 frames per second;</p>
+</div>
+</li>
+<li id="S1.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i4.p1" class="ltx_para">
+<p id="S1.I1.i4.p1.1" class="ltx_p">An experimental evaluation using the standard datasets used for assessing 6D pose estimation methods including a comparison against the current best methods in the area.</p>
+</div>
+</li>
+</ul>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2111.09378/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="207" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Representation of the data-flow thought MPF6D without the Pose Refinement optional step. Note that this flow is for the training phase. At inference time, the mask is generated by our method using the semantic segmentation head.</figcaption>
+</figure>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">In this section, we present the most relevant literature related to object 6D pose estimation. First, we introduce methods for semantic segmentation, and then we present methods that estimate the object’s pose.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Semantic Segmentation</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">One of the most notable methods for semantic segmentation is the U-Net <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib3" title="" class="ltx_ref">unet </a></cite> convolutional neural network that was originally developed for segmenting biomedical images. Its name comes from the architectures U letter-like shape. The U-Net architecture is composed of two parts, the left part is the contracting path and the right part is the expansive path. The contracting path’s purpose is to capture context while the purpose of the expansive path is to assign the classes to the pixels based on the context. SegNet <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib4" title="" class="ltx_ref">segnet </a></cite> has a similar architecture to U-Net where the second half consists of the same structure as in the first half but hierarchically symmetric.
+SegNet uses a fully convolutional neural network based on the VGG-16 <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib5" title="" class="ltx_ref">VGG16 </a></cite> convolutional layers.
+FastFCN <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib6" title="" class="ltx_ref">fastfcn </a></cite> architecture uses a Joint Pyramid Upsampling module instead of using dilated convolutions to assign classes to the pixels, since those consume more memory and time during training. FastFCN has a fully connected network as its backbone and the Joint Pyramid Upsampling is used to upsample the features and label the pixels. This pyramid upsamples the low-resolution feature maps into high-resolution feature maps.
+The Pyramid Scene Parsing Network (PSPNet) <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib7" title="" class="ltx_ref">pspnet </a></cite>, uses global contextual information for semantic segmentation. The authors introduced a Pyramid Pooling Module after the last layers of a fully convolutional neural network, that is based on ResNet-18, and the feature maps obtained from the fully convolutional neural network are pooled using four different scales corresponding to four different pyramid levels. The polled feature maps are then convoluted using a 1×1 convolution layer to reduce the feature maps dimension. These outputs of each convolution are then upsampled and concatenated with the initial feature maps that were extracted from the fully convolution neural network. This concatenation provides the local and global contextual information of the image. After the concatenation, the authors use another convolution layer to generate the final pixel-wise predictions.
+The PSPNet objective is to observe the whole feature map in sub-regions with different locations using the pyramid pooling module.
+The Gated-SCNN <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib8" title="" class="ltx_ref">gated-scnn </a></cite> architecture consists of a two-stream convolutional neural network architecture. The first stream branch is used to process image shape information, and the second is used to process boundary information. A gating method is used in the intermediate layers of each branch to connect features from both branches. In the end, it fuses all the features from both branches and predicts the semantic segmentation masks. One challenge with using deep fully convolutional neural networks on images for segmentation tasks is that input feature maps become smaller while traversing through the convolutional and pooling layers of the network. This causes loss of information and results in an output where predictions are of low resolution and object boundaries are fuzzy. DeepLab models <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib9" title="" class="ltx_ref">deeplabv3 </a></cite> address this challenge by using Atrous convolutions and Atrous Spatial Pyramid Pooling modules. The DeepLab architecture has evolved over several generations: DeepLabV1 uses Atrous Convolution and Fully Connected Conditional Random Field to control the resolution at which image features are computed. DeepLabV2 uses Atrous Spatial Pyramid Pooling to consider objects at different scales and segments with improved accuracy. Finally, DeepLabV3, apart from using Atrous Convolution, also uses an improved Atrous Spatial Pyramid Pooling module by including batch normalization and image-level features, and it does not use the Conditional Random Field as in previous versions.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2111.09378/assets/x2.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="415" height="130" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>In-depth representation of Pyramid ResNet34. This system is used with both RGB and Mask images to extract features, with only one change between them: the first layer for the mask receives only one channel instead of three.</figcaption>
+</figure>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>6D Pose Estimation</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">The methods for 6D Pose Estimation can be divided, based on the type of input that they use, into three different categories, RGB, Point Cloud, and RGB-D methods. Methods like <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib10" title="" class="ltx_ref">pnpex1 </a>; <a href="#bib.bib11" title="" class="ltx_ref">pnpex2 </a>; <a href="#bib.bib12" title="" class="ltx_ref">pnpex3 </a>; <a href="#bib.bib13" title="" class="ltx_ref">pnpex4 </a>; <a href="#bib.bib14" title="" class="ltx_ref">pvnet </a></cite> that use RGB images as input, rely on the detection and matching of keypoints from the objects with keypoints from the object’s 3D render and then use the PnP <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib15" title="" class="ltx_ref">pnp </a></cite> algorithm to estimate the 6D pose.
+In this category, there are other methods, such as <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib16" title="" class="ltx_ref">localrgbd </a></cite> that do template matching with cropped patches from the object presented in the image and approximate the 3D model of the objects to the cropped patches to estimate the object’s pose.
+Point cloud methods <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib17" title="" class="ltx_ref">pvfh </a>; <a href="#bib.bib18" title="" class="ltx_ref">frustum </a>; <a href="#bib.bib19" title="" class="ltx_ref">pointnet </a>; <a href="#bib.bib20" title="" class="ltx_ref">vfh </a>; <a href="#bib.bib21" title="" class="ltx_ref">voxelnet </a></cite> rely on descriptors to extract object features, and match the extracted features with features acquired from known poses.
+RGB-D methods <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib22" title="" class="ltx_ref">ssd6d </a>; <a href="#bib.bib16" title="" class="ltx_ref">localrgbd </a>; <a href="#bib.bib23" title="" class="ltx_ref">liunified </a>; <a href="#bib.bib2" title="" class="ltx_ref">densefusion </a>; <a href="#bib.bib24" title="" class="ltx_ref">posecnn </a>; <a href="#bib.bib25" title="" class="ltx_ref">pointfusion </a>; <a href="#bib.bib26" title="" class="ltx_ref">pvn3d </a></cite> regress the 6D poses directly regressed from the input data. Usually, these methods have a pose refinement phase using the Iterative Closest Point algorithm where the depth data is mostly taken into account. In this category, fewer methods <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib1" title="" class="ltx_ref">maskedfusion </a>; <a href="#bib.bib2" title="" class="ltx_ref">densefusion </a>; <a href="#bib.bib26" title="" class="ltx_ref">pvn3d </a></cite> use the RGB and depth as input data to achieve better pose accuracies and also use refinement phases to achieve higher accuracy.
+Tejani <em id="S2.SS2.p1.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS2.p1.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib27" title="" class="ltx_ref">tejani </a></cite> follow a local approach where small RGB-D patches vote for object pose hypotheses in a 6D space.
+Kehl <em id="S2.SS2.p1.1.3" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS2.p1.1.4" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib16" title="" class="ltx_ref">localrgbd </a></cite> also follow a local approach but they use a convolutional auto-encoder (CAE) to encode each patch of the object to later match the obtained features in the bottleneck of the CAE with a code-book of features learned during the train and use the code-book matches to predict the 6D pose of the object.
+Although such methods are not taking global context into account, they proved to be robust to occlusion and the presence of noise artifacts since they infer the object pose using only small patches of the image.
+SSD-6D <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib22" title="" class="ltx_ref">ssd6d </a></cite> uses an RGB image that is processed by the NN to output localized 2D detections with bounding boxes, classifies the bounding boxes into discrete bins of Euler angles and subsequently estimates the object’s 6D pose.
+This method is in the RGB-D category because after the first estimation, and with the availability of the depth information, the 6D poses can be further refined.
+PoseCNN <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib24" title="" class="ltx_ref">posecnn </a></cite> uses a new loss function that is robust to object symmetry to directly regress the object rotation.
+It uses a Hough voting approach to obtain the 3D center of the object to estimate its translation.
+Using ICP on the refinement phase of SSD-6D and PoseCNN makes their 6D pose estimation more accurate.
+Li <em id="S2.SS2.p1.1.5" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS2.p1.1.6" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib23" title="" class="ltx_ref">liunified </a></cite> formulate a discriminative representation of 6-D pose that enables predictions of both rotation and translation by a single forward pass of a convolutional neural network, and it can be used with many object categories.
+DenseFusion <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib2" title="" class="ltx_ref">densefusion </a></cite> extract features from RGB images and depth data with different fully convolutional neural network.
+After the extraction, it fuses the depth and RGB features while retaining the input’s space geometric structure.
+DenseFusion is similar to PointFusion <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib25" title="" class="ltx_ref">pointfusion </a></cite>, as it also estimates the 6D pose while keeping the geometric structure and appearance information of the object, to later fuse this information in a heterogeneous architecture.
+MaskedFusion <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib1" title="" class="ltx_ref">maskedfusion </a></cite> is a pipeline divided into 3 sub-tasks that combined can solve the task of object 6D pose estimation.
+In the first sub-task, the detection and segmentation for each object in the scene occur.
+The neural network presented in the first sub-task classifies each pixel of the RGB image captured and predicts the mask and the location for each object in the scene. After the output of the neural network, filters are applied to the mask and then a <span id="S2.SS2.p1.1.7" class="ltx_text ltx_font_italic">bit-wise AND</span> operation is used on the original RGB and depth images to crop the intended object.
+In the second sub-task, with the masks obtained from sub-task 1 for each object and the RGB-D data, it is possible to estimate the object 6D pose.
+For each type of input data, the method has different neural networks to extract features.
+After all the features are extracted they are combined and another neural network is used to extract the most meaningful features and regress the estimated 6D pose of the object.
+After this sub-task, the 6D pose is estimated, but it is also possible to do pose refinement using another neural network.
+PVN3D <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib26" title="" class="ltx_ref">pvn3d </a></cite>, uses DenseFusion as a backbone to extract features of the object and then uses a shared MLP to estimate the object keypoints and segment each object. A clustering algorithm is then used to find the different points of the object. In the end, a least-squares fitting algorithm is used to estimate the 6D pose of the object.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Most of the related methods rely on an object detector or object segmentation method to pre-process the scene and then crop each object to then estimate its 6D pose.
+Our method, MPF6D, uses RGB-D data and extracts features from both data, RGB and depth images, so it is categorized in the RGB-D category. MPF6D, does not need a pre-processing method to detect the object. It segments the objects in one neural network head while other heads estimate the translation of the object and its rotation.</p>
+</div>
+<figure id="S2.F3" class="ltx_figure"><img src="/html/2111.09378/assets/x3.png" id="S2.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="415" height="318" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Pyramid Fusion is the architecture that fuses extracted features from the different data types (RGB, Mask, Depth/Point Cloud).</figcaption>
+</figure>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>MPF6D</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">Our method has influences from pyramid neural networks, as we use this type of architecture during the feature extraction and feature fusion so that we can have multiple features that combine low-resolution features, semantically strong features, and high resolution features.
+With this type of architecture, it was possible to create an accurate and fast method to estimate the 6D pose of objects.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Our architecture has five steps from the input data until we have the estimated pose. The five steps are Semantic Segmentation, Feature Extraction, Feature Fusion, Estimation Heads and Pose Refinement. All five steps are trained simultaneously.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">In Fig. <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, we have the overview diagram that represents the data flow through MPF6D, except the optional Pose Refinement step. The flow starts on the top of the image with the RGB, Mask, and Depth images as input. Note that this flow is for the training phase. At inference time, the mask is generated using the semantic segmentation head. Fig. <a href="#S2.F2" title="Figure 2 ‣ 2.1 Semantic Segmentation ‣ 2 Related Work ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> represents the pyramid scheme ResNet34 (we named it Pyramid ResNet34) as well as the upscale processes in order to have features from different scales in a pixel-wise form. In Fig. <a href="#S2.F3" title="Figure 3 ‣ 2.2 6D Pose Estimation ‣ 2 Related Work ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, we show the fusion of the multiple extracted features that are used in the estimation heads (Translation Head, Rotation Head).</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.2" class="ltx_p">In the first step, Semantic Segmentation, we used the DeepLabV3 <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib9" title="" class="ltx_ref">deeplabv3 </a></cite> architecture as a head of our method to detect, classify and generate the mask of the known objects presented in the scene. This head is trained using the same loss function that was proposed in <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib9" title="" class="ltx_ref">deeplabv3 </a></cite>. The training is done at the same time as the rest of the method. This was possible due to the integration of this head in our neural network.
+After the prediction of the mask we apply a technique introduced by the authors of MaskedFusion <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib1" title="" class="ltx_ref">maskedfusion </a></cite>: first, we use a median filter to smooth the mask image with a kernel size of <math id="S3.p4.1.m1.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S3.p4.1.m1.1a"><mrow id="S3.p4.1.m1.1.1" xref="S3.p4.1.m1.1.1.cmml"><mn id="S3.p4.1.m1.1.1.2" xref="S3.p4.1.m1.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p4.1.m1.1.1.1" xref="S3.p4.1.m1.1.1.1.cmml">×</mo><mn id="S3.p4.1.m1.1.1.3" xref="S3.p4.1.m1.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p4.1.m1.1b"><apply id="S3.p4.1.m1.1.1.cmml" xref="S3.p4.1.m1.1.1"><times id="S3.p4.1.m1.1.1.1.cmml" xref="S3.p4.1.m1.1.1.1"></times><cn type="integer" id="S3.p4.1.m1.1.1.2.cmml" xref="S3.p4.1.m1.1.1.2">3</cn><cn type="integer" id="S3.p4.1.m1.1.1.3.cmml" xref="S3.p4.1.m1.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p4.1.m1.1c">3\times 3</annotation></semantics></math>, and then, we dilate the mask with a <math id="S3.p4.2.m2.1" class="ltx_Math" alttext="5\times 5" display="inline"><semantics id="S3.p4.2.m2.1a"><mrow id="S3.p4.2.m2.1.1" xref="S3.p4.2.m2.1.1.cmml"><mn id="S3.p4.2.m2.1.1.2" xref="S3.p4.2.m2.1.1.2.cmml">5</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p4.2.m2.1.1.1" xref="S3.p4.2.m2.1.1.1.cmml">×</mo><mn id="S3.p4.2.m2.1.1.3" xref="S3.p4.2.m2.1.1.3.cmml">5</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p4.2.m2.1b"><apply id="S3.p4.2.m2.1.1.cmml" xref="S3.p4.2.m2.1.1"><times id="S3.p4.2.m2.1.1.1.cmml" xref="S3.p4.2.m2.1.1.1"></times><cn type="integer" id="S3.p4.2.m2.1.1.2.cmml" xref="S3.p4.2.m2.1.1.2">5</cn><cn type="integer" id="S3.p4.2.m2.1.1.3.cmml" xref="S3.p4.2.m2.1.1.3">5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p4.2.m2.1c">5\times 5</annotation></semantics></math> kernel such that, if the mask has some minor boundary segmentation error, this operation helps to correct it or complete any misclassified pixel in the middle of the object.
+Since the 6D pose estimation step of our neural network requires an isolated object as input, we use the mask of the classified object to crop that object, and for that, we needed to add a mechanism that would enable the rest of the neural network to be trained efficiently instead of waiting for the segmentation head to be accurate. This mechanism is only used in the initial training epochs. The mechanism consists in using the ground truth mask in the 6D pose estimation step while the semantic segmentation head does not achieve a low and stable loss. We use the ground truth masks until the threshold mechanism detects that the loss of the segmentation head is stabilizing. Then we start to use masks produced by the segmentation head into the next steps. We apply and analyze the loss threshold in the validation subset. We use a <span id="S3.p4.2.1" class="ltx_text ltx_font_italic">bit-wise AND</span> between the mask and the RGB image and the mask and depth image in order to only have the pixels that have the object present in it. Then we do a rectangular crop of the object from the resultant images. This enables us to have a tensor that has a smaller size than using the full image as input tensor, where most of the pixels were black due to our <span id="S3.p4.2.2" class="ltx_text ltx_font_italic">bit-wise AND</span> operation to remove the background.</p>
+</div>
+<div id="S3.p5" class="ltx_para">
+<p id="S3.p5.1" class="ltx_p">For the Feature Extraction step of the RGB and mask data, we use a ResNet34 architecture in a pyramid-like architecture (Fig. <a href="#S2.F2" title="Figure 2 ‣ 2.1 Semantic Segmentation ‣ 2 Related Work ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>) where we stacked two of the original ResNet34 architectures to have multi-scale features.
+This ResNet34 has at the end upscale layers. This type of layer is similar to the ones presented in PSPNet <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib7" title="" class="ltx_ref">pspnet </a></cite>. They consist of convolutional layers mixed with upsampling layers, that enables us to assign features for each original pixel of the object (pixel-wise features). We use the features produced by the first ResNet34 as input to the next ResNet34 and we upscale these features to the original object size after the first ResNet34 and after the second ResNet34, then we fuse both of the upscaled features. The fusion is made with a concatenation of the features tensors and the output of two convolutional layers. These fused features for the RGB data and mask will be used in the pyramid feature fusion.</p>
+</div>
+<div id="S3.p6" class="ltx_para">
+<p id="S3.p6.1" class="ltx_p">For the depth data, we convert the cropped depth image into a point cloud, and then we use a PointNet architecture to extract features from the generated point cloud.</p>
+</div>
+<div id="S3.p7" class="ltx_para">
+<p id="S3.p7.1" class="ltx_p">The neural network responsible for the feature extraction generates features corresponding to each different data type. For the feature fusion step (Fig. <a href="#S2.F3" title="Figure 3 ‣ 2.2 6D Pose Estimation ‣ 2 Related Work ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>), we use a pyramid like architecture with the intent of having multi-dimensional features with different scales that are then upscaled to the original object image size.
+The pyramid feature fusion has three different resolutions.
+With this type of technique, which was previously used during the feature extraction of RGB and mask data, we can have the most significant features of the object while keeping the original features that represent the object’s size, geometry, and pixel-wise multi-feature. With all the features fused we can then use the neural network heads to estimate the different values for the position of the object and its rotation.
+We use two regression heads, one for estimating the translation vector of the object, and the other to estimate the quaternion that corresponds to the rotation of the object. After having this preliminary 6D pose of the object, we could use other methods (ICP or DenseFusion refinement) to refine the 6D pose estimation. However, we improved the DenseFusion refinement neural network to use it in our refinement step. We choose to improve upon DenseFusion since their refinement neural network can be used during the inference time without using too much computation time. We added two extra layers to use the same type of pyramid architecture that we used before to maintain the original scale of the features and have deeper features.</p>
+</div>
+<div id="S3.p8" class="ltx_para">
+<p id="S3.p8.1" class="ltx_p">To train MPF6D we use the following loss function (<a href="#S3.E1" title="In 3 MPF6D ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>) where we calculate the error between <math id="S3.p8.1.m1.1" class="ltx_Math" alttext="M" display="inline"><semantics id="S3.p8.1.m1.1a"><mi id="S3.p8.1.m1.1.1" xref="S3.p8.1.m1.1.1.cmml">M</mi><annotation-xml encoding="MathML-Content" id="S3.p8.1.m1.1b"><ci id="S3.p8.1.m1.1.1.cmml" xref="S3.p8.1.m1.1.1">𝑀</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.1.m1.1c">M</annotation></semantics></math> randomly sampled points and the ground truth object pose:</p>
+</div>
+<div id="S3.p9" class="ltx_para">
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math id="S3.E1.m1.1" class="ltx_Math" alttext="\mathcal{L}^{p}_{i}=\frac{1}{M}\sum_{j}\left\|(Rx_{j}+t)-(\hat{R_{i}}x_{j}+\hat{t_{i}})\right\|\vspace{-.5em}" display="block"><semantics id="S3.E1.m1.1a"><mrow id="S3.E1.m1.1.1" xref="S3.E1.m1.1.1.cmml"><msubsup id="S3.E1.m1.1.1.3" xref="S3.E1.m1.1.1.3.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.E1.m1.1.1.3.2.2" xref="S3.E1.m1.1.1.3.2.2.cmml">ℒ</mi><mi id="S3.E1.m1.1.1.3.3" xref="S3.E1.m1.1.1.3.3.cmml">i</mi><mi id="S3.E1.m1.1.1.3.2.3" xref="S3.E1.m1.1.1.3.2.3.cmml">p</mi></msubsup><mo id="S3.E1.m1.1.1.2" xref="S3.E1.m1.1.1.2.cmml">=</mo><mrow id="S3.E1.m1.1.1.1" xref="S3.E1.m1.1.1.1.cmml"><mfrac id="S3.E1.m1.1.1.1.3" xref="S3.E1.m1.1.1.1.3.cmml"><mn id="S3.E1.m1.1.1.1.3.2" xref="S3.E1.m1.1.1.1.3.2.cmml">1</mn><mi id="S3.E1.m1.1.1.1.3.3" xref="S3.E1.m1.1.1.1.3.3.cmml">M</mi></mfrac><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.1.2" xref="S3.E1.m1.1.1.1.2.cmml">​</mo><mrow id="S3.E1.m1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.cmml"><munder id="S3.E1.m1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S3.E1.m1.1.1.1.1.2.2" xref="S3.E1.m1.1.1.1.1.2.2.cmml">∑</mo><mi id="S3.E1.m1.1.1.1.1.2.3" xref="S3.E1.m1.1.1.1.1.2.3.cmml">j</mi></munder><mrow id="S3.E1.m1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.2.cmml"><mo id="S3.E1.m1.1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S3.E1.m1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E1.m1.1.1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><msub id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.2" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml">x</mi><mi id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.3" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml">j</mi></msub></mrow><mo id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">+</mo><mi id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.3.cmml">t</mi></mrow><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo id="S3.E1.m1.1.1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.1.3.cmml">−</mo><mrow id="S3.E1.m1.1.1.1.1.1.1.1.2.1" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.cmml"><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.1.1.2.1.2" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.cmml">(</mo><mrow id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.cmml"><mrow id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.cmml"><mover accent="true" id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.cmml"><msub id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.2" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.2.cmml">R</mi><mi id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.3" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.3.cmml">i</mi></msub><mo id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.1" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml">^</mo></mover><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.1" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.1.cmml">​</mo><msub id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.2" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.2.cmml">x</mi><mi id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.3" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.3.cmml">j</mi></msub></mrow><mo id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.1.cmml">+</mo><mover accent="true" id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.cmml"><msub id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.2" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.2.cmml">t</mi><mi id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.3" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.3.cmml">i</mi></msub><mo id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.1" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.1.cmml">^</mo></mover></mrow><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.1.1.2.1.3" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.cmml">)</mo></mrow></mrow><mo id="S3.E1.m1.1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.2.1.cmml">‖</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.1b"><apply id="S3.E1.m1.1.1.cmml" xref="S3.E1.m1.1.1"><eq id="S3.E1.m1.1.1.2.cmml" xref="S3.E1.m1.1.1.2"></eq><apply id="S3.E1.m1.1.1.3.cmml" xref="S3.E1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.1.cmml" xref="S3.E1.m1.1.1.3">subscript</csymbol><apply id="S3.E1.m1.1.1.3.2.cmml" xref="S3.E1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.2.1.cmml" xref="S3.E1.m1.1.1.3">superscript</csymbol><ci id="S3.E1.m1.1.1.3.2.2.cmml" xref="S3.E1.m1.1.1.3.2.2">ℒ</ci><ci id="S3.E1.m1.1.1.3.2.3.cmml" xref="S3.E1.m1.1.1.3.2.3">𝑝</ci></apply><ci id="S3.E1.m1.1.1.3.3.cmml" xref="S3.E1.m1.1.1.3.3">𝑖</ci></apply><apply id="S3.E1.m1.1.1.1.cmml" xref="S3.E1.m1.1.1.1"><times id="S3.E1.m1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.2"></times><apply id="S3.E1.m1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.3"><divide id="S3.E1.m1.1.1.1.3.1.cmml" xref="S3.E1.m1.1.1.1.3"></divide><cn type="integer" id="S3.E1.m1.1.1.1.3.2.cmml" xref="S3.E1.m1.1.1.1.3.2">1</cn><ci id="S3.E1.m1.1.1.1.3.3.cmml" xref="S3.E1.m1.1.1.1.3.3">𝑀</ci></apply><apply id="S3.E1.m1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1"><apply id="S3.E1.m1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.2.1.cmml" xref="S3.E1.m1.1.1.1.1.2">subscript</csymbol><sum id="S3.E1.m1.1.1.1.1.2.2.cmml" xref="S3.E1.m1.1.1.1.1.2.2"></sum><ci id="S3.E1.m1.1.1.1.1.2.3.cmml" xref="S3.E1.m1.1.1.1.1.2.3">𝑗</ci></apply><apply id="S3.E1.m1.1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1"><csymbol cd="latexml" id="S3.E1.m1.1.1.1.1.1.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.2">norm</csymbol><apply id="S3.E1.m1.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1"><minus id="S3.E1.m1.1.1.1.1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.3"></minus><apply id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1"><plus id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.1"></plus><apply id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2"><times id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.1"></times><ci id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.2">𝑅</ci><apply id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3">subscript</csymbol><ci id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.2">𝑥</ci><ci id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.2.3.3">𝑗</ci></apply></apply><ci id="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.1.3">𝑡</ci></apply><apply id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1"><plus id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.1"></plus><apply id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2"><times id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.1"></times><apply id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2"><ci id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.1">^</ci><apply id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2">subscript</csymbol><ci id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.2">𝑅</ci><ci id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.3">𝑖</ci></apply></apply><apply id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3">subscript</csymbol><ci id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.2">𝑥</ci><ci id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.2.3.3">𝑗</ci></apply></apply><apply id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3"><ci id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.1">^</ci><apply id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2">subscript</csymbol><ci id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.2">𝑡</ci><ci id="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.2.1.1.3.2.3">𝑖</ci></apply></apply></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.1c">\mathcal{L}^{p}_{i}=\frac{1}{M}\sum_{j}\left\|(Rx_{j}+t)-(\hat{R_{i}}x_{j}+\hat{t_{i}})\right\|\vspace{-.5em}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.p10" class="ltx_para">
+<p id="S3.p10.9" class="ltx_p">where, <math id="S3.p10.1.m1.1" class="ltx_Math" alttext="x_{j}" display="inline"><semantics id="S3.p10.1.m1.1a"><msub id="S3.p10.1.m1.1.1" xref="S3.p10.1.m1.1.1.cmml"><mi id="S3.p10.1.m1.1.1.2" xref="S3.p10.1.m1.1.1.2.cmml">x</mi><mi id="S3.p10.1.m1.1.1.3" xref="S3.p10.1.m1.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p10.1.m1.1b"><apply id="S3.p10.1.m1.1.1.cmml" xref="S3.p10.1.m1.1.1"><csymbol cd="ambiguous" id="S3.p10.1.m1.1.1.1.cmml" xref="S3.p10.1.m1.1.1">subscript</csymbol><ci id="S3.p10.1.m1.1.1.2.cmml" xref="S3.p10.1.m1.1.1.2">𝑥</ci><ci id="S3.p10.1.m1.1.1.3.cmml" xref="S3.p10.1.m1.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.1.m1.1c">x_{j}</annotation></semantics></math> denotes the <math id="S3.p10.2.m2.1" class="ltx_Math" alttext="j^{th}" display="inline"><semantics id="S3.p10.2.m2.1a"><msup id="S3.p10.2.m2.1.1" xref="S3.p10.2.m2.1.1.cmml"><mi id="S3.p10.2.m2.1.1.2" xref="S3.p10.2.m2.1.1.2.cmml">j</mi><mrow id="S3.p10.2.m2.1.1.3" xref="S3.p10.2.m2.1.1.3.cmml"><mi id="S3.p10.2.m2.1.1.3.2" xref="S3.p10.2.m2.1.1.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.p10.2.m2.1.1.3.1" xref="S3.p10.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.p10.2.m2.1.1.3.3" xref="S3.p10.2.m2.1.1.3.3.cmml">h</mi></mrow></msup><annotation-xml encoding="MathML-Content" id="S3.p10.2.m2.1b"><apply id="S3.p10.2.m2.1.1.cmml" xref="S3.p10.2.m2.1.1"><csymbol cd="ambiguous" id="S3.p10.2.m2.1.1.1.cmml" xref="S3.p10.2.m2.1.1">superscript</csymbol><ci id="S3.p10.2.m2.1.1.2.cmml" xref="S3.p10.2.m2.1.1.2">𝑗</ci><apply id="S3.p10.2.m2.1.1.3.cmml" xref="S3.p10.2.m2.1.1.3"><times id="S3.p10.2.m2.1.1.3.1.cmml" xref="S3.p10.2.m2.1.1.3.1"></times><ci id="S3.p10.2.m2.1.1.3.2.cmml" xref="S3.p10.2.m2.1.1.3.2">𝑡</ci><ci id="S3.p10.2.m2.1.1.3.3.cmml" xref="S3.p10.2.m2.1.1.3.3">ℎ</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.2.m2.1c">j^{th}</annotation></semantics></math> point of the <math id="S3.p10.3.m3.1" class="ltx_Math" alttext="M" display="inline"><semantics id="S3.p10.3.m3.1a"><mi id="S3.p10.3.m3.1.1" xref="S3.p10.3.m3.1.1.cmml">M</mi><annotation-xml encoding="MathML-Content" id="S3.p10.3.m3.1b"><ci id="S3.p10.3.m3.1.1.cmml" xref="S3.p10.3.m3.1.1">𝑀</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.3.m3.1c">M</annotation></semantics></math> randomly selected 3D points from the object’s 3D model, <math id="S3.p10.4.m4.1" class="ltx_Math" alttext="p=[R|t]" display="inline"><semantics id="S3.p10.4.m4.1a"><mrow id="S3.p10.4.m4.1.1" xref="S3.p10.4.m4.1.1.cmml"><mi id="S3.p10.4.m4.1.1.3" xref="S3.p10.4.m4.1.1.3.cmml">p</mi><mo id="S3.p10.4.m4.1.1.2" xref="S3.p10.4.m4.1.1.2.cmml">=</mo><mrow id="S3.p10.4.m4.1.1.1.1" xref="S3.p10.4.m4.1.1.1.2.cmml"><mo stretchy="false" id="S3.p10.4.m4.1.1.1.1.2" xref="S3.p10.4.m4.1.1.1.2.1.cmml">[</mo><mrow id="S3.p10.4.m4.1.1.1.1.1" xref="S3.p10.4.m4.1.1.1.1.1.cmml"><mi id="S3.p10.4.m4.1.1.1.1.1.2" xref="S3.p10.4.m4.1.1.1.1.1.2.cmml">R</mi><mo fence="false" id="S3.p10.4.m4.1.1.1.1.1.1" xref="S3.p10.4.m4.1.1.1.1.1.1.cmml">|</mo><mi id="S3.p10.4.m4.1.1.1.1.1.3" xref="S3.p10.4.m4.1.1.1.1.1.3.cmml">t</mi></mrow><mo stretchy="false" id="S3.p10.4.m4.1.1.1.1.3" xref="S3.p10.4.m4.1.1.1.2.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p10.4.m4.1b"><apply id="S3.p10.4.m4.1.1.cmml" xref="S3.p10.4.m4.1.1"><eq id="S3.p10.4.m4.1.1.2.cmml" xref="S3.p10.4.m4.1.1.2"></eq><ci id="S3.p10.4.m4.1.1.3.cmml" xref="S3.p10.4.m4.1.1.3">𝑝</ci><apply id="S3.p10.4.m4.1.1.1.2.cmml" xref="S3.p10.4.m4.1.1.1.1"><csymbol cd="latexml" id="S3.p10.4.m4.1.1.1.2.1.cmml" xref="S3.p10.4.m4.1.1.1.1.2">delimited-[]</csymbol><apply id="S3.p10.4.m4.1.1.1.1.1.cmml" xref="S3.p10.4.m4.1.1.1.1.1"><csymbol cd="latexml" id="S3.p10.4.m4.1.1.1.1.1.1.cmml" xref="S3.p10.4.m4.1.1.1.1.1.1">conditional</csymbol><ci id="S3.p10.4.m4.1.1.1.1.1.2.cmml" xref="S3.p10.4.m4.1.1.1.1.1.2">𝑅</ci><ci id="S3.p10.4.m4.1.1.1.1.1.3.cmml" xref="S3.p10.4.m4.1.1.1.1.1.3">𝑡</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.4.m4.1c">p=[R|t]</annotation></semantics></math> is the ground truth pose, <math id="S3.p10.5.m5.1" class="ltx_Math" alttext="R" display="inline"><semantics id="S3.p10.5.m5.1a"><mi id="S3.p10.5.m5.1.1" xref="S3.p10.5.m5.1.1.cmml">R</mi><annotation-xml encoding="MathML-Content" id="S3.p10.5.m5.1b"><ci id="S3.p10.5.m5.1.1.cmml" xref="S3.p10.5.m5.1.1">𝑅</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.5.m5.1c">R</annotation></semantics></math> is the rotation matrix of the object and <math id="S3.p10.6.m6.1" class="ltx_Math" alttext="t" display="inline"><semantics id="S3.p10.6.m6.1a"><mi id="S3.p10.6.m6.1.1" xref="S3.p10.6.m6.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="S3.p10.6.m6.1b"><ci id="S3.p10.6.m6.1.1.cmml" xref="S3.p10.6.m6.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.6.m6.1c">t</annotation></semantics></math> is the translation vector.
+The estimated pose from MPF6D is represented by <math id="S3.p10.7.m7.1" class="ltx_Math" alttext="\hat{p}_{i}=[\hat{R}_{i}|\hat{t}_{i}]" display="inline"><semantics id="S3.p10.7.m7.1a"><mrow id="S3.p10.7.m7.1.1" xref="S3.p10.7.m7.1.1.cmml"><msub id="S3.p10.7.m7.1.1.3" xref="S3.p10.7.m7.1.1.3.cmml"><mover accent="true" id="S3.p10.7.m7.1.1.3.2" xref="S3.p10.7.m7.1.1.3.2.cmml"><mi id="S3.p10.7.m7.1.1.3.2.2" xref="S3.p10.7.m7.1.1.3.2.2.cmml">p</mi><mo id="S3.p10.7.m7.1.1.3.2.1" xref="S3.p10.7.m7.1.1.3.2.1.cmml">^</mo></mover><mi id="S3.p10.7.m7.1.1.3.3" xref="S3.p10.7.m7.1.1.3.3.cmml">i</mi></msub><mo id="S3.p10.7.m7.1.1.2" xref="S3.p10.7.m7.1.1.2.cmml">=</mo><mrow id="S3.p10.7.m7.1.1.1.1" xref="S3.p10.7.m7.1.1.1.2.cmml"><mo stretchy="false" id="S3.p10.7.m7.1.1.1.1.2" xref="S3.p10.7.m7.1.1.1.2.1.cmml">[</mo><mrow id="S3.p10.7.m7.1.1.1.1.1" xref="S3.p10.7.m7.1.1.1.1.1.cmml"><msub id="S3.p10.7.m7.1.1.1.1.1.2" xref="S3.p10.7.m7.1.1.1.1.1.2.cmml"><mover accent="true" id="S3.p10.7.m7.1.1.1.1.1.2.2" xref="S3.p10.7.m7.1.1.1.1.1.2.2.cmml"><mi id="S3.p10.7.m7.1.1.1.1.1.2.2.2" xref="S3.p10.7.m7.1.1.1.1.1.2.2.2.cmml">R</mi><mo id="S3.p10.7.m7.1.1.1.1.1.2.2.1" xref="S3.p10.7.m7.1.1.1.1.1.2.2.1.cmml">^</mo></mover><mi id="S3.p10.7.m7.1.1.1.1.1.2.3" xref="S3.p10.7.m7.1.1.1.1.1.2.3.cmml">i</mi></msub><mo fence="false" id="S3.p10.7.m7.1.1.1.1.1.1" xref="S3.p10.7.m7.1.1.1.1.1.1.cmml">|</mo><msub id="S3.p10.7.m7.1.1.1.1.1.3" xref="S3.p10.7.m7.1.1.1.1.1.3.cmml"><mover accent="true" id="S3.p10.7.m7.1.1.1.1.1.3.2" xref="S3.p10.7.m7.1.1.1.1.1.3.2.cmml"><mi id="S3.p10.7.m7.1.1.1.1.1.3.2.2" xref="S3.p10.7.m7.1.1.1.1.1.3.2.2.cmml">t</mi><mo id="S3.p10.7.m7.1.1.1.1.1.3.2.1" xref="S3.p10.7.m7.1.1.1.1.1.3.2.1.cmml">^</mo></mover><mi id="S3.p10.7.m7.1.1.1.1.1.3.3" xref="S3.p10.7.m7.1.1.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="S3.p10.7.m7.1.1.1.1.3" xref="S3.p10.7.m7.1.1.1.2.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.p10.7.m7.1b"><apply id="S3.p10.7.m7.1.1.cmml" xref="S3.p10.7.m7.1.1"><eq id="S3.p10.7.m7.1.1.2.cmml" xref="S3.p10.7.m7.1.1.2"></eq><apply id="S3.p10.7.m7.1.1.3.cmml" xref="S3.p10.7.m7.1.1.3"><csymbol cd="ambiguous" id="S3.p10.7.m7.1.1.3.1.cmml" xref="S3.p10.7.m7.1.1.3">subscript</csymbol><apply id="S3.p10.7.m7.1.1.3.2.cmml" xref="S3.p10.7.m7.1.1.3.2"><ci id="S3.p10.7.m7.1.1.3.2.1.cmml" xref="S3.p10.7.m7.1.1.3.2.1">^</ci><ci id="S3.p10.7.m7.1.1.3.2.2.cmml" xref="S3.p10.7.m7.1.1.3.2.2">𝑝</ci></apply><ci id="S3.p10.7.m7.1.1.3.3.cmml" xref="S3.p10.7.m7.1.1.3.3">𝑖</ci></apply><apply id="S3.p10.7.m7.1.1.1.2.cmml" xref="S3.p10.7.m7.1.1.1.1"><csymbol cd="latexml" id="S3.p10.7.m7.1.1.1.2.1.cmml" xref="S3.p10.7.m7.1.1.1.1.2">delimited-[]</csymbol><apply id="S3.p10.7.m7.1.1.1.1.1.cmml" xref="S3.p10.7.m7.1.1.1.1.1"><csymbol cd="latexml" id="S3.p10.7.m7.1.1.1.1.1.1.cmml" xref="S3.p10.7.m7.1.1.1.1.1.1">conditional</csymbol><apply id="S3.p10.7.m7.1.1.1.1.1.2.cmml" xref="S3.p10.7.m7.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.p10.7.m7.1.1.1.1.1.2.1.cmml" xref="S3.p10.7.m7.1.1.1.1.1.2">subscript</csymbol><apply id="S3.p10.7.m7.1.1.1.1.1.2.2.cmml" xref="S3.p10.7.m7.1.1.1.1.1.2.2"><ci id="S3.p10.7.m7.1.1.1.1.1.2.2.1.cmml" xref="S3.p10.7.m7.1.1.1.1.1.2.2.1">^</ci><ci id="S3.p10.7.m7.1.1.1.1.1.2.2.2.cmml" xref="S3.p10.7.m7.1.1.1.1.1.2.2.2">𝑅</ci></apply><ci id="S3.p10.7.m7.1.1.1.1.1.2.3.cmml" xref="S3.p10.7.m7.1.1.1.1.1.2.3">𝑖</ci></apply><apply id="S3.p10.7.m7.1.1.1.1.1.3.cmml" xref="S3.p10.7.m7.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.p10.7.m7.1.1.1.1.1.3.1.cmml" xref="S3.p10.7.m7.1.1.1.1.1.3">subscript</csymbol><apply id="S3.p10.7.m7.1.1.1.1.1.3.2.cmml" xref="S3.p10.7.m7.1.1.1.1.1.3.2"><ci id="S3.p10.7.m7.1.1.1.1.1.3.2.1.cmml" xref="S3.p10.7.m7.1.1.1.1.1.3.2.1">^</ci><ci id="S3.p10.7.m7.1.1.1.1.1.3.2.2.cmml" xref="S3.p10.7.m7.1.1.1.1.1.3.2.2">𝑡</ci></apply><ci id="S3.p10.7.m7.1.1.1.1.1.3.3.cmml" xref="S3.p10.7.m7.1.1.1.1.1.3.3">𝑖</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.7.m7.1c">\hat{p}_{i}=[\hat{R}_{i}|\hat{t}_{i}]</annotation></semantics></math> where <math id="S3.p10.8.m8.1" class="ltx_Math" alttext="\hat{R}" display="inline"><semantics id="S3.p10.8.m8.1a"><mover accent="true" id="S3.p10.8.m8.1.1" xref="S3.p10.8.m8.1.1.cmml"><mi id="S3.p10.8.m8.1.1.2" xref="S3.p10.8.m8.1.1.2.cmml">R</mi><mo id="S3.p10.8.m8.1.1.1" xref="S3.p10.8.m8.1.1.1.cmml">^</mo></mover><annotation-xml encoding="MathML-Content" id="S3.p10.8.m8.1b"><apply id="S3.p10.8.m8.1.1.cmml" xref="S3.p10.8.m8.1.1"><ci id="S3.p10.8.m8.1.1.1.cmml" xref="S3.p10.8.m8.1.1.1">^</ci><ci id="S3.p10.8.m8.1.1.2.cmml" xref="S3.p10.8.m8.1.1.2">𝑅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.8.m8.1c">\hat{R}</annotation></semantics></math> denotes the predicted rotation and <math id="S3.p10.9.m9.1" class="ltx_Math" alttext="\hat{t}" display="inline"><semantics id="S3.p10.9.m9.1a"><mover accent="true" id="S3.p10.9.m9.1.1" xref="S3.p10.9.m9.1.1.cmml"><mi id="S3.p10.9.m9.1.1.2" xref="S3.p10.9.m9.1.1.2.cmml">t</mi><mo id="S3.p10.9.m9.1.1.1" xref="S3.p10.9.m9.1.1.1.cmml">^</mo></mover><annotation-xml encoding="MathML-Content" id="S3.p10.9.m9.1b"><apply id="S3.p10.9.m9.1.1.cmml" xref="S3.p10.9.m9.1.1"><ci id="S3.p10.9.m9.1.1.1.cmml" xref="S3.p10.9.m9.1.1.1">^</ci><ci id="S3.p10.9.m9.1.1.2.cmml" xref="S3.p10.9.m9.1.1.2">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p10.9.m9.1c">\hat{t}</annotation></semantics></math> the predicted translation.</p>
+</div>
+<div id="S3.p11" class="ltx_para">
+<p id="S3.p11.1" class="ltx_p">All these techniques in conjunction enable us to have and accurate 6D pose estimation while keeping the inference time as low as possible to enable our method to be used in real-world applications.</p>
+</div>
+<figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Quantitative evaluation of 6D pose using the ADD (<a href="#S4.E2" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>) metric on the LineMOD dataset. Symmetric objects are presented in italic and were evaluated using ADD-S (<a href="#S4.E3" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>). Bold shows best results in a given row.</figcaption>
+<div id="S3.T1.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:237.8pt;vertical-align:-0.8pt;"><span class="ltx_transformed_inner" style="transform:translate(-68.1pt,37.2pt) scale(0.760957998201778,0.760957998201778) ;">
+<table id="S3.T1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T1.1.1.1.1" class="ltx_tr">
+<th id="S3.T1.1.1.1.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">Objects</th>
+<th id="S3.T1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">
+<table id="S3.T1.1.1.1.1.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.1.1.1.1.2.1.1" class="ltx_tr">
+<td id="S3.T1.1.1.1.1.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">MPF6D</td>
+</tr>
+<tr id="S3.T1.1.1.1.1.2.1.2" class="ltx_tr">
+<td id="S3.T1.1.1.1.1.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">Avg (Stdev)</td>
+</tr>
+</table>
+</th>
+<td id="S3.T1.1.1.1.1.3" class="ltx_td ltx_align_center">MPF6D*</td>
+<td id="S3.T1.1.1.1.1.4" class="ltx_td ltx_align_center">PVN3D</td>
+<td id="S3.T1.1.1.1.1.5" class="ltx_td ltx_align_center">MaskedFusion</td>
+<td id="S3.T1.1.1.1.1.6" class="ltx_td ltx_align_center">DenseFusion</td>
+<td id="S3.T1.1.1.1.1.7" class="ltx_td ltx_align_center">PointFusion</td>
+<td id="S3.T1.1.1.1.1.8" class="ltx_td ltx_align_center">SSD-6D+ICP</td>
+<td id="S3.T1.1.1.1.1.9" class="ltx_td ltx_align_center">Implicit+ICP</td>
+</tr>
+<tr id="S3.T1.1.1.2.2" class="ltx_tr">
+<th id="S3.T1.1.1.2.2.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">ape</th>
+<th id="S3.T1.1.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">98.9 (0.3)</th>
+<td id="S3.T1.1.1.2.2.3" class="ltx_td ltx_align_center ltx_border_t"><span id="S3.T1.1.1.2.2.3.1" class="ltx_text ltx_font_bold">99.2</span></td>
+<td id="S3.T1.1.1.2.2.4" class="ltx_td ltx_align_center ltx_border_t">97.3</td>
+<td id="S3.T1.1.1.2.2.5" class="ltx_td ltx_align_center ltx_border_t">91.4</td>
+<td id="S3.T1.1.1.2.2.6" class="ltx_td ltx_align_center ltx_border_t">92.3</td>
+<td id="S3.T1.1.1.2.2.7" class="ltx_td ltx_align_center ltx_border_t">70.4</td>
+<td id="S3.T1.1.1.2.2.8" class="ltx_td ltx_align_center ltx_border_t">65.0</td>
+<td id="S3.T1.1.1.2.2.9" class="ltx_td ltx_align_center ltx_border_t">20.6</td>
+</tr>
+<tr id="S3.T1.1.1.3.3" class="ltx_tr">
+<th id="S3.T1.1.1.3.3.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">bench vi.</th>
+<th id="S3.T1.1.1.3.3.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.7 (0.3)</th>
+<td id="S3.T1.1.1.3.3.3" class="ltx_td ltx_align_center">99.5</td>
+<td id="S3.T1.1.1.3.3.4" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.3.3.4.1" class="ltx_text ltx_font_bold">99.7</span></td>
+<td id="S3.T1.1.1.3.3.5" class="ltx_td ltx_align_center">99.0</td>
+<td id="S3.T1.1.1.3.3.6" class="ltx_td ltx_align_center">93.2</td>
+<td id="S3.T1.1.1.3.3.7" class="ltx_td ltx_align_center">80.7</td>
+<td id="S3.T1.1.1.3.3.8" class="ltx_td ltx_align_center">80.0</td>
+<td id="S3.T1.1.1.3.3.9" class="ltx_td ltx_align_center">64.3</td>
+</tr>
+<tr id="S3.T1.1.1.4.4" class="ltx_tr">
+<th id="S3.T1.1.1.4.4.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">camera</th>
+<th id="S3.T1.1.1.4.4.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">100.0 (0.0)</th>
+<td id="S3.T1.1.1.4.4.3" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.4.4.3.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.4.4.4" class="ltx_td ltx_align_center">99.6</td>
+<td id="S3.T1.1.1.4.4.5" class="ltx_td ltx_align_center">99.0</td>
+<td id="S3.T1.1.1.4.4.6" class="ltx_td ltx_align_center">94.4</td>
+<td id="S3.T1.1.1.4.4.7" class="ltx_td ltx_align_center">60.8</td>
+<td id="S3.T1.1.1.4.4.8" class="ltx_td ltx_align_center">78.0</td>
+<td id="S3.T1.1.1.4.4.9" class="ltx_td ltx_align_center">63.2</td>
+</tr>
+<tr id="S3.T1.1.1.5.5" class="ltx_tr">
+<th id="S3.T1.1.1.5.5.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">can</th>
+<th id="S3.T1.1.1.5.5.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">98.9 (0.3)</th>
+<td id="S3.T1.1.1.5.5.3" class="ltx_td ltx_align_center">99.2</td>
+<td id="S3.T1.1.1.5.5.4" class="ltx_td ltx_align_center">99.5</td>
+<td id="S3.T1.1.1.5.5.5" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.5.5.5.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.5.5.6" class="ltx_td ltx_align_center">93.1</td>
+<td id="S3.T1.1.1.5.5.7" class="ltx_td ltx_align_center">61.1</td>
+<td id="S3.T1.1.1.5.5.8" class="ltx_td ltx_align_center">86.0</td>
+<td id="S3.T1.1.1.5.5.9" class="ltx_td ltx_align_center">76.1</td>
+</tr>
+<tr id="S3.T1.1.1.6.6" class="ltx_tr">
+<th id="S3.T1.1.1.6.6.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">cat</th>
+<th id="S3.T1.1.1.6.6.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.7 (0.3)</th>
+<td id="S3.T1.1.1.6.6.3" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.6.6.3.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.6.6.4" class="ltx_td ltx_align_center">99.8</td>
+<td id="S3.T1.1.1.6.6.5" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.6.6.5.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.6.6.6" class="ltx_td ltx_align_center">96.5</td>
+<td id="S3.T1.1.1.6.6.7" class="ltx_td ltx_align_center">79.1</td>
+<td id="S3.T1.1.1.6.6.8" class="ltx_td ltx_align_center">70.0</td>
+<td id="S3.T1.1.1.6.6.9" class="ltx_td ltx_align_center">72.0</td>
+</tr>
+<tr id="S3.T1.1.1.7.7" class="ltx_tr">
+<th id="S3.T1.1.1.7.7.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">driller</th>
+<th id="S3.T1.1.1.7.7.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.8 (0.1)</th>
+<td id="S3.T1.1.1.7.7.3" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.7.7.3.1" class="ltx_text ltx_font_bold">99.8</span></td>
+<td id="S3.T1.1.1.7.7.4" class="ltx_td ltx_align_center">99.3</td>
+<td id="S3.T1.1.1.7.7.5" class="ltx_td ltx_align_center">97.0</td>
+<td id="S3.T1.1.1.7.7.6" class="ltx_td ltx_align_center">87.0</td>
+<td id="S3.T1.1.1.7.7.7" class="ltx_td ltx_align_center">47.3</td>
+<td id="S3.T1.1.1.7.7.8" class="ltx_td ltx_align_center">73.0</td>
+<td id="S3.T1.1.1.7.7.9" class="ltx_td ltx_align_center">41.6</td>
+</tr>
+<tr id="S3.T1.1.1.8.8" class="ltx_tr">
+<th id="S3.T1.1.1.8.8.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">duck</th>
+<th id="S3.T1.1.1.8.8.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.1 (0.2)</th>
+<td id="S3.T1.1.1.8.8.3" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.8.8.3.1" class="ltx_text ltx_font_bold">99.3</span></td>
+<td id="S3.T1.1.1.8.8.4" class="ltx_td ltx_align_center">98.2</td>
+<td id="S3.T1.1.1.8.8.5" class="ltx_td ltx_align_center">92.5</td>
+<td id="S3.T1.1.1.8.8.6" class="ltx_td ltx_align_center">92.3</td>
+<td id="S3.T1.1.1.8.8.7" class="ltx_td ltx_align_center">63.0</td>
+<td id="S3.T1.1.1.8.8.8" class="ltx_td ltx_align_center">66.0</td>
+<td id="S3.T1.1.1.8.8.9" class="ltx_td ltx_align_center">32.4</td>
+</tr>
+<tr id="S3.T1.1.1.9.9" class="ltx_tr">
+<th id="S3.T1.1.1.9.9.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r"><span id="S3.T1.1.1.9.9.1.1" class="ltx_text ltx_font_italic">eggbox</span></th>
+<th id="S3.T1.1.1.9.9.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">100.0 (0.0)</th>
+<td id="S3.T1.1.1.9.9.3" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.9.9.3.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.9.9.4" class="ltx_td ltx_align_center">99.8</td>
+<td id="S3.T1.1.1.9.9.5" class="ltx_td ltx_align_center">99.1</td>
+<td id="S3.T1.1.1.9.9.6" class="ltx_td ltx_align_center">99.8</td>
+<td id="S3.T1.1.1.9.9.7" class="ltx_td ltx_align_center">99.9</td>
+<td id="S3.T1.1.1.9.9.8" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.9.9.8.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.9.9.9" class="ltx_td ltx_align_center">98.6</td>
+</tr>
+<tr id="S3.T1.1.1.10.10" class="ltx_tr">
+<th id="S3.T1.1.1.10.10.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r"><span id="S3.T1.1.1.10.10.1.1" class="ltx_text ltx_font_italic">glue</span></th>
+<th id="S3.T1.1.1.10.10.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">100.0 (0.0)</th>
+<td id="S3.T1.1.1.10.10.3" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.10.10.3.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.10.10.4" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.10.10.4.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.10.10.5" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.10.10.5.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.10.10.6" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.10.10.6.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.10.10.7" class="ltx_td ltx_align_center">99.3</td>
+<td id="S3.T1.1.1.10.10.8" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.10.10.8.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.10.10.9" class="ltx_td ltx_align_center">96.4</td>
+</tr>
+<tr id="S3.T1.1.1.11.11" class="ltx_tr">
+<th id="S3.T1.1.1.11.11.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">hole p.</th>
+<th id="S3.T1.1.1.11.11.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.8 (0.1)</th>
+<td id="S3.T1.1.1.11.11.3" class="ltx_td ltx_align_center">99.8</td>
+<td id="S3.T1.1.1.11.11.4" class="ltx_td ltx_align_center">99.9</td>
+<td id="S3.T1.1.1.11.11.5" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.11.11.5.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S3.T1.1.1.11.11.6" class="ltx_td ltx_align_center">92.1</td>
+<td id="S3.T1.1.1.11.11.7" class="ltx_td ltx_align_center">71.8</td>
+<td id="S3.T1.1.1.11.11.8" class="ltx_td ltx_align_center">49.0</td>
+<td id="S3.T1.1.1.11.11.9" class="ltx_td ltx_align_center">49.9</td>
+</tr>
+<tr id="S3.T1.1.1.12.12" class="ltx_tr">
+<th id="S3.T1.1.1.12.12.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">iron</th>
+<th id="S3.T1.1.1.12.12.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.7 (0.0)</th>
+<td id="S3.T1.1.1.12.12.3" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.12.12.3.1" class="ltx_text ltx_font_bold">99.8</span></td>
+<td id="S3.T1.1.1.12.12.4" class="ltx_td ltx_align_center">99.7</td>
+<td id="S3.T1.1.1.12.12.5" class="ltx_td ltx_align_center">96.9</td>
+<td id="S3.T1.1.1.12.12.6" class="ltx_td ltx_align_center">97.0</td>
+<td id="S3.T1.1.1.12.12.7" class="ltx_td ltx_align_center">83.2</td>
+<td id="S3.T1.1.1.12.12.8" class="ltx_td ltx_align_center">78.0</td>
+<td id="S3.T1.1.1.12.12.9" class="ltx_td ltx_align_center">63.1</td>
+</tr>
+<tr id="S3.T1.1.1.13.13" class="ltx_tr">
+<th id="S3.T1.1.1.13.13.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">lamp</th>
+<th id="S3.T1.1.1.13.13.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.6 (0.3)</th>
+<td id="S3.T1.1.1.13.13.3" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.13.13.3.1" class="ltx_text ltx_font_bold">99.8</span></td>
+<td id="S3.T1.1.1.13.13.4" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.13.13.4.1" class="ltx_text ltx_font_bold">99.8</span></td>
+<td id="S3.T1.1.1.13.13.5" class="ltx_td ltx_align_center">98.1</td>
+<td id="S3.T1.1.1.13.13.6" class="ltx_td ltx_align_center">95.3</td>
+<td id="S3.T1.1.1.13.13.7" class="ltx_td ltx_align_center">62.3</td>
+<td id="S3.T1.1.1.13.13.8" class="ltx_td ltx_align_center">73.0</td>
+<td id="S3.T1.1.1.13.13.9" class="ltx_td ltx_align_center">91.7</td>
+</tr>
+<tr id="S3.T1.1.1.14.14" class="ltx_tr">
+<th id="S3.T1.1.1.14.14.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">phone</th>
+<th id="S3.T1.1.1.14.14.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.3 (0.2)</th>
+<td id="S3.T1.1.1.14.14.3" class="ltx_td ltx_align_center">99.1</td>
+<td id="S3.T1.1.1.14.14.4" class="ltx_td ltx_align_center"><span id="S3.T1.1.1.14.14.4.1" class="ltx_text ltx_font_bold">99.5</span></td>
+<td id="S3.T1.1.1.14.14.5" class="ltx_td ltx_align_center">99.0</td>
+<td id="S3.T1.1.1.14.14.6" class="ltx_td ltx_align_center">92.8</td>
+<td id="S3.T1.1.1.14.14.7" class="ltx_td ltx_align_center">78.8</td>
+<td id="S3.T1.1.1.14.14.8" class="ltx_td ltx_align_center">79.0</td>
+<td id="S3.T1.1.1.14.14.9" class="ltx_td ltx_align_center">71.0</td>
+</tr>
+<tr id="S3.T1.1.1.15.15" class="ltx_tr">
+<th id="S3.T1.1.1.15.15.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">Average</th>
+<th id="S3.T1.1.1.15.15.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">99.6 (0.1)</th>
+<td id="S3.T1.1.1.15.15.3" class="ltx_td ltx_align_center ltx_border_t"><span id="S3.T1.1.1.15.15.3.1" class="ltx_text ltx_font_bold">99.7</span></td>
+<td id="S3.T1.1.1.15.15.4" class="ltx_td ltx_align_center ltx_border_t">99.4</td>
+<td id="S3.T1.1.1.15.15.5" class="ltx_td ltx_align_center ltx_border_t">97.8</td>
+<td id="S3.T1.1.1.15.15.6" class="ltx_td ltx_align_center ltx_border_t">94.3</td>
+<td id="S3.T1.1.1.15.15.7" class="ltx_td ltx_align_center ltx_border_t">73.7</td>
+<td id="S3.T1.1.1.15.15.8" class="ltx_td ltx_align_center ltx_border_t">76.7</td>
+<td id="S3.T1.1.1.15.15.9" class="ltx_td ltx_align_center ltx_border_t">64.7</td>
+</tr>
+</tbody>
+<tfoot class="ltx_tfoot">
+<tr id="S3.T1.1.1.16.1" class="ltx_tr">
+<th id="S3.T1.1.1.16.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row" colspan="9"><span id="S3.T1.1.1.16.1.1.1" class="ltx_text" style="font-size:90%;">(*) Best of three repetitions.</span></th>
+</tr>
+</tfoot>
+</table>
+</span></div>
+</figure>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Experiments</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">In these experiments, the results showed that our method is the best overall method to tackle the challenges presented in two datasets. We trained MPF6D three times from scratch, thus meaning all our weights start randomly all three times. We show the average results for the three runs that we trained and we also show the best run and compare these results with previous methods. For all training and inference experiments we use a desktop computer with SSD NVME, 64GB of RAM, an NVIDIA GeForce GTX 1080 Ti, and Intel Core i7-7700K CPU.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Datasets</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">To evaluate our method we use two benchmark datasets, LineMOD and YCB-Video. These datasets are widely used by previous state-of-the-art methods.
+The LineMOD Dataset <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib28" title="" class="ltx_ref">linemod </a></cite> was captured with a Kinect, and it has the RGB and depth images automatically aligned. The dataset consists of 13 low-textured objects, annotated 6D poses, and object masks. The main challenges of this dataset are the cluttered scenes, texture-less objects, and illumination variations.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.1" class="ltx_p">The YCB-Video Dataset <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib29" title="" class="ltx_ref">originalycb </a></cite> contains 21 YCB objects of varying shape and texture, and is composed of 92 RGB-D videos, each with a subset of the objects placed in the scene. It has 6D pose annotations and objects masks. The varying lighting conditions, image noise, and occlusions make this dataset a challenge.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Evaluation Metrics</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">As in previous works <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib22" title="" class="ltx_ref">ssd6d </a>; <a href="#bib.bib14" title="" class="ltx_ref">pvnet </a>; <a href="#bib.bib2" title="" class="ltx_ref">densefusion </a>; <a href="#bib.bib24" title="" class="ltx_ref">posecnn </a></cite> for the LineMOD dataset we used the Average Distance of Model Points (ADD) (<a href="#S4.E2" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>) <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib28" title="" class="ltx_ref">linemod </a></cite> as metric of evaluation for non-symmetric objects and for the egg-box and glue we used the Average Closest Point Distance (ADD-S) (<a href="#S4.E3" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib24" title="" class="ltx_ref">posecnn </a></cite>.</p>
+<table id="S4.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math id="S4.E2.m1.1" class="ltx_Math" alttext="\textnormal{ADD}=\frac{1}{m}\sum_{x\in M}\left\|(Rx+t)-(\hat{R}x+\hat{t})\right\|" display="block"><semantics id="S4.E2.m1.1a"><mrow id="S4.E2.m1.1.1" xref="S4.E2.m1.1.1.cmml"><mtext id="S4.E2.m1.1.1.3" xref="S4.E2.m1.1.1.3a.cmml">ADD</mtext><mo id="S4.E2.m1.1.1.2" xref="S4.E2.m1.1.1.2.cmml">=</mo><mrow id="S4.E2.m1.1.1.1" xref="S4.E2.m1.1.1.1.cmml"><mfrac id="S4.E2.m1.1.1.1.3" xref="S4.E2.m1.1.1.1.3.cmml"><mn id="S4.E2.m1.1.1.1.3.2" xref="S4.E2.m1.1.1.1.3.2.cmml">1</mn><mi id="S4.E2.m1.1.1.1.3.3" xref="S4.E2.m1.1.1.1.3.3.cmml">m</mi></mfrac><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.1.2" xref="S4.E2.m1.1.1.1.2.cmml">​</mo><mrow id="S4.E2.m1.1.1.1.1" xref="S4.E2.m1.1.1.1.1.cmml"><munder id="S4.E2.m1.1.1.1.1.2" xref="S4.E2.m1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S4.E2.m1.1.1.1.1.2.2" xref="S4.E2.m1.1.1.1.1.2.2.cmml">∑</mo><mrow id="S4.E2.m1.1.1.1.1.2.3" xref="S4.E2.m1.1.1.1.1.2.3.cmml"><mi id="S4.E2.m1.1.1.1.1.2.3.2" xref="S4.E2.m1.1.1.1.1.2.3.2.cmml">x</mi><mo id="S4.E2.m1.1.1.1.1.2.3.1" xref="S4.E2.m1.1.1.1.1.2.3.1.cmml">∈</mo><mi id="S4.E2.m1.1.1.1.1.2.3.3" xref="S4.E2.m1.1.1.1.1.2.3.3.cmml">M</mi></mrow></munder><mrow id="S4.E2.m1.1.1.1.1.1.1" xref="S4.E2.m1.1.1.1.1.1.2.cmml"><mo id="S4.E2.m1.1.1.1.1.1.1.2" xref="S4.E2.m1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S4.E2.m1.1.1.1.1.1.1.1" xref="S4.E2.m1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E2.m1.1.1.1.1.1.1.1.1.1" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S4.E2.m1.1.1.1.1.1.1.1.1.1.2" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><mi id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml">x</mi></mrow><mo id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">+</mo><mi id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.3.cmml">t</mi></mrow><mo stretchy="false" id="S4.E2.m1.1.1.1.1.1.1.1.1.1.3" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo id="S4.E2.m1.1.1.1.1.1.1.1.3" xref="S4.E2.m1.1.1.1.1.1.1.1.3.cmml">−</mo><mrow id="S4.E2.m1.1.1.1.1.1.1.1.2.1" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.cmml"><mo stretchy="false" id="S4.E2.m1.1.1.1.1.1.1.1.2.1.2" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.cmml">(</mo><mrow id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.cmml"><mrow id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.cmml"><mover accent="true" id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.cmml"><mi id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.2" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml">R</mi><mo id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.1" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml">^</mo></mover><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.1" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.1.cmml">​</mo><mi id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.3" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.3.cmml">x</mi></mrow><mo id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.1" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.1.cmml">+</mo><mover accent="true" id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.cmml"><mi id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.2" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.2.cmml">t</mi><mo id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.1" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.1.cmml">^</mo></mover></mrow><mo stretchy="false" id="S4.E2.m1.1.1.1.1.1.1.1.2.1.3" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.cmml">)</mo></mrow></mrow><mo id="S4.E2.m1.1.1.1.1.1.1.3" xref="S4.E2.m1.1.1.1.1.1.2.1.cmml">‖</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E2.m1.1b"><apply id="S4.E2.m1.1.1.cmml" xref="S4.E2.m1.1.1"><eq id="S4.E2.m1.1.1.2.cmml" xref="S4.E2.m1.1.1.2"></eq><ci id="S4.E2.m1.1.1.3a.cmml" xref="S4.E2.m1.1.1.3"><mtext id="S4.E2.m1.1.1.3.cmml" xref="S4.E2.m1.1.1.3">ADD</mtext></ci><apply id="S4.E2.m1.1.1.1.cmml" xref="S4.E2.m1.1.1.1"><times id="S4.E2.m1.1.1.1.2.cmml" xref="S4.E2.m1.1.1.1.2"></times><apply id="S4.E2.m1.1.1.1.3.cmml" xref="S4.E2.m1.1.1.1.3"><divide id="S4.E2.m1.1.1.1.3.1.cmml" xref="S4.E2.m1.1.1.1.3"></divide><cn type="integer" id="S4.E2.m1.1.1.1.3.2.cmml" xref="S4.E2.m1.1.1.1.3.2">1</cn><ci id="S4.E2.m1.1.1.1.3.3.cmml" xref="S4.E2.m1.1.1.1.3.3">𝑚</ci></apply><apply id="S4.E2.m1.1.1.1.1.cmml" xref="S4.E2.m1.1.1.1.1"><apply id="S4.E2.m1.1.1.1.1.2.cmml" xref="S4.E2.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E2.m1.1.1.1.1.2.1.cmml" xref="S4.E2.m1.1.1.1.1.2">subscript</csymbol><sum id="S4.E2.m1.1.1.1.1.2.2.cmml" xref="S4.E2.m1.1.1.1.1.2.2"></sum><apply id="S4.E2.m1.1.1.1.1.2.3.cmml" xref="S4.E2.m1.1.1.1.1.2.3"><in id="S4.E2.m1.1.1.1.1.2.3.1.cmml" xref="S4.E2.m1.1.1.1.1.2.3.1"></in><ci id="S4.E2.m1.1.1.1.1.2.3.2.cmml" xref="S4.E2.m1.1.1.1.1.2.3.2">𝑥</ci><ci id="S4.E2.m1.1.1.1.1.2.3.3.cmml" xref="S4.E2.m1.1.1.1.1.2.3.3">𝑀</ci></apply></apply><apply id="S4.E2.m1.1.1.1.1.1.2.cmml" xref="S4.E2.m1.1.1.1.1.1.1"><csymbol cd="latexml" id="S4.E2.m1.1.1.1.1.1.2.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.2">norm</csymbol><apply id="S4.E2.m1.1.1.1.1.1.1.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1"><minus id="S4.E2.m1.1.1.1.1.1.1.1.3.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.3"></minus><apply id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1"><plus id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.1"></plus><apply id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2"><times id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.1"></times><ci id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2">𝑅</ci><ci id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.2.3">𝑥</ci></apply><ci id="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.1.1.1.3">𝑡</ci></apply><apply id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1"><plus id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.1"></plus><apply id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2"><times id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.1"></times><apply id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2"><ci id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.1">^</ci><ci id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.2.2">𝑅</ci></apply><ci id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.3.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.2.3">𝑥</ci></apply><apply id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3"><ci id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.1.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.1">^</ci><ci id="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.2.cmml" xref="S4.E2.m1.1.1.1.1.1.1.1.2.1.1.3.2">𝑡</ci></apply></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E2.m1.1c">\textnormal{ADD}=\frac{1}{m}\sum_{x\in M}\left\|(Rx+t)-(\hat{R}x+\hat{t})\right\|</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<table id="S4.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math id="S4.E3.m1.1" class="ltx_Math" alttext="\textnormal{ADD-S}=\frac{1}{m}\sum_{x_{1}\in M}\min_{x_{2}\in M}\left\|(Rx_{1}+t)-(\hat{R}x_{2}+\hat{t})\right\|" display="block"><semantics id="S4.E3.m1.1a"><mrow id="S4.E3.m1.1.1" xref="S4.E3.m1.1.1.cmml"><mtext id="S4.E3.m1.1.1.3" xref="S4.E3.m1.1.1.3a.cmml">ADD-S</mtext><mo id="S4.E3.m1.1.1.2" xref="S4.E3.m1.1.1.2.cmml">=</mo><mrow id="S4.E3.m1.1.1.1" xref="S4.E3.m1.1.1.1.cmml"><mfrac id="S4.E3.m1.1.1.1.3" xref="S4.E3.m1.1.1.1.3.cmml"><mn id="S4.E3.m1.1.1.1.3.2" xref="S4.E3.m1.1.1.1.3.2.cmml">1</mn><mi id="S4.E3.m1.1.1.1.3.3" xref="S4.E3.m1.1.1.1.3.3.cmml">m</mi></mfrac><mo lspace="0em" rspace="0em" id="S4.E3.m1.1.1.1.2" xref="S4.E3.m1.1.1.1.2.cmml">​</mo><mrow id="S4.E3.m1.1.1.1.1" xref="S4.E3.m1.1.1.1.1.cmml"><munder id="S4.E3.m1.1.1.1.1.2" xref="S4.E3.m1.1.1.1.1.2.cmml"><mo movablelimits="false" id="S4.E3.m1.1.1.1.1.2.2" xref="S4.E3.m1.1.1.1.1.2.2.cmml">∑</mo><mrow id="S4.E3.m1.1.1.1.1.2.3" xref="S4.E3.m1.1.1.1.1.2.3.cmml"><msub id="S4.E3.m1.1.1.1.1.2.3.2" xref="S4.E3.m1.1.1.1.1.2.3.2.cmml"><mi id="S4.E3.m1.1.1.1.1.2.3.2.2" xref="S4.E3.m1.1.1.1.1.2.3.2.2.cmml">x</mi><mn id="S4.E3.m1.1.1.1.1.2.3.2.3" xref="S4.E3.m1.1.1.1.1.2.3.2.3.cmml">1</mn></msub><mo id="S4.E3.m1.1.1.1.1.2.3.1" xref="S4.E3.m1.1.1.1.1.2.3.1.cmml">∈</mo><mi id="S4.E3.m1.1.1.1.1.2.3.3" xref="S4.E3.m1.1.1.1.1.2.3.3.cmml">M</mi></mrow></munder><mrow id="S4.E3.m1.1.1.1.1.1" xref="S4.E3.m1.1.1.1.1.1.cmml"><munder id="S4.E3.m1.1.1.1.1.1.2" xref="S4.E3.m1.1.1.1.1.1.2.cmml"><mi id="S4.E3.m1.1.1.1.1.1.2.2" xref="S4.E3.m1.1.1.1.1.1.2.2.cmml">min</mi><mrow id="S4.E3.m1.1.1.1.1.1.2.3" xref="S4.E3.m1.1.1.1.1.1.2.3.cmml"><msub id="S4.E3.m1.1.1.1.1.1.2.3.2" xref="S4.E3.m1.1.1.1.1.1.2.3.2.cmml"><mi id="S4.E3.m1.1.1.1.1.1.2.3.2.2" xref="S4.E3.m1.1.1.1.1.1.2.3.2.2.cmml">x</mi><mn id="S4.E3.m1.1.1.1.1.1.2.3.2.3" xref="S4.E3.m1.1.1.1.1.1.2.3.2.3.cmml">2</mn></msub><mo id="S4.E3.m1.1.1.1.1.1.2.3.1" xref="S4.E3.m1.1.1.1.1.1.2.3.1.cmml">∈</mo><mi id="S4.E3.m1.1.1.1.1.1.2.3.3" xref="S4.E3.m1.1.1.1.1.1.2.3.3.cmml">M</mi></mrow></munder><mo id="S4.E3.m1.1.1.1.1.1a" xref="S4.E3.m1.1.1.1.1.1.cmml">⁡</mo><mrow id="S4.E3.m1.1.1.1.1.1.1.1" xref="S4.E3.m1.1.1.1.1.1.1.2.cmml"><mo id="S4.E3.m1.1.1.1.1.1.1.1.2" xref="S4.E3.m1.1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S4.E3.m1.1.1.1.1.1.1.1.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><msub id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml"><mi id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml">x</mi><mn id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml">1</mn></msub></mrow><mo id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">+</mo><mi id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.3.cmml">t</mi></mrow><mo stretchy="false" id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo id="S4.E3.m1.1.1.1.1.1.1.1.1.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.3.cmml">−</mo><mrow id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.cmml"><mo stretchy="false" id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.cmml">(</mo><mrow id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.cmml"><mrow id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.cmml"><mover accent="true" id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.cmml"><mi id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml">R</mi><mo id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml">^</mo></mover><mo lspace="0em" rspace="0em" id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.1.cmml">​</mo><msub id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.cmml"><mi id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.2.cmml">x</mi><mn id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.3.cmml">2</mn></msub></mrow><mo id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.1.cmml">+</mo><mover accent="true" id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.cmml"><mi id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.2" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.2.cmml">t</mi><mo id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.1" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.1.cmml">^</mo></mover></mrow><mo stretchy="false" id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.3" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.cmml">)</mo></mrow></mrow><mo id="S4.E3.m1.1.1.1.1.1.1.1.3" xref="S4.E3.m1.1.1.1.1.1.1.2.1.cmml">‖</mo></mrow></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E3.m1.1b"><apply id="S4.E3.m1.1.1.cmml" xref="S4.E3.m1.1.1"><eq id="S4.E3.m1.1.1.2.cmml" xref="S4.E3.m1.1.1.2"></eq><ci id="S4.E3.m1.1.1.3a.cmml" xref="S4.E3.m1.1.1.3"><mtext id="S4.E3.m1.1.1.3.cmml" xref="S4.E3.m1.1.1.3">ADD-S</mtext></ci><apply id="S4.E3.m1.1.1.1.cmml" xref="S4.E3.m1.1.1.1"><times id="S4.E3.m1.1.1.1.2.cmml" xref="S4.E3.m1.1.1.1.2"></times><apply id="S4.E3.m1.1.1.1.3.cmml" xref="S4.E3.m1.1.1.1.3"><divide id="S4.E3.m1.1.1.1.3.1.cmml" xref="S4.E3.m1.1.1.1.3"></divide><cn type="integer" id="S4.E3.m1.1.1.1.3.2.cmml" xref="S4.E3.m1.1.1.1.3.2">1</cn><ci id="S4.E3.m1.1.1.1.3.3.cmml" xref="S4.E3.m1.1.1.1.3.3">𝑚</ci></apply><apply id="S4.E3.m1.1.1.1.1.cmml" xref="S4.E3.m1.1.1.1.1"><apply id="S4.E3.m1.1.1.1.1.2.cmml" xref="S4.E3.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E3.m1.1.1.1.1.2.1.cmml" xref="S4.E3.m1.1.1.1.1.2">subscript</csymbol><sum id="S4.E3.m1.1.1.1.1.2.2.cmml" xref="S4.E3.m1.1.1.1.1.2.2"></sum><apply id="S4.E3.m1.1.1.1.1.2.3.cmml" xref="S4.E3.m1.1.1.1.1.2.3"><in id="S4.E3.m1.1.1.1.1.2.3.1.cmml" xref="S4.E3.m1.1.1.1.1.2.3.1"></in><apply id="S4.E3.m1.1.1.1.1.2.3.2.cmml" xref="S4.E3.m1.1.1.1.1.2.3.2"><csymbol cd="ambiguous" id="S4.E3.m1.1.1.1.1.2.3.2.1.cmml" xref="S4.E3.m1.1.1.1.1.2.3.2">subscript</csymbol><ci id="S4.E3.m1.1.1.1.1.2.3.2.2.cmml" xref="S4.E3.m1.1.1.1.1.2.3.2.2">𝑥</ci><cn type="integer" id="S4.E3.m1.1.1.1.1.2.3.2.3.cmml" xref="S4.E3.m1.1.1.1.1.2.3.2.3">1</cn></apply><ci id="S4.E3.m1.1.1.1.1.2.3.3.cmml" xref="S4.E3.m1.1.1.1.1.2.3.3">𝑀</ci></apply></apply><apply id="S4.E3.m1.1.1.1.1.1.cmml" xref="S4.E3.m1.1.1.1.1.1"><apply id="S4.E3.m1.1.1.1.1.1.2.cmml" xref="S4.E3.m1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E3.m1.1.1.1.1.1.2.1.cmml" xref="S4.E3.m1.1.1.1.1.1.2">subscript</csymbol><min id="S4.E3.m1.1.1.1.1.1.2.2.cmml" xref="S4.E3.m1.1.1.1.1.1.2.2"></min><apply id="S4.E3.m1.1.1.1.1.1.2.3.cmml" xref="S4.E3.m1.1.1.1.1.1.2.3"><in id="S4.E3.m1.1.1.1.1.1.2.3.1.cmml" xref="S4.E3.m1.1.1.1.1.1.2.3.1"></in><apply id="S4.E3.m1.1.1.1.1.1.2.3.2.cmml" xref="S4.E3.m1.1.1.1.1.1.2.3.2"><csymbol cd="ambiguous" id="S4.E3.m1.1.1.1.1.1.2.3.2.1.cmml" xref="S4.E3.m1.1.1.1.1.1.2.3.2">subscript</csymbol><ci id="S4.E3.m1.1.1.1.1.1.2.3.2.2.cmml" xref="S4.E3.m1.1.1.1.1.1.2.3.2.2">𝑥</ci><cn type="integer" id="S4.E3.m1.1.1.1.1.1.2.3.2.3.cmml" xref="S4.E3.m1.1.1.1.1.1.2.3.2.3">2</cn></apply><ci id="S4.E3.m1.1.1.1.1.1.2.3.3.cmml" xref="S4.E3.m1.1.1.1.1.1.2.3.3">𝑀</ci></apply></apply><apply id="S4.E3.m1.1.1.1.1.1.1.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S4.E3.m1.1.1.1.1.1.1.2.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.2">norm</csymbol><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1"><minus id="S4.E3.m1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.3"></minus><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1"><plus id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.1"></plus><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2"><times id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.1"></times><ci id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.2">𝑅</ci><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3"><csymbol cd="ambiguous" id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3">subscript</csymbol><ci id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.2">𝑥</ci><cn type="integer" id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.3">1</cn></apply></apply><ci id="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.1.1.1.3">𝑡</ci></apply><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1"><plus id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.1"></plus><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2"><times id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.1"></times><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2"><ci id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.1">^</ci><ci id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.2.2">𝑅</ci></apply><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3"><csymbol cd="ambiguous" id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3">subscript</csymbol><ci id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.2">𝑥</ci><cn type="integer" id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.3.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.2.3.3">2</cn></apply></apply><apply id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3"><ci id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.1.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.1">^</ci><ci id="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.2.cmml" xref="S4.E3.m1.1.1.1.1.1.1.1.1.2.1.1.3.2">𝑡</ci></apply></apply></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E3.m1.1c">\textnormal{ADD-S}=\frac{1}{m}\sum_{x_{1}\in M}\min_{x_{2}\in M}\left\|(Rx_{1}+t)-(\hat{R}x_{2}+\hat{t})\right\|</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.6" class="ltx_p">In the metrics (<a href="#S4.E2" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>) and (<a href="#S4.E3" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>), assuming the ground truth rotation <math id="S4.SS2.p2.1.m1.1" class="ltx_Math" alttext="R" display="inline"><semantics id="S4.SS2.p2.1.m1.1a"><mi id="S4.SS2.p2.1.m1.1.1" xref="S4.SS2.p2.1.m1.1.1.cmml">R</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.1.m1.1b"><ci id="S4.SS2.p2.1.m1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1">𝑅</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.1.m1.1c">R</annotation></semantics></math> and translation <math id="S4.SS2.p2.2.m2.1" class="ltx_Math" alttext="t" display="inline"><semantics id="S4.SS2.p2.2.m2.1a"><mi id="S4.SS2.p2.2.m2.1.1" xref="S4.SS2.p2.2.m2.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.2.m2.1b"><ci id="S4.SS2.p2.2.m2.1.1.cmml" xref="S4.SS2.p2.2.m2.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.2.m2.1c">t</annotation></semantics></math> and the estimated rotation <math id="S4.SS2.p2.3.m3.1" class="ltx_Math" alttext="\tilde{R}" display="inline"><semantics id="S4.SS2.p2.3.m3.1a"><mover accent="true" id="S4.SS2.p2.3.m3.1.1" xref="S4.SS2.p2.3.m3.1.1.cmml"><mi id="S4.SS2.p2.3.m3.1.1.2" xref="S4.SS2.p2.3.m3.1.1.2.cmml">R</mi><mo id="S4.SS2.p2.3.m3.1.1.1" xref="S4.SS2.p2.3.m3.1.1.1.cmml">~</mo></mover><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.3.m3.1b"><apply id="S4.SS2.p2.3.m3.1.1.cmml" xref="S4.SS2.p2.3.m3.1.1"><ci id="S4.SS2.p2.3.m3.1.1.1.cmml" xref="S4.SS2.p2.3.m3.1.1.1">~</ci><ci id="S4.SS2.p2.3.m3.1.1.2.cmml" xref="S4.SS2.p2.3.m3.1.1.2">𝑅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.3.m3.1c">\tilde{R}</annotation></semantics></math> and translation <math id="S4.SS2.p2.4.m4.1" class="ltx_Math" alttext="\tilde{t}" display="inline"><semantics id="S4.SS2.p2.4.m4.1a"><mover accent="true" id="S4.SS2.p2.4.m4.1.1" xref="S4.SS2.p2.4.m4.1.1.cmml"><mi id="S4.SS2.p2.4.m4.1.1.2" xref="S4.SS2.p2.4.m4.1.1.2.cmml">t</mi><mo id="S4.SS2.p2.4.m4.1.1.1" xref="S4.SS2.p2.4.m4.1.1.1.cmml">~</mo></mover><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.4.m4.1b"><apply id="S4.SS2.p2.4.m4.1.1.cmml" xref="S4.SS2.p2.4.m4.1.1"><ci id="S4.SS2.p2.4.m4.1.1.1.cmml" xref="S4.SS2.p2.4.m4.1.1.1">~</ci><ci id="S4.SS2.p2.4.m4.1.1.2.cmml" xref="S4.SS2.p2.4.m4.1.1.2">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.4.m4.1c">\tilde{t}</annotation></semantics></math>, the average distance calculates the mean of the pairwise distances between the 3D model points of the ground truth pose and the estimated pose. <math id="S4.SS2.p2.5.m5.1" class="ltx_Math" alttext="M" display="inline"><semantics id="S4.SS2.p2.5.m5.1a"><mi id="S4.SS2.p2.5.m5.1.1" xref="S4.SS2.p2.5.m5.1.1.cmml">M</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.5.m5.1b"><ci id="S4.SS2.p2.5.m5.1.1.cmml" xref="S4.SS2.p2.5.m5.1.1">𝑀</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.5.m5.1c">M</annotation></semantics></math> represents the set of 3D model points and <math id="S4.SS2.p2.6.m6.1" class="ltx_Math" alttext="m" display="inline"><semantics id="S4.SS2.p2.6.m6.1a"><mi id="S4.SS2.p2.6.m6.1.1" xref="S4.SS2.p2.6.m6.1.1.cmml">m</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.6.m6.1b"><ci id="S4.SS2.p2.6.m6.1.1.cmml" xref="S4.SS2.p2.6.m6.1.1">𝑚</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.6.m6.1c">m</annotation></semantics></math> is the number of points. For the symmetric objects, the matching between points is ambiguous for some poses, and that is why the ADD-S metric is used for symmetric objects.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p">In the YCB-Video evaluation we use the same metrics as in previous works <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib24" title="" class="ltx_ref">posecnn </a></cite> and <cite class="ltx_cite ltx_citemacro_cite"><a href="#bib.bib2" title="" class="ltx_ref">densefusion </a></cite>. So the evaluation as been done with the area under the ADD-S (<a href="#S4.E3" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) curve (AUC).
+Using these common metrics enable us to have a direct comparison between our method and previous methods.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Results: LineMOD</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">As previously stated, the main challenges of this dataset are the cluttered scenes, texture-less objects, and illumination variations. Even with these challenging conditions, our method had less pose error overall than all previous methods.</p>
+</div>
+<div id="S4.SS3.p2" class="ltx_para">
+<p id="S4.SS3.p2.1" class="ltx_p">As presented in Table <a href="#S3.T1" title="Table 1 ‣ 3 MPF6D ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, with a direct comparison of our method and PVN3D we improved by 0.3%. This value might not be seen as much improvement but since our method, PVN3D, and even MaskedFusion are close to the zero error mark, all slight improvements are hard to get.
+Extracting features from different resolutions enable a more accurate pose estimation, independent of the camera angle and object distance. MPF6D achieved the best accuracy in 9 objects out of 13, in its best execution. The values presented in the second column of Table <a href="#S3.T1" title="Table 1 ‣ 3 MPF6D ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> correspond to the best run. Each run was trained from scratch where all the weights were initialized randomly. The first column has the average values and the standard deviation that were obtained for all three runs. We can see that even the average of our three repetitions presents better results than any of the competing approaches.</p>
+</div>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span>Results: YCB-Video</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.1" class="ltx_p">In Table <a href="#S4.T2" title="Table 2 ‣ 4.4 Results: YCB-Video ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, we present the quantitative evaluation using the area under the ADD-S (<a href="#S4.E3" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) curve (AUC). Our method outperforms all previous methods. Comparing it with PVN3D we had 1.96% more area under the curve. In the YCB-Video dataset, our method had the best accuracy for 19 objects out of 21. The two objects where we lose for the PVN3D are basically the same object (clamp) but with different sizes. As with LineMOD, the average of our three repetitions has better average result than any of the other methods.</p>
+</div>
+<div id="S4.SS4.p2" class="ltx_para">
+<p id="S4.SS4.p2.1" class="ltx_p">Figure <a href="#S4.F4" title="Figure 4 ‣ 4.4 Results: YCB-Video ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> shows two examples of poor performance of object pose estimation on the left and two good performance examples on the right. The two right examples are also good examples of the MPF6D handling object occlusions without losing accuracy.</p>
+</div>
+<figure id="S4.F4" class="ltx_figure"><img src="/html/2111.09378/assets/x4.png" id="S4.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="170" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>MPF6D object pose estimation examples. The green dots represent keypoints of the object pose estimation projected onto the RGB image. The top row contains the input RGB images and the bottom row the predicted object poses. The left two columns contain two examples of poor performance and the right two columns of good performance under heavy occlusion.</figcaption>
+</figure>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Quantitative evaluation of 6D pose (area under the ADD-S (<a href="#S4.E3" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) curve (AUC)) on the YCB-Video Dataset. Bold numbers are the best in a row.</figcaption>
+<div id="S4.T2.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:329.9pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-82.5pt,62.8pt) scale(0.724341926403505,0.724341926403505) ;">
+<table id="S4.T2.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">Objects</th>
+<th id="S4.T2.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">
+<table id="S4.T2.1.1.1.1.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S4.T2.1.1.1.1.2.1.1" class="ltx_tr">
+<td id="S4.T2.1.1.1.1.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">MPF6D</td>
+</tr>
+<tr id="S4.T2.1.1.1.1.2.1.2" class="ltx_tr">
+<td id="S4.T2.1.1.1.1.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">Avg (Stdev)</td>
+</tr>
+</table>
+</th>
+<td id="S4.T2.1.1.1.1.3" class="ltx_td ltx_align_center">MPF6D*</td>
+<td id="S4.T2.1.1.1.1.4" class="ltx_td ltx_align_center">PVN3D+ICP</td>
+<td id="S4.T2.1.1.1.1.5" class="ltx_td ltx_align_center">MaskedFusion</td>
+<td id="S4.T2.1.1.1.1.6" class="ltx_td ltx_align_center">DenseFusion</td>
+<td id="S4.T2.1.1.1.1.7" class="ltx_td ltx_align_center">PointFusion</td>
+<td id="S4.T2.1.1.1.1.8" class="ltx_td ltx_align_center">PoseCNN+ICP</td>
+</tr>
+<tr id="S4.T2.1.1.2.2" class="ltx_tr">
+<th id="S4.T2.1.1.2.2.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">002_master_chef_can</th>
+<th id="S4.T2.1.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">99.69 (0.22)</th>
+<td id="S4.T2.1.1.2.2.3" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.1.1.2.2.3.1" class="ltx_text ltx_font_bold">99.44</span></td>
+<td id="S4.T2.1.1.2.2.4" class="ltx_td ltx_align_center ltx_border_t">95.20</td>
+<td id="S4.T2.1.1.2.2.5" class="ltx_td ltx_align_center ltx_border_t">96.91</td>
+<td id="S4.T2.1.1.2.2.6" class="ltx_td ltx_align_center ltx_border_t">96.40</td>
+<td id="S4.T2.1.1.2.2.7" class="ltx_td ltx_align_center ltx_border_t">90.90</td>
+<td id="S4.T2.1.1.2.2.8" class="ltx_td ltx_align_center ltx_border_t">95.80</td>
+</tr>
+<tr id="S4.T2.1.1.3.3" class="ltx_tr">
+<th id="S4.T2.1.1.3.3.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">003_cracker_box</th>
+<th id="S4.T2.1.1.3.3.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.60 (0.39)</th>
+<td id="S4.T2.1.1.3.3.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.3.3.3.1" class="ltx_text ltx_font_bold">99.75</span></td>
+<td id="S4.T2.1.1.3.3.4" class="ltx_td ltx_align_center">94.40</td>
+<td id="S4.T2.1.1.3.3.5" class="ltx_td ltx_align_center">96.55</td>
+<td id="S4.T2.1.1.3.3.6" class="ltx_td ltx_align_center">95.50</td>
+<td id="S4.T2.1.1.3.3.7" class="ltx_td ltx_align_center">80.50</td>
+<td id="S4.T2.1.1.3.3.8" class="ltx_td ltx_align_center">92.70</td>
+</tr>
+<tr id="S4.T2.1.1.4.4" class="ltx_tr">
+<th id="S4.T2.1.1.4.4.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">004_sugar_box</th>
+<th id="S4.T2.1.1.4.4.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.49 (0.21)</th>
+<td id="S4.T2.1.1.4.4.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.4.4.3.1" class="ltx_text ltx_font_bold">99.47</span></td>
+<td id="S4.T2.1.1.4.4.4" class="ltx_td ltx_align_center">97.90</td>
+<td id="S4.T2.1.1.4.4.5" class="ltx_td ltx_align_center">98.81</td>
+<td id="S4.T2.1.1.4.4.6" class="ltx_td ltx_align_center">97.50</td>
+<td id="S4.T2.1.1.4.4.7" class="ltx_td ltx_align_center">90.40</td>
+<td id="S4.T2.1.1.4.4.8" class="ltx_td ltx_align_center">98.20</td>
+</tr>
+<tr id="S4.T2.1.1.5.5" class="ltx_tr">
+<th id="S4.T2.1.1.5.5.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">005_tomato_soup_can</th>
+<th id="S4.T2.1.1.5.5.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.12 (0.28)</th>
+<td id="S4.T2.1.1.5.5.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.5.5.3.1" class="ltx_text ltx_font_bold">99.08</span></td>
+<td id="S4.T2.1.1.5.5.4" class="ltx_td ltx_align_center">95.90</td>
+<td id="S4.T2.1.1.5.5.5" class="ltx_td ltx_align_center">95.64</td>
+<td id="S4.T2.1.1.5.5.6" class="ltx_td ltx_align_center">94.60</td>
+<td id="S4.T2.1.1.5.5.7" class="ltx_td ltx_align_center">91.90</td>
+<td id="S4.T2.1.1.5.5.8" class="ltx_td ltx_align_center">94.50</td>
+</tr>
+<tr id="S4.T2.1.1.6.6" class="ltx_tr">
+<th id="S4.T2.1.1.6.6.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">006_mustard_bottle</th>
+<th id="S4.T2.1.1.6.6.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.51 (0.37)</th>
+<td id="S4.T2.1.1.6.6.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.6.6.3.1" class="ltx_text ltx_font_bold">99.61</span></td>
+<td id="S4.T2.1.1.6.6.4" class="ltx_td ltx_align_center">98.30</td>
+<td id="S4.T2.1.1.6.6.5" class="ltx_td ltx_align_center">98.13</td>
+<td id="S4.T2.1.1.6.6.6" class="ltx_td ltx_align_center">97.20</td>
+<td id="S4.T2.1.1.6.6.7" class="ltx_td ltx_align_center">88.50</td>
+<td id="S4.T2.1.1.6.6.8" class="ltx_td ltx_align_center">98.60</td>
+</tr>
+<tr id="S4.T2.1.1.7.7" class="ltx_tr">
+<th id="S4.T2.1.1.7.7.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">007_tuna_fish_can</th>
+<th id="S4.T2.1.1.7.7.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.50 (0.43)</th>
+<td id="S4.T2.1.1.7.7.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.7.7.3.1" class="ltx_text ltx_font_bold">99.52</span></td>
+<td id="S4.T2.1.1.7.7.4" class="ltx_td ltx_align_center">96.70</td>
+<td id="S4.T2.1.1.7.7.5" class="ltx_td ltx_align_center">97.31</td>
+<td id="S4.T2.1.1.7.7.6" class="ltx_td ltx_align_center">96.60</td>
+<td id="S4.T2.1.1.7.7.7" class="ltx_td ltx_align_center">93.80</td>
+<td id="S4.T2.1.1.7.7.8" class="ltx_td ltx_align_center">97.10</td>
+</tr>
+<tr id="S4.T2.1.1.8.8" class="ltx_tr">
+<th id="S4.T2.1.1.8.8.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">008_pudding_box</th>
+<th id="S4.T2.1.1.8.8.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.68 (0.40)</th>
+<td id="S4.T2.1.1.8.8.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.8.8.3.1" class="ltx_text ltx_font_bold">99.89</span></td>
+<td id="S4.T2.1.1.8.8.4" class="ltx_td ltx_align_center">98.20</td>
+<td id="S4.T2.1.1.8.8.5" class="ltx_td ltx_align_center">97.02</td>
+<td id="S4.T2.1.1.8.8.6" class="ltx_td ltx_align_center">96.50</td>
+<td id="S4.T2.1.1.8.8.7" class="ltx_td ltx_align_center">87.50</td>
+<td id="S4.T2.1.1.8.8.8" class="ltx_td ltx_align_center">97.90</td>
+</tr>
+<tr id="S4.T2.1.1.9.9" class="ltx_tr">
+<th id="S4.T2.1.1.9.9.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">009_gelatin_box</th>
+<th id="S4.T2.1.1.9.9.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.45 (0.24)</th>
+<td id="S4.T2.1.1.9.9.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.9.9.3.1" class="ltx_text ltx_font_bold">99.41</span></td>
+<td id="S4.T2.1.1.9.9.4" class="ltx_td ltx_align_center">98.80</td>
+<td id="S4.T2.1.1.9.9.5" class="ltx_td ltx_align_center">98.69</td>
+<td id="S4.T2.1.1.9.9.6" class="ltx_td ltx_align_center">98.10</td>
+<td id="S4.T2.1.1.9.9.7" class="ltx_td ltx_align_center">95.00</td>
+<td id="S4.T2.1.1.9.9.8" class="ltx_td ltx_align_center">98.80</td>
+</tr>
+<tr id="S4.T2.1.1.10.10" class="ltx_tr">
+<th id="S4.T2.1.1.10.10.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">010_potted_meat_can</th>
+<th id="S4.T2.1.1.10.10.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">97.47 (0.23)</th>
+<td id="S4.T2.1.1.10.10.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.10.10.3.1" class="ltx_text ltx_font_bold">97.64</span></td>
+<td id="S4.T2.1.1.10.10.4" class="ltx_td ltx_align_center">93.80</td>
+<td id="S4.T2.1.1.10.10.5" class="ltx_td ltx_align_center">94.57</td>
+<td id="S4.T2.1.1.10.10.6" class="ltx_td ltx_align_center">91.30</td>
+<td id="S4.T2.1.1.10.10.7" class="ltx_td ltx_align_center">86.40</td>
+<td id="S4.T2.1.1.10.10.8" class="ltx_td ltx_align_center">92.70</td>
+</tr>
+<tr id="S4.T2.1.1.11.11" class="ltx_tr">
+<th id="S4.T2.1.1.11.11.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">011_banana</th>
+<th id="S4.T2.1.1.11.11.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.47 (0.41)</th>
+<td id="S4.T2.1.1.11.11.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.11.11.3.1" class="ltx_text ltx_font_bold">99.50</span></td>
+<td id="S4.T2.1.1.11.11.4" class="ltx_td ltx_align_center">98.20</td>
+<td id="S4.T2.1.1.11.11.5" class="ltx_td ltx_align_center">98.10</td>
+<td id="S4.T2.1.1.11.11.6" class="ltx_td ltx_align_center">96.60</td>
+<td id="S4.T2.1.1.11.11.7" class="ltx_td ltx_align_center">84.70</td>
+<td id="S4.T2.1.1.11.11.8" class="ltx_td ltx_align_center">97.10</td>
+</tr>
+<tr id="S4.T2.1.1.12.12" class="ltx_tr">
+<th id="S4.T2.1.1.12.12.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">019_pitcher_base</th>
+<th id="S4.T2.1.1.12.12.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.39 (0.46)</th>
+<td id="S4.T2.1.1.12.12.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.12.12.3.1" class="ltx_text ltx_font_bold">98.87</span></td>
+<td id="S4.T2.1.1.12.12.4" class="ltx_td ltx_align_center">97.60</td>
+<td id="S4.T2.1.1.12.12.5" class="ltx_td ltx_align_center">97.06</td>
+<td id="S4.T2.1.1.12.12.6" class="ltx_td ltx_align_center">97.10</td>
+<td id="S4.T2.1.1.12.12.7" class="ltx_td ltx_align_center">85.50</td>
+<td id="S4.T2.1.1.12.12.8" class="ltx_td ltx_align_center">97.80</td>
+</tr>
+<tr id="S4.T2.1.1.13.13" class="ltx_tr">
+<th id="S4.T2.1.1.13.13.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">021_bleach_cleanser</th>
+<th id="S4.T2.1.1.13.13.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.02 (0.47)</th>
+<td id="S4.T2.1.1.13.13.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.13.13.3.1" class="ltx_text ltx_font_bold">98.99</span></td>
+<td id="S4.T2.1.1.13.13.4" class="ltx_td ltx_align_center">97.20</td>
+<td id="S4.T2.1.1.13.13.5" class="ltx_td ltx_align_center">96.53</td>
+<td id="S4.T2.1.1.13.13.6" class="ltx_td ltx_align_center">95.80</td>
+<td id="S4.T2.1.1.13.13.7" class="ltx_td ltx_align_center">81.00</td>
+<td id="S4.T2.1.1.13.13.8" class="ltx_td ltx_align_center">96.90</td>
+</tr>
+<tr id="S4.T2.1.1.14.14" class="ltx_tr">
+<th id="S4.T2.1.1.14.14.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">024_bowl</th>
+<th id="S4.T2.1.1.14.14.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">98.46 (0.20)</th>
+<td id="S4.T2.1.1.14.14.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.14.14.3.1" class="ltx_text ltx_font_bold">98.51</span></td>
+<td id="S4.T2.1.1.14.14.4" class="ltx_td ltx_align_center">92.80</td>
+<td id="S4.T2.1.1.14.14.5" class="ltx_td ltx_align_center">97.55</td>
+<td id="S4.T2.1.1.14.14.6" class="ltx_td ltx_align_center">88.20</td>
+<td id="S4.T2.1.1.14.14.7" class="ltx_td ltx_align_center">75.70</td>
+<td id="S4.T2.1.1.14.14.8" class="ltx_td ltx_align_center">81.00</td>
+</tr>
+<tr id="S4.T2.1.1.15.15" class="ltx_tr">
+<th id="S4.T2.1.1.15.15.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">025_mug</th>
+<th id="S4.T2.1.1.15.15.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.02 (0.45)</th>
+<td id="S4.T2.1.1.15.15.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.15.15.3.1" class="ltx_text ltx_font_bold">98.84</span></td>
+<td id="S4.T2.1.1.15.15.4" class="ltx_td ltx_align_center">97.70</td>
+<td id="S4.T2.1.1.15.15.5" class="ltx_td ltx_align_center">97.48</td>
+<td id="S4.T2.1.1.15.15.6" class="ltx_td ltx_align_center">97.10</td>
+<td id="S4.T2.1.1.15.15.7" class="ltx_td ltx_align_center">94.20</td>
+<td id="S4.T2.1.1.15.15.8" class="ltx_td ltx_align_center">95.00</td>
+</tr>
+<tr id="S4.T2.1.1.16.16" class="ltx_tr">
+<th id="S4.T2.1.1.16.16.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">035_power_drill</th>
+<th id="S4.T2.1.1.16.16.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.15 (0.54)</th>
+<td id="S4.T2.1.1.16.16.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.16.16.3.1" class="ltx_text ltx_font_bold">99.54</span></td>
+<td id="S4.T2.1.1.16.16.4" class="ltx_td ltx_align_center">97.10</td>
+<td id="S4.T2.1.1.16.16.5" class="ltx_td ltx_align_center">97.26</td>
+<td id="S4.T2.1.1.16.16.6" class="ltx_td ltx_align_center">96.00</td>
+<td id="S4.T2.1.1.16.16.7" class="ltx_td ltx_align_center">71.50</td>
+<td id="S4.T2.1.1.16.16.8" class="ltx_td ltx_align_center">98.20</td>
+</tr>
+<tr id="S4.T2.1.1.17.17" class="ltx_tr">
+<th id="S4.T2.1.1.17.17.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">036_wood_block</th>
+<th id="S4.T2.1.1.17.17.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">95.81 (0.15)</th>
+<td id="S4.T2.1.1.17.17.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.17.17.3.1" class="ltx_text ltx_font_bold">95.98</span></td>
+<td id="S4.T2.1.1.17.17.4" class="ltx_td ltx_align_center">91.10</td>
+<td id="S4.T2.1.1.17.17.5" class="ltx_td ltx_align_center">95.42</td>
+<td id="S4.T2.1.1.17.17.6" class="ltx_td ltx_align_center">89.70</td>
+<td id="S4.T2.1.1.17.17.7" class="ltx_td ltx_align_center">68.10</td>
+<td id="S4.T2.1.1.17.17.8" class="ltx_td ltx_align_center">87.60</td>
+</tr>
+<tr id="S4.T2.1.1.18.18" class="ltx_tr">
+<th id="S4.T2.1.1.18.18.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">037_scissors</th>
+<th id="S4.T2.1.1.18.18.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">97.13 (0.42)</th>
+<td id="S4.T2.1.1.18.18.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.18.18.3.1" class="ltx_text ltx_font_bold">97.10</span></td>
+<td id="S4.T2.1.1.18.18.4" class="ltx_td ltx_align_center">95.00</td>
+<td id="S4.T2.1.1.18.18.5" class="ltx_td ltx_align_center">95.93</td>
+<td id="S4.T2.1.1.18.18.6" class="ltx_td ltx_align_center">95.20</td>
+<td id="S4.T2.1.1.18.18.7" class="ltx_td ltx_align_center">76.70</td>
+<td id="S4.T2.1.1.18.18.8" class="ltx_td ltx_align_center">91.70</td>
+</tr>
+<tr id="S4.T2.1.1.19.19" class="ltx_tr">
+<th id="S4.T2.1.1.19.19.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">040_large_marker</th>
+<th id="S4.T2.1.1.19.19.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">99.45 (0.40)</th>
+<td id="S4.T2.1.1.19.19.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.19.19.3.1" class="ltx_text ltx_font_bold">99.02</span></td>
+<td id="S4.T2.1.1.19.19.4" class="ltx_td ltx_align_center">98.10</td>
+<td id="S4.T2.1.1.19.19.5" class="ltx_td ltx_align_center">97.55</td>
+<td id="S4.T2.1.1.19.19.6" class="ltx_td ltx_align_center">97.50</td>
+<td id="S4.T2.1.1.19.19.7" class="ltx_td ltx_align_center">87.90</td>
+<td id="S4.T2.1.1.19.19.8" class="ltx_td ltx_align_center">97.20</td>
+</tr>
+<tr id="S4.T2.1.1.20.20" class="ltx_tr">
+<th id="S4.T2.1.1.20.20.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">051_large_clamp</th>
+<th id="S4.T2.1.1.20.20.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">88.97 (5.09)</th>
+<td id="S4.T2.1.1.20.20.3" class="ltx_td ltx_align_center">93.13</td>
+<td id="S4.T2.1.1.20.20.4" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.20.20.4.1" class="ltx_text ltx_font_bold">95.60</span></td>
+<td id="S4.T2.1.1.20.20.5" class="ltx_td ltx_align_center">89.40</td>
+<td id="S4.T2.1.1.20.20.6" class="ltx_td ltx_align_center">72.90</td>
+<td id="S4.T2.1.1.20.20.7" class="ltx_td ltx_align_center">65.90</td>
+<td id="S4.T2.1.1.20.20.8" class="ltx_td ltx_align_center">75.20</td>
+</tr>
+<tr id="S4.T2.1.1.21.21" class="ltx_tr">
+<th id="S4.T2.1.1.21.21.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">052_extra_large_clamp</th>
+<th id="S4.T2.1.1.21.21.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">82.73 (5.93)</th>
+<td id="S4.T2.1.1.21.21.3" class="ltx_td ltx_align_center">87.11</td>
+<td id="S4.T2.1.1.21.21.4" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.21.21.4.1" class="ltx_text ltx_font_bold">90.50</span></td>
+<td id="S4.T2.1.1.21.21.5" class="ltx_td ltx_align_center">84.04</td>
+<td id="S4.T2.1.1.21.21.6" class="ltx_td ltx_align_center">69.80</td>
+<td id="S4.T2.1.1.21.21.7" class="ltx_td ltx_align_center">60.40</td>
+<td id="S4.T2.1.1.21.21.8" class="ltx_td ltx_align_center">64.40</td>
+</tr>
+<tr id="S4.T2.1.1.22.22" class="ltx_tr">
+<th id="S4.T2.1.1.22.22.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">061_foam_brick</th>
+<th id="S4.T2.1.1.22.22.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">98.85 (0.11)</th>
+<td id="S4.T2.1.1.22.22.3" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.22.22.3.1" class="ltx_text ltx_font_bold">98.83</span></td>
+<td id="S4.T2.1.1.22.22.4" class="ltx_td ltx_align_center">98.20</td>
+<td id="S4.T2.1.1.22.22.5" class="ltx_td ltx_align_center">95.29</td>
+<td id="S4.T2.1.1.22.22.6" class="ltx_td ltx_align_center">92.50</td>
+<td id="S4.T2.1.1.22.22.7" class="ltx_td ltx_align_center">91.80</td>
+<td id="S4.T2.1.1.22.22.8" class="ltx_td ltx_align_center">97.20</td>
+</tr>
+<tr id="S4.T2.1.1.23.23" class="ltx_tr">
+<th id="S4.T2.1.1.23.23.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">Average</th>
+<th id="S4.T2.1.1.23.23.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">97.66 (0.37)</th>
+<td id="S4.T2.1.1.23.23.3" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.1.1.23.23.3.1" class="ltx_text ltx_font_bold">98.06</span></td>
+<td id="S4.T2.1.1.23.23.4" class="ltx_td ltx_align_center ltx_border_t">96.10</td>
+<td id="S4.T2.1.1.23.23.5" class="ltx_td ltx_align_center ltx_border_t">95.96</td>
+<td id="S4.T2.1.1.23.23.6" class="ltx_td ltx_align_center ltx_border_t">93.20</td>
+<td id="S4.T2.1.1.23.23.7" class="ltx_td ltx_align_center ltx_border_t">83.90</td>
+<td id="S4.T2.1.1.23.23.8" class="ltx_td ltx_align_center ltx_border_t">93.00</td>
+</tr>
+</tbody>
+<tfoot class="ltx_tfoot">
+<tr id="S4.T2.1.1.24.1" class="ltx_tr">
+<th id="S4.T2.1.1.24.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row" colspan="8"><span id="S4.T2.1.1.24.1.1.1" class="ltx_text" style="font-size:90%;">(*) Best of three repetitions.</span></th>
+</tr>
+</tfoot>
+</table>
+</span></div>
+</figure>
+</section>
+<section id="S4.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.5 </span>Inference</h3>
+
+<figure id="S4.T3" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Quantitative inference time. The values presented in the table were measured in seconds.</figcaption>
+<div id="S4.T3.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:303.5pt;height:140.3pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-9.8pt,4.5pt) scale(0.939162839280271,0.939162839280271) ;">
+<table id="S4.T3.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T3.1.1.2.1" class="ltx_tr">
+<th id="S4.T3.1.1.2.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_th_row ltx_border_r">Methods</th>
+<th id="S4.T3.1.1.2.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column">Segmentation</th>
+<th id="S4.T3.1.1.2.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column">6D Pose</th>
+<th id="S4.T3.1.1.2.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column">
+<table id="S4.T3.1.1.2.1.4.1" class="ltx_tabular ltx_align_middle">
+<tr id="S4.T3.1.1.2.1.4.1.1" class="ltx_tr">
+<td id="S4.T3.1.1.2.1.4.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Pose</td>
+</tr>
+<tr id="S4.T3.1.1.2.1.4.1.2" class="ltx_tr">
+<td id="S4.T3.1.1.2.1.4.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">Refinement</td>
+</tr>
+</table>
+</th>
+<th id="S4.T3.1.1.2.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column">Overall</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T3.1.1.3.1" class="ltx_tr">
+<th id="S4.T3.1.1.3.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">DenseFusion</th>
+<td id="S4.T3.1.1.3.1.2" class="ltx_td ltx_align_center ltx_border_t">0.03</td>
+<td id="S4.T3.1.1.3.1.3" class="ltx_td ltx_align_center ltx_border_t">0.02</td>
+<td id="S4.T3.1.1.3.1.4" class="ltx_td ltx_align_center ltx_border_t">0.01</td>
+<td id="S4.T3.1.1.3.1.5" class="ltx_td ltx_align_center ltx_border_t">0.06</td>
+</tr>
+<tr id="S4.T3.1.1.4.2" class="ltx_tr">
+<th id="S4.T3.1.1.4.2.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">MPF6D</th>
+<td id="S4.T3.1.1.4.2.2" class="ltx_td ltx_align_center">-</td>
+<td id="S4.T3.1.1.4.2.3" class="ltx_td ltx_align_center">-</td>
+<td id="S4.T3.1.1.4.2.4" class="ltx_td ltx_align_center">-</td>
+<td id="S4.T3.1.1.4.2.5" class="ltx_td ltx_align_center">0.12</td>
+</tr>
+<tr id="S4.T3.1.1.1" class="ltx_tr">
+<th id="S4.T3.1.1.1.2" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">PVN3D</th>
+<td id="S4.T3.1.1.1.3" class="ltx_td ltx_align_center">-</td>
+<td id="S4.T3.1.1.1.4" class="ltx_td ltx_align_center">0.02</td>
+<td id="S4.T3.1.1.1.5" class="ltx_td ltx_align_center">- (*)</td>
+<td id="S4.T3.1.1.1.1" class="ltx_td ltx_align_center">
+<math id="S4.T3.1.1.1.1.m1.1" class="ltx_Math" alttext="&gt;" display="inline"><semantics id="S4.T3.1.1.1.1.m1.1a"><mo id="S4.T3.1.1.1.1.m1.1.1" xref="S4.T3.1.1.1.1.m1.1.1.cmml">&gt;</mo><annotation-xml encoding="MathML-Content" id="S4.T3.1.1.1.1.m1.1b"><gt id="S4.T3.1.1.1.1.m1.1.1.cmml" xref="S4.T3.1.1.1.1.m1.1.1"></gt></annotation-xml><annotation encoding="application/x-tex" id="S4.T3.1.1.1.1.m1.1c">&gt;</annotation></semantics></math> 0.17 (*)</td>
+</tr>
+<tr id="S4.T3.1.1.5.3" class="ltx_tr">
+<th id="S4.T3.1.1.5.3.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">MaskedFusion</th>
+<td id="S4.T3.1.1.5.3.2" class="ltx_td ltx_align_center">0.2</td>
+<td id="S4.T3.1.1.5.3.3" class="ltx_td ltx_align_center">0.01</td>
+<td id="S4.T3.1.1.5.3.4" class="ltx_td ltx_align_center">0.002</td>
+<td id="S4.T3.1.1.5.3.5" class="ltx_td ltx_align_center">0.212</td>
+</tr>
+<tr id="S4.T3.1.1.6.4" class="ltx_tr">
+<th id="S4.T3.1.1.6.4.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">PoseCNN+ICP</th>
+<td id="S4.T3.1.1.6.4.2" class="ltx_td ltx_align_center">0.03</td>
+<td id="S4.T3.1.1.6.4.3" class="ltx_td ltx_align_center">0.17</td>
+<td id="S4.T3.1.1.6.4.4" class="ltx_td ltx_align_center">10.4</td>
+<td id="S4.T3.1.1.6.4.5" class="ltx_td ltx_align_center">10.6</td>
+</tr>
+</tbody>
+<tfoot class="ltx_tfoot">
+<tr id="S4.T3.1.1.7.1" class="ltx_tr">
+<th id="S4.T3.1.1.7.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row" colspan="5"><span id="S4.T3.1.1.7.1.1.1" class="ltx_text" style="font-size:90%;">(*) Pose Refinement time not reported by the authors.</span></th>
+</tr>
+</tfoot>
+</table>
+</span></div>
+</figure>
+<div id="S4.SS5.p1" class="ltx_para">
+<p id="S4.SS5.p1.3" class="ltx_p">MPF6D can be used in real-time applications since it can infer the 6D pose of an object in <math id="S4.SS5.p1.1.m1.1" class="ltx_Math" alttext="0.12" display="inline"><semantics id="S4.SS5.p1.1.m1.1a"><mn id="S4.SS5.p1.1.m1.1.1" xref="S4.SS5.p1.1.m1.1.1.cmml">0.12</mn><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.1.m1.1b"><cn type="float" id="S4.SS5.p1.1.m1.1.1.cmml" xref="S4.SS5.p1.1.m1.1.1">0.12</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.1.m1.1c">0.12</annotation></semantics></math> seconds, so it can execute at 8 frames per second. This time was measured from the instant the data (RGB-D) was fed to the method until it produced the 6D pose estimation (translation vector and quaternion that has the rotation representation). We need an extra <math id="S4.SS5.p1.2.m2.1" class="ltx_Math" alttext="0.02" display="inline"><semantics id="S4.SS5.p1.2.m2.1a"><mn id="S4.SS5.p1.2.m2.1.1" xref="S4.SS5.p1.2.m2.1.1.cmml">0.02</mn><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.2.m2.1b"><cn type="float" id="S4.SS5.p1.2.m2.1.1.cmml" xref="S4.SS5.p1.2.m2.1.1">0.02</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.2.m2.1c">0.02</annotation></semantics></math> seconds to have the output as a translation vector and a rotation matrix.
+PVN3D only reports the inference time on the LineMOD dataset, but in the YCB-Video the authors reported the results where they use the ICP to refine the 6D pose. Using the ICP algorithm improves the overall 6D pose estimation, but usually, this algorithm has high computation costs. It is possible to see that PoseCNN used the ICP refinement and just for the refinement it spent <math id="S4.SS5.p1.3.m3.1" class="ltx_Math" alttext="10.4" display="inline"><semantics id="S4.SS5.p1.3.m3.1a"><mn id="S4.SS5.p1.3.m3.1.1" xref="S4.SS5.p1.3.m3.1.1.cmml">10.4</mn><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.3.m3.1b"><cn type="float" id="S4.SS5.p1.3.m3.1.1.cmml" xref="S4.SS5.p1.3.m3.1.1">10.4</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.3.m3.1c">10.4</annotation></semantics></math> seconds to execute the ICP.</p>
+</div>
+<div id="S4.SS5.p2" class="ltx_para">
+<p id="S4.SS5.p2.1" class="ltx_p">In Table <a href="#S4.T3" title="Table 3 ‣ 4.5 Inference ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, we present the quantitative comparison of values measured in seconds of methods that reported their inference times. The fastest method for inference is DenseFusion, but in terms of accuracy, we should compare the two best methods, ours and PVN3D, comparing these two we have <math id="S4.SS5.p2.1.m1.1" class="ltx_Math" alttext="0.05" display="inline"><semantics id="S4.SS5.p2.1.m1.1a"><mn id="S4.SS5.p2.1.m1.1.1" xref="S4.SS5.p2.1.m1.1.1.cmml">0.05</mn><annotation-xml encoding="MathML-Content" id="S4.SS5.p2.1.m1.1b"><cn type="float" id="S4.SS5.p2.1.m1.1.1.cmml" xref="S4.SS5.p2.1.m1.1.1">0.05</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p2.1.m1.1c">0.05</annotation></semantics></math> seconds faster inference time than PVN3D even while using pose refinement.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Ablation Studies</h2>
+
+<figure id="S5.T4" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Ablation studies (using the ADD (<a href="#S4.E2" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>)) on the LineMOD dataset. Ablation 1, removing the Pyramid ResNet34. Ablation 2, lower depth Pyramid Fusion. Ablation 3, removing Pyramid Fusion.</figcaption>
+<div id="S5.T4.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:303.5pt;height:287.8pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-2.9pt,2.8pt) scale(0.981070068405022,0.981070068405022) ;">
+<table id="S5.T4.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S5.T4.1.1.1.1" class="ltx_tr">
+<th id="S5.T4.1.1.1.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_th_row ltx_border_r">Objects</th>
+<th id="S5.T4.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column">
+<table id="S5.T4.1.1.1.1.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S5.T4.1.1.1.1.2.1.1" class="ltx_tr">
+<td id="S5.T4.1.1.1.1.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">MPF6D</td>
+</tr>
+<tr id="S5.T4.1.1.1.1.2.1.2" class="ltx_tr">
+<td id="S5.T4.1.1.1.1.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">Architecture</td>
+</tr>
+</table>
+</th>
+<th id="S5.T4.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column">Ablation 1</th>
+<th id="S5.T4.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column">Ablation 2</th>
+<th id="S5.T4.1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column">Ablation 3</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S5.T4.1.1.2.1" class="ltx_tr">
+<th id="S5.T4.1.1.2.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">ape</th>
+<td id="S5.T4.1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">90.3</td>
+<td id="S5.T4.1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">75.2</td>
+<td id="S5.T4.1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">79.5</td>
+<td id="S5.T4.1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_t">75.5</td>
+</tr>
+<tr id="S5.T4.1.1.3.2" class="ltx_tr">
+<th id="S5.T4.1.1.3.2.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">bench vi.</th>
+<td id="S5.T4.1.1.3.2.2" class="ltx_td ltx_align_center">90.5</td>
+<td id="S5.T4.1.1.3.2.3" class="ltx_td ltx_align_center">73.1</td>
+<td id="S5.T4.1.1.3.2.4" class="ltx_td ltx_align_center">79.8</td>
+<td id="S5.T4.1.1.3.2.5" class="ltx_td ltx_align_center">75.3</td>
+</tr>
+<tr id="S5.T4.1.1.4.3" class="ltx_tr">
+<th id="S5.T4.1.1.4.3.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">camera</th>
+<td id="S5.T4.1.1.4.3.2" class="ltx_td ltx_align_center">96.7</td>
+<td id="S5.T4.1.1.4.3.3" class="ltx_td ltx_align_center">78.7</td>
+<td id="S5.T4.1.1.4.3.4" class="ltx_td ltx_align_center">85.4</td>
+<td id="S5.T4.1.1.4.3.5" class="ltx_td ltx_align_center">82.0</td>
+</tr>
+<tr id="S5.T4.1.1.5.4" class="ltx_tr">
+<th id="S5.T4.1.1.5.4.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">can</th>
+<td id="S5.T4.1.1.5.4.2" class="ltx_td ltx_align_center">90.3</td>
+<td id="S5.T4.1.1.5.4.3" class="ltx_td ltx_align_center">79.9</td>
+<td id="S5.T4.1.1.5.4.4" class="ltx_td ltx_align_center">78.8</td>
+<td id="S5.T4.1.1.5.4.5" class="ltx_td ltx_align_center">77.6</td>
+</tr>
+<tr id="S5.T4.1.1.6.5" class="ltx_tr">
+<th id="S5.T4.1.1.6.5.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">cat</th>
+<td id="S5.T4.1.1.6.5.2" class="ltx_td ltx_align_center">96.2</td>
+<td id="S5.T4.1.1.6.5.3" class="ltx_td ltx_align_center">77.4</td>
+<td id="S5.T4.1.1.6.5.4" class="ltx_td ltx_align_center">82.0</td>
+<td id="S5.T4.1.1.6.5.5" class="ltx_td ltx_align_center">84.1</td>
+</tr>
+<tr id="S5.T4.1.1.7.6" class="ltx_tr">
+<th id="S5.T4.1.1.7.6.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">driller</th>
+<td id="S5.T4.1.1.7.6.2" class="ltx_td ltx_align_center">90.9</td>
+<td id="S5.T4.1.1.7.6.3" class="ltx_td ltx_align_center">77.9</td>
+<td id="S5.T4.1.1.7.6.4" class="ltx_td ltx_align_center">81.0</td>
+<td id="S5.T4.1.1.7.6.5" class="ltx_td ltx_align_center">80.1</td>
+</tr>
+<tr id="S5.T4.1.1.8.7" class="ltx_tr">
+<th id="S5.T4.1.1.8.7.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">duck</th>
+<td id="S5.T4.1.1.8.7.2" class="ltx_td ltx_align_center">90.3</td>
+<td id="S5.T4.1.1.8.7.3" class="ltx_td ltx_align_center">81.1</td>
+<td id="S5.T4.1.1.8.7.4" class="ltx_td ltx_align_center">77.6</td>
+<td id="S5.T4.1.1.8.7.5" class="ltx_td ltx_align_center">77.0</td>
+</tr>
+<tr id="S5.T4.1.1.9.8" class="ltx_tr">
+<th id="S5.T4.1.1.9.8.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r"><span id="S5.T4.1.1.9.8.1.1" class="ltx_text ltx_font_italic">eggbox</span></th>
+<td id="S5.T4.1.1.9.8.2" class="ltx_td ltx_align_center">96.9</td>
+<td id="S5.T4.1.1.9.8.3" class="ltx_td ltx_align_center">78.4</td>
+<td id="S5.T4.1.1.9.8.4" class="ltx_td ltx_align_center">87.0</td>
+<td id="S5.T4.1.1.9.8.5" class="ltx_td ltx_align_center">82.4</td>
+</tr>
+<tr id="S5.T4.1.1.10.9" class="ltx_tr">
+<th id="S5.T4.1.1.10.9.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r"><span id="S5.T4.1.1.10.9.1.1" class="ltx_text ltx_font_italic">glue</span></th>
+<td id="S5.T4.1.1.10.9.2" class="ltx_td ltx_align_center">96.8</td>
+<td id="S5.T4.1.1.10.9.3" class="ltx_td ltx_align_center">82.1</td>
+<td id="S5.T4.1.1.10.9.4" class="ltx_td ltx_align_center">89.9</td>
+<td id="S5.T4.1.1.10.9.5" class="ltx_td ltx_align_center">83.4</td>
+</tr>
+<tr id="S5.T4.1.1.11.10" class="ltx_tr">
+<th id="S5.T4.1.1.11.10.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">hole p.</th>
+<td id="S5.T4.1.1.11.10.2" class="ltx_td ltx_align_center">90.9</td>
+<td id="S5.T4.1.1.11.10.3" class="ltx_td ltx_align_center">80.9</td>
+<td id="S5.T4.1.1.11.10.4" class="ltx_td ltx_align_center">83.0</td>
+<td id="S5.T4.1.1.11.10.5" class="ltx_td ltx_align_center">78.8</td>
+</tr>
+<tr id="S5.T4.1.1.12.11" class="ltx_tr">
+<th id="S5.T4.1.1.12.11.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">iron</th>
+<td id="S5.T4.1.1.12.11.2" class="ltx_td ltx_align_center">90.8</td>
+<td id="S5.T4.1.1.12.11.3" class="ltx_td ltx_align_center">76.8</td>
+<td id="S5.T4.1.1.12.11.4" class="ltx_td ltx_align_center">81.4</td>
+<td id="S5.T4.1.1.12.11.5" class="ltx_td ltx_align_center">78.2</td>
+</tr>
+<tr id="S5.T4.1.1.13.12" class="ltx_tr">
+<th id="S5.T4.1.1.13.12.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">lamp</th>
+<td id="S5.T4.1.1.13.12.2" class="ltx_td ltx_align_center">90.8</td>
+<td id="S5.T4.1.1.13.12.3" class="ltx_td ltx_align_center">76.0</td>
+<td id="S5.T4.1.1.13.12.4" class="ltx_td ltx_align_center">83.4</td>
+<td id="S5.T4.1.1.13.12.5" class="ltx_td ltx_align_center">75.2</td>
+</tr>
+<tr id="S5.T4.1.1.14.13" class="ltx_tr">
+<th id="S5.T4.1.1.14.13.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">phone</th>
+<td id="S5.T4.1.1.14.13.2" class="ltx_td ltx_align_center">90.2</td>
+<td id="S5.T4.1.1.14.13.3" class="ltx_td ltx_align_center">77.9</td>
+<td id="S5.T4.1.1.14.13.4" class="ltx_td ltx_align_center">82.2</td>
+<td id="S5.T4.1.1.14.13.5" class="ltx_td ltx_align_center">77.9</td>
+</tr>
+<tr id="S5.T4.1.1.15.14" class="ltx_tr">
+<th id="S5.T4.1.1.15.14.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">Average</th>
+<td id="S5.T4.1.1.15.14.2" class="ltx_td ltx_align_center ltx_border_t">92.4</td>
+<td id="S5.T4.1.1.15.14.3" class="ltx_td ltx_align_center ltx_border_t">78.1</td>
+<td id="S5.T4.1.1.15.14.4" class="ltx_td ltx_align_center ltx_border_t">82.4</td>
+<td id="S5.T4.1.1.15.14.5" class="ltx_td ltx_align_center ltx_border_t">79.0</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">For the ablation studies in our method, we performed three extra experiments in both datasets (LineMOD and YCB-Video).
+For these experiments, we trained our method for 50 epochs in the LineMOD and YCB-Video datasets and we evaluated the inference output on the test subset of each dataset.
+All the experiment results executed in the LineMOD dataset are shown in Table <a href="#S5.T4" title="Table 4 ‣ 5 Ablation Studies ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> and the obtained results for the YCB-Video are shown in Table <a href="#S5.T5" title="Table 5 ‣ 5 Ablation Studies ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.
+Ablation study one consists in testing the impact of removing the pyramid from the feature extraction step (Pyramid ResNet34), thus meaning that we only used a single ResNet34 and one upsample layer and then proceed to the fusion layers of the neural network.
+With this experiment its possible to analyze the influence of our pyramid architecture on the MPF6D backbone feature extraction for the mask and RGB data.
+Without the Pyramid ResNet34, the method obtained a 15% increase in the error rate when compared to the original MPF6D architecture, thus meaning that having features extracted with multiple resolutions will improve the object 6D pose estimation.
+The second ablation study focus on the impact of the Pyramid Fusion depth.
+This study consists in removing one depth level of the Pyramid Fusion, thus enabling us to study if with a lower depth we could achieve the same results.
+The obtained results had around 10% more error overall.
+The third ablation study evaluates the impact of removing the Pyramid Fusion from the original architecture.
+We replaced the Pyramid Fusion with just a simple concatenation of the multiple features, a convolution layer, and a ReLU activation function.
+This third experiment showed that fusing multiple feature resolutions without using the pyramid approach, increases the overall error by 15%</p>
+</div>
+<figure id="S5.T5" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Ablation studies (using area under the ADD-S (<a href="#S4.E3" title="In 4.2 Evaluation Metrics ‣ 4 Experiments ‣ MPF6D: Masked Pyramid Fusion 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) curve (AUC)) on the YCB-Video dataset. Ablation 1, removing the Pyramid ResNet34. Ablation 2, lower depth Pyramid Fusion. Ablation 3, removing Pyramid Fusion.</figcaption>
+<div id="S5.T5.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:449.5pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(17.1pt,-17.7pt) scale(1.0856312397765,1.0856312397765) ;">
+<table id="S5.T5.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S5.T5.1.1.1.1" class="ltx_tr">
+<th id="S5.T5.1.1.1.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_th_row ltx_border_r">Objects</th>
+<th id="S5.T5.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column">MPF6D Architecture</th>
+<th id="S5.T5.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column">Ablation 1</th>
+<th id="S5.T5.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column">Ablation 2</th>
+<th id="S5.T5.1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column">Ablation 3</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S5.T5.1.1.2.1" class="ltx_tr">
+<th id="S5.T5.1.1.2.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">002_master_chef_can</th>
+<td id="S5.T5.1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">88.38</td>
+<td id="S5.T5.1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">75.78</td>
+<td id="S5.T5.1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">79.01</td>
+<td id="S5.T5.1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_t">73.98</td>
+</tr>
+<tr id="S5.T5.1.1.3.2" class="ltx_tr">
+<th id="S5.T5.1.1.3.2.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">003_cracker_box</th>
+<td id="S5.T5.1.1.3.2.2" class="ltx_td ltx_align_center">88.66</td>
+<td id="S5.T5.1.1.3.2.3" class="ltx_td ltx_align_center">75.79</td>
+<td id="S5.T5.1.1.3.2.4" class="ltx_td ltx_align_center">78.91</td>
+<td id="S5.T5.1.1.3.2.5" class="ltx_td ltx_align_center">74.38</td>
+</tr>
+<tr id="S5.T5.1.1.4.3" class="ltx_tr">
+<th id="S5.T5.1.1.4.3.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">004_sugar_box</th>
+<td id="S5.T5.1.1.4.3.2" class="ltx_td ltx_align_center">88.46</td>
+<td id="S5.T5.1.1.4.3.3" class="ltx_td ltx_align_center">75.74</td>
+<td id="S5.T5.1.1.4.3.4" class="ltx_td ltx_align_center">79.56</td>
+<td id="S5.T5.1.1.4.3.5" class="ltx_td ltx_align_center">75.09</td>
+</tr>
+<tr id="S5.T5.1.1.5.4" class="ltx_tr">
+<th id="S5.T5.1.1.5.4.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">005_tomato_soup_can</th>
+<td id="S5.T5.1.1.5.4.2" class="ltx_td ltx_align_center">88.32</td>
+<td id="S5.T5.1.1.5.4.3" class="ltx_td ltx_align_center">75.62</td>
+<td id="S5.T5.1.1.5.4.4" class="ltx_td ltx_align_center">79.00</td>
+<td id="S5.T5.1.1.5.4.5" class="ltx_td ltx_align_center">73.32</td>
+</tr>
+<tr id="S5.T5.1.1.6.5" class="ltx_tr">
+<th id="S5.T5.1.1.6.5.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">006_mustard_bottle</th>
+<td id="S5.T5.1.1.6.5.2" class="ltx_td ltx_align_center">88.49</td>
+<td id="S5.T5.1.1.6.5.3" class="ltx_td ltx_align_center">75.77</td>
+<td id="S5.T5.1.1.6.5.4" class="ltx_td ltx_align_center">79.04</td>
+<td id="S5.T5.1.1.6.5.5" class="ltx_td ltx_align_center">73.91</td>
+</tr>
+<tr id="S5.T5.1.1.7.6" class="ltx_tr">
+<th id="S5.T5.1.1.7.6.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">007_tuna_fish_can</th>
+<td id="S5.T5.1.1.7.6.2" class="ltx_td ltx_align_center">88.11</td>
+<td id="S5.T5.1.1.7.6.3" class="ltx_td ltx_align_center">74.94</td>
+<td id="S5.T5.1.1.7.6.4" class="ltx_td ltx_align_center">78.69</td>
+<td id="S5.T5.1.1.7.6.5" class="ltx_td ltx_align_center">73.37</td>
+</tr>
+<tr id="S5.T5.1.1.8.7" class="ltx_tr">
+<th id="S5.T5.1.1.8.7.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">008_pudding_box</th>
+<td id="S5.T5.1.1.8.7.2" class="ltx_td ltx_align_center">88.15</td>
+<td id="S5.T5.1.1.8.7.3" class="ltx_td ltx_align_center">75.13</td>
+<td id="S5.T5.1.1.8.7.4" class="ltx_td ltx_align_center">78.37</td>
+<td id="S5.T5.1.1.8.7.5" class="ltx_td ltx_align_center">73.17</td>
+</tr>
+<tr id="S5.T5.1.1.9.8" class="ltx_tr">
+<th id="S5.T5.1.1.9.8.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">009_gelatin_box</th>
+<td id="S5.T5.1.1.9.8.2" class="ltx_td ltx_align_center">88.68</td>
+<td id="S5.T5.1.1.9.8.3" class="ltx_td ltx_align_center">75.82</td>
+<td id="S5.T5.1.1.9.8.4" class="ltx_td ltx_align_center">79.17</td>
+<td id="S5.T5.1.1.9.8.5" class="ltx_td ltx_align_center">74.45</td>
+</tr>
+<tr id="S5.T5.1.1.10.9" class="ltx_tr">
+<th id="S5.T5.1.1.10.9.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">010_potted_meat_can</th>
+<td id="S5.T5.1.1.10.9.2" class="ltx_td ltx_align_center">85.91</td>
+<td id="S5.T5.1.1.10.9.3" class="ltx_td ltx_align_center">73.32</td>
+<td id="S5.T5.1.1.10.9.4" class="ltx_td ltx_align_center">76.34</td>
+<td id="S5.T5.1.1.10.9.5" class="ltx_td ltx_align_center">72.53</td>
+</tr>
+<tr id="S5.T5.1.1.11.10" class="ltx_tr">
+<th id="S5.T5.1.1.11.10.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">011_banana</th>
+<td id="S5.T5.1.1.11.10.2" class="ltx_td ltx_align_center">88.83</td>
+<td id="S5.T5.1.1.11.10.3" class="ltx_td ltx_align_center">76.37</td>
+<td id="S5.T5.1.1.11.10.4" class="ltx_td ltx_align_center">80.37</td>
+<td id="S5.T5.1.1.11.10.5" class="ltx_td ltx_align_center">74.22</td>
+</tr>
+<tr id="S5.T5.1.1.12.11" class="ltx_tr">
+<th id="S5.T5.1.1.12.11.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">019_pitcher_base</th>
+<td id="S5.T5.1.1.12.11.2" class="ltx_td ltx_align_center">88.61</td>
+<td id="S5.T5.1.1.12.11.3" class="ltx_td ltx_align_center">75.84</td>
+<td id="S5.T5.1.1.12.11.4" class="ltx_td ltx_align_center">78.80</td>
+<td id="S5.T5.1.1.12.11.5" class="ltx_td ltx_align_center">73.53</td>
+</tr>
+<tr id="S5.T5.1.1.13.12" class="ltx_tr">
+<th id="S5.T5.1.1.13.12.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">021_bleach_cleanser</th>
+<td id="S5.T5.1.1.13.12.2" class="ltx_td ltx_align_center">88.13</td>
+<td id="S5.T5.1.1.13.12.3" class="ltx_td ltx_align_center">75.35</td>
+<td id="S5.T5.1.1.13.12.4" class="ltx_td ltx_align_center">79.02</td>
+<td id="S5.T5.1.1.13.12.5" class="ltx_td ltx_align_center">73.60</td>
+</tr>
+<tr id="S5.T5.1.1.14.13" class="ltx_tr">
+<th id="S5.T5.1.1.14.13.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">024_bowl</th>
+<td id="S5.T5.1.1.14.13.2" class="ltx_td ltx_align_center">87.55</td>
+<td id="S5.T5.1.1.14.13.3" class="ltx_td ltx_align_center">74.48</td>
+<td id="S5.T5.1.1.14.13.4" class="ltx_td ltx_align_center">78.33</td>
+<td id="S5.T5.1.1.14.13.5" class="ltx_td ltx_align_center">73.20</td>
+</tr>
+<tr id="S5.T5.1.1.15.14" class="ltx_tr">
+<th id="S5.T5.1.1.15.14.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">025_mug</th>
+<td id="S5.T5.1.1.15.14.2" class="ltx_td ltx_align_center">88.11</td>
+<td id="S5.T5.1.1.15.14.3" class="ltx_td ltx_align_center">75.54</td>
+<td id="S5.T5.1.1.15.14.4" class="ltx_td ltx_align_center">78.70</td>
+<td id="S5.T5.1.1.15.14.5" class="ltx_td ltx_align_center">74.40</td>
+</tr>
+<tr id="S5.T5.1.1.16.15" class="ltx_tr">
+<th id="S5.T5.1.1.16.15.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">035_power_drill</th>
+<td id="S5.T5.1.1.16.15.2" class="ltx_td ltx_align_center">87.70</td>
+<td id="S5.T5.1.1.16.15.3" class="ltx_td ltx_align_center">75.36</td>
+<td id="S5.T5.1.1.16.15.4" class="ltx_td ltx_align_center">78.58</td>
+<td id="S5.T5.1.1.16.15.5" class="ltx_td ltx_align_center">73.01</td>
+</tr>
+<tr id="S5.T5.1.1.17.16" class="ltx_tr">
+<th id="S5.T5.1.1.17.16.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">036_wood_block</th>
+<td id="S5.T5.1.1.17.16.2" class="ltx_td ltx_align_center">84.60</td>
+<td id="S5.T5.1.1.17.16.3" class="ltx_td ltx_align_center">72.02</td>
+<td id="S5.T5.1.1.17.16.4" class="ltx_td ltx_align_center">75.92</td>
+<td id="S5.T5.1.1.17.16.5" class="ltx_td ltx_align_center">70.41</td>
+</tr>
+<tr id="S5.T5.1.1.18.17" class="ltx_tr">
+<th id="S5.T5.1.1.18.17.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">037_scissors</th>
+<td id="S5.T5.1.1.18.17.2" class="ltx_td ltx_align_center">86.45</td>
+<td id="S5.T5.1.1.18.17.3" class="ltx_td ltx_align_center">73.63</td>
+<td id="S5.T5.1.1.18.17.4" class="ltx_td ltx_align_center">77.32</td>
+<td id="S5.T5.1.1.18.17.5" class="ltx_td ltx_align_center">72.56</td>
+</tr>
+<tr id="S5.T5.1.1.19.18" class="ltx_tr">
+<th id="S5.T5.1.1.19.18.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">040_large_marker</th>
+<td id="S5.T5.1.1.19.18.2" class="ltx_td ltx_align_center">88.15</td>
+<td id="S5.T5.1.1.19.18.3" class="ltx_td ltx_align_center">75.45</td>
+<td id="S5.T5.1.1.19.18.4" class="ltx_td ltx_align_center">78.34</td>
+<td id="S5.T5.1.1.19.18.5" class="ltx_td ltx_align_center">73.93</td>
+</tr>
+<tr id="S5.T5.1.1.20.19" class="ltx_tr">
+<th id="S5.T5.1.1.20.19.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">051_large_clamp</th>
+<td id="S5.T5.1.1.20.19.2" class="ltx_td ltx_align_center">74.08</td>
+<td id="S5.T5.1.1.20.19.3" class="ltx_td ltx_align_center">63.34</td>
+<td id="S5.T5.1.1.20.19.4" class="ltx_td ltx_align_center">65.89</td>
+<td id="S5.T5.1.1.20.19.5" class="ltx_td ltx_align_center">62.80</td>
+</tr>
+<tr id="S5.T5.1.1.21.20" class="ltx_tr">
+<th id="S5.T5.1.1.21.20.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">052_extra_large_clamp</th>
+<td id="S5.T5.1.1.21.20.2" class="ltx_td ltx_align_center">67.62</td>
+<td id="S5.T5.1.1.21.20.3" class="ltx_td ltx_align_center">57.19</td>
+<td id="S5.T5.1.1.21.20.4" class="ltx_td ltx_align_center">61.03</td>
+<td id="S5.T5.1.1.21.20.5" class="ltx_td ltx_align_center">56.01</td>
+</tr>
+<tr id="S5.T5.1.1.22.21" class="ltx_tr">
+<th id="S5.T5.1.1.22.21.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r">061_foam_brick</th>
+<td id="S5.T5.1.1.22.21.2" class="ltx_td ltx_align_center">87.55</td>
+<td id="S5.T5.1.1.22.21.3" class="ltx_td ltx_align_center">74.51</td>
+<td id="S5.T5.1.1.22.21.4" class="ltx_td ltx_align_center">78.40</td>
+<td id="S5.T5.1.1.22.21.5" class="ltx_td ltx_align_center">72.72</td>
+</tr>
+<tr id="S5.T5.1.1.23.22" class="ltx_tr">
+<th id="S5.T5.1.1.23.22.1" class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t">Average</th>
+<td id="S5.T5.1.1.23.22.2" class="ltx_td ltx_align_center ltx_border_t">86.22</td>
+<td id="S5.T5.1.1.23.22.3" class="ltx_td ltx_align_center ltx_border_t">73.67</td>
+<td id="S5.T5.1.1.23.22.4" class="ltx_td ltx_align_center ltx_border_t">77.09</td>
+<td id="S5.T5.1.1.23.22.5" class="ltx_td ltx_align_center ltx_border_t">72.12</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>Conclusion</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">We propose a method that consists of a single feed-forward network that can do the complete inference from data to 6D pose estimation. Our method can be used in real-time taking only <math id="S6.p1.1.m1.1" class="ltx_Math" alttext="0.12" display="inline"><semantics id="S6.p1.1.m1.1a"><mn id="S6.p1.1.m1.1.1" xref="S6.p1.1.m1.1.1.cmml">0.12</mn><annotation-xml encoding="MathML-Content" id="S6.p1.1.m1.1b"><cn type="float" id="S6.p1.1.m1.1.1.cmml" xref="S6.p1.1.m1.1.1">0.12</cn></annotation-xml><annotation encoding="application/x-tex" id="S6.p1.1.m1.1c">0.12</annotation></semantics></math> seconds to retrieve an accurate 6D pose estimation of a known object present in the scene.
+Our method has the best overall performance in both used datasets (LineMOD and YCB-Video). In the LineMOD dataset, we achieved 99.7% of accuracy, having 0.3% better accuracy than the second-best method PVN3D. In the YCB-Video dataset, we achieved 98.06% area under the ADD-S curve which is 1.96% better than PVN3D.
+We performed ablation studies to clarify the impact of the three main architecture components on the overall error rates and found that the removal of these components accounts for a similar error increase on both used datasets, indicating that their benefits are not dependent of the particular data used.</p>
+</div>
+<div id="S6.p2" class="ltx_para">
+<span id="S6.p2.1" class="ltx_ERROR undefined">\bmhead</span>
+<p id="S6.p2.2" class="ltx_p">Acknowledgments</p>
+</div>
+<div id="S6.p3" class="ltx_para">
+<p id="S6.p3.1" class="ltx_p">This work was supported by NOVA LINCS (UIDB/04516/2020) with the financial support of FCT-Fundação para a Ciência e a Tecnologia, through national funds, and partially supported by project 026653 (POCI-01-0247-FEDER-026653) INDTECH 4.0 – New technologies for smart manufacturing, cofinanced by the Portugal 2020 Program (PT 2020), Compete 2020 Program and the European Union through the European Regional Development Fund (ERDF).</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.1.1" class="ltx_bibitem">
+<span class="ltx_bibblock"><span id="bib.1.1.1.1" class="ltx_ERROR undefined">\bibcommenthead</span>
+</span>
+</li>
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(1)</span>
+<span class="ltx_bibblock">
+Pereira, N.,
+Alexandre, L.A.:
+MaskedFusion: Mask-based 6d object pose estimation.
+In: 19th IEEE International Conference on Machine Learning and
+Applications (ICMLA 2020)
+(2020)
+
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(2)</span>
+<span class="ltx_bibblock">
+Wang, C.,
+Xu, D.,
+Zhu, Y.,
+Martín-Martín, R.,
+Lu, C.,
+Fei-Fei, L.,
+Savarese, S.:
+Densefusion: 6d object pose estimation by iterative dense fusion.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition,
+pp. 3343–3352
+(2019)
+
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(3)</span>
+<span class="ltx_bibblock">
+Ronneberger, O.,
+Fischer, P.,
+Brox, T.:
+U-net: Convolutional networks for biomedical image segmentation.
+In: International Conference on Medical Image Computing and
+Computer-assisted Intervention,
+pp. 234–241
+(2015).
+Springer
+
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(4)</span>
+<span class="ltx_bibblock">
+Badrinarayanan, V.,
+Kendall, A.,
+Cipolla, R.:
+Segnet: A deep convolutional encoder-decoder architecture for image
+segmentation.
+IEEE transactions on pattern analysis and machine intelligence
+<span id="bib.bib4.1.1" class="ltx_text ltx_font_bold">39</span>(12),
+2481–2495
+(2017)
+
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(5)</span>
+<span class="ltx_bibblock">
+Krizhevsky, A.,
+Sutskever, I.,
+Hinton, G.E.:
+Imagenet classification with deep convolutional neural networks.
+In: Advances in Neural Information Processing Systems,
+pp. 1097–1105
+(2012)
+
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(6)</span>
+<span class="ltx_bibblock">
+Wu, H.,
+Zhang, J.,
+Huang, K.,
+Liang, K.,
+Yu, Y.:
+Fastfcn: Rethinking dilated convolution in the backbone for semantic
+segmentation.
+arXiv preprint arXiv:1903.11816
+(2019)
+
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(7)</span>
+<span class="ltx_bibblock">
+Zhao, H.,
+Shi, J.,
+Qi, X.,
+Wang, X.,
+Jia, J.:
+Pyramid scene parsing network.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition,
+pp. 2881–2890
+(2017)
+
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(8)</span>
+<span class="ltx_bibblock">
+Takikawa, T.,
+Acuna, D.,
+Jampani, V.,
+Fidler, S.:
+Gated-scnn: Gated shape cnns for semantic segmentation.
+In: Proceedings of the IEEE/CVF International Conference on Computer
+Vision,
+pp. 5229–5238
+(2019)
+
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(9)</span>
+<span class="ltx_bibblock">
+Chen, L.-C.,
+Papandreou, G.,
+Schroff, F.,
+Adam, H.:
+Rethinking atrous convolution for semantic image segmentation.
+arXiv preprint arXiv:1706.05587
+(2017)
+
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(10)</span>
+<span class="ltx_bibblock">
+Brachmann, E.,
+Krull, A.,
+Michel, F.,
+Gumhold, S.,
+Shotton, J.,
+Rother, C.:
+Learning 6d object pose estimation using 3d object coordinates.
+In: European Conference on Computer Vision,
+pp. 536–551
+(2014).
+Springer
+
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(11)</span>
+<span class="ltx_bibblock">
+Pavlakos, G.,
+Zhou, X.,
+Chan, A.,
+Derpanis, K.G.,
+Daniilidis, K.:
+6-dof object pose from semantic keypoints.
+In: 2017 IEEE International Conference on Robotics and Automation
+(ICRA),
+pp. 2011–2018
+(2017).
+IEEE
+
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(12)</span>
+<span class="ltx_bibblock">
+Tekin, B.,
+Sinha, S.N.,
+Fua, P.:
+Real-time seamless single shot 6d object pose prediction.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition,
+pp. 292–301
+(2018)
+
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(13)</span>
+<span class="ltx_bibblock">
+Tremblay, J.,
+To, T.,
+Sundaralingam, B.,
+Xiang, Y.,
+Fox, D.,
+Birchfield, S.:
+Deep object pose estimation for semantic robotic grasping of household
+objects.
+In: Conference on Robot Learning,
+pp. 306–316
+(2018)
+
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(14)</span>
+<span class="ltx_bibblock">
+Peng, S.,
+Liu, Y.,
+Huang, Q.,
+Zhou, X.,
+Bao, H.:
+Pvnet: Pixel-wise voting network for 6dof pose estimation.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition,
+pp. 4561–4570
+(2019)
+
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(15)</span>
+<span class="ltx_bibblock">
+Fischler, M.A.,
+Bolles, R.C.:
+Random sample consensus: a paradigm for model fitting with
+applications to image analysis and automated cartography.
+Communications of the ACM
+<span id="bib.bib15.1.1" class="ltx_text ltx_font_bold">24</span>(6),
+381–395
+(1981)
+
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(16)</span>
+<span class="ltx_bibblock">
+Kehl, W.,
+Milletari, F.,
+Tombari, F.,
+Ilic, S.,
+Navab, N.:
+Deep learning of local rgb-d patches for 3d object detection and 6d
+pose estimation.
+In: European Conference on Computer Vision,
+pp. 205–220
+(2016).
+Springer
+
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(17)</span>
+<span class="ltx_bibblock">
+Li, D.,
+Liu, N.,
+Guo, Y.,
+Wang, X.,
+Xu, J.:
+3d object recognition and pose estimation for random bin-picking using
+partition viewpoint feature histograms.
+Pattern Recognition Letters
+<span id="bib.bib17.1.1" class="ltx_text ltx_font_bold">128</span>,
+148–154
+(2019)
+
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(18)</span>
+<span class="ltx_bibblock">
+Qi, C.R.,
+Liu, W.,
+Wu, C.,
+Su, H.,
+Guibas, L.J.:
+Frustum pointnets for 3d object detection from rgb-d data.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition,
+pp. 918–927
+(2018)
+
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(19)</span>
+<span class="ltx_bibblock">
+Qi, C.R.,
+Su, H.,
+Mo, K.,
+Guibas, L.J.:
+Pointnet: Deep learning on point sets for 3d classification and
+segmentation.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition,
+pp. 652–660
+(2017)
+
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(20)</span>
+<span class="ltx_bibblock">
+Rusu, R.B.,
+Bradski, G.,
+Thibaux, R.,
+Hsu, J.:
+Fast 3d recognition and pose using the viewpoint feature histogram.
+In: Proceedings of the 23rd IEEE/RSJ International Conference on
+Intelligent Robots and Systems (IROS),
+Taipei, Taiwan
+(2010)
+
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(21)</span>
+<span class="ltx_bibblock">
+Zhou, Y.,
+Tuzel, O.:
+Voxelnet: End-to-end learning for point cloud based 3d object
+detection.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition,
+pp. 4490–4499
+(2018)
+
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(22)</span>
+<span class="ltx_bibblock">
+Kehl, W.,
+Manhardt, F.,
+Tombari, F.,
+Ilic, S.,
+Navab, N.:
+Ssd-6d: Making rgb-based 3d detection and 6d pose estimation great
+again.
+In: Proceedings of the IEEE International Conference on Computer
+Vision,
+pp. 1521–1529
+(2017)
+
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(23)</span>
+<span class="ltx_bibblock">
+Li, C.,
+Bai, J.,
+Hager, G.D.:
+A unified framework for multi-view multi-class object pose
+estimation.
+In: Proceedings of the European Conference on Computer Vision (ECCV),
+pp. 254–269
+(2018)
+
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(24)</span>
+<span class="ltx_bibblock">
+Xiang, Y.,
+Schmidt, T.,
+Narayanan, V.,
+Fox, D.:
+Posecnn: A convolutional neural network for 6d object pose estimation in
+cluttered scenes.
+arXiv preprint arXiv:1711.00199
+(2017)
+
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(25)</span>
+<span class="ltx_bibblock">
+Xu, D.,
+Anguelov, D.,
+Jain, A.:
+Pointfusion: Deep sensor fusion for 3d bounding box estimation.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition,
+pp. 244–253
+(2018)
+
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(26)</span>
+<span class="ltx_bibblock">
+He, Y.,
+Sun, W.,
+Huang, H.,
+Liu, J.,
+Fan, H.,
+Sun, J.:
+Pvn3d: A deep point-wise 3d keypoints voting network for 6dof pose
+estimation.
+In: Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition (CVPR)
+(2020)
+
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(27)</span>
+<span class="ltx_bibblock">
+Tejani, A.,
+Kouskouridas, R.,
+Doumanoglou, A.,
+Tang, D.,
+Kim, T.:
+Latent-class hough forests for 6 dof object pose estimation.
+IEEE Transactions on Pattern Analysis and Machine Intelligence
+<span id="bib.bib27.1.1" class="ltx_text ltx_font_bold">40</span>(1),
+119–132
+(2018).
+<a target="_blank" href="https://doi.org/10.1109/TPAMI.2017.2665623" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://doi.org/10.1109/TPAMI.2017.2665623</a>
+
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(28)</span>
+<span class="ltx_bibblock">
+Hinterstoisser, S.,
+Holzer, S.,
+Cagniart, C.,
+Ilic, S.,
+Konolige, K.,
+Navab, N.,
+Lepetit, V.:
+Multimodal templates for real-time detection of texture-less objects
+in heavily cluttered scenes.
+In: 2011 International Conference on Computer Vision,
+pp. 858–865
+(2011).
+IEEE
+
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(29)</span>
+<span class="ltx_bibblock">
+Calli, B.,
+Singh, A.,
+Walsman, A.,
+Srinivasa, S.,
+Abbeel, P.,
+Dollar, A.M.:
+The ycb object and model set: Towards common benchmarks for
+manipulation research.
+In: 2015 International Conference on Advanced Robotics (ICAR),
+pp. 510–517
+(2015).
+IEEE
+
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2111.09377" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2111.09378" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2111.09378">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2111.09378" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2111.09379" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Fri Mar  1 22:04:55 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

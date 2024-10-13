@@ -1,0 +1,612 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2105.10904] Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation</title><meta property="og:description" content="Existing RGB-based 2D hand pose estimation methods learn the joint locations from a single resolution, which is not suitable for different hand sizes. To tackle this problem, we propose a new deep learning-based framew…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2105.10904">
+
+<!--Generated on Mon Mar 18 23:54:17 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="keywords" lang="en" content="
+Hand pose estimation; Hand detection; Convolutional neural networks..
+">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Ikram Kourbane<span id="id1.1.1" class="ltx_text" style="position:relative; bottom:0.0pt;"><sup id="id1.1.1.1" class="ltx_sup"><math id="id1.1.1.1.m1.1" class="ltx_Math" alttext="1" display="inline"><semantics id="id1.1.1.1.m1.1a"><mn mathsize="80%" id="id1.1.1.1.m1.1.1" xref="id1.1.1.1.m1.1.1.cmml">1</mn><annotation-xml encoding="MathML-Content" id="id1.1.1.1.m1.1b"><cn type="integer" id="id1.1.1.1.m1.1.1.cmml" xref="id1.1.1.1.m1.1.1">1</cn></annotation-xml><annotation encoding="application/x-tex" id="id1.1.1.1.m1.1c">1</annotation></semantics></math></sup></span>,
+Yakup Genc<span id="id2.2.2" class="ltx_text" style="position:relative; bottom:0.0pt;"><sup id="id2.2.2.1" class="ltx_sup"><math id="id2.2.2.1.m1.1" class="ltx_Math" alttext="1" display="inline"><semantics id="id2.2.2.1.m1.1a"><mn mathsize="80%" id="id2.2.2.1.m1.1.1" xref="id2.2.2.1.m1.1.1.cmml">1</mn><annotation-xml encoding="MathML-Content" id="id2.2.2.1.m1.1b"><cn type="integer" id="id2.2.2.1.m1.1.1.cmml" xref="id2.2.2.1.m1.1.1">1</cn></annotation-xml><annotation encoding="application/x-tex" id="id2.2.2.1.m1.1c">1</annotation></semantics></math></sup></span>
+
+<span id="id4.4.id1" class="ltx_text ltx_font_italic">ikourbane,yahup.genc@gtu.edu.tr</span>
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span id="id3.3.1" class="ltx_text" style="position:relative; bottom:0.0pt;"><sup id="id3.3.1.1" class="ltx_sup"><math id="id3.3.1.1.m1.1" class="ltx_Math" alttext="1" display="inline"><semantics id="id3.3.1.1.m1.1a"><mn mathsize="80%" id="id3.3.1.1.m1.1.1" xref="id3.3.1.1.m1.1.1.cmml">1</mn><annotation-xml encoding="MathML-Content" id="id3.3.1.1.m1.1b"><cn type="integer" id="id3.3.1.1.m1.1.1.cmml" xref="id3.3.1.1.m1.1.1">1</cn></annotation-xml><annotation encoding="application/x-tex" id="id3.3.1.1.m1.1c">1</annotation></semantics></math></sup></span>
+Gebze Technical University
+<br class="ltx_break">Kocaeli, Turkey
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id5.id1" class="ltx_p">Existing RGB-based 2D hand pose estimation methods learn the joint locations from a single resolution, which is not suitable for different hand sizes. To tackle this problem, we propose a new deep learning-based framework that consists of two main modules. The former presents a segmentation-based approach to detect the hand skeleton and localize the hand bounding box. The second module regresses the 2D joint locations through a multi-scale heatmap regression approach that exploits the predicted hand skeleton as a constraint to guide the model. Furthermore, we construct a new dataset that is suitable for both hand detection and pose estimation. We qualitatively and quantitatively validate our method on two datasets. Results demonstrate that the proposed method outperforms state-of-the-art and can recover the pose even in cluttered images and complex poses.</p>
+</div>
+<div class="ltx_keywords">
+<h6 class="ltx_title ltx_title_keywords">Keywords: </h6>
+Hand pose estimation; Hand detection; Convolutional neural networks..
+
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">Introduction</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">The hands are one of the most important and intuitive interaction tools for humans. Solving the hand pose estimation problem is crucial for many applications, including human-computer interaction, virtual reality and augmented reality. The earlier works in hand tracking use special hardware to track the hand, such as gloves and visual markers. Yet, these types of solutions are expensive and restrict the applications to limited scenarios. To this end, tracking hands without any device or markers is desirable. However, markerless hand trackers have their challenges due to articulations, self-occlusions, variations in shape, size, skin texture and color.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">The rapid development of deep learning techniques revolutionizes complex computer vision problems and outperforms conventional methods in many challenging tasks. Hand pose estimation is not an exception and deep convolution neural networks (CNNs) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> have been applied successfully in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. These studies address the scenarios where the hand is tracked via an RGB-D camera. However, depth-enhanced data is not available everywhere, and they are expensive to utilize. Thus, estimating the hand pose from a single RGB image has been an active and challenging area of research, as they are cheaper and easier to use than RGB-D cameras <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Recently deep learning-based methods achieve promising results. We can classify them into two broad categories: regression-based and detection-based. The regression approaches use CNNs as an automatic feature extractor to directly estimate the joint locations <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>. Although this approach is fast at inference time, direct regression is a difficult optimization problem. This is mainly due to its non-linear nature requiring many iterations and a lot of data for convergence. To overcome these limitations, recent works use probability density maps such as the heatmap to solve human and hand pose estimation problems <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>. They divide the pose estimation problem into two steps. While the first one finds a dense pixel-wise prediction for each joint, the second step infers the joint locations by finding the maximum pixel in each heatmap. The heatmap representation helps the neural network to estimate the joint locations robustly and has a fast convergence property <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">In this work, we focus on the problem of 2D hand pose estimation from a single RGB image. This task is also challenging due to the many degrees of freedom (DOF) and the self-similarity of the hand. The proposed approach has two principal components; The former estimates the hand skeleton to predict the bounding box using the well-know UNet architecture <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>. The second part presents a new multi-scale heatmap regression approach to estimate joint locations from multiple resolutions. Specifically, the network output is supervised on different scales to ensure accurate poses for different hand image sizes. This strategy helps the model for better learning of the contextual and the location information. Besides, our method uses the predicted hand skeleton as additional information to guide the network to robustly predict the 2D hand pose.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">Furthermore, we create a new dataset suitable for both hand detection and 2D pose estimation tasks. This dataset includes bounding boxes, 2D keypoints, 3D pose and their corresponding temporal RGB images. We validate the proposed method on a common existing multiview hand pose dataset (LSMV). Furthermore, we extended our results to our newly created dataset (GTHD). Results demonstrate that our method generates accurate poses and outperforms three state-of-the-arts <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Skeleton detection and bounding box localization</span>
+</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">We represent the detected hand location in an image by a rectangular region with four corners. Faster-RCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> type of deep network models directly regress the four corner coordinates from the given hand image. Alternatively, we can predict the 2D hand skeleton and extract the bounding box in a post-processing step (Figure <a href="#S2.F1" title="Figure 1 ‣ II Skeleton detection and bounding box localization ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>). Direct regression of the bounding box is useful for hand cropping but cannot be further exploited for other tasks. In contrast, estimating the hand skeleton includes useful information that guides the 2D pose estimation. Also, the segmentation task is less challenging than predicting the bounding box. Of course, one needs to have the training data with corresponding skeletons. We can obtain this type of data using a 3D hand tracker and an RGB camera to provide the 2D key-points (see Section <a href="#S4.SS1" title="IV-A Implementation details ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-A</span></span></a>). We create the ground truth data for the skeleton by connecting the joints in each finger. Also, we attach the palm to the ends of each finger. Additionally, we represent each joint location by the standardized Gaussian blob.</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p">We can treat hand skeleton data as a segmentation mask. Thus, we use the UNet architecture <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> since it is one of the best encoder-decoder architectures for semantic segmentation. It has two major properties. The first one is the skip connections between the encoder and the decoder layers that enable the network to learn the location and the contextual information. The second property is its symmetry, leading to better information transfer and performances. The model outputs single feature maps on which we apply a <span id="S2.p2.1.1" class="ltx_text ltx_font_italic">sigmoid</span> activation function to bound the prediction values between 0 (background) and 1 (hand). We localize the bounding box using a post-processing step, in which we identify the foreground pixels, and then we apply a region growing algorithm. In our case, the horizontal and vertical boundaries of the recovered regions are reported as the location of the detected hand. Our model robustly differentiates between the skin of the hand and that of the face. Also, it can detect the hand even in cluttered images or different lightning conditions (see Section <a href="#S4.SS2" title="IV-B Hand detection ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-B</span></span></a>).</p>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.2" class="ltx_p">We trained the model for 20 epochs using a batch size of 8. Concerning the loss function, we did two experiments. In the first one, we only used the <math id="S2.p3.1.m1.1" class="ltx_Math" alttext="L_{1}" display="inline"><semantics id="S2.p3.1.m1.1a"><msub id="S2.p3.1.m1.1.1" xref="S2.p3.1.m1.1.1.cmml"><mi id="S2.p3.1.m1.1.1.2" xref="S2.p3.1.m1.1.1.2.cmml">L</mi><mn id="S2.p3.1.m1.1.1.3" xref="S2.p3.1.m1.1.1.3.cmml">1</mn></msub><annotation-xml encoding="MathML-Content" id="S2.p3.1.m1.1b"><apply id="S2.p3.1.m1.1.1.cmml" xref="S2.p3.1.m1.1.1"><csymbol cd="ambiguous" id="S2.p3.1.m1.1.1.1.cmml" xref="S2.p3.1.m1.1.1">subscript</csymbol><ci id="S2.p3.1.m1.1.1.2.cmml" xref="S2.p3.1.m1.1.1.2">𝐿</ci><cn type="integer" id="S2.p3.1.m1.1.1.3.cmml" xref="S2.p3.1.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.1.m1.1c">L_{1}</annotation></semantics></math> loss function, which can not robustly localize the skeleton and adversely affecting the bounding box localization results. On the other hand, using the combination of <math id="S2.p3.2.m2.1" class="ltx_Math" alttext="L_{1}" display="inline"><semantics id="S2.p3.2.m2.1a"><msub id="S2.p3.2.m2.1.1" xref="S2.p3.2.m2.1.1.cmml"><mi id="S2.p3.2.m2.1.1.2" xref="S2.p3.2.m2.1.1.2.cmml">L</mi><mn id="S2.p3.2.m2.1.1.3" xref="S2.p3.2.m2.1.1.3.cmml">1</mn></msub><annotation-xml encoding="MathML-Content" id="S2.p3.2.m2.1b"><apply id="S2.p3.2.m2.1.1.cmml" xref="S2.p3.2.m2.1.1"><csymbol cd="ambiguous" id="S2.p3.2.m2.1.1.1.cmml" xref="S2.p3.2.m2.1.1">subscript</csymbol><ci id="S2.p3.2.m2.1.1.2.cmml" xref="S2.p3.2.m2.1.1.2">𝐿</ci><cn type="integer" id="S2.p3.2.m2.1.1.3.cmml" xref="S2.p3.2.m2.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.2.m2.1c">L_{1}</annotation></semantics></math> loss and a <span id="S2.p3.2.1" class="ltx_text ltx_font_italic">SoftDice</span> loss with their empirical weights can robustly localize the hand.</p>
+</div>
+<div id="S2.p4" class="ltx_para">
+<table id="S2.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E1.m1.3" class="ltx_Math" alttext="L_{1}(x,\hat{x})=\|\ x-\hat{x}\|^{1}_{1}" display="block"><semantics id="S2.E1.m1.3a"><mrow id="S2.E1.m1.3.3" xref="S2.E1.m1.3.3.cmml"><mrow id="S2.E1.m1.3.3.3" xref="S2.E1.m1.3.3.3.cmml"><msub id="S2.E1.m1.3.3.3.2" xref="S2.E1.m1.3.3.3.2.cmml"><mi id="S2.E1.m1.3.3.3.2.2" xref="S2.E1.m1.3.3.3.2.2.cmml">L</mi><mn id="S2.E1.m1.3.3.3.2.3" xref="S2.E1.m1.3.3.3.2.3.cmml">1</mn></msub><mo lspace="0em" rspace="0em" id="S2.E1.m1.3.3.3.1" xref="S2.E1.m1.3.3.3.1.cmml">​</mo><mrow id="S2.E1.m1.3.3.3.3.2" xref="S2.E1.m1.3.3.3.3.1.cmml"><mo stretchy="false" id="S2.E1.m1.3.3.3.3.2.1" xref="S2.E1.m1.3.3.3.3.1.cmml">(</mo><mi id="S2.E1.m1.1.1" xref="S2.E1.m1.1.1.cmml">x</mi><mo id="S2.E1.m1.3.3.3.3.2.2" xref="S2.E1.m1.3.3.3.3.1.cmml">,</mo><mover accent="true" id="S2.E1.m1.2.2" xref="S2.E1.m1.2.2.cmml"><mi id="S2.E1.m1.2.2.2" xref="S2.E1.m1.2.2.2.cmml">x</mi><mo id="S2.E1.m1.2.2.1" xref="S2.E1.m1.2.2.1.cmml">^</mo></mover><mo stretchy="false" id="S2.E1.m1.3.3.3.3.2.3" xref="S2.E1.m1.3.3.3.3.1.cmml">)</mo></mrow></mrow><mo id="S2.E1.m1.3.3.2" xref="S2.E1.m1.3.3.2.cmml">=</mo><msubsup id="S2.E1.m1.3.3.1" xref="S2.E1.m1.3.3.1.cmml"><mrow id="S2.E1.m1.3.3.1.1.1.1" xref="S2.E1.m1.3.3.1.1.1.2.cmml"><mo rspace="0.500em" stretchy="false" id="S2.E1.m1.3.3.1.1.1.1.2" xref="S2.E1.m1.3.3.1.1.1.2.1.cmml">‖</mo><mrow id="S2.E1.m1.3.3.1.1.1.1.1" xref="S2.E1.m1.3.3.1.1.1.1.1.cmml"><mi id="S2.E1.m1.3.3.1.1.1.1.1.2" xref="S2.E1.m1.3.3.1.1.1.1.1.2.cmml">x</mi><mo id="S2.E1.m1.3.3.1.1.1.1.1.1" xref="S2.E1.m1.3.3.1.1.1.1.1.1.cmml">−</mo><mover accent="true" id="S2.E1.m1.3.3.1.1.1.1.1.3" xref="S2.E1.m1.3.3.1.1.1.1.1.3.cmml"><mi id="S2.E1.m1.3.3.1.1.1.1.1.3.2" xref="S2.E1.m1.3.3.1.1.1.1.1.3.2.cmml">x</mi><mo id="S2.E1.m1.3.3.1.1.1.1.1.3.1" xref="S2.E1.m1.3.3.1.1.1.1.1.3.1.cmml">^</mo></mover></mrow><mo stretchy="false" id="S2.E1.m1.3.3.1.1.1.1.3" xref="S2.E1.m1.3.3.1.1.1.2.1.cmml">‖</mo></mrow><mn id="S2.E1.m1.3.3.1.3" xref="S2.E1.m1.3.3.1.3.cmml">1</mn><mn id="S2.E1.m1.3.3.1.1.3" xref="S2.E1.m1.3.3.1.1.3.cmml">1</mn></msubsup></mrow><annotation-xml encoding="MathML-Content" id="S2.E1.m1.3b"><apply id="S2.E1.m1.3.3.cmml" xref="S2.E1.m1.3.3"><eq id="S2.E1.m1.3.3.2.cmml" xref="S2.E1.m1.3.3.2"></eq><apply id="S2.E1.m1.3.3.3.cmml" xref="S2.E1.m1.3.3.3"><times id="S2.E1.m1.3.3.3.1.cmml" xref="S2.E1.m1.3.3.3.1"></times><apply id="S2.E1.m1.3.3.3.2.cmml" xref="S2.E1.m1.3.3.3.2"><csymbol cd="ambiguous" id="S2.E1.m1.3.3.3.2.1.cmml" xref="S2.E1.m1.3.3.3.2">subscript</csymbol><ci id="S2.E1.m1.3.3.3.2.2.cmml" xref="S2.E1.m1.3.3.3.2.2">𝐿</ci><cn type="integer" id="S2.E1.m1.3.3.3.2.3.cmml" xref="S2.E1.m1.3.3.3.2.3">1</cn></apply><interval closure="open" id="S2.E1.m1.3.3.3.3.1.cmml" xref="S2.E1.m1.3.3.3.3.2"><ci id="S2.E1.m1.1.1.cmml" xref="S2.E1.m1.1.1">𝑥</ci><apply id="S2.E1.m1.2.2.cmml" xref="S2.E1.m1.2.2"><ci id="S2.E1.m1.2.2.1.cmml" xref="S2.E1.m1.2.2.1">^</ci><ci id="S2.E1.m1.2.2.2.cmml" xref="S2.E1.m1.2.2.2">𝑥</ci></apply></interval></apply><apply id="S2.E1.m1.3.3.1.cmml" xref="S2.E1.m1.3.3.1"><csymbol cd="ambiguous" id="S2.E1.m1.3.3.1.2.cmml" xref="S2.E1.m1.3.3.1">subscript</csymbol><apply id="S2.E1.m1.3.3.1.1.cmml" xref="S2.E1.m1.3.3.1"><csymbol cd="ambiguous" id="S2.E1.m1.3.3.1.1.2.cmml" xref="S2.E1.m1.3.3.1">superscript</csymbol><apply id="S2.E1.m1.3.3.1.1.1.2.cmml" xref="S2.E1.m1.3.3.1.1.1.1"><csymbol cd="latexml" id="S2.E1.m1.3.3.1.1.1.2.1.cmml" xref="S2.E1.m1.3.3.1.1.1.1.2">norm</csymbol><apply id="S2.E1.m1.3.3.1.1.1.1.1.cmml" xref="S2.E1.m1.3.3.1.1.1.1.1"><minus id="S2.E1.m1.3.3.1.1.1.1.1.1.cmml" xref="S2.E1.m1.3.3.1.1.1.1.1.1"></minus><ci id="S2.E1.m1.3.3.1.1.1.1.1.2.cmml" xref="S2.E1.m1.3.3.1.1.1.1.1.2">𝑥</ci><apply id="S2.E1.m1.3.3.1.1.1.1.1.3.cmml" xref="S2.E1.m1.3.3.1.1.1.1.1.3"><ci id="S2.E1.m1.3.3.1.1.1.1.1.3.1.cmml" xref="S2.E1.m1.3.3.1.1.1.1.1.3.1">^</ci><ci id="S2.E1.m1.3.3.1.1.1.1.1.3.2.cmml" xref="S2.E1.m1.3.3.1.1.1.1.1.3.2">𝑥</ci></apply></apply></apply><cn type="integer" id="S2.E1.m1.3.3.1.1.3.cmml" xref="S2.E1.m1.3.3.1.1.3">1</cn></apply><cn type="integer" id="S2.E1.m1.3.3.1.3.cmml" xref="S2.E1.m1.3.3.1.3">1</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E1.m1.3c">L_{1}(x,\hat{x})=\|\ x-\hat{x}\|^{1}_{1}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<table id="S2.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E2.m1.4" class="ltx_Math" alttext="SoftDice(x,\hat{x})=1-\frac{2\hat{x}^{T}x}{\|\hat{x}\|^{2}_{2}+\|x\|^{2}_{2}}" display="block"><semantics id="S2.E2.m1.4a"><mrow id="S2.E2.m1.4.5" xref="S2.E2.m1.4.5.cmml"><mrow id="S2.E2.m1.4.5.2" xref="S2.E2.m1.4.5.2.cmml"><mi id="S2.E2.m1.4.5.2.2" xref="S2.E2.m1.4.5.2.2.cmml">S</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mi id="S2.E2.m1.4.5.2.3" xref="S2.E2.m1.4.5.2.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1a" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mi id="S2.E2.m1.4.5.2.4" xref="S2.E2.m1.4.5.2.4.cmml">f</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1b" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mi id="S2.E2.m1.4.5.2.5" xref="S2.E2.m1.4.5.2.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1c" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mi id="S2.E2.m1.4.5.2.6" xref="S2.E2.m1.4.5.2.6.cmml">D</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1d" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mi id="S2.E2.m1.4.5.2.7" xref="S2.E2.m1.4.5.2.7.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1e" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mi id="S2.E2.m1.4.5.2.8" xref="S2.E2.m1.4.5.2.8.cmml">c</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1f" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mi id="S2.E2.m1.4.5.2.9" xref="S2.E2.m1.4.5.2.9.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.4.5.2.1g" xref="S2.E2.m1.4.5.2.1.cmml">​</mo><mrow id="S2.E2.m1.4.5.2.10.2" xref="S2.E2.m1.4.5.2.10.1.cmml"><mo stretchy="false" id="S2.E2.m1.4.5.2.10.2.1" xref="S2.E2.m1.4.5.2.10.1.cmml">(</mo><mi id="S2.E2.m1.3.3" xref="S2.E2.m1.3.3.cmml">x</mi><mo id="S2.E2.m1.4.5.2.10.2.2" xref="S2.E2.m1.4.5.2.10.1.cmml">,</mo><mover accent="true" id="S2.E2.m1.4.4" xref="S2.E2.m1.4.4.cmml"><mi id="S2.E2.m1.4.4.2" xref="S2.E2.m1.4.4.2.cmml">x</mi><mo id="S2.E2.m1.4.4.1" xref="S2.E2.m1.4.4.1.cmml">^</mo></mover><mo stretchy="false" id="S2.E2.m1.4.5.2.10.2.3" xref="S2.E2.m1.4.5.2.10.1.cmml">)</mo></mrow></mrow><mo id="S2.E2.m1.4.5.1" xref="S2.E2.m1.4.5.1.cmml">=</mo><mrow id="S2.E2.m1.4.5.3" xref="S2.E2.m1.4.5.3.cmml"><mn id="S2.E2.m1.4.5.3.2" xref="S2.E2.m1.4.5.3.2.cmml">1</mn><mo id="S2.E2.m1.4.5.3.1" xref="S2.E2.m1.4.5.3.1.cmml">−</mo><mfrac id="S2.E2.m1.2.2" xref="S2.E2.m1.2.2.cmml"><mrow id="S2.E2.m1.2.2.4" xref="S2.E2.m1.2.2.4.cmml"><mn id="S2.E2.m1.2.2.4.2" xref="S2.E2.m1.2.2.4.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S2.E2.m1.2.2.4.1" xref="S2.E2.m1.2.2.4.1.cmml">​</mo><msup id="S2.E2.m1.2.2.4.3" xref="S2.E2.m1.2.2.4.3.cmml"><mover accent="true" id="S2.E2.m1.2.2.4.3.2" xref="S2.E2.m1.2.2.4.3.2.cmml"><mi id="S2.E2.m1.2.2.4.3.2.2" xref="S2.E2.m1.2.2.4.3.2.2.cmml">x</mi><mo id="S2.E2.m1.2.2.4.3.2.1" xref="S2.E2.m1.2.2.4.3.2.1.cmml">^</mo></mover><mi id="S2.E2.m1.2.2.4.3.3" xref="S2.E2.m1.2.2.4.3.3.cmml">T</mi></msup><mo lspace="0em" rspace="0em" id="S2.E2.m1.2.2.4.1a" xref="S2.E2.m1.2.2.4.1.cmml">​</mo><mi id="S2.E2.m1.2.2.4.4" xref="S2.E2.m1.2.2.4.4.cmml">x</mi></mrow><mrow id="S2.E2.m1.2.2.2" xref="S2.E2.m1.2.2.2.cmml"><msubsup id="S2.E2.m1.2.2.2.4" xref="S2.E2.m1.2.2.2.4.cmml"><mrow id="S2.E2.m1.2.2.2.4.2.2.2" xref="S2.E2.m1.2.2.2.4.2.2.1.cmml"><mo stretchy="false" id="S2.E2.m1.2.2.2.4.2.2.2.1" xref="S2.E2.m1.2.2.2.4.2.2.1.1.cmml">‖</mo><mover accent="true" id="S2.E2.m1.1.1.1.1" xref="S2.E2.m1.1.1.1.1.cmml"><mi id="S2.E2.m1.1.1.1.1.2" xref="S2.E2.m1.1.1.1.1.2.cmml">x</mi><mo id="S2.E2.m1.1.1.1.1.1" xref="S2.E2.m1.1.1.1.1.1.cmml">^</mo></mover><mo stretchy="false" id="S2.E2.m1.2.2.2.4.2.2.2.2" xref="S2.E2.m1.2.2.2.4.2.2.1.1.cmml">‖</mo></mrow><mn id="S2.E2.m1.2.2.2.4.3" xref="S2.E2.m1.2.2.2.4.3.cmml">2</mn><mn id="S2.E2.m1.2.2.2.4.2.3" xref="S2.E2.m1.2.2.2.4.2.3.cmml">2</mn></msubsup><mo id="S2.E2.m1.2.2.2.3" xref="S2.E2.m1.2.2.2.3.cmml">+</mo><msubsup id="S2.E2.m1.2.2.2.5" xref="S2.E2.m1.2.2.2.5.cmml"><mrow id="S2.E2.m1.2.2.2.5.2.2.2" xref="S2.E2.m1.2.2.2.5.2.2.1.cmml"><mo stretchy="false" id="S2.E2.m1.2.2.2.5.2.2.2.1" xref="S2.E2.m1.2.2.2.5.2.2.1.1.cmml">‖</mo><mi id="S2.E2.m1.2.2.2.2" xref="S2.E2.m1.2.2.2.2.cmml">x</mi><mo stretchy="false" id="S2.E2.m1.2.2.2.5.2.2.2.2" xref="S2.E2.m1.2.2.2.5.2.2.1.1.cmml">‖</mo></mrow><mn id="S2.E2.m1.2.2.2.5.3" xref="S2.E2.m1.2.2.2.5.3.cmml">2</mn><mn id="S2.E2.m1.2.2.2.5.2.3" xref="S2.E2.m1.2.2.2.5.2.3.cmml">2</mn></msubsup></mrow></mfrac></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E2.m1.4b"><apply id="S2.E2.m1.4.5.cmml" xref="S2.E2.m1.4.5"><eq id="S2.E2.m1.4.5.1.cmml" xref="S2.E2.m1.4.5.1"></eq><apply id="S2.E2.m1.4.5.2.cmml" xref="S2.E2.m1.4.5.2"><times id="S2.E2.m1.4.5.2.1.cmml" xref="S2.E2.m1.4.5.2.1"></times><ci id="S2.E2.m1.4.5.2.2.cmml" xref="S2.E2.m1.4.5.2.2">𝑆</ci><ci id="S2.E2.m1.4.5.2.3.cmml" xref="S2.E2.m1.4.5.2.3">𝑜</ci><ci id="S2.E2.m1.4.5.2.4.cmml" xref="S2.E2.m1.4.5.2.4">𝑓</ci><ci id="S2.E2.m1.4.5.2.5.cmml" xref="S2.E2.m1.4.5.2.5">𝑡</ci><ci id="S2.E2.m1.4.5.2.6.cmml" xref="S2.E2.m1.4.5.2.6">𝐷</ci><ci id="S2.E2.m1.4.5.2.7.cmml" xref="S2.E2.m1.4.5.2.7">𝑖</ci><ci id="S2.E2.m1.4.5.2.8.cmml" xref="S2.E2.m1.4.5.2.8">𝑐</ci><ci id="S2.E2.m1.4.5.2.9.cmml" xref="S2.E2.m1.4.5.2.9">𝑒</ci><interval closure="open" id="S2.E2.m1.4.5.2.10.1.cmml" xref="S2.E2.m1.4.5.2.10.2"><ci id="S2.E2.m1.3.3.cmml" xref="S2.E2.m1.3.3">𝑥</ci><apply id="S2.E2.m1.4.4.cmml" xref="S2.E2.m1.4.4"><ci id="S2.E2.m1.4.4.1.cmml" xref="S2.E2.m1.4.4.1">^</ci><ci id="S2.E2.m1.4.4.2.cmml" xref="S2.E2.m1.4.4.2">𝑥</ci></apply></interval></apply><apply id="S2.E2.m1.4.5.3.cmml" xref="S2.E2.m1.4.5.3"><minus id="S2.E2.m1.4.5.3.1.cmml" xref="S2.E2.m1.4.5.3.1"></minus><cn type="integer" id="S2.E2.m1.4.5.3.2.cmml" xref="S2.E2.m1.4.5.3.2">1</cn><apply id="S2.E2.m1.2.2.cmml" xref="S2.E2.m1.2.2"><divide id="S2.E2.m1.2.2.3.cmml" xref="S2.E2.m1.2.2"></divide><apply id="S2.E2.m1.2.2.4.cmml" xref="S2.E2.m1.2.2.4"><times id="S2.E2.m1.2.2.4.1.cmml" xref="S2.E2.m1.2.2.4.1"></times><cn type="integer" id="S2.E2.m1.2.2.4.2.cmml" xref="S2.E2.m1.2.2.4.2">2</cn><apply id="S2.E2.m1.2.2.4.3.cmml" xref="S2.E2.m1.2.2.4.3"><csymbol cd="ambiguous" id="S2.E2.m1.2.2.4.3.1.cmml" xref="S2.E2.m1.2.2.4.3">superscript</csymbol><apply id="S2.E2.m1.2.2.4.3.2.cmml" xref="S2.E2.m1.2.2.4.3.2"><ci id="S2.E2.m1.2.2.4.3.2.1.cmml" xref="S2.E2.m1.2.2.4.3.2.1">^</ci><ci id="S2.E2.m1.2.2.4.3.2.2.cmml" xref="S2.E2.m1.2.2.4.3.2.2">𝑥</ci></apply><ci id="S2.E2.m1.2.2.4.3.3.cmml" xref="S2.E2.m1.2.2.4.3.3">𝑇</ci></apply><ci id="S2.E2.m1.2.2.4.4.cmml" xref="S2.E2.m1.2.2.4.4">𝑥</ci></apply><apply id="S2.E2.m1.2.2.2.cmml" xref="S2.E2.m1.2.2.2"><plus id="S2.E2.m1.2.2.2.3.cmml" xref="S2.E2.m1.2.2.2.3"></plus><apply id="S2.E2.m1.2.2.2.4.cmml" xref="S2.E2.m1.2.2.2.4"><csymbol cd="ambiguous" id="S2.E2.m1.2.2.2.4.1.cmml" xref="S2.E2.m1.2.2.2.4">subscript</csymbol><apply id="S2.E2.m1.2.2.2.4.2.cmml" xref="S2.E2.m1.2.2.2.4"><csymbol cd="ambiguous" id="S2.E2.m1.2.2.2.4.2.1.cmml" xref="S2.E2.m1.2.2.2.4">superscript</csymbol><apply id="S2.E2.m1.2.2.2.4.2.2.1.cmml" xref="S2.E2.m1.2.2.2.4.2.2.2"><csymbol cd="latexml" id="S2.E2.m1.2.2.2.4.2.2.1.1.cmml" xref="S2.E2.m1.2.2.2.4.2.2.2.1">norm</csymbol><apply id="S2.E2.m1.1.1.1.1.cmml" xref="S2.E2.m1.1.1.1.1"><ci id="S2.E2.m1.1.1.1.1.1.cmml" xref="S2.E2.m1.1.1.1.1.1">^</ci><ci id="S2.E2.m1.1.1.1.1.2.cmml" xref="S2.E2.m1.1.1.1.1.2">𝑥</ci></apply></apply><cn type="integer" id="S2.E2.m1.2.2.2.4.2.3.cmml" xref="S2.E2.m1.2.2.2.4.2.3">2</cn></apply><cn type="integer" id="S2.E2.m1.2.2.2.4.3.cmml" xref="S2.E2.m1.2.2.2.4.3">2</cn></apply><apply id="S2.E2.m1.2.2.2.5.cmml" xref="S2.E2.m1.2.2.2.5"><csymbol cd="ambiguous" id="S2.E2.m1.2.2.2.5.1.cmml" xref="S2.E2.m1.2.2.2.5">subscript</csymbol><apply id="S2.E2.m1.2.2.2.5.2.cmml" xref="S2.E2.m1.2.2.2.5"><csymbol cd="ambiguous" id="S2.E2.m1.2.2.2.5.2.1.cmml" xref="S2.E2.m1.2.2.2.5">superscript</csymbol><apply id="S2.E2.m1.2.2.2.5.2.2.1.cmml" xref="S2.E2.m1.2.2.2.5.2.2.2"><csymbol cd="latexml" id="S2.E2.m1.2.2.2.5.2.2.1.1.cmml" xref="S2.E2.m1.2.2.2.5.2.2.2.1">norm</csymbol><ci id="S2.E2.m1.2.2.2.2.cmml" xref="S2.E2.m1.2.2.2.2">𝑥</ci></apply><cn type="integer" id="S2.E2.m1.2.2.2.5.2.3.cmml" xref="S2.E2.m1.2.2.2.5.2.3">2</cn></apply><cn type="integer" id="S2.E2.m1.2.2.2.5.3.cmml" xref="S2.E2.m1.2.2.2.5.3">2</cn></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E2.m1.4c">SoftDice(x,\hat{x})=1-\frac{2\hat{x}^{T}x}{\|\hat{x}\|^{2}_{2}+\|x\|^{2}_{2}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<table id="S2.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E3.m1.6" class="ltx_Math" alttext="Total(x,\hat{x})=\lambda_{1}L_{1}(x,\hat{x})+\lambda_{2}SoftDice(x,\hat{x})" display="block"><semantics id="S2.E3.m1.6a"><mrow id="S2.E3.m1.6.7" xref="S2.E3.m1.6.7.cmml"><mrow id="S2.E3.m1.6.7.2" xref="S2.E3.m1.6.7.2.cmml"><mi id="S2.E3.m1.6.7.2.2" xref="S2.E3.m1.6.7.2.2.cmml">T</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.2.1" xref="S2.E3.m1.6.7.2.1.cmml">​</mo><mi id="S2.E3.m1.6.7.2.3" xref="S2.E3.m1.6.7.2.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.2.1a" xref="S2.E3.m1.6.7.2.1.cmml">​</mo><mi id="S2.E3.m1.6.7.2.4" xref="S2.E3.m1.6.7.2.4.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.2.1b" xref="S2.E3.m1.6.7.2.1.cmml">​</mo><mi id="S2.E3.m1.6.7.2.5" xref="S2.E3.m1.6.7.2.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.2.1c" xref="S2.E3.m1.6.7.2.1.cmml">​</mo><mi id="S2.E3.m1.6.7.2.6" xref="S2.E3.m1.6.7.2.6.cmml">l</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.2.1d" xref="S2.E3.m1.6.7.2.1.cmml">​</mo><mrow id="S2.E3.m1.6.7.2.7.2" xref="S2.E3.m1.6.7.2.7.1.cmml"><mo stretchy="false" id="S2.E3.m1.6.7.2.7.2.1" xref="S2.E3.m1.6.7.2.7.1.cmml">(</mo><mi id="S2.E3.m1.1.1" xref="S2.E3.m1.1.1.cmml">x</mi><mo id="S2.E3.m1.6.7.2.7.2.2" xref="S2.E3.m1.6.7.2.7.1.cmml">,</mo><mover accent="true" id="S2.E3.m1.2.2" xref="S2.E3.m1.2.2.cmml"><mi id="S2.E3.m1.2.2.2" xref="S2.E3.m1.2.2.2.cmml">x</mi><mo id="S2.E3.m1.2.2.1" xref="S2.E3.m1.2.2.1.cmml">^</mo></mover><mo stretchy="false" id="S2.E3.m1.6.7.2.7.2.3" xref="S2.E3.m1.6.7.2.7.1.cmml">)</mo></mrow></mrow><mo id="S2.E3.m1.6.7.1" xref="S2.E3.m1.6.7.1.cmml">=</mo><mrow id="S2.E3.m1.6.7.3" xref="S2.E3.m1.6.7.3.cmml"><mrow id="S2.E3.m1.6.7.3.2" xref="S2.E3.m1.6.7.3.2.cmml"><msub id="S2.E3.m1.6.7.3.2.2" xref="S2.E3.m1.6.7.3.2.2.cmml"><mi id="S2.E3.m1.6.7.3.2.2.2" xref="S2.E3.m1.6.7.3.2.2.2.cmml">λ</mi><mn id="S2.E3.m1.6.7.3.2.2.3" xref="S2.E3.m1.6.7.3.2.2.3.cmml">1</mn></msub><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.2.1" xref="S2.E3.m1.6.7.3.2.1.cmml">​</mo><msub id="S2.E3.m1.6.7.3.2.3" xref="S2.E3.m1.6.7.3.2.3.cmml"><mi id="S2.E3.m1.6.7.3.2.3.2" xref="S2.E3.m1.6.7.3.2.3.2.cmml">L</mi><mn id="S2.E3.m1.6.7.3.2.3.3" xref="S2.E3.m1.6.7.3.2.3.3.cmml">1</mn></msub><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.2.1a" xref="S2.E3.m1.6.7.3.2.1.cmml">​</mo><mrow id="S2.E3.m1.6.7.3.2.4.2" xref="S2.E3.m1.6.7.3.2.4.1.cmml"><mo stretchy="false" id="S2.E3.m1.6.7.3.2.4.2.1" xref="S2.E3.m1.6.7.3.2.4.1.cmml">(</mo><mi id="S2.E3.m1.3.3" xref="S2.E3.m1.3.3.cmml">x</mi><mo id="S2.E3.m1.6.7.3.2.4.2.2" xref="S2.E3.m1.6.7.3.2.4.1.cmml">,</mo><mover accent="true" id="S2.E3.m1.4.4" xref="S2.E3.m1.4.4.cmml"><mi id="S2.E3.m1.4.4.2" xref="S2.E3.m1.4.4.2.cmml">x</mi><mo id="S2.E3.m1.4.4.1" xref="S2.E3.m1.4.4.1.cmml">^</mo></mover><mo stretchy="false" id="S2.E3.m1.6.7.3.2.4.2.3" xref="S2.E3.m1.6.7.3.2.4.1.cmml">)</mo></mrow></mrow><mo id="S2.E3.m1.6.7.3.1" xref="S2.E3.m1.6.7.3.1.cmml">+</mo><mrow id="S2.E3.m1.6.7.3.3" xref="S2.E3.m1.6.7.3.3.cmml"><msub id="S2.E3.m1.6.7.3.3.2" xref="S2.E3.m1.6.7.3.3.2.cmml"><mi id="S2.E3.m1.6.7.3.3.2.2" xref="S2.E3.m1.6.7.3.3.2.2.cmml">λ</mi><mn id="S2.E3.m1.6.7.3.3.2.3" xref="S2.E3.m1.6.7.3.3.2.3.cmml">2</mn></msub><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mi id="S2.E3.m1.6.7.3.3.3" xref="S2.E3.m1.6.7.3.3.3.cmml">S</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1a" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mi id="S2.E3.m1.6.7.3.3.4" xref="S2.E3.m1.6.7.3.3.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1b" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mi id="S2.E3.m1.6.7.3.3.5" xref="S2.E3.m1.6.7.3.3.5.cmml">f</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1c" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mi id="S2.E3.m1.6.7.3.3.6" xref="S2.E3.m1.6.7.3.3.6.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1d" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mi id="S2.E3.m1.6.7.3.3.7" xref="S2.E3.m1.6.7.3.3.7.cmml">D</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1e" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mi id="S2.E3.m1.6.7.3.3.8" xref="S2.E3.m1.6.7.3.3.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1f" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mi id="S2.E3.m1.6.7.3.3.9" xref="S2.E3.m1.6.7.3.3.9.cmml">c</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1g" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mi id="S2.E3.m1.6.7.3.3.10" xref="S2.E3.m1.6.7.3.3.10.cmml">e</mi><mo lspace="0em" rspace="0em" id="S2.E3.m1.6.7.3.3.1h" xref="S2.E3.m1.6.7.3.3.1.cmml">​</mo><mrow id="S2.E3.m1.6.7.3.3.11.2" xref="S2.E3.m1.6.7.3.3.11.1.cmml"><mo stretchy="false" id="S2.E3.m1.6.7.3.3.11.2.1" xref="S2.E3.m1.6.7.3.3.11.1.cmml">(</mo><mi id="S2.E3.m1.5.5" xref="S2.E3.m1.5.5.cmml">x</mi><mo id="S2.E3.m1.6.7.3.3.11.2.2" xref="S2.E3.m1.6.7.3.3.11.1.cmml">,</mo><mover accent="true" id="S2.E3.m1.6.6" xref="S2.E3.m1.6.6.cmml"><mi id="S2.E3.m1.6.6.2" xref="S2.E3.m1.6.6.2.cmml">x</mi><mo id="S2.E3.m1.6.6.1" xref="S2.E3.m1.6.6.1.cmml">^</mo></mover><mo stretchy="false" id="S2.E3.m1.6.7.3.3.11.2.3" xref="S2.E3.m1.6.7.3.3.11.1.cmml">)</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E3.m1.6b"><apply id="S2.E3.m1.6.7.cmml" xref="S2.E3.m1.6.7"><eq id="S2.E3.m1.6.7.1.cmml" xref="S2.E3.m1.6.7.1"></eq><apply id="S2.E3.m1.6.7.2.cmml" xref="S2.E3.m1.6.7.2"><times id="S2.E3.m1.6.7.2.1.cmml" xref="S2.E3.m1.6.7.2.1"></times><ci id="S2.E3.m1.6.7.2.2.cmml" xref="S2.E3.m1.6.7.2.2">𝑇</ci><ci id="S2.E3.m1.6.7.2.3.cmml" xref="S2.E3.m1.6.7.2.3">𝑜</ci><ci id="S2.E3.m1.6.7.2.4.cmml" xref="S2.E3.m1.6.7.2.4">𝑡</ci><ci id="S2.E3.m1.6.7.2.5.cmml" xref="S2.E3.m1.6.7.2.5">𝑎</ci><ci id="S2.E3.m1.6.7.2.6.cmml" xref="S2.E3.m1.6.7.2.6">𝑙</ci><interval closure="open" id="S2.E3.m1.6.7.2.7.1.cmml" xref="S2.E3.m1.6.7.2.7.2"><ci id="S2.E3.m1.1.1.cmml" xref="S2.E3.m1.1.1">𝑥</ci><apply id="S2.E3.m1.2.2.cmml" xref="S2.E3.m1.2.2"><ci id="S2.E3.m1.2.2.1.cmml" xref="S2.E3.m1.2.2.1">^</ci><ci id="S2.E3.m1.2.2.2.cmml" xref="S2.E3.m1.2.2.2">𝑥</ci></apply></interval></apply><apply id="S2.E3.m1.6.7.3.cmml" xref="S2.E3.m1.6.7.3"><plus id="S2.E3.m1.6.7.3.1.cmml" xref="S2.E3.m1.6.7.3.1"></plus><apply id="S2.E3.m1.6.7.3.2.cmml" xref="S2.E3.m1.6.7.3.2"><times id="S2.E3.m1.6.7.3.2.1.cmml" xref="S2.E3.m1.6.7.3.2.1"></times><apply id="S2.E3.m1.6.7.3.2.2.cmml" xref="S2.E3.m1.6.7.3.2.2"><csymbol cd="ambiguous" id="S2.E3.m1.6.7.3.2.2.1.cmml" xref="S2.E3.m1.6.7.3.2.2">subscript</csymbol><ci id="S2.E3.m1.6.7.3.2.2.2.cmml" xref="S2.E3.m1.6.7.3.2.2.2">𝜆</ci><cn type="integer" id="S2.E3.m1.6.7.3.2.2.3.cmml" xref="S2.E3.m1.6.7.3.2.2.3">1</cn></apply><apply id="S2.E3.m1.6.7.3.2.3.cmml" xref="S2.E3.m1.6.7.3.2.3"><csymbol cd="ambiguous" id="S2.E3.m1.6.7.3.2.3.1.cmml" xref="S2.E3.m1.6.7.3.2.3">subscript</csymbol><ci id="S2.E3.m1.6.7.3.2.3.2.cmml" xref="S2.E3.m1.6.7.3.2.3.2">𝐿</ci><cn type="integer" id="S2.E3.m1.6.7.3.2.3.3.cmml" xref="S2.E3.m1.6.7.3.2.3.3">1</cn></apply><interval closure="open" id="S2.E3.m1.6.7.3.2.4.1.cmml" xref="S2.E3.m1.6.7.3.2.4.2"><ci id="S2.E3.m1.3.3.cmml" xref="S2.E3.m1.3.3">𝑥</ci><apply id="S2.E3.m1.4.4.cmml" xref="S2.E3.m1.4.4"><ci id="S2.E3.m1.4.4.1.cmml" xref="S2.E3.m1.4.4.1">^</ci><ci id="S2.E3.m1.4.4.2.cmml" xref="S2.E3.m1.4.4.2">𝑥</ci></apply></interval></apply><apply id="S2.E3.m1.6.7.3.3.cmml" xref="S2.E3.m1.6.7.3.3"><times id="S2.E3.m1.6.7.3.3.1.cmml" xref="S2.E3.m1.6.7.3.3.1"></times><apply id="S2.E3.m1.6.7.3.3.2.cmml" xref="S2.E3.m1.6.7.3.3.2"><csymbol cd="ambiguous" id="S2.E3.m1.6.7.3.3.2.1.cmml" xref="S2.E3.m1.6.7.3.3.2">subscript</csymbol><ci id="S2.E3.m1.6.7.3.3.2.2.cmml" xref="S2.E3.m1.6.7.3.3.2.2">𝜆</ci><cn type="integer" id="S2.E3.m1.6.7.3.3.2.3.cmml" xref="S2.E3.m1.6.7.3.3.2.3">2</cn></apply><ci id="S2.E3.m1.6.7.3.3.3.cmml" xref="S2.E3.m1.6.7.3.3.3">𝑆</ci><ci id="S2.E3.m1.6.7.3.3.4.cmml" xref="S2.E3.m1.6.7.3.3.4">𝑜</ci><ci id="S2.E3.m1.6.7.3.3.5.cmml" xref="S2.E3.m1.6.7.3.3.5">𝑓</ci><ci id="S2.E3.m1.6.7.3.3.6.cmml" xref="S2.E3.m1.6.7.3.3.6">𝑡</ci><ci id="S2.E3.m1.6.7.3.3.7.cmml" xref="S2.E3.m1.6.7.3.3.7">𝐷</ci><ci id="S2.E3.m1.6.7.3.3.8.cmml" xref="S2.E3.m1.6.7.3.3.8">𝑖</ci><ci id="S2.E3.m1.6.7.3.3.9.cmml" xref="S2.E3.m1.6.7.3.3.9">𝑐</ci><ci id="S2.E3.m1.6.7.3.3.10.cmml" xref="S2.E3.m1.6.7.3.3.10">𝑒</ci><interval closure="open" id="S2.E3.m1.6.7.3.3.11.1.cmml" xref="S2.E3.m1.6.7.3.3.11.2"><ci id="S2.E3.m1.5.5.cmml" xref="S2.E3.m1.5.5">𝑥</ci><apply id="S2.E3.m1.6.6.cmml" xref="S2.E3.m1.6.6"><ci id="S2.E3.m1.6.6.1.cmml" xref="S2.E3.m1.6.6.1">^</ci><ci id="S2.E3.m1.6.6.2.cmml" xref="S2.E3.m1.6.6.2">𝑥</ci></apply></interval></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E3.m1.6c">Total(x,\hat{x})=\lambda_{1}L_{1}(x,\hat{x})+\lambda_{2}SoftDice(x,\hat{x})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S2.p5" class="ltx_para">
+<p id="S2.p5.4" class="ltx_p">Where: <math id="S2.p5.1.m1.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S2.p5.1.m1.1a"><mi id="S2.p5.1.m1.1.1" xref="S2.p5.1.m1.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S2.p5.1.m1.1b"><ci id="S2.p5.1.m1.1.1.cmml" xref="S2.p5.1.m1.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.1.m1.1c">x</annotation></semantics></math>, <math id="S2.p5.2.m2.1" class="ltx_Math" alttext="\hat{x}" display="inline"><semantics id="S2.p5.2.m2.1a"><mover accent="true" id="S2.p5.2.m2.1.1" xref="S2.p5.2.m2.1.1.cmml"><mi id="S2.p5.2.m2.1.1.2" xref="S2.p5.2.m2.1.1.2.cmml">x</mi><mo id="S2.p5.2.m2.1.1.1" xref="S2.p5.2.m2.1.1.1.cmml">^</mo></mover><annotation-xml encoding="MathML-Content" id="S2.p5.2.m2.1b"><apply id="S2.p5.2.m2.1.1.cmml" xref="S2.p5.2.m2.1.1"><ci id="S2.p5.2.m2.1.1.1.cmml" xref="S2.p5.2.m2.1.1.1">^</ci><ci id="S2.p5.2.m2.1.1.2.cmml" xref="S2.p5.2.m2.1.1.2">𝑥</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.2.m2.1c">\hat{x}</annotation></semantics></math>, <math id="S2.p5.3.m3.1" class="ltx_Math" alttext="\lambda_{1}" display="inline"><semantics id="S2.p5.3.m3.1a"><msub id="S2.p5.3.m3.1.1" xref="S2.p5.3.m3.1.1.cmml"><mi id="S2.p5.3.m3.1.1.2" xref="S2.p5.3.m3.1.1.2.cmml">λ</mi><mn id="S2.p5.3.m3.1.1.3" xref="S2.p5.3.m3.1.1.3.cmml">1</mn></msub><annotation-xml encoding="MathML-Content" id="S2.p5.3.m3.1b"><apply id="S2.p5.3.m3.1.1.cmml" xref="S2.p5.3.m3.1.1"><csymbol cd="ambiguous" id="S2.p5.3.m3.1.1.1.cmml" xref="S2.p5.3.m3.1.1">subscript</csymbol><ci id="S2.p5.3.m3.1.1.2.cmml" xref="S2.p5.3.m3.1.1.2">𝜆</ci><cn type="integer" id="S2.p5.3.m3.1.1.3.cmml" xref="S2.p5.3.m3.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.3.m3.1c">\lambda_{1}</annotation></semantics></math> and <math id="S2.p5.4.m4.1" class="ltx_Math" alttext="\lambda_{2}" display="inline"><semantics id="S2.p5.4.m4.1a"><msub id="S2.p5.4.m4.1.1" xref="S2.p5.4.m4.1.1.cmml"><mi id="S2.p5.4.m4.1.1.2" xref="S2.p5.4.m4.1.1.2.cmml">λ</mi><mn id="S2.p5.4.m4.1.1.3" xref="S2.p5.4.m4.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S2.p5.4.m4.1b"><apply id="S2.p5.4.m4.1.1.cmml" xref="S2.p5.4.m4.1.1"><csymbol cd="ambiguous" id="S2.p5.4.m4.1.1.1.cmml" xref="S2.p5.4.m4.1.1">subscript</csymbol><ci id="S2.p5.4.m4.1.1.2.cmml" xref="S2.p5.4.m4.1.1.2">𝜆</ci><cn type="integer" id="S2.p5.4.m4.1.1.3.cmml" xref="S2.p5.4.m4.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.4.m4.1c">\lambda_{2}</annotation></semantics></math> represent the ground truth skeleton, the predicted skeleton and the two hyperparameters of the loss function (set to 0.4 and 0.6, respectively).</p>
+</div>
+<figure id="S2.F1" class="ltx_figure"><img src="/html/2105.10904/assets/1.png" id="S2.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="299" height="95" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>The proposed method for hand bounding box detection. Unlike many deep learning approaches that use Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> model to directly estimate the bounding box (top), we predict the skeleton image and infer the bounding box in a post-processing step (bottom).</figcaption>
+</figure>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Multi-scale heatmaps regression</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">Most of the existing hand pose estimation methods predict the heatmaps at a single-scale. However, the hand in the original image can have several sizes (close/far hands). Hence, when we use a single scale image, the cropped hand image size cannot be suitable for all the dataset samples. To address this limitation, we propose a multi-scale heatmaps regression architecture that performs the back-propagation process for many resolutions providing better joint learning for both large and small hands. Moreover, the cropped hand image would include some parts of the background. To overcome this problem, we employ the predicted hand skeleton to act as an attention mechanism for the network to focus on hand pixels. This makes the 2D pose regression task less challenging to optimize.</p>
+</div>
+<figure id="S3.F2" class="ltx_figure"><img src="/html/2105.10904/assets/2.png" id="S3.F2.g1" class="ltx_graphics ltx_centering ltx_img_square" width="299" height="301" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>The overall architecture of the proposed 2D hand pose estimation approach uses the hand skeleton as a constraint and estimates the joint heatmaps from multiple scales.</figcaption>
+</figure>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Figure <a href="#S3.F2" title="Figure 2 ‣ III Multi-scale heatmaps regression ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> shows our skeleton-aware multi-scale heatmaps network approach for 2D hand pose estimation. We feed the concatenation of the cropped hand image and the predicted skeleton to the first convolution layer. The latter is followed by two downsampling ResNet blocks, two upsampling ResNet blocks, and a final transposed convolution layer that recovers the input resolution. After each downsampling (similarly upsampling), we apply a <math id="S3.p2.1.m1.1" class="ltx_Math" alttext="1\times 1" display="inline"><semantics id="S3.p2.1.m1.1a"><mrow id="S3.p2.1.m1.1.1" xref="S3.p2.1.m1.1.1.cmml"><mn id="S3.p2.1.m1.1.1.2" xref="S3.p2.1.m1.1.1.2.cmml">1</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p2.1.m1.1.1.1" xref="S3.p2.1.m1.1.1.1.cmml">×</mo><mn id="S3.p2.1.m1.1.1.3" xref="S3.p2.1.m1.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.1.m1.1b"><apply id="S3.p2.1.m1.1.1.cmml" xref="S3.p2.1.m1.1.1"><times id="S3.p2.1.m1.1.1.1.cmml" xref="S3.p2.1.m1.1.1.1"></times><cn type="integer" id="S3.p2.1.m1.1.1.2.cmml" xref="S3.p2.1.m1.1.1.2">1</cn><cn type="integer" id="S3.p2.1.m1.1.1.3.cmml" xref="S3.p2.1.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.1.m1.1c">1\times 1</annotation></semantics></math> convolution layer followed by a <span id="S3.p2.1.1" class="ltx_text ltx_font_italic">sigmoid</span> activation function to output 21 or 20 feature maps representing the heatmaps in GTHD or LSMV datasets, respectively. The heatmaps resolution is divided/multiplied by two after each downsampling/upsampling. In test time, we calculate a weighted average of the predicted five heatmaps to find the coordinate of the 2D keypoints. We formulate the loss function as:</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<table id="S3.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E4.m1.3" class="ltx_Math" alttext="L(x,\hat{x})=\sum_{i=1}^{k}\delta_{i}{}\|\ x_{i}-\hat{x}_{i}\|^{2}_{2}" display="block"><semantics id="S3.E4.m1.3a"><mrow id="S3.E4.m1.3.3" xref="S3.E4.m1.3.3.cmml"><mrow id="S3.E4.m1.3.3.3" xref="S3.E4.m1.3.3.3.cmml"><mi id="S3.E4.m1.3.3.3.2" xref="S3.E4.m1.3.3.3.2.cmml">L</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.3.3.3.1" xref="S3.E4.m1.3.3.3.1.cmml">​</mo><mrow id="S3.E4.m1.3.3.3.3.2" xref="S3.E4.m1.3.3.3.3.1.cmml"><mo stretchy="false" id="S3.E4.m1.3.3.3.3.2.1" xref="S3.E4.m1.3.3.3.3.1.cmml">(</mo><mi id="S3.E4.m1.1.1" xref="S3.E4.m1.1.1.cmml">x</mi><mo id="S3.E4.m1.3.3.3.3.2.2" xref="S3.E4.m1.3.3.3.3.1.cmml">,</mo><mover accent="true" id="S3.E4.m1.2.2" xref="S3.E4.m1.2.2.cmml"><mi id="S3.E4.m1.2.2.2" xref="S3.E4.m1.2.2.2.cmml">x</mi><mo id="S3.E4.m1.2.2.1" xref="S3.E4.m1.2.2.1.cmml">^</mo></mover><mo stretchy="false" id="S3.E4.m1.3.3.3.3.2.3" xref="S3.E4.m1.3.3.3.3.1.cmml">)</mo></mrow></mrow><mo rspace="0.111em" id="S3.E4.m1.3.3.2" xref="S3.E4.m1.3.3.2.cmml">=</mo><mrow id="S3.E4.m1.3.3.1" xref="S3.E4.m1.3.3.1.cmml"><munderover id="S3.E4.m1.3.3.1.2" xref="S3.E4.m1.3.3.1.2.cmml"><mo movablelimits="false" id="S3.E4.m1.3.3.1.2.2.2" xref="S3.E4.m1.3.3.1.2.2.2.cmml">∑</mo><mrow id="S3.E4.m1.3.3.1.2.2.3" xref="S3.E4.m1.3.3.1.2.2.3.cmml"><mi id="S3.E4.m1.3.3.1.2.2.3.2" xref="S3.E4.m1.3.3.1.2.2.3.2.cmml">i</mi><mo id="S3.E4.m1.3.3.1.2.2.3.1" xref="S3.E4.m1.3.3.1.2.2.3.1.cmml">=</mo><mn id="S3.E4.m1.3.3.1.2.2.3.3" xref="S3.E4.m1.3.3.1.2.2.3.3.cmml">1</mn></mrow><mi id="S3.E4.m1.3.3.1.2.3" xref="S3.E4.m1.3.3.1.2.3.cmml">k</mi></munderover><mrow id="S3.E4.m1.3.3.1.1" xref="S3.E4.m1.3.3.1.1.cmml"><msub id="S3.E4.m1.3.3.1.1.3" xref="S3.E4.m1.3.3.1.1.3.cmml"><mi id="S3.E4.m1.3.3.1.1.3.2" xref="S3.E4.m1.3.3.1.1.3.2.cmml">δ</mi><mi id="S3.E4.m1.3.3.1.1.3.3" xref="S3.E4.m1.3.3.1.1.3.3.cmml">i</mi></msub><mo lspace="0em" rspace="0em" id="S3.E4.m1.3.3.1.1.2" xref="S3.E4.m1.3.3.1.1.2.cmml">​</mo><msubsup id="S3.E4.m1.3.3.1.1.1" xref="S3.E4.m1.3.3.1.1.1.cmml"><mrow id="S3.E4.m1.3.3.1.1.1.1.1.1" xref="S3.E4.m1.3.3.1.1.1.1.1.2.cmml"><mo rspace="0.500em" stretchy="false" id="S3.E4.m1.3.3.1.1.1.1.1.1.2" xref="S3.E4.m1.3.3.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S3.E4.m1.3.3.1.1.1.1.1.1.1" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.cmml"><msub id="S3.E4.m1.3.3.1.1.1.1.1.1.1.2" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.cmml"><mi id="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.2" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.2.cmml">x</mi><mi id="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.3" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.3.cmml">i</mi></msub><mo id="S3.E4.m1.3.3.1.1.1.1.1.1.1.1" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.cmml"><mover accent="true" id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.cmml"><mi id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.2" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.2.cmml">x</mi><mo id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.1" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.1.cmml">^</mo></mover><mi id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.3" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="S3.E4.m1.3.3.1.1.1.1.1.1.3" xref="S3.E4.m1.3.3.1.1.1.1.1.2.1.cmml">‖</mo></mrow><mn id="S3.E4.m1.3.3.1.1.1.3" xref="S3.E4.m1.3.3.1.1.1.3.cmml">2</mn><mn id="S3.E4.m1.3.3.1.1.1.1.3" xref="S3.E4.m1.3.3.1.1.1.1.3.cmml">2</mn></msubsup></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E4.m1.3b"><apply id="S3.E4.m1.3.3.cmml" xref="S3.E4.m1.3.3"><eq id="S3.E4.m1.3.3.2.cmml" xref="S3.E4.m1.3.3.2"></eq><apply id="S3.E4.m1.3.3.3.cmml" xref="S3.E4.m1.3.3.3"><times id="S3.E4.m1.3.3.3.1.cmml" xref="S3.E4.m1.3.3.3.1"></times><ci id="S3.E4.m1.3.3.3.2.cmml" xref="S3.E4.m1.3.3.3.2">𝐿</ci><interval closure="open" id="S3.E4.m1.3.3.3.3.1.cmml" xref="S3.E4.m1.3.3.3.3.2"><ci id="S3.E4.m1.1.1.cmml" xref="S3.E4.m1.1.1">𝑥</ci><apply id="S3.E4.m1.2.2.cmml" xref="S3.E4.m1.2.2"><ci id="S3.E4.m1.2.2.1.cmml" xref="S3.E4.m1.2.2.1">^</ci><ci id="S3.E4.m1.2.2.2.cmml" xref="S3.E4.m1.2.2.2">𝑥</ci></apply></interval></apply><apply id="S3.E4.m1.3.3.1.cmml" xref="S3.E4.m1.3.3.1"><apply id="S3.E4.m1.3.3.1.2.cmml" xref="S3.E4.m1.3.3.1.2"><csymbol cd="ambiguous" id="S3.E4.m1.3.3.1.2.1.cmml" xref="S3.E4.m1.3.3.1.2">superscript</csymbol><apply id="S3.E4.m1.3.3.1.2.2.cmml" xref="S3.E4.m1.3.3.1.2"><csymbol cd="ambiguous" id="S3.E4.m1.3.3.1.2.2.1.cmml" xref="S3.E4.m1.3.3.1.2">subscript</csymbol><sum id="S3.E4.m1.3.3.1.2.2.2.cmml" xref="S3.E4.m1.3.3.1.2.2.2"></sum><apply id="S3.E4.m1.3.3.1.2.2.3.cmml" xref="S3.E4.m1.3.3.1.2.2.3"><eq id="S3.E4.m1.3.3.1.2.2.3.1.cmml" xref="S3.E4.m1.3.3.1.2.2.3.1"></eq><ci id="S3.E4.m1.3.3.1.2.2.3.2.cmml" xref="S3.E4.m1.3.3.1.2.2.3.2">𝑖</ci><cn type="integer" id="S3.E4.m1.3.3.1.2.2.3.3.cmml" xref="S3.E4.m1.3.3.1.2.2.3.3">1</cn></apply></apply><ci id="S3.E4.m1.3.3.1.2.3.cmml" xref="S3.E4.m1.3.3.1.2.3">𝑘</ci></apply><apply id="S3.E4.m1.3.3.1.1.cmml" xref="S3.E4.m1.3.3.1.1"><times id="S3.E4.m1.3.3.1.1.2.cmml" xref="S3.E4.m1.3.3.1.1.2"></times><apply id="S3.E4.m1.3.3.1.1.3.cmml" xref="S3.E4.m1.3.3.1.1.3"><csymbol cd="ambiguous" id="S3.E4.m1.3.3.1.1.3.1.cmml" xref="S3.E4.m1.3.3.1.1.3">subscript</csymbol><ci id="S3.E4.m1.3.3.1.1.3.2.cmml" xref="S3.E4.m1.3.3.1.1.3.2">𝛿</ci><ci id="S3.E4.m1.3.3.1.1.3.3.cmml" xref="S3.E4.m1.3.3.1.1.3.3">𝑖</ci></apply><apply id="S3.E4.m1.3.3.1.1.1.cmml" xref="S3.E4.m1.3.3.1.1.1"><csymbol cd="ambiguous" id="S3.E4.m1.3.3.1.1.1.2.cmml" xref="S3.E4.m1.3.3.1.1.1">subscript</csymbol><apply id="S3.E4.m1.3.3.1.1.1.1.cmml" xref="S3.E4.m1.3.3.1.1.1"><csymbol cd="ambiguous" id="S3.E4.m1.3.3.1.1.1.1.2.cmml" xref="S3.E4.m1.3.3.1.1.1">superscript</csymbol><apply id="S3.E4.m1.3.3.1.1.1.1.1.2.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1"><csymbol cd="latexml" id="S3.E4.m1.3.3.1.1.1.1.1.2.1.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.2">norm</csymbol><apply id="S3.E4.m1.3.3.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1"><minus id="S3.E4.m1.3.3.1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.1"></minus><apply id="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.2">𝑥</ci><ci id="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.3.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.2.3">𝑖</ci></apply><apply id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3">subscript</csymbol><apply id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2"><ci id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.1">^</ci><ci id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.2.2">𝑥</ci></apply><ci id="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E4.m1.3.3.1.1.1.1.1.1.1.3.3">𝑖</ci></apply></apply></apply><cn type="integer" id="S3.E4.m1.3.3.1.1.1.1.3.cmml" xref="S3.E4.m1.3.3.1.1.1.1.3">2</cn></apply><cn type="integer" id="S3.E4.m1.3.3.1.1.1.3.cmml" xref="S3.E4.m1.3.3.1.1.1.3">2</cn></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E4.m1.3c">L(x,\hat{x})=\sum_{i=1}^{k}\delta_{i}{}\|\ x_{i}-\hat{x}_{i}\|^{2}_{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.4" class="ltx_p">Where: <math id="S3.p4.1.m1.1" class="ltx_Math" alttext="k" display="inline"><semantics id="S3.p4.1.m1.1a"><mi id="S3.p4.1.m1.1.1" xref="S3.p4.1.m1.1.1.cmml">k</mi><annotation-xml encoding="MathML-Content" id="S3.p4.1.m1.1b"><ci id="S3.p4.1.m1.1.1.cmml" xref="S3.p4.1.m1.1.1">𝑘</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p4.1.m1.1c">k</annotation></semantics></math> is the number of scales including the full resolution output, and <math id="S3.p4.2.m2.1" class="ltx_Math" alttext="\delta_{i}" display="inline"><semantics id="S3.p4.2.m2.1a"><msub id="S3.p4.2.m2.1.1" xref="S3.p4.2.m2.1.1.cmml"><mi id="S3.p4.2.m2.1.1.2" xref="S3.p4.2.m2.1.1.2.cmml">δ</mi><mi id="S3.p4.2.m2.1.1.3" xref="S3.p4.2.m2.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p4.2.m2.1b"><apply id="S3.p4.2.m2.1.1.cmml" xref="S3.p4.2.m2.1.1"><csymbol cd="ambiguous" id="S3.p4.2.m2.1.1.1.cmml" xref="S3.p4.2.m2.1.1">subscript</csymbol><ci id="S3.p4.2.m2.1.1.2.cmml" xref="S3.p4.2.m2.1.1.2">𝛿</ci><ci id="S3.p4.2.m2.1.1.3.cmml" xref="S3.p4.2.m2.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p4.2.m2.1c">\delta_{i}</annotation></semantics></math> is the weight given for each scale. In our experiments we choose <math id="S3.p4.3.m3.1" class="ltx_Math" alttext="k=5" display="inline"><semantics id="S3.p4.3.m3.1a"><mrow id="S3.p4.3.m3.1.1" xref="S3.p4.3.m3.1.1.cmml"><mi id="S3.p4.3.m3.1.1.2" xref="S3.p4.3.m3.1.1.2.cmml">k</mi><mo id="S3.p4.3.m3.1.1.1" xref="S3.p4.3.m3.1.1.1.cmml">=</mo><mn id="S3.p4.3.m3.1.1.3" xref="S3.p4.3.m3.1.1.3.cmml">5</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p4.3.m3.1b"><apply id="S3.p4.3.m3.1.1.cmml" xref="S3.p4.3.m3.1.1"><eq id="S3.p4.3.m3.1.1.1.cmml" xref="S3.p4.3.m3.1.1.1"></eq><ci id="S3.p4.3.m3.1.1.2.cmml" xref="S3.p4.3.m3.1.1.2">𝑘</ci><cn type="integer" id="S3.p4.3.m3.1.1.3.cmml" xref="S3.p4.3.m3.1.1.3">5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p4.3.m3.1c">k=5</annotation></semantics></math> and <math id="S3.p4.4.m4.1" class="ltx_Math" alttext="\delta_{i}" display="inline"><semantics id="S3.p4.4.m4.1a"><msub id="S3.p4.4.m4.1.1" xref="S3.p4.4.m4.1.1.cmml"><mi id="S3.p4.4.m4.1.1.2" xref="S3.p4.4.m4.1.1.2.cmml">δ</mi><mi id="S3.p4.4.m4.1.1.3" xref="S3.p4.4.m4.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S3.p4.4.m4.1b"><apply id="S3.p4.4.m4.1.1.cmml" xref="S3.p4.4.m4.1.1"><csymbol cd="ambiguous" id="S3.p4.4.m4.1.1.1.cmml" xref="S3.p4.4.m4.1.1">subscript</csymbol><ci id="S3.p4.4.m4.1.1.2.cmml" xref="S3.p4.4.m4.1.1.2">𝛿</ci><ci id="S3.p4.4.m4.1.1.3.cmml" xref="S3.p4.4.m4.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p4.4.m4.1c">\delta_{i}</annotation></semantics></math> is set be 1, 1/2 and 1/4 for scales 128, 64 and 32 respectively.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Experiments</span>
+</h2>
+
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.4.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.5.2" class="ltx_text ltx_font_italic">Implementation details</span>
+</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">Our method has been implemented and tested on two different datasets. The first one is LSMV <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, which is one of the large-scale datasets that provide the hand bounding boxes, the 2D key-points as well as the 3D pose. We split the data into 60000, 15000, and 12760 samples for the training set, validation set, and test set, respectively.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.4" class="ltx_p">To train both the hand detector and the hand pose estimator, we have built our own dataset (GTHD) using an RGB camera and a Leap Motion sensor <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>. The RGB camera provides an image with a resolution of <math id="S4.SS1.p2.1.m1.1" class="ltx_Math" alttext="640\times 480" display="inline"><semantics id="S4.SS1.p2.1.m1.1a"><mrow id="S4.SS1.p2.1.m1.1.1" xref="S4.SS1.p2.1.m1.1.1.cmml"><mn id="S4.SS1.p2.1.m1.1.1.2" xref="S4.SS1.p2.1.m1.1.1.2.cmml">640</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p2.1.m1.1.1.1" xref="S4.SS1.p2.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS1.p2.1.m1.1.1.3" xref="S4.SS1.p2.1.m1.1.1.3.cmml">480</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.1.m1.1b"><apply id="S4.SS1.p2.1.m1.1.1.cmml" xref="S4.SS1.p2.1.m1.1.1"><times id="S4.SS1.p2.1.m1.1.1.1.cmml" xref="S4.SS1.p2.1.m1.1.1.1"></times><cn type="integer" id="S4.SS1.p2.1.m1.1.1.2.cmml" xref="S4.SS1.p2.1.m1.1.1.2">640</cn><cn type="integer" id="S4.SS1.p2.1.m1.1.1.3.cmml" xref="S4.SS1.p2.1.m1.1.1.3">480</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.1.m1.1c">640\times 480</annotation></semantics></math> pixels. The leap motion controller is a combination of hardware and software that senses the fingers of the hand to provide the 3D joint locations. Hence, a projection process from 3D space to the 2D image plane is necessary. We achieve this goal in two steps. In the first one, we use OpenCV to estimate specific intrinsic parameters of the camera. In the second step, we estimate the extrinsic parameters between the leap motion controller and the camera. To get the correct pose with its corresponding image, we synchronize the two sensors in time. Finally, to find the rotation and translation matrices, we manually mark one key-point in a set of hand images and solve the <span id="S4.SS1.p2.4.1" class="ltx_text ltx_font_italic">PnP</span> problem by computing the 3D-2D correspondences <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>. Figure <a href="#S4.F3" title="Figure 3 ‣ IV-A Implementation details ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> illustrates the results of the calibration process. We randomly split the GTHD dataset into a training set (<math id="S4.SS1.p2.2.m2.1" class="ltx_Math" alttext="75\%" display="inline"><semantics id="S4.SS1.p2.2.m2.1a"><mrow id="S4.SS1.p2.2.m2.1.1" xref="S4.SS1.p2.2.m2.1.1.cmml"><mn id="S4.SS1.p2.2.m2.1.1.2" xref="S4.SS1.p2.2.m2.1.1.2.cmml">75</mn><mo id="S4.SS1.p2.2.m2.1.1.1" xref="S4.SS1.p2.2.m2.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.2.m2.1b"><apply id="S4.SS1.p2.2.m2.1.1.cmml" xref="S4.SS1.p2.2.m2.1.1"><csymbol cd="latexml" id="S4.SS1.p2.2.m2.1.1.1.cmml" xref="S4.SS1.p2.2.m2.1.1.1">percent</csymbol><cn type="integer" id="S4.SS1.p2.2.m2.1.1.2.cmml" xref="S4.SS1.p2.2.m2.1.1.2">75</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.2.m2.1c">75\%</annotation></semantics></math>), a validation set (<math id="S4.SS1.p2.3.m3.1" class="ltx_Math" alttext="10\%" display="inline"><semantics id="S4.SS1.p2.3.m3.1a"><mrow id="S4.SS1.p2.3.m3.1.1" xref="S4.SS1.p2.3.m3.1.1.cmml"><mn id="S4.SS1.p2.3.m3.1.1.2" xref="S4.SS1.p2.3.m3.1.1.2.cmml">10</mn><mo id="S4.SS1.p2.3.m3.1.1.1" xref="S4.SS1.p2.3.m3.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.3.m3.1b"><apply id="S4.SS1.p2.3.m3.1.1.cmml" xref="S4.SS1.p2.3.m3.1.1"><csymbol cd="latexml" id="S4.SS1.p2.3.m3.1.1.1.cmml" xref="S4.SS1.p2.3.m3.1.1.1">percent</csymbol><cn type="integer" id="S4.SS1.p2.3.m3.1.1.2.cmml" xref="S4.SS1.p2.3.m3.1.1.2">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.3.m3.1c">10\%</annotation></semantics></math>) and a test set (<math id="S4.SS1.p2.4.m4.1" class="ltx_Math" alttext="15\%" display="inline"><semantics id="S4.SS1.p2.4.m4.1a"><mrow id="S4.SS1.p2.4.m4.1.1" xref="S4.SS1.p2.4.m4.1.1.cmml"><mn id="S4.SS1.p2.4.m4.1.1.2" xref="S4.SS1.p2.4.m4.1.1.2.cmml">15</mn><mo id="S4.SS1.p2.4.m4.1.1.1" xref="S4.SS1.p2.4.m4.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.4.m4.1b"><apply id="S4.SS1.p2.4.m4.1.1.cmml" xref="S4.SS1.p2.4.m4.1.1"><csymbol cd="latexml" id="S4.SS1.p2.4.m4.1.1.1.cmml" xref="S4.SS1.p2.4.m4.1.1.1">percent</csymbol><cn type="integer" id="S4.SS1.p2.4.m4.1.1.2.cmml" xref="S4.SS1.p2.4.m4.1.1.2">15</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.4.m4.1c">15\%</annotation></semantics></math>).</p>
+</div>
+<div id="S4.SS1.p3" class="ltx_para">
+<p id="S4.SS1.p3.1" class="ltx_p">We report the performance of that module using <span id="S4.SS1.p3.1.1" class="ltx_text ltx_font_italic">Accuracy</span>, <span id="S4.SS1.p3.1.2" class="ltx_text ltx_font_italic">Precision</span>, <span id="S4.SS1.p3.1.3" class="ltx_text ltx_font_italic">Recall</span> and <span id="S4.SS1.p3.1.4" class="ltx_text ltx_font_italic">F1</span>. Also, we calculate the Area Under ROC Curve ( <span id="S4.SS1.p3.1.5" class="ltx_text ltx_font_italic">AUC</span>) for GTHD datasets since it measures how well the two classes (Hand and NoHand) are separable. It calculates the trade-off between the true positive rate and the false positive rate. Furthermore, we report the Intersection over Union ( <span id="S4.SS1.p3.1.6" class="ltx_text ltx_font_italic">IOU</span>) metric to quantify our model performance in hand bounding box detection task. It evaluates the predicted bounding boxes by comparing them against the ground truth.</p>
+</div>
+<div id="S4.SS1.p4" class="ltx_para">
+<p id="S4.SS1.p4.1" class="ltx_p">To quantitatively evaluate the performance of the proposed 2D hand pose regression methods, we use the Probability of Correct Keypoint (PCK) metric <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> as it is used frequently in human and hand pose estimation tasks. It considers the predicted joints as correct if the distance to the ground truth joint is within a certain threshold. We used a normalized threshold by dividing all the joints values by the size of the hand bounding box. Also, for additional quantification of the performance of the proposed method, we report the low joint pixel error (MJPE) per keypoint over the input hand image with <math id="S4.SS1.p4.1.m1.1" class="ltx_Math" alttext="128\times 128" display="inline"><semantics id="S4.SS1.p4.1.m1.1a"><mrow id="S4.SS1.p4.1.m1.1.1" xref="S4.SS1.p4.1.m1.1.1.cmml"><mn id="S4.SS1.p4.1.m1.1.1.2" xref="S4.SS1.p4.1.m1.1.1.2.cmml">128</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p4.1.m1.1.1.1" xref="S4.SS1.p4.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS1.p4.1.m1.1.1.3" xref="S4.SS1.p4.1.m1.1.1.3.cmml">128</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.1.m1.1b"><apply id="S4.SS1.p4.1.m1.1.1.cmml" xref="S4.SS1.p4.1.m1.1.1"><times id="S4.SS1.p4.1.m1.1.1.1.cmml" xref="S4.SS1.p4.1.m1.1.1.1"></times><cn type="integer" id="S4.SS1.p4.1.m1.1.1.2.cmml" xref="S4.SS1.p4.1.m1.1.1.2">128</cn><cn type="integer" id="S4.SS1.p4.1.m1.1.1.3.cmml" xref="S4.SS1.p4.1.m1.1.1.3">128</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.1.m1.1c">128\times 128</annotation></semantics></math> resolution.</p>
+</div>
+<div id="S4.SS1.p5" class="ltx_para">
+<p id="S4.SS1.p5.2" class="ltx_p">We train the models for 30 epochs using a batch size of 8 and Adam as an optimizer. We initialize the learning rate to <math id="S4.SS1.p5.1.m1.1" class="ltx_Math" alttext="0.01" display="inline"><semantics id="S4.SS1.p5.1.m1.1a"><mn id="S4.SS1.p5.1.m1.1.1" xref="S4.SS1.p5.1.m1.1.1.cmml">0.01</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p5.1.m1.1b"><cn type="float" id="S4.SS1.p5.1.m1.1.1.cmml" xref="S4.SS1.p5.1.m1.1.1">0.01</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p5.1.m1.1c">0.01</annotation></semantics></math>, and we decrease it after every eight epochs by <math id="S4.SS1.p5.2.m2.1" class="ltx_Math" alttext="10\%" display="inline"><semantics id="S4.SS1.p5.2.m2.1a"><mrow id="S4.SS1.p5.2.m2.1.1" xref="S4.SS1.p5.2.m2.1.1.cmml"><mn id="S4.SS1.p5.2.m2.1.1.2" xref="S4.SS1.p5.2.m2.1.1.2.cmml">10</mn><mo id="S4.SS1.p5.2.m2.1.1.1" xref="S4.SS1.p5.2.m2.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p5.2.m2.1b"><apply id="S4.SS1.p5.2.m2.1.1.cmml" xref="S4.SS1.p5.2.m2.1.1"><csymbol cd="latexml" id="S4.SS1.p5.2.m2.1.1.1.cmml" xref="S4.SS1.p5.2.m2.1.1.1">percent</csymbol><cn type="integer" id="S4.SS1.p5.2.m2.1.1.2.cmml" xref="S4.SS1.p5.2.m2.1.1.2">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p5.2.m2.1c">10\%</annotation></semantics></math>. We conduct all experiments on NVIDIA GTX 1080 GPU using PyTorch v1.6.0.</p>
+</div>
+<figure id="S4.F3" class="ltx_figure"><img src="/html/2105.10904/assets/3.png" id="S4.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="287" height="141" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Examples of our hand dataset images having the bounding boxes and 21 joints annotations taken from four subjects and covering many pose and backgrounds.</figcaption>
+</figure>
+<figure id="S4.F4" class="ltx_figure"><img src="/html/2105.10904/assets/8.png" id="S4.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="592" height="312" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Qualitative results on GTHD and LSMV datasets. The columns from left to right in each image show: the direct regression proposed in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, our proposed skeleton aware multi-scale heatmaps regression and the ground truth joints.</figcaption>
+</figure>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.4.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.5.2" class="ltx_text ltx_font_italic">Hand detection </span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">Our approach can robustly estimate the hand skeleton and localize the bounding box for LSMV and GTHD datasets. Furthermore, it does not produce any false positives for background images or images with people who do not show their hands (see Figure <a href="#S4.F5" title="Figure 5 ‣ IV-B Hand detection ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>).</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.6" class="ltx_p">The correct threshold for selecting <span id="S4.SS2.p2.6.1" class="ltx_text ltx_font_italic">Hand</span> from <span id="S4.SS2.p2.6.2" class="ltx_text ltx_font_italic">NoHand</span> depends on the data. A robust threshold should eliminate the noise and be in an interval that does not miss samples from the dataset distribution. In other words, the selected threshold should decrease both the false-negative rate (adding samples from the <span id="S4.SS2.p2.6.3" class="ltx_text ltx_font_italic">NoHand</span> class) and false positive rate (missing samples from the <span id="S4.SS2.p2.6.4" class="ltx_text ltx_font_italic">Hand</span> class) to achieve high performance and robustly detect the hand. Figure <a href="#S4.F6" title="Figure 6 ‣ IV-B Hand detection ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>. shows that selecting a threshold from the interval <math id="S4.SS2.p2.1.m1.2" class="ltx_Math" alttext="[200,400]" display="inline"><semantics id="S4.SS2.p2.1.m1.2a"><mrow id="S4.SS2.p2.1.m1.2.3.2" xref="S4.SS2.p2.1.m1.2.3.1.cmml"><mo stretchy="false" id="S4.SS2.p2.1.m1.2.3.2.1" xref="S4.SS2.p2.1.m1.2.3.1.cmml">[</mo><mn id="S4.SS2.p2.1.m1.1.1" xref="S4.SS2.p2.1.m1.1.1.cmml">200</mn><mo id="S4.SS2.p2.1.m1.2.3.2.2" xref="S4.SS2.p2.1.m1.2.3.1.cmml">,</mo><mn id="S4.SS2.p2.1.m1.2.2" xref="S4.SS2.p2.1.m1.2.2.cmml">400</mn><mo stretchy="false" id="S4.SS2.p2.1.m1.2.3.2.3" xref="S4.SS2.p2.1.m1.2.3.1.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.1.m1.2b"><interval closure="closed" id="S4.SS2.p2.1.m1.2.3.1.cmml" xref="S4.SS2.p2.1.m1.2.3.2"><cn type="integer" id="S4.SS2.p2.1.m1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1">200</cn><cn type="integer" id="S4.SS2.p2.1.m1.2.2.cmml" xref="S4.SS2.p2.1.m1.2.2">400</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.1.m1.2c">[200,400]</annotation></semantics></math> is the best choice for our dataset. Also, the thickest skeleton representation seems to be more robust to the noise. It outperforms the other representations and achieves a higher performance (<math id="S4.SS2.p2.2.m2.1" class="ltx_Math" alttext="AUC=0.99" display="inline"><semantics id="S4.SS2.p2.2.m2.1a"><mrow id="S4.SS2.p2.2.m2.1.1" xref="S4.SS2.p2.2.m2.1.1.cmml"><mrow id="S4.SS2.p2.2.m2.1.1.2" xref="S4.SS2.p2.2.m2.1.1.2.cmml"><mi id="S4.SS2.p2.2.m2.1.1.2.2" xref="S4.SS2.p2.2.m2.1.1.2.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.2.m2.1.1.2.1" xref="S4.SS2.p2.2.m2.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.2.m2.1.1.2.3" xref="S4.SS2.p2.2.m2.1.1.2.3.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.2.m2.1.1.2.1a" xref="S4.SS2.p2.2.m2.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.2.m2.1.1.2.4" xref="S4.SS2.p2.2.m2.1.1.2.4.cmml">C</mi></mrow><mo id="S4.SS2.p2.2.m2.1.1.1" xref="S4.SS2.p2.2.m2.1.1.1.cmml">=</mo><mn id="S4.SS2.p2.2.m2.1.1.3" xref="S4.SS2.p2.2.m2.1.1.3.cmml">0.99</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.2.m2.1b"><apply id="S4.SS2.p2.2.m2.1.1.cmml" xref="S4.SS2.p2.2.m2.1.1"><eq id="S4.SS2.p2.2.m2.1.1.1.cmml" xref="S4.SS2.p2.2.m2.1.1.1"></eq><apply id="S4.SS2.p2.2.m2.1.1.2.cmml" xref="S4.SS2.p2.2.m2.1.1.2"><times id="S4.SS2.p2.2.m2.1.1.2.1.cmml" xref="S4.SS2.p2.2.m2.1.1.2.1"></times><ci id="S4.SS2.p2.2.m2.1.1.2.2.cmml" xref="S4.SS2.p2.2.m2.1.1.2.2">𝐴</ci><ci id="S4.SS2.p2.2.m2.1.1.2.3.cmml" xref="S4.SS2.p2.2.m2.1.1.2.3">𝑈</ci><ci id="S4.SS2.p2.2.m2.1.1.2.4.cmml" xref="S4.SS2.p2.2.m2.1.1.2.4">𝐶</ci></apply><cn type="float" id="S4.SS2.p2.2.m2.1.1.3.cmml" xref="S4.SS2.p2.2.m2.1.1.3">0.99</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.2.m2.1c">AUC=0.99</annotation></semantics></math>). Finally, our approach records high scores of <math id="S4.SS2.p2.3.m3.1" class="ltx_Math" alttext="Accuracy=0.99" display="inline"><semantics id="S4.SS2.p2.3.m3.1a"><mrow id="S4.SS2.p2.3.m3.1.1" xref="S4.SS2.p2.3.m3.1.1.cmml"><mrow id="S4.SS2.p2.3.m3.1.1.2" xref="S4.SS2.p2.3.m3.1.1.2.cmml"><mi id="S4.SS2.p2.3.m3.1.1.2.2" xref="S4.SS2.p2.3.m3.1.1.2.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.3.m3.1.1.2.1" xref="S4.SS2.p2.3.m3.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.3.m3.1.1.2.3" xref="S4.SS2.p2.3.m3.1.1.2.3.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.3.m3.1.1.2.1a" xref="S4.SS2.p2.3.m3.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.3.m3.1.1.2.4" xref="S4.SS2.p2.3.m3.1.1.2.4.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.3.m3.1.1.2.1b" xref="S4.SS2.p2.3.m3.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.3.m3.1.1.2.5" xref="S4.SS2.p2.3.m3.1.1.2.5.cmml">u</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.3.m3.1.1.2.1c" xref="S4.SS2.p2.3.m3.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.3.m3.1.1.2.6" xref="S4.SS2.p2.3.m3.1.1.2.6.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.3.m3.1.1.2.1d" xref="S4.SS2.p2.3.m3.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.3.m3.1.1.2.7" xref="S4.SS2.p2.3.m3.1.1.2.7.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.3.m3.1.1.2.1e" xref="S4.SS2.p2.3.m3.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.3.m3.1.1.2.8" xref="S4.SS2.p2.3.m3.1.1.2.8.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.3.m3.1.1.2.1f" xref="S4.SS2.p2.3.m3.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.3.m3.1.1.2.9" xref="S4.SS2.p2.3.m3.1.1.2.9.cmml">y</mi></mrow><mo id="S4.SS2.p2.3.m3.1.1.1" xref="S4.SS2.p2.3.m3.1.1.1.cmml">=</mo><mn id="S4.SS2.p2.3.m3.1.1.3" xref="S4.SS2.p2.3.m3.1.1.3.cmml">0.99</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.3.m3.1b"><apply id="S4.SS2.p2.3.m3.1.1.cmml" xref="S4.SS2.p2.3.m3.1.1"><eq id="S4.SS2.p2.3.m3.1.1.1.cmml" xref="S4.SS2.p2.3.m3.1.1.1"></eq><apply id="S4.SS2.p2.3.m3.1.1.2.cmml" xref="S4.SS2.p2.3.m3.1.1.2"><times id="S4.SS2.p2.3.m3.1.1.2.1.cmml" xref="S4.SS2.p2.3.m3.1.1.2.1"></times><ci id="S4.SS2.p2.3.m3.1.1.2.2.cmml" xref="S4.SS2.p2.3.m3.1.1.2.2">𝐴</ci><ci id="S4.SS2.p2.3.m3.1.1.2.3.cmml" xref="S4.SS2.p2.3.m3.1.1.2.3">𝑐</ci><ci id="S4.SS2.p2.3.m3.1.1.2.4.cmml" xref="S4.SS2.p2.3.m3.1.1.2.4">𝑐</ci><ci id="S4.SS2.p2.3.m3.1.1.2.5.cmml" xref="S4.SS2.p2.3.m3.1.1.2.5">𝑢</ci><ci id="S4.SS2.p2.3.m3.1.1.2.6.cmml" xref="S4.SS2.p2.3.m3.1.1.2.6">𝑟</ci><ci id="S4.SS2.p2.3.m3.1.1.2.7.cmml" xref="S4.SS2.p2.3.m3.1.1.2.7">𝑎</ci><ci id="S4.SS2.p2.3.m3.1.1.2.8.cmml" xref="S4.SS2.p2.3.m3.1.1.2.8">𝑐</ci><ci id="S4.SS2.p2.3.m3.1.1.2.9.cmml" xref="S4.SS2.p2.3.m3.1.1.2.9">𝑦</ci></apply><cn type="float" id="S4.SS2.p2.3.m3.1.1.3.cmml" xref="S4.SS2.p2.3.m3.1.1.3">0.99</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.3.m3.1c">Accuracy=0.99</annotation></semantics></math>, <math id="S4.SS2.p2.4.m4.1" class="ltx_Math" alttext="Precision=0.97" display="inline"><semantics id="S4.SS2.p2.4.m4.1a"><mrow id="S4.SS2.p2.4.m4.1.1" xref="S4.SS2.p2.4.m4.1.1.cmml"><mrow id="S4.SS2.p2.4.m4.1.1.2" xref="S4.SS2.p2.4.m4.1.1.2.cmml"><mi id="S4.SS2.p2.4.m4.1.1.2.2" xref="S4.SS2.p2.4.m4.1.1.2.2.cmml">P</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.2.1" xref="S4.SS2.p2.4.m4.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.4.m4.1.1.2.3" xref="S4.SS2.p2.4.m4.1.1.2.3.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.2.1a" xref="S4.SS2.p2.4.m4.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.4.m4.1.1.2.4" xref="S4.SS2.p2.4.m4.1.1.2.4.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.2.1b" xref="S4.SS2.p2.4.m4.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.4.m4.1.1.2.5" xref="S4.SS2.p2.4.m4.1.1.2.5.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.2.1c" xref="S4.SS2.p2.4.m4.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.4.m4.1.1.2.6" xref="S4.SS2.p2.4.m4.1.1.2.6.cmml">i</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.2.1d" xref="S4.SS2.p2.4.m4.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.4.m4.1.1.2.7" xref="S4.SS2.p2.4.m4.1.1.2.7.cmml">s</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.2.1e" xref="S4.SS2.p2.4.m4.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.4.m4.1.1.2.8" xref="S4.SS2.p2.4.m4.1.1.2.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.2.1f" xref="S4.SS2.p2.4.m4.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.4.m4.1.1.2.9" xref="S4.SS2.p2.4.m4.1.1.2.9.cmml">o</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.2.1g" xref="S4.SS2.p2.4.m4.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.4.m4.1.1.2.10" xref="S4.SS2.p2.4.m4.1.1.2.10.cmml">n</mi></mrow><mo id="S4.SS2.p2.4.m4.1.1.1" xref="S4.SS2.p2.4.m4.1.1.1.cmml">=</mo><mn id="S4.SS2.p2.4.m4.1.1.3" xref="S4.SS2.p2.4.m4.1.1.3.cmml">0.97</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.4.m4.1b"><apply id="S4.SS2.p2.4.m4.1.1.cmml" xref="S4.SS2.p2.4.m4.1.1"><eq id="S4.SS2.p2.4.m4.1.1.1.cmml" xref="S4.SS2.p2.4.m4.1.1.1"></eq><apply id="S4.SS2.p2.4.m4.1.1.2.cmml" xref="S4.SS2.p2.4.m4.1.1.2"><times id="S4.SS2.p2.4.m4.1.1.2.1.cmml" xref="S4.SS2.p2.4.m4.1.1.2.1"></times><ci id="S4.SS2.p2.4.m4.1.1.2.2.cmml" xref="S4.SS2.p2.4.m4.1.1.2.2">𝑃</ci><ci id="S4.SS2.p2.4.m4.1.1.2.3.cmml" xref="S4.SS2.p2.4.m4.1.1.2.3">𝑟</ci><ci id="S4.SS2.p2.4.m4.1.1.2.4.cmml" xref="S4.SS2.p2.4.m4.1.1.2.4">𝑒</ci><ci id="S4.SS2.p2.4.m4.1.1.2.5.cmml" xref="S4.SS2.p2.4.m4.1.1.2.5">𝑐</ci><ci id="S4.SS2.p2.4.m4.1.1.2.6.cmml" xref="S4.SS2.p2.4.m4.1.1.2.6">𝑖</ci><ci id="S4.SS2.p2.4.m4.1.1.2.7.cmml" xref="S4.SS2.p2.4.m4.1.1.2.7">𝑠</ci><ci id="S4.SS2.p2.4.m4.1.1.2.8.cmml" xref="S4.SS2.p2.4.m4.1.1.2.8">𝑖</ci><ci id="S4.SS2.p2.4.m4.1.1.2.9.cmml" xref="S4.SS2.p2.4.m4.1.1.2.9">𝑜</ci><ci id="S4.SS2.p2.4.m4.1.1.2.10.cmml" xref="S4.SS2.p2.4.m4.1.1.2.10">𝑛</ci></apply><cn type="float" id="S4.SS2.p2.4.m4.1.1.3.cmml" xref="S4.SS2.p2.4.m4.1.1.3">0.97</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.4.m4.1c">Precision=0.97</annotation></semantics></math>, <math id="S4.SS2.p2.5.m5.1" class="ltx_Math" alttext="Recall=0.99" display="inline"><semantics id="S4.SS2.p2.5.m5.1a"><mrow id="S4.SS2.p2.5.m5.1.1" xref="S4.SS2.p2.5.m5.1.1.cmml"><mrow id="S4.SS2.p2.5.m5.1.1.2" xref="S4.SS2.p2.5.m5.1.1.2.cmml"><mi id="S4.SS2.p2.5.m5.1.1.2.2" xref="S4.SS2.p2.5.m5.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.5.m5.1.1.2.1" xref="S4.SS2.p2.5.m5.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.5.m5.1.1.2.3" xref="S4.SS2.p2.5.m5.1.1.2.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.5.m5.1.1.2.1a" xref="S4.SS2.p2.5.m5.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.5.m5.1.1.2.4" xref="S4.SS2.p2.5.m5.1.1.2.4.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.5.m5.1.1.2.1b" xref="S4.SS2.p2.5.m5.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.5.m5.1.1.2.5" xref="S4.SS2.p2.5.m5.1.1.2.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.5.m5.1.1.2.1c" xref="S4.SS2.p2.5.m5.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.5.m5.1.1.2.6" xref="S4.SS2.p2.5.m5.1.1.2.6.cmml">l</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.5.m5.1.1.2.1d" xref="S4.SS2.p2.5.m5.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p2.5.m5.1.1.2.7" xref="S4.SS2.p2.5.m5.1.1.2.7.cmml">l</mi></mrow><mo id="S4.SS2.p2.5.m5.1.1.1" xref="S4.SS2.p2.5.m5.1.1.1.cmml">=</mo><mn id="S4.SS2.p2.5.m5.1.1.3" xref="S4.SS2.p2.5.m5.1.1.3.cmml">0.99</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.5.m5.1b"><apply id="S4.SS2.p2.5.m5.1.1.cmml" xref="S4.SS2.p2.5.m5.1.1"><eq id="S4.SS2.p2.5.m5.1.1.1.cmml" xref="S4.SS2.p2.5.m5.1.1.1"></eq><apply id="S4.SS2.p2.5.m5.1.1.2.cmml" xref="S4.SS2.p2.5.m5.1.1.2"><times id="S4.SS2.p2.5.m5.1.1.2.1.cmml" xref="S4.SS2.p2.5.m5.1.1.2.1"></times><ci id="S4.SS2.p2.5.m5.1.1.2.2.cmml" xref="S4.SS2.p2.5.m5.1.1.2.2">𝑅</ci><ci id="S4.SS2.p2.5.m5.1.1.2.3.cmml" xref="S4.SS2.p2.5.m5.1.1.2.3">𝑒</ci><ci id="S4.SS2.p2.5.m5.1.1.2.4.cmml" xref="S4.SS2.p2.5.m5.1.1.2.4">𝑐</ci><ci id="S4.SS2.p2.5.m5.1.1.2.5.cmml" xref="S4.SS2.p2.5.m5.1.1.2.5">𝑎</ci><ci id="S4.SS2.p2.5.m5.1.1.2.6.cmml" xref="S4.SS2.p2.5.m5.1.1.2.6">𝑙</ci><ci id="S4.SS2.p2.5.m5.1.1.2.7.cmml" xref="S4.SS2.p2.5.m5.1.1.2.7">𝑙</ci></apply><cn type="float" id="S4.SS2.p2.5.m5.1.1.3.cmml" xref="S4.SS2.p2.5.m5.1.1.3">0.99</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.5.m5.1c">Recall=0.99</annotation></semantics></math> and <math id="S4.SS2.p2.6.m6.1" class="ltx_Math" alttext="F1=0.98" display="inline"><semantics id="S4.SS2.p2.6.m6.1a"><mrow id="S4.SS2.p2.6.m6.1.1" xref="S4.SS2.p2.6.m6.1.1.cmml"><mrow id="S4.SS2.p2.6.m6.1.1.2" xref="S4.SS2.p2.6.m6.1.1.2.cmml"><mi id="S4.SS2.p2.6.m6.1.1.2.2" xref="S4.SS2.p2.6.m6.1.1.2.2.cmml">F</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.6.m6.1.1.2.1" xref="S4.SS2.p2.6.m6.1.1.2.1.cmml">​</mo><mn id="S4.SS2.p2.6.m6.1.1.2.3" xref="S4.SS2.p2.6.m6.1.1.2.3.cmml">1</mn></mrow><mo id="S4.SS2.p2.6.m6.1.1.1" xref="S4.SS2.p2.6.m6.1.1.1.cmml">=</mo><mn id="S4.SS2.p2.6.m6.1.1.3" xref="S4.SS2.p2.6.m6.1.1.3.cmml">0.98</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.6.m6.1b"><apply id="S4.SS2.p2.6.m6.1.1.cmml" xref="S4.SS2.p2.6.m6.1.1"><eq id="S4.SS2.p2.6.m6.1.1.1.cmml" xref="S4.SS2.p2.6.m6.1.1.1"></eq><apply id="S4.SS2.p2.6.m6.1.1.2.cmml" xref="S4.SS2.p2.6.m6.1.1.2"><times id="S4.SS2.p2.6.m6.1.1.2.1.cmml" xref="S4.SS2.p2.6.m6.1.1.2.1"></times><ci id="S4.SS2.p2.6.m6.1.1.2.2.cmml" xref="S4.SS2.p2.6.m6.1.1.2.2">𝐹</ci><cn type="integer" id="S4.SS2.p2.6.m6.1.1.2.3.cmml" xref="S4.SS2.p2.6.m6.1.1.2.3">1</cn></apply><cn type="float" id="S4.SS2.p2.6.m6.1.1.3.cmml" xref="S4.SS2.p2.6.m6.1.1.3">0.98</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.6.m6.1c">F1=0.98</annotation></semantics></math>.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p">We do not report the AUC for the MVHD dataset because it does not have images without hands. Nevertheless, we predict the skeleton representation to extract the hand bounding boxes and perform our proposed 2D hand pose estimation method. Also, we report <span id="S4.SS2.p3.1.1" class="ltx_text ltx_font_italic">IOU</span> in Table <a href="#S4.T1" title="TABLE I ‣ IV-B Hand detection ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a> showing that the proposed method outperforms Faster-RCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure"><img src="/html/2105.10904/assets/detection_results.png" id="S4.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="299" height="202" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>The results of the skeleton estimation and the bounding box localization on LSMV and GTHD datasets. The rows from top to down show: the input image, the ground truth skeleton, the predicted skeleton, and the obtained bounding boxes.</figcaption>
+</figure>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2105.10904/assets/6.jpg" id="S4.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="293" height="107" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>The impact of the threshold selection on the AUC performances.</figcaption>
+</figure>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Bounding box evaluation on MVHD and our GTHD dataset with IOU.
+</figcaption>
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t">Dataset</th>
+<th id="S4.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">Faster-RCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+</th>
+<th id="S4.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">Ours</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.2.1" class="ltx_tr">
+<td id="S4.T1.1.2.1.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">GTHD</td>
+<td id="S4.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0912</td>
+<td id="S4.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.923</td>
+</tr>
+<tr id="S4.T1.1.3.2" class="ltx_tr">
+<td id="S4.T1.1.3.2.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t">LSMV</td>
+<td id="S4.T1.1.3.2.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">0.895</td>
+<td id="S4.T1.1.3.2.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">0.917</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS3.4.1.1" class="ltx_text">IV-C</span> </span><span id="S4.SS3.5.2" class="ltx_text ltx_font_italic">Pose estimation</span>
+</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">We compare the proposed pose estimation approach against three-deep learning-based methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>. Before giving the RGB image as input to the model, we resize and normalize the datasets by subtracting the mean from all the images. The number of heatmaps is the number of joints where we represent each one with a Gaussian blob in a map of the same size of the image. The coordinate of the joint is the location of the highest value in the heatmap. We find them by applying the <span id="S4.SS3.p1.1.1" class="ltx_text ltx_font_italic">argmax</span> function.</p>
+</div>
+<div id="S4.SS3.p2" class="ltx_para">
+<p id="S4.SS3.p2.1" class="ltx_p">Our baseline is <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> that uses ResNet-50 architecture <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> to directly regress the 2D joints from RGB images. The other deep-based methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> are two of the existing state-of-the-art in 2D hand pose estimation. Moreover, to demonstrate the effectiveness of the proposed approach, we conduct two additional experiments. The former applies single-scale heatmap regression using UNet architecture <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> on <math id="S4.SS3.p2.1.m1.1" class="ltx_Math" alttext="128\times 128" display="inline"><semantics id="S4.SS3.p2.1.m1.1a"><mrow id="S4.SS3.p2.1.m1.1.1" xref="S4.SS3.p2.1.m1.1.1.cmml"><mn id="S4.SS3.p2.1.m1.1.1.2" xref="S4.SS3.p2.1.m1.1.1.2.cmml">128</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS3.p2.1.m1.1.1.1" xref="S4.SS3.p2.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS3.p2.1.m1.1.1.3" xref="S4.SS3.p2.1.m1.1.1.3.cmml">128</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p2.1.m1.1b"><apply id="S4.SS3.p2.1.m1.1.1.cmml" xref="S4.SS3.p2.1.m1.1.1"><times id="S4.SS3.p2.1.m1.1.1.1.cmml" xref="S4.SS3.p2.1.m1.1.1.1"></times><cn type="integer" id="S4.SS3.p2.1.m1.1.1.2.cmml" xref="S4.SS3.p2.1.m1.1.1.2">128</cn><cn type="integer" id="S4.SS3.p2.1.m1.1.1.3.cmml" xref="S4.SS3.p2.1.m1.1.1.3">128</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p2.1.m1.1c">128\times 128</annotation></semantics></math> resolution images. The second experiment performs our multi-scale heatmaps regression without the skeleton information.</p>
+</div>
+<div id="S4.SS3.p3" class="ltx_para">
+<p id="S4.SS3.p3.1" class="ltx_p">Figure <a href="#S4.F4" title="Figure 4 ‣ IV-A Implementation details ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> shows some randomly selected test images on both datasets. The proposed method can robustly estimate the 2D hand pose even in complex poses and cluttered images. Furthermore, the proposed skeleton-aware multi-scale heatmaps regression method outperforms the state-of-the-art <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>. It achieves a high PCK score (0.98) with a small threshold on the two datasets (Figure <a href="#S5.F7" title="Figure 7 ‣ V Conclusion ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>). Besides, our proposed method for 2D hand pose estimation provides more improvement for our dataset since it has more complex poses, face occlusion cases, and lighting condition variations (Figure <a href="#S5.F7" title="Figure 7 ‣ V Conclusion ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a> and Table <a href="#S4.T2" title="TABLE II ‣ IV-C Pose estimation ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>).</p>
+</div>
+<div id="S4.SS3.p4" class="ltx_para">
+<p id="S4.SS3.p4.1" class="ltx_p">The hand skeleton representation improves the proposed multi-scale heatmaps regression method since it constrains the 2D pose estimation task. Also, it favorably performs against the single-scale heatmaps regression method. (Table <a href="#S4.T2" title="TABLE II ‣ IV-C Pose estimation ‣ IV Experiments ‣ Skeleton-aware multi-scale heatmap regression for 2D hand pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>).</p>
+</div>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE II: </span>Comparison with the state-of-the-art methods on GTHD and LSMV datasets with Mean pixel errors.</figcaption>
+<table id="S4.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t">Methods</th>
+<th id="S4.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">GTHD</th>
+<th id="S4.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">LSMV</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.2.1" class="ltx_tr">
+<td id="S4.T2.1.2.1.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">Gomez et al <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>
+</td>
+<td id="S4.T2.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">13.20</td>
+<td id="S4.T2.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">10.00</td>
+</tr>
+<tr id="S4.T2.1.3.2" class="ltx_tr">
+<td id="S4.T2.1.3.2.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">Lie et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>
+</td>
+<td id="S4.T2.1.3.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">6.25</td>
+<td id="S4.T2.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">8.05</td>
+</tr>
+<tr id="S4.T2.1.4.3" class="ltx_tr">
+<td id="S4.T2.1.4.3.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">Single-scale heatmaps regression using <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>
+</td>
+<td id="S4.T2.1.4.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">7.33</td>
+<td id="S4.T2.1.4.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">5.87</td>
+</tr>
+<tr id="S4.T2.1.5.4" class="ltx_tr">
+<td id="S4.T2.1.5.4.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">Ours w/o skeleton</td>
+<td id="S4.T2.1.5.4.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">5.89</td>
+<td id="S4.T2.1.5.4.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">4.95</td>
+</tr>
+<tr id="S4.T2.1.6.5" class="ltx_tr">
+<td id="S4.T2.1.6.5.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t">Ours</td>
+<td id="S4.T2.1.6.5.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T2.1.6.5.2.1" class="ltx_text ltx_font_bold">5.51</span></td>
+<td id="S4.T2.1.6.5.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T2.1.6.5.3.1" class="ltx_text ltx_font_bold">4.67</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Conclusion</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this work, we propose a new learning-based method for 2D hand pose estimation. It performs multi-scale heatmaps regression and uses the hand skeleton as additional information to constrain the regression problem. It provides better results compared with the direct regression and single-scale heatmaps regression. Also, we present a new method for hand bounding box localization that first estimate the hand skeleton and then extract the bounding box. This approach provides accurate results since it learns more information from the skeleton. Furthermore, we introduce a new RGB hand pose dataset that can use both for hand detection and 2D pose estimation tasks. For future work, we plan to exploit our 2D hand pose estimation method to improve the 3D hand pose estimation from an RGB image. Also, we plan to incorporate other constraints that can restrict the hand pose estimation problem.</p>
+</div>
+<figure id="S5.F7" class="ltx_figure"><img src="/html/2105.10904/assets/7.png" id="S5.F7.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="299" height="102" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Quantitative comparison of the proposed 2D hand pose estimation with the other methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> using PCK metric. Left for GTHD and right for LSMV.</figcaption>
+</figure>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+A. Krizhevsky, I. Sutskever, and G. E. Hinton, “Imagenet classification with
+deep convolutional neural networks,” <span id="bib.bib1.1.1" class="ltx_text ltx_font_italic">Communications of the ACM</span>,
+vol. 60, no. 6, pp. 84–90, 2017.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Y. Yang, C. Feng, Y. Shen, and D. Tian, “Foldingnet: Point cloud auto-encoder
+via deep grid deformation,” in <span id="bib.bib2.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on
+Computer Vision and Pattern Recognition</span>, pp. 206–215, 2018.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+S. Li and D. Lee, “Point-to-pose voting based hand pose estimation using
+residual permutation equivariant layer,” in <span id="bib.bib3.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition</span>, pp. 11927–11936,
+2019.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+C. Wan, T. Probst, L. Van Gool, and A. Yao, “Crossing nets: Combining gans and
+vaes with a shared latent space for hand pose estimation,” in <span id="bib.bib4.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition</span>, pp. 680–689, 2017.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+C. Zimmermann and T. Brox, “Learning to estimate 3d hand pose from single rgb
+images,” in <span id="bib.bib5.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE international conference on
+computer vision</span>, pp. 4903–4911, 2017.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+A. Spurr, J. Song, S. Park, and O. Hilliges, “Cross-modal deep variational
+hand pose estimation,” in <span id="bib.bib6.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on
+Computer Vision and Pattern Recognition</span>, pp. 89–98, 2018.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+F. Mueller, F. Bernard, O. Sotnychenko, D. Mehta, S. Sridhar, D. Casas, and
+C. Theobalt, “Ganerated hands for real-time 3d hand tracking from monocular
+rgb,” in <span id="bib.bib7.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition</span>, pp. 49–59, 2018.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+F. Gomez-Donoso, S. Orts-Escolano, and M. Cazorla, “Large-scale multiview 3d
+hand pose dataset,” <span id="bib.bib8.1.1" class="ltx_text ltx_font_italic">Image and Vision Computing</span>, vol. 81, pp. 25–33,
+2019.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+J. Carreira, P. Agrawal, K. Fragkiadaki, and J. Malik, “Human pose estimation
+with iterative error feedback,” in <span id="bib.bib9.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE conference
+on computer vision and pattern recognition</span>, pp. 4733–4742, 2016.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+G. Papandreou, T. Zhu, N. Kanazawa, A. Toshev, J. Tompson, C. Bregler, and
+K. Murphy, “Towards accurate multi-person pose estimation in the wild,” in
+<span id="bib.bib10.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition</span>, pp. 4903–4911, 2017.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+U. Iqbal, P. Molchanov, T. Breuel Juergen Gall, and J. Kautz, “Hand pose
+estimation via latent 2.5 d heatmap regression,” in <span id="bib.bib11.1.1" class="ltx_text ltx_font_italic">Proceedings of the
+European Conference on Computer Vision (ECCV)</span>, pp. 118–134, 2018.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+A. Bulat and G. Tzimiropoulos, “Human pose estimation via convolutional part
+heatmap regression,” in <span id="bib.bib12.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision</span>,
+pp. 717–732, Springer, 2016.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+O. Ronneberger, P. Fischer, and T. Brox, “U-net: Convolutional networks for
+biomedical image segmentation,” in <span id="bib.bib13.1.1" class="ltx_text ltx_font_italic">International Conference on Medical
+image computing and computer-assisted intervention</span>, pp. 234–241, Springer,
+2015.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+S. Li and A. B. Chan, “3d human pose estimation from monocular images with
+deep convolutional neural network,” in <span id="bib.bib14.1.1" class="ltx_text ltx_font_italic">Asian Conference on Computer
+Vision</span>, pp. 332–347, Springer, 2014.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+D. Kong, Y. Chen, H. Ma, X. Yan, and X. Xie, “Adaptive graphical model network
+for 2d handpose estimation,” <span id="bib.bib15.1.1" class="ltx_text ltx_font_italic">In Proceedings of the British Machine
+Vision Conference (BMVC)</span>, 2019.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+S. Ren, K. He, R. Girshick, and J. Sun, “Faster r-cnn: Towards real-time
+object detection with region proposal networks,” <span id="bib.bib16.1.1" class="ltx_text ltx_font_italic">IEEE transactions on
+pattern analysis and machine intelligence</span>, vol. 39, no. 6, pp. 1137–1149,
+2016.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+L. E. Potter, J. Araullo, and L. Carter, “The leap motion controller: a view
+on sign language,” in <span id="bib.bib17.1.1" class="ltx_text ltx_font_italic">Proceedings of the 25th Australian computer-human
+interaction conference: augmentation, application, innovation,
+collaboration</span>, pp. 175–178, 2013.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+P. Beardsley, D. Murray, and A. Zisserman, “Camera calibration using multiple
+images,” in <span id="bib.bib18.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision</span>, pp. 312–320,
+Springer, 1992.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+T. Simon, H. Joo, I. Matthews, and Y. Sheikh, “Hand keypoint detection in
+single images using multiview bootstrapping,” in <span id="bib.bib19.1.1" class="ltx_text ltx_font_italic">Proceedings of the
+IEEE conference on Computer Vision and Pattern Recognition</span>, pp. 1145–1153,
+2017.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image
+recognition,” in <span id="bib.bib20.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE conference on computer vision
+and pattern recognition</span>, pp. 770–778, 2016.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2105.10903" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2105.10904" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2105.10904">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2105.10904" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2105.10905" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Mon Mar 18 23:54:17 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

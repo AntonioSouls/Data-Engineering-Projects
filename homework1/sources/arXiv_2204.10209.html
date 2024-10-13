@@ -1,0 +1,1636 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2204.10209] BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training</title><meta property="og:description" content="The task of 2D human pose estimation is challenging as the number of keypoints is
+typically large ( 17) and this necessitates the use of robust
+neural network architectures and training pipelines that can capture
+the r…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2204.10209">
+
+<!--Generated on Mon Mar 11 11:41:18 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span id="id1" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">institutetext: </span>Ford Greenfield Labs, Palo Alto, CA, <span id="id1.1" class="ltx_note ltx_role_email"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">email: </span>kbalak18@ford.com</span></span></span> </span></span></span><span id="id2" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_note_type">institutetext: </span>Ford Research, Dearborn, MI, <span id="id2.1" class="ltx_note ltx_role_email"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_note_type">email: </span>dupadhya@ford.com</span></span></span></span></span></span>
+<h1 class="ltx_title ltx_title_document">BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Kaushik Balakrishnan
+</span><span class="ltx_author_notes">11</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Devesh Upadhyay
+</span><span class="ltx_author_notes">22</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.1a" class="ltx_p">The task of 2D human pose estimation is challenging as the number of keypoints is
+typically large (<math id="id1.1.m1.1" class="ltx_Math" alttext="\sim" display="inline"><semantics id="id1.1.m1.1a"><mo id="id1.1.m1.1.1" xref="id1.1.m1.1.1.cmml">∼</mo><annotation-xml encoding="MathML-Content" id="id1.1.m1.1b"><csymbol cd="latexml" id="id1.1.m1.1.1.cmml" xref="id1.1.m1.1.1">similar-to</csymbol></annotation-xml><annotation encoding="application/x-tex" id="id1.1.m1.1c">\sim</annotation></semantics></math> 17) and this necessitates the use of robust
+neural network architectures and training pipelines that can capture
+the relevant features from the input image. These features are then aggregated to
+make accurate heatmap predictions from which the final keypoints of
+human body parts can be inferred. Many papers in literature use
+CNN-based architectures for the backbone, and/or combine it with a
+transformer, after which the features are aggregated to make the final
+keypoint predictions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. In this paper, we consider the recently proposed
+Bottleneck Transformers <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, which combine CNN and multi-head self attention (MHSA) layers
+effectively, and we integrate it with a Transformer encoder and apply it to the task of 2D human pose estimation.
+We consider different backbone architectures and pre-train them using
+the DINO self-supervised learning method <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>, this pre-training is found to improve the
+overall prediction accuracy.
+We call our model BTranspose, and experiments show that on the <span id="id1.1a.1" class="ltx_text ltx_font_italic">COCO</span>
+validation set, our model achieves an AP of 76.4, which is competitive with
+other methods such as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> and has fewer network parameters.
+Furthermore, we also present the dependencies of the final predicted keypoints on
+both the MHSA block and the Transformer encoder layers, providing clues on the image sub-regions the
+network attends to at the mid and high levels.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Deep convolutional neural network (CNN) architectures have a proven track
+record of success in image classification <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, object detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, semantic segmentation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, etc.
+CNNs are also popular in human pose estimation.
+For instance, DeepPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> regresses the numerical coordinate locations of keypoints.
+Fully convolutional networks such as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+predict keypoint heatmaps, which implicitly learn the dependencies between the human body parts.
+All these studies rely on a CNN backbone, which unfortunately makes it
+unclear how to explain the network’s learning of the relationships between the different human body parts.
+Moreover, the CNN models used for human pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+have very deep architectures, which makes it cumbersome to ascertain what each layer of the network learns and how it is related to the
+final output predictions.
+A schematic of the human keypoint detection is shown in Fig. <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> (a).
+The task of keypoint detection inherently involves learning long-range dependencies: the network must
+collect and associate body parts of the human in an image, and for this to be accurately learned, the
+network must learn the relationships across sub-regions of the image, which is challenging to undertake in
+purely convolutional neural network architectures.
+Convolutional-based architectures require stacking multiple layers <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>
+in order to efficiently learn the local-to-global relationships.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.4" class="ltx_p">Learning the long-range dependencies is critical for
+robust predictions of human pose. In natural language processing (NLP) applications,
+self-attention has a proven track record of success as the basic building block of
+Transformer architectures to learn such local-to-global correspondences <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>, including for
+long sequences.
+The self-attention building block has also been extended to computer vision
+applications by stacking Transformer blocks—the Vision Transformer (ViT)—by feeding image patches into the Transformer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>
+and learning the relationships between the patches. This demonstrated success of
+self-attention as the fundamental building block (i.e., in the Transformer)
+has made it an alternative to the more classical convolutional architectures for many applications.
+Recently, the Bottleneck Transformer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> was introduced
+by blending CNN and MHSA layers. The standard ResNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> consists of multiple “ResNet blocks”
+where each of the block is a sequence of 1<math id="S1.p2.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S1.p2.1.m1.1a"><mo id="S1.p2.1.m1.1.1" xref="S1.p2.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S1.p2.1.m1.1b"><times id="S1.p2.1.m1.1.1.cmml" xref="S1.p2.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S1.p2.1.m1.1c">\times</annotation></semantics></math>1, 3<math id="S1.p2.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S1.p2.2.m2.1a"><mo id="S1.p2.2.m2.1.1" xref="S1.p2.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S1.p2.2.m2.1b"><times id="S1.p2.2.m2.1.1.cmml" xref="S1.p2.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S1.p2.2.m2.1c">\times</annotation></semantics></math>3 and 1<math id="S1.p2.3.m3.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S1.p2.3.m3.1a"><mo id="S1.p2.3.m3.1.1" xref="S1.p2.3.m3.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S1.p2.3.m3.1b"><times id="S1.p2.3.m3.1.1.cmml" xref="S1.p2.3.m3.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S1.p2.3.m3.1c">\times</annotation></semantics></math>1 convolutions. In the Bottleneck Transformer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>,
+the early ResNet blocks are retained as is, but in the last of the blocks, the 3<math id="S1.p2.4.m4.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S1.p2.4.m4.1a"><mo id="S1.p2.4.m4.1.1" xref="S1.p2.4.m4.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S1.p2.4.m4.1b"><times id="S1.p2.4.m4.1.1.cmml" xref="S1.p2.4.m4.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S1.p2.4.m4.1c">\times</annotation></semantics></math>3 convolution is replaced with a MHSA module.
+A schematic of the MHSA block is shown in Figure <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> (b).
+This MHSA performs a global (<span id="S1.p2.4.1" class="ltx_text ltx_font_italic">all2all</span>) self-attention over a 2D feature map. The authors of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>
+demonstrated strong performance on the ImageNet classification and COCO instance segmentation tasks.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure">
+<p id="S1.F1.2" class="ltx_p ltx_align_center">(a)<img src="/html/2204.10209/assets/x1.png" id="S1.F1.1.g1" class="ltx_graphics ltx_img_landscape" width="151" height="61" alt="Refer to caption"> (b)<img src="/html/2204.10209/assets/x2.png" id="S1.F1.2.g2" class="ltx_graphics ltx_img_landscape" width="151" height="95" alt="Refer to caption"> 
+<br class="ltx_break"></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>(a) Schematic of the pose estimation problem. (b) Bottleneck Transformers: comparison of the ResNet block <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> and the MHSA block <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.</figcaption>
+</figure>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Self-supervised learning (SSL) is a branch of machine learning that aims to learn useful features in
+data without the use of a supervisory learning signal such as a label. Instead, one
+often uses a Siamese-like framework with two identical neural network architectures—termed
+“teacher” and “student”—that see different augmented views of an input image and try to
+match features using Knowledge Distillation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. Augmentations from the same source
+image are a positive pair whereas from different sources form a negative pair. The objective here
+is to maximize the similarity between positive pairs and minimize the same for negative pairs <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>.
+However, only positive pairs are used in many newer self-supervised learning algorithms such as BYOL <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>,
+Barlow Twins <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>, SimSIAM <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite> and DINO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. This works by Knowledge Distillation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>.
+Pre-training the network using SSL has the advantage of starting with superior weights vis-á-vis random weights, and this
+forms the motivation for us to consider self-supervised pre-training.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">While CNN architectures have a proven track record at
+low-level feature extraction, they may not be robust enough for determining the local-to-global
+correspondences as they need to be deep enough to have a large receptive field.
+Inspired by the success of Bottleneck Transformers <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, in this study we
+extend the idea to the problem of 2D human keypoint estimation on the COCO dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>.
+We use hybrid backbone architectures combining (1) convolutional blocks, (2) MHSA bottleneck block(s) and (3) Transformer
+Encoder layer. The early convolutional blocks extract low-level features, whereas the MHSA bottleneck block(s)
+use them to extract mid-level features. Finally, the Transformer uses the mid-level features to learn
+local-to-global relationships. Our architecture is similar in spirit to a recent paper
+called Transpose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, however our architecture differs from them in that we use the
+MHSA bottleneck transformer block as a mid-level feature extractor, which they did not consider.
+We test the hypothesis that separating out early, mid and high level features with appropriate attention-based architectures helps in
+better learning the local-to-global dependencies, as will be demonstrated in this paper.
+The last attention layer of the Transformer Encoder layer acts as a feature aggregator from different sub-regions
+of the image and combines them to learn the relationships between them.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">In summary, our contributions are as follows:</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<ol id="S1.I1" class="ltx_enumerate">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">We use a hybrid architecture that combines Bottleneck Transformers with the vanilla Transformer Encoder to estimate human keypoints by predicting heatmaps. We term our model as BTranspose.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">We consider self-supervised pre-training using DINO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> of our backbone architectures and this is found to improve the prediction accuracy.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">We show attention map dependencies and compare them across different backbone architectures as well as with and without self-supervised pre-training. This provides insights on what exactly the attention layer of the MHSA and the Transformer Encoder focus on in an input image and how it relates to the final keypoint heatmaps predicted.</p>
+</div>
+</li>
+<li id="S1.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span> 
+<div id="S1.I1.i4.p1" class="ltx_para">
+<p id="S1.I1.i4.p1.1" class="ltx_p">With self-supervised pre-training, our best performing BTranspose architecture achieves an AP of 76.4 and an AR of 79.2 on the COCO validation set, which
+is competitive with Transpose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> on AP with much fewer number of neural network parameters (10.1M for BTranspose versus 17.5M for Transpose).</p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Human pose estimation</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.2" class="ltx_p">Deep CNNs have a proven track record at human pose estimation. However, locality and translation equivariance are inductive biases inherent in CNNs <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>.
+While CNNs are good at extracting low-level features from images, they have to be very deep in order to learn the local-to-global relationships between different
+sub-regions of an image. Learning this relationship is vital to the task of human pose estimation as the location of the different human body parts must be learned to preserve
+the human anatomy in the predictions. Many strategies have been proposed such as stacking <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>, high-resolution representation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>
+and multi-scale fusion <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite> with a good amount of success.
+Different neural network architectures have also been considered for human pose estimation: FPN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>, SimpleBaseline <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, Hourglass Network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>,
+HRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>, RSN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite>. Some of these architectures have <math id="S2.SS1.p1.1.m1.1" class="ltx_Math" alttext="&gt;" display="inline"><semantics id="S2.SS1.p1.1.m1.1a"><mo id="S2.SS1.p1.1.m1.1.1" xref="S2.SS1.p1.1.m1.1.1.cmml">&gt;</mo><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.1.m1.1b"><gt id="S2.SS1.p1.1.m1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1"></gt></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.1.m1.1c">&gt;</annotation></semantics></math> 50M neural network parameters, which is hard to train and deploy. In contrast, we focus in this
+study on lightweight neural network architectures (<math id="S2.SS1.p1.2.m2.1" class="ltx_Math" alttext="\sim" display="inline"><semantics id="S2.SS1.p1.2.m2.1a"><mo id="S2.SS1.p1.2.m2.1.1" xref="S2.SS1.p1.2.m2.1.1.cmml">∼</mo><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.2.m2.1b"><csymbol cd="latexml" id="S2.SS1.p1.2.m2.1.1.cmml" xref="S2.SS1.p1.2.m2.1.1">similar-to</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.2.m2.1c">\sim</annotation></semantics></math> 10M parameters or fewer) for human pose estimation so that one can achieve real-time inference speeds.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Multi-head self attention</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">The basic building block of the vanilla Transformer is the multi-head self attention (MHSA) module <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>.
+Since the development of transformers for NLP applications, they have also percolated into computer vision applications.
+For instance, DETR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite> combines a ResNet-50 and a Transformer Encoder for object detection and reported high AP scores.
+Bottleneck Transformers <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> include the multi-head self attention module inside ResNet-like blocks and
+have shown good performance for image classification and object
+detection tasks; it forms the basis of the present study.
+The Vision Transformer (ViT) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> extended the idea of MHSA to image patches and has gained a lot of interest in the
+computer vision community. DeiT <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite> uses a distillation token for the student to learn from the teacher; they also introduce multiple
+transformer architectures for computer vision applications: small, medium and large.
+In this study, we extend <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> architecture by using a Bottleneck Transformer in the backbone network and demonstrate robust
+predictions for the problem of 2D human pose estimation.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Self-supervised learning</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">Self-supervised learning (SSL) is the learning of representations in data without supervised labels and has gained a lot of interest in the computer
+vision community recently. BYOL <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite> uses two neural networks, referred to as online and target networks.
+The online network is trained from an augmented view of an image to predict the representation of the target network of the same image under a different augmented view, using
+the L2 loss function. The target network parameters are a slow-moving average of the online network.
+DINO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> is similar in spirit as BYOL, but uses the cross-entropy loss instead.
+Barlow Twins <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite> measures the cross-correlation matrix between the outputs of two identical networks fed with distorted versions of an image, and
+makes it as close as possible to the identity matrix. This enforces the embedding vectors of augmented images to be similar, and concomittantly minimizes
+the redundancy between the components of these vectors. Recently, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite> use the same SSL framework for speech, NLP and computer vision, by
+predicting latent representations of the full input data based on a masked view of the input in a self-distillation setup with standard Transformer architectures.
+Inspired by the success of these different SSL methods for multiple applications, in this study we use the DINO method to pre-train the backbone architectures
+in a SSL fashion on ImageNet images (i.e., without class labels) and transfer the learning to 2D human pose estimation.
+We will demonstrate that this SSL pre-training consistently augments the final prediction AP values.</p>
+</div>
+</section>
+<section id="S2.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.4 </span>Explainability of neural networks</h3>
+
+<div id="S2.SS4.p1" class="ltx_para">
+<p id="S2.SS4.p1.1" class="ltx_p">Explainability is essentially an effort to understand what the model learns from data to make predictions.
+This is a key component in Deep Learning as otherwise neural network predictions are essentially black box in nature lacking an understanding of what the model infers from data.
+Explainability and interpretability of a neural network is ascertaining what parts of an input are the most relevant to make predictions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite>.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite> undertake gradient descent in the input to find which patterns maximize a given unit.
+For image classification task, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite> compute a class saliency map, specific to a given image and class and show that such maps can be used
+for weakly supervised object segmentation using CNN architectures. They also establish the connection between gradient-based visualization methods in CNNs
+and deconvolutional networks.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite> introduced a novel visualization technique to provide insights into the function of intermediate feature layers in CNNs.
+Transpose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> also present dependency areas for keypoints for the 2D human pose estimation problem using
+Activation Maximization <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>. Explainability boils down to a sensitivity analysis problem of estimating which
+region of an input maximizes the activation of a given neuron. Similar to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, we also undertake such dependency area estimation, but
+the main difference being that we make this dependency analysis both at the mid (MHSA block) and high levels (Transformer Encoder) whereas they do so only at the high level.
+We will demonstrate how this mid-level explainability is useful to better understand what the network learns.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2204.10209/assets/x3.png" id="S2.F2.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="181" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>The BTranspose architecture: shown here is the C3A1 architecture used in our paper. The purple rectangle is the backbone used. The naming convention for the different architectures is bsed on the number of CNN and MHSA blocks in the blue rectangle inside the backbone. Finally, the output of the Transformer encoder is fed into a Deconvolutional layer followed by a 1<math id="S2.F2.3.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S2.F2.3.m1.1b"><mo id="S2.F2.3.m1.1.1" xref="S2.F2.3.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S2.F2.3.m1.1c"><times id="S2.F2.3.m1.1.1.cmml" xref="S2.F2.3.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S2.F2.3.m1.1d">\times</annotation></semantics></math>1 convolutional layer to output 17 heatmaps.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Method</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">The primary objective of this study is to make 2D human keypoint predictions from input images, and also explain global dependencies between the keypoint
+predictions. Specifically, we explore different backbone architectures by combining Bottleneck Transformers <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>
+and vanilla Transformer encoder layer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>. The backbone architectures are pre-trained using Self-Supervised Learning (SSL) and we
+will demonstrate that this strategy improves the prediction accuracy. Most of the architectures considered in this study are lightweight and have <math id="S3.p1.1.m1.1" class="ltx_Math" alttext="\sim" display="inline"><semantics id="S3.p1.1.m1.1a"><mo id="S3.p1.1.m1.1.1" xref="S3.p1.1.m1.1.1.cmml">∼</mo><annotation-xml encoding="MathML-Content" id="S3.p1.1.m1.1b"><csymbol cd="latexml" id="S3.p1.1.m1.1.1.cmml" xref="S3.p1.1.m1.1.1">similar-to</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.1.m1.1c">\sim</annotation></semantics></math> 10M parameters.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Architecture</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">Our neural network architecture consists of a backbone for feature extraction, followed by a head to predict 17 keypoint heatmaps.
+A schematic of one of our architectures is presented in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+We will now describe our neural network architectures, indicating the color used for each module in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+The purple rectangle in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> represents the backbone, which is pre-trained using self-supervised learning (SSL), and is now described in detail.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.3" class="ltx_p"><span id="S3.SS1.p2.3.1" class="ltx_text ltx_font_bold">Backbone</span>
+The backbone consists of three components: (1) early CNN block; (2) a Bottleneck Transformer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>; (3) a vanilla Transformer encoder layer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>.
+The input image first goes through an early convolutional block (yellow in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>)
+that consists of 7<math id="S3.SS1.p2.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p2.1.m1.1a"><mo id="S3.SS1.p2.1.m1.1.1" xref="S3.SS1.p2.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.1.m1.1b"><times id="S3.SS1.p2.1.m1.1.1.cmml" xref="S3.SS1.p2.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.1.m1.1c">\times</annotation></semantics></math>7 convolutional kernel, Batch Normalization and max pooling to downsample, identical to a ResNet-50 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>.
+The second module in the backbone is the Bottleneck Transformer (BT) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> with consists of
+either 2 or 3 convolutional ResNet block groups <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>, followed by 1 or 2 multi-head self-attention (MHSA) block groups (see Figure <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>).
+The convolutional ResNet blocks consist of 3<math id="S3.SS1.p2.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p2.2.m2.1a"><mo id="S3.SS1.p2.2.m2.1.1" xref="S3.SS1.p2.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.2.m2.1b"><times id="S3.SS1.p2.2.m2.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.2.m2.1c">\times</annotation></semantics></math>3 convolutions sandwiched between
+1<math id="S3.SS1.p2.3.m3.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p2.3.m3.1a"><mo id="S3.SS1.p2.3.m3.1.1" xref="S3.SS1.p2.3.m3.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.3.m3.1b"><times id="S3.SS1.p2.3.m3.1.1.cmml" xref="S3.SS1.p2.3.m3.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.3.m3.1c">\times</annotation></semantics></math>1 convolutions (green in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>), albeit the number of feature maps used in this study for these convolutional blocks are fewer than the standard ResNet.</p>
+</div>
+<div id="S3.SS1.p3" class="ltx_para">
+<p id="S3.SS1.p3.1" class="ltx_p">This is followed by the MHSA blocks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> (refer to Figure <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>) with the
+MHSA layer sandwiched between 1<math id="S3.SS1.p3.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p3.1.m1.1a"><mo id="S3.SS1.p3.1.m1.1.1" xref="S3.SS1.p3.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p3.1.m1.1b"><times id="S3.SS1.p3.1.m1.1.1.cmml" xref="S3.SS1.p3.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p3.1.m1.1c">\times</annotation></semantics></math>1 convolutional layers (orange in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>).
+The naming convention we will use in this paper is the number of such blocks in the BT.
+For example, architectures with 2 CNN blocks and 2 MHSA blocks are termed C2A2; with 3 CNN blocks and 1 MHSA block are termed C3A1, etc.
+The blue rectangle in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> denotes the subset of the backbone that gives rise to the naming convention used:
+for instance, since we use 3 conv blocks (green) and 1 MHSA block (orange), the architecture shown in the figure is C3A1.</p>
+</div>
+<div id="S3.SS1.p4" class="ltx_para">
+<p id="S3.SS1.p4.6" class="ltx_p">The last module in the backbone is a standard Transformer encoder layer (blue in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>) to capture the long-range
+dependencies from the sequences using the standard query-key-value attention modules <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>.
+If the output of the MHSA block is <math id="S3.SS1.p4.1.m1.1" class="ltx_Math" alttext="\mathbb{R}^{(d_{1}\times H\times W)}" display="inline"><semantics id="S3.SS1.p4.1.m1.1a"><msup id="S3.SS1.p4.1.m1.1.2" xref="S3.SS1.p4.1.m1.1.2.cmml"><mi id="S3.SS1.p4.1.m1.1.2.2" xref="S3.SS1.p4.1.m1.1.2.2.cmml">ℝ</mi><mrow id="S3.SS1.p4.1.m1.1.1.1.1" xref="S3.SS1.p4.1.m1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.SS1.p4.1.m1.1.1.1.1.2" xref="S3.SS1.p4.1.m1.1.1.1.1.1.cmml">(</mo><mrow id="S3.SS1.p4.1.m1.1.1.1.1.1" xref="S3.SS1.p4.1.m1.1.1.1.1.1.cmml"><msub id="S3.SS1.p4.1.m1.1.1.1.1.1.2" xref="S3.SS1.p4.1.m1.1.1.1.1.1.2.cmml"><mi id="S3.SS1.p4.1.m1.1.1.1.1.1.2.2" xref="S3.SS1.p4.1.m1.1.1.1.1.1.2.2.cmml">d</mi><mn id="S3.SS1.p4.1.m1.1.1.1.1.1.2.3" xref="S3.SS1.p4.1.m1.1.1.1.1.1.2.3.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p4.1.m1.1.1.1.1.1.1" xref="S3.SS1.p4.1.m1.1.1.1.1.1.1.cmml">×</mo><mi id="S3.SS1.p4.1.m1.1.1.1.1.1.3" xref="S3.SS1.p4.1.m1.1.1.1.1.1.3.cmml">H</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p4.1.m1.1.1.1.1.1.1a" xref="S3.SS1.p4.1.m1.1.1.1.1.1.1.cmml">×</mo><mi id="S3.SS1.p4.1.m1.1.1.1.1.1.4" xref="S3.SS1.p4.1.m1.1.1.1.1.1.4.cmml">W</mi></mrow><mo stretchy="false" id="S3.SS1.p4.1.m1.1.1.1.1.3" xref="S3.SS1.p4.1.m1.1.1.1.1.1.cmml">)</mo></mrow></msup><annotation-xml encoding="MathML-Content" id="S3.SS1.p4.1.m1.1b"><apply id="S3.SS1.p4.1.m1.1.2.cmml" xref="S3.SS1.p4.1.m1.1.2"><csymbol cd="ambiguous" id="S3.SS1.p4.1.m1.1.2.1.cmml" xref="S3.SS1.p4.1.m1.1.2">superscript</csymbol><ci id="S3.SS1.p4.1.m1.1.2.2.cmml" xref="S3.SS1.p4.1.m1.1.2.2">ℝ</ci><apply id="S3.SS1.p4.1.m1.1.1.1.1.1.cmml" xref="S3.SS1.p4.1.m1.1.1.1.1"><times id="S3.SS1.p4.1.m1.1.1.1.1.1.1.cmml" xref="S3.SS1.p4.1.m1.1.1.1.1.1.1"></times><apply id="S3.SS1.p4.1.m1.1.1.1.1.1.2.cmml" xref="S3.SS1.p4.1.m1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.SS1.p4.1.m1.1.1.1.1.1.2.1.cmml" xref="S3.SS1.p4.1.m1.1.1.1.1.1.2">subscript</csymbol><ci id="S3.SS1.p4.1.m1.1.1.1.1.1.2.2.cmml" xref="S3.SS1.p4.1.m1.1.1.1.1.1.2.2">𝑑</ci><cn type="integer" id="S3.SS1.p4.1.m1.1.1.1.1.1.2.3.cmml" xref="S3.SS1.p4.1.m1.1.1.1.1.1.2.3">1</cn></apply><ci id="S3.SS1.p4.1.m1.1.1.1.1.1.3.cmml" xref="S3.SS1.p4.1.m1.1.1.1.1.1.3">𝐻</ci><ci id="S3.SS1.p4.1.m1.1.1.1.1.1.4.cmml" xref="S3.SS1.p4.1.m1.1.1.1.1.1.4">𝑊</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p4.1.m1.1c">\mathbb{R}^{(d_{1}\times H\times W)}</annotation></semantics></math>, it is first passed through a 1<math id="S3.SS1.p4.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p4.2.m2.1a"><mo id="S3.SS1.p4.2.m2.1.1" xref="S3.SS1.p4.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p4.2.m2.1b"><times id="S3.SS1.p4.2.m2.1.1.cmml" xref="S3.SS1.p4.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p4.2.m2.1c">\times</annotation></semantics></math>1 convolution to obtain a feature dimension <math id="S3.SS1.p4.3.m3.1" class="ltx_Math" alttext="d" display="inline"><semantics id="S3.SS1.p4.3.m3.1a"><mi id="S3.SS1.p4.3.m3.1.1" xref="S3.SS1.p4.3.m3.1.1.cmml">d</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p4.3.m3.1b"><ci id="S3.SS1.p4.3.m3.1.1.cmml" xref="S3.SS1.p4.3.m3.1.1">𝑑</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p4.3.m3.1c">d</annotation></semantics></math> and is
+then flattened before feeding into the Transformer encoder. The dimension of the features input to the Transformer encoder is <math id="S3.SS1.p4.4.m4.1" class="ltx_Math" alttext="\mathbb{R}^{(L\times d)}" display="inline"><semantics id="S3.SS1.p4.4.m4.1a"><msup id="S3.SS1.p4.4.m4.1.2" xref="S3.SS1.p4.4.m4.1.2.cmml"><mi id="S3.SS1.p4.4.m4.1.2.2" xref="S3.SS1.p4.4.m4.1.2.2.cmml">ℝ</mi><mrow id="S3.SS1.p4.4.m4.1.1.1.1" xref="S3.SS1.p4.4.m4.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.SS1.p4.4.m4.1.1.1.1.2" xref="S3.SS1.p4.4.m4.1.1.1.1.1.cmml">(</mo><mrow id="S3.SS1.p4.4.m4.1.1.1.1.1" xref="S3.SS1.p4.4.m4.1.1.1.1.1.cmml"><mi id="S3.SS1.p4.4.m4.1.1.1.1.1.2" xref="S3.SS1.p4.4.m4.1.1.1.1.1.2.cmml">L</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p4.4.m4.1.1.1.1.1.1" xref="S3.SS1.p4.4.m4.1.1.1.1.1.1.cmml">×</mo><mi id="S3.SS1.p4.4.m4.1.1.1.1.1.3" xref="S3.SS1.p4.4.m4.1.1.1.1.1.3.cmml">d</mi></mrow><mo stretchy="false" id="S3.SS1.p4.4.m4.1.1.1.1.3" xref="S3.SS1.p4.4.m4.1.1.1.1.1.cmml">)</mo></mrow></msup><annotation-xml encoding="MathML-Content" id="S3.SS1.p4.4.m4.1b"><apply id="S3.SS1.p4.4.m4.1.2.cmml" xref="S3.SS1.p4.4.m4.1.2"><csymbol cd="ambiguous" id="S3.SS1.p4.4.m4.1.2.1.cmml" xref="S3.SS1.p4.4.m4.1.2">superscript</csymbol><ci id="S3.SS1.p4.4.m4.1.2.2.cmml" xref="S3.SS1.p4.4.m4.1.2.2">ℝ</ci><apply id="S3.SS1.p4.4.m4.1.1.1.1.1.cmml" xref="S3.SS1.p4.4.m4.1.1.1.1"><times id="S3.SS1.p4.4.m4.1.1.1.1.1.1.cmml" xref="S3.SS1.p4.4.m4.1.1.1.1.1.1"></times><ci id="S3.SS1.p4.4.m4.1.1.1.1.1.2.cmml" xref="S3.SS1.p4.4.m4.1.1.1.1.1.2">𝐿</ci><ci id="S3.SS1.p4.4.m4.1.1.1.1.1.3.cmml" xref="S3.SS1.p4.4.m4.1.1.1.1.1.3">𝑑</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p4.4.m4.1c">\mathbb{R}^{(L\times d)}</annotation></semantics></math>, where <math id="S3.SS1.p4.5.m5.1" class="ltx_Math" alttext="L=H\times W" display="inline"><semantics id="S3.SS1.p4.5.m5.1a"><mrow id="S3.SS1.p4.5.m5.1.1" xref="S3.SS1.p4.5.m5.1.1.cmml"><mi id="S3.SS1.p4.5.m5.1.1.2" xref="S3.SS1.p4.5.m5.1.1.2.cmml">L</mi><mo id="S3.SS1.p4.5.m5.1.1.1" xref="S3.SS1.p4.5.m5.1.1.1.cmml">=</mo><mrow id="S3.SS1.p4.5.m5.1.1.3" xref="S3.SS1.p4.5.m5.1.1.3.cmml"><mi id="S3.SS1.p4.5.m5.1.1.3.2" xref="S3.SS1.p4.5.m5.1.1.3.2.cmml">H</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p4.5.m5.1.1.3.1" xref="S3.SS1.p4.5.m5.1.1.3.1.cmml">×</mo><mi id="S3.SS1.p4.5.m5.1.1.3.3" xref="S3.SS1.p4.5.m5.1.1.3.3.cmml">W</mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p4.5.m5.1b"><apply id="S3.SS1.p4.5.m5.1.1.cmml" xref="S3.SS1.p4.5.m5.1.1"><eq id="S3.SS1.p4.5.m5.1.1.1.cmml" xref="S3.SS1.p4.5.m5.1.1.1"></eq><ci id="S3.SS1.p4.5.m5.1.1.2.cmml" xref="S3.SS1.p4.5.m5.1.1.2">𝐿</ci><apply id="S3.SS1.p4.5.m5.1.1.3.cmml" xref="S3.SS1.p4.5.m5.1.1.3"><times id="S3.SS1.p4.5.m5.1.1.3.1.cmml" xref="S3.SS1.p4.5.m5.1.1.3.1"></times><ci id="S3.SS1.p4.5.m5.1.1.3.2.cmml" xref="S3.SS1.p4.5.m5.1.1.3.2">𝐻</ci><ci id="S3.SS1.p4.5.m5.1.1.3.3.cmml" xref="S3.SS1.p4.5.m5.1.1.3.3">𝑊</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p4.5.m5.1c">L=H\times W</annotation></semantics></math>.
+This goes through <math id="S3.SS1.p4.6.m6.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S3.SS1.p4.6.m6.1a"><mi id="S3.SS1.p4.6.m6.1.1" xref="S3.SS1.p4.6.m6.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p4.6.m6.1b"><ci id="S3.SS1.p4.6.m6.1.1.cmml" xref="S3.SS1.p4.6.m6.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p4.6.m6.1c">N</annotation></semantics></math> attention layers and feed-forward networks (FFNs), similar to the vanilla Transformer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>.
+Note that our architecture is somewhat similar to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, but they used vanilla CNN blocks followed by the Transformer encoder, whereas we use
+BT followed by the vanilla Transformer encoder.
+The motivation for choosing our architectures is that the CNN blocks in BT capture the low-level features, the MHSA blocks
+use this information to capture mid-level features using attention, and the Transformer encoder will then use these mid-features to learn the global relationships.
+Thus, our architecture uses self-attention both at the mid and high levels.</p>
+</div>
+<div id="S3.SS1.p5" class="ltx_para">
+<p id="S3.SS1.p5.4" class="ltx_p"><span id="S3.SS1.p5.4.1" class="ltx_text ltx_font_bold">Head</span> A head is attached to the backbone. This head consists of a deconvolution layer (grey in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>)
+to increase the size of the feature map from 32<math id="S3.SS1.p5.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p5.1.m1.1a"><mo id="S3.SS1.p5.1.m1.1.1" xref="S3.SS1.p5.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p5.1.m1.1b"><times id="S3.SS1.p5.1.m1.1.1.cmml" xref="S3.SS1.p5.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p5.1.m1.1c">\times</annotation></semantics></math>24 to 64<math id="S3.SS1.p5.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p5.2.m2.1a"><mo id="S3.SS1.p5.2.m2.1.1" xref="S3.SS1.p5.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p5.2.m2.1b"><times id="S3.SS1.p5.2.m2.1.1.cmml" xref="S3.SS1.p5.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p5.2.m2.1c">\times</annotation></semantics></math>48, and a simple 1<math id="S3.SS1.p5.3.m3.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p5.3.m3.1a"><mo id="S3.SS1.p5.3.m3.1.1" xref="S3.SS1.p5.3.m3.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p5.3.m3.1b"><times id="S3.SS1.p5.3.m3.1.1.cmml" xref="S3.SS1.p5.3.m3.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p5.3.m3.1c">\times</annotation></semantics></math>1 convolutional layer (cream color in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>)
+to output 17 human keypoint heatmaps of size 64<math id="S3.SS1.p5.4.m4.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p5.4.m4.1a"><mo id="S3.SS1.p5.4.m4.1.1" xref="S3.SS1.p5.4.m4.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p5.4.m4.1b"><times id="S3.SS1.p5.4.m4.1.1.cmml" xref="S3.SS1.p5.4.m4.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p5.4.m4.1c">\times</annotation></semantics></math>48.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>DINO self-supervised pretraining</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">The self-supervised pre-training of the backbone is undertaken using the DINO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> method, which uses self distillation from the
+teacher to student networks. Augmented views of the input images are fed into the teacher and student networks, respectively.
+The output features of the teacher and student are enforced to be similar with the cross-entropy loss, which is back-propagated into the
+student network. The teacher network follows the student network by means of an Exponential Moving Average (EMA) update rule, i.e., a Momentum Encoder <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib41" title="" class="ltx_ref">41</a>]</cite>.
+In addition, a centering operation is done to avoid collapse <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Experiments</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p"><span id="S4.p1.1.1" class="ltx_text ltx_font_bold">Dataset</span>. For the Self-Supervised pre-training of the backbone architectures, we use ImageNet (images only, no labels).
+For the 2D human pose estimation downstream task, all our training and inference is on the COCO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> dataset. COCO consists of 200k images in the wild, with <math id="S4.p1.1.m1.1" class="ltx_Math" alttext="\sim" display="inline"><semantics id="S4.p1.1.m1.1a"><mo id="S4.p1.1.m1.1.1" xref="S4.p1.1.m1.1.1.cmml">∼</mo><annotation-xml encoding="MathML-Content" id="S4.p1.1.m1.1b"><csymbol cd="latexml" id="S4.p1.1.m1.1.1.cmml" xref="S4.p1.1.m1.1.1">similar-to</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.p1.1.m1.1c">\sim</annotation></semantics></math> 250k human instances.
+Train2017 has 57k images and 150k person instances. Val2017 has 5k images. The evaluation metric is based on Object Keypoint Similarity (OKS) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> and
+we compare Average Precision (AP) and Average Recall (AR) for the different models on the COCO validation set.</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p"><span id="S4.p2.1.1" class="ltx_text ltx_font_bold">Training details</span>. The SSL pre-training strategy follows <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> and uses 300 epochs.
+For the 2D human pose estimation, we follow the top-down human pose estimation paradigm where a pre-trained object detector
+obtains the bounding box around humans in an image, which is then extracted and
+fed into the pose estimator. The training set consists of single person crops from the dataset. All input images are resized to 256 <math id="S4.p2.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S4.p2.1.m1.1a"><mo id="S4.p2.1.m1.1.1" xref="S4.p2.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S4.p2.1.m1.1b"><times id="S4.p2.1.m1.1.1.cmml" xref="S4.p2.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S4.p2.1.m1.1c">\times</annotation></semantics></math> 192.
+The same data augmentation and training strategies from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> are used in this study. We use a total of 230 training epochs for
+the 2D human pose estimation problem, and employ the L2 loss function.</p>
+</div>
+<div id="S4.p3" class="ltx_para">
+<p id="S4.p3.2" class="ltx_p"><span id="S4.p3.2.1" class="ltx_text ltx_font_bold">Architecture details</span>. The architectures we use comprise of either 3 or 4 block groups <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>
+with the number of feature maps being [64, 96, 128, 256] for the block groups (in the same sequence),
+which is fewer than the original BT used in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> or the ResNet-50. The number of blocks used in each group is
+[3, 4, 6, 3], which is the same as the ResNet-50 and BT.
+We vary the number of attention heads in the MHSA block and this takes the value 4 or 8 in this study.
+The Transformer encoder uses a transformer dimension of 256 and a feed-forward dimension of 1024. The number
+of transformer layers is <math id="S4.p3.1.m1.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S4.p3.1.m1.1a"><mi id="S4.p3.1.m1.1.1" xref="S4.p3.1.m1.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S4.p3.1.m1.1b"><ci id="S4.p3.1.m1.1.1.cmml" xref="S4.p3.1.m1.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.p3.1.m1.1c">N</annotation></semantics></math> = 4 (except in one ablation study where <math id="S4.p3.2.m2.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S4.p3.2.m2.1a"><mi id="S4.p3.2.m2.1.1" xref="S4.p3.2.m2.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S4.p3.2.m2.1b"><ci id="S4.p3.2.m2.1.1.cmml" xref="S4.p3.2.m2.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.p3.2.m2.1c">N</annotation></semantics></math> = 6), the number of heads in the Transformer is 8.
+We use relative position embedding for height and width for the MHSA block, consistent with <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.
+For the Transformer encoder, we use learnable position embeddings <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>.</p>
+</div>
+<div id="S4.p4" class="ltx_para">
+<p id="S4.p4.1" class="ltx_p"><span id="S4.p4.1.1" class="ltx_text ltx_font_bold">Naming convention</span>. As aforementioned, the naming convention used in this paper (e.g., C2A1, C2A2, C3A1) is based on the number of convolutional and MHSA blocks in the BT part of
+the backbone (inside the blue rectangle shown in Figure <a href="#S2.F2" title="Figure 2 ‣ 2.4 Explainability of neural networks ‣ 2 Related Work ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>).
+When the number of attention heads in the MHSA block is 4, we add a “(4)” to the model name; and similarly a “(8)” when 8 heads are used in the MHSA block (note: the number
+of attention heads in the Transformer encoder is 8 for all the cases considered in this paper).
+In addition, when we pre-train with DINO, we add a suffix “Dino” to the model name; if the suffix “Dino” is not used, it is a model
+trained on the 2D pose estimation task with random weights as initialization.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Results on 2D human pose estimation</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">We compare BTranspose with SimpleBaseline <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, HRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite> and Transpose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> in Table <a href="#S4.T1" title="Table 1 ‣ 4.1 Results on 2D human pose estimation ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> on the
+COCO validation set.
+Specifically, C3A1(4)-Dino is the best performing BTranspose model with an AP of 76.4 and AR of 79.2, and so the comparison is done with this.
+C3A1(4)-Dino outperforms all the other models shown in Table <a href="#S4.T1" title="Table 1 ‣ 4.1 Results on 2D human pose estimation ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> on AP and comes close to Transpose-H-A4/6 on AR.
+Note that C3A1(4)-Dino only uses 10.1M neural network parameters, whereas Transpose-H-A4/6 use 17.5M.
+C3A1(4)-Dino also outperforms Transpose-H-S which has number of parameters comparable to BTranspose.
+Thus, with only 10.1M parameters, BTranspose is competitive with other pose estimation models.
+Furthermore, at inference C3A1(4)-Dino has an FPS of 45, which is also comparable with other pose estimation models such as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<td id="S4.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"><span id="S4.T1.1.1.1.1.1" class="ltx_text ltx_font_bold">Model</span></td>
+<td id="S4.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T1.1.1.1.2.1" class="ltx_text ltx_font_bold">AP</span></td>
+<td id="S4.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T1.1.1.1.3.1" class="ltx_text ltx_font_bold">AR</span></td>
+<td id="S4.T1.1.1.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T1.1.1.1.4.1" class="ltx_text ltx_font_bold">#Params</span></td>
+</tr>
+<tr id="S4.T1.1.2.2" class="ltx_tr">
+<td id="S4.T1.1.2.2.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">SimpleBaseline-Res50 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+</td>
+<td id="S4.T1.1.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">70.4</td>
+<td id="S4.T1.1.2.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">76.3</td>
+<td id="S4.T1.1.2.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">34.0M</td>
+</tr>
+<tr id="S4.T1.1.3.3" class="ltx_tr">
+<td id="S4.T1.1.3.3.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">SimpleBaseline-Res101 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+</td>
+<td id="S4.T1.1.3.3.2" class="ltx_td ltx_align_center ltx_border_r">71.4</td>
+<td id="S4.T1.1.3.3.3" class="ltx_td ltx_align_center ltx_border_r">76.3</td>
+<td id="S4.T1.1.3.3.4" class="ltx_td ltx_align_center ltx_border_r">53.0M</td>
+</tr>
+<tr id="S4.T1.1.4.4" class="ltx_tr">
+<td id="S4.T1.1.4.4.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">SimpleBaseline-Res152 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+</td>
+<td id="S4.T1.1.4.4.2" class="ltx_td ltx_align_center ltx_border_r">72.0</td>
+<td id="S4.T1.1.4.4.3" class="ltx_td ltx_align_center ltx_border_r">77.8</td>
+<td id="S4.T1.1.4.4.4" class="ltx_td ltx_align_center ltx_border_r">68.6M</td>
+</tr>
+<tr id="S4.T1.1.5.5" class="ltx_tr">
+<td id="S4.T1.1.5.5.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">HRNet-W32 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>
+</td>
+<td id="S4.T1.1.5.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">74.4</td>
+<td id="S4.T1.1.5.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">79.8</td>
+<td id="S4.T1.1.5.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">28.5M</td>
+</tr>
+<tr id="S4.T1.1.6.6" class="ltx_tr">
+<td id="S4.T1.1.6.6.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">HRNet-W48 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>
+</td>
+<td id="S4.T1.1.6.6.2" class="ltx_td ltx_align_center ltx_border_r">75.1</td>
+<td id="S4.T1.1.6.6.3" class="ltx_td ltx_align_center ltx_border_r">80.4</td>
+<td id="S4.T1.1.6.6.4" class="ltx_td ltx_align_center ltx_border_r">63.6M</td>
+</tr>
+<tr id="S4.T1.1.7.7" class="ltx_tr">
+<td id="S4.T1.1.7.7.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">Transpose-R-A3 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>
+</td>
+<td id="S4.T1.1.7.7.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">71.7</td>
+<td id="S4.T1.1.7.7.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">77.1</td>
+<td id="S4.T1.1.7.7.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">5.2M</td>
+</tr>
+<tr id="S4.T1.1.8.8" class="ltx_tr">
+<td id="S4.T1.1.8.8.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">Transpose-R-A4 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>
+</td>
+<td id="S4.T1.1.8.8.2" class="ltx_td ltx_align_center ltx_border_r">72.6</td>
+<td id="S4.T1.1.8.8.3" class="ltx_td ltx_align_center ltx_border_r">78.0</td>
+<td id="S4.T1.1.8.8.4" class="ltx_td ltx_align_center ltx_border_r">6.0M</td>
+</tr>
+<tr id="S4.T1.1.9.9" class="ltx_tr">
+<td id="S4.T1.1.9.9.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">Transpose-H-S <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>
+</td>
+<td id="S4.T1.1.9.9.2" class="ltx_td ltx_align_center ltx_border_r">74.2</td>
+<td id="S4.T1.1.9.9.3" class="ltx_td ltx_align_center ltx_border_r">78.0</td>
+<td id="S4.T1.1.9.9.4" class="ltx_td ltx_align_center ltx_border_r">8.0M</td>
+</tr>
+<tr id="S4.T1.1.10.10" class="ltx_tr">
+<td id="S4.T1.1.10.10.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">Transpose-H-A4 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>
+</td>
+<td id="S4.T1.1.10.10.2" class="ltx_td ltx_align_center ltx_border_r">75.3</td>
+<td id="S4.T1.1.10.10.3" class="ltx_td ltx_align_center ltx_border_r">80.3</td>
+<td id="S4.T1.1.10.10.4" class="ltx_td ltx_align_center ltx_border_r">17.3M</td>
+</tr>
+<tr id="S4.T1.1.11.11" class="ltx_tr">
+<td id="S4.T1.1.11.11.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">Transpose-H-A6 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>
+</td>
+<td id="S4.T1.1.11.11.2" class="ltx_td ltx_align_center ltx_border_r">75.8</td>
+<td id="S4.T1.1.11.11.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T1.1.11.11.3.1" class="ltx_text ltx_font_bold">80.8</span></td>
+<td id="S4.T1.1.11.11.4" class="ltx_td ltx_align_center ltx_border_r">17.5M</td>
+</tr>
+<tr id="S4.T1.1.12.12" class="ltx_tr">
+<td id="S4.T1.1.12.12.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t">C3A1(4)-Dino (this study)</td>
+<td id="S4.T1.1.12.12.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T1.1.12.12.2.1" class="ltx_text ltx_font_bold">76.4</span></td>
+<td id="S4.T1.1.12.12.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">79.2</td>
+<td id="S4.T1.1.12.12.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">10.1M</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Comparison of AP and AR on the COCO validation set for different models. C3A1(4)-Dino achieves competitive results with fewer parameters.</figcaption>
+</figure>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Ablation studies</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p"><span id="S4.SS2.p1.1.1" class="ltx_text ltx_font_bold">SSL pre-training versus random weight initialization</span>. Self-supervised learning (SSL) used as pre-training has a proven track record
+of learning useful image representations from unlabeled data. To this end, we have also pre-trained our models on
+ImageNet (images only, no lables) using the DINO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> method. We compare our pose estimation models with (1)
+random weight initialization and (2) DINO pre-training on ImageNet. With pre-training, the neural network learns useful
+low level features such as basic shapes and edges and how to aggregate information from them for the downstream pose
+estimation task. Table <a href="#S4.T2" title="Table 2 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> compares several BTranspose models with random initialization and
+DINO pre-training.<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>training C2A2(4) went awry, probably due to poor weight initialization.</span></span></span>
+All three BTranspose models C2A1(4)-Dino, C2A2(4)-Dino, C3A1(4)-Dino outperform when pre-trained using DINO, with +1.3 AP and +1.4 AR observed for
+C3A1(4)-Dino compared to its random initialization counterpart C3A1(4). Pre-training using SSL obviously improves performance, even though the
+pre-training was done on a completely different dataset (i.e., ImageNet), as basic features such as shapes and edges can still be learned which
+is useful for the downstream pose estimation task. Furthermore, C3A1(4)-Dino outperforms both C2A1(4)-Dino and C2A2(4)-Dino, which suggests that
+3 convolutional blocks help in learning better low-level features, before we proceed to processing the mid-level features in the MHSA block.</p>
+</div>
+<figure id="S4.T2" class="ltx_table">
+<table id="S4.T2.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<td id="S4.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"><span id="S4.T2.1.1.1.1.1" class="ltx_text ltx_font_bold">Model</span></td>
+<td id="S4.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.1.1.1.2.1" class="ltx_text ltx_font_bold">AP</span></td>
+<td id="S4.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.1.1.1.3.1" class="ltx_text ltx_font_bold">AR</span></td>
+<td id="S4.T2.1.1.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.1.1.1.4.1" class="ltx_text ltx_font_bold">#Params</span></td>
+</tr>
+<tr id="S4.T2.1.2.2" class="ltx_tr">
+<td id="S4.T2.1.2.2.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" colspan="4">random initialization</td>
+</tr>
+<tr id="S4.T2.1.3.3" class="ltx_tr">
+<td id="S4.T2.1.3.3.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">C2A1(4)</td>
+<td id="S4.T2.1.3.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">74.2</td>
+<td id="S4.T2.1.3.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">76.9</td>
+<td id="S4.T2.1.3.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">6.8M</td>
+</tr>
+<tr id="S4.T2.1.4.4" class="ltx_tr">
+<td id="S4.T2.1.4.4.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">C2A2(4)</td>
+<td id="S4.T2.1.4.4.2" class="ltx_td ltx_align_center ltx_border_r">59.0</td>
+<td id="S4.T2.1.4.4.3" class="ltx_td ltx_align_center ltx_border_r">62.6</td>
+<td id="S4.T2.1.4.4.4" class="ltx_td ltx_align_center ltx_border_r">9.55M</td>
+</tr>
+<tr id="S4.T2.1.5.5" class="ltx_tr">
+<td id="S4.T2.1.5.5.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">C3A1(4)</td>
+<td id="S4.T2.1.5.5.2" class="ltx_td ltx_align_center ltx_border_r">75.1</td>
+<td id="S4.T2.1.5.5.3" class="ltx_td ltx_align_center ltx_border_r">77.8</td>
+<td id="S4.T2.1.5.5.4" class="ltx_td ltx_align_center ltx_border_r">10.1M</td>
+</tr>
+<tr id="S4.T2.1.6.6" class="ltx_tr">
+<td id="S4.T2.1.6.6.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" colspan="4">self-supervised pre-training</td>
+</tr>
+<tr id="S4.T2.1.7.7" class="ltx_tr">
+<td id="S4.T2.1.7.7.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">C2A1(4)-Dino</td>
+<td id="S4.T2.1.7.7.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">75.2</td>
+<td id="S4.T2.1.7.7.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">78.0</td>
+<td id="S4.T2.1.7.7.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">6.8M</td>
+</tr>
+<tr id="S4.T2.1.8.8" class="ltx_tr">
+<td id="S4.T2.1.8.8.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">C2A2(4)-Dino</td>
+<td id="S4.T2.1.8.8.2" class="ltx_td ltx_align_center ltx_border_r">75.0</td>
+<td id="S4.T2.1.8.8.3" class="ltx_td ltx_align_center ltx_border_r">77.8</td>
+<td id="S4.T2.1.8.8.4" class="ltx_td ltx_align_center ltx_border_r">9.55M</td>
+</tr>
+<tr id="S4.T2.1.9.9" class="ltx_tr">
+<td id="S4.T2.1.9.9.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r">C3A1(4)-Dino</td>
+<td id="S4.T2.1.9.9.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">76.4</td>
+<td id="S4.T2.1.9.9.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">79.2</td>
+<td id="S4.T2.1.9.9.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">10.1M</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2: </span>Random weight initialization versus self-supervised pre-training on ImageNet using DINO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>.</figcaption>
+</figure>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p"><span id="S4.SS2.p2.1.1" class="ltx_text ltx_font_bold">4 versus 8 heads in the MHSA block</span>. For the MHSA block of the Bottleneck Transformer used in the backbone,
+we considered either 4 or 8 self-attention heads (note: the Transformer encoder always uses 8 heads for all models; the analysis here is for the MHSA block only).
+The MHSA block is responsible for learning mid-level features using attention, which are then passed on to the Transformer encoder.
+The results are compared in Table <a href="#S4.T4" title="Table 4 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> for C3A1 architecture for the bottleneck in the backbone.
+With random weight initialization, 8 heads outperforms 4 heads, with +0.2 and +0.3 on AP and AR observed, respectively.
+However, with SSL pre-training, 4 heads has better performance than 8: +0.4 on AP and +0.3 on AR.
+We believe that more heads help training when the networks are trained from scratch with random weight initialization.
+However, when SSL pre-training is used, the networks already learn useful image features and in this setting fewer heads in the MHSA block suffices.</p>
+</div>
+<figure id="S4.T4" class="ltx_table">
+<div class="ltx_flex_figure ltx_flex_table">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S4.T4.fig1" class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_middle" style="width:216.8pt;">
+<table id="S4.T4.fig1.1" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T4.fig1.1.1.1" class="ltx_tr">
+<td id="S4.T4.fig1.1.1.1.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"><span id="S4.T4.fig1.1.1.1.1.1" class="ltx_text ltx_font_bold">Model</span></td>
+<td id="S4.T4.fig1.1.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T4.fig1.1.1.1.2.1" class="ltx_text ltx_font_bold">AP</span></td>
+<td id="S4.T4.fig1.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T4.fig1.1.1.1.3.1" class="ltx_text ltx_font_bold">AR</span></td>
+</tr>
+<tr id="S4.T4.fig1.1.2.2" class="ltx_tr">
+<td id="S4.T4.fig1.1.2.2.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" colspan="3">random initialization</td>
+</tr>
+<tr id="S4.T4.fig1.1.3.3" class="ltx_tr">
+<td id="S4.T4.fig1.1.3.3.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">C3A1(4)</td>
+<td id="S4.T4.fig1.1.3.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">75.1</td>
+<td id="S4.T4.fig1.1.3.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">77.8</td>
+</tr>
+<tr id="S4.T4.fig1.1.4.4" class="ltx_tr">
+<td id="S4.T4.fig1.1.4.4.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">C3A1(8)</td>
+<td id="S4.T4.fig1.1.4.4.2" class="ltx_td ltx_align_center ltx_border_r">75.3</td>
+<td id="S4.T4.fig1.1.4.4.3" class="ltx_td ltx_align_center ltx_border_r">78.1</td>
+</tr>
+<tr id="S4.T4.fig1.1.5.5" class="ltx_tr">
+<td id="S4.T4.fig1.1.5.5.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" colspan="3">self-supervised pre-training</td>
+</tr>
+<tr id="S4.T4.fig1.1.6.6" class="ltx_tr">
+<td id="S4.T4.fig1.1.6.6.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">C3A1(4)-Dino</td>
+<td id="S4.T4.fig1.1.6.6.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">76.4</td>
+<td id="S4.T4.fig1.1.6.6.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">79.2</td>
+</tr>
+<tr id="S4.T4.fig1.1.7.7" class="ltx_tr">
+<td id="S4.T4.fig1.1.7.7.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r">C3A1(8)-Dino</td>
+<td id="S4.T4.fig1.1.7.7.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">76.0</td>
+<td id="S4.T4.fig1.1.7.7.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">78.9</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Table 3: </span>4 versus 8 attention heads in the MHSA block. All models have 10.1M #Params.</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S4.T4.fig2" class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_middle" style="width:216.8pt;">
+<table id="S4.T4.fig2.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T4.fig2.1.1.1" class="ltx_tr">
+<th id="S4.T4.fig2.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t"><span id="S4.T4.fig2.1.1.1.1.1" class="ltx_text ltx_font_bold">Model</span></th>
+<th id="S4.T4.fig2.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S4.T4.fig2.1.1.1.2.1" class="ltx_text ltx_font_bold">AP</span></th>
+<th id="S4.T4.fig2.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S4.T4.fig2.1.1.1.3.1" class="ltx_text ltx_font_bold">AR</span></th>
+<th id="S4.T4.fig2.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S4.T4.fig2.1.1.1.4.1" class="ltx_text ltx_font_bold">#Params</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T4.fig2.1.2.1" class="ltx_tr">
+<td id="S4.T4.fig2.1.2.1.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">C3A1(4)-Dino</td>
+<td id="S4.T4.fig2.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">76.4</td>
+<td id="S4.T4.fig2.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">79.2</td>
+<td id="S4.T4.fig2.1.2.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">10.1M</td>
+</tr>
+<tr id="S4.T4.fig2.1.3.2" class="ltx_tr">
+<td id="S4.T4.fig2.1.3.2.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r">C3A1(4)-Dino-N6</td>
+<td id="S4.T4.fig2.1.3.2.2" class="ltx_td ltx_align_center ltx_border_r">76.3</td>
+<td id="S4.T4.fig2.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r">79.1</td>
+<td id="S4.T4.fig2.1.3.2.4" class="ltx_td ltx_align_center ltx_border_r">11.67M</td>
+</tr>
+<tr id="S4.T4.fig2.1.4.3" class="ltx_tr">
+<td id="S4.T4.fig2.1.4.3.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r">C3A1(4)-Dino-Large</td>
+<td id="S4.T4.fig2.1.4.3.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">76.7</td>
+<td id="S4.T4.fig2.1.4.3.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">79.3</td>
+<td id="S4.T4.fig2.1.4.3.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">23.82M</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Table 4: </span>Other architecture variants.</figcaption>
+</figure>
+</div>
+</div>
+</figure>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p"><span id="S4.SS2.p3.1.1" class="ltx_text ltx_font_bold">Number of transformer encoder layers</span>. We consider another case where the number of transformer encoder layers is varied.
+For all the cases considered thus far, we used N = 4 layers; we consider one case with N = 6 layers (called C3A1(4)-Dino-N6), with everything else
+being the same. The results on the COCO validation set are presented in Table <a href="#S4.T4" title="Table 4 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>. Compared to the baseline
+C3A1(4)-Dino case, AP and AR are -0.1 and -0.1, respectively. Thus, adding extra transformer encoder layers has no performance boost.</p>
+</div>
+<div id="S4.SS2.p4" class="ltx_para">
+<p id="S4.SS2.p4.1" class="ltx_p"><span id="S4.SS2.p4.1.1" class="ltx_text ltx_font_bold">Larger network architecture</span>. The number of feature maps used in the CNN and MHSA blocks for all the cases considered thus far is
+[64, 96, 128, 256]. We consider a larger network architecture with [64, 128, 256, 512] feature maps for the CNN and MHSA block groups—we name it C3A1(4)-Dino-Large—
+whose backbone is the same as the original architecture used in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. As before, this network is also pre-trained using DINO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> and the
+results on the COCO validation set are presented in Table <a href="#S4.T4" title="Table 4 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>. AP and AR for C3A1(4)-Dino-Large are
++0.3 and +0.1 compared to C3A1(4)-Dino, which is an incremental improvement, albeit with 2X number of parameters.</p>
+</div>
+<div id="S4.SS2.p5" class="ltx_para">
+<p id="S4.SS2.p5.4" class="ltx_p"><span id="S4.SS2.p5.4.1" class="ltx_text ltx_font_bold">Optimal transport loss function</span>. We also consider one training with the Sinkhorn loss function used in optimal transport <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite>
+for the downstream pose estimation task, with the entropy regulation term <math id="S4.SS2.p5.1.m1.1" class="ltx_Math" alttext="\epsilon" display="inline"><semantics id="S4.SS2.p5.1.m1.1a"><mi id="S4.SS2.p5.1.m1.1.1" xref="S4.SS2.p5.1.m1.1.1.cmml">ϵ</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p5.1.m1.1b"><ci id="S4.SS2.p5.1.m1.1.1.cmml" xref="S4.SS2.p5.1.m1.1.1">italic-ϵ</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p5.1.m1.1c">\epsilon</annotation></semantics></math> = 0.05 and number of training iterations <math id="S4.SS2.p5.2.m2.1" class="ltx_Math" alttext="n" display="inline"><semantics id="S4.SS2.p5.2.m2.1a"><mi id="S4.SS2.p5.2.m2.1.1" xref="S4.SS2.p5.2.m2.1.1.cmml">n</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p5.2.m2.1b"><ci id="S4.SS2.p5.2.m2.1.1.cmml" xref="S4.SS2.p5.2.m2.1.1">𝑛</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p5.2.m2.1c">n</annotation></semantics></math> = 3.
+On the COCO validation set the AP is 76.3 and AR is 79.0, which is -0.1 and -0.2 compared to C3A1(4)-Dino.
+Thus, with the Sinkhorn loss BTranspose slightly underperforms. We believe the reason could be the two hyperparameters <math id="S4.SS2.p5.3.m3.1" class="ltx_Math" alttext="\epsilon" display="inline"><semantics id="S4.SS2.p5.3.m3.1a"><mi id="S4.SS2.p5.3.m3.1.1" xref="S4.SS2.p5.3.m3.1.1.cmml">ϵ</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p5.3.m3.1b"><ci id="S4.SS2.p5.3.m3.1.1.cmml" xref="S4.SS2.p5.3.m3.1.1">italic-ϵ</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p5.3.m3.1c">\epsilon</annotation></semantics></math> and <math id="S4.SS2.p5.4.m4.1" class="ltx_Math" alttext="n" display="inline"><semantics id="S4.SS2.p5.4.m4.1a"><mi id="S4.SS2.p5.4.m4.1.1" xref="S4.SS2.p5.4.m4.1.1.cmml">n</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p5.4.m4.1b"><ci id="S4.SS2.p5.4.m4.1.1.cmml" xref="S4.SS2.p5.4.m4.1.1">𝑛</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p5.4.m4.1c">n</annotation></semantics></math>
+may need to be calibrated, which is problem specific.</p>
+</div>
+<figure id="S4.F3" class="ltx_figure">
+<p id="S4.F3.4" class="ltx_p ltx_align_center">(a)<img src="/html/2204.10209/assets/x4.png" id="S4.F3.1.g1" class="ltx_graphics ltx_img_landscape" width="302" height="90" alt="Refer to caption"> 
+<br class="ltx_break">(b)<img src="/html/2204.10209/assets/x5.png" id="S4.F3.2.g2" class="ltx_graphics ltx_img_landscape" width="302" height="90" alt="Refer to caption"> 
+<br class="ltx_break">(c)<img src="/html/2204.10209/assets/x6.png" id="S4.F3.3.g3" class="ltx_graphics ltx_img_landscape" width="302" height="90" alt="Refer to caption"> 
+<br class="ltx_break">(d)<img src="/html/2204.10209/assets/x7.png" id="S4.F3.4.g4" class="ltx_graphics ltx_img_landscape" width="302" height="90" alt="Refer to caption"> 
+<br class="ltx_break"></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Dependency areas for the predicted keypoints using models: (a &amp; b) C3A1(4)-Dino; (c &amp; d) C3A1(4). The dependency area is computed at the MHSA block in (a &amp; c) and at
+the Transformer encoder layer in (b &amp; d). The predicted keypoints and the skeleton reconstruction is also shown in the first column of each image.</figcaption>
+</figure>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Dependency areas</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">We undertake a qualitative analysis to understand how the network makes
+the final predictions by aggregating information. To this end, we visualize dependency areas from attention maps
+using the final predicted keypoint as the query location, similar to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. But the analysis
+differs from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> in that they have attention layers only in the Transformer encoder, whereas in our study
+we have 2 parts of the backbone network that have attention layers: the MHSA block in the bottleneck transformer and in the
+final Transformer Encoder (TE) layer. The dependency areas in the MHSA block provides insights on the role of attention at the
+mid-level features; whereas the same at the TE layer provides insights on the role of attention at the high-level features.</p>
+</div>
+<div id="S4.SS3.p2" class="ltx_para">
+<p id="S4.SS3.p2.1" class="ltx_p"><span id="S4.SS3.p2.1.1" class="ltx_text ltx_font_bold">MHSA block versus Transformer encoder</span> We present the dependency areas for an input image comparing
+C3A1(4)-Dino and C3A1(4) in Figure <a href="#S4.F3" title="Figure 3 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>. It is interesting to note that at the MHSA level, the network has already learned to
+focus on the human anatomy/shape, i.e., a rough segmented region of the human,
+with many potential keypoint regions having high scores (yellow/red patches).
+However, at the MHSA block (Figure <a href="#S4.F3" title="Figure 3 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> a &amp; c), no strong correlation is evident between the
+final keypoint predicted (white star in the figure) and the region where the MHSA block focuses on in the input image.
+In the Transformer encoder attention dependency areas (Figure <a href="#S4.F3" title="Figure 3 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> b &amp; d),
+we see high values in the vicinity of the predicted keypoints.
+This suggests that at the MHSA block, the network has learned to aggregate low-level information to construct mid-level features and
+infer the basic human anatomy/shape, but has not yet learned which part of the human anatomy corresponds to the final keypoint of interst.
+In contrast, at the Transformer encoder level, the network aggregates the mid-level understanding to learn local-to-global relationships, and so
+arrives at the final predicted keypoint.</p>
+</div>
+<figure id="S4.F4" class="ltx_figure">
+<p id="S4.F4.2" class="ltx_p ltx_align_center">(a)<img src="/html/2204.10209/assets/x8.png" id="S4.F4.1.g1" class="ltx_graphics ltx_img_landscape" width="302" height="179" alt="Refer to caption"> 
+<br class="ltx_break">(b)<img src="/html/2204.10209/assets/x9.png" id="S4.F4.2.g2" class="ltx_graphics ltx_img_landscape" width="302" height="90" alt="Refer to caption"> 
+<br class="ltx_break"></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Dependency areas for the predicted keypoints using C3A1(8)-Dino for the (a) MHSA block and (b) Transformer encoder layer.</figcaption>
+</figure>
+<div id="S4.SS3.p3" class="ltx_para">
+<p id="S4.SS3.p3.1" class="ltx_p"><span id="S4.SS3.p3.1.1" class="ltx_text ltx_font_bold">Dependency area due to self-supervised pre-training.</span> Comparing C3A1(4)-Dino and C3A1(4) in Figure <a href="#S4.F3" title="Figure 3 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, it is evident that the
+dependency areas are different. At the MHSA level, the dependency areas look relatively smaller for C3A1(4)-Dino than C3A1(4), so
+pre-training potentially helps at the MHSA level as the early layers have learned low-level features better. At the Transformer encoder level, the
+differences are subtle, suggesting that even though there may be multiple pathways by which the mid-level features are extracted in the MHSA block, at the
+Transformer encoder layer they still get aggregated to form mid-to-high relationships to arrive at the final keypoint. More examples are presented in the
+supplementary material.</p>
+</div>
+<div id="S4.SS3.p4" class="ltx_para">
+<p id="S4.SS3.p4.1" class="ltx_p"><span id="S4.SS3.p4.1.1" class="ltx_text ltx_font_bold">4 versus 8 attention heads in the MHSA block.</span> Next, we consider C3A1(8)-Dino and present the dependency areas for the predicted keypoints
+in Figure <a href="#S4.F4" title="Figure 4 ‣ 4.3 Dependency areas ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>. Here too the network has learned the basic human anatomy (i.e., a segmented sub-region of the human) at the MHSA block using attention (i.e., the mid-level), and
+at the Transformer Encoder level it has learned to aggregate the mid-level information to infer the global relationships and predict the final keypoint.
+Comparing Figures <a href="#S4.F3" title="Figure 3 ‣ 4.2 Ablation studies ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> and <a href="#S4.F4" title="Figure 4 ‣ 4.3 Dependency areas ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, we observe that at the MHSA block 8 heads seems to result in a few dependency areas
+that are partially outside the human sub-region, suggesting that 8 heads can confuse the network to some extent at the mid-level features.
+However, at the Transformer Encoder level, the differenes are much less pronounced, suggesting that at the high-level features the Transformer Encoder has overcome some of the
+confusion that exists at the mid-level. More examples are presented in the supplementary material.</p>
+</div>
+<div id="S4.SS3.p5" class="ltx_para">
+<p id="S4.SS3.p5.1" class="ltx_p"><span id="S4.SS3.p5.1.1" class="ltx_text ltx_font_bold">Special Scenarios.</span> Next, we consider some special cases and compare the dependency areas. In Figure <a href="#S4.F5" title="Figure 5 ‣ 4.3 Dependency areas ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> (a) we consider a horse rider with the left half of the human
+occluded. At the MHSA block, the network has already learned the shape of the human, although some
+regions of the horse are also attended to.
+Comparing the dependency areas at the TE layer for the left elbow and left ankle (i.e., two occluded body parts)
+we find the red patches (i.e., peak magnitudes) to be closer to the predicted keypoint location for C3A1(4)-Dino than for C3A1(4).
+We consider the input image of a surfer in Figure <a href="#S4.F5" title="Figure 5 ‣ 4.3 Dependency areas ‣ 4 Experiments ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> (b). This is interesting as the human in the image is nearly horizontal, whereas most of the images
+in the training are of vertically-oriented humans. At the MHSA block, the network has learned to focus on the sub-region of interest, albeit with
+no correlation with the query keypoint. At the TE layer, the peak magnitudes are closer to the query keypoint for C3A1(4)-Dino than for C3A1(4)
+suggesting that SSL pre-training helps in the network being more confident in its predictions.
+In another special case, we consider two humans close to each other in the input image (see supplementary material). Here, the
+MHSA block is unable to distinguish between the two humans, but has learned to segment the sub-region as a large patch.
+The TE layer then aggregates this information to make the distinction between the two humans close to each other.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure">
+<p id="S4.F5.2" class="ltx_p ltx_align_center">(a) <img src="/html/2204.10209/assets/x10.png" id="S4.F5.1.g1" class="ltx_graphics ltx_img_landscape" width="166" height="104" alt="Refer to caption"> (b) <img src="/html/2204.10209/assets/x11.png" id="S4.F5.2.g2" class="ltx_graphics ltx_img_landscape" width="166" height="112" alt="Refer to caption"></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Dependency areas for the (a) horse rider and the (b) surfer. The white star denotes the predicted keypoint location.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusion</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">For the task of 2D human pose estimation, we explored a model—BTranspose—by combining
+Bottleneck Transformers with the vanilla Transformer Encoder (TE). We have attention layers in two regions of the backbone:
+the MHSA block and in the Transformer encoder. Attention in the MHSA block focuses on the mid-level features, whereas attention in the
+TE aggregates this information to learn high-level features.
+Self-supervised pre-training of the backbone is found to improve the performance of the models for all the architectures considered in this study.
+The model is lightweight and with only 10.1M parameters is able to compete with other state-of-the-art approaches on the COCO dataset.
+Analyzing dependency areas reveals that the MHSA block learns the basic human anatomy/shape, but has not yet learned which
+region of the human anatomy to focus on for the queried keypoint.
+However, this mid-level information is then used by the Transformer encoder to learn the mid-to-high relationships and arrive at the final keypoint.
+Analyzing some special scenarios, we find that the model pre-trained with SSL is slightly more confident in knowing where to focus on in the input image.
+This is particularly useful for images with occluded human body parts, as well as when there are two humans very close to each other.
+Overall, BTranspose is competitive with other 2D pose estimation models, is lightweight and provides insights into how the model aggregates information at
+both the mid and high-levels.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Yang, S., Quan, Z., Nie, M., Yang, W.:
+
+</span>
+<span class="ltx_bibblock">Transpose: Keypoint localization via transformer.
+
+</span>
+<span class="ltx_bibblock">ICCV, pages 11802–11812 (2021)
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Srinivas, A., Lin, T.Y., Parmar, N., Shlens, J., Abbeel, P., Vaswani, A.:
+
+</span>
+<span class="ltx_bibblock">Bottleneck transformers for visual recognition.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 16519–16529 (2021)
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Caron, M., Touvron, H., Misra, I., Jegou, H., Mairal, J., Bojanowski, P.,
+Joulin, A.:
+
+</span>
+<span class="ltx_bibblock">Emerging properties in self-supervised vision transformers.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv: 2104.14294 (2021)
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+LeCun, Y., Bottou, L., Bengio, Y., Haffner, P.:
+
+</span>
+<span class="ltx_bibblock">Gradient-based learning applied to document recognition.
+
+</span>
+<span class="ltx_bibblock">Proc. of the IEEE (November 1998)
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Krizhevsky, A., Sutskever, I., Hinton, G.:
+
+</span>
+<span class="ltx_bibblock">Imagenet classification with deep convolutional neural networks.
+
+</span>
+<span class="ltx_bibblock">NeurIPS (2012)
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Girshick, R., Donahue, J., Darrell, T., Malik, J.:
+
+</span>
+<span class="ltx_bibblock">Rich feature hierarchies for accurate object detection and semantic
+segmentation.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 580–587 (2014)
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Girshick, R.:
+
+</span>
+<span class="ltx_bibblock">Fast rcnn.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 1440–1448 (2015)
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Lin, T., Maire, M., Belongie, S.J., Bourdev, L.D., Girshick, R.B., Hays, J.,
+Perona, P., Ramanan, D., Dollár, P., Zitnick, C.L.:
+
+</span>
+<span class="ltx_bibblock">Microsoft COCO: common objects in context.
+
+</span>
+<span class="ltx_bibblock">CoRR <span id="bib.bib8.1.1" class="ltx_text ltx_font_bold">abs/1405.0312</span> (2014)
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Chen, L.C., Papandreou, G., Schroff, F., Adam, H.:
+
+</span>
+<span class="ltx_bibblock">Rethinking atrous convolution for semantic image segmentation.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv:1706.05587 (2017)
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Takikawa, T., Acuna, D., Jampani, V., Fidler, S.:
+
+</span>
+<span class="ltx_bibblock">Gated-scnn: Gated shape cnns for semantic segmentation.
+
+</span>
+<span class="ltx_bibblock">ICCV (2019)
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Toshev, A., Szegedy, C.:
+
+</span>
+<span class="ltx_bibblock">Deeppose: Human pose estimation via deep neural networks.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 1653–1660 (2014)
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Newell, A., Yang, K., Deng, J.:
+
+</span>
+<span class="ltx_bibblock">Stacked hourglass networks for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">ECCV, pages 483–499. Springer (2016)
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Chen, Y., Wang, Z., Peng, Y., Zhang, Z., Yu, G., Sun, J.:
+
+</span>
+<span class="ltx_bibblock">Cascaded pyramid network for multi-person pose estimation.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 7103–7112 (2018)
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Papandreou, G., Zhu, T., Kanazawa, N., Toshev, A., Tompson, J., Bregler, C.,
+Murphy, K.:
+
+</span>
+<span class="ltx_bibblock">Towards accurate multi-person pose estimation in the wild.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 4903–4911 (2017)
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Papandreou, G., Zhu, T., Chen, L.C., Gidaris, S., Tompson, J., Murphy, K.:
+
+</span>
+<span class="ltx_bibblock">Personlab: Person pose estimation and instance segmentation with a
+bottom-up, part-based, geometric embedding model.
+
+</span>
+<span class="ltx_bibblock">ECCV, arXiv preprint arXiv:1803.08225 (2018)
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Xiao, B., Wu, H., Wei, Y.:
+
+</span>
+<span class="ltx_bibblock">Simple baselines for human pose estimation and tracking.
+
+</span>
+<span class="ltx_bibblock">ECCV, pages 466–481 (2018)
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Simonyan, K., Zisserman, A.:
+
+</span>
+<span class="ltx_bibblock">Very deep convolutional networks for large-scale image recognition.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv:1409.1556 (2014)
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+He, K., Zhang, X., Ren, S., Sun, J.:
+
+</span>
+<span class="ltx_bibblock">Deep residual learning for image recognition.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 770–778 (2016)
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N.,
+Kaiser, L., Polosukhin, I.:
+
+</span>
+<span class="ltx_bibblock">Attention is all you need.
+
+</span>
+<span class="ltx_bibblock">NeurIPS, pages 5998–6008 (2017)
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Devlin, J., Chang, M.W., Lee, K., Toutanova, K.:
+
+</span>
+<span class="ltx_bibblock">Bert: Pre-training of deep bidirectional transformers for language
+understanding.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv:1810.04805 (2018)
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Dosovitskiy, A., Beyer, L., Kolesnikov, A., Weissenborn, D., Zhai, X.,
+Unterthiner, T., Dehghani, M., Minderer, M., Heigold, G., Gelly, S.,
+Uszkoreit, J., Houlsby, N.:
+
+</span>
+<span class="ltx_bibblock">An image is worth 16x16 words: Transformers for image recognition at
+scale.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv: 2010.11929 (2020)
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Chen, T., Kornblith, S., Norouzi, M., Hinton, G.:
+
+</span>
+<span class="ltx_bibblock">A simple framework for contrastive learning of visual
+representations.
+
+</span>
+<span class="ltx_bibblock">ICML, arXiv preprint arXiv: 2002.05709 (2020)
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+Grill, J.B., Strub, F., Altche, F., Tallec, C., Richemond, P.H., Buchatskaya,
+E., Doersch, C., Pires, B.A., Guo, Z.D., Azar, M.G., Piot, B., Kavukcuoglu,
+K., Munos, R., Valko, M.:
+
+</span>
+<span class="ltx_bibblock">Bootstrap your own latent: A new approach to self-supervised
+learning.
+
+</span>
+<span class="ltx_bibblock">NeurIPS 2020, arXiv preprint arXiv: 2006.07733 (2020)
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Zbontar, J., Jing, L., Misra, I., LeCun, Y., Deny, S.:
+
+</span>
+<span class="ltx_bibblock">Barlow twins: Self-supervised learning via redundancy reduction.
+
+</span>
+<span class="ltx_bibblock">ICML, arXiv preprint arXiv: 2103.03230 (2021)
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+Chen, X., He, K.:
+
+</span>
+<span class="ltx_bibblock">Exploring simple siamese representation learning.
+
+</span>
+<span class="ltx_bibblock">CVPR, arXiv preprint arXiv: 2011.10566 (2021)
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+Hinton, G., Vinyals, O., Dean, J.:
+
+</span>
+<span class="ltx_bibblock">Distilling the knowledge in a neural network.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv:1503.02531 (2015)
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+Wei, S.E., Ramakrishna, V., Kanade, T., Sheikh, Y.:
+
+</span>
+<span class="ltx_bibblock">Convolutional pose machines.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 4724–4732 (2016)
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+Sun, K., Xiao, B., Liu, D., Wang, J.:
+
+</span>
+<span class="ltx_bibblock">Deep high-resolution representation learning for human pose
+estimation.
+
+</span>
+<span class="ltx_bibblock">CVPR (2019)
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+Pfister, T., Charles, J., Zisserman, A.:
+
+</span>
+<span class="ltx_bibblock">Following convnets for human pose estimation in videos.
+
+</span>
+<span class="ltx_bibblock">ICCV, pages 1913–1921 (2015)
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+Chu, X., Yang, W., Ouyang, W., Ma, C., Yuille, A.L., Wang, X.:
+
+</span>
+<span class="ltx_bibblock">Multi-context attention for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">CVPR, pages 5669–5678 (2017)
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+Cheng, B., Xiao, B., Wang, J., Shi, H., Huang, T.S., Zhang, L.:
+
+</span>
+<span class="ltx_bibblock">Higherhrnet: Scale-aware representation learning for bottom-up human
+pose estimation.
+
+</span>
+<span class="ltx_bibblock">CVPR (2020)
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+Yang, W., Li, S., Ouyang, W., Li, H., Wang, X.:
+
+</span>
+<span class="ltx_bibblock">Learning feature pyramids for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">ICCV, pages 1281–1290 (2017)
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+Cai, Y., Wang, Z., Luo, Z., Yin, B., Du, A., Wang, H., Zhang, X., Zhou, X.,
+Zhou, E., Sun, J.:
+
+</span>
+<span class="ltx_bibblock">Learning delicate local representations for multi-person pose
+estimation.
+
+</span>
+<span class="ltx_bibblock">ECCV (2020)
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+Carion, N., Massa, F., Synnaeve, G., Usunier, N., Kirillov, A., Zagoruyko, S.:
+
+</span>
+<span class="ltx_bibblock">End-to-end object detection with transformers.
+
+</span>
+<span class="ltx_bibblock">ECCV, pages 213–229 (2020)
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+Touvron, H., Cord, M., Douze, M., Massa, F., Sablayrolles, A., Jegou, H.:
+
+</span>
+<span class="ltx_bibblock">raining data-efficient image transformers and distillation through
+attention.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv:2012.12877 (2020)
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+Baevski, A., Hsu, W.N., Xu, Q., Babu, A., Gu, J., Auli, M.:
+
+</span>
+<span class="ltx_bibblock">Data2vec: A general framework for self-supervised learning in speech,
+vision and language.
+
+</span>
+<span class="ltx_bibblock">https://ai.facebook.com/research/data2vec-a-general-framework-for-self-supervised-learning-in-speech-vision-and-language/
+(2022)
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+Samek, W., Montavon, G., Vedaldi, A., Hansen, L.K., Muller, K.R.:
+
+</span>
+<span class="ltx_bibblock">Explainable ai: Interpreting, explaining and visualizing deep
+learning.
+
+</span>
+<span class="ltx_bibblock">Springer LNAI 11700 (2019)
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+Li, S., Liu, Z.Q., Chan, A.B.:
+
+</span>
+<span class="ltx_bibblock">Heterogeneous multi-task learning for human pose estimation with deep
+convolutional neural network.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv:1406.3474 (2014)
+
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock">
+Simonyan, K., Vedaldi, A., Zisserman, A.:
+
+</span>
+<span class="ltx_bibblock">Deep inside convolutional networks: Visualising image classification
+models and saliency maps.
+
+</span>
+<span class="ltx_bibblock">arXiv preprint arXiv:1312.6034 (2013)
+
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock">
+Zeiler, M.D., Fergus, R.:
+
+</span>
+<span class="ltx_bibblock">Visualizing and understanding convolutional networks.
+
+</span>
+<span class="ltx_bibblock">ECCV, pages 818–833 (2014)
+
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock">
+He, K., Fan, H., Wu, Y., Xie, S., Girshick, R.:
+
+</span>
+<span class="ltx_bibblock">Momentum contrast for unsupervised visual representation learning.
+
+</span>
+<span class="ltx_bibblock">CVPR (2020)
+
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock">
+Cuturi, M.:
+
+</span>
+<span class="ltx_bibblock">Sinkhorn distances: Lightspeed computation of optimal transport.
+
+</span>
+<span class="ltx_bibblock">NeurIPS (2013)
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">A. Image and feature map dimensions for C3A1 architecture</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.3" class="ltx_p">The image and feature map dimensions at various stages of the C3A1 architecture is shown in Table <a href="#Sx1.T5" title="Table 5 ‣ A. Image and feature map dimensions for C3A1 architecture ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>. The batch
+dimension is not presented.
+The input image is RGB and of size 256 <math id="Sx1.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.p1.1.m1.1a"><mo id="Sx1.p1.1.m1.1.1" xref="Sx1.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.p1.1.m1.1b"><times id="Sx1.p1.1.m1.1.1.cmml" xref="Sx1.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.p1.1.m1.1c">\times</annotation></semantics></math> 192.
+The model predicts 17 keypoint heatmaps, and so the output is 17 <math id="Sx1.p1.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.p1.2.m2.1a"><mo id="Sx1.p1.2.m2.1.1" xref="Sx1.p1.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.p1.2.m2.1b"><times id="Sx1.p1.2.m2.1.1.cmml" xref="Sx1.p1.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.p1.2.m2.1c">\times</annotation></semantics></math> 64 <math id="Sx1.p1.3.m3.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.p1.3.m3.1a"><mo id="Sx1.p1.3.m3.1.1" xref="Sx1.p1.3.m3.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.p1.3.m3.1b"><times id="Sx1.p1.3.m3.1.1.cmml" xref="Sx1.p1.3.m3.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.p1.3.m3.1c">\times</annotation></semantics></math> 48.</p>
+</div>
+<figure id="Sx1.T5" class="ltx_table">
+<table id="Sx1.T5.24.24" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="Sx1.T5.24.24.25.1" class="ltx_tr">
+<th id="Sx1.T5.24.24.25.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t"><span id="Sx1.T5.24.24.25.1.1.1" class="ltx_text ltx_font_bold">Layer</span></th>
+<th id="Sx1.T5.24.24.25.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="Sx1.T5.24.24.25.1.2.1" class="ltx_text ltx_font_bold">Dimension</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="Sx1.T5.2.2.2" class="ltx_tr">
+<th id="Sx1.T5.2.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Input image</th>
+<td id="Sx1.T5.2.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">3 <math id="Sx1.T5.1.1.1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.1.1.1.1.m1.1a"><mo id="Sx1.T5.1.1.1.1.m1.1.1" xref="Sx1.T5.1.1.1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.1.1.1.1.m1.1b"><times id="Sx1.T5.1.1.1.1.m1.1.1.cmml" xref="Sx1.T5.1.1.1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.1.1.1.1.m1.1c">\times</annotation></semantics></math> 256 <math id="Sx1.T5.2.2.2.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.2.2.2.2.m2.1a"><mo id="Sx1.T5.2.2.2.2.m2.1.1" xref="Sx1.T5.2.2.2.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.2.2.2.2.m2.1b"><times id="Sx1.T5.2.2.2.2.m2.1.1.cmml" xref="Sx1.T5.2.2.2.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.2.2.2.2.m2.1c">\times</annotation></semantics></math> 192</td>
+</tr>
+<tr id="Sx1.T5.4.4.4" class="ltx_tr">
+<th id="Sx1.T5.4.4.4.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Early conv layer</th>
+<td id="Sx1.T5.4.4.4.2" class="ltx_td ltx_align_center ltx_border_r">64 <math id="Sx1.T5.3.3.3.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.3.3.3.1.m1.1a"><mo id="Sx1.T5.3.3.3.1.m1.1.1" xref="Sx1.T5.3.3.3.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.3.3.3.1.m1.1b"><times id="Sx1.T5.3.3.3.1.m1.1.1.cmml" xref="Sx1.T5.3.3.3.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.3.3.3.1.m1.1c">\times</annotation></semantics></math> 64 <math id="Sx1.T5.4.4.4.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.4.4.4.2.m2.1a"><mo id="Sx1.T5.4.4.4.2.m2.1.1" xref="Sx1.T5.4.4.4.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.4.4.4.2.m2.1b"><times id="Sx1.T5.4.4.4.2.m2.1.1.cmml" xref="Sx1.T5.4.4.4.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.4.4.4.2.m2.1c">\times</annotation></semantics></math> 48</td>
+</tr>
+<tr id="Sx1.T5.6.6.6" class="ltx_tr">
+<th id="Sx1.T5.6.6.6.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">First conv block</th>
+<td id="Sx1.T5.6.6.6.2" class="ltx_td ltx_align_center ltx_border_r">256 <math id="Sx1.T5.5.5.5.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.5.5.5.1.m1.1a"><mo id="Sx1.T5.5.5.5.1.m1.1.1" xref="Sx1.T5.5.5.5.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.5.5.5.1.m1.1b"><times id="Sx1.T5.5.5.5.1.m1.1.1.cmml" xref="Sx1.T5.5.5.5.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.5.5.5.1.m1.1c">\times</annotation></semantics></math> 64 <math id="Sx1.T5.6.6.6.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.6.6.6.2.m2.1a"><mo id="Sx1.T5.6.6.6.2.m2.1.1" xref="Sx1.T5.6.6.6.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.6.6.6.2.m2.1b"><times id="Sx1.T5.6.6.6.2.m2.1.1.cmml" xref="Sx1.T5.6.6.6.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.6.6.6.2.m2.1c">\times</annotation></semantics></math> 48</td>
+</tr>
+<tr id="Sx1.T5.8.8.8" class="ltx_tr">
+<th id="Sx1.T5.8.8.8.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Second conv block</th>
+<td id="Sx1.T5.8.8.8.2" class="ltx_td ltx_align_center ltx_border_r">384 <math id="Sx1.T5.7.7.7.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.7.7.7.1.m1.1a"><mo id="Sx1.T5.7.7.7.1.m1.1.1" xref="Sx1.T5.7.7.7.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.7.7.7.1.m1.1b"><times id="Sx1.T5.7.7.7.1.m1.1.1.cmml" xref="Sx1.T5.7.7.7.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.7.7.7.1.m1.1c">\times</annotation></semantics></math> 32 <math id="Sx1.T5.8.8.8.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.8.8.8.2.m2.1a"><mo id="Sx1.T5.8.8.8.2.m2.1.1" xref="Sx1.T5.8.8.8.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.8.8.8.2.m2.1b"><times id="Sx1.T5.8.8.8.2.m2.1.1.cmml" xref="Sx1.T5.8.8.8.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.8.8.8.2.m2.1c">\times</annotation></semantics></math> 24</td>
+</tr>
+<tr id="Sx1.T5.10.10.10" class="ltx_tr">
+<th id="Sx1.T5.10.10.10.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Third conv block</th>
+<td id="Sx1.T5.10.10.10.2" class="ltx_td ltx_align_center ltx_border_r">512 <math id="Sx1.T5.9.9.9.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.9.9.9.1.m1.1a"><mo id="Sx1.T5.9.9.9.1.m1.1.1" xref="Sx1.T5.9.9.9.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.9.9.9.1.m1.1b"><times id="Sx1.T5.9.9.9.1.m1.1.1.cmml" xref="Sx1.T5.9.9.9.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.9.9.9.1.m1.1c">\times</annotation></semantics></math> 32 <math id="Sx1.T5.10.10.10.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.10.10.10.2.m2.1a"><mo id="Sx1.T5.10.10.10.2.m2.1.1" xref="Sx1.T5.10.10.10.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.10.10.10.2.m2.1b"><times id="Sx1.T5.10.10.10.2.m2.1.1.cmml" xref="Sx1.T5.10.10.10.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.10.10.10.2.m2.1c">\times</annotation></semantics></math> 24</td>
+</tr>
+<tr id="Sx1.T5.12.12.12" class="ltx_tr">
+<th id="Sx1.T5.12.12.12.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">MHSA block</th>
+<td id="Sx1.T5.12.12.12.2" class="ltx_td ltx_align_center ltx_border_r">1024 <math id="Sx1.T5.11.11.11.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.11.11.11.1.m1.1a"><mo id="Sx1.T5.11.11.11.1.m1.1.1" xref="Sx1.T5.11.11.11.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.11.11.11.1.m1.1b"><times id="Sx1.T5.11.11.11.1.m1.1.1.cmml" xref="Sx1.T5.11.11.11.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.11.11.11.1.m1.1c">\times</annotation></semantics></math> 32 <math id="Sx1.T5.12.12.12.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.12.12.12.2.m2.1a"><mo id="Sx1.T5.12.12.12.2.m2.1.1" xref="Sx1.T5.12.12.12.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.12.12.12.2.m2.1b"><times id="Sx1.T5.12.12.12.2.m2.1.1.cmml" xref="Sx1.T5.12.12.12.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.12.12.12.2.m2.1c">\times</annotation></semantics></math> 24</td>
+</tr>
+<tr id="Sx1.T5.15.15.15" class="ltx_tr">
+<th id="Sx1.T5.13.13.13.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">1 <math id="Sx1.T5.13.13.13.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.13.13.13.1.m1.1a"><mo id="Sx1.T5.13.13.13.1.m1.1.1" xref="Sx1.T5.13.13.13.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.13.13.13.1.m1.1b"><times id="Sx1.T5.13.13.13.1.m1.1.1.cmml" xref="Sx1.T5.13.13.13.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.13.13.13.1.m1.1c">\times</annotation></semantics></math> 1 conv</th>
+<td id="Sx1.T5.15.15.15.3" class="ltx_td ltx_align_center ltx_border_r">256 <math id="Sx1.T5.14.14.14.2.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.14.14.14.2.m1.1a"><mo id="Sx1.T5.14.14.14.2.m1.1.1" xref="Sx1.T5.14.14.14.2.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.14.14.14.2.m1.1b"><times id="Sx1.T5.14.14.14.2.m1.1.1.cmml" xref="Sx1.T5.14.14.14.2.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.14.14.14.2.m1.1c">\times</annotation></semantics></math> 32 <math id="Sx1.T5.15.15.15.3.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.15.15.15.3.m2.1a"><mo id="Sx1.T5.15.15.15.3.m2.1.1" xref="Sx1.T5.15.15.15.3.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.15.15.15.3.m2.1b"><times id="Sx1.T5.15.15.15.3.m2.1.1.cmml" xref="Sx1.T5.15.15.15.3.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.15.15.15.3.m2.1c">\times</annotation></semantics></math> 24</td>
+</tr>
+<tr id="Sx1.T5.16.16.16" class="ltx_tr">
+<th id="Sx1.T5.16.16.16.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Flatten and reshape</th>
+<td id="Sx1.T5.16.16.16.1" class="ltx_td ltx_align_center ltx_border_r">768 <math id="Sx1.T5.16.16.16.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.16.16.16.1.m1.1a"><mo id="Sx1.T5.16.16.16.1.m1.1.1" xref="Sx1.T5.16.16.16.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.16.16.16.1.m1.1b"><times id="Sx1.T5.16.16.16.1.m1.1.1.cmml" xref="Sx1.T5.16.16.16.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.16.16.16.1.m1.1c">\times</annotation></semantics></math> 256</td>
+</tr>
+<tr id="Sx1.T5.17.17.17" class="ltx_tr">
+<th id="Sx1.T5.17.17.17.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Transformer encoder</th>
+<td id="Sx1.T5.17.17.17.1" class="ltx_td ltx_align_center ltx_border_r">768 <math id="Sx1.T5.17.17.17.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.17.17.17.1.m1.1a"><mo id="Sx1.T5.17.17.17.1.m1.1.1" xref="Sx1.T5.17.17.17.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.17.17.17.1.m1.1b"><times id="Sx1.T5.17.17.17.1.m1.1.1.cmml" xref="Sx1.T5.17.17.17.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.17.17.17.1.m1.1c">\times</annotation></semantics></math> 256</td>
+</tr>
+<tr id="Sx1.T5.19.19.19" class="ltx_tr">
+<th id="Sx1.T5.19.19.19.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Reshaped output of backbone</th>
+<td id="Sx1.T5.19.19.19.2" class="ltx_td ltx_align_center ltx_border_r">256 <math id="Sx1.T5.18.18.18.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.18.18.18.1.m1.1a"><mo id="Sx1.T5.18.18.18.1.m1.1.1" xref="Sx1.T5.18.18.18.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.18.18.18.1.m1.1b"><times id="Sx1.T5.18.18.18.1.m1.1.1.cmml" xref="Sx1.T5.18.18.18.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.18.18.18.1.m1.1c">\times</annotation></semantics></math> 32 <math id="Sx1.T5.19.19.19.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.19.19.19.2.m2.1a"><mo id="Sx1.T5.19.19.19.2.m2.1.1" xref="Sx1.T5.19.19.19.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.19.19.19.2.m2.1b"><times id="Sx1.T5.19.19.19.2.m2.1.1.cmml" xref="Sx1.T5.19.19.19.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.19.19.19.2.m2.1c">\times</annotation></semantics></math> 24</td>
+</tr>
+<tr id="Sx1.T5.21.21.21" class="ltx_tr">
+<th id="Sx1.T5.21.21.21.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Deconv layer</th>
+<td id="Sx1.T5.21.21.21.2" class="ltx_td ltx_align_center ltx_border_r">256 <math id="Sx1.T5.20.20.20.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.20.20.20.1.m1.1a"><mo id="Sx1.T5.20.20.20.1.m1.1.1" xref="Sx1.T5.20.20.20.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.20.20.20.1.m1.1b"><times id="Sx1.T5.20.20.20.1.m1.1.1.cmml" xref="Sx1.T5.20.20.20.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.20.20.20.1.m1.1c">\times</annotation></semantics></math> 64 <math id="Sx1.T5.21.21.21.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.21.21.21.2.m2.1a"><mo id="Sx1.T5.21.21.21.2.m2.1.1" xref="Sx1.T5.21.21.21.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.21.21.21.2.m2.1b"><times id="Sx1.T5.21.21.21.2.m2.1.1.cmml" xref="Sx1.T5.21.21.21.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.21.21.21.2.m2.1c">\times</annotation></semantics></math> 48</td>
+</tr>
+<tr id="Sx1.T5.24.24.24" class="ltx_tr">
+<th id="Sx1.T5.22.22.22.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r">Final 1 <math id="Sx1.T5.22.22.22.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.22.22.22.1.m1.1a"><mo id="Sx1.T5.22.22.22.1.m1.1.1" xref="Sx1.T5.22.22.22.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.22.22.22.1.m1.1b"><times id="Sx1.T5.22.22.22.1.m1.1.1.cmml" xref="Sx1.T5.22.22.22.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.22.22.22.1.m1.1c">\times</annotation></semantics></math> 1 conv</th>
+<td id="Sx1.T5.24.24.24.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">17 <math id="Sx1.T5.23.23.23.2.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.23.23.23.2.m1.1a"><mo id="Sx1.T5.23.23.23.2.m1.1.1" xref="Sx1.T5.23.23.23.2.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.23.23.23.2.m1.1b"><times id="Sx1.T5.23.23.23.2.m1.1.1.cmml" xref="Sx1.T5.23.23.23.2.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.23.23.23.2.m1.1c">\times</annotation></semantics></math> 64 <math id="Sx1.T5.24.24.24.3.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.T5.24.24.24.3.m2.1a"><mo id="Sx1.T5.24.24.24.3.m2.1.1" xref="Sx1.T5.24.24.24.3.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.T5.24.24.24.3.m2.1b"><times id="Sx1.T5.24.24.24.3.m2.1.1.cmml" xref="Sx1.T5.24.24.24.3.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.T5.24.24.24.3.m2.1c">\times</annotation></semantics></math> 48</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 5: </span>Image and feature map dimensions for C3A1 architecture at different depths of the network.</figcaption>
+</figure>
+</section>
+<section id="Sx2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">B. BTranspose training details</h2>
+
+<div id="Sx2.p1" class="ltx_para">
+<p id="Sx2.p1.1" class="ltx_p">The training hyperparameters are shown in Table <a href="#Sx2.T6" title="Table 6 ‣ B. BTranspose training details ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>.</p>
+</div>
+<figure id="Sx2.T6" class="ltx_table">
+<table id="Sx2.T6.5.5" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="Sx2.T6.5.5.6.1" class="ltx_tr">
+<th id="Sx2.T6.5.5.6.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t"><span id="Sx2.T6.5.5.6.1.1.1" class="ltx_text ltx_font_bold">Layer</span></th>
+<td id="Sx2.T6.5.5.6.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="Sx2.T6.5.5.6.1.2.1" class="ltx_text ltx_font_bold">Dimension</span></td>
+</tr>
+<tr id="Sx2.T6.2.2.2" class="ltx_tr">
+<th id="Sx2.T6.2.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Image size</th>
+<td id="Sx2.T6.2.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">3 <math id="Sx2.T6.1.1.1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.T6.1.1.1.1.m1.1a"><mo id="Sx2.T6.1.1.1.1.m1.1.1" xref="Sx2.T6.1.1.1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.T6.1.1.1.1.m1.1b"><times id="Sx2.T6.1.1.1.1.m1.1.1.cmml" xref="Sx2.T6.1.1.1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.T6.1.1.1.1.m1.1c">\times</annotation></semantics></math> 256 <math id="Sx2.T6.2.2.2.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.T6.2.2.2.2.m2.1a"><mo id="Sx2.T6.2.2.2.2.m2.1.1" xref="Sx2.T6.2.2.2.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.T6.2.2.2.2.m2.1b"><times id="Sx2.T6.2.2.2.2.m2.1.1.cmml" xref="Sx2.T6.2.2.2.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.T6.2.2.2.2.m2.1c">\times</annotation></semantics></math> 192</td>
+</tr>
+<tr id="Sx2.T6.3.3.3" class="ltx_tr">
+<th id="Sx2.T6.3.3.3.2" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Heat map size</th>
+<td id="Sx2.T6.3.3.3.1" class="ltx_td ltx_align_center ltx_border_r">64 <math id="Sx2.T6.3.3.3.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.T6.3.3.3.1.m1.1a"><mo id="Sx2.T6.3.3.3.1.m1.1.1" xref="Sx2.T6.3.3.3.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.T6.3.3.3.1.m1.1b"><times id="Sx2.T6.3.3.3.1.m1.1.1.cmml" xref="Sx2.T6.3.3.3.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.T6.3.3.3.1.m1.1c">\times</annotation></semantics></math> 48</td>
+</tr>
+<tr id="Sx2.T6.5.5.7.2" class="ltx_tr">
+<th id="Sx2.T6.5.5.7.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Batch size</th>
+<td id="Sx2.T6.5.5.7.2.2" class="ltx_td ltx_align_center ltx_border_r">16</td>
+</tr>
+<tr id="Sx2.T6.5.5.8.3" class="ltx_tr">
+<th id="Sx2.T6.5.5.8.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Number of epochs</th>
+<td id="Sx2.T6.5.5.8.3.2" class="ltx_td ltx_align_center ltx_border_r">230</td>
+</tr>
+<tr id="Sx2.T6.5.5.9.4" class="ltx_tr">
+<th id="Sx2.T6.5.5.9.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Learning rate</th>
+<td id="Sx2.T6.5.5.9.4.2" class="ltx_td ltx_align_center ltx_border_r">1e-4 to 1e-5</td>
+</tr>
+<tr id="Sx2.T6.5.5.10.5" class="ltx_tr">
+<th id="Sx2.T6.5.5.10.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Learning rate steps</th>
+<td id="Sx2.T6.5.5.10.5.2" class="ltx_td ltx_align_center ltx_border_r">100, 150, 200, 220</td>
+</tr>
+<tr id="Sx2.T6.5.5.11.6" class="ltx_tr">
+<th id="Sx2.T6.5.5.11.6.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Learning rate factor</th>
+<td id="Sx2.T6.5.5.11.6.2" class="ltx_td ltx_align_center ltx_border_r">0.25</td>
+</tr>
+<tr id="Sx2.T6.5.5.12.7" class="ltx_tr">
+<th id="Sx2.T6.5.5.12.7.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Optimizer</th>
+<td id="Sx2.T6.5.5.12.7.2" class="ltx_td ltx_align_center ltx_border_r">Adam</td>
+</tr>
+<tr id="Sx2.T6.5.5.13.8" class="ltx_tr">
+<th id="Sx2.T6.5.5.13.8.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r">Momentum</th>
+<td id="Sx2.T6.5.5.13.8.2" class="ltx_td ltx_align_center ltx_border_r">0.9</td>
+</tr>
+<tr id="Sx2.T6.4.4.4" class="ltx_tr">
+<th id="Sx2.T6.4.4.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r"><math id="Sx2.T6.4.4.4.1.m1.1" class="ltx_Math" alttext="\gamma_{1}" display="inline"><semantics id="Sx2.T6.4.4.4.1.m1.1a"><msub id="Sx2.T6.4.4.4.1.m1.1.1" xref="Sx2.T6.4.4.4.1.m1.1.1.cmml"><mi id="Sx2.T6.4.4.4.1.m1.1.1.2" xref="Sx2.T6.4.4.4.1.m1.1.1.2.cmml">γ</mi><mn id="Sx2.T6.4.4.4.1.m1.1.1.3" xref="Sx2.T6.4.4.4.1.m1.1.1.3.cmml">1</mn></msub><annotation-xml encoding="MathML-Content" id="Sx2.T6.4.4.4.1.m1.1b"><apply id="Sx2.T6.4.4.4.1.m1.1.1.cmml" xref="Sx2.T6.4.4.4.1.m1.1.1"><csymbol cd="ambiguous" id="Sx2.T6.4.4.4.1.m1.1.1.1.cmml" xref="Sx2.T6.4.4.4.1.m1.1.1">subscript</csymbol><ci id="Sx2.T6.4.4.4.1.m1.1.1.2.cmml" xref="Sx2.T6.4.4.4.1.m1.1.1.2">𝛾</ci><cn type="integer" id="Sx2.T6.4.4.4.1.m1.1.1.3.cmml" xref="Sx2.T6.4.4.4.1.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.T6.4.4.4.1.m1.1c">\gamma_{1}</annotation></semantics></math></th>
+<td id="Sx2.T6.4.4.4.2" class="ltx_td ltx_align_center ltx_border_r">0.99</td>
+</tr>
+<tr id="Sx2.T6.5.5.5" class="ltx_tr">
+<th id="Sx2.T6.5.5.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r"><math id="Sx2.T6.5.5.5.1.m1.1" class="ltx_Math" alttext="\gamma_{2}" display="inline"><semantics id="Sx2.T6.5.5.5.1.m1.1a"><msub id="Sx2.T6.5.5.5.1.m1.1.1" xref="Sx2.T6.5.5.5.1.m1.1.1.cmml"><mi id="Sx2.T6.5.5.5.1.m1.1.1.2" xref="Sx2.T6.5.5.5.1.m1.1.1.2.cmml">γ</mi><mn id="Sx2.T6.5.5.5.1.m1.1.1.3" xref="Sx2.T6.5.5.5.1.m1.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="Sx2.T6.5.5.5.1.m1.1b"><apply id="Sx2.T6.5.5.5.1.m1.1.1.cmml" xref="Sx2.T6.5.5.5.1.m1.1.1"><csymbol cd="ambiguous" id="Sx2.T6.5.5.5.1.m1.1.1.1.cmml" xref="Sx2.T6.5.5.5.1.m1.1.1">subscript</csymbol><ci id="Sx2.T6.5.5.5.1.m1.1.1.2.cmml" xref="Sx2.T6.5.5.5.1.m1.1.1.2">𝛾</ci><cn type="integer" id="Sx2.T6.5.5.5.1.m1.1.1.3.cmml" xref="Sx2.T6.5.5.5.1.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.T6.5.5.5.1.m1.1c">\gamma_{2}</annotation></semantics></math></th>
+<td id="Sx2.T6.5.5.5.2" class="ltx_td ltx_align_center ltx_border_r">0</td>
+</tr>
+<tr id="Sx2.T6.5.5.14.9" class="ltx_tr">
+<th id="Sx2.T6.5.5.14.9.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r">GPU used</th>
+<td id="Sx2.T6.5.5.14.9.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">Nvidia RTX 6000</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 6: </span>Training hyperparameters for the pose estimation task.</figcaption>
+</figure>
+</section>
+<section id="Sx3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">C. Additional dependency area visualizations</h2>
+
+<div id="Sx3.p1" class="ltx_para">
+<p id="Sx3.p1.1" class="ltx_p">We consider more input images and compare C3A1(4)-Dino and C3A1(4) to better understand the effect of the self-supervised pre-training and
+present the dependency areas in Figures <a href="#Sx3.F6" title="Figure 6 ‣ C. Additional dependency area visualizations ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> &amp; <a href="#Sx3.F7" title="Figure 7 ‣ C. Additional dependency area visualizations ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>.
+In Figure <a href="#Sx3.F6" title="Figure 6 ‣ C. Additional dependency area visualizations ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>, we consider an image with an occlusion (a dog occluding a human ankle). Here, C3A1(4)-Dino does better than C3A1(4)
+near the occluded region, where the latter is confused (see Figure <a href="#Sx3.F6" title="Figure 6 ‣ C. Additional dependency area visualizations ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> b &amp; d near the ankle regions).
+For the same input images, we present the results with C3A1(8)-Dino in Figures
+<a href="#Sx3.F8" title="Figure 8 ‣ C. Additional dependency area visualizations ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a> &amp; <a href="#Sx3.F9" title="Figure 9 ‣ C. Additional dependency area visualizations ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a>.</p>
+</div>
+<figure id="Sx3.F6" class="ltx_figure">
+<p id="Sx3.F6.4" class="ltx_p ltx_align_center">(a)<img src="/html/2204.10209/assets/x12.png" id="Sx3.F6.1.g1" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break">(b)<img src="/html/2204.10209/assets/x13.png" id="Sx3.F6.2.g2" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break">(c)<img src="/html/2204.10209/assets/x14.png" id="Sx3.F6.3.g3" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break">(d)<img src="/html/2204.10209/assets/x15.png" id="Sx3.F6.4.g4" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break"></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Dependency areas for the predicted keypoints for another input image using models: (a &amp; b) C3A1(4)-Dino; (c &amp; d) C3A1(4). The dependency area is computed at the MHSA block in (a &amp; c) and at the Transformer encoder layer in (b &amp; d).</figcaption>
+</figure>
+<figure id="Sx3.F7" class="ltx_figure">
+<p id="Sx3.F7.4" class="ltx_p ltx_align_center">(a)<img src="/html/2204.10209/assets/x16.png" id="Sx3.F7.1.g1" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break">(b)<img src="/html/2204.10209/assets/x17.png" id="Sx3.F7.2.g2" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break">(c)<img src="/html/2204.10209/assets/x18.png" id="Sx3.F7.3.g3" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break">(d)<img src="/html/2204.10209/assets/x19.png" id="Sx3.F7.4.g4" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break"></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Dependency areas for the predicted keypoints for yet another input image using models: (a &amp; b) C3A1(4)-Dino; (c &amp; d) C3A1(4). The dependency area is computed at the MHSA block in (a &amp; c) and at the Transformer encoder layer in (b &amp; d).</figcaption>
+</figure>
+<figure id="Sx3.F8" class="ltx_figure">
+<p id="Sx3.F8.2" class="ltx_p ltx_align_center">(a)<img src="/html/2204.10209/assets/x20.png" id="Sx3.F8.1.g1" class="ltx_graphics ltx_img_landscape" width="363" height="215" alt="Refer to caption"> 
+<br class="ltx_break">(b)<img src="/html/2204.10209/assets/x21.png" id="Sx3.F8.2.g2" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break"></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>Dependency areas for the predicted keypoints for the same input image considered in Figure <a href="#Sx3.F6" title="Figure 6 ‣ C. Additional dependency area visualizations ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> for C3A1(8)-Dino. The dependency area is computed at the MHSA block in (a) and at the Transformer encoder layer in (b).</figcaption>
+</figure>
+<figure id="Sx3.F9" class="ltx_figure">
+<p id="Sx3.F9.2" class="ltx_p ltx_align_center">(a)<img src="/html/2204.10209/assets/x22.png" id="Sx3.F9.1.g1" class="ltx_graphics ltx_img_landscape" width="363" height="215" alt="Refer to caption"> 
+<br class="ltx_break">(b)<img src="/html/2204.10209/assets/x23.png" id="Sx3.F9.2.g2" class="ltx_graphics ltx_img_landscape" width="363" height="107" alt="Refer to caption"> 
+<br class="ltx_break"></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>Dependency areas for the predicted keypoints for the same input image considered in Figure <a href="#Sx3.F7" title="Figure 7 ‣ C. Additional dependency area visualizations ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a> for C3A1(8)-Dino. The dependency area is computed at the MHSA block in (a) and at the Transformer encoder layer in (b).</figcaption>
+</figure>
+</section>
+<section id="Sx4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">D. Special scenarios</h2>
+
+<div id="Sx4.p1" class="ltx_para">
+<p id="Sx4.p1.1" class="ltx_p"><span id="Sx4.p1.1.1" class="ltx_text ltx_font_bold">Two humans.</span> We consider an input image with two humans very close to each other in Figure <a href="#Sx4.F10" title="Figure 10 ‣ D. Special scenarios ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a>. Here, Figure <a href="#Sx4.F10" title="Figure 10 ‣ D. Special scenarios ‣ BTranspose: Bottleneck Transformers for Human Pose Estimation with Self-Supervised Pre-Training" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a> (a) focuses on the human on the left; and (b) to the
+human on the right. At the MHSA block, we see a large patch that encompasses both humans, suggesting that at the mid-level while the network has figured out the rough region of interest, it is
+still unable to distinguish between the two humans and so focuses on both humans. However, at the TE layer the network has figured out the correct human to focus on in each of the input
+images. Again, we find the dependency area to more confident for C3A1(4)-Dino (i.e., less pinky zones), and so SSL pre-training makes the network be more confident on where to focus on in the image.</p>
+</div>
+<figure id="Sx4.F10" class="ltx_figure">
+<table id="Sx4.F10.2" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="Sx4.F10.2.2" class="ltx_tr">
+<td id="Sx4.F10.1.1.1" class="ltx_td ltx_align_center">(a)<img src="/html/2204.10209/assets/x24.png" id="Sx4.F10.1.1.1.g1" class="ltx_graphics ltx_img_square" width="151" height="168" alt="Refer to caption">
+</td>
+<td id="Sx4.F10.2.2.2" class="ltx_td ltx_align_center">(b)<img src="/html/2204.10209/assets/x25.png" id="Sx4.F10.2.2.2.g1" class="ltx_graphics ltx_img_square" width="151" height="172" alt="Refer to caption">
+</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 10: </span>Dependency areas when two humans are close to each other in the input image.</figcaption>
+</figure>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2204.10208" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2204.10209" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2204.10209">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2204.10209" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2204.10210" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Mon Mar 11 11:41:18 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

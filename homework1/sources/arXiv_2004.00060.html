@@ -1,0 +1,1582 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2004.00060] HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation</title><meta property="og:description" content="Hand-object pose estimation (HOPE) aims to jointly detect the poses of both
+a hand and of a held object. In this paper, we
+propose a lightweight model called HOPE-Net which
+jointly estimates hand and object pose in 2D …">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2004.00060">
+
+<!--Generated on Sun Mar 17 08:11:21 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Bardia Doosti<sup id="id7.2.id1" class="ltx_sup">1</sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Shujon Naha<sup id="id8.2.id1" class="ltx_sup">1</sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Majid Mirbagheri<sup id="id9.2.id1" class="ltx_sup">2</sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">David J. Crandall<sup id="id10.2.id1" class="ltx_sup">1</sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"><sup id="id11.3.id1" class="ltx_sup">1</sup> Luddy School of Informatics, Computing, and Engineering, Indiana University Bloomington
+<br class="ltx_break"><span id="id6.2.1" class="ltx_text ltx_font_typewriter" style="font-size:90%;">{bdoosti,snaha,djcran}@indiana.edu
+<br class="ltx_break"><sup id="id6.2.1.1" class="ltx_sup"><span id="id6.2.1.1.1" class="ltx_text ltx_font_serif" style="font-size:111%;">2</span></sup></span> Institute for Learning and Brain Sciences, University of Washington
+<br class="ltx_break"><span id="id12.4.id2" class="ltx_text ltx_font_typewriter" style="font-size:90%;">mbagheri@uw.edu
+<br class="ltx_break"><span id="id12.4.id2.1" class="ltx_text ltx_font_serif">Project Page: <a target="_blank" href="http://vision.sice.indiana.edu/projects/hopenet" title="" class="ltx_ref ltx_url ltx_font_typewriter">http://vision.sice.indiana.edu/projects/hopenet</a>
+</span></span>
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id13.id1" class="ltx_p">Hand-object pose estimation (HOPE) aims to jointly detect the poses of both
+a hand and of a held object. In this paper, we
+propose a lightweight model called <span id="id13.id1.1" class="ltx_text ltx_font_italic">HOPE-Net</span> which
+jointly estimates hand and object pose in 2D and 3D in
+real-time. Our network uses a cascade of two adaptive graph
+convolutional neural networks, one to estimate 2D coordinates of the
+hand joints and object corners, followed by another to convert 2D
+coordinates to 3D. Our experiments show that through end-to-end training of
+the full network, we achieve better accuracy for both the 2D and
+3D coordinate estimation problems. The proposed 2D to 3D graph convolution-based
+model could be applied to other 3D landmark detection problems, where
+it is possible to first predict the 2D keypoints and then transform
+them to 3D.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">We use our hands as a primary means of sensing and interacting
+with the world. Thus to understand human activity, computer vision systems
+need to be able to detect the pose of the hands and to identify
+properties of the objects that are being handled. This human Hand-Object Pose Estimation (HOPE) problem is
+crucial for a variety of applications, including augmented and virtual
+reality, fine-grained action recognition, robotics, and telepresence.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">This is a challenging problem, however. Hands move quickly
+as they interact with the world, and handling an object, by definition, creates occlusions of
+the hand and/or object from nearly any given point of view.
+Moreover, hand-object interaction video is often collected from first-person (wearable) cameras (e.g., for Augmented Reality applications), generating
+a
+large degree of unpredictable camera motion.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Of course, one approach is to detect the poses of the hands and objects
+separately <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>, <a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>. However, this ignores
+the fact that hand and handled object poses are highly correlated: the
+shape of an object usually constrains the types of grasps (hand poses)
+that can be used to handle it. Detecting the pose of the hand can
+give cues as to the pose and identity of an object, while the pose of
+an object can constrain the pose of the hand that is holding it.
+Solving the two problems jointly
+can help overcome challenges such as occlusion.
+Recent work <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> proposed
+deep learning-based approaches to jointly model the hand and object
+poses. We build on this work, showing how to improve performance
+by
+more explicitly modeling the physical and anatomical
+constraints on hand-object interaction.
+</p>
+</div>
+<figure id="S1.F1" class="ltx_figure">
+<table id="S1.F1.2" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S1.F1.2.2" class="ltx_tr">
+<td id="S1.F1.1.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dannot.png" id="S1.F1.1.1.1.g1" class="ltx_graphics ltx_img_landscape" width="135" height="76" alt="Refer to caption"></td>
+<td id="S1.F1.2.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x1.png" id="S1.F1.2.2.2.g1" class="ltx_graphics ltx_img_landscape" width="79" height="61" alt="Refer to caption"></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>The goal of Hand-Object Pose Estimation (HOPE) is to
+jointly estimate the poses of both the hand and a handled object.
+Our HOPE-Net model can estimate the 2D and
+3D hand and object poses in real-time, given a single image.</figcaption>
+</figure>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">We propose to do this using graph convolutional neural networks.
+Given their ability to learn effective representations of graph-structured data, graph convolutional neural networks have recently
+received much attention in computer vision.
+Human hand and body pose estimation problems are particularly amenable to
+graph-based techniques since they can naturally model the skeletal and kinematic constraints
+between joints and body parts.
+Graph convolution can
+be used to learn these inter-joint relationships.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">In this paper, we show that graph convolution can dramatically increase the
+performance of estimating
+3D hand-object pose in real-world
+hand-object manipulation videos.
+We model hand-object interaction by
+representing the hand and object as a single graph. We focus on
+estimating 3D hand-object poses from egocentric (first-person) and third-person
+monocular color video frames, without requiring any depth
+information. Our model first predicts 2D keypoint locations of
+hand joints and object boundaries. Then the model jointly
+recovers the depth information from the 2D pose estimates in a
+hierarchical manner (Figure <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>).</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p">This approach of first estimating in 2D and then “converting”
+to 3D is inspired by the fact that
+detection-based models perform better in detecting 2D hand
+keypoints, but in 3D, because of the high degree
+of non-linearity and the huge output space, regression-based models
+are more popular <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. Our graph convolutional approach allows us
+to use a detection-based model to detect the hand keypoints in 2D
+(which is easier than predicting 3D coordinates), and then
+to accurately convert them to 3D coordinates.
+We show that using this graph-based network, we are not
+limited to training on only annotated real images, but can instead
+pre-train the 2D to 3D network separately with synthetic images rendered from 3D meshes of
+hands interacting with objects (<em id="S1.p6.1.1" class="ltx_emph ltx_font_italic">e.g</em>.<span id="S1.p6.1.2" class="ltx_text"></span> ObMan
+dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>). This is very useful for training a
+model for hand-object pose estimation as real-world annotated data for
+these scenarios is scarce and costly to collect.</p>
+</div>
+<div id="S1.p7" class="ltx_para">
+<p id="S1.p7.1" class="ltx_p">In brief, the core contributions of our work are:</p>
+</div>
+<div id="S1.p8" class="ltx_para">
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">We propose a novel but lightweight deep learning framework, HOPE-Net,
+which can predict 2D and 3D coordinates of hand
+and hand-manipulated object in real-time. Our model accurately
+predicts the hand and object pose from single RGB images.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">We introduce the Adaptive Graph U-Net, a graph convolution-based
+neural network to convert 2D hand and object poses to 3D
+with novel graph convolution, pooling, and unpooling
+layers. The new formulations of these layers make it more stable and
+robust compared to the existing Graph U-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>
+model.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">Through extensive experiments, we show that our approach can
+outperform the state-of-the-art models for joint hand and object 3D
+pose estimation tasks while still running in real-time.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">Our work is related to two main lines of research: joint hand-object pose prediction
+models and graph convolutional networks for understanding
+graph-based data.</p>
+</div>
+<section id="S2.SS0.SSS0.Px1" class="ltx_paragraph">
+<h5 class="ltx_title ltx_title_paragraph">Hand-Object Pose Estimation.</h5>
+
+<div id="S2.SS0.SSS0.Px1.p1" class="ltx_para">
+<p id="S2.SS0.SSS0.Px1.p1.1" class="ltx_p">Due to the strong relationship between hand pose and the shape of a
+manipulated object, several papers have studied joint estimation of
+both hand and object pose. Oikonomidis
+<em id="S2.SS0.SSS0.Px1.p1.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px1.p1.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> used hand-object interaction as
+context to better estimate the 2D hand pose from multiview
+images. Choi <em id="S2.SS0.SSS0.Px1.p1.1.3" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px1.p1.1.4" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> trained two networks, one
+object-centered and one hand-centered, to capture information from
+both the object and hand perspectives, and shared information between
+these two networks to learn a better representation for predicting 3D
+hand pose.
+Panteleris <em id="S2.SS0.SSS0.Px1.p1.1.5" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px1.p1.1.6" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> generated 3D hand pose
+and 3D models of unknown objects based on hand-object interactions and
+depth information. Oberweger <em id="S2.SS0.SSS0.Px1.p1.1.7" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px1.p1.1.8" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>
+proposed an iterative approach by using Spatial Transformer Networks
+(STNs) to separately focus on the manipulated object and the hand to
+predict their corresponding poses. Later they estimated the hand and
+object depth images and fused them using an inverse STN. The
+synthesized depth images were used to refine the hand and object pose
+estimates.
+Recently, Hasson <em id="S2.SS0.SSS0.Px1.p1.1.9" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px1.p1.1.10" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> showed that
+by incorporating physical constraints, two separate networks
+responsible for learning object and hand representations can be
+combined to generate better 3D hand and object shapes. Tekin
+<em id="S2.SS0.SSS0.Px1.p1.1.11" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px1.p1.1.12" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite> proposed a single 3D YOLO model to
+jointly predict the 3D hand pose and object pose from a single RGB
+image.</p>
+</div>
+</section>
+<section id="S2.SS0.SSS0.Px2" class="ltx_paragraph">
+<h5 class="ltx_title ltx_title_paragraph">Graph Convolution Networks.</h5>
+
+<div id="S2.SS0.SSS0.Px2.p1" class="ltx_para">
+<p id="S2.SS0.SSS0.Px2.p1.1" class="ltx_p">Graph convolution networks allow learning high-level representations
+of the relationships between the nodes of graph-based data. Zhao
+<em id="S2.SS0.SSS0.Px2.p1.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p1.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite> proposed a semantic graph convolution
+network for capturing both local and global relationships among human
+body joints for 2D and 3D human pose estimation. Cai
+<em id="S2.SS0.SSS0.Px2.p1.1.3" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p1.1.4" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> converted 2D human joints to 3D by
+encoding domain knowledge of the human body and hand joints using a
+graph convolution network which can learn multi-scale
+representations. Yan <em id="S2.SS0.SSS0.Px2.p1.1.5" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p1.1.6" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite> used a graph
+convolution network for learning a spatial-temporal representation of
+human body joints for skeleton-based action recognition. Kolotouros
+<em id="S2.SS0.SSS0.Px2.p1.1.7" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p1.1.8" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> showed that graph
+convolutional networks can be used to extract 3D human shape and pose
+from a single RGB image, while Ge <em id="S2.SS0.SSS0.Px2.p1.1.9" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p1.1.10" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> used them to
+generate complete 3D meshes of hands from images. Li
+<em id="S2.SS0.SSS0.Px2.p1.1.11" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p1.1.12" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> used graph convolutional networks for
+skeleton-based action recognition, while Shi
+<em id="S2.SS0.SSS0.Px2.p1.1.13" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p1.1.14" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>, <a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite> similarly used two stream
+adaptive graph convolution.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2004.00060/assets/x2.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="391" height="121" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>The architecture of HOPE-Net. The model starts
+with ResNet10 as the image encoder and for predicting the
+initial 2D coordinates of the joints and object vertices. The
+coordinates concatenated with the image features used as the
+features of the input graph of a 3 layered graph convolution to
+use the power of neighbors features to estimate the better 2D
+pose. Finally the 2D coordinates predicted in the previous step
+are passed to our Adaptive Graph U-Net to find the 3D coordinates
+of the hand and object.</figcaption>
+</figure>
+<div id="S2.SS0.SSS0.Px2.p2" class="ltx_para">
+<p id="S2.SS0.SSS0.Px2.p2.1" class="ltx_p">Gao <em id="S2.SS0.SSS0.Px2.p2.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p2.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> introduced the Graph U-Net structure with their proposed
+pooling and unpooling layers. But that pooling method did not work well
+on graphs with low numbers of edges, such as skeletons or object
+meshes. Ranjan <em id="S2.SS0.SSS0.Px2.p2.1.3" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p2.1.4" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> used fixed pooling
+and Hanocka <em id="S2.SS0.SSS0.Px2.p2.1.5" class="ltx_emph ltx_font_italic">et al</em>.<span id="S2.SS0.SSS0.Px2.p2.1.6" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> used edge pooling to
+prevent holes in the mesh after pooling. In this paper, we
+propose a new Graph U-Net architecture with different graph
+convolution, pooling, and unpooling. We use an adaptive adjacency
+matrix for our graph convolutional layer and new trainable
+pooling and unpooling layers.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Methodology</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">We now present HOPE-Net, which consists of
+a convolutional neural network for encoding the image and predicting
+the initial 2D locations of the hand and object keypoints (hand joints
+and tight object bounding box corners), a simple graph convolution
+to refine the predicted 2D predictions,
+and a Graph U-Net architecture to convert 2D
+keypoints to 3D using a series of graph convolutions,
+poolings, and unpoolings.
+Figure <a href="#S2.F2" title="Figure 2 ‣ Graph Convolution Networks. ‣ 2 Related Work ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>
+shows an overall schematic of the HOPE-Net architecture.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Image Encoder and Graph Convolution</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.6" class="ltx_p">For the image encoder, we use a lightweight residual neural
+network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> (ResNet10)
+to help reduce overfitting.
+The image
+encoder produces a 2048D feature vector for each input
+image. Then initial predictions of the 2D coordinates of the
+keypoints (hand joints and corners of the object’s tight bounding box)
+are produced using a fully-connected layer. Inspired by the
+architecture of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, we concatenate these
+features with the initial 2D predictions of each keypoint, yielding
+a graph with <math id="S3.SS1.p1.1.m1.1" class="ltx_Math" alttext="2050" display="inline"><semantics id="S3.SS1.p1.1.m1.1a"><mn id="S3.SS1.p1.1.m1.1.1" xref="S3.SS1.p1.1.m1.1.1.cmml">2050</mn><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.1.m1.1b"><cn type="integer" id="S3.SS1.p1.1.m1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1">2050</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.1.m1.1c">2050</annotation></semantics></math> features (<math id="S3.SS1.p1.2.m2.1" class="ltx_Math" alttext="2048" display="inline"><semantics id="S3.SS1.p1.2.m2.1a"><mn id="S3.SS1.p1.2.m2.1.1" xref="S3.SS1.p1.2.m2.1.1.cmml">2048</mn><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.2.m2.1b"><cn type="integer" id="S3.SS1.p1.2.m2.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1">2048</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.2.m2.1c">2048</annotation></semantics></math> image features plus initial estimates of <math id="S3.SS1.p1.3.m3.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S3.SS1.p1.3.m3.1a"><mi id="S3.SS1.p1.3.m3.1.1" xref="S3.SS1.p1.3.m3.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.3.m3.1b"><ci id="S3.SS1.p1.3.m3.1.1.cmml" xref="S3.SS1.p1.3.m3.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.3.m3.1c">x</annotation></semantics></math> and <math id="S3.SS1.p1.4.m4.1" class="ltx_Math" alttext="y" display="inline"><semantics id="S3.SS1.p1.4.m4.1a"><mi id="S3.SS1.p1.4.m4.1.1" xref="S3.SS1.p1.4.m4.1.1.cmml">y</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.4.m4.1b"><ci id="S3.SS1.p1.4.m4.1.1.cmml" xref="S3.SS1.p1.4.m4.1.1">𝑦</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.4.m4.1c">y</annotation></semantics></math>) for each node. A
+3-layer adaptive graph convolution network is applied to this
+graph to use adjacency information and modify the 2D coordinates of
+the keypoints. In the next section, we explain the adaptive graph
+convolution in depth. The concatenation of the
+image features to the predicted <math id="S3.SS1.p1.5.m5.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S3.SS1.p1.5.m5.1a"><mi id="S3.SS1.p1.5.m5.1.1" xref="S3.SS1.p1.5.m5.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.5.m5.1b"><ci id="S3.SS1.p1.5.m5.1.1.cmml" xref="S3.SS1.p1.5.m5.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.5.m5.1c">x</annotation></semantics></math> and <math id="S3.SS1.p1.6.m6.1" class="ltx_Math" alttext="y" display="inline"><semantics id="S3.SS1.p1.6.m6.1a"><mi id="S3.SS1.p1.6.m6.1.1" xref="S3.SS1.p1.6.m6.1.1.cmml">y</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.6.m6.1b"><ci id="S3.SS1.p1.6.m6.1.1.cmml" xref="S3.SS1.p1.6.m6.1.1">𝑦</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.6.m6.1c">y</annotation></semantics></math> of each keypoint
+forces the graph convolution network to modify the 2D coordinates
+conditioned on the image features as well as the initial prediction of
+the 2D coordinates. These final 2D coordinates of the hand and object
+keypoints are then passed to our adaptive Graph U-Net, a graph
+convolution network using adaptive convolution, pooling, and unpooling
+to convert 2D coordinates to 3D.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2004.00060/assets/x3.png" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="382" height="112" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>A schematic of our Adaptive Graph U-Net architecture, which is used to
+estimate 3D coordinates from 2D coordinates. In each of the pooling
+layers, we roughly cut the number of nodes in half, while
+in each unpooling layer, we double the number of nodes in the graph. The
+red arrows in the image are the skip layer features which are
+passed to the decoder to be concatenated with the unpooled
+features.</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Adaptive Graph U-Net</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">In this section, we explain our graph-based model which predicts 3D
+coordinates of the hand joints and object corners based on
+predicted 2D coordinates. In this network, we simplify the input graph
+by applying graph pooling in the encoding part, and in the decoding
+part, we add those nodes again with our graph unpooling layers. Also,
+similar to the classic U-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>,
+we use skip connections and concatenate features from the encoding stage to
+features of the decoding stage in each decoding graph
+convolution. With this architecture we are interested in training a
+network which simplifies the graph to obtain global features of the
+hand and object, but also tries to preserve local features via
+the skip connections from the encoder to the decoder layers. Modeling the
+HOPE problem as a graph helps use neighbors to predict
+more accurate coordinates and also to discover the relationship between
+hands and objects.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">The Graph U-Net concept was previously introduced by Gao
+<em id="S3.SS2.p2.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S3.SS2.p2.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, but our network layers, <em id="S3.SS2.p2.1.3" class="ltx_emph ltx_font_italic">i.e</em>.<span id="S3.SS2.p2.1.4" class="ltx_text"></span> graph
+convolution, pooling, and unpooling, are significantly
+different. We found that the sigmoid function in the
+pooling layer of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> (gPool) can cause the gradients to
+vanish and to not update the picked nodes at all. We thus use a
+fully-connected layer to pool the nodes and updated our
+adjacency matrix in the graph convolution layers, using the adjacency
+matrix as a kernel we apply to our graph. Moreover, Gao <em id="S3.SS2.p2.1.5" class="ltx_emph ltx_font_italic">et al</em>.<span id="S3.SS2.p2.1.6" class="ltx_text"></span>’s
+gPool <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> removes the vertices and all the edges
+connected to them and does not have a procedure to reconnect the
+remaining vertices.
+This approach may not be problematic for dense graphs (<em id="S3.SS2.p2.1.7" class="ltx_emph ltx_font_italic">e.g</em>.<span id="S3.SS2.p2.1.8" class="ltx_text"></span> Citeseer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>) in which removing a node and its edges will not change the connectivity of the graph. But in graphs with sparse adjacency matrices, such as when the graph is a mesh or a hand or body skeleton, removing one node and its edges may cut the graph into several isolated subgraphs and destroy the connectivity, which is the most important feature of a graph convolutional neural network.
+Using an adaptive graph convolution neural network, we avoid this problem as the network finds the connectivity of the nodes after each pooling layer.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.1" class="ltx_p">Below we explain the three components of our network, graph
+convolution, pooling, and unpooling layers, in detail. The
+architecture of our adaptive Graph U-Net is shown in
+Figure <a href="#S3.F3" title="Figure 3 ‣ 3.1 Image Encoder and Graph Convolution ‣ 3 Methodology ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+<section id="S3.SS2.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.1 </span>Graph Convolution</h4>
+
+<div id="S3.SS2.SSS1.p1" class="ltx_para">
+<p id="S3.SS2.SSS1.p1.3" class="ltx_p">The core part of a graph convolutional network is the
+implementation of the graph convolution operation. We
+implemented our convolution based on the <span id="S3.SS2.SSS1.p1.3.1" class="ltx_text ltx_font_italic">Renormalization
+Trick</span> mentioned in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>: the output
+features of a graph convolution layer for an input graph with <math id="S3.SS2.SSS1.p1.1.m1.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S3.SS2.SSS1.p1.1.m1.1a"><mi id="S3.SS2.SSS1.p1.1.m1.1.1" xref="S3.SS2.SSS1.p1.1.m1.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.1.m1.1b"><ci id="S3.SS2.SSS1.p1.1.m1.1.1.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.1.m1.1c">N</annotation></semantics></math>
+nodes, <math id="S3.SS2.SSS1.p1.2.m2.1" class="ltx_Math" alttext="k" display="inline"><semantics id="S3.SS2.SSS1.p1.2.m2.1a"><mi id="S3.SS2.SSS1.p1.2.m2.1.1" xref="S3.SS2.SSS1.p1.2.m2.1.1.cmml">k</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.2.m2.1b"><ci id="S3.SS2.SSS1.p1.2.m2.1.1.cmml" xref="S3.SS2.SSS1.p1.2.m2.1.1">𝑘</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.2.m2.1c">k</annotation></semantics></math> input features, and <math id="S3.SS2.SSS1.p1.3.m3.1" class="ltx_Math" alttext="\ell" display="inline"><semantics id="S3.SS2.SSS1.p1.3.m3.1a"><mi mathvariant="normal" id="S3.SS2.SSS1.p1.3.m3.1.1" xref="S3.SS2.SSS1.p1.3.m3.1.1.cmml">ℓ</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.3.m3.1b"><ci id="S3.SS2.SSS1.p1.3.m3.1.1.cmml" xref="S3.SS2.SSS1.p1.3.m3.1.1">ℓ</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.3.m3.1c">\ell</annotation></semantics></math> output features for each node is computed as,</p>
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1.1" class="ltx_Math" alttext="Y=\sigma(\tilde{A}XW)," display="block"><semantics id="S3.E1.m1.1a"><mrow id="S3.E1.m1.1.1.1" xref="S3.E1.m1.1.1.1.1.cmml"><mrow id="S3.E1.m1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.cmml"><mi id="S3.E1.m1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.3.cmml">Y</mi><mo id="S3.E1.m1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.2.cmml">=</mo><mrow id="S3.E1.m1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.cmml"><mi id="S3.E1.m1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.3.cmml">σ</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.2.cmml">​</mo><mrow id="S3.E1.m1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E1.m1.1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.1.cmml"><mover accent="true" id="S3.E1.m1.1.1.1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.1.1.2.2" xref="S3.E1.m1.1.1.1.1.1.1.1.1.2.2.cmml">A</mi><mo id="S3.E1.m1.1.1.1.1.1.1.1.1.2.1" xref="S3.E1.m1.1.1.1.1.1.1.1.1.2.1.cmml">~</mo></mover><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.cmml">​</mo><mi id="S3.E1.m1.1.1.1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.1.1.3.cmml">X</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.1.1.1.1.1.1.1a" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1.cmml">​</mo><mi id="S3.E1.m1.1.1.1.1.1.1.1.1.4" xref="S3.E1.m1.1.1.1.1.1.1.1.1.4.cmml">W</mi></mrow><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow><mo id="S3.E1.m1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.1b"><apply id="S3.E1.m1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1"><eq id="S3.E1.m1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.2"></eq><ci id="S3.E1.m1.1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.1.3">𝑌</ci><apply id="S3.E1.m1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1"><times id="S3.E1.m1.1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.1.2"></times><ci id="S3.E1.m1.1.1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.1.1.3">𝜎</ci><apply id="S3.E1.m1.1.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1"><times id="S3.E1.m1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.1"></times><apply id="S3.E1.m1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.2"><ci id="S3.E1.m1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.2.1">~</ci><ci id="S3.E1.m1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.2.2">𝐴</ci></apply><ci id="S3.E1.m1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.3">𝑋</ci><ci id="S3.E1.m1.1.1.1.1.1.1.1.1.4.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1.1.4">𝑊</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.1c">Y=\sigma(\tilde{A}XW),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS2.SSS1.p1.7" class="ltx_p">where <math id="S3.SS2.SSS1.p1.4.m1.1" class="ltx_Math" alttext="\sigma" display="inline"><semantics id="S3.SS2.SSS1.p1.4.m1.1a"><mi id="S3.SS2.SSS1.p1.4.m1.1.1" xref="S3.SS2.SSS1.p1.4.m1.1.1.cmml">σ</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.4.m1.1b"><ci id="S3.SS2.SSS1.p1.4.m1.1.1.cmml" xref="S3.SS2.SSS1.p1.4.m1.1.1">𝜎</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.4.m1.1c">\sigma</annotation></semantics></math> is the activation function, <math id="S3.SS2.SSS1.p1.5.m2.1" class="ltx_Math" alttext="W\in\mathbb{R}^{k\times\ell}" display="inline"><semantics id="S3.SS2.SSS1.p1.5.m2.1a"><mrow id="S3.SS2.SSS1.p1.5.m2.1.1" xref="S3.SS2.SSS1.p1.5.m2.1.1.cmml"><mi id="S3.SS2.SSS1.p1.5.m2.1.1.2" xref="S3.SS2.SSS1.p1.5.m2.1.1.2.cmml">W</mi><mo id="S3.SS2.SSS1.p1.5.m2.1.1.1" xref="S3.SS2.SSS1.p1.5.m2.1.1.1.cmml">∈</mo><msup id="S3.SS2.SSS1.p1.5.m2.1.1.3" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.cmml"><mi id="S3.SS2.SSS1.p1.5.m2.1.1.3.2" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.2.cmml">ℝ</mi><mrow id="S3.SS2.SSS1.p1.5.m2.1.1.3.3" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.3.cmml"><mi id="S3.SS2.SSS1.p1.5.m2.1.1.3.3.2" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.3.2.cmml">k</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.SSS1.p1.5.m2.1.1.3.3.1" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.3.1.cmml">×</mo><mi mathvariant="normal" id="S3.SS2.SSS1.p1.5.m2.1.1.3.3.3" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.3.3.cmml">ℓ</mi></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.5.m2.1b"><apply id="S3.SS2.SSS1.p1.5.m2.1.1.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1"><in id="S3.SS2.SSS1.p1.5.m2.1.1.1.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.1"></in><ci id="S3.SS2.SSS1.p1.5.m2.1.1.2.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.2">𝑊</ci><apply id="S3.SS2.SSS1.p1.5.m2.1.1.3.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.5.m2.1.1.3.1.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.3">superscript</csymbol><ci id="S3.SS2.SSS1.p1.5.m2.1.1.3.2.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.2">ℝ</ci><apply id="S3.SS2.SSS1.p1.5.m2.1.1.3.3.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.3"><times id="S3.SS2.SSS1.p1.5.m2.1.1.3.3.1.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.3.1"></times><ci id="S3.SS2.SSS1.p1.5.m2.1.1.3.3.2.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.3.2">𝑘</ci><ci id="S3.SS2.SSS1.p1.5.m2.1.1.3.3.3.cmml" xref="S3.SS2.SSS1.p1.5.m2.1.1.3.3.3">ℓ</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.5.m2.1c">W\in\mathbb{R}^{k\times\ell}</annotation></semantics></math> is the trainable weights
+matrix, <math id="S3.SS2.SSS1.p1.6.m3.1" class="ltx_Math" alttext="X\in\mathbb{R}^{N\times k}" display="inline"><semantics id="S3.SS2.SSS1.p1.6.m3.1a"><mrow id="S3.SS2.SSS1.p1.6.m3.1.1" xref="S3.SS2.SSS1.p1.6.m3.1.1.cmml"><mi id="S3.SS2.SSS1.p1.6.m3.1.1.2" xref="S3.SS2.SSS1.p1.6.m3.1.1.2.cmml">X</mi><mo id="S3.SS2.SSS1.p1.6.m3.1.1.1" xref="S3.SS2.SSS1.p1.6.m3.1.1.1.cmml">∈</mo><msup id="S3.SS2.SSS1.p1.6.m3.1.1.3" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.cmml"><mi id="S3.SS2.SSS1.p1.6.m3.1.1.3.2" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.2.cmml">ℝ</mi><mrow id="S3.SS2.SSS1.p1.6.m3.1.1.3.3" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.3.cmml"><mi id="S3.SS2.SSS1.p1.6.m3.1.1.3.3.2" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.3.2.cmml">N</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.SSS1.p1.6.m3.1.1.3.3.1" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.3.1.cmml">×</mo><mi id="S3.SS2.SSS1.p1.6.m3.1.1.3.3.3" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.3.3.cmml">k</mi></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.6.m3.1b"><apply id="S3.SS2.SSS1.p1.6.m3.1.1.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1"><in id="S3.SS2.SSS1.p1.6.m3.1.1.1.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.1"></in><ci id="S3.SS2.SSS1.p1.6.m3.1.1.2.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.2">𝑋</ci><apply id="S3.SS2.SSS1.p1.6.m3.1.1.3.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.6.m3.1.1.3.1.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.3">superscript</csymbol><ci id="S3.SS2.SSS1.p1.6.m3.1.1.3.2.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.2">ℝ</ci><apply id="S3.SS2.SSS1.p1.6.m3.1.1.3.3.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.3"><times id="S3.SS2.SSS1.p1.6.m3.1.1.3.3.1.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.3.1"></times><ci id="S3.SS2.SSS1.p1.6.m3.1.1.3.3.2.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.3.2">𝑁</ci><ci id="S3.SS2.SSS1.p1.6.m3.1.1.3.3.3.cmml" xref="S3.SS2.SSS1.p1.6.m3.1.1.3.3.3">𝑘</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.6.m3.1c">X\in\mathbb{R}^{N\times k}</annotation></semantics></math> is the matrix of input
+features, and <math id="S3.SS2.SSS1.p1.7.m4.1" class="ltx_Math" alttext="\tilde{A}\in\mathbb{R}^{N\times N}" display="inline"><semantics id="S3.SS2.SSS1.p1.7.m4.1a"><mrow id="S3.SS2.SSS1.p1.7.m4.1.1" xref="S3.SS2.SSS1.p1.7.m4.1.1.cmml"><mover accent="true" id="S3.SS2.SSS1.p1.7.m4.1.1.2" xref="S3.SS2.SSS1.p1.7.m4.1.1.2.cmml"><mi id="S3.SS2.SSS1.p1.7.m4.1.1.2.2" xref="S3.SS2.SSS1.p1.7.m4.1.1.2.2.cmml">A</mi><mo id="S3.SS2.SSS1.p1.7.m4.1.1.2.1" xref="S3.SS2.SSS1.p1.7.m4.1.1.2.1.cmml">~</mo></mover><mo id="S3.SS2.SSS1.p1.7.m4.1.1.1" xref="S3.SS2.SSS1.p1.7.m4.1.1.1.cmml">∈</mo><msup id="S3.SS2.SSS1.p1.7.m4.1.1.3" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.cmml"><mi id="S3.SS2.SSS1.p1.7.m4.1.1.3.2" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.2.cmml">ℝ</mi><mrow id="S3.SS2.SSS1.p1.7.m4.1.1.3.3" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.3.cmml"><mi id="S3.SS2.SSS1.p1.7.m4.1.1.3.3.2" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.3.2.cmml">N</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.SSS1.p1.7.m4.1.1.3.3.1" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.3.1.cmml">×</mo><mi id="S3.SS2.SSS1.p1.7.m4.1.1.3.3.3" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.3.3.cmml">N</mi></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.7.m4.1b"><apply id="S3.SS2.SSS1.p1.7.m4.1.1.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1"><in id="S3.SS2.SSS1.p1.7.m4.1.1.1.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.1"></in><apply id="S3.SS2.SSS1.p1.7.m4.1.1.2.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.2"><ci id="S3.SS2.SSS1.p1.7.m4.1.1.2.1.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.2.1">~</ci><ci id="S3.SS2.SSS1.p1.7.m4.1.1.2.2.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.2.2">𝐴</ci></apply><apply id="S3.SS2.SSS1.p1.7.m4.1.1.3.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.7.m4.1.1.3.1.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.3">superscript</csymbol><ci id="S3.SS2.SSS1.p1.7.m4.1.1.3.2.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.2">ℝ</ci><apply id="S3.SS2.SSS1.p1.7.m4.1.1.3.3.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.3"><times id="S3.SS2.SSS1.p1.7.m4.1.1.3.3.1.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.3.1"></times><ci id="S3.SS2.SSS1.p1.7.m4.1.1.3.3.2.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.3.2">𝑁</ci><ci id="S3.SS2.SSS1.p1.7.m4.1.1.3.3.3.cmml" xref="S3.SS2.SSS1.p1.7.m4.1.1.3.3.3">𝑁</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.7.m4.1c">\tilde{A}\in\mathbb{R}^{N\times N}</annotation></semantics></math> is the
+row-normalized adjacency matrix of the graph,</p>
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E2.m1.1" class="ltx_Math" alttext="\tilde{A}=\hat{D}^{-\frac{1}{2}}\hat{A}\hat{D}^{-\frac{1}{2}}," display="block"><semantics id="S3.E2.m1.1a"><mrow id="S3.E2.m1.1.1.1" xref="S3.E2.m1.1.1.1.1.cmml"><mrow id="S3.E2.m1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.cmml"><mover accent="true" id="S3.E2.m1.1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.2.cmml"><mi id="S3.E2.m1.1.1.1.1.2.2" xref="S3.E2.m1.1.1.1.1.2.2.cmml">A</mi><mo id="S3.E2.m1.1.1.1.1.2.1" xref="S3.E2.m1.1.1.1.1.2.1.cmml">~</mo></mover><mo id="S3.E2.m1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.cmml">=</mo><mrow id="S3.E2.m1.1.1.1.1.3" xref="S3.E2.m1.1.1.1.1.3.cmml"><msup id="S3.E2.m1.1.1.1.1.3.2" xref="S3.E2.m1.1.1.1.1.3.2.cmml"><mover accent="true" id="S3.E2.m1.1.1.1.1.3.2.2" xref="S3.E2.m1.1.1.1.1.3.2.2.cmml"><mi id="S3.E2.m1.1.1.1.1.3.2.2.2" xref="S3.E2.m1.1.1.1.1.3.2.2.2.cmml">D</mi><mo id="S3.E2.m1.1.1.1.1.3.2.2.1" xref="S3.E2.m1.1.1.1.1.3.2.2.1.cmml">^</mo></mover><mrow id="S3.E2.m1.1.1.1.1.3.2.3" xref="S3.E2.m1.1.1.1.1.3.2.3.cmml"><mo id="S3.E2.m1.1.1.1.1.3.2.3a" xref="S3.E2.m1.1.1.1.1.3.2.3.cmml">−</mo><mfrac id="S3.E2.m1.1.1.1.1.3.2.3.2" xref="S3.E2.m1.1.1.1.1.3.2.3.2.cmml"><mn id="S3.E2.m1.1.1.1.1.3.2.3.2.2" xref="S3.E2.m1.1.1.1.1.3.2.3.2.2.cmml">1</mn><mn id="S3.E2.m1.1.1.1.1.3.2.3.2.3" xref="S3.E2.m1.1.1.1.1.3.2.3.2.3.cmml">2</mn></mfrac></mrow></msup><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.1.1.3.1" xref="S3.E2.m1.1.1.1.1.3.1.cmml">​</mo><mover accent="true" id="S3.E2.m1.1.1.1.1.3.3" xref="S3.E2.m1.1.1.1.1.3.3.cmml"><mi id="S3.E2.m1.1.1.1.1.3.3.2" xref="S3.E2.m1.1.1.1.1.3.3.2.cmml">A</mi><mo id="S3.E2.m1.1.1.1.1.3.3.1" xref="S3.E2.m1.1.1.1.1.3.3.1.cmml">^</mo></mover><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.1.1.3.1a" xref="S3.E2.m1.1.1.1.1.3.1.cmml">​</mo><msup id="S3.E2.m1.1.1.1.1.3.4" xref="S3.E2.m1.1.1.1.1.3.4.cmml"><mover accent="true" id="S3.E2.m1.1.1.1.1.3.4.2" xref="S3.E2.m1.1.1.1.1.3.4.2.cmml"><mi id="S3.E2.m1.1.1.1.1.3.4.2.2" xref="S3.E2.m1.1.1.1.1.3.4.2.2.cmml">D</mi><mo id="S3.E2.m1.1.1.1.1.3.4.2.1" xref="S3.E2.m1.1.1.1.1.3.4.2.1.cmml">^</mo></mover><mrow id="S3.E2.m1.1.1.1.1.3.4.3" xref="S3.E2.m1.1.1.1.1.3.4.3.cmml"><mo id="S3.E2.m1.1.1.1.1.3.4.3a" xref="S3.E2.m1.1.1.1.1.3.4.3.cmml">−</mo><mfrac id="S3.E2.m1.1.1.1.1.3.4.3.2" xref="S3.E2.m1.1.1.1.1.3.4.3.2.cmml"><mn id="S3.E2.m1.1.1.1.1.3.4.3.2.2" xref="S3.E2.m1.1.1.1.1.3.4.3.2.2.cmml">1</mn><mn id="S3.E2.m1.1.1.1.1.3.4.3.2.3" xref="S3.E2.m1.1.1.1.1.3.4.3.2.3.cmml">2</mn></mfrac></mrow></msup></mrow></mrow><mo id="S3.E2.m1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E2.m1.1b"><apply id="S3.E2.m1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1"><eq id="S3.E2.m1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1"></eq><apply id="S3.E2.m1.1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.1.2"><ci id="S3.E2.m1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.1.1.1.1.2.1">~</ci><ci id="S3.E2.m1.1.1.1.1.2.2.cmml" xref="S3.E2.m1.1.1.1.1.2.2">𝐴</ci></apply><apply id="S3.E2.m1.1.1.1.1.3.cmml" xref="S3.E2.m1.1.1.1.1.3"><times id="S3.E2.m1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.1.1.1.1.3.1"></times><apply id="S3.E2.m1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.1.1.1.1.3.2"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.3.2.1.cmml" xref="S3.E2.m1.1.1.1.1.3.2">superscript</csymbol><apply id="S3.E2.m1.1.1.1.1.3.2.2.cmml" xref="S3.E2.m1.1.1.1.1.3.2.2"><ci id="S3.E2.m1.1.1.1.1.3.2.2.1.cmml" xref="S3.E2.m1.1.1.1.1.3.2.2.1">^</ci><ci id="S3.E2.m1.1.1.1.1.3.2.2.2.cmml" xref="S3.E2.m1.1.1.1.1.3.2.2.2">𝐷</ci></apply><apply id="S3.E2.m1.1.1.1.1.3.2.3.cmml" xref="S3.E2.m1.1.1.1.1.3.2.3"><minus id="S3.E2.m1.1.1.1.1.3.2.3.1.cmml" xref="S3.E2.m1.1.1.1.1.3.2.3"></minus><apply id="S3.E2.m1.1.1.1.1.3.2.3.2.cmml" xref="S3.E2.m1.1.1.1.1.3.2.3.2"><divide id="S3.E2.m1.1.1.1.1.3.2.3.2.1.cmml" xref="S3.E2.m1.1.1.1.1.3.2.3.2"></divide><cn type="integer" id="S3.E2.m1.1.1.1.1.3.2.3.2.2.cmml" xref="S3.E2.m1.1.1.1.1.3.2.3.2.2">1</cn><cn type="integer" id="S3.E2.m1.1.1.1.1.3.2.3.2.3.cmml" xref="S3.E2.m1.1.1.1.1.3.2.3.2.3">2</cn></apply></apply></apply><apply id="S3.E2.m1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.1.1.1.1.3.3"><ci id="S3.E2.m1.1.1.1.1.3.3.1.cmml" xref="S3.E2.m1.1.1.1.1.3.3.1">^</ci><ci id="S3.E2.m1.1.1.1.1.3.3.2.cmml" xref="S3.E2.m1.1.1.1.1.3.3.2">𝐴</ci></apply><apply id="S3.E2.m1.1.1.1.1.3.4.cmml" xref="S3.E2.m1.1.1.1.1.3.4"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.3.4.1.cmml" xref="S3.E2.m1.1.1.1.1.3.4">superscript</csymbol><apply id="S3.E2.m1.1.1.1.1.3.4.2.cmml" xref="S3.E2.m1.1.1.1.1.3.4.2"><ci id="S3.E2.m1.1.1.1.1.3.4.2.1.cmml" xref="S3.E2.m1.1.1.1.1.3.4.2.1">^</ci><ci id="S3.E2.m1.1.1.1.1.3.4.2.2.cmml" xref="S3.E2.m1.1.1.1.1.3.4.2.2">𝐷</ci></apply><apply id="S3.E2.m1.1.1.1.1.3.4.3.cmml" xref="S3.E2.m1.1.1.1.1.3.4.3"><minus id="S3.E2.m1.1.1.1.1.3.4.3.1.cmml" xref="S3.E2.m1.1.1.1.1.3.4.3"></minus><apply id="S3.E2.m1.1.1.1.1.3.4.3.2.cmml" xref="S3.E2.m1.1.1.1.1.3.4.3.2"><divide id="S3.E2.m1.1.1.1.1.3.4.3.2.1.cmml" xref="S3.E2.m1.1.1.1.1.3.4.3.2"></divide><cn type="integer" id="S3.E2.m1.1.1.1.1.3.4.3.2.2.cmml" xref="S3.E2.m1.1.1.1.1.3.4.3.2.2">1</cn><cn type="integer" id="S3.E2.m1.1.1.1.1.3.4.3.2.3.cmml" xref="S3.E2.m1.1.1.1.1.3.4.3.2.3">2</cn></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m1.1c">\tilde{A}=\hat{D}^{-\frac{1}{2}}\hat{A}\hat{D}^{-\frac{1}{2}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS2.SSS1.p1.11" class="ltx_p">where <math id="S3.SS2.SSS1.p1.8.m1.1" class="ltx_Math" alttext="\hat{A}=A+I" display="inline"><semantics id="S3.SS2.SSS1.p1.8.m1.1a"><mrow id="S3.SS2.SSS1.p1.8.m1.1.1" xref="S3.SS2.SSS1.p1.8.m1.1.1.cmml"><mover accent="true" id="S3.SS2.SSS1.p1.8.m1.1.1.2" xref="S3.SS2.SSS1.p1.8.m1.1.1.2.cmml"><mi id="S3.SS2.SSS1.p1.8.m1.1.1.2.2" xref="S3.SS2.SSS1.p1.8.m1.1.1.2.2.cmml">A</mi><mo id="S3.SS2.SSS1.p1.8.m1.1.1.2.1" xref="S3.SS2.SSS1.p1.8.m1.1.1.2.1.cmml">^</mo></mover><mo id="S3.SS2.SSS1.p1.8.m1.1.1.1" xref="S3.SS2.SSS1.p1.8.m1.1.1.1.cmml">=</mo><mrow id="S3.SS2.SSS1.p1.8.m1.1.1.3" xref="S3.SS2.SSS1.p1.8.m1.1.1.3.cmml"><mi id="S3.SS2.SSS1.p1.8.m1.1.1.3.2" xref="S3.SS2.SSS1.p1.8.m1.1.1.3.2.cmml">A</mi><mo id="S3.SS2.SSS1.p1.8.m1.1.1.3.1" xref="S3.SS2.SSS1.p1.8.m1.1.1.3.1.cmml">+</mo><mi id="S3.SS2.SSS1.p1.8.m1.1.1.3.3" xref="S3.SS2.SSS1.p1.8.m1.1.1.3.3.cmml">I</mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.8.m1.1b"><apply id="S3.SS2.SSS1.p1.8.m1.1.1.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1"><eq id="S3.SS2.SSS1.p1.8.m1.1.1.1.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1.1"></eq><apply id="S3.SS2.SSS1.p1.8.m1.1.1.2.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1.2"><ci id="S3.SS2.SSS1.p1.8.m1.1.1.2.1.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1.2.1">^</ci><ci id="S3.SS2.SSS1.p1.8.m1.1.1.2.2.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1.2.2">𝐴</ci></apply><apply id="S3.SS2.SSS1.p1.8.m1.1.1.3.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1.3"><plus id="S3.SS2.SSS1.p1.8.m1.1.1.3.1.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1.3.1"></plus><ci id="S3.SS2.SSS1.p1.8.m1.1.1.3.2.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1.3.2">𝐴</ci><ci id="S3.SS2.SSS1.p1.8.m1.1.1.3.3.cmml" xref="S3.SS2.SSS1.p1.8.m1.1.1.3.3">𝐼</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.8.m1.1c">\hat{A}=A+I</annotation></semantics></math> and <math id="S3.SS2.SSS1.p1.9.m2.1" class="ltx_Math" alttext="\hat{D}" display="inline"><semantics id="S3.SS2.SSS1.p1.9.m2.1a"><mover accent="true" id="S3.SS2.SSS1.p1.9.m2.1.1" xref="S3.SS2.SSS1.p1.9.m2.1.1.cmml"><mi id="S3.SS2.SSS1.p1.9.m2.1.1.2" xref="S3.SS2.SSS1.p1.9.m2.1.1.2.cmml">D</mi><mo id="S3.SS2.SSS1.p1.9.m2.1.1.1" xref="S3.SS2.SSS1.p1.9.m2.1.1.1.cmml">^</mo></mover><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.9.m2.1b"><apply id="S3.SS2.SSS1.p1.9.m2.1.1.cmml" xref="S3.SS2.SSS1.p1.9.m2.1.1"><ci id="S3.SS2.SSS1.p1.9.m2.1.1.1.cmml" xref="S3.SS2.SSS1.p1.9.m2.1.1.1">^</ci><ci id="S3.SS2.SSS1.p1.9.m2.1.1.2.cmml" xref="S3.SS2.SSS1.p1.9.m2.1.1.2">𝐷</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.9.m2.1c">\hat{D}</annotation></semantics></math> is the diagonal node degree
+matrix. <math id="S3.SS2.SSS1.p1.10.m3.1" class="ltx_Math" alttext="\tilde{A}" display="inline"><semantics id="S3.SS2.SSS1.p1.10.m3.1a"><mover accent="true" id="S3.SS2.SSS1.p1.10.m3.1.1" xref="S3.SS2.SSS1.p1.10.m3.1.1.cmml"><mi id="S3.SS2.SSS1.p1.10.m3.1.1.2" xref="S3.SS2.SSS1.p1.10.m3.1.1.2.cmml">A</mi><mo id="S3.SS2.SSS1.p1.10.m3.1.1.1" xref="S3.SS2.SSS1.p1.10.m3.1.1.1.cmml">~</mo></mover><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.10.m3.1b"><apply id="S3.SS2.SSS1.p1.10.m3.1.1.cmml" xref="S3.SS2.SSS1.p1.10.m3.1.1"><ci id="S3.SS2.SSS1.p1.10.m3.1.1.1.cmml" xref="S3.SS2.SSS1.p1.10.m3.1.1.1">~</ci><ci id="S3.SS2.SSS1.p1.10.m3.1.1.2.cmml" xref="S3.SS2.SSS1.p1.10.m3.1.1.2">𝐴</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.10.m3.1c">\tilde{A}</annotation></semantics></math> simply defines the extent to which each node uses other
+nodes’ features. So <math id="S3.SS2.SSS1.p1.11.m4.1" class="ltx_Math" alttext="\tilde{A}X" display="inline"><semantics id="S3.SS2.SSS1.p1.11.m4.1a"><mrow id="S3.SS2.SSS1.p1.11.m4.1.1" xref="S3.SS2.SSS1.p1.11.m4.1.1.cmml"><mover accent="true" id="S3.SS2.SSS1.p1.11.m4.1.1.2" xref="S3.SS2.SSS1.p1.11.m4.1.1.2.cmml"><mi id="S3.SS2.SSS1.p1.11.m4.1.1.2.2" xref="S3.SS2.SSS1.p1.11.m4.1.1.2.2.cmml">A</mi><mo id="S3.SS2.SSS1.p1.11.m4.1.1.2.1" xref="S3.SS2.SSS1.p1.11.m4.1.1.2.1.cmml">~</mo></mover><mo lspace="0em" rspace="0em" id="S3.SS2.SSS1.p1.11.m4.1.1.1" xref="S3.SS2.SSS1.p1.11.m4.1.1.1.cmml">​</mo><mi id="S3.SS2.SSS1.p1.11.m4.1.1.3" xref="S3.SS2.SSS1.p1.11.m4.1.1.3.cmml">X</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.11.m4.1b"><apply id="S3.SS2.SSS1.p1.11.m4.1.1.cmml" xref="S3.SS2.SSS1.p1.11.m4.1.1"><times id="S3.SS2.SSS1.p1.11.m4.1.1.1.cmml" xref="S3.SS2.SSS1.p1.11.m4.1.1.1"></times><apply id="S3.SS2.SSS1.p1.11.m4.1.1.2.cmml" xref="S3.SS2.SSS1.p1.11.m4.1.1.2"><ci id="S3.SS2.SSS1.p1.11.m4.1.1.2.1.cmml" xref="S3.SS2.SSS1.p1.11.m4.1.1.2.1">~</ci><ci id="S3.SS2.SSS1.p1.11.m4.1.1.2.2.cmml" xref="S3.SS2.SSS1.p1.11.m4.1.1.2.2">𝐴</ci></apply><ci id="S3.SS2.SSS1.p1.11.m4.1.1.3.cmml" xref="S3.SS2.SSS1.p1.11.m4.1.1.3">𝑋</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.11.m4.1c">\tilde{A}X</annotation></semantics></math> is the new
+feature matrix in which each node’s features are the averaged features
+of the node itself and its adjacent nodes. Therefore, to effectively formulate
+the HOPE problem in this framework, an effective adjacency
+matrix is needed.</p>
+</div>
+<div id="S3.SS2.SSS1.p2" class="ltx_para">
+<p id="S3.SS2.SSS1.p2.2" class="ltx_p">Initially, we tried using the adjacency matrix defined by the
+kinematic structure of the hand skeleton and the object bounding box
+for the first layer of the network. But we found it was better to
+allow the network to learn the best adjacency matrix. Note that this is
+no longer strictly an adjacency matrix in the strict sense, but more
+like an “affinity” matrix where nodes can be connected by weighted
+edges to many other nodes in the graph. An adaptive graph convolution
+operation updates the adjacency matrix (<math id="S3.SS2.SSS1.p2.1.m1.1" class="ltx_Math" alttext="A" display="inline"><semantics id="S3.SS2.SSS1.p2.1.m1.1a"><mi id="S3.SS2.SSS1.p2.1.m1.1.1" xref="S3.SS2.SSS1.p2.1.m1.1.1.cmml">A</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p2.1.m1.1b"><ci id="S3.SS2.SSS1.p2.1.m1.1.1.cmml" xref="S3.SS2.SSS1.p2.1.m1.1.1">𝐴</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p2.1.m1.1c">A</annotation></semantics></math>), as well as the weights
+matrix (<math id="S3.SS2.SSS1.p2.2.m2.1" class="ltx_Math" alttext="W" display="inline"><semantics id="S3.SS2.SSS1.p2.2.m2.1a"><mi id="S3.SS2.SSS1.p2.2.m2.1.1" xref="S3.SS2.SSS1.p2.2.m2.1.1.cmml">W</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p2.2.m2.1b"><ci id="S3.SS2.SSS1.p2.2.m2.1.1.cmml" xref="S3.SS2.SSS1.p2.2.m2.1.1">𝑊</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p2.2.m2.1c">W</annotation></semantics></math>) during the backpropagation step. This approach allows
+us to model subtle relationships between joints which are not
+connected in the hand skeleton model (<em id="S3.SS2.SSS1.p2.2.1" class="ltx_emph ltx_font_italic">e.g</em>.<span id="S3.SS2.SSS1.p2.2.2" class="ltx_text"></span> strong
+relationships between finger tips despite not being
+physically connected).</p>
+</div>
+<div id="S3.SS2.SSS1.p3" class="ltx_para">
+<p id="S3.SS2.SSS1.p3.1" class="ltx_p">We use ReLU as the activation function for the graph convolution
+layers. Also we found that the network trains faster and generalizes
+better if we do not use either Batch <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> or Group
+Normalization <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>.</p>
+</div>
+</section>
+<section id="S3.SS2.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.2 </span>Graph Pooling</h4>
+
+<div id="S3.SS2.SSS2.p1" class="ltx_para">
+<p id="S3.SS2.SSS2.p1.1" class="ltx_p">As mentioned earlier, we did not find gPool <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>
+helpful in our problem: the sigmoid function’s weaknesses
+are well-known <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>
+and the use of sigmoid in the pooling step created very small
+gradients during backpropagation. This caused the network not to
+update the randomly-initialized selected pooled nodes throughout the entire
+training phase, and lost the advantage of the trainable pooling layer.</p>
+</div>
+<div id="S3.SS2.SSS2.p2" class="ltx_para">
+<p id="S3.SS2.SSS2.p2.1" class="ltx_p">To solve this problem, we use a fully-connected layer and apply it on
+the transpose of the feature matrix. This fully-connected works as a
+kernel along each of the features and outputs the desired number of
+nodes. Compared to gPool, we found this module updated
+very well during training. Also due to using an adaptive graph
+convolution, this pooling does not fragment the graph into pieces.</p>
+</div>
+</section>
+<section id="S3.SS2.SSS3" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.3 </span>Graph Unpooling</h4>
+
+<div id="S3.SS2.SSS3.p1" class="ltx_para">
+<p id="S3.SS2.SSS3.p1.1" class="ltx_p">The unpooling layer used in our Graph U-Net is also different from
+Gao <em id="S3.SS2.SSS3.p1.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S3.SS2.SSS3.p1.1.2" class="ltx_text"></span>’s gUnpool <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>. That approach
+adds the pooled nodes to the graph with empty features and uses the
+subsequent graph convolution to fill those features. Instead, we use a
+transpose convolution approach in our unpooling layer. Similar to our
+pooling layer, we use a fully-connected layer and applied it on the
+transpose matrix of the features to obtain the desired number of output
+nodes, and then transpose the matrix again.</p>
+</div>
+</section>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Loss Function and Training the Model</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.3" class="ltx_p">Our loss function for training the model has three parts. We first
+calculate the loss for the initial 2D coordinates predicted by
+ResNet (<math id="S3.SS3.p1.1.m1.1" class="ltx_Math" alttext="\mathcal{L}_{init2D}" display="inline"><semantics id="S3.SS3.p1.1.m1.1a"><msub id="S3.SS3.p1.1.m1.1.1" xref="S3.SS3.p1.1.m1.1.1.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.SS3.p1.1.m1.1.1.2" xref="S3.SS3.p1.1.m1.1.1.2.cmml">ℒ</mi><mrow id="S3.SS3.p1.1.m1.1.1.3" xref="S3.SS3.p1.1.m1.1.1.3.cmml"><mi id="S3.SS3.p1.1.m1.1.1.3.2" xref="S3.SS3.p1.1.m1.1.1.3.2.cmml">i</mi><mo lspace="0em" rspace="0em" id="S3.SS3.p1.1.m1.1.1.3.1" xref="S3.SS3.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS3.p1.1.m1.1.1.3.3" xref="S3.SS3.p1.1.m1.1.1.3.3.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.SS3.p1.1.m1.1.1.3.1a" xref="S3.SS3.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS3.p1.1.m1.1.1.3.4" xref="S3.SS3.p1.1.m1.1.1.3.4.cmml">i</mi><mo lspace="0em" rspace="0em" id="S3.SS3.p1.1.m1.1.1.3.1b" xref="S3.SS3.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS3.p1.1.m1.1.1.3.5" xref="S3.SS3.p1.1.m1.1.1.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.SS3.p1.1.m1.1.1.3.1c" xref="S3.SS3.p1.1.m1.1.1.3.1.cmml">​</mo><mn id="S3.SS3.p1.1.m1.1.1.3.6" xref="S3.SS3.p1.1.m1.1.1.3.6.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS3.p1.1.m1.1.1.3.1d" xref="S3.SS3.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS3.p1.1.m1.1.1.3.7" xref="S3.SS3.p1.1.m1.1.1.3.7.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.1.m1.1b"><apply id="S3.SS3.p1.1.m1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.1.m1.1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.p1.1.m1.1.1.2.cmml" xref="S3.SS3.p1.1.m1.1.1.2">ℒ</ci><apply id="S3.SS3.p1.1.m1.1.1.3.cmml" xref="S3.SS3.p1.1.m1.1.1.3"><times id="S3.SS3.p1.1.m1.1.1.3.1.cmml" xref="S3.SS3.p1.1.m1.1.1.3.1"></times><ci id="S3.SS3.p1.1.m1.1.1.3.2.cmml" xref="S3.SS3.p1.1.m1.1.1.3.2">𝑖</ci><ci id="S3.SS3.p1.1.m1.1.1.3.3.cmml" xref="S3.SS3.p1.1.m1.1.1.3.3">𝑛</ci><ci id="S3.SS3.p1.1.m1.1.1.3.4.cmml" xref="S3.SS3.p1.1.m1.1.1.3.4">𝑖</ci><ci id="S3.SS3.p1.1.m1.1.1.3.5.cmml" xref="S3.SS3.p1.1.m1.1.1.3.5">𝑡</ci><cn type="integer" id="S3.SS3.p1.1.m1.1.1.3.6.cmml" xref="S3.SS3.p1.1.m1.1.1.3.6">2</cn><ci id="S3.SS3.p1.1.m1.1.1.3.7.cmml" xref="S3.SS3.p1.1.m1.1.1.3.7">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.1.m1.1c">\mathcal{L}_{init2D}</annotation></semantics></math>). We then add this loss to that
+calculated from the predicted 2D and 3D coordinates
+(<math id="S3.SS3.p1.2.m2.1" class="ltx_Math" alttext="\mathcal{L}_{2D}" display="inline"><semantics id="S3.SS3.p1.2.m2.1a"><msub id="S3.SS3.p1.2.m2.1.1" xref="S3.SS3.p1.2.m2.1.1.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.SS3.p1.2.m2.1.1.2" xref="S3.SS3.p1.2.m2.1.1.2.cmml">ℒ</mi><mrow id="S3.SS3.p1.2.m2.1.1.3" xref="S3.SS3.p1.2.m2.1.1.3.cmml"><mn id="S3.SS3.p1.2.m2.1.1.3.2" xref="S3.SS3.p1.2.m2.1.1.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS3.p1.2.m2.1.1.3.1" xref="S3.SS3.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS3.p1.2.m2.1.1.3.3" xref="S3.SS3.p1.2.m2.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.2.m2.1b"><apply id="S3.SS3.p1.2.m2.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.2.m2.1.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.p1.2.m2.1.1.2.cmml" xref="S3.SS3.p1.2.m2.1.1.2">ℒ</ci><apply id="S3.SS3.p1.2.m2.1.1.3.cmml" xref="S3.SS3.p1.2.m2.1.1.3"><times id="S3.SS3.p1.2.m2.1.1.3.1.cmml" xref="S3.SS3.p1.2.m2.1.1.3.1"></times><cn type="integer" id="S3.SS3.p1.2.m2.1.1.3.2.cmml" xref="S3.SS3.p1.2.m2.1.1.3.2">2</cn><ci id="S3.SS3.p1.2.m2.1.1.3.3.cmml" xref="S3.SS3.p1.2.m2.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.2.m2.1c">\mathcal{L}_{2D}</annotation></semantics></math> and <math id="S3.SS3.p1.3.m3.1" class="ltx_Math" alttext="\mathcal{L}_{3D}" display="inline"><semantics id="S3.SS3.p1.3.m3.1a"><msub id="S3.SS3.p1.3.m3.1.1" xref="S3.SS3.p1.3.m3.1.1.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.SS3.p1.3.m3.1.1.2" xref="S3.SS3.p1.3.m3.1.1.2.cmml">ℒ</mi><mrow id="S3.SS3.p1.3.m3.1.1.3" xref="S3.SS3.p1.3.m3.1.1.3.cmml"><mn id="S3.SS3.p1.3.m3.1.1.3.2" xref="S3.SS3.p1.3.m3.1.1.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S3.SS3.p1.3.m3.1.1.3.1" xref="S3.SS3.p1.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS3.p1.3.m3.1.1.3.3" xref="S3.SS3.p1.3.m3.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.3.m3.1b"><apply id="S3.SS3.p1.3.m3.1.1.cmml" xref="S3.SS3.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.3.m3.1.1.1.cmml" xref="S3.SS3.p1.3.m3.1.1">subscript</csymbol><ci id="S3.SS3.p1.3.m3.1.1.2.cmml" xref="S3.SS3.p1.3.m3.1.1.2">ℒ</ci><apply id="S3.SS3.p1.3.m3.1.1.3.cmml" xref="S3.SS3.p1.3.m3.1.1.3"><times id="S3.SS3.p1.3.m3.1.1.3.1.cmml" xref="S3.SS3.p1.3.m3.1.1.3.1"></times><cn type="integer" id="S3.SS3.p1.3.m3.1.1.3.2.cmml" xref="S3.SS3.p1.3.m3.1.1.3.2">3</cn><ci id="S3.SS3.p1.3.m3.1.1.3.3.cmml" xref="S3.SS3.p1.3.m3.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.3.m3.1c">\mathcal{L}_{3D}</annotation></semantics></math>),</p>
+<table id="S3.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E3.m1.1" class="ltx_Math" alttext="\mathcal{L}=\alpha\mathcal{L}_{init2D}+\beta\mathcal{L}_{2D}+\mathcal{L}_{3D}," display="block"><semantics id="S3.E3.m1.1a"><mrow id="S3.E3.m1.1.1.1" xref="S3.E3.m1.1.1.1.1.cmml"><mrow id="S3.E3.m1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.E3.m1.1.1.1.1.2" xref="S3.E3.m1.1.1.1.1.2.cmml">ℒ</mi><mo id="S3.E3.m1.1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.1.cmml">=</mo><mrow id="S3.E3.m1.1.1.1.1.3" xref="S3.E3.m1.1.1.1.1.3.cmml"><mrow id="S3.E3.m1.1.1.1.1.3.2" xref="S3.E3.m1.1.1.1.1.3.2.cmml"><mi id="S3.E3.m1.1.1.1.1.3.2.2" xref="S3.E3.m1.1.1.1.1.3.2.2.cmml">α</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.2.1" xref="S3.E3.m1.1.1.1.1.3.2.1.cmml">​</mo><msub id="S3.E3.m1.1.1.1.1.3.2.3" xref="S3.E3.m1.1.1.1.1.3.2.3.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.E3.m1.1.1.1.1.3.2.3.2" xref="S3.E3.m1.1.1.1.1.3.2.3.2.cmml">ℒ</mi><mrow id="S3.E3.m1.1.1.1.1.3.2.3.3" xref="S3.E3.m1.1.1.1.1.3.2.3.3.cmml"><mi id="S3.E3.m1.1.1.1.1.3.2.3.3.2" xref="S3.E3.m1.1.1.1.1.3.2.3.3.2.cmml">i</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.2.3.3.1" xref="S3.E3.m1.1.1.1.1.3.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.3.2.3.3.3" xref="S3.E3.m1.1.1.1.1.3.2.3.3.3.cmml">n</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.2.3.3.1a" xref="S3.E3.m1.1.1.1.1.3.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.3.2.3.3.4" xref="S3.E3.m1.1.1.1.1.3.2.3.3.4.cmml">i</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.2.3.3.1b" xref="S3.E3.m1.1.1.1.1.3.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.3.2.3.3.5" xref="S3.E3.m1.1.1.1.1.3.2.3.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.2.3.3.1c" xref="S3.E3.m1.1.1.1.1.3.2.3.3.1.cmml">​</mo><mn id="S3.E3.m1.1.1.1.1.3.2.3.3.6" xref="S3.E3.m1.1.1.1.1.3.2.3.3.6.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.2.3.3.1d" xref="S3.E3.m1.1.1.1.1.3.2.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.3.2.3.3.7" xref="S3.E3.m1.1.1.1.1.3.2.3.3.7.cmml">D</mi></mrow></msub></mrow><mo id="S3.E3.m1.1.1.1.1.3.1" xref="S3.E3.m1.1.1.1.1.3.1.cmml">+</mo><mrow id="S3.E3.m1.1.1.1.1.3.3" xref="S3.E3.m1.1.1.1.1.3.3.cmml"><mi id="S3.E3.m1.1.1.1.1.3.3.2" xref="S3.E3.m1.1.1.1.1.3.3.2.cmml">β</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.3.1" xref="S3.E3.m1.1.1.1.1.3.3.1.cmml">​</mo><msub id="S3.E3.m1.1.1.1.1.3.3.3" xref="S3.E3.m1.1.1.1.1.3.3.3.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.E3.m1.1.1.1.1.3.3.3.2" xref="S3.E3.m1.1.1.1.1.3.3.3.2.cmml">ℒ</mi><mrow id="S3.E3.m1.1.1.1.1.3.3.3.3" xref="S3.E3.m1.1.1.1.1.3.3.3.3.cmml"><mn id="S3.E3.m1.1.1.1.1.3.3.3.3.2" xref="S3.E3.m1.1.1.1.1.3.3.3.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.3.3.3.1" xref="S3.E3.m1.1.1.1.1.3.3.3.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.3.3.3.3.3" xref="S3.E3.m1.1.1.1.1.3.3.3.3.3.cmml">D</mi></mrow></msub></mrow><mo id="S3.E3.m1.1.1.1.1.3.1a" xref="S3.E3.m1.1.1.1.1.3.1.cmml">+</mo><msub id="S3.E3.m1.1.1.1.1.3.4" xref="S3.E3.m1.1.1.1.1.3.4.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.E3.m1.1.1.1.1.3.4.2" xref="S3.E3.m1.1.1.1.1.3.4.2.cmml">ℒ</mi><mrow id="S3.E3.m1.1.1.1.1.3.4.3" xref="S3.E3.m1.1.1.1.1.3.4.3.cmml"><mn id="S3.E3.m1.1.1.1.1.3.4.3.2" xref="S3.E3.m1.1.1.1.1.3.4.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.3.4.3.1" xref="S3.E3.m1.1.1.1.1.3.4.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.3.4.3.3" xref="S3.E3.m1.1.1.1.1.3.4.3.3.cmml">D</mi></mrow></msub></mrow></mrow><mo id="S3.E3.m1.1.1.1.2" xref="S3.E3.m1.1.1.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E3.m1.1b"><apply id="S3.E3.m1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1"><eq id="S3.E3.m1.1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1.1"></eq><ci id="S3.E3.m1.1.1.1.1.2.cmml" xref="S3.E3.m1.1.1.1.1.2">ℒ</ci><apply id="S3.E3.m1.1.1.1.1.3.cmml" xref="S3.E3.m1.1.1.1.1.3"><plus id="S3.E3.m1.1.1.1.1.3.1.cmml" xref="S3.E3.m1.1.1.1.1.3.1"></plus><apply id="S3.E3.m1.1.1.1.1.3.2.cmml" xref="S3.E3.m1.1.1.1.1.3.2"><times id="S3.E3.m1.1.1.1.1.3.2.1.cmml" xref="S3.E3.m1.1.1.1.1.3.2.1"></times><ci id="S3.E3.m1.1.1.1.1.3.2.2.cmml" xref="S3.E3.m1.1.1.1.1.3.2.2">𝛼</ci><apply id="S3.E3.m1.1.1.1.1.3.2.3.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.3.2.3.1.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3">subscript</csymbol><ci id="S3.E3.m1.1.1.1.1.3.2.3.2.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.2">ℒ</ci><apply id="S3.E3.m1.1.1.1.1.3.2.3.3.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.3"><times id="S3.E3.m1.1.1.1.1.3.2.3.3.1.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.3.1"></times><ci id="S3.E3.m1.1.1.1.1.3.2.3.3.2.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.3.2">𝑖</ci><ci id="S3.E3.m1.1.1.1.1.3.2.3.3.3.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.3.3">𝑛</ci><ci id="S3.E3.m1.1.1.1.1.3.2.3.3.4.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.3.4">𝑖</ci><ci id="S3.E3.m1.1.1.1.1.3.2.3.3.5.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.3.5">𝑡</ci><cn type="integer" id="S3.E3.m1.1.1.1.1.3.2.3.3.6.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.3.6">2</cn><ci id="S3.E3.m1.1.1.1.1.3.2.3.3.7.cmml" xref="S3.E3.m1.1.1.1.1.3.2.3.3.7">𝐷</ci></apply></apply></apply><apply id="S3.E3.m1.1.1.1.1.3.3.cmml" xref="S3.E3.m1.1.1.1.1.3.3"><times id="S3.E3.m1.1.1.1.1.3.3.1.cmml" xref="S3.E3.m1.1.1.1.1.3.3.1"></times><ci id="S3.E3.m1.1.1.1.1.3.3.2.cmml" xref="S3.E3.m1.1.1.1.1.3.3.2">𝛽</ci><apply id="S3.E3.m1.1.1.1.1.3.3.3.cmml" xref="S3.E3.m1.1.1.1.1.3.3.3"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.3.3.3.1.cmml" xref="S3.E3.m1.1.1.1.1.3.3.3">subscript</csymbol><ci id="S3.E3.m1.1.1.1.1.3.3.3.2.cmml" xref="S3.E3.m1.1.1.1.1.3.3.3.2">ℒ</ci><apply id="S3.E3.m1.1.1.1.1.3.3.3.3.cmml" xref="S3.E3.m1.1.1.1.1.3.3.3.3"><times id="S3.E3.m1.1.1.1.1.3.3.3.3.1.cmml" xref="S3.E3.m1.1.1.1.1.3.3.3.3.1"></times><cn type="integer" id="S3.E3.m1.1.1.1.1.3.3.3.3.2.cmml" xref="S3.E3.m1.1.1.1.1.3.3.3.3.2">2</cn><ci id="S3.E3.m1.1.1.1.1.3.3.3.3.3.cmml" xref="S3.E3.m1.1.1.1.1.3.3.3.3.3">𝐷</ci></apply></apply></apply><apply id="S3.E3.m1.1.1.1.1.3.4.cmml" xref="S3.E3.m1.1.1.1.1.3.4"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.3.4.1.cmml" xref="S3.E3.m1.1.1.1.1.3.4">subscript</csymbol><ci id="S3.E3.m1.1.1.1.1.3.4.2.cmml" xref="S3.E3.m1.1.1.1.1.3.4.2">ℒ</ci><apply id="S3.E3.m1.1.1.1.1.3.4.3.cmml" xref="S3.E3.m1.1.1.1.1.3.4.3"><times id="S3.E3.m1.1.1.1.1.3.4.3.1.cmml" xref="S3.E3.m1.1.1.1.1.3.4.3.1"></times><cn type="integer" id="S3.E3.m1.1.1.1.1.3.4.3.2.cmml" xref="S3.E3.m1.1.1.1.1.3.4.3.2">3</cn><ci id="S3.E3.m1.1.1.1.1.3.4.3.3.cmml" xref="S3.E3.m1.1.1.1.1.3.4.3.3">𝐷</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E3.m1.1c">\mathcal{L}=\alpha\mathcal{L}_{init2D}+\beta\mathcal{L}_{2D}+\mathcal{L}_{3D},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.p1.6" class="ltx_p">where we set <math id="S3.SS3.p1.4.m1.1" class="ltx_Math" alttext="\alpha" display="inline"><semantics id="S3.SS3.p1.4.m1.1a"><mi id="S3.SS3.p1.4.m1.1.1" xref="S3.SS3.p1.4.m1.1.1.cmml">α</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.4.m1.1b"><ci id="S3.SS3.p1.4.m1.1.1.cmml" xref="S3.SS3.p1.4.m1.1.1">𝛼</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.4.m1.1c">\alpha</annotation></semantics></math> and <math id="S3.SS3.p1.5.m2.1" class="ltx_Math" alttext="\beta" display="inline"><semantics id="S3.SS3.p1.5.m2.1a"><mi id="S3.SS3.p1.5.m2.1.1" xref="S3.SS3.p1.5.m2.1.1.cmml">β</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.5.m2.1b"><ci id="S3.SS3.p1.5.m2.1.1.cmml" xref="S3.SS3.p1.5.m2.1.1">𝛽</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.5.m2.1c">\beta</annotation></semantics></math> to <math id="S3.SS3.p1.6.m3.1" class="ltx_Math" alttext="0.1" display="inline"><semantics id="S3.SS3.p1.6.m3.1a"><mn id="S3.SS3.p1.6.m3.1.1" xref="S3.SS3.p1.6.m3.1.1.cmml">0.1</mn><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.6.m3.1b"><cn type="float" id="S3.SS3.p1.6.m3.1.1.cmml" xref="S3.SS3.p1.6.m3.1.1">0.1</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.6.m3.1c">0.1</annotation></semantics></math> to bring the 2D error
+(in pixels) and 3D error (in millimeters) into a similar range. For
+each of the loss functions, we used Mean Squared Error.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Results</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We now describe our experiments and
+report results for hand-object pose estimation.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Datasets</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">To evaluate the generality of our hand-object pose estimation method,
+we used two datasets with very different contexts:
+First-Person Hand Action
+Dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, which has videos captured from
+egocentric (wearable) cameras,
+and
+HO-3D <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, which was captured from third-person views.
+We also used a third dataset of synthetic images, ObMan <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, for
+pre-training.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.3" class="ltx_p"><span id="S4.SS1.p2.3.1" class="ltx_text ltx_font_bold">First-Person Hand Action
+Dataset</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> contains first-person
+videos of hand actions performed on a variety of objects. The objects
+are <span id="S4.SS1.p2.3.2" class="ltx_text ltx_font_italic">milk</span>, <span id="S4.SS1.p2.3.3" class="ltx_text ltx_font_italic">juice bottle</span>, <span id="S4.SS1.p2.3.4" class="ltx_text ltx_font_italic">liquid soap</span>,
+and <span id="S4.SS1.p2.3.5" class="ltx_text ltx_font_italic">salt</span>, and actions include <span id="S4.SS1.p2.3.6" class="ltx_text ltx_font_italic">open</span>, <span id="S4.SS1.p2.3.7" class="ltx_text ltx_font_italic">close</span>,
+<span id="S4.SS1.p2.3.8" class="ltx_text ltx_font_italic">pour</span>, and <span id="S4.SS1.p2.3.9" class="ltx_text ltx_font_italic">put</span>. Three-dimensional meshes for the
+objects are provided. Although this is a large dataset, a relatively
+small subset of frames (<math id="S4.SS1.p2.1.m1.2" class="ltx_Math" alttext="21,501" display="inline"><semantics id="S4.SS1.p2.1.m1.2a"><mrow id="S4.SS1.p2.1.m1.2.3.2" xref="S4.SS1.p2.1.m1.2.3.1.cmml"><mn id="S4.SS1.p2.1.m1.1.1" xref="S4.SS1.p2.1.m1.1.1.cmml">21</mn><mo id="S4.SS1.p2.1.m1.2.3.2.1" xref="S4.SS1.p2.1.m1.2.3.1.cmml">,</mo><mn id="S4.SS1.p2.1.m1.2.2" xref="S4.SS1.p2.1.m1.2.2.cmml">501</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.1.m1.2b"><list id="S4.SS1.p2.1.m1.2.3.1.cmml" xref="S4.SS1.p2.1.m1.2.3.2"><cn type="integer" id="S4.SS1.p2.1.m1.1.1.cmml" xref="S4.SS1.p2.1.m1.1.1">21</cn><cn type="integer" id="S4.SS1.p2.1.m1.2.2.cmml" xref="S4.SS1.p2.1.m1.2.2">501</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.1.m1.2c">21,501</annotation></semantics></math>) include 6D object pose annotations,
+with <math id="S4.SS1.p2.2.m2.2" class="ltx_Math" alttext="11,019" display="inline"><semantics id="S4.SS1.p2.2.m2.2a"><mrow id="S4.SS1.p2.2.m2.2.3.2" xref="S4.SS1.p2.2.m2.2.3.1.cmml"><mn id="S4.SS1.p2.2.m2.1.1" xref="S4.SS1.p2.2.m2.1.1.cmml">11</mn><mo id="S4.SS1.p2.2.m2.2.3.2.1" xref="S4.SS1.p2.2.m2.2.3.1.cmml">,</mo><mn id="S4.SS1.p2.2.m2.2.2" xref="S4.SS1.p2.2.m2.2.2.cmml">019</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.2.m2.2b"><list id="S4.SS1.p2.2.m2.2.3.1.cmml" xref="S4.SS1.p2.2.m2.2.3.2"><cn type="integer" id="S4.SS1.p2.2.m2.1.1.cmml" xref="S4.SS1.p2.2.m2.1.1">11</cn><cn type="integer" id="S4.SS1.p2.2.m2.2.2.cmml" xref="S4.SS1.p2.2.m2.2.2">019</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.2.m2.2c">11,019</annotation></semantics></math> for training and <math id="S4.SS1.p2.3.m3.2" class="ltx_Math" alttext="10,482" display="inline"><semantics id="S4.SS1.p2.3.m3.2a"><mrow id="S4.SS1.p2.3.m3.2.3.2" xref="S4.SS1.p2.3.m3.2.3.1.cmml"><mn id="S4.SS1.p2.3.m3.1.1" xref="S4.SS1.p2.3.m3.1.1.cmml">10</mn><mo id="S4.SS1.p2.3.m3.2.3.2.1" xref="S4.SS1.p2.3.m3.2.3.1.cmml">,</mo><mn id="S4.SS1.p2.3.m3.2.2" xref="S4.SS1.p2.3.m3.2.2.cmml">482</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.3.m3.2b"><list id="S4.SS1.p2.3.m3.2.3.1.cmml" xref="S4.SS1.p2.3.m3.2.3.2"><cn type="integer" id="S4.SS1.p2.3.m3.1.1.cmml" xref="S4.SS1.p2.3.m3.1.1">10</cn><cn type="integer" id="S4.SS1.p2.3.m3.2.2.cmml" xref="S4.SS1.p2.3.m3.2.2">482</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.3.m3.2c">10,482</annotation></semantics></math> for evaluation.
+The annotation provided for each frame is a 6D vector giving 3D
+translation and rotation for each of the objects. To fit this
+annotation to our graph model, for each object in each frame, we
+translate and rotate the 3D object mesh to the pose given by the
+annotation, and then compute a tight oriented bounding box (simply PCA
+on vertex coordinates). We use the eight 3D
+coordinates of the object box corners as nodes in our graph.</p>
+</div>
+<div id="S4.SS1.p3" class="ltx_para">
+<p id="S4.SS1.p3.3" class="ltx_p">The <span id="S4.SS1.p3.3.1" class="ltx_text ltx_font_bold">HO-3D Dataset</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> also
+contains hands and handled objects but is quite different because it is
+captured from a third-person point-of-view. Hands and objects in these
+videos are smaller because they are further from the
+camera, and their position is less constrained than in first-person videos
+(where people tend to center their field of view around attended objects).
+HO-3D contains <math id="S4.SS1.p3.1.m1.2" class="ltx_Math" alttext="77,558" display="inline"><semantics id="S4.SS1.p3.1.m1.2a"><mrow id="S4.SS1.p3.1.m1.2.3.2" xref="S4.SS1.p3.1.m1.2.3.1.cmml"><mn id="S4.SS1.p3.1.m1.1.1" xref="S4.SS1.p3.1.m1.1.1.cmml">77</mn><mo id="S4.SS1.p3.1.m1.2.3.2.1" xref="S4.SS1.p3.1.m1.2.3.1.cmml">,</mo><mn id="S4.SS1.p3.1.m1.2.2" xref="S4.SS1.p3.1.m1.2.2.cmml">558</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.1.m1.2b"><list id="S4.SS1.p3.1.m1.2.3.1.cmml" xref="S4.SS1.p3.1.m1.2.3.2"><cn type="integer" id="S4.SS1.p3.1.m1.1.1.cmml" xref="S4.SS1.p3.1.m1.1.1">77</cn><cn type="integer" id="S4.SS1.p3.1.m1.2.2.cmml" xref="S4.SS1.p3.1.m1.2.2">558</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.1.m1.2c">77,558</annotation></semantics></math> frames annotated with hands and objects, and
+was collected with 10 subjects and 10 objects. <math id="S4.SS1.p3.2.m2.2" class="ltx_Math" alttext="66,034" display="inline"><semantics id="S4.SS1.p3.2.m2.2a"><mrow id="S4.SS1.p3.2.m2.2.3.2" xref="S4.SS1.p3.2.m2.2.3.1.cmml"><mn id="S4.SS1.p3.2.m2.1.1" xref="S4.SS1.p3.2.m2.1.1.cmml">66</mn><mo id="S4.SS1.p3.2.m2.2.3.2.1" xref="S4.SS1.p3.2.m2.2.3.1.cmml">,</mo><mn id="S4.SS1.p3.2.m2.2.2" xref="S4.SS1.p3.2.m2.2.2.cmml">034</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.2.m2.2b"><list id="S4.SS1.p3.2.m2.2.3.1.cmml" xref="S4.SS1.p3.2.m2.2.3.2"><cn type="integer" id="S4.SS1.p3.2.m2.1.1.cmml" xref="S4.SS1.p3.2.m2.1.1">66</cn><cn type="integer" id="S4.SS1.p3.2.m2.2.2.cmml" xref="S4.SS1.p3.2.m2.2.2">034</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.2.m2.2c">66,034</annotation></semantics></math> frames are
+designated as the training set and <math id="S4.SS1.p3.3.m3.2" class="ltx_Math" alttext="11,524" display="inline"><semantics id="S4.SS1.p3.3.m3.2a"><mrow id="S4.SS1.p3.3.m3.2.3.2" xref="S4.SS1.p3.3.m3.2.3.1.cmml"><mn id="S4.SS1.p3.3.m3.1.1" xref="S4.SS1.p3.3.m3.1.1.cmml">11</mn><mo id="S4.SS1.p3.3.m3.2.3.2.1" xref="S4.SS1.p3.3.m3.2.3.1.cmml">,</mo><mn id="S4.SS1.p3.3.m3.2.2" xref="S4.SS1.p3.3.m3.2.2.cmml">524</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.3.m3.2b"><list id="S4.SS1.p3.3.m3.2.3.1.cmml" xref="S4.SS1.p3.3.m3.2.3.2"><cn type="integer" id="S4.SS1.p3.3.m3.1.1.cmml" xref="S4.SS1.p3.3.m3.1.1">11</cn><cn type="integer" id="S4.SS1.p3.3.m3.2.2.cmml" xref="S4.SS1.p3.3.m3.2.2">524</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.3.m3.2c">11,524</annotation></semantics></math> are for evaluation.
+Hands in the evaluation set of HO-3D are just annotated with the wrist
+coordinates and the full hand is not annotated.</p>
+</div>
+<div id="S4.SS1.p4" class="ltx_para">
+<p id="S4.SS1.p4.3" class="ltx_p"><span id="S4.SS1.p4.3.1" class="ltx_text ltx_font_bold">ObMan</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> is a large
+dataset of synthetically-generated images of hand-object interactions.
+Images in this dataset were produced
+by rendering meshes of hands with selected objects from
+ShapeNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, using an optimization on the
+grasp of the objects.
+ObMan contains <math id="S4.SS1.p4.1.m1.2" class="ltx_Math" alttext="141,550" display="inline"><semantics id="S4.SS1.p4.1.m1.2a"><mrow id="S4.SS1.p4.1.m1.2.3.2" xref="S4.SS1.p4.1.m1.2.3.1.cmml"><mn id="S4.SS1.p4.1.m1.1.1" xref="S4.SS1.p4.1.m1.1.1.cmml">141</mn><mo id="S4.SS1.p4.1.m1.2.3.2.1" xref="S4.SS1.p4.1.m1.2.3.1.cmml">,</mo><mn id="S4.SS1.p4.1.m1.2.2" xref="S4.SS1.p4.1.m1.2.2.cmml">550</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.1.m1.2b"><list id="S4.SS1.p4.1.m1.2.3.1.cmml" xref="S4.SS1.p4.1.m1.2.3.2"><cn type="integer" id="S4.SS1.p4.1.m1.1.1.cmml" xref="S4.SS1.p4.1.m1.1.1">141</cn><cn type="integer" id="S4.SS1.p4.1.m1.2.2.cmml" xref="S4.SS1.p4.1.m1.2.2">550</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.1.m1.2c">141,550</annotation></semantics></math> training,
+<math id="S4.SS1.p4.2.m2.2" class="ltx_Math" alttext="6,463" display="inline"><semantics id="S4.SS1.p4.2.m2.2a"><mrow id="S4.SS1.p4.2.m2.2.3.2" xref="S4.SS1.p4.2.m2.2.3.1.cmml"><mn id="S4.SS1.p4.2.m2.1.1" xref="S4.SS1.p4.2.m2.1.1.cmml">6</mn><mo id="S4.SS1.p4.2.m2.2.3.2.1" xref="S4.SS1.p4.2.m2.2.3.1.cmml">,</mo><mn id="S4.SS1.p4.2.m2.2.2" xref="S4.SS1.p4.2.m2.2.2.cmml">463</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.2.m2.2b"><list id="S4.SS1.p4.2.m2.2.3.1.cmml" xref="S4.SS1.p4.2.m2.2.3.2"><cn type="integer" id="S4.SS1.p4.2.m2.1.1.cmml" xref="S4.SS1.p4.2.m2.1.1">6</cn><cn type="integer" id="S4.SS1.p4.2.m2.2.2.cmml" xref="S4.SS1.p4.2.m2.2.2">463</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.2.m2.2c">6,463</annotation></semantics></math> validation, and <math id="S4.SS1.p4.3.m3.2" class="ltx_Math" alttext="6,285" display="inline"><semantics id="S4.SS1.p4.3.m3.2a"><mrow id="S4.SS1.p4.3.m3.2.3.2" xref="S4.SS1.p4.3.m3.2.3.1.cmml"><mn id="S4.SS1.p4.3.m3.1.1" xref="S4.SS1.p4.3.m3.1.1.cmml">6</mn><mo id="S4.SS1.p4.3.m3.2.3.2.1" xref="S4.SS1.p4.3.m3.2.3.1.cmml">,</mo><mn id="S4.SS1.p4.3.m3.2.2" xref="S4.SS1.p4.3.m3.2.2.cmml">285</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.3.m3.2b"><list id="S4.SS1.p4.3.m3.2.3.1.cmml" xref="S4.SS1.p4.3.m3.2.3.2"><cn type="integer" id="S4.SS1.p4.3.m3.1.1.cmml" xref="S4.SS1.p4.3.m3.1.1">6</cn><cn type="integer" id="S4.SS1.p4.3.m3.2.2.cmml" xref="S4.SS1.p4.3.m3.2.2">285</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.3.m3.2c">6,285</annotation></semantics></math>
+evaluation frames.
+Despite the large-scale of the annotated data, we found that models trained with these synthetic images do
+not generalize
+well to real images. Nevertheless, we found it helpful to pretrain our
+model on the large-scale data of ObMan, and then fine-tune using real images.</p>
+</div>
+<div id="S4.SS1.p5" class="ltx_para">
+<p id="S4.SS1.p5.1" class="ltx_p">All of these datasets use 21 joints model for hands which contains one joints
+for the wrist and 4 joints for each of the fingers.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Implementation Details</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">Because of the nature of first-person video, hands often leave the
+field of view, and thus roughly half of the frames in the First-Person
+Hand Action dataset have at least one keypoint outside of the frame
+(Figure <a href="#S4.F4" title="Figure 4 ‣ 4.2 Implementation Details ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>). Because of this, we found that
+detection-based models are not very helpful in this dataset. Thus we
+use a regression-based model to find the initial 2D coordinates. To
+avoid overfitting, we use a lightweight ResNet which gave better
+generalization. This lightweight model is also fast, allowing us
+to run our model in near real-time. For both datasets, we use the
+official training and evaluation splits, and pretrain on
+ObMan <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>.</p>
+</div>
+<figure id="S4.F4" class="ltx_figure"><img src="/html/2004.00060/assets/x4.png" id="S4.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="166" height="103" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Scatter plot of keypoint coordinates in the First Person Hand Action
+dataset. The red dashed rectangle denotes the image frame. Since
+many points are outside the image boundary, the detection-based
+models did not work well on this dataset.</figcaption>
+</figure>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">Since HOPE-Net has different numbers of parameters and complexity, we
+train the image encoder and graph parts separately. The 2D to 3D
+converter network can be trained separately because
+it is not dependent to the annotated image. In addition to the samples
+in the FPHA dataset, we augment the 2D points with Gaussian noise (<math id="S4.SS2.p2.1.m1.2" class="ltx_Math" alttext="\mu=0,\sigma=10" display="inline"><semantics id="S4.SS2.p2.1.m1.2a"><mrow id="S4.SS2.p2.1.m1.2.2.2" xref="S4.SS2.p2.1.m1.2.2.3.cmml"><mrow id="S4.SS2.p2.1.m1.1.1.1.1" xref="S4.SS2.p2.1.m1.1.1.1.1.cmml"><mi id="S4.SS2.p2.1.m1.1.1.1.1.2" xref="S4.SS2.p2.1.m1.1.1.1.1.2.cmml">μ</mi><mo id="S4.SS2.p2.1.m1.1.1.1.1.1" xref="S4.SS2.p2.1.m1.1.1.1.1.1.cmml">=</mo><mn id="S4.SS2.p2.1.m1.1.1.1.1.3" xref="S4.SS2.p2.1.m1.1.1.1.1.3.cmml">0</mn></mrow><mo id="S4.SS2.p2.1.m1.2.2.2.3" xref="S4.SS2.p2.1.m1.2.2.3a.cmml">,</mo><mrow id="S4.SS2.p2.1.m1.2.2.2.2" xref="S4.SS2.p2.1.m1.2.2.2.2.cmml"><mi id="S4.SS2.p2.1.m1.2.2.2.2.2" xref="S4.SS2.p2.1.m1.2.2.2.2.2.cmml">σ</mi><mo id="S4.SS2.p2.1.m1.2.2.2.2.1" xref="S4.SS2.p2.1.m1.2.2.2.2.1.cmml">=</mo><mn id="S4.SS2.p2.1.m1.2.2.2.2.3" xref="S4.SS2.p2.1.m1.2.2.2.2.3.cmml">10</mn></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.1.m1.2b"><apply id="S4.SS2.p2.1.m1.2.2.3.cmml" xref="S4.SS2.p2.1.m1.2.2.2"><csymbol cd="ambiguous" id="S4.SS2.p2.1.m1.2.2.3a.cmml" xref="S4.SS2.p2.1.m1.2.2.2.3">formulae-sequence</csymbol><apply id="S4.SS2.p2.1.m1.1.1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1"><eq id="S4.SS2.p2.1.m1.1.1.1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1.1"></eq><ci id="S4.SS2.p2.1.m1.1.1.1.1.2.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1.2">𝜇</ci><cn type="integer" id="S4.SS2.p2.1.m1.1.1.1.1.3.cmml" xref="S4.SS2.p2.1.m1.1.1.1.1.3">0</cn></apply><apply id="S4.SS2.p2.1.m1.2.2.2.2.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2"><eq id="S4.SS2.p2.1.m1.2.2.2.2.1.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2.1"></eq><ci id="S4.SS2.p2.1.m1.2.2.2.2.2.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2.2">𝜎</ci><cn type="integer" id="S4.SS2.p2.1.m1.2.2.2.2.3.cmml" xref="S4.SS2.p2.1.m1.2.2.2.2.3">10</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.1.m1.2c">\mu=0,\sigma=10</annotation></semantics></math>)
+to help improve
+robustness to errors.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.10" class="ltx_p">For both FPHA and HO-3D datasets
+we train the ResNet model with an initial learning rate of <math id="S4.SS2.p3.1.m1.1" class="ltx_Math" alttext="0.001" display="inline"><semantics id="S4.SS2.p3.1.m1.1a"><mn id="S4.SS2.p3.1.m1.1.1" xref="S4.SS2.p3.1.m1.1.1.cmml">0.001</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.1.m1.1b"><cn type="float" id="S4.SS2.p3.1.m1.1.1.cmml" xref="S4.SS2.p3.1.m1.1.1">0.001</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.1.m1.1c">0.001</annotation></semantics></math>
+and multiply it by <math id="S4.SS2.p3.2.m2.1" class="ltx_Math" alttext="0.9" display="inline"><semantics id="S4.SS2.p3.2.m2.1a"><mn id="S4.SS2.p3.2.m2.1.1" xref="S4.SS2.p3.2.m2.1.1.cmml">0.9</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.2.m2.1b"><cn type="float" id="S4.SS2.p3.2.m2.1.1.cmml" xref="S4.SS2.p3.2.m2.1.1">0.9</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.2.m2.1c">0.9</annotation></semantics></math> every <math id="S4.SS2.p3.3.m3.1" class="ltx_Math" alttext="100" display="inline"><semantics id="S4.SS2.p3.3.m3.1a"><mn id="S4.SS2.p3.3.m3.1.1" xref="S4.SS2.p3.3.m3.1.1.cmml">100</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.3.m3.1b"><cn type="integer" id="S4.SS2.p3.3.m3.1.1.cmml" xref="S4.SS2.p3.3.m3.1.1">100</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.3.m3.1c">100</annotation></semantics></math> steps. We train ResNet for
+<math id="S4.SS2.p3.4.m4.1" class="ltx_Math" alttext="5000" display="inline"><semantics id="S4.SS2.p3.4.m4.1a"><mn id="S4.SS2.p3.4.m4.1.1" xref="S4.SS2.p3.4.m4.1.1.cmml">5000</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.4.m4.1b"><cn type="integer" id="S4.SS2.p3.4.m4.1.1.cmml" xref="S4.SS2.p3.4.m4.1.1">5000</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.4.m4.1c">5000</annotation></semantics></math> epochs and the graph convolutional
+network for <math id="S4.SS2.p3.5.m5.2" class="ltx_Math" alttext="10,000" display="inline"><semantics id="S4.SS2.p3.5.m5.2a"><mrow id="S4.SS2.p3.5.m5.2.3.2" xref="S4.SS2.p3.5.m5.2.3.1.cmml"><mn id="S4.SS2.p3.5.m5.1.1" xref="S4.SS2.p3.5.m5.1.1.cmml">10</mn><mo id="S4.SS2.p3.5.m5.2.3.2.1" xref="S4.SS2.p3.5.m5.2.3.1.cmml">,</mo><mn id="S4.SS2.p3.5.m5.2.2" xref="S4.SS2.p3.5.m5.2.2.cmml">000</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.5.m5.2b"><list id="S4.SS2.p3.5.m5.2.3.1.cmml" xref="S4.SS2.p3.5.m5.2.3.2"><cn type="integer" id="S4.SS2.p3.5.m5.1.1.cmml" xref="S4.SS2.p3.5.m5.1.1">10</cn><cn type="integer" id="S4.SS2.p3.5.m5.2.2.cmml" xref="S4.SS2.p3.5.m5.2.2">000</cn></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.5.m5.2c">10,000</annotation></semantics></math> epochs, starting from a learning rate of
+<math id="S4.SS2.p3.6.m6.1" class="ltx_Math" alttext="0.001" display="inline"><semantics id="S4.SS2.p3.6.m6.1a"><mn id="S4.SS2.p3.6.m6.1.1" xref="S4.SS2.p3.6.m6.1.1.cmml">0.001</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.6.m6.1b"><cn type="float" id="S4.SS2.p3.6.m6.1.1.cmml" xref="S4.SS2.p3.6.m6.1.1">0.001</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.6.m6.1c">0.001</annotation></semantics></math> and multiplying by <math id="S4.SS2.p3.7.m7.1" class="ltx_Math" alttext="0.1" display="inline"><semantics id="S4.SS2.p3.7.m7.1a"><mn id="S4.SS2.p3.7.m7.1.1" xref="S4.SS2.p3.7.m7.1.1.cmml">0.1</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.7.m7.1b"><cn type="float" id="S4.SS2.p3.7.m7.1.1.cmml" xref="S4.SS2.p3.7.m7.1.1">0.1</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.7.m7.1c">0.1</annotation></semantics></math> every <math id="S4.SS2.p3.8.m8.1" class="ltx_Math" alttext="4000" display="inline"><semantics id="S4.SS2.p3.8.m8.1a"><mn id="S4.SS2.p3.8.m8.1.1" xref="S4.SS2.p3.8.m8.1.1.cmml">4000</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.8.m8.1b"><cn type="integer" id="S4.SS2.p3.8.m8.1.1.cmml" xref="S4.SS2.p3.8.m8.1.1">4000</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.8.m8.1c">4000</annotation></semantics></math> steps. Finally we
+train the model end-to-end for another <math id="S4.SS2.p3.9.m9.1" class="ltx_Math" alttext="5000" display="inline"><semantics id="S4.SS2.p3.9.m9.1a"><mn id="S4.SS2.p3.9.m9.1.1" xref="S4.SS2.p3.9.m9.1.1.cmml">5000</mn><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.9.m9.1b"><cn type="integer" id="S4.SS2.p3.9.m9.1.1.cmml" xref="S4.SS2.p3.9.m9.1.1">5000</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.9.m9.1c">5000</annotation></semantics></math> epochs. All the images
+are resized to <math id="S4.SS2.p3.10.m10.1" class="ltx_Math" alttext="224\times 224" display="inline"><semantics id="S4.SS2.p3.10.m10.1a"><mrow id="S4.SS2.p3.10.m10.1.1" xref="S4.SS2.p3.10.m10.1.1.cmml"><mn id="S4.SS2.p3.10.m10.1.1.2" xref="S4.SS2.p3.10.m10.1.1.2.cmml">224</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS2.p3.10.m10.1.1.1" xref="S4.SS2.p3.10.m10.1.1.1.cmml">×</mo><mn id="S4.SS2.p3.10.m10.1.1.3" xref="S4.SS2.p3.10.m10.1.1.3.cmml">224</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p3.10.m10.1b"><apply id="S4.SS2.p3.10.m10.1.1.cmml" xref="S4.SS2.p3.10.m10.1.1"><times id="S4.SS2.p3.10.m10.1.1.1.cmml" xref="S4.SS2.p3.10.m10.1.1.1"></times><cn type="integer" id="S4.SS2.p3.10.m10.1.1.2.cmml" xref="S4.SS2.p3.10.m10.1.1.2">224</cn><cn type="integer" id="S4.SS2.p3.10.m10.1.1.3.cmml" xref="S4.SS2.p3.10.m10.1.1.3">224</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p3.10.m10.1c">224\times 224</annotation></semantics></math> pixels and passed to the ResNet. All
+learning and inference was implemented in PyTorch.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Metrics</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">Similar to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>, we evaluated our model using
+percentage of correct pose (PCP) for both 2D and 3D coordinates. In
+this metric, a pose is considered correct if the average
+distance to the ground truth pose is less than a
+threshold.</p>
+</div>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span>Hand-Object Pose Estimation Results</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.1" class="ltx_p">We now report the performance of our model in hand and object
+pose estimation on our two datasets.
+Figure <a href="#S4.F5" title="Figure 5 ‣ 4.4 Hand-Object Pose Estimation Results ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> presents
+the percentage of correct object pose for each pixel threshold on the
+First-Person Hand Action dataset.
+As we can see in
+this graph, the 2D object pose estimates produced by the HOPE-Net model
+outperform the state-of-the-art model of Tekin <em id="S4.SS4.p1.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S4.SS4.p1.1.2" class="ltx_text"></span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>
+for 2D object pose estimation, even though we do not
+use an object locator and we operate on single frames without
+using temporal constraints.
+Moreover, our
+architecture is lightweight and faster to run.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure"><img src="/html/2004.00060/assets/x5.png" id="S4.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="178" height="122" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>The percentage of correct 2D object pose of our model
+on the First-Person Hand Action dataset compared to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>
+and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>. The graph convolutional layers
+helped the model to predict more accurate coordinates.</figcaption>
+</figure>
+<div id="S4.SS4.p2" class="ltx_para">
+<p id="S4.SS4.p2.1" class="ltx_p">Figure <a href="#S4.F6" title="Figure 6 ‣ 4.4 Hand-Object Pose Estimation Results ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> presents
+the percentage of correct 3D poses for various thresholds (measured in millimeters) on
+the First-Person Hand Action dataset. The results show that
+the HOPE-Net model outperforms Tekin <em id="S4.SS4.p2.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S4.SS4.p2.1.2" class="ltx_text"></span>’s RGB-based
+model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite> and Herando
+<em id="S4.SS4.p2.1.3" class="ltx_emph ltx_font_italic">et al</em>.<span id="S4.SS4.p2.1.4" class="ltx_text"></span>’s <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> depth-based model in 3D pose
+estimation, even without using an object localizer or temporal
+information.</p>
+</div>
+<div id="S4.SS4.p3" class="ltx_para">
+<p id="S4.SS4.p3.2" class="ltx_p">We also tested our graph model with various other inputs,
+including ground truth 2D
+coordinates, as well as ground truth 2D coordinates with Gaussian noise added (with zero mean and
+<math id="S4.SS4.p3.1.m1.1" class="ltx_Math" alttext="\sigma=20" display="inline"><semantics id="S4.SS4.p3.1.m1.1a"><mrow id="S4.SS4.p3.1.m1.1.1" xref="S4.SS4.p3.1.m1.1.1.cmml"><mi id="S4.SS4.p3.1.m1.1.1.2" xref="S4.SS4.p3.1.m1.1.1.2.cmml">σ</mi><mo id="S4.SS4.p3.1.m1.1.1.1" xref="S4.SS4.p3.1.m1.1.1.1.cmml">=</mo><mn id="S4.SS4.p3.1.m1.1.1.3" xref="S4.SS4.p3.1.m1.1.1.3.cmml">20</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p3.1.m1.1b"><apply id="S4.SS4.p3.1.m1.1.1.cmml" xref="S4.SS4.p3.1.m1.1.1"><eq id="S4.SS4.p3.1.m1.1.1.1.cmml" xref="S4.SS4.p3.1.m1.1.1.1"></eq><ci id="S4.SS4.p3.1.m1.1.1.2.cmml" xref="S4.SS4.p3.1.m1.1.1.2">𝜎</ci><cn type="integer" id="S4.SS4.p3.1.m1.1.1.3.cmml" xref="S4.SS4.p3.1.m1.1.1.3">20</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p3.1.m1.1c">\sigma=20</annotation></semantics></math> and <math id="S4.SS4.p3.2.m2.1" class="ltx_Math" alttext="\sigma=50" display="inline"><semantics id="S4.SS4.p3.2.m2.1a"><mrow id="S4.SS4.p3.2.m2.1.1" xref="S4.SS4.p3.2.m2.1.1.cmml"><mi id="S4.SS4.p3.2.m2.1.1.2" xref="S4.SS4.p3.2.m2.1.1.2.cmml">σ</mi><mo id="S4.SS4.p3.2.m2.1.1.1" xref="S4.SS4.p3.2.m2.1.1.1.cmml">=</mo><mn id="S4.SS4.p3.2.m2.1.1.3" xref="S4.SS4.p3.2.m2.1.1.3.cmml">50</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p3.2.m2.1b"><apply id="S4.SS4.p3.2.m2.1.1.cmml" xref="S4.SS4.p3.2.m2.1.1"><eq id="S4.SS4.p3.2.m2.1.1.1.cmml" xref="S4.SS4.p3.2.m2.1.1.1"></eq><ci id="S4.SS4.p3.2.m2.1.1.2.cmml" xref="S4.SS4.p3.2.m2.1.1.2">𝜎</ci><cn type="integer" id="S4.SS4.p3.2.m2.1.1.3.cmml" xref="S4.SS4.p3.2.m2.1.1.3">50</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p3.2.m2.1c">\sigma=50</annotation></semantics></math>).
+Figure <a href="#S4.F6" title="Figure 6 ‣ 4.4 Hand-Object Pose Estimation Results ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> presents the results. We note that the graph model is able to effectively
+remove the Gaussian noise from the keypoint coordinates.</p>
+</div>
+<div id="S4.SS4.p4" class="ltx_para">
+<p id="S4.SS4.p4.1" class="ltx_p">Figure <a href="#S4.F7" title="Figure 7 ‣ 4.4 Hand-Object Pose Estimation Results ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a> shows selected qualitative results of our
+model on the First-Person Hand Action dataset.
+Figure <a href="#S4.F8" title="Figure 8 ‣ 4.4 Hand-Object Pose Estimation Results ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a> breaks out the
+error of the 2D to 3D converter for each finger and also for
+each kind of joint of the hand.</p>
+</div>
+<div id="S4.SS4.p5" class="ltx_para">
+<p id="S4.SS4.p5.2" class="ltx_p">We also tested on the third-person videos of the very recent HO-3D dataset.
+Although the locations of hands and objects in the images vary more in
+HO-3D, we found that HOPE-Net performs better, perhaps because of the size of the dataset.
+The Area Under the
+Curve (AUC) score of HOPE-Net is <math id="S4.SS4.p5.1.m1.1" class="ltx_Math" alttext="0.712" display="inline"><semantics id="S4.SS4.p5.1.m1.1a"><mn id="S4.SS4.p5.1.m1.1.1" xref="S4.SS4.p5.1.m1.1.1.cmml">0.712</mn><annotation-xml encoding="MathML-Content" id="S4.SS4.p5.1.m1.1b"><cn type="float" id="S4.SS4.p5.1.m1.1.1.cmml" xref="S4.SS4.p5.1.m1.1.1">0.712</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p5.1.m1.1c">0.712</annotation></semantics></math> for 2D pose
+and <math id="S4.SS4.p5.2.m2.1" class="ltx_Math" alttext="0.967" display="inline"><semantics id="S4.SS4.p5.2.m2.1a"><mn id="S4.SS4.p5.2.m2.1.1" xref="S4.SS4.p5.2.m2.1.1.cmml">0.967</mn><annotation-xml encoding="MathML-Content" id="S4.SS4.p5.2.m2.1b"><cn type="float" id="S4.SS4.p5.2.m2.1.1.cmml" xref="S4.SS4.p5.2.m2.1.1">0.967</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p5.2.m2.1c">0.967</annotation></semantics></math> for 3D pose estimation.
+Note that hands in the evaluation set of HO-3D are just annotated with
+the wrist (without the full hand annotation). Therefore the mentioned results
+are just for wrist keypoint.</p>
+</div>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2004.00060/assets/x6.png" id="S4.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="178" height="122" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>The percentage of correct 3D hand pose of our model on
+the First-Person Hand Action dataset compared to the RGB-based technique of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>
+and the depth-based technique of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>.
+Our model works well on roughly accurate 2D estimates.</figcaption>
+</figure>
+<figure id="S4.F7" class="ltx_figure">
+<table id="S4.F7.30" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.F7.6.6" class="ltx_tr">
+<td id="S4.F7.1.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann1.png" id="S4.F7.1.1.1.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.2.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x7.png" id="S4.F7.2.2.2.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.3.3.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann48.png" id="S4.F7.3.3.3.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.4.4.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x8.png" id="S4.F7.4.4.4.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.5.5.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann69.png" id="S4.F7.5.5.5.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.6.6.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x9.png" id="S4.F7.6.6.6.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+</tr>
+<tr id="S4.F7.12.12" class="ltx_tr">
+<td id="S4.F7.7.7.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann37.png" id="S4.F7.7.7.1.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.8.8.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x10.png" id="S4.F7.8.8.2.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.9.9.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann36.png" id="S4.F7.9.9.3.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.10.10.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x11.png" id="S4.F7.10.10.4.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.11.11.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann65.png" id="S4.F7.11.11.5.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.12.12.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x12.png" id="S4.F7.12.12.6.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+</tr>
+<tr id="S4.F7.18.18" class="ltx_tr">
+<td id="S4.F7.13.13.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann12.png" id="S4.F7.13.13.1.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.14.14.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x13.png" id="S4.F7.14.14.2.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.15.15.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann59.png" id="S4.F7.15.15.3.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.16.16.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x14.png" id="S4.F7.16.16.4.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.17.17.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann11.png" id="S4.F7.17.17.5.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.18.18.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x15.png" id="S4.F7.18.18.6.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+</tr>
+<tr id="S4.F7.24.24" class="ltx_tr">
+<td id="S4.F7.19.19.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann28.png" id="S4.F7.19.19.1.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.20.20.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x16.png" id="S4.F7.20.20.2.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.21.21.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann39.png" id="S4.F7.21.21.3.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.22.22.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x17.png" id="S4.F7.22.22.4.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.23.23.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann75.png" id="S4.F7.23.23.5.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.24.24.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x18.png" id="S4.F7.24.24.6.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+</tr>
+<tr id="S4.F7.30.30" class="ltx_tr">
+<td id="S4.F7.25.25.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann3.png" id="S4.F7.25.25.1.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.26.26.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x19.png" id="S4.F7.26.26.2.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.27.27.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann13.png" id="S4.F7.27.27.3.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.28.28.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x20.png" id="S4.F7.28.28.4.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+<td id="S4.F7.29.29.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/figures/2dann4.png" id="S4.F7.29.29.5.g1" class="ltx_graphics ltx_img_landscape" width="87" height="49" alt="Refer to caption"></td>
+<td id="S4.F7.30.30.6" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" style="padding-left:1.0pt;padding-right:1.0pt;"><img src="/html/2004.00060/assets/x21.png" id="S4.F7.30.30.6.g1" class="ltx_graphics ltx_img_landscape" width="56" height="37" alt="Refer to caption"></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Qualitative 2D and 3D results of HOPE-Net on the First-Person Hand Action
+dataset. The estimated poses are shown in color,
+and the ground truth is shown in black.
+The last row includes three failure cases.
+</figcaption>
+</figure>
+<figure id="S4.F8" class="ltx_figure">
+<table id="S4.F8.2" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.F8.2.2" class="ltx_tr">
+<td id="S4.F8.1.1.1" class="ltx_td ltx_align_center"><img src="/html/2004.00060/assets/x22.png" id="S4.F8.1.1.1.g1" class="ltx_graphics ltx_img_square" width="85" height="91" alt="Refer to caption"></td>
+<td id="S4.F8.2.2.2" class="ltx_td ltx_align_center"><img src="/html/2004.00060/assets/x23.png" id="S4.F8.2.2.2.g1" class="ltx_graphics ltx_img_square" width="85" height="91" alt="Refer to caption"></td>
+</tr>
+<tr id="S4.F8.2.3.1" class="ltx_tr">
+<td id="S4.F8.2.3.1.1" class="ltx_td ltx_align_center">(a)</td>
+<td id="S4.F8.2.3.1.2" class="ltx_td ltx_align_center">(b)</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>Average 3D pose estimation errors broken out across (a) each joint of the hand and (b) each finger.
+Note that MCP, PIP, and DIP denote the 3 joints located between the wrist and fingertip (TIP), in that order.
+</figcaption>
+</figure>
+<figure id="S4.F9" class="ltx_figure">
+<table id="S4.F9.10" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.F9.5.5" class="ltx_tr">
+<td id="S4.F9.1.1.1" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><img src="/html/2004.00060/assets/x24.png" id="S4.F9.1.1.1.g1" class="ltx_graphics ltx_img_square" width="68" height="68" alt="Refer to caption"></td>
+<td id="S4.F9.2.2.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><img src="/html/2004.00060/assets/x25.png" id="S4.F9.2.2.2.g1" class="ltx_graphics ltx_img_square" width="68" height="68" alt="Refer to caption"></td>
+<td id="S4.F9.3.3.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><img src="/html/2004.00060/assets/x26.png" id="S4.F9.3.3.3.g1" class="ltx_graphics ltx_img_square" width="67" height="68" alt="Refer to caption"></td>
+<td id="S4.F9.4.4.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><img src="/html/2004.00060/assets/x27.png" id="S4.F9.4.4.4.g1" class="ltx_graphics ltx_img_square" width="72" height="68" alt="Refer to caption"></td>
+<td id="S4.F9.5.5.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><img src="/html/2004.00060/assets/x28.png" id="S4.F9.5.5.5.g1" class="ltx_graphics ltx_img_square" width="75" height="68" alt="Refer to caption"></td>
+</tr>
+<tr id="S4.F9.10.10" class="ltx_tr">
+<td id="S4.F9.6.6.1" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><math id="S4.F9.6.6.1.m1.1" class="ltx_Math" alttext="A_{0}" display="inline"><semantics id="S4.F9.6.6.1.m1.1a"><msub id="S4.F9.6.6.1.m1.1.1" xref="S4.F9.6.6.1.m1.1.1.cmml"><mi id="S4.F9.6.6.1.m1.1.1.2" xref="S4.F9.6.6.1.m1.1.1.2.cmml">A</mi><mn id="S4.F9.6.6.1.m1.1.1.3" xref="S4.F9.6.6.1.m1.1.1.3.cmml">0</mn></msub><annotation-xml encoding="MathML-Content" id="S4.F9.6.6.1.m1.1b"><apply id="S4.F9.6.6.1.m1.1.1.cmml" xref="S4.F9.6.6.1.m1.1.1"><csymbol cd="ambiguous" id="S4.F9.6.6.1.m1.1.1.1.cmml" xref="S4.F9.6.6.1.m1.1.1">subscript</csymbol><ci id="S4.F9.6.6.1.m1.1.1.2.cmml" xref="S4.F9.6.6.1.m1.1.1.2">𝐴</ci><cn type="integer" id="S4.F9.6.6.1.m1.1.1.3.cmml" xref="S4.F9.6.6.1.m1.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F9.6.6.1.m1.1c">A_{0}</annotation></semantics></math></td>
+<td id="S4.F9.7.7.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><math id="S4.F9.7.7.2.m1.1" class="ltx_Math" alttext="A_{1}" display="inline"><semantics id="S4.F9.7.7.2.m1.1a"><msub id="S4.F9.7.7.2.m1.1.1" xref="S4.F9.7.7.2.m1.1.1.cmml"><mi id="S4.F9.7.7.2.m1.1.1.2" xref="S4.F9.7.7.2.m1.1.1.2.cmml">A</mi><mn id="S4.F9.7.7.2.m1.1.1.3" xref="S4.F9.7.7.2.m1.1.1.3.cmml">1</mn></msub><annotation-xml encoding="MathML-Content" id="S4.F9.7.7.2.m1.1b"><apply id="S4.F9.7.7.2.m1.1.1.cmml" xref="S4.F9.7.7.2.m1.1.1"><csymbol cd="ambiguous" id="S4.F9.7.7.2.m1.1.1.1.cmml" xref="S4.F9.7.7.2.m1.1.1">subscript</csymbol><ci id="S4.F9.7.7.2.m1.1.1.2.cmml" xref="S4.F9.7.7.2.m1.1.1.2">𝐴</ci><cn type="integer" id="S4.F9.7.7.2.m1.1.1.3.cmml" xref="S4.F9.7.7.2.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F9.7.7.2.m1.1c">A_{1}</annotation></semantics></math></td>
+<td id="S4.F9.8.8.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><math id="S4.F9.8.8.3.m1.1" class="ltx_Math" alttext="A_{2}" display="inline"><semantics id="S4.F9.8.8.3.m1.1a"><msub id="S4.F9.8.8.3.m1.1.1" xref="S4.F9.8.8.3.m1.1.1.cmml"><mi id="S4.F9.8.8.3.m1.1.1.2" xref="S4.F9.8.8.3.m1.1.1.2.cmml">A</mi><mn id="S4.F9.8.8.3.m1.1.1.3" xref="S4.F9.8.8.3.m1.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S4.F9.8.8.3.m1.1b"><apply id="S4.F9.8.8.3.m1.1.1.cmml" xref="S4.F9.8.8.3.m1.1.1"><csymbol cd="ambiguous" id="S4.F9.8.8.3.m1.1.1.1.cmml" xref="S4.F9.8.8.3.m1.1.1">subscript</csymbol><ci id="S4.F9.8.8.3.m1.1.1.2.cmml" xref="S4.F9.8.8.3.m1.1.1.2">𝐴</ci><cn type="integer" id="S4.F9.8.8.3.m1.1.1.3.cmml" xref="S4.F9.8.8.3.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F9.8.8.3.m1.1c">A_{2}</annotation></semantics></math></td>
+<td id="S4.F9.9.9.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><math id="S4.F9.9.9.4.m1.1" class="ltx_Math" alttext="A_{3}" display="inline"><semantics id="S4.F9.9.9.4.m1.1a"><msub id="S4.F9.9.9.4.m1.1.1" xref="S4.F9.9.9.4.m1.1.1.cmml"><mi id="S4.F9.9.9.4.m1.1.1.2" xref="S4.F9.9.9.4.m1.1.1.2.cmml">A</mi><mn id="S4.F9.9.9.4.m1.1.1.3" xref="S4.F9.9.9.4.m1.1.1.3.cmml">3</mn></msub><annotation-xml encoding="MathML-Content" id="S4.F9.9.9.4.m1.1b"><apply id="S4.F9.9.9.4.m1.1.1.cmml" xref="S4.F9.9.9.4.m1.1.1"><csymbol cd="ambiguous" id="S4.F9.9.9.4.m1.1.1.1.cmml" xref="S4.F9.9.9.4.m1.1.1">subscript</csymbol><ci id="S4.F9.9.9.4.m1.1.1.2.cmml" xref="S4.F9.9.9.4.m1.1.1.2">𝐴</ci><cn type="integer" id="S4.F9.9.9.4.m1.1.1.3.cmml" xref="S4.F9.9.9.4.m1.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F9.9.9.4.m1.1c">A_{3}</annotation></semantics></math></td>
+<td id="S4.F9.10.10.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;"><math id="S4.F9.10.10.5.m1.1" class="ltx_Math" alttext="A_{4}" display="inline"><semantics id="S4.F9.10.10.5.m1.1a"><msub id="S4.F9.10.10.5.m1.1.1" xref="S4.F9.10.10.5.m1.1.1.cmml"><mi id="S4.F9.10.10.5.m1.1.1.2" xref="S4.F9.10.10.5.m1.1.1.2.cmml">A</mi><mn id="S4.F9.10.10.5.m1.1.1.3" xref="S4.F9.10.10.5.m1.1.1.3.cmml">4</mn></msub><annotation-xml encoding="MathML-Content" id="S4.F9.10.10.5.m1.1b"><apply id="S4.F9.10.10.5.m1.1.1.cmml" xref="S4.F9.10.10.5.m1.1.1"><csymbol cd="ambiguous" id="S4.F9.10.10.5.m1.1.1.1.cmml" xref="S4.F9.10.10.5.m1.1.1">subscript</csymbol><ci id="S4.F9.10.10.5.m1.1.1.2.cmml" xref="S4.F9.10.10.5.m1.1.1.2">𝐴</ci><cn type="integer" id="S4.F9.10.10.5.m1.1.1.3.cmml" xref="S4.F9.10.10.5.m1.1.1.3">4</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F9.10.10.5.m1.1c">A_{4}</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>Visualization of the learned adjacency matrices of the
+adaptive graph convolution layers. For instance, we see in the
+<math id="S4.F9.12.m1.1" class="ltx_Math" alttext="A_{0}" display="inline"><semantics id="S4.F9.12.m1.1b"><msub id="S4.F9.12.m1.1.1" xref="S4.F9.12.m1.1.1.cmml"><mi id="S4.F9.12.m1.1.1.2" xref="S4.F9.12.m1.1.1.2.cmml">A</mi><mn id="S4.F9.12.m1.1.1.3" xref="S4.F9.12.m1.1.1.3.cmml">0</mn></msub><annotation-xml encoding="MathML-Content" id="S4.F9.12.m1.1c"><apply id="S4.F9.12.m1.1.1.cmml" xref="S4.F9.12.m1.1.1"><csymbol cd="ambiguous" id="S4.F9.12.m1.1.1.1.cmml" xref="S4.F9.12.m1.1.1">subscript</csymbol><ci id="S4.F9.12.m1.1.1.2.cmml" xref="S4.F9.12.m1.1.1.2">𝐴</ci><cn type="integer" id="S4.F9.12.m1.1.1.3.cmml" xref="S4.F9.12.m1.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F9.12.m1.1d">A_{0}</annotation></semantics></math> matrix that the corners of the object bounding box (row and
+column indices 21 through 29) are highly dependent on one another, and also there is a
+relatively strong connection between fingertips.</figcaption>
+</figure>
+</section>
+<section id="S4.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.5 </span>Adaptive Graph U-Net Ablation Study</h3>
+
+<div id="S4.SS5.p1" class="ltx_para">
+<p id="S4.SS5.p1.1" class="ltx_p">We also conducted an ablation study of our Adaptive Graph U-Net to
+identify which components were important for achieving our results.
+We first compare our model to other models, and then we evaluate the
+influence of the adjacency matrix initialization on the adaptive Graph
+U-Net performance.</p>
+</div>
+<div id="S4.SS5.p2" class="ltx_para">
+<p id="S4.SS5.p2.1" class="ltx_p">To show the effectiveness of our U-Net structure, we compared it
+to two different models, one with three Fully Connected Layers and one with three Graph
+Convolutional Layers without pooling and unpooling. We were interested
+in the importance of each of our graph convolutional models in the
+3D output. Each of these models is trained to convert 2D coordinates
+of the hand and object keypoints to 3D.
+Table <a href="#S4.T1" title="Table 1 ‣ 4.5 Adaptive Graph U-Net Ablation Study ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> shows the results.
+The
+adaptive Graph U-Net performs better than the other methods by a
+large margin. This large margin seems to come from the
+U-Net structure and the pooling and unpooling layers.</p>
+</div>
+<div id="S4.SS5.p3" class="ltx_para">
+<p id="S4.SS5.p3.1" class="ltx_p">To understand the effect of our graph pooling layer, we compared it
+with Gao <em id="S4.SS5.p3.1.1" class="ltx_emph ltx_font_italic">et al</em>.<span id="S4.SS5.p3.1.2" class="ltx_text"></span>’s <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> gPool, and also with fixed
+pooled nodes which do not break the graph into
+pieces. Table <a href="#S4.T2" title="Table 2 ‣ 4.5 Adaptive Graph U-Net Ablation Study ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> compares the performance of different
+graph pooling methods. We see that by using a more efficient training
+algorithm and also by not breaking apart the graph after pooling, our
+pooling layer performs better than gPool.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Average error on 3D hand and object pose estimation given
+2D pose. The first row is a multi-layer perceptron and the
+second row is a 3-layered graph convolution without pooling
+and unpooling. The Adaptive Graph U-Net structure
+has the best performance.</figcaption>
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt"><span id="S4.T1.1.1.1.1.1" class="ltx_text" style="font-size:90%;">Architecture</span></th>
+<th id="S4.T1.1.1.1.2" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt"><span id="S4.T1.1.1.1.2.1" class="ltx_text" style="font-size:90%;">Average Error (mm)</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.2.1" class="ltx_tr">
+<th id="S4.T1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t"><span id="S4.T1.1.2.1.1.1" class="ltx_text" style="font-size:90%;">Fully Connected</span></th>
+<td id="S4.T1.1.2.1.2" class="ltx_td ltx_align_right ltx_border_t"><span id="S4.T1.1.2.1.2.1" class="ltx_text" style="font-size:90%;">185.18</span></td>
+</tr>
+<tr id="S4.T1.1.3.2" class="ltx_tr">
+<th id="S4.T1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row"><span id="S4.T1.1.3.2.1.1" class="ltx_text" style="font-size:90%;">Adaptive Graph Convolution</span></th>
+<td id="S4.T1.1.3.2.2" class="ltx_td ltx_align_right"><span id="S4.T1.1.3.2.2.1" class="ltx_text" style="font-size:90%;">68.93</span></td>
+</tr>
+<tr id="S4.T1.1.4.3" class="ltx_tr">
+<th id="S4.T1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb"><span id="S4.T1.1.4.3.1.1" class="ltx_text" style="font-size:90%;">Adaptive Graph U-Net</span></th>
+<td id="S4.T1.1.4.3.2" class="ltx_td ltx_align_right ltx_border_bb"><span id="S4.T1.1.4.3.2.1" class="ltx_text ltx_font_bold" style="font-size:90%;">6.81</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Average error on 2D to 3D hand and object pose estimation
+using different pooling methods. Our trainable
+pooling method produces the best results.</figcaption>
+<table id="S4.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt"><span id="S4.T2.1.1.1.1.1" class="ltx_text" style="font-size:90%;">Pooling method</span></th>
+<th id="S4.T2.1.1.1.2" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt"><span id="S4.T2.1.1.1.2.1" class="ltx_text" style="font-size:90%;">Average Error (mm)</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.2.1" class="ltx_tr">
+<th id="S4.T2.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">
+<span id="S4.T2.1.2.1.1.1" class="ltx_text" style="font-size:90%;">gPool </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.T2.1.2.1.1.2.1" class="ltx_text" style="font-size:90%;">[</span><a href="#bib.bib5" title="" class="ltx_ref">5</a><span id="S4.T2.1.2.1.1.3.2" class="ltx_text" style="font-size:90%;">]</span></cite>
+</th>
+<td id="S4.T2.1.2.1.2" class="ltx_td ltx_align_right ltx_border_t"><span id="S4.T2.1.2.1.2.1" class="ltx_text" style="font-size:90%;">153.28</span></td>
+</tr>
+<tr id="S4.T2.1.3.2" class="ltx_tr">
+<th id="S4.T2.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row"><span id="S4.T2.1.3.2.1.1" class="ltx_text" style="font-size:90%;">Fixed Pooling Layers</span></th>
+<td id="S4.T2.1.3.2.2" class="ltx_td ltx_align_right"><span id="S4.T2.1.3.2.2.1" class="ltx_text" style="font-size:90%;">7.41</span></td>
+</tr>
+<tr id="S4.T2.1.4.3" class="ltx_tr">
+<th id="S4.T2.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb"><span id="S4.T2.1.4.3.1.1" class="ltx_text" style="font-size:90%;">Trainable Pooling</span></th>
+<td id="S4.T2.1.4.3.2" class="ltx_td ltx_align_right ltx_border_bb"><span id="S4.T2.1.4.3.2.1" class="ltx_text ltx_font_bold" style="font-size:90%;">6.81</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS5.p4" class="ltx_para">
+<p id="S4.SS5.p4.1" class="ltx_p">Since we are using an adaptive graph convolution, the network learns
+the adjacency matrix as well. We tested the effect of different adjacency matrix
+initializations on the final performance, including:
+hand skeleton and object bounding box, empty graph with and without
+self-loops, complete graph, and a random connection of
+vertices. Table <a href="#S4.T3" title="Table 3 ‣ 4.5 Adaptive Graph U-Net Ablation Study ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> presents the results of the model initialized
+with each of these matrices, showing that the identity matrix is the
+best initialization.
+In other words, the model seems to learn best when it finds the
+relationship between the nodes starting with an unbiased (uninformative) initialization.</p>
+</div>
+<figure id="S4.T3" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Average error in 3D pose estimation in the
+adaptive graph convolution layer. The model has the best performance when
+it is initialized with the identity matrix. “Skeleton” in the
+fourth row refers to an adjacency matrix that simply encodes the actual kinematic
+structure of the human hand.</figcaption>
+<table id="S4.T3.3" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T3.3.4.1" class="ltx_tr">
+<th id="S4.T3.3.4.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt"><span id="S4.T3.3.4.1.1.1" class="ltx_text" style="font-size:90%;">Initial Adjacency Matrix</span></th>
+<th id="S4.T3.3.4.1.2" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt"><span id="S4.T3.3.4.1.2.1" class="ltx_text" style="font-size:90%;">Average Error (mm)</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T3.1.1" class="ltx_tr">
+<th id="S4.T3.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">
+<span id="S4.T3.1.1.1.1" class="ltx_text" style="font-size:90%;">Zeros (</span><math id="S4.T3.1.1.1.m1.1" class="ltx_Math" alttext="\mathbf{0}_{n\times n}" display="inline"><semantics id="S4.T3.1.1.1.m1.1a"><msub id="S4.T3.1.1.1.m1.1.1" xref="S4.T3.1.1.1.m1.1.1.cmml"><mn mathsize="90%" id="S4.T3.1.1.1.m1.1.1.2" xref="S4.T3.1.1.1.m1.1.1.2.cmml">𝟎</mn><mrow id="S4.T3.1.1.1.m1.1.1.3" xref="S4.T3.1.1.1.m1.1.1.3.cmml"><mi mathsize="90%" id="S4.T3.1.1.1.m1.1.1.3.2" xref="S4.T3.1.1.1.m1.1.1.3.2.cmml">n</mi><mo lspace="0.222em" mathsize="90%" rspace="0.222em" id="S4.T3.1.1.1.m1.1.1.3.1" xref="S4.T3.1.1.1.m1.1.1.3.1.cmml">×</mo><mi mathsize="90%" id="S4.T3.1.1.1.m1.1.1.3.3" xref="S4.T3.1.1.1.m1.1.1.3.3.cmml">n</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.T3.1.1.1.m1.1b"><apply id="S4.T3.1.1.1.m1.1.1.cmml" xref="S4.T3.1.1.1.m1.1.1"><csymbol cd="ambiguous" id="S4.T3.1.1.1.m1.1.1.1.cmml" xref="S4.T3.1.1.1.m1.1.1">subscript</csymbol><cn type="integer" id="S4.T3.1.1.1.m1.1.1.2.cmml" xref="S4.T3.1.1.1.m1.1.1.2">0</cn><apply id="S4.T3.1.1.1.m1.1.1.3.cmml" xref="S4.T3.1.1.1.m1.1.1.3"><times id="S4.T3.1.1.1.m1.1.1.3.1.cmml" xref="S4.T3.1.1.1.m1.1.1.3.1"></times><ci id="S4.T3.1.1.1.m1.1.1.3.2.cmml" xref="S4.T3.1.1.1.m1.1.1.3.2">𝑛</ci><ci id="S4.T3.1.1.1.m1.1.1.3.3.cmml" xref="S4.T3.1.1.1.m1.1.1.3.3">𝑛</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.T3.1.1.1.m1.1c">\mathbf{0}_{n\times n}</annotation></semantics></math><span id="S4.T3.1.1.1.2" class="ltx_text" style="font-size:90%;">)</span>
+</th>
+<td id="S4.T3.1.1.2" class="ltx_td ltx_align_right ltx_border_t"><span id="S4.T3.1.1.2.1" class="ltx_text" style="font-size:90%;">92805.02</span></td>
+</tr>
+<tr id="S4.T3.3.5.1" class="ltx_tr">
+<th id="S4.T3.3.5.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row"><span id="S4.T3.3.5.1.1.1" class="ltx_text" style="font-size:90%;">Random Initialization</span></th>
+<td id="S4.T3.3.5.1.2" class="ltx_td ltx_align_right"><span id="S4.T3.3.5.1.2.1" class="ltx_text" style="font-size:90%;">94.42</span></td>
+</tr>
+<tr id="S4.T3.2.2" class="ltx_tr">
+<th id="S4.T3.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">
+<span id="S4.T3.2.2.1.1" class="ltx_text" style="font-size:90%;">Ones (</span><math id="S4.T3.2.2.1.m1.1" class="ltx_Math" alttext="\mathbf{1}_{n\times n}" display="inline"><semantics id="S4.T3.2.2.1.m1.1a"><msub id="S4.T3.2.2.1.m1.1.1" xref="S4.T3.2.2.1.m1.1.1.cmml"><mn mathsize="90%" id="S4.T3.2.2.1.m1.1.1.2" xref="S4.T3.2.2.1.m1.1.1.2.cmml">𝟏</mn><mrow id="S4.T3.2.2.1.m1.1.1.3" xref="S4.T3.2.2.1.m1.1.1.3.cmml"><mi mathsize="90%" id="S4.T3.2.2.1.m1.1.1.3.2" xref="S4.T3.2.2.1.m1.1.1.3.2.cmml">n</mi><mo lspace="0.222em" mathsize="90%" rspace="0.222em" id="S4.T3.2.2.1.m1.1.1.3.1" xref="S4.T3.2.2.1.m1.1.1.3.1.cmml">×</mo><mi mathsize="90%" id="S4.T3.2.2.1.m1.1.1.3.3" xref="S4.T3.2.2.1.m1.1.1.3.3.cmml">n</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.T3.2.2.1.m1.1b"><apply id="S4.T3.2.2.1.m1.1.1.cmml" xref="S4.T3.2.2.1.m1.1.1"><csymbol cd="ambiguous" id="S4.T3.2.2.1.m1.1.1.1.cmml" xref="S4.T3.2.2.1.m1.1.1">subscript</csymbol><cn type="integer" id="S4.T3.2.2.1.m1.1.1.2.cmml" xref="S4.T3.2.2.1.m1.1.1.2">1</cn><apply id="S4.T3.2.2.1.m1.1.1.3.cmml" xref="S4.T3.2.2.1.m1.1.1.3"><times id="S4.T3.2.2.1.m1.1.1.3.1.cmml" xref="S4.T3.2.2.1.m1.1.1.3.1"></times><ci id="S4.T3.2.2.1.m1.1.1.3.2.cmml" xref="S4.T3.2.2.1.m1.1.1.3.2">𝑛</ci><ci id="S4.T3.2.2.1.m1.1.1.3.3.cmml" xref="S4.T3.2.2.1.m1.1.1.3.3">𝑛</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.T3.2.2.1.m1.1c">\mathbf{1}_{n\times n}</annotation></semantics></math><span id="S4.T3.2.2.1.2" class="ltx_text" style="font-size:90%;">)</span>
+</th>
+<td id="S4.T3.2.2.2" class="ltx_td ltx_align_right"><span id="S4.T3.2.2.2.1" class="ltx_text" style="font-size:90%;">63.25</span></td>
+</tr>
+<tr id="S4.T3.3.6.2" class="ltx_tr">
+<th id="S4.T3.3.6.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row"><span id="S4.T3.3.6.2.1.1" class="ltx_text" style="font-size:90%;">Skeleton</span></th>
+<td id="S4.T3.3.6.2.2" class="ltx_td ltx_align_right"><span id="S4.T3.3.6.2.2.1" class="ltx_text" style="font-size:90%;">12.91</span></td>
+</tr>
+<tr id="S4.T3.3.3" class="ltx_tr">
+<th id="S4.T3.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb">
+<span id="S4.T3.3.3.1.1" class="ltx_text" style="font-size:90%;">Identity (</span><math id="S4.T3.3.3.1.m1.1" class="ltx_Math" alttext="\mathbf{I}_{n\times n}" display="inline"><semantics id="S4.T3.3.3.1.m1.1a"><msub id="S4.T3.3.3.1.m1.1.1" xref="S4.T3.3.3.1.m1.1.1.cmml"><mi mathsize="90%" id="S4.T3.3.3.1.m1.1.1.2" xref="S4.T3.3.3.1.m1.1.1.2.cmml">𝐈</mi><mrow id="S4.T3.3.3.1.m1.1.1.3" xref="S4.T3.3.3.1.m1.1.1.3.cmml"><mi mathsize="90%" id="S4.T3.3.3.1.m1.1.1.3.2" xref="S4.T3.3.3.1.m1.1.1.3.2.cmml">n</mi><mo lspace="0.222em" mathsize="90%" rspace="0.222em" id="S4.T3.3.3.1.m1.1.1.3.1" xref="S4.T3.3.3.1.m1.1.1.3.1.cmml">×</mo><mi mathsize="90%" id="S4.T3.3.3.1.m1.1.1.3.3" xref="S4.T3.3.3.1.m1.1.1.3.3.cmml">n</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.T3.3.3.1.m1.1b"><apply id="S4.T3.3.3.1.m1.1.1.cmml" xref="S4.T3.3.3.1.m1.1.1"><csymbol cd="ambiguous" id="S4.T3.3.3.1.m1.1.1.1.cmml" xref="S4.T3.3.3.1.m1.1.1">subscript</csymbol><ci id="S4.T3.3.3.1.m1.1.1.2.cmml" xref="S4.T3.3.3.1.m1.1.1.2">𝐈</ci><apply id="S4.T3.3.3.1.m1.1.1.3.cmml" xref="S4.T3.3.3.1.m1.1.1.3"><times id="S4.T3.3.3.1.m1.1.1.3.1.cmml" xref="S4.T3.3.3.1.m1.1.1.3.1"></times><ci id="S4.T3.3.3.1.m1.1.1.3.2.cmml" xref="S4.T3.3.3.1.m1.1.1.3.2">𝑛</ci><ci id="S4.T3.3.3.1.m1.1.1.3.3.cmml" xref="S4.T3.3.3.1.m1.1.1.3.3">𝑛</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.T3.3.3.1.m1.1c">\mathbf{I}_{n\times n}</annotation></semantics></math><span id="S4.T3.3.3.1.2" class="ltx_text" style="font-size:90%;">)</span>
+</th>
+<td id="S4.T3.3.3.2" class="ltx_td ltx_align_right ltx_border_bb"><span id="S4.T3.3.3.2.1" class="ltx_text ltx_font_bold" style="font-size:90%;">6.81</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS5.p5" class="ltx_para">
+<p id="S4.SS5.p5.1" class="ltx_p">The final trained adjacency matrices for the graph convolution layers
+(starting from <math id="S4.SS5.p5.1.m1.1" class="ltx_Math" alttext="\mathbf{I}_{n\times n}" display="inline"><semantics id="S4.SS5.p5.1.m1.1a"><msub id="S4.SS5.p5.1.m1.1.1" xref="S4.SS5.p5.1.m1.1.1.cmml"><mi id="S4.SS5.p5.1.m1.1.1.2" xref="S4.SS5.p5.1.m1.1.1.2.cmml">𝐈</mi><mrow id="S4.SS5.p5.1.m1.1.1.3" xref="S4.SS5.p5.1.m1.1.1.3.cmml"><mi id="S4.SS5.p5.1.m1.1.1.3.2" xref="S4.SS5.p5.1.m1.1.1.3.2.cmml">n</mi><mo lspace="0.222em" rspace="0.222em" id="S4.SS5.p5.1.m1.1.1.3.1" xref="S4.SS5.p5.1.m1.1.1.3.1.cmml">×</mo><mi id="S4.SS5.p5.1.m1.1.1.3.3" xref="S4.SS5.p5.1.m1.1.1.3.3.cmml">n</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS5.p5.1.m1.1b"><apply id="S4.SS5.p5.1.m1.1.1.cmml" xref="S4.SS5.p5.1.m1.1.1"><csymbol cd="ambiguous" id="S4.SS5.p5.1.m1.1.1.1.cmml" xref="S4.SS5.p5.1.m1.1.1">subscript</csymbol><ci id="S4.SS5.p5.1.m1.1.1.2.cmml" xref="S4.SS5.p5.1.m1.1.1.2">𝐈</ci><apply id="S4.SS5.p5.1.m1.1.1.3.cmml" xref="S4.SS5.p5.1.m1.1.1.3"><times id="S4.SS5.p5.1.m1.1.1.3.1.cmml" xref="S4.SS5.p5.1.m1.1.1.3.1"></times><ci id="S4.SS5.p5.1.m1.1.1.3.2.cmml" xref="S4.SS5.p5.1.m1.1.1.3.2">𝑛</ci><ci id="S4.SS5.p5.1.m1.1.1.3.3.cmml" xref="S4.SS5.p5.1.m1.1.1.3.3">𝑛</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p5.1.m1.1c">\mathbf{I}_{n\times n}</annotation></semantics></math>) are visualized in
+Figure <a href="#S4.F9" title="Figure 9 ‣ 4.4 Hand-Object Pose Estimation Results ‣ 4 Results ‣ HOPE-Net: A Graph-based Model for Hand-Object Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a>.
+We see that the model has found relationships between nodes which are not
+connected in the hand skeleton model. For example, it found a relationship between
+node 6 (index finger’s PIP) and node 4 (thumb’s TIP), which are not connected in the
+hand skeleton model.</p>
+</div>
+</section>
+<section id="S4.SS6" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.6 </span>Runtime</h3>
+
+<div id="S4.SS6.p1" class="ltx_para">
+<p id="S4.SS6.p1.1" class="ltx_p">As mentioned earlier, HOPE-Net consists of a lightweight
+feature extractor (ResNet10) and two graph convolutional neural networks which
+are more than ten times faster than the shallowest image convolutional
+neural network. The core inference of the model can be run in
+real-time on an Nvidia Titan Xp. On such a GPU, the entire 2D and 3D
+inference of a single frame requires just 0.005 seconds.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusion and Future Work</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this paper, we introduced a model for hand-object 2D and 3D pose
+estimation from a single image using an image encoder followed by a
+cascade of two graph convolutional neural networks. Our approach
+beats the state-of-the-art, while also running in real-time.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">Nevertheless, there are limitations of our approach. When trained on
+the FPHA and HO-3D datasets, our model is well-suited for objects that
+are of similar size or shape to those seen in the dataset during
+training, but might not generalize well to all categories of object
+shapes. For example, objects with a non-convex geometry lacking a
+tight 3D bounding box would be a challenge for our technique. For
+real-world applications, a larger dataset including a greater variety
+of shapes and environments would help to improve the estimation
+accuracies.</p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p">Future work could include incorporating temporal information into our
+graph-based model, both to improve pose estimation results and as
+step towards action detection. Graph classification methods can be integrated
+into the proposed framework to infer categorical semantic information
+for applications such as detecting sign language or gesture
+understanding. Also, in addition to hand pose estimation, the
+Adaptive Graph U-Net introduced in this work can be applied to a
+variety of other problems such as graph completion,
+protein classification, mesh classification, and body pose estimation.</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">Acknowledgment</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">The work in this paper was supported in part by the
+National Science Foundation (CAREER IIS-1253549), and by
+the IU Office of the Vice Provost for Research, the College of Arts and Sciences, and the Luddy School of Informatics, Computing, and Engineering through the Emerging Areas of Research Project “Learning: Brains, Machines, and Children.”</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography" style="font-size:90%;">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text" style="font-size:90%;">
+Yujun Cai, Liuhao Ge, Jun Liu, Jianfei Cai, Tat-Jen Cham, Junsong Yuan, and
+Nadia Magnenat Thalmann.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.2.1" class="ltx_text" style="font-size:90%;">Exploiting spatial-temporal relationships for 3d pose estimation via
+graph convolutional networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib1.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE International Conference on Computer
+Vision</span><span id="bib.bib1.5.3" class="ltx_text" style="font-size:90%;">, pages 2272–2281, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text" style="font-size:90%;">
+Angel X Chang, Thomas Funkhouser, Leonidas Guibas, Pat Hanrahan, Qixing Huang,
+Zimo Li, Silvio Savarese, Manolis Savva, Shuran Song, Hao Su, et al.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.2.1" class="ltx_text" style="font-size:90%;">Shapenet: An information-rich 3d model repository.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">arXiv preprint arXiv:1512.03012</span><span id="bib.bib2.4.2" class="ltx_text" style="font-size:90%;">, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text" style="font-size:90%;">
+Chiho Choi, Sang Ho Yoon, Chin-Ning Chen, and Karthik Ramani.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.2.1" class="ltx_text" style="font-size:90%;">Robust hand pose estimation during the interaction with an unknown
+object.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib3.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE International Conference on Computer Vision (ICCV)</span><span id="bib.bib3.5.3" class="ltx_text" style="font-size:90%;">,
+pages 3123–3132, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text" style="font-size:90%;">
+Bardia Doosti.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.2.1" class="ltx_text" style="font-size:90%;">Hand pose estimation: A survey.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib4.4.2" class="ltx_text" style="font-size:90%;">, abs/1903.01013, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text" style="font-size:90%;">
+Hongyang Gao and Shuiwang Ji.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.2.1" class="ltx_text" style="font-size:90%;">Graph u-nets.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib5.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">International Conference on Learning Representations (ICLR)</span><span id="bib.bib5.5.3" class="ltx_text" style="font-size:90%;">,
+2019.
+</span>
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text" style="font-size:90%;">
+Guillermo Garcia-Hernando, Shanxin Yuan, Seungryul Baek, and Tae-Kyun Kim.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.2.1" class="ltx_text" style="font-size:90%;">First-person hand action benchmark with rgb-d videos and 3d hand pose
+annotations.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib6.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib6.5.3" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text" style="font-size:90%;">
+Liuhao Ge, Zhou Ren, Yuncheng Li, Zehao Xue, Yingying Wang, Jianfei Cai, and
+Junsong Yuan.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.2.1" class="ltx_text" style="font-size:90%;">3d hand shape and pose estimation from a single rgb image.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib7.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib7.5.3" class="ltx_text" style="font-size:90%;">, pages 10833–10842, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text" style="font-size:90%;">
+Shreyas Hampali, Mahdi Rad, Markus Oberweger, and Vincent Lepetit.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.2.1" class="ltx_text" style="font-size:90%;">Honnotate: A method for 3d annotation of hand and objects poses,
+2019.
+</span>
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text" style="font-size:90%;">
+Rana Hanocka, Amir Hertz, Noa Fish, Raja Giryes, Shachar Fleishman, and Daniel
+Cohen-Or.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.2.1" class="ltx_text" style="font-size:90%;">Meshcnn: a network with an edge.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">ACM Transactions on Graphics (TOG)</span><span id="bib.bib9.4.2" class="ltx_text" style="font-size:90%;">, 38(4):90, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span id="bib.bib10.1.1" class="ltx_text" style="font-size:90%;">
+Yana Hasson, Gül Varol, Dimitrios Tzionas, Igor Kalevatykh, Michael J.
+Black, Ivan Laptev, and Cordelia Schmid.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.2.1" class="ltx_text" style="font-size:90%;">Learning joint reconstruction of hands and manipulated objects.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib10.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib10.5.3" class="ltx_text" style="font-size:90%;">, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span id="bib.bib11.1.1" class="ltx_text" style="font-size:90%;">
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.2.1" class="ltx_text" style="font-size:90%;">Deep residual learning for image recognition.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib11.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib11.5.3" class="ltx_text" style="font-size:90%;">, pages 770–778, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span id="bib.bib12.1.1" class="ltx_text" style="font-size:90%;">
+Sergey Ioffe and Christian Szegedy.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.2.1" class="ltx_text" style="font-size:90%;">Batch normalization: Accelerating deep network training by reducing
+internal covariate shift.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib12.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">International Conference on Machine Learning (ICML)</span><span id="bib.bib12.5.3" class="ltx_text" style="font-size:90%;">, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text" style="font-size:90%;">
+Thomas N Kipf and Max Welling.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.2.1" class="ltx_text" style="font-size:90%;">Semi-supervised classification with graph convolutional networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib13.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">International Conference on Learning Representations (ICLR)</span><span id="bib.bib13.5.3" class="ltx_text" style="font-size:90%;">,
+2017.
+</span>
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text" style="font-size:90%;">
+Nikos Kolotouros, Georgios Pavlakos, and Kostas Daniilidis.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.2.1" class="ltx_text" style="font-size:90%;">Convolutional mesh regression for single-image human shape
+reconstruction.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib14.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib14.5.3" class="ltx_text" style="font-size:90%;">, pages 4501–4510, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span id="bib.bib15.1.1" class="ltx_text" style="font-size:90%;">
+Nikos Kolotouros, Georgios Pavlakos, and Kostas Daniilidis.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.2.1" class="ltx_text" style="font-size:90%;">Convolutional mesh regression for single-image human shape
+reconstruction.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib15.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib15.5.3" class="ltx_text" style="font-size:90%;">, June 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text" style="font-size:90%;">
+Alex Krizhevsky, Ilya Sutskever, and Geoffrey E Hinton.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.2.1" class="ltx_text" style="font-size:90%;">Imagenet classification with deep convolutional neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib16.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Advances in Neural Information Processing Systems (NeurIPS)</span><span id="bib.bib16.5.3" class="ltx_text" style="font-size:90%;">,
+pages 1097–1105, 2012.
+</span>
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span id="bib.bib17.1.1" class="ltx_text" style="font-size:90%;">
+Maosen Li, Siheng Chen, Xu Chen, Ya Zhang, Yanfeng Wang, and Qi Tian.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.2.1" class="ltx_text" style="font-size:90%;">Actional-structural graph convolutional networks for skeleton-based
+action recognition.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib17.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib17.5.3" class="ltx_text" style="font-size:90%;">, June 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span id="bib.bib18.1.1" class="ltx_text" style="font-size:90%;">
+Vinod Nair and Geoffrey E Hinton.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.2.1" class="ltx_text" style="font-size:90%;">Rectified linear units improve restricted boltzmann machines.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib18.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">International Conference on Machine Learning (ICML)</span><span id="bib.bib18.5.3" class="ltx_text" style="font-size:90%;">, pages
+807–814, 2010.
+</span>
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text" style="font-size:90%;">
+Markus Oberweger, Paul Wohlhart, and Vincent Lepetit.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.2.1" class="ltx_text" style="font-size:90%;">Generalized feedback loop for joint hand-object pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Transactions on Pattern Analysis and Machine Intelligence</span><span id="bib.bib19.4.2" class="ltx_text" style="font-size:90%;">,
+2019.
+</span>
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text" style="font-size:90%;">
+Iason Oikonomidis, Nikolaos Kyriazis, and Antonis A Argyros.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.2.1" class="ltx_text" style="font-size:90%;">Full dof tracking of a hand interacting with an object by modeling
+occlusions and physical constraints.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib20.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">2011 International Conference on Computer Vision</span><span id="bib.bib20.5.3" class="ltx_text" style="font-size:90%;">, pages
+2088–2095. IEEE, 2011.
+</span>
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text" style="font-size:90%;">
+Paschalis Panteleris, Nikolaos Kyriazis, and Antonis A Argyros.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.2.1" class="ltx_text" style="font-size:90%;">3d tracking of human hands in interaction with unknown objects.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib21.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">British Machine Vision Conference (BMVC)</span><span id="bib.bib21.5.3" class="ltx_text" style="font-size:90%;">, pages 123–1,
+2015.
+</span>
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span id="bib.bib22.1.1" class="ltx_text" style="font-size:90%;">
+Anurag Ranjan, Timo Bolkart, Soubhik Sanyal, and Michael J Black.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.2.1" class="ltx_text" style="font-size:90%;">Generating 3d faces using convolutional mesh autoencoders.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib22.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">European Conference on Computer Vision (ECCV)</span><span id="bib.bib22.5.3" class="ltx_text" style="font-size:90%;">, pages
+704–720, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span id="bib.bib23.1.1" class="ltx_text" style="font-size:90%;">
+Olaf Ronneberger, Philipp Fischer, and Thomas Brox.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.2.1" class="ltx_text" style="font-size:90%;">U-net: Convolutional networks for biomedical image segmentation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib23.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">International Conference on Medical Image Computing and
+Computer-assisted Intervention</span><span id="bib.bib23.5.3" class="ltx_text" style="font-size:90%;">, pages 234–241. Springer, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span id="bib.bib24.1.1" class="ltx_text" style="font-size:90%;">
+Lei Shi, Yifan Zhang, Jian Cheng, and Hanqing Lu.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.2.1" class="ltx_text" style="font-size:90%;">Skeleton-based action recognition with directed graph neural
+networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib24.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib24.5.3" class="ltx_text" style="font-size:90%;">, June 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span id="bib.bib25.1.1" class="ltx_text" style="font-size:90%;">
+Lei Shi, Yifan Zhang, Jian Cheng, and Hanqing Lu.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.2.1" class="ltx_text" style="font-size:90%;">Two-stream adaptive graph convolutional networks for skeleton-based
+action recognition.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib25.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib25.5.3" class="ltx_text" style="font-size:90%;">, June 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span id="bib.bib26.1.1" class="ltx_text" style="font-size:90%;">
+Bugra Tekin, Federica Bogo, and Marc Pollefeys.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.2.1" class="ltx_text" style="font-size:90%;">H+o: Unified egocentric recognition of 3d hand-object poses and
+interactions.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib26.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib26.5.3" class="ltx_text" style="font-size:90%;">, June 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span id="bib.bib27.1.1" class="ltx_text" style="font-size:90%;">
+Bugra Tekin, Sudipta N Sinha, and Pascal Fua.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.2.1" class="ltx_text" style="font-size:90%;">Real-time seamless single shot 6d object pose prediction.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib27.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib27.5.3" class="ltx_text" style="font-size:90%;">, pages 292–301, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span id="bib.bib28.1.1" class="ltx_text" style="font-size:90%;">
+Yuxin Wu and Kaiming He.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.2.1" class="ltx_text" style="font-size:90%;">Group normalization.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib28.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">European Conference on Computer Vision (ECCV)</span><span id="bib.bib28.5.3" class="ltx_text" style="font-size:90%;">, pages 3–19,
+2018.
+</span>
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span id="bib.bib29.1.1" class="ltx_text" style="font-size:90%;">
+Sijie Yan, Yuanjun Xiong, and Dahua Lin.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.2.1" class="ltx_text" style="font-size:90%;">Spatial temporal graph convolutional networks for skeleton-based
+action recognition.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib29.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Thirty-Second AAAI Conference on Artificial Intelligence</span><span id="bib.bib29.5.3" class="ltx_text" style="font-size:90%;">,
+2018.
+</span>
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock"><span id="bib.bib30.1.1" class="ltx_text" style="font-size:90%;">
+Shanxin Yuan, Guillermo Garcia-Hernando, Björn Stenger, Gyeongsik Moon, Ju
+Yong Chang, Kyoung Mu Lee, Pavlo Molchanov, Jan Kautz, Sina Honari, Liuhao
+Ge, et al.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib30.2.1" class="ltx_text" style="font-size:90%;">Depth-based 3d hand pose estimation: From current achievements to
+future goals.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib30.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib30.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib30.5.3" class="ltx_text" style="font-size:90%;">, pages 2636–2645, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock"><span id="bib.bib31.1.1" class="ltx_text" style="font-size:90%;">
+Long Zhao, Xi Peng, Yu Tian, Mubbasir Kapadia, and Dimitris N Metaxas.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib31.2.1" class="ltx_text" style="font-size:90%;">Semantic graph convolutional networks for 3d human pose regression.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib31.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib31.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span><span id="bib.bib31.5.3" class="ltx_text" style="font-size:90%;">, pages 3425–3435, 2019.
+</span>
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2004.00059" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2004.00060" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2004.00060">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2004.00060" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2004.00061" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Sun Mar 17 08:11:21 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,1463 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2110.11414] Real-time, low-cost multi-person 3D pose estimation</title><meta property="og:description" content="The process of tracking human anatomy in computer vision is referred to pose estimation, and it is used in fields ranging from gaming to surveillance. Three-dimensional pose estimation traditionally requires advanced e…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Real-time, low-cost multi-person 3D pose estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Real-time, low-cost multi-person 3D pose estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2110.11414">
+
+<!--Generated on Sat Mar  9 01:07:08 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line ltx_fleqn">
+<h1 class="ltx_title ltx_title_document">Real-time, low-cost multi-person 3D pose estimation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Alice Ruget
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering and Physical Sciences, Heriot-Watt University, Edinburgh, EH14 4AS, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Max Tyler
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering and Physical Sciences, Heriot-Watt University, Edinburgh, EH14 4AS, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Germán Mora-Martín
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering, Institute for Integrated Micro and Nano Systems, The University of Edinburgh, Edinburgh, EH9 3FF, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Stirling Scholes
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering and Physical Sciences, Heriot-Watt University, Edinburgh, EH14 4AS, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Feng Zhu
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering and Physical Sciences, Heriot-Watt University, Edinburgh, EH14 4AS, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Istvan Gyongy
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering, Institute for Integrated Micro and Nano Systems, The University of Edinburgh, Edinburgh, EH9 3FF, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Brent Hearn
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">Imaging Sub-group, STMicroelectronics, Edinburgh, EH3 5DA, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Steve McLaughlin
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering and Physical Sciences, Heriot-Watt University, Edinburgh, EH14 4AS, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Abderrahim Halimi
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering and Physical Sciences, Heriot-Watt University, Edinburgh, EH14 4AS, UK
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jonathan Leach
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">School of Engineering and Physical Sciences, Heriot-Watt University, Edinburgh, EH14 4AS, UK
+</span>
+<span class="ltx_contact ltx_role_affiliation">Jonathan Leach (j.leach@hw.ac.uk)
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id3.3" class="ltx_p">The process of tracking human anatomy in computer vision is referred to pose estimation, and it is used in fields ranging from gaming to surveillance. Three-dimensional pose estimation traditionally requires advanced equipment, such as multiple linked intensity cameras or high-resolution time-of-flight cameras to produce depth images. However, there are applications, e.g. consumer electronics, where significant constraints are placed on the size, power consumption, weight and cost of the usable technology. Here, we demonstrate that computational imaging methods can achieve accurate pose estimation and overcome the apparent limitations of time-of-flight sensors designed for much simpler tasks. The sensor we use is already widely integrated in consumer-grade mobile devices, and despite its low spatial resolution, only 4<math id="id1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="id1.1.m1.1a"><mo id="id1.1.m1.1.1" xref="id1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="id1.1.m1.1b"><times id="id1.1.m1.1.1.cmml" xref="id1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="id1.1.m1.1c">\times</annotation></semantics></math>4 pixels, our proposed Pixels2Pose system transforms its data into accurate depth maps and 3D pose data of multiple people up to a distance of 3 m from the sensor. We are able to generate depth maps at a resolution of 32<math id="id2.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="id2.2.m2.1a"><mo id="id2.2.m2.1.1" xref="id2.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="id2.2.m2.1b"><times id="id2.2.m2.1.1.cmml" xref="id2.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="id2.2.m2.1c">\times</annotation></semantics></math>32 and 3D localization of a body parts with an error of only <math id="id3.3.m3.1" class="ltx_Math" alttext="\approx" display="inline"><semantics id="id3.3.m3.1a"><mo id="id3.3.m3.1.1" xref="id3.3.m3.1.1.cmml">≈</mo><annotation-xml encoding="MathML-Content" id="id3.3.m3.1b"><approx id="id3.3.m3.1.1.cmml" xref="id3.3.m3.1.1"></approx></annotation-xml><annotation encoding="application/x-tex" id="id3.3.m3.1c">\approx</annotation></semantics></math>10 cm at a frame rate of 7 fps. This work opens up promising real-life applications in scenarios that were previously restricted by the advanced hardware requirements and cost of time-of-flight technology.</p>
+</div>
+<section id="Sx1" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Introduction</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">Pose estimation is the process of locating the position of human body parts via analysis of images, videos, and sensor data. Accurate tracking of human anatomy is important in several areas, including activity recognition in gaming <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, gesture identification in consumer electronics <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, behavioural analysis in medical monitoring <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, as well as form and functional analysis in professional sports <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>. Three-dimensional pose estimation from depth images or depth videos has been performed across many different domains: fall detection of elderly <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, medical diagnosis <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>, assistance in physical therapy <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>, monitoring of patient sleep <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>, sport coaching <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>, interaction with robots <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, and general action recognition <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>. As the application areas for pose estimation span a wide range, so too does the technology used for it. For example, the most accurate pose estimation uses markers or multiple sensors that are tracked in three dimensions. Accurate 3D tracking can also be obtained using high-resolution depth images or triangulation from multiple linked intensity cameras.</p>
+</div>
+<div id="Sx1.p2" class="ltx_para">
+<p id="Sx1.p2.1" class="ltx_p">While advanced technology is known to provide accurate pose estimation, it is also desirable to have accurate tracking from the simplest possible technology. Approaching the problem from this perspective opens up opportunities where cost, size, and weight are significant considerations, e.g. the consumer electronics market, autonomous and self-driving vehicles, and airborne vehicles such as drones. Here we show that a simple, small, and cost-effective time-of-flight sensor with only 4 <math id="Sx1.p2.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.p2.1.m1.1a"><mo id="Sx1.p2.1.m1.1.1" xref="Sx1.p2.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.p2.1.m1.1b"><times id="Sx1.p2.1.m1.1.1.cmml" xref="Sx1.p2.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.p2.1.m1.1c">\times</annotation></semantics></math> 4 pixels contains sufficient data for 3D tracking of multiple human targets.</p>
+</div>
+<div id="Sx1.p3" class="ltx_para">
+<p id="Sx1.p3.1" class="ltx_p">Very accurate pose estimation can be achieved by placing markers on the body. For example, inertial markers that record motion by combining data from different sensors such as accelerometers, gyroscopes, or magnetometers can recover accurate body poses <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> and can be used in combination with images <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>. They have been developed, for example, for clinical applications <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> and for tracking posture during sport <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>, <a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>. Marker-based pose estimation gives the most accurate results, but these technologies are expensive, time-consuming to use, and the requirement to wear sensors means that they are not practical for general applications. Accurate poses can also be estimated using several linked cameras viewing a scene from different angles <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>, <a href="#bib.bib26" title="" class="ltx_ref">26</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>, <a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>. Reflective markers placed on the body or face are also commonly used for animation and special effects in computer games or films <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>. These approaches are very reliable, but it is desirable to have methods that do not require multiple cameras or use any markers.</p>
+</div>
+<div id="Sx1.p4" class="ltx_para">
+<p id="Sx1.p4.1" class="ltx_p">Three-dimensional pose estimation from single point-of-view intensity images is an attractive alternative to labeled tracking because such images are easy to obtain <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>, <a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>. However, 3D pose estimation in this manner is extremely challenging due to depth ambiguities and occlusions from objects. Recent algorithms based on machine learning networks have achieved 3D pose estimation from single RGB images, demonstrating the reconstruction of multiple people that is robust to occlusions, in real-time, and in both controlled and uncontrolled environments <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>, <a href="#bib.bib33" title="" class="ltx_ref">33</a>, <a href="#bib.bib34" title="" class="ltx_ref">34</a>, <a href="#bib.bib35" title="" class="ltx_ref">35</a>, <a href="#bib.bib36" title="" class="ltx_ref">36</a>, <a href="#bib.bib37" title="" class="ltx_ref">37</a>, <a href="#bib.bib38" title="" class="ltx_ref">38</a>, <a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>. Ref. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite> contains a comprehensive collection of resources on pose estimation from RGB images.</p>
+</div>
+<div id="Sx1.p5" class="ltx_para">
+<p id="Sx1.p5.1" class="ltx_p">An alternative to using RGB images is using depth images to reconstruct 3D poses <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib41" title="" class="ltx_ref">41</a>, <a href="#bib.bib42" title="" class="ltx_ref">42</a>, <a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite>. Depth images provide a considerable advantage since they already contain 3D information, however, more advanced sensors are required to record depth. For fast depth data acquisition, two main technologies are used: time-of-flight (ToF) cameras or structured light sensors. ToF cameras use a pulse of light to illuminate a target and a detector records the returned light. Structured light sensors project a pattern of light onto the scene and the depth measurement is based on triangulation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib44" title="" class="ltx_ref">44</a>]</cite>. Recent research has developed techniques to retrieve high-resolution depth images from a single-pixel depth detector, therefore opening new perspectives in terms of cost and speed. Structured illumination has been used to reconstruct high-resolution depth images from a single-pixel detector at high frame rates <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib45" title="" class="ltx_ref">45</a>]</cite> and from indirect light measurements of static scenes <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib46" title="" class="ltx_ref">46</a>]</cite>. However, the hardware requirements for structured illumination make it impossible at this stage to be integrated into high-scale marketed consumer devices.</p>
+</div>
+<div id="Sx1.p6" class="ltx_para">
+<p id="Sx1.p6.1" class="ltx_p">An attractive solution to the requirement to use structured illumination for single-pixel depth imaging was proposed by Turpin <span id="Sx1.p6.1.1" class="ltx_text ltx_font_italic">et al.</span> who demonstrated that the rich temporal data from a single point in space contains information that could be converted to depth images via reconstruction with a neural network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib47" title="" class="ltx_ref">47</a>]</cite>. This work shows an important proof-of-concept that good spatial resolution can be retrieved from temporal data rather than from the detector’s spatial structure. Estimating depth from a single pixel appeared to be a heavily ill-posed inverse problem, yet the authors show that the use of a static background overcomes this apparent constraint.</p>
+</div>
+<figure id="Sx1.F1" class="ltx_figure"><img src="/html/2110.11414/assets/Figures/Figure_1.png" id="Sx1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="238" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="Sx1.F1.5.2.1" class="ltx_text" style="font-size:90%;">Figure 1</span>: </span><span id="Sx1.F1.2.1" class="ltx_text" style="font-size:90%;">
+<span id="Sx1.F1.2.1.1" class="ltx_text ltx_font_bold">Schematic of the Pixels2Pose system.</span> A small, cost-effective time-of-flight sensor illuminates a scene and generates histogram data with a spatial resolution of 4<math id="Sx1.F1.2.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx1.F1.2.1.m1.1b"><mo id="Sx1.F1.2.1.m1.1.1" xref="Sx1.F1.2.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx1.F1.2.1.m1.1c"><times id="Sx1.F1.2.1.m1.1.1.cmml" xref="Sx1.F1.2.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx1.F1.2.1.m1.1d">\times</annotation></semantics></math>4 (x, y). This data is passed to the Pixels2Pose network to generate accurate pose reconstruction in 3D. </span></figcaption>
+</figure>
+<div id="Sx1.p7" class="ltx_para">
+<p id="Sx1.p7.1" class="ltx_p">Computational imaging methods are known to provide powerful tools to extract and convert information between different modalities, provided that the input signal is rich and the task is sufficiently restricted. The work in reference <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib47" title="" class="ltx_ref">47</a>]</cite> was developed further to show depth imaging of people using multi-path temporal echoes from radar, sonar, and lidar data <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib48" title="" class="ltx_ref">48</a>]</cite>, and the poses of humans that are behind walls can be estimated using data obtained at radar frequencies <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib49" title="" class="ltx_ref">49</a>, <a href="#bib.bib50" title="" class="ltx_ref">50</a>]</cite>. Additionally, networks that use multiple input data source have been used for data fusion to increase the resolution of depth images originating from the temporal histogram data from single-photon detector array sensors and intensity images <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib51" title="" class="ltx_ref">51</a>, <a href="#bib.bib52" title="" class="ltx_ref">52</a>, <a href="#bib.bib53" title="" class="ltx_ref">53</a>, <a href="#bib.bib54" title="" class="ltx_ref">54</a>]</cite>.</p>
+</div>
+<div id="Sx1.p8" class="ltx_para">
+<p id="Sx1.p8.1" class="ltx_p">On the other hand, small, cost-effective ToF depth detectors with very few pixels have been developed for commercial purposes and are designed for applications such as auto-focus assist or obstacle detection in smartphones and drones. While such sensors only have a few pixels, they have rich temporal information, and Callenberg <span id="Sx1.p8.1.1" class="ltx_text ltx_font_italic">et al.</span> recently demonstrated a range of applications that are significantly enhanced by use of the full ToF histogram data from a cheap commercial SPAD sensor <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib55" title="" class="ltx_ref">55</a>]</cite>. This work highlights the increasing range of applications that can be delivered from such a ToF sensor.</p>
+</div>
+<div id="Sx1.p9" class="ltx_para">
+<p id="Sx1.p9.1" class="ltx_p">Our work builds upon the core ideas of image enhancement using neural networks and processing the full histogram data obtained from cost-effective ToF SPAD sensors. The use of the full ToF histogram data from few pixels is key to the success of this work, and we show that generating depth images from a cheap, simple depth sensor can be achieved at high frame rates. Not only can we reconstruct depth images, but these images also have sufficient resolution to perform accurate 3D pose estimation of multiple targets. Crucially, as the sensor has multiple pixels, our system solves a more constrained ill-posed problem and therefore the pre-trained network works in a range of different environments.</p>
+</div>
+</section>
+<section id="Sx2" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Results</h2>
+
+<figure id="Sx2.F2" class="ltx_figure"><img src="/html/2110.11414/assets/Figures/Figure_2.png" id="Sx2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="258" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F2.3.1.1" class="ltx_text" style="font-size:90%;">Figure 2</span>: </span><span id="Sx2.F2.4.2" class="ltx_text" style="font-size:90%;">
+<span id="Sx2.F2.4.2.1" class="ltx_text ltx_font_bold">Overview of Pixels2Pose along with the supervision used for training.</span> The bottom part displays the Pixels2Pose system. The ToF data of the sensor is passed through a series of three steps to reconstruct the 3D Pose: A. the network Pixels2Depth returns a high resolution (HR) depth map from the histogram data; B. the network Depth2Pose processes the HR depth map to return 2D poses; C. the HR depth map and the 2D poses are combined to produce 3D poses.
+The top part displays the system used for the training of the networks Pixels2Depth and Depth2Pose. A Microsoft Azure Kinect DK camera is used to provide the labels corresponding to the sensor data. For Pixels2Depth, the high-resolution depth images of the Kinect are used as labels. For Depth2Pose, the RGB image is processed through OpenPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib56" title="" class="ltx_ref">56</a>]</cite> to get the 2D pose labels.</span></figcaption>
+</figure>
+<section id="Sx2.SSx1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Overview of the system</h3>
+
+<div id="Sx2.SSx1.p1" class="ltx_para">
+<p id="Sx2.SSx1.p1.1" class="ltx_p">The Pixels2Pose system utilizes a small sensor to illuminate a scene and generate ToF histogram data of size <math id="Sx2.SSx1.p1.1.m1.1" class="ltx_Math" alttext="4\times 4\times 144" display="inline"><semantics id="Sx2.SSx1.p1.1.m1.1a"><mrow id="Sx2.SSx1.p1.1.m1.1.1" xref="Sx2.SSx1.p1.1.m1.1.1.cmml"><mn id="Sx2.SSx1.p1.1.m1.1.1.2" xref="Sx2.SSx1.p1.1.m1.1.1.2.cmml">4</mn><mo lspace="0.222em" rspace="0.222em" id="Sx2.SSx1.p1.1.m1.1.1.1" xref="Sx2.SSx1.p1.1.m1.1.1.1.cmml">×</mo><mn id="Sx2.SSx1.p1.1.m1.1.1.3" xref="Sx2.SSx1.p1.1.m1.1.1.3.cmml">4</mn><mo lspace="0.222em" rspace="0.222em" id="Sx2.SSx1.p1.1.m1.1.1.1a" xref="Sx2.SSx1.p1.1.m1.1.1.1.cmml">×</mo><mn id="Sx2.SSx1.p1.1.m1.1.1.4" xref="Sx2.SSx1.p1.1.m1.1.1.4.cmml">144</mn></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx1.p1.1.m1.1b"><apply id="Sx2.SSx1.p1.1.m1.1.1.cmml" xref="Sx2.SSx1.p1.1.m1.1.1"><times id="Sx2.SSx1.p1.1.m1.1.1.1.cmml" xref="Sx2.SSx1.p1.1.m1.1.1.1"></times><cn type="integer" id="Sx2.SSx1.p1.1.m1.1.1.2.cmml" xref="Sx2.SSx1.p1.1.m1.1.1.2">4</cn><cn type="integer" id="Sx2.SSx1.p1.1.m1.1.1.3.cmml" xref="Sx2.SSx1.p1.1.m1.1.1.3">4</cn><cn type="integer" id="Sx2.SSx1.p1.1.m1.1.1.4.cmml" xref="Sx2.SSx1.p1.1.m1.1.1.4">144</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx1.p1.1.m1.1c">4\times 4\times 144</annotation></semantics></math> (x,y,t). This data is then passed to a neural network that has been trained to recover the poses of multiple people in three dimensions. The training stage of Pixels2Pose uses high-resolution depth and intensity images obtained from a Microsoft Kinect sensor and the RGB-based pose network OpenPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib56" title="" class="ltx_ref">56</a>]</cite>. Despite the apparent low spatial resolution, after the supervised training, our proposed Pixels2Pose system transforms the sensor’s rich ToF data into accurate 3D pose data of multiple people. A schematic of the system is shown in Figure <a href="#Sx1.F1" title="Figure 1 ‣ Introduction ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<div id="Sx2.SSx1.p2" class="ltx_para">
+<p id="Sx2.SSx1.p2.1" class="ltx_p">Our Pixels2Pose system is made of two neural networks: one that estimates depth from measured histograms and one inspired from the network OpenPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib56" title="" class="ltx_ref">56</a>]</cite> that creates 2D poses using heatmaps of joints and part affinity fields. Our final step consists of superimposing the two outputs to render a 3D pose. We demonstrate continuous real-time video at a frame rate of 7 fps. Our approach can be adopted widely in a range of systems due to the simplicity of the underlying technology.</p>
+</div>
+</section>
+<section id="Sx2.SSx2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Sensor</h3>
+
+<div id="Sx2.SSx2.p1" class="ltx_para">
+<p id="Sx2.SSx2.p1.4" class="ltx_p">The key sensor for our work is the vl53l5 single-photon avalanche diode (SPAD) sensor manufactured by STMicroelectronics. The sensor illuminates the scene with 940 nm light pulses, and its SPAD detectors record the time of arrival of photons reflected as histograms of photon counts. The field of view is 60 degrees diagonal, the maximum range is 3 meters and the frame rate is 10fps. The dimensions of the sensor are 4.9mm<math id="Sx2.SSx2.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.SSx2.p1.1.m1.1a"><mo id="Sx2.SSx2.p1.1.m1.1.1" xref="Sx2.SSx2.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.SSx2.p1.1.m1.1b"><times id="Sx2.SSx2.p1.1.m1.1.1.cmml" xref="Sx2.SSx2.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx2.p1.1.m1.1c">\times</annotation></semantics></math>2.5mm<math id="Sx2.SSx2.p1.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.SSx2.p1.2.m2.1a"><mo id="Sx2.SSx2.p1.2.m2.1.1" xref="Sx2.SSx2.p1.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.SSx2.p1.2.m2.1b"><times id="Sx2.SSx2.p1.2.m2.1.1.cmml" xref="Sx2.SSx2.p1.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx2.p1.2.m2.1c">\times</annotation></semantics></math>1.6mm, the spatial resolution is only 4<math id="Sx2.SSx2.p1.3.m3.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.SSx2.p1.3.m3.1a"><mo id="Sx2.SSx2.p1.3.m3.1.1" xref="Sx2.SSx2.p1.3.m3.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.SSx2.p1.3.m3.1b"><times id="Sx2.SSx2.p1.3.m3.1.1.cmml" xref="Sx2.SSx2.p1.3.m3.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx2.p1.3.m3.1c">\times</annotation></semantics></math>4 pixels, and the temporal resolution is 144 time-bins, each separated by 125 ps. The data is cropped to 100 time-bins so that there are no unwanted artefacts from objects in the background. We can establish the main depth in each pixel, i.e., a single depth associated with the time-bin showing maximum return of photons. This provides a 4<math id="Sx2.SSx2.p1.4.m4.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.SSx2.p1.4.m4.1a"><mo id="Sx2.SSx2.p1.4.m4.1.1" xref="Sx2.SSx2.p1.4.m4.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.SSx2.p1.4.m4.1b"><times id="Sx2.SSx2.p1.4.m4.1.1.cmml" xref="Sx2.SSx2.p1.4.m4.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx2.p1.4.m4.1c">\times</annotation></semantics></math>4 maximum return depth map.
+A visual representation of the temporal and spatial data from the vl53l5 sensor and its corresponding maximum return depth map are shown in Fig. <a href="#Sx1.F1" title="Figure 1 ‣ Introduction ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+</section>
+<section id="Sx2.SSx3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Pixels2Pose Network</h3>
+
+<div id="Sx2.SSx3.p1" class="ltx_para">
+<p id="Sx2.SSx3.p1.2" class="ltx_p">The proposed Pixels2Pose system takes the raw data of the sensor as its input, i.e. the 4<math id="Sx2.SSx3.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.SSx3.p1.1.m1.1a"><mo id="Sx2.SSx3.p1.1.m1.1.1" xref="Sx2.SSx3.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p1.1.m1.1b"><times id="Sx2.SSx3.p1.1.m1.1.1.cmml" xref="Sx2.SSx3.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p1.1.m1.1c">\times</annotation></semantics></math>4 histograms of 100 time-bins each, generates a higher resolution depth map, and then uses the depth map to render the people poses in 3D. An overview of Pixels2Pose is displayed in Fig. <a href="#Sx2.F2" title="Figure 2 ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+It consists of three steps: first, a neural network called Pixels2Depth; second, a neural network called Depth2Pose; and finally, a post-processing module that combines the information from each network. Pixels2Depth processes the histogram coming from the sensor using 3D convolutional layers to render depth maps with a resolution of 32<math id="Sx2.SSx3.p1.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.SSx3.p1.2.m2.1a"><mo id="Sx2.SSx3.p1.2.m2.1.1" xref="Sx2.SSx3.p1.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.SSx3.p1.2.m2.1b"><times id="Sx2.SSx3.p1.2.m2.1.1.cmml" xref="Sx2.SSx3.p1.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx3.p1.2.m2.1c">\times</annotation></semantics></math>32 pixels. Depth2Pose then processes this higher resolution depth map using 2D convolutional layers to output the 2D position of joints and limbs of all people present. This stage uses an adaptation of OpenPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib56" title="" class="ltx_ref">56</a>]</cite> specifically written for depth images rather than intensity images. Finally, we associate the limb locations provided by Depth2Pose with the corresponding depth locations obtained from Pixels2Depth to recover distinct 3D skeletons of people. Further details on the different steps are provided in Supplementary Information 2.</p>
+</div>
+</section>
+<section id="Sx2.SSx4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Supervised training</h3>
+
+<div id="Sx2.SSx4.p1" class="ltx_para">
+<p id="Sx2.SSx4.p1.1" class="ltx_p">The two networks that we use for Pixels2Pose, Pixels2Depth and Depth2Pose, are each trained separately and then combined later. To train Pixels2Depth, we simultaneously record histograms from the vl53l5 sensor and the corresponding depth images with a Microsoft Azure Kinect DK. The high-resolution images from the Kinect are downsampled to 32x32 pixels using bicubic interpolation before training. We now have the data from the vl53l5 sensor and the corresponding ground truth depth label that can be used for training.</p>
+</div>
+<div id="Sx2.SSx4.p2" class="ltx_para">
+<p id="Sx2.SSx4.p2.1" class="ltx_p">To train Depth2Pose, we exploit the corresponding Kinect’s RGB image, which is recorded at the same time as the depth image. We can use the intensity images to extract 2D pose labels (confidence maps of joints and limbs position) via the RGB-based model OpenPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib56" title="" class="ltx_ref">56</a>]</cite>. These 2D pose labels are the ground truth data used to train the Depth2Pose network. During training, Depth2Pose learns the parameters of the network to convert a depth image from Pixels2Depth to the 2D pose obtained from the RGB image. After the supervised training of the networks, Pixels2Pose relies only on the vl53l5 sensor data with no additional camera necessary.</p>
+</div>
+<div id="Sx2.SSx4.p3" class="ltx_para">
+<p id="Sx2.SSx4.p3.1" class="ltx_p">We trained three separate networks for reconstructing one, two, and three people in 3D. We collected 7000 images for the training for the one-person network, 9500 for the two-person network, and 9500 for the three-person network. All the training and validation images are captured in a controlled laboratory environment. Further details on the network structure and on the training are provided in Supplementary Information 2.</p>
+</div>
+</section>
+<section id="Sx2.SSx5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Pose estimation of multiple people in 3D</h3>
+
+<div id="Sx2.SSx5.p1" class="ltx_para">
+<p id="Sx2.SSx5.p1.1" class="ltx_p">Several frames showing the outputs of the two-person Pixels2Depth and Pixels2Pose networks are shown in Fig. <a href="#Sx2.F3" title="Figure 3 ‣ Pose estimation of multiple people in 3D ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>. We include the RGB image obtained from the Kinect as a reference of the input scene. Note that this image was not used in any of the networks and is just shown as a guide for the reader. Figure <a href="#Sx2.F4" title="Figure 4 ‣ Pose estimation of multiple people in 3D ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> shows several frames from the results for the one-person and three-person Pixels2Pose networks. Here we also show the ground truth 3D pose as a reference for comparison.</p>
+</div>
+<div id="Sx2.SSx5.p2" class="ltx_para">
+<p id="Sx2.SSx5.p2.2" class="ltx_p">The ground truth 3D poses are obtained directly from the intensity and depth images of the Kinect. We use the high-resolution RGB images and OpenPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib56" title="" class="ltx_ref">56</a>]</cite> to calculate the ground truth 2D pose data. Each of the points in the 2D pose dataset corresponds to the <math id="Sx2.SSx5.p2.1.m1.2" class="ltx_Math" alttext="x,y" display="inline"><semantics id="Sx2.SSx5.p2.1.m1.2a"><mrow id="Sx2.SSx5.p2.1.m1.2.3.2" xref="Sx2.SSx5.p2.1.m1.2.3.1.cmml"><mi id="Sx2.SSx5.p2.1.m1.1.1" xref="Sx2.SSx5.p2.1.m1.1.1.cmml">x</mi><mo id="Sx2.SSx5.p2.1.m1.2.3.2.1" xref="Sx2.SSx5.p2.1.m1.2.3.1.cmml">,</mo><mi id="Sx2.SSx5.p2.1.m1.2.2" xref="Sx2.SSx5.p2.1.m1.2.2.cmml">y</mi></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx5.p2.1.m1.2b"><list id="Sx2.SSx5.p2.1.m1.2.3.1.cmml" xref="Sx2.SSx5.p2.1.m1.2.3.2"><ci id="Sx2.SSx5.p2.1.m1.1.1.cmml" xref="Sx2.SSx5.p2.1.m1.1.1">𝑥</ci><ci id="Sx2.SSx5.p2.1.m1.2.2.cmml" xref="Sx2.SSx5.p2.1.m1.2.2">𝑦</ci></list></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx5.p2.1.m1.2c">x,y</annotation></semantics></math> location of a joint. The <math id="Sx2.SSx5.p2.2.m2.1" class="ltx_Math" alttext="z" display="inline"><semantics id="Sx2.SSx5.p2.2.m2.1a"><mi id="Sx2.SSx5.p2.2.m2.1.1" xref="Sx2.SSx5.p2.2.m2.1.1.cmml">z</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx5.p2.2.m2.1b"><ci id="Sx2.SSx5.p2.2.m2.1.1.cmml" xref="Sx2.SSx5.p2.2.m2.1.1">𝑧</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx5.p2.2.m2.1c">z</annotation></semantics></math> location of each of the data points is obtained by using the corresponding depth information obtained from the associated Kinect depth image.</p>
+</div>
+<figure id="Sx2.F3" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="Sx2.F3.sf1" class="ltx_figure ltx_figure_panel ltx_align_center">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F3.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="Sx2.F3.sf1.3.2" class="ltx_text" style="font-size:90%;">RGB Reference</span></figcaption><img src="/html/2110.11414/assets/Figures/Figure_3_1.png" id="Sx2.F3.sf1.g1" class="ltx_graphics ltx_img_portrait" width="598" height="1854" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="Sx2.F3.sf2" class="ltx_figure ltx_figure_panel ltx_align_center">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F3.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="Sx2.F3.sf2.3.2" class="ltx_text" style="font-size:90%;"> Apparent resolution of the sensor</span></figcaption><img src="/html/2110.11414/assets/Figures/Figure_3_2.png" id="Sx2.F3.sf2.g1" class="ltx_graphics ltx_img_portrait" width="598" height="1854" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="Sx2.F3.sf3" class="ltx_figure ltx_figure_panel ltx_align_center">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F3.sf3.2.1.1" class="ltx_text" style="font-size:90%;">(c)</span> </span><span id="Sx2.F3.sf3.3.2" class="ltx_text" style="font-size:90%;"> Pixels2Depth output</span></figcaption><img src="/html/2110.11414/assets/Figures/Figure_3_3.png" id="Sx2.F3.sf3.g1" class="ltx_graphics ltx_img_portrait" width="598" height="1854" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="Sx2.F3.sf4" class="ltx_figure ltx_figure_panel ltx_align_center">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F3.sf4.2.1.1" class="ltx_text" style="font-size:90%;">(d)</span> </span><span id="Sx2.F3.sf4.3.2" class="ltx_text" style="font-size:90%;"> Pixels2Pose output</span></figcaption><img src="/html/2110.11414/assets/Figures/Figure_3_4.png" id="Sx2.F3.sf4.g1" class="ltx_graphics ltx_img_portrait" width="598" height="1854" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F3.9.4.1" class="ltx_text" style="font-size:90%;">Figure 3</span>: </span><span id="Sx2.F3.6.3" class="ltx_text ltx_font_bold" style="font-size:90%;">Results with two people.<span id="Sx2.F3.6.3.3" class="ltx_text ltx_font_medium"> (a) is the RGB image taken by a Kinect for reference. (b) shows the 4 <math id="Sx2.F3.4.1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.F3.4.1.1.m1.1b"><mo id="Sx2.F3.4.1.1.m1.1.1" xref="Sx2.F3.4.1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.F3.4.1.1.m1.1c"><times id="Sx2.F3.4.1.1.m1.1.1.cmml" xref="Sx2.F3.4.1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.F3.4.1.1.m1.1d">\times</annotation></semantics></math> 4 depth map corresponding to the maximum return of photon counts of the 4 <math id="Sx2.F3.5.2.2.m2.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.F3.5.2.2.m2.1b"><mo id="Sx2.F3.5.2.2.m2.1.1" xref="Sx2.F3.5.2.2.m2.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.F3.5.2.2.m2.1c"><times id="Sx2.F3.5.2.2.m2.1.1.cmml" xref="Sx2.F3.5.2.2.m2.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.F3.5.2.2.m2.1d">\times</annotation></semantics></math> 4 <math id="Sx2.F3.6.3.3.m3.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx2.F3.6.3.3.m3.1b"><mo id="Sx2.F3.6.3.3.m3.1.1" xref="Sx2.F3.6.3.3.m3.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx2.F3.6.3.3.m3.1c"><times id="Sx2.F3.6.3.3.m3.1.1.cmml" xref="Sx2.F3.6.3.3.m3.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx2.F3.6.3.3.m3.1d">\times</annotation></semantics></math> 100 histogram. (c) shows the output of Pixels2Depth. (d) shows the reconstruction of Pixels2Pose.</span></span></figcaption>
+</figure>
+<div id="Sx2.SSx5.p3" class="ltx_para">
+<p id="Sx2.SSx5.p3.1" class="ltx_p">Supplementary information movies 1, 2, and 3 show videos of data obtained from the Pixels2Depth and Pixels2Pose networks for one, two, and three people, respectively. We also show the input to the network, the vl53l5 sensor data, and the reference data obtained from the Kinect camera.</p>
+</div>
+<figure id="Sx2.F4" class="ltx_figure"><img src="/html/2110.11414/assets/Figures/Figure_4.png" id="Sx2.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="367" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F4.3.1.1" class="ltx_text" style="font-size:90%;">Figure 4</span>: </span><span id="Sx2.F4.4.2" class="ltx_text" style="font-size:90%;">
+<span id="Sx2.F4.4.2.1" class="ltx_text ltx_font_bold">Results with one and three people.</span> The 3D reconstructions on validation data and the corresponding RGB images are shown for different scenes containing one or three people. </span></figcaption>
+</figure>
+</section>
+<section id="Sx2.SSx6" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Evaluation of performance</h3>
+
+<div id="Sx2.SSx6.p1" class="ltx_para">
+<p id="Sx2.SSx6.p1.4" class="ltx_p">We evaluate the accuracy of the estimated 3D poses on a validation dataset of 1500 images. We use 500 frames for each scenario of one, two, and three people. In Table <a href="#Sx2.T1" title="Table 1 ‣ Evaluation of performance ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, we show the error in positions along the <math id="Sx2.SSx6.p1.1.m1.1" class="ltx_Math" alttext="x" display="inline"><semantics id="Sx2.SSx6.p1.1.m1.1a"><mi id="Sx2.SSx6.p1.1.m1.1.1" xref="Sx2.SSx6.p1.1.m1.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx6.p1.1.m1.1b"><ci id="Sx2.SSx6.p1.1.m1.1.1.cmml" xref="Sx2.SSx6.p1.1.m1.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx6.p1.1.m1.1c">x</annotation></semantics></math>, <math id="Sx2.SSx6.p1.2.m2.1" class="ltx_Math" alttext="y" display="inline"><semantics id="Sx2.SSx6.p1.2.m2.1a"><mi id="Sx2.SSx6.p1.2.m2.1.1" xref="Sx2.SSx6.p1.2.m2.1.1.cmml">y</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx6.p1.2.m2.1b"><ci id="Sx2.SSx6.p1.2.m2.1.1.cmml" xref="Sx2.SSx6.p1.2.m2.1.1">𝑦</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx6.p1.2.m2.1c">y</annotation></semantics></math>, and <math id="Sx2.SSx6.p1.3.m3.1" class="ltx_Math" alttext="z" display="inline"><semantics id="Sx2.SSx6.p1.3.m3.1a"><mi id="Sx2.SSx6.p1.3.m3.1.1" xref="Sx2.SSx6.p1.3.m3.1.1.cmml">z</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx6.p1.3.m3.1b"><ci id="Sx2.SSx6.p1.3.m3.1.1.cmml" xref="Sx2.SSx6.p1.3.m3.1.1">𝑧</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx6.p1.3.m3.1c">z</annotation></semantics></math> axes for each joint in every pose that we estimate. The error is defined as the root mean squared error, expressed as (for the <math id="Sx2.SSx6.p1.4.m4.1" class="ltx_Math" alttext="x" display="inline"><semantics id="Sx2.SSx6.p1.4.m4.1a"><mi id="Sx2.SSx6.p1.4.m4.1.1" xref="Sx2.SSx6.p1.4.m4.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx6.p1.4.m4.1b"><ci id="Sx2.SSx6.p1.4.m4.1.1.cmml" xref="Sx2.SSx6.p1.4.m4.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx6.p1.4.m4.1c">x</annotation></semantics></math>-axis):</p>
+<table id="Sx2.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math id="Sx2.E1.m1.2" class="ltx_Math" alttext="RMSE_{x}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(\widehat{x}_{i}-x_{i})^{2}}," display="block"><semantics id="Sx2.E1.m1.2a"><mrow id="Sx2.E1.m1.2.2.1" xref="Sx2.E1.m1.2.2.1.1.cmml"><mrow id="Sx2.E1.m1.2.2.1.1" xref="Sx2.E1.m1.2.2.1.1.cmml"><mrow id="Sx2.E1.m1.2.2.1.1.2" xref="Sx2.E1.m1.2.2.1.1.2.cmml"><mi id="Sx2.E1.m1.2.2.1.1.2.2" xref="Sx2.E1.m1.2.2.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="Sx2.E1.m1.2.2.1.1.2.1" xref="Sx2.E1.m1.2.2.1.1.2.1.cmml">​</mo><mi id="Sx2.E1.m1.2.2.1.1.2.3" xref="Sx2.E1.m1.2.2.1.1.2.3.cmml">M</mi><mo lspace="0em" rspace="0em" id="Sx2.E1.m1.2.2.1.1.2.1a" xref="Sx2.E1.m1.2.2.1.1.2.1.cmml">​</mo><mi id="Sx2.E1.m1.2.2.1.1.2.4" xref="Sx2.E1.m1.2.2.1.1.2.4.cmml">S</mi><mo lspace="0em" rspace="0em" id="Sx2.E1.m1.2.2.1.1.2.1b" xref="Sx2.E1.m1.2.2.1.1.2.1.cmml">​</mo><msub id="Sx2.E1.m1.2.2.1.1.2.5" xref="Sx2.E1.m1.2.2.1.1.2.5.cmml"><mi id="Sx2.E1.m1.2.2.1.1.2.5.2" xref="Sx2.E1.m1.2.2.1.1.2.5.2.cmml">E</mi><mi id="Sx2.E1.m1.2.2.1.1.2.5.3" xref="Sx2.E1.m1.2.2.1.1.2.5.3.cmml">x</mi></msub></mrow><mo id="Sx2.E1.m1.2.2.1.1.1" xref="Sx2.E1.m1.2.2.1.1.1.cmml">=</mo><msqrt id="Sx2.E1.m1.1.1" xref="Sx2.E1.m1.1.1.cmml"><mrow id="Sx2.E1.m1.1.1.1" xref="Sx2.E1.m1.1.1.1.cmml"><mfrac id="Sx2.E1.m1.1.1.1.3" xref="Sx2.E1.m1.1.1.1.3.cmml"><mn id="Sx2.E1.m1.1.1.1.3.2" xref="Sx2.E1.m1.1.1.1.3.2.cmml">1</mn><mi id="Sx2.E1.m1.1.1.1.3.3" xref="Sx2.E1.m1.1.1.1.3.3.cmml">N</mi></mfrac><mo lspace="0em" rspace="0em" id="Sx2.E1.m1.1.1.1.2" xref="Sx2.E1.m1.1.1.1.2.cmml">​</mo><mrow id="Sx2.E1.m1.1.1.1.1" xref="Sx2.E1.m1.1.1.1.1.cmml"><munderover id="Sx2.E1.m1.1.1.1.1.2" xref="Sx2.E1.m1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="Sx2.E1.m1.1.1.1.1.2.2.2" xref="Sx2.E1.m1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="Sx2.E1.m1.1.1.1.1.2.2.3" xref="Sx2.E1.m1.1.1.1.1.2.2.3.cmml"><mi id="Sx2.E1.m1.1.1.1.1.2.2.3.2" xref="Sx2.E1.m1.1.1.1.1.2.2.3.2.cmml">i</mi><mo id="Sx2.E1.m1.1.1.1.1.2.2.3.1" xref="Sx2.E1.m1.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="Sx2.E1.m1.1.1.1.1.2.2.3.3" xref="Sx2.E1.m1.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="Sx2.E1.m1.1.1.1.1.2.3" xref="Sx2.E1.m1.1.1.1.1.2.3.cmml">N</mi></munderover><msup id="Sx2.E1.m1.1.1.1.1.1" xref="Sx2.E1.m1.1.1.1.1.1.cmml"><mrow id="Sx2.E1.m1.1.1.1.1.1.1.1" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="Sx2.E1.m1.1.1.1.1.1.1.1.2" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="Sx2.E1.m1.1.1.1.1.1.1.1.1" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.cmml"><msub id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.cmml"><mover accent="true" id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.cmml"><mi id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.2" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.2.cmml">x</mi><mo id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.1" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.1.cmml">^</mo></mover><mi id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.3" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.3.cmml">i</mi></msub><mo id="Sx2.E1.m1.1.1.1.1.1.1.1.1.1" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="Sx2.E1.m1.1.1.1.1.1.1.1.1.3" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.cmml"><mi id="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.2" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.2.cmml">x</mi><mi id="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.3" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="Sx2.E1.m1.1.1.1.1.1.1.1.3" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mn id="Sx2.E1.m1.1.1.1.1.1.3" xref="Sx2.E1.m1.1.1.1.1.1.3.cmml">2</mn></msup></mrow></mrow></msqrt></mrow><mo id="Sx2.E1.m1.2.2.1.2" xref="Sx2.E1.m1.2.2.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="Sx2.E1.m1.2b"><apply id="Sx2.E1.m1.2.2.1.1.cmml" xref="Sx2.E1.m1.2.2.1"><eq id="Sx2.E1.m1.2.2.1.1.1.cmml" xref="Sx2.E1.m1.2.2.1.1.1"></eq><apply id="Sx2.E1.m1.2.2.1.1.2.cmml" xref="Sx2.E1.m1.2.2.1.1.2"><times id="Sx2.E1.m1.2.2.1.1.2.1.cmml" xref="Sx2.E1.m1.2.2.1.1.2.1"></times><ci id="Sx2.E1.m1.2.2.1.1.2.2.cmml" xref="Sx2.E1.m1.2.2.1.1.2.2">𝑅</ci><ci id="Sx2.E1.m1.2.2.1.1.2.3.cmml" xref="Sx2.E1.m1.2.2.1.1.2.3">𝑀</ci><ci id="Sx2.E1.m1.2.2.1.1.2.4.cmml" xref="Sx2.E1.m1.2.2.1.1.2.4">𝑆</ci><apply id="Sx2.E1.m1.2.2.1.1.2.5.cmml" xref="Sx2.E1.m1.2.2.1.1.2.5"><csymbol cd="ambiguous" id="Sx2.E1.m1.2.2.1.1.2.5.1.cmml" xref="Sx2.E1.m1.2.2.1.1.2.5">subscript</csymbol><ci id="Sx2.E1.m1.2.2.1.1.2.5.2.cmml" xref="Sx2.E1.m1.2.2.1.1.2.5.2">𝐸</ci><ci id="Sx2.E1.m1.2.2.1.1.2.5.3.cmml" xref="Sx2.E1.m1.2.2.1.1.2.5.3">𝑥</ci></apply></apply><apply id="Sx2.E1.m1.1.1.cmml" xref="Sx2.E1.m1.1.1"><root id="Sx2.E1.m1.1.1a.cmml" xref="Sx2.E1.m1.1.1"></root><apply id="Sx2.E1.m1.1.1.1.cmml" xref="Sx2.E1.m1.1.1.1"><times id="Sx2.E1.m1.1.1.1.2.cmml" xref="Sx2.E1.m1.1.1.1.2"></times><apply id="Sx2.E1.m1.1.1.1.3.cmml" xref="Sx2.E1.m1.1.1.1.3"><divide id="Sx2.E1.m1.1.1.1.3.1.cmml" xref="Sx2.E1.m1.1.1.1.3"></divide><cn type="integer" id="Sx2.E1.m1.1.1.1.3.2.cmml" xref="Sx2.E1.m1.1.1.1.3.2">1</cn><ci id="Sx2.E1.m1.1.1.1.3.3.cmml" xref="Sx2.E1.m1.1.1.1.3.3">𝑁</ci></apply><apply id="Sx2.E1.m1.1.1.1.1.cmml" xref="Sx2.E1.m1.1.1.1.1"><apply id="Sx2.E1.m1.1.1.1.1.2.cmml" xref="Sx2.E1.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.E1.m1.1.1.1.1.2.1.cmml" xref="Sx2.E1.m1.1.1.1.1.2">superscript</csymbol><apply id="Sx2.E1.m1.1.1.1.1.2.2.cmml" xref="Sx2.E1.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.E1.m1.1.1.1.1.2.2.1.cmml" xref="Sx2.E1.m1.1.1.1.1.2">subscript</csymbol><sum id="Sx2.E1.m1.1.1.1.1.2.2.2.cmml" xref="Sx2.E1.m1.1.1.1.1.2.2.2"></sum><apply id="Sx2.E1.m1.1.1.1.1.2.2.3.cmml" xref="Sx2.E1.m1.1.1.1.1.2.2.3"><eq id="Sx2.E1.m1.1.1.1.1.2.2.3.1.cmml" xref="Sx2.E1.m1.1.1.1.1.2.2.3.1"></eq><ci id="Sx2.E1.m1.1.1.1.1.2.2.3.2.cmml" xref="Sx2.E1.m1.1.1.1.1.2.2.3.2">𝑖</ci><cn type="integer" id="Sx2.E1.m1.1.1.1.1.2.2.3.3.cmml" xref="Sx2.E1.m1.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="Sx2.E1.m1.1.1.1.1.2.3.cmml" xref="Sx2.E1.m1.1.1.1.1.2.3">𝑁</ci></apply><apply id="Sx2.E1.m1.1.1.1.1.1.cmml" xref="Sx2.E1.m1.1.1.1.1.1"><csymbol cd="ambiguous" id="Sx2.E1.m1.1.1.1.1.1.2.cmml" xref="Sx2.E1.m1.1.1.1.1.1">superscript</csymbol><apply id="Sx2.E1.m1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1"><minus id="Sx2.E1.m1.1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.1"></minus><apply id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.1.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2">subscript</csymbol><apply id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2"><ci id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.1.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.1">^</ci><ci id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.2.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.2.2">𝑥</ci></apply><ci id="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.3.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.2.3">𝑖</ci></apply><apply id="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.1.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.2.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.2">𝑥</ci><ci id="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.3.cmml" xref="Sx2.E1.m1.1.1.1.1.1.1.1.1.3.3">𝑖</ci></apply></apply><cn type="integer" id="Sx2.E1.m1.1.1.1.1.1.3.cmml" xref="Sx2.E1.m1.1.1.1.1.1.3">2</cn></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.E1.m1.2c">RMSE_{x}=\sqrt{\frac{1}{N}\sum_{i=1}^{N}(\widehat{x}_{i}-x_{i})^{2}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="Sx2.SSx6.p1.8" class="ltx_p">with <math id="Sx2.SSx6.p1.5.m1.1" class="ltx_Math" alttext="N" display="inline"><semantics id="Sx2.SSx6.p1.5.m1.1a"><mi id="Sx2.SSx6.p1.5.m1.1.1" xref="Sx2.SSx6.p1.5.m1.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="Sx2.SSx6.p1.5.m1.1b"><ci id="Sx2.SSx6.p1.5.m1.1.1.cmml" xref="Sx2.SSx6.p1.5.m1.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx6.p1.5.m1.1c">N</annotation></semantics></math> the number of validation frames, <math id="Sx2.SSx6.p1.6.m2.3" class="ltx_Math" alttext="(\widehat{x},\widehat{y},\widehat{z})" display="inline"><semantics id="Sx2.SSx6.p1.6.m2.3a"><mrow id="Sx2.SSx6.p1.6.m2.3.4.2" xref="Sx2.SSx6.p1.6.m2.3.4.1.cmml"><mo stretchy="false" id="Sx2.SSx6.p1.6.m2.3.4.2.1" xref="Sx2.SSx6.p1.6.m2.3.4.1.cmml">(</mo><mover accent="true" id="Sx2.SSx6.p1.6.m2.1.1" xref="Sx2.SSx6.p1.6.m2.1.1.cmml"><mi id="Sx2.SSx6.p1.6.m2.1.1.2" xref="Sx2.SSx6.p1.6.m2.1.1.2.cmml">x</mi><mo id="Sx2.SSx6.p1.6.m2.1.1.1" xref="Sx2.SSx6.p1.6.m2.1.1.1.cmml">^</mo></mover><mo id="Sx2.SSx6.p1.6.m2.3.4.2.2" xref="Sx2.SSx6.p1.6.m2.3.4.1.cmml">,</mo><mover accent="true" id="Sx2.SSx6.p1.6.m2.2.2" xref="Sx2.SSx6.p1.6.m2.2.2.cmml"><mi id="Sx2.SSx6.p1.6.m2.2.2.2" xref="Sx2.SSx6.p1.6.m2.2.2.2.cmml">y</mi><mo id="Sx2.SSx6.p1.6.m2.2.2.1" xref="Sx2.SSx6.p1.6.m2.2.2.1.cmml">^</mo></mover><mo id="Sx2.SSx6.p1.6.m2.3.4.2.3" xref="Sx2.SSx6.p1.6.m2.3.4.1.cmml">,</mo><mover accent="true" id="Sx2.SSx6.p1.6.m2.3.3" xref="Sx2.SSx6.p1.6.m2.3.3.cmml"><mi id="Sx2.SSx6.p1.6.m2.3.3.2" xref="Sx2.SSx6.p1.6.m2.3.3.2.cmml">z</mi><mo id="Sx2.SSx6.p1.6.m2.3.3.1" xref="Sx2.SSx6.p1.6.m2.3.3.1.cmml">^</mo></mover><mo stretchy="false" id="Sx2.SSx6.p1.6.m2.3.4.2.4" xref="Sx2.SSx6.p1.6.m2.3.4.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx6.p1.6.m2.3b"><vector id="Sx2.SSx6.p1.6.m2.3.4.1.cmml" xref="Sx2.SSx6.p1.6.m2.3.4.2"><apply id="Sx2.SSx6.p1.6.m2.1.1.cmml" xref="Sx2.SSx6.p1.6.m2.1.1"><ci id="Sx2.SSx6.p1.6.m2.1.1.1.cmml" xref="Sx2.SSx6.p1.6.m2.1.1.1">^</ci><ci id="Sx2.SSx6.p1.6.m2.1.1.2.cmml" xref="Sx2.SSx6.p1.6.m2.1.1.2">𝑥</ci></apply><apply id="Sx2.SSx6.p1.6.m2.2.2.cmml" xref="Sx2.SSx6.p1.6.m2.2.2"><ci id="Sx2.SSx6.p1.6.m2.2.2.1.cmml" xref="Sx2.SSx6.p1.6.m2.2.2.1">^</ci><ci id="Sx2.SSx6.p1.6.m2.2.2.2.cmml" xref="Sx2.SSx6.p1.6.m2.2.2.2">𝑦</ci></apply><apply id="Sx2.SSx6.p1.6.m2.3.3.cmml" xref="Sx2.SSx6.p1.6.m2.3.3"><ci id="Sx2.SSx6.p1.6.m2.3.3.1.cmml" xref="Sx2.SSx6.p1.6.m2.3.3.1">^</ci><ci id="Sx2.SSx6.p1.6.m2.3.3.2.cmml" xref="Sx2.SSx6.p1.6.m2.3.3.2">𝑧</ci></apply></vector></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx6.p1.6.m2.3c">(\widehat{x},\widehat{y},\widehat{z})</annotation></semantics></math> the estimated positions, and <math id="Sx2.SSx6.p1.7.m3.3" class="ltx_Math" alttext="(x,y,z)" display="inline"><semantics id="Sx2.SSx6.p1.7.m3.3a"><mrow id="Sx2.SSx6.p1.7.m3.3.4.2" xref="Sx2.SSx6.p1.7.m3.3.4.1.cmml"><mo stretchy="false" id="Sx2.SSx6.p1.7.m3.3.4.2.1" xref="Sx2.SSx6.p1.7.m3.3.4.1.cmml">(</mo><mi id="Sx2.SSx6.p1.7.m3.1.1" xref="Sx2.SSx6.p1.7.m3.1.1.cmml">x</mi><mo id="Sx2.SSx6.p1.7.m3.3.4.2.2" xref="Sx2.SSx6.p1.7.m3.3.4.1.cmml">,</mo><mi id="Sx2.SSx6.p1.7.m3.2.2" xref="Sx2.SSx6.p1.7.m3.2.2.cmml">y</mi><mo id="Sx2.SSx6.p1.7.m3.3.4.2.3" xref="Sx2.SSx6.p1.7.m3.3.4.1.cmml">,</mo><mi id="Sx2.SSx6.p1.7.m3.3.3" xref="Sx2.SSx6.p1.7.m3.3.3.cmml">z</mi><mo stretchy="false" id="Sx2.SSx6.p1.7.m3.3.4.2.4" xref="Sx2.SSx6.p1.7.m3.3.4.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx6.p1.7.m3.3b"><vector id="Sx2.SSx6.p1.7.m3.3.4.1.cmml" xref="Sx2.SSx6.p1.7.m3.3.4.2"><ci id="Sx2.SSx6.p1.7.m3.1.1.cmml" xref="Sx2.SSx6.p1.7.m3.1.1">𝑥</ci><ci id="Sx2.SSx6.p1.7.m3.2.2.cmml" xref="Sx2.SSx6.p1.7.m3.2.2">𝑦</ci><ci id="Sx2.SSx6.p1.7.m3.3.3.cmml" xref="Sx2.SSx6.p1.7.m3.3.3">𝑧</ci></vector></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx6.p1.7.m3.3c">(x,y,z)</annotation></semantics></math> the ground truth positions. We report the average error <math id="Sx2.SSx6.p1.8.m4.1" class="ltx_Math" alttext="AE" display="inline"><semantics id="Sx2.SSx6.p1.8.m4.1a"><mrow id="Sx2.SSx6.p1.8.m4.1.1" xref="Sx2.SSx6.p1.8.m4.1.1.cmml"><mi id="Sx2.SSx6.p1.8.m4.1.1.2" xref="Sx2.SSx6.p1.8.m4.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="Sx2.SSx6.p1.8.m4.1.1.1" xref="Sx2.SSx6.p1.8.m4.1.1.1.cmml">​</mo><mi id="Sx2.SSx6.p1.8.m4.1.1.3" xref="Sx2.SSx6.p1.8.m4.1.1.3.cmml">E</mi></mrow><annotation-xml encoding="MathML-Content" id="Sx2.SSx6.p1.8.m4.1b"><apply id="Sx2.SSx6.p1.8.m4.1.1.cmml" xref="Sx2.SSx6.p1.8.m4.1.1"><times id="Sx2.SSx6.p1.8.m4.1.1.1.cmml" xref="Sx2.SSx6.p1.8.m4.1.1.1"></times><ci id="Sx2.SSx6.p1.8.m4.1.1.2.cmml" xref="Sx2.SSx6.p1.8.m4.1.1.2">𝐴</ci><ci id="Sx2.SSx6.p1.8.m4.1.1.3.cmml" xref="Sx2.SSx6.p1.8.m4.1.1.3">𝐸</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.SSx6.p1.8.m4.1c">AE</annotation></semantics></math>, defined as:</p>
+</div>
+<div id="Sx2.SSx6.p2" class="ltx_para">
+<table id="Sx2.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math id="Sx2.E2.m1.4" class="ltx_Math" alttext="AE=\frac{1}{N}\sum_{i=1}^{N}\sqrt{(\widehat{x}_{i}-x_{i})^{2}+(\widehat{y}_{i}-y_{i})^{2}+(\widehat{z}_{i}-z_{i})^{2}}." display="block"><semantics id="Sx2.E2.m1.4a"><mrow id="Sx2.E2.m1.4.4.1" xref="Sx2.E2.m1.4.4.1.1.cmml"><mrow id="Sx2.E2.m1.4.4.1.1" xref="Sx2.E2.m1.4.4.1.1.cmml"><mrow id="Sx2.E2.m1.4.4.1.1.2" xref="Sx2.E2.m1.4.4.1.1.2.cmml"><mi id="Sx2.E2.m1.4.4.1.1.2.2" xref="Sx2.E2.m1.4.4.1.1.2.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="Sx2.E2.m1.4.4.1.1.2.1" xref="Sx2.E2.m1.4.4.1.1.2.1.cmml">​</mo><mi id="Sx2.E2.m1.4.4.1.1.2.3" xref="Sx2.E2.m1.4.4.1.1.2.3.cmml">E</mi></mrow><mo id="Sx2.E2.m1.4.4.1.1.1" xref="Sx2.E2.m1.4.4.1.1.1.cmml">=</mo><mrow id="Sx2.E2.m1.4.4.1.1.3" xref="Sx2.E2.m1.4.4.1.1.3.cmml"><mfrac id="Sx2.E2.m1.4.4.1.1.3.2" xref="Sx2.E2.m1.4.4.1.1.3.2.cmml"><mn id="Sx2.E2.m1.4.4.1.1.3.2.2" xref="Sx2.E2.m1.4.4.1.1.3.2.2.cmml">1</mn><mi id="Sx2.E2.m1.4.4.1.1.3.2.3" xref="Sx2.E2.m1.4.4.1.1.3.2.3.cmml">N</mi></mfrac><mo lspace="0em" rspace="0em" id="Sx2.E2.m1.4.4.1.1.3.1" xref="Sx2.E2.m1.4.4.1.1.3.1.cmml">​</mo><mrow id="Sx2.E2.m1.4.4.1.1.3.3" xref="Sx2.E2.m1.4.4.1.1.3.3.cmml"><munderover id="Sx2.E2.m1.4.4.1.1.3.3.1" xref="Sx2.E2.m1.4.4.1.1.3.3.1.cmml"><mo movablelimits="false" id="Sx2.E2.m1.4.4.1.1.3.3.1.2.2" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.2.cmml">∑</mo><mrow id="Sx2.E2.m1.4.4.1.1.3.3.1.2.3" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.cmml"><mi id="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.2" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.2.cmml">i</mi><mo id="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.1" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.1.cmml">=</mo><mn id="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.3" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.3.cmml">1</mn></mrow><mi id="Sx2.E2.m1.4.4.1.1.3.3.1.3" xref="Sx2.E2.m1.4.4.1.1.3.3.1.3.cmml">N</mi></munderover><msqrt id="Sx2.E2.m1.3.3" xref="Sx2.E2.m1.3.3.cmml"><mrow id="Sx2.E2.m1.3.3.3" xref="Sx2.E2.m1.3.3.3.cmml"><msup id="Sx2.E2.m1.1.1.1.1" xref="Sx2.E2.m1.1.1.1.1.cmml"><mrow id="Sx2.E2.m1.1.1.1.1.1.1" xref="Sx2.E2.m1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="Sx2.E2.m1.1.1.1.1.1.1.2" xref="Sx2.E2.m1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="Sx2.E2.m1.1.1.1.1.1.1.1" xref="Sx2.E2.m1.1.1.1.1.1.1.1.cmml"><msub id="Sx2.E2.m1.1.1.1.1.1.1.1.2" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.cmml"><mover accent="true" id="Sx2.E2.m1.1.1.1.1.1.1.1.2.2" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.cmml"><mi id="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.2" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.2.cmml">x</mi><mo id="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.1" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.1.cmml">^</mo></mover><mi id="Sx2.E2.m1.1.1.1.1.1.1.1.2.3" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.3.cmml">i</mi></msub><mo id="Sx2.E2.m1.1.1.1.1.1.1.1.1" xref="Sx2.E2.m1.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="Sx2.E2.m1.1.1.1.1.1.1.1.3" xref="Sx2.E2.m1.1.1.1.1.1.1.1.3.cmml"><mi id="Sx2.E2.m1.1.1.1.1.1.1.1.3.2" xref="Sx2.E2.m1.1.1.1.1.1.1.1.3.2.cmml">x</mi><mi id="Sx2.E2.m1.1.1.1.1.1.1.1.3.3" xref="Sx2.E2.m1.1.1.1.1.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="Sx2.E2.m1.1.1.1.1.1.1.3" xref="Sx2.E2.m1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mn id="Sx2.E2.m1.1.1.1.1.3" xref="Sx2.E2.m1.1.1.1.1.3.cmml">2</mn></msup><mo id="Sx2.E2.m1.3.3.3.4" xref="Sx2.E2.m1.3.3.3.4.cmml">+</mo><msup id="Sx2.E2.m1.2.2.2.2" xref="Sx2.E2.m1.2.2.2.2.cmml"><mrow id="Sx2.E2.m1.2.2.2.2.1.1" xref="Sx2.E2.m1.2.2.2.2.1.1.1.cmml"><mo stretchy="false" id="Sx2.E2.m1.2.2.2.2.1.1.2" xref="Sx2.E2.m1.2.2.2.2.1.1.1.cmml">(</mo><mrow id="Sx2.E2.m1.2.2.2.2.1.1.1" xref="Sx2.E2.m1.2.2.2.2.1.1.1.cmml"><msub id="Sx2.E2.m1.2.2.2.2.1.1.1.2" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.cmml"><mover accent="true" id="Sx2.E2.m1.2.2.2.2.1.1.1.2.2" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.cmml"><mi id="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.2" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.2.cmml">y</mi><mo id="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.1" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.1.cmml">^</mo></mover><mi id="Sx2.E2.m1.2.2.2.2.1.1.1.2.3" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.3.cmml">i</mi></msub><mo id="Sx2.E2.m1.2.2.2.2.1.1.1.1" xref="Sx2.E2.m1.2.2.2.2.1.1.1.1.cmml">−</mo><msub id="Sx2.E2.m1.2.2.2.2.1.1.1.3" xref="Sx2.E2.m1.2.2.2.2.1.1.1.3.cmml"><mi id="Sx2.E2.m1.2.2.2.2.1.1.1.3.2" xref="Sx2.E2.m1.2.2.2.2.1.1.1.3.2.cmml">y</mi><mi id="Sx2.E2.m1.2.2.2.2.1.1.1.3.3" xref="Sx2.E2.m1.2.2.2.2.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="Sx2.E2.m1.2.2.2.2.1.1.3" xref="Sx2.E2.m1.2.2.2.2.1.1.1.cmml">)</mo></mrow><mn id="Sx2.E2.m1.2.2.2.2.3" xref="Sx2.E2.m1.2.2.2.2.3.cmml">2</mn></msup><mo id="Sx2.E2.m1.3.3.3.4a" xref="Sx2.E2.m1.3.3.3.4.cmml">+</mo><msup id="Sx2.E2.m1.3.3.3.3" xref="Sx2.E2.m1.3.3.3.3.cmml"><mrow id="Sx2.E2.m1.3.3.3.3.1.1" xref="Sx2.E2.m1.3.3.3.3.1.1.1.cmml"><mo stretchy="false" id="Sx2.E2.m1.3.3.3.3.1.1.2" xref="Sx2.E2.m1.3.3.3.3.1.1.1.cmml">(</mo><mrow id="Sx2.E2.m1.3.3.3.3.1.1.1" xref="Sx2.E2.m1.3.3.3.3.1.1.1.cmml"><msub id="Sx2.E2.m1.3.3.3.3.1.1.1.2" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.cmml"><mover accent="true" id="Sx2.E2.m1.3.3.3.3.1.1.1.2.2" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.cmml"><mi id="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.2" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.2.cmml">z</mi><mo id="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.1" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.1.cmml">^</mo></mover><mi id="Sx2.E2.m1.3.3.3.3.1.1.1.2.3" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.3.cmml">i</mi></msub><mo id="Sx2.E2.m1.3.3.3.3.1.1.1.1" xref="Sx2.E2.m1.3.3.3.3.1.1.1.1.cmml">−</mo><msub id="Sx2.E2.m1.3.3.3.3.1.1.1.3" xref="Sx2.E2.m1.3.3.3.3.1.1.1.3.cmml"><mi id="Sx2.E2.m1.3.3.3.3.1.1.1.3.2" xref="Sx2.E2.m1.3.3.3.3.1.1.1.3.2.cmml">z</mi><mi id="Sx2.E2.m1.3.3.3.3.1.1.1.3.3" xref="Sx2.E2.m1.3.3.3.3.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="Sx2.E2.m1.3.3.3.3.1.1.3" xref="Sx2.E2.m1.3.3.3.3.1.1.1.cmml">)</mo></mrow><mn id="Sx2.E2.m1.3.3.3.3.3" xref="Sx2.E2.m1.3.3.3.3.3.cmml">2</mn></msup></mrow></msqrt></mrow></mrow></mrow><mo lspace="0em" id="Sx2.E2.m1.4.4.1.2" xref="Sx2.E2.m1.4.4.1.1.cmml">.</mo></mrow><annotation-xml encoding="MathML-Content" id="Sx2.E2.m1.4b"><apply id="Sx2.E2.m1.4.4.1.1.cmml" xref="Sx2.E2.m1.4.4.1"><eq id="Sx2.E2.m1.4.4.1.1.1.cmml" xref="Sx2.E2.m1.4.4.1.1.1"></eq><apply id="Sx2.E2.m1.4.4.1.1.2.cmml" xref="Sx2.E2.m1.4.4.1.1.2"><times id="Sx2.E2.m1.4.4.1.1.2.1.cmml" xref="Sx2.E2.m1.4.4.1.1.2.1"></times><ci id="Sx2.E2.m1.4.4.1.1.2.2.cmml" xref="Sx2.E2.m1.4.4.1.1.2.2">𝐴</ci><ci id="Sx2.E2.m1.4.4.1.1.2.3.cmml" xref="Sx2.E2.m1.4.4.1.1.2.3">𝐸</ci></apply><apply id="Sx2.E2.m1.4.4.1.1.3.cmml" xref="Sx2.E2.m1.4.4.1.1.3"><times id="Sx2.E2.m1.4.4.1.1.3.1.cmml" xref="Sx2.E2.m1.4.4.1.1.3.1"></times><apply id="Sx2.E2.m1.4.4.1.1.3.2.cmml" xref="Sx2.E2.m1.4.4.1.1.3.2"><divide id="Sx2.E2.m1.4.4.1.1.3.2.1.cmml" xref="Sx2.E2.m1.4.4.1.1.3.2"></divide><cn type="integer" id="Sx2.E2.m1.4.4.1.1.3.2.2.cmml" xref="Sx2.E2.m1.4.4.1.1.3.2.2">1</cn><ci id="Sx2.E2.m1.4.4.1.1.3.2.3.cmml" xref="Sx2.E2.m1.4.4.1.1.3.2.3">𝑁</ci></apply><apply id="Sx2.E2.m1.4.4.1.1.3.3.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3"><apply id="Sx2.E2.m1.4.4.1.1.3.3.1.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1"><csymbol cd="ambiguous" id="Sx2.E2.m1.4.4.1.1.3.3.1.1.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1">superscript</csymbol><apply id="Sx2.E2.m1.4.4.1.1.3.3.1.2.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1"><csymbol cd="ambiguous" id="Sx2.E2.m1.4.4.1.1.3.3.1.2.1.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1">subscript</csymbol><sum id="Sx2.E2.m1.4.4.1.1.3.3.1.2.2.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.2"></sum><apply id="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.3"><eq id="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.1.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.1"></eq><ci id="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.2.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.2">𝑖</ci><cn type="integer" id="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.3.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1.2.3.3">1</cn></apply></apply><ci id="Sx2.E2.m1.4.4.1.1.3.3.1.3.cmml" xref="Sx2.E2.m1.4.4.1.1.3.3.1.3">𝑁</ci></apply><apply id="Sx2.E2.m1.3.3.cmml" xref="Sx2.E2.m1.3.3"><root id="Sx2.E2.m1.3.3a.cmml" xref="Sx2.E2.m1.3.3"></root><apply id="Sx2.E2.m1.3.3.3.cmml" xref="Sx2.E2.m1.3.3.3"><plus id="Sx2.E2.m1.3.3.3.4.cmml" xref="Sx2.E2.m1.3.3.3.4"></plus><apply id="Sx2.E2.m1.1.1.1.1.cmml" xref="Sx2.E2.m1.1.1.1.1"><csymbol cd="ambiguous" id="Sx2.E2.m1.1.1.1.1.2.cmml" xref="Sx2.E2.m1.1.1.1.1">superscript</csymbol><apply id="Sx2.E2.m1.1.1.1.1.1.1.1.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1"><minus id="Sx2.E2.m1.1.1.1.1.1.1.1.1.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.1"></minus><apply id="Sx2.E2.m1.1.1.1.1.1.1.1.2.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.E2.m1.1.1.1.1.1.1.1.2.1.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2">subscript</csymbol><apply id="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.2"><ci id="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.1.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.1">^</ci><ci id="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.2.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.2.2">𝑥</ci></apply><ci id="Sx2.E2.m1.1.1.1.1.1.1.1.2.3.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.2.3">𝑖</ci></apply><apply id="Sx2.E2.m1.1.1.1.1.1.1.1.3.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.E2.m1.1.1.1.1.1.1.1.3.1.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="Sx2.E2.m1.1.1.1.1.1.1.1.3.2.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.3.2">𝑥</ci><ci id="Sx2.E2.m1.1.1.1.1.1.1.1.3.3.cmml" xref="Sx2.E2.m1.1.1.1.1.1.1.1.3.3">𝑖</ci></apply></apply><cn type="integer" id="Sx2.E2.m1.1.1.1.1.3.cmml" xref="Sx2.E2.m1.1.1.1.1.3">2</cn></apply><apply id="Sx2.E2.m1.2.2.2.2.cmml" xref="Sx2.E2.m1.2.2.2.2"><csymbol cd="ambiguous" id="Sx2.E2.m1.2.2.2.2.2.cmml" xref="Sx2.E2.m1.2.2.2.2">superscript</csymbol><apply id="Sx2.E2.m1.2.2.2.2.1.1.1.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1"><minus id="Sx2.E2.m1.2.2.2.2.1.1.1.1.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.1"></minus><apply id="Sx2.E2.m1.2.2.2.2.1.1.1.2.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.E2.m1.2.2.2.2.1.1.1.2.1.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2">subscript</csymbol><apply id="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.2"><ci id="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.1.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.1">^</ci><ci id="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.2.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.2.2">𝑦</ci></apply><ci id="Sx2.E2.m1.2.2.2.2.1.1.1.2.3.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.2.3">𝑖</ci></apply><apply id="Sx2.E2.m1.2.2.2.2.1.1.1.3.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.E2.m1.2.2.2.2.1.1.1.3.1.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.3">subscript</csymbol><ci id="Sx2.E2.m1.2.2.2.2.1.1.1.3.2.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.3.2">𝑦</ci><ci id="Sx2.E2.m1.2.2.2.2.1.1.1.3.3.cmml" xref="Sx2.E2.m1.2.2.2.2.1.1.1.3.3">𝑖</ci></apply></apply><cn type="integer" id="Sx2.E2.m1.2.2.2.2.3.cmml" xref="Sx2.E2.m1.2.2.2.2.3">2</cn></apply><apply id="Sx2.E2.m1.3.3.3.3.cmml" xref="Sx2.E2.m1.3.3.3.3"><csymbol cd="ambiguous" id="Sx2.E2.m1.3.3.3.3.2.cmml" xref="Sx2.E2.m1.3.3.3.3">superscript</csymbol><apply id="Sx2.E2.m1.3.3.3.3.1.1.1.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1"><minus id="Sx2.E2.m1.3.3.3.3.1.1.1.1.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.1"></minus><apply id="Sx2.E2.m1.3.3.3.3.1.1.1.2.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2"><csymbol cd="ambiguous" id="Sx2.E2.m1.3.3.3.3.1.1.1.2.1.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2">subscript</csymbol><apply id="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.2"><ci id="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.1.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.1">^</ci><ci id="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.2.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.2.2">𝑧</ci></apply><ci id="Sx2.E2.m1.3.3.3.3.1.1.1.2.3.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.2.3">𝑖</ci></apply><apply id="Sx2.E2.m1.3.3.3.3.1.1.1.3.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.3"><csymbol cd="ambiguous" id="Sx2.E2.m1.3.3.3.3.1.1.1.3.1.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.3">subscript</csymbol><ci id="Sx2.E2.m1.3.3.3.3.1.1.1.3.2.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.3.2">𝑧</ci><ci id="Sx2.E2.m1.3.3.3.3.1.1.1.3.3.cmml" xref="Sx2.E2.m1.3.3.3.3.1.1.1.3.3">𝑖</ci></apply></apply><cn type="integer" id="Sx2.E2.m1.3.3.3.3.3.cmml" xref="Sx2.E2.m1.3.3.3.3.3">2</cn></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.E2.m1.4c">AE=\frac{1}{N}\sum_{i=1}^{N}\sqrt{(\widehat{x}_{i}-x_{i})^{2}+(\widehat{y}_{i}-y_{i})^{2}+(\widehat{z}_{i}-z_{i})^{2}}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="Sx2.SSx6.p3" class="ltx_para">
+<p id="Sx2.SSx6.p3.1" class="ltx_p">We also report the percentages of correct key points (PCK-15, PCK-20, PCK-30), i.e. the ratio of estimated body parts for which the distance to the ground truth is below 15, 20, and 30 cm respectively. We see that for the large core body parts i.e. neck, shoulders, hips, and knees, more than 70% of the estimates are within 15 cm of the real position; for the smaller body parts at the extremities, i.e. ankle, wrists, and elbows, between 65% and 90% of estimates are within 30 cm.</p>
+</div>
+<figure id="Sx2.T1" class="ltx_table">
+<table id="Sx2.T1.3" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="Sx2.T1.3.3" class="ltx_tr">
+<th id="Sx2.T1.3.3.4" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="Sx2.T1.1.1.1" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t">
+<math id="Sx2.T1.1.1.1.m1.1" class="ltx_Math" alttext="RMSE_{x}" display="inline"><semantics id="Sx2.T1.1.1.1.m1.1a"><mrow id="Sx2.T1.1.1.1.m1.1.1" xref="Sx2.T1.1.1.1.m1.1.1.cmml"><mi id="Sx2.T1.1.1.1.m1.1.1.2" xref="Sx2.T1.1.1.1.m1.1.1.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.1.1.1.m1.1.1.1" xref="Sx2.T1.1.1.1.m1.1.1.1.cmml">​</mo><mi id="Sx2.T1.1.1.1.m1.1.1.3" xref="Sx2.T1.1.1.1.m1.1.1.3.cmml">M</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.1.1.1.m1.1.1.1a" xref="Sx2.T1.1.1.1.m1.1.1.1.cmml">​</mo><mi id="Sx2.T1.1.1.1.m1.1.1.4" xref="Sx2.T1.1.1.1.m1.1.1.4.cmml">S</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.1.1.1.m1.1.1.1b" xref="Sx2.T1.1.1.1.m1.1.1.1.cmml">​</mo><msub id="Sx2.T1.1.1.1.m1.1.1.5" xref="Sx2.T1.1.1.1.m1.1.1.5.cmml"><mi id="Sx2.T1.1.1.1.m1.1.1.5.2" xref="Sx2.T1.1.1.1.m1.1.1.5.2.cmml">E</mi><mi id="Sx2.T1.1.1.1.m1.1.1.5.3" xref="Sx2.T1.1.1.1.m1.1.1.5.3.cmml">x</mi></msub></mrow><annotation-xml encoding="MathML-Content" id="Sx2.T1.1.1.1.m1.1b"><apply id="Sx2.T1.1.1.1.m1.1.1.cmml" xref="Sx2.T1.1.1.1.m1.1.1"><times id="Sx2.T1.1.1.1.m1.1.1.1.cmml" xref="Sx2.T1.1.1.1.m1.1.1.1"></times><ci id="Sx2.T1.1.1.1.m1.1.1.2.cmml" xref="Sx2.T1.1.1.1.m1.1.1.2">𝑅</ci><ci id="Sx2.T1.1.1.1.m1.1.1.3.cmml" xref="Sx2.T1.1.1.1.m1.1.1.3">𝑀</ci><ci id="Sx2.T1.1.1.1.m1.1.1.4.cmml" xref="Sx2.T1.1.1.1.m1.1.1.4">𝑆</ci><apply id="Sx2.T1.1.1.1.m1.1.1.5.cmml" xref="Sx2.T1.1.1.1.m1.1.1.5"><csymbol cd="ambiguous" id="Sx2.T1.1.1.1.m1.1.1.5.1.cmml" xref="Sx2.T1.1.1.1.m1.1.1.5">subscript</csymbol><ci id="Sx2.T1.1.1.1.m1.1.1.5.2.cmml" xref="Sx2.T1.1.1.1.m1.1.1.5.2">𝐸</ci><ci id="Sx2.T1.1.1.1.m1.1.1.5.3.cmml" xref="Sx2.T1.1.1.1.m1.1.1.5.3">𝑥</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.T1.1.1.1.m1.1c">RMSE_{x}</annotation></semantics></math> (cm)</th>
+<th id="Sx2.T1.2.2.2" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t">
+<math id="Sx2.T1.2.2.2.m1.1" class="ltx_Math" alttext="RMSE_{y}" display="inline"><semantics id="Sx2.T1.2.2.2.m1.1a"><mrow id="Sx2.T1.2.2.2.m1.1.1" xref="Sx2.T1.2.2.2.m1.1.1.cmml"><mi id="Sx2.T1.2.2.2.m1.1.1.2" xref="Sx2.T1.2.2.2.m1.1.1.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.2.2.2.m1.1.1.1" xref="Sx2.T1.2.2.2.m1.1.1.1.cmml">​</mo><mi id="Sx2.T1.2.2.2.m1.1.1.3" xref="Sx2.T1.2.2.2.m1.1.1.3.cmml">M</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.2.2.2.m1.1.1.1a" xref="Sx2.T1.2.2.2.m1.1.1.1.cmml">​</mo><mi id="Sx2.T1.2.2.2.m1.1.1.4" xref="Sx2.T1.2.2.2.m1.1.1.4.cmml">S</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.2.2.2.m1.1.1.1b" xref="Sx2.T1.2.2.2.m1.1.1.1.cmml">​</mo><msub id="Sx2.T1.2.2.2.m1.1.1.5" xref="Sx2.T1.2.2.2.m1.1.1.5.cmml"><mi id="Sx2.T1.2.2.2.m1.1.1.5.2" xref="Sx2.T1.2.2.2.m1.1.1.5.2.cmml">E</mi><mi id="Sx2.T1.2.2.2.m1.1.1.5.3" xref="Sx2.T1.2.2.2.m1.1.1.5.3.cmml">y</mi></msub></mrow><annotation-xml encoding="MathML-Content" id="Sx2.T1.2.2.2.m1.1b"><apply id="Sx2.T1.2.2.2.m1.1.1.cmml" xref="Sx2.T1.2.2.2.m1.1.1"><times id="Sx2.T1.2.2.2.m1.1.1.1.cmml" xref="Sx2.T1.2.2.2.m1.1.1.1"></times><ci id="Sx2.T1.2.2.2.m1.1.1.2.cmml" xref="Sx2.T1.2.2.2.m1.1.1.2">𝑅</ci><ci id="Sx2.T1.2.2.2.m1.1.1.3.cmml" xref="Sx2.T1.2.2.2.m1.1.1.3">𝑀</ci><ci id="Sx2.T1.2.2.2.m1.1.1.4.cmml" xref="Sx2.T1.2.2.2.m1.1.1.4">𝑆</ci><apply id="Sx2.T1.2.2.2.m1.1.1.5.cmml" xref="Sx2.T1.2.2.2.m1.1.1.5"><csymbol cd="ambiguous" id="Sx2.T1.2.2.2.m1.1.1.5.1.cmml" xref="Sx2.T1.2.2.2.m1.1.1.5">subscript</csymbol><ci id="Sx2.T1.2.2.2.m1.1.1.5.2.cmml" xref="Sx2.T1.2.2.2.m1.1.1.5.2">𝐸</ci><ci id="Sx2.T1.2.2.2.m1.1.1.5.3.cmml" xref="Sx2.T1.2.2.2.m1.1.1.5.3">𝑦</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.T1.2.2.2.m1.1c">RMSE_{y}</annotation></semantics></math> (cm)</th>
+<th id="Sx2.T1.3.3.3" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t">
+<math id="Sx2.T1.3.3.3.m1.1" class="ltx_Math" alttext="RMSE_{z}" display="inline"><semantics id="Sx2.T1.3.3.3.m1.1a"><mrow id="Sx2.T1.3.3.3.m1.1.1" xref="Sx2.T1.3.3.3.m1.1.1.cmml"><mi id="Sx2.T1.3.3.3.m1.1.1.2" xref="Sx2.T1.3.3.3.m1.1.1.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.3.3.3.m1.1.1.1" xref="Sx2.T1.3.3.3.m1.1.1.1.cmml">​</mo><mi id="Sx2.T1.3.3.3.m1.1.1.3" xref="Sx2.T1.3.3.3.m1.1.1.3.cmml">M</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.3.3.3.m1.1.1.1a" xref="Sx2.T1.3.3.3.m1.1.1.1.cmml">​</mo><mi id="Sx2.T1.3.3.3.m1.1.1.4" xref="Sx2.T1.3.3.3.m1.1.1.4.cmml">S</mi><mo lspace="0em" rspace="0em" id="Sx2.T1.3.3.3.m1.1.1.1b" xref="Sx2.T1.3.3.3.m1.1.1.1.cmml">​</mo><msub id="Sx2.T1.3.3.3.m1.1.1.5" xref="Sx2.T1.3.3.3.m1.1.1.5.cmml"><mi id="Sx2.T1.3.3.3.m1.1.1.5.2" xref="Sx2.T1.3.3.3.m1.1.1.5.2.cmml">E</mi><mi id="Sx2.T1.3.3.3.m1.1.1.5.3" xref="Sx2.T1.3.3.3.m1.1.1.5.3.cmml">z</mi></msub></mrow><annotation-xml encoding="MathML-Content" id="Sx2.T1.3.3.3.m1.1b"><apply id="Sx2.T1.3.3.3.m1.1.1.cmml" xref="Sx2.T1.3.3.3.m1.1.1"><times id="Sx2.T1.3.3.3.m1.1.1.1.cmml" xref="Sx2.T1.3.3.3.m1.1.1.1"></times><ci id="Sx2.T1.3.3.3.m1.1.1.2.cmml" xref="Sx2.T1.3.3.3.m1.1.1.2">𝑅</ci><ci id="Sx2.T1.3.3.3.m1.1.1.3.cmml" xref="Sx2.T1.3.3.3.m1.1.1.3">𝑀</ci><ci id="Sx2.T1.3.3.3.m1.1.1.4.cmml" xref="Sx2.T1.3.3.3.m1.1.1.4">𝑆</ci><apply id="Sx2.T1.3.3.3.m1.1.1.5.cmml" xref="Sx2.T1.3.3.3.m1.1.1.5"><csymbol cd="ambiguous" id="Sx2.T1.3.3.3.m1.1.1.5.1.cmml" xref="Sx2.T1.3.3.3.m1.1.1.5">subscript</csymbol><ci id="Sx2.T1.3.3.3.m1.1.1.5.2.cmml" xref="Sx2.T1.3.3.3.m1.1.1.5.2">𝐸</ci><ci id="Sx2.T1.3.3.3.m1.1.1.5.3.cmml" xref="Sx2.T1.3.3.3.m1.1.1.5.3">𝑧</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx2.T1.3.3.3.m1.1c">RMSE_{z}</annotation></semantics></math> (cm)</th>
+<th id="Sx2.T1.3.3.5" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t">AE(cm)</th>
+<th id="Sx2.T1.3.3.6" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t">PCR-15 (%)</th>
+<th id="Sx2.T1.3.3.7" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t">PCR-20 (%)</th>
+<th id="Sx2.T1.3.3.8" class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t">PCR-30 (%)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="Sx2.T1.3.4.1" class="ltx_tr">
+<th id="Sx2.T1.3.4.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">neck</th>
+<td id="Sx2.T1.3.4.1.2" class="ltx_td ltx_align_right ltx_border_t">5.4</td>
+<td id="Sx2.T1.3.4.1.3" class="ltx_td ltx_align_right ltx_border_t">6.0</td>
+<td id="Sx2.T1.3.4.1.4" class="ltx_td ltx_align_right ltx_border_t">8.5</td>
+<td id="Sx2.T1.3.4.1.5" class="ltx_td ltx_align_right ltx_border_t">9.5</td>
+<td id="Sx2.T1.3.4.1.6" class="ltx_td ltx_align_right ltx_border_t">80.0</td>
+<td id="Sx2.T1.3.4.1.7" class="ltx_td ltx_align_right ltx_border_t">88.0</td>
+<td id="Sx2.T1.3.4.1.8" class="ltx_td ltx_align_right ltx_border_t">92.0</td>
+</tr>
+<tr id="Sx2.T1.3.5.2" class="ltx_tr">
+<th id="Sx2.T1.3.5.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">shoulders</th>
+<td id="Sx2.T1.3.5.2.2" class="ltx_td ltx_align_right">5.8</td>
+<td id="Sx2.T1.3.5.2.3" class="ltx_td ltx_align_right">12.4</td>
+<td id="Sx2.T1.3.5.2.4" class="ltx_td ltx_align_right">9.2</td>
+<td id="Sx2.T1.3.5.2.5" class="ltx_td ltx_align_right">12.3</td>
+<td id="Sx2.T1.3.5.2.6" class="ltx_td ltx_align_right">72.5</td>
+<td id="Sx2.T1.3.5.2.7" class="ltx_td ltx_align_right">80.2</td>
+<td id="Sx2.T1.3.5.2.8" class="ltx_td ltx_align_right">86.3</td>
+</tr>
+<tr id="Sx2.T1.3.6.3" class="ltx_tr">
+<th id="Sx2.T1.3.6.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">hips</th>
+<td id="Sx2.T1.3.6.3.2" class="ltx_td ltx_align_right">4.4</td>
+<td id="Sx2.T1.3.6.3.3" class="ltx_td ltx_align_right">8.8</td>
+<td id="Sx2.T1.3.6.3.4" class="ltx_td ltx_align_right">9.1</td>
+<td id="Sx2.T1.3.6.3.5" class="ltx_td ltx_align_right">10.2</td>
+<td id="Sx2.T1.3.6.3.6" class="ltx_td ltx_align_right">77.8</td>
+<td id="Sx2.T1.3.6.3.7" class="ltx_td ltx_align_right">83.3</td>
+<td id="Sx2.T1.3.6.3.8" class="ltx_td ltx_align_right">91.6</td>
+</tr>
+<tr id="Sx2.T1.3.7.4" class="ltx_tr">
+<th id="Sx2.T1.3.7.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">knees</th>
+<td id="Sx2.T1.3.7.4.2" class="ltx_td ltx_align_right">5.6</td>
+<td id="Sx2.T1.3.7.4.3" class="ltx_td ltx_align_right">11.1</td>
+<td id="Sx2.T1.3.7.4.4" class="ltx_td ltx_align_right">10.1</td>
+<td id="Sx2.T1.3.7.4.5" class="ltx_td ltx_align_right">11.9</td>
+<td id="Sx2.T1.3.7.4.6" class="ltx_td ltx_align_right">72.1</td>
+<td id="Sx2.T1.3.7.4.7" class="ltx_td ltx_align_right">81.7</td>
+<td id="Sx2.T1.3.7.4.8" class="ltx_td ltx_align_right">89.8</td>
+</tr>
+<tr id="Sx2.T1.3.8.5" class="ltx_tr">
+<th id="Sx2.T1.3.8.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">ankles</th>
+<td id="Sx2.T1.3.8.5.2" class="ltx_td ltx_align_right">7.9</td>
+<td id="Sx2.T1.3.8.5.3" class="ltx_td ltx_align_right">15.1</td>
+<td id="Sx2.T1.3.8.5.4" class="ltx_td ltx_align_right">11.3</td>
+<td id="Sx2.T1.3.8.5.5" class="ltx_td ltx_align_right">15.1</td>
+<td id="Sx2.T1.3.8.5.6" class="ltx_td ltx_align_right">62.1</td>
+<td id="Sx2.T1.3.8.5.7" class="ltx_td ltx_align_right">74.4</td>
+<td id="Sx2.T1.3.8.5.8" class="ltx_td ltx_align_right">86.4</td>
+</tr>
+<tr id="Sx2.T1.3.9.6" class="ltx_tr">
+<th id="Sx2.T1.3.9.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">elbows</th>
+<td id="Sx2.T1.3.9.6.2" class="ltx_td ltx_align_right">17.7</td>
+<td id="Sx2.T1.3.9.6.3" class="ltx_td ltx_align_right">19.9</td>
+<td id="Sx2.T1.3.9.6.4" class="ltx_td ltx_align_right">13.4</td>
+<td id="Sx2.T1.3.9.6.5" class="ltx_td ltx_align_right">19.6</td>
+<td id="Sx2.T1.3.9.6.6" class="ltx_td ltx_align_right">60.9</td>
+<td id="Sx2.T1.3.9.6.7" class="ltx_td ltx_align_right">68.6</td>
+<td id="Sx2.T1.3.9.6.8" class="ltx_td ltx_align_right">75.4</td>
+</tr>
+<tr id="Sx2.T1.3.10.7" class="ltx_tr">
+<th id="Sx2.T1.3.10.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b">wrists</th>
+<td id="Sx2.T1.3.10.7.2" class="ltx_td ltx_align_right ltx_border_b">22.6</td>
+<td id="Sx2.T1.3.10.7.3" class="ltx_td ltx_align_right ltx_border_b">26</td>
+<td id="Sx2.T1.3.10.7.4" class="ltx_td ltx_align_right ltx_border_b">17.6</td>
+<td id="Sx2.T1.3.10.7.5" class="ltx_td ltx_align_right ltx_border_b">25.9</td>
+<td id="Sx2.T1.3.10.7.6" class="ltx_td ltx_align_right ltx_border_b">50</td>
+<td id="Sx2.T1.3.10.7.7" class="ltx_td ltx_align_right ltx_border_b">57.5</td>
+<td id="Sx2.T1.3.10.7.8" class="ltx_td ltx_align_right ltx_border_b">65.1</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="Sx2.T1.6.1.1" class="ltx_text" style="font-size:90%;">Table 1</span>: </span><span id="Sx2.T1.7.2" class="ltx_text ltx_font_bold" style="font-size:90%;">Evaluation of the performance.<span id="Sx2.T1.7.2.1" class="ltx_text ltx_font_medium"> We report the root mean squared error between the estimated and the ground truth position of each joint for each axis x,y, and z. We also report the percentages of correct key points (PCK-15, PCK-20, PCK-30), i.e. the ratio of estimated body parts for which the distance to the ground truth is below 15, 20, and 30 cm respectively.</span></span></figcaption>
+</figure>
+<figure id="Sx2.F5" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="Sx2.F5.sf1" class="ltx_figure ltx_figure_panel ltx_align_center">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F5.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="Sx2.F5.sf1.3.2" class="ltx_text" style="font-size:90%;">Wrong arm position and no consistency in time</span></figcaption><img src="/html/2110.11414/assets/Figures/Figure_5_1.png" id="Sx2.F5.sf1.g1" class="ltx_graphics ltx_img_landscape" width="598" height="258" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="Sx2.F5.sf2" class="ltx_figure ltx_figure_panel ltx_align_center">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F5.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="Sx2.F5.sf2.3.2" class="ltx_text" style="font-size:90%;"> Arms towards the sensor</span></figcaption><img src="/html/2110.11414/assets/Figures/Figure_5_2.png" id="Sx2.F5.sf2.g1" class="ltx_graphics ltx_img_square" width="598" height="504" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="Sx2.F5.sf3" class="ltx_figure ltx_figure_panel ltx_align_center">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F5.sf3.2.1.1" class="ltx_text" style="font-size:90%;">(c)</span> </span><span id="Sx2.F5.sf3.3.2" class="ltx_text" style="font-size:90%;"> Crossing</span></figcaption><img src="/html/2110.11414/assets/Figures/Figure_5_3.png" id="Sx2.F5.sf3.g1" class="ltx_graphics ltx_img_landscape" width="598" height="192" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="Sx2.F5.3.1.1" class="ltx_text" style="font-size:90%;">Figure 5</span>: </span><span id="Sx2.F5.4.2" class="ltx_text ltx_font_bold" style="font-size:90%;">Examples of failure cases.<span id="Sx2.F5.4.2.1" class="ltx_text ltx_font_medium"> (a) represents the case wrong arm position. (b) shows cases when arms were positioned in the axis of the sensor. (c) shows the issue when people are crossing. </span></span></figcaption>
+</figure>
+<div id="Sx2.SSx6.p4" class="ltx_para">
+<p id="Sx2.SSx6.p4.1" class="ltx_p">Supplementary movies 4, 5, and 6 show the reconstruction of poses from Pixels2Pose along with the ground truth obtained from the Kinect sensor. We see that the overall movement of the people is accurately recovered.</p>
+</div>
+<div id="Sx2.SSx6.p5" class="ltx_para">
+<p id="Sx2.SSx6.p5.1" class="ltx_p">Fig. <a href="#Sx2.F5" title="Figure 5 ‣ Evaluation of performance ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> shows examples of the most common failure cases of Pixels2Pose. The network could fail to identify arm movements when multiple people are present in the scene, e.g. in the case of three people present, arms can be misplaced alongside the body, as in Fig. <a href="#Sx2.F5" title="Figure 5 ‣ Evaluation of performance ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> (a). Moreover, movements over multiple time frames are sometimes unrealistic, e.g. changes in the position of arms and legs that are too rapid are occasionally observed, as in Fig. <a href="#Sx2.F5" title="Figure 5 ‣ Evaluation of performance ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> (a). We also observe that people can disappear from the frame when crossing behind one another, as in Fig. <a href="#Sx2.F5" title="Figure 5 ‣ Evaluation of performance ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> (c). The system might fail to identify arms that are directed towards the sensor as in Fig. <a href="#Sx2.F5" title="Figure 5 ‣ Evaluation of performance ‣ Results ‣ Real-time, low-cost multi-person 3D pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> (b).</p>
+</div>
+</section>
+<section id="Sx2.SSx7" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Performance in other environments</h3>
+
+<div id="Sx2.SSx7.p1" class="ltx_para">
+<p id="Sx2.SSx7.p1.1" class="ltx_p">To demonstrate that the trained Pixels2Pose network is transferable between different environments, we took new data with the vl53l5 sensor in a new room and from two different angles. No data from the second room was used in the training of the Pixels2Pose network. The acquired data was processed and 3D poses were reconstructed. The results of this can be seen in the supplementary information 5. A video of the reconstruction in new environments is shown in the supplementary movie 7. As with the training data captured from the vl53l5, the number of bins from the histogram was reduced from 144 to 100. This ensures that there are no artefacts in the background that would affect the final result.</p>
+</div>
+<div id="Sx2.SSx7.p2" class="ltx_para">
+<p id="Sx2.SSx7.p2.1" class="ltx_p">The data shows that the Pixels2Pose network recovers the 3D pose in an environment in which it was not trained, thus demonstrating the versatility of our system. We note that in this case the average error of the body locations increases, and this is likely due to changes in the ambient light levels and the precise orientation and location of the vl53l5 sensor with respect to the subject. These differences could be accounted for with further training of the network or a pre-processing step that corrects for orientation.</p>
+</div>
+</section>
+<section id="Sx2.SSx8" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">Computational requirements</h3>
+
+<div id="Sx2.SSx8.p1" class="ltx_para">
+<p id="Sx2.SSx8.p1.1" class="ltx_p">The model Pixels2Depth consists of 368,929 parameters of type float32 and requires about 4.7 MB of memory. The model Depth2Pose consists of 2,517,768 parameters of type float32 and 30 MB. For one frame, the processing time is 0.032s for Pixels2Depth, 0.032s for Depth2Pose, and 0.07s for the post-processing module, i.e. the total processing time of Pixels2Pose is around 7 to 8 fps, processed on an NVidia Tesla RTX 6000 GPU.</p>
+</div>
+<div id="Sx2.SSx8.p2" class="ltx_para">
+<p id="Sx2.SSx8.p2.1" class="ltx_p">We can reduce the memory requirements of the networks using the Tensorflow Lite converter. This can be used to create an appropriately sized network for implementation on computing systems with less resource than a GPU, e.g. mobile and IoT devices. Tensorflow Lite applies a post-training quantization to the trainable weights from floating-point to integer. After the conversion, the entire Pixels2Pose system requires only 5 MB of memory. We find that the reduced-size networks have a very similar performance as the original models, often performing to within a few percent of the main network. The exact details of the performance of the Lite version of Pixels2Pose can be found in Supplementary Information 3. The lite models can be used directly on a Raspberry Pi 4, in real time together with the acquisition of the data. In this case, we can achieve a frame rate of 1 fps for both the acquisition and the processing of the data.</p>
+</div>
+</section>
+</section>
+<section id="Sx3" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Discussion</h2>
+
+<div id="Sx3.p1" class="ltx_para">
+<p id="Sx3.p1.2" class="ltx_p">In this project, we have developed a machine learning approach to estimate poses of people in 3D from a cost-effective and compact time-of-flight sensor, containing only 4<math id="Sx3.p1.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="Sx3.p1.1.m1.1a"><mo id="Sx3.p1.1.m1.1.1" xref="Sx3.p1.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="Sx3.p1.1.m1.1b"><times id="Sx3.p1.1.m1.1.1.cmml" xref="Sx3.p1.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="Sx3.p1.1.m1.1c">\times</annotation></semantics></math>4 pixels. The sensor is small, light-weight, has a low power consumption, and can be easily integrated into consumer electronics such as smartphones or computers. The combined sensor and algorithm is capable of estimating the 3D poses of multiple humans in real-time at a maximum range of 3 m and at a frame rate of <math id="Sx3.p1.2.m2.1" class="ltx_Math" alttext="\approx 7" display="inline"><semantics id="Sx3.p1.2.m2.1a"><mrow id="Sx3.p1.2.m2.1.1" xref="Sx3.p1.2.m2.1.1.cmml"><mi id="Sx3.p1.2.m2.1.1.2" xref="Sx3.p1.2.m2.1.1.2.cmml"></mi><mo id="Sx3.p1.2.m2.1.1.1" xref="Sx3.p1.2.m2.1.1.1.cmml">≈</mo><mn id="Sx3.p1.2.m2.1.1.3" xref="Sx3.p1.2.m2.1.1.3.cmml">7</mn></mrow><annotation-xml encoding="MathML-Content" id="Sx3.p1.2.m2.1b"><apply id="Sx3.p1.2.m2.1.1.cmml" xref="Sx3.p1.2.m2.1.1"><approx id="Sx3.p1.2.m2.1.1.1.cmml" xref="Sx3.p1.2.m2.1.1.1"></approx><csymbol cd="latexml" id="Sx3.p1.2.m2.1.1.2.cmml" xref="Sx3.p1.2.m2.1.1.2">absent</csymbol><cn type="integer" id="Sx3.p1.2.m2.1.1.3.cmml" xref="Sx3.p1.2.m2.1.1.3">7</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="Sx3.p1.2.m2.1c">\approx 7</annotation></semantics></math> to 8 fps.</p>
+</div>
+<div id="Sx3.p2" class="ltx_para">
+<p id="Sx3.p2.1" class="ltx_p">This work shows the capabilities of low-cost ToF sensors to provide rich data from which key information can be extracted. This technology can be used for action/gesture recognition and will have applications in driver monitoring systems, human-computer interaction, and healthcare observation. We have detected large-scale objects in this work, and future work will focus on resolving finer features that will open up further applications, e.g. facial structure for face ID applications, or finger and hand gestures for sign language identification. The system could also be used for the reconstruction of more general shapes for simultaneous localization and mapping (SLAM), a navigation technique used by robots and autonomous vehicles. Furthermore, our 3D pose estimation system could be extended to other SPAD or RADAR detectors, including those used for non-line-of-sight (NLOS) imaging.</p>
+</div>
+<div id="Sx3.p3" class="ltx_para">
+<p id="Sx3.p3.1" class="ltx_p">We note that Pixel2Pose accurately tracks multiple humans in a 3D space, but it does not yet identify specific individuals within a scene. That is to say, Pixels2Pose can track three people simultaneously, but it cannot label each of them separately. This has obvious implications where data protection is an issue. It is not clear yet whether the current sensor would have the resolution in time and space to achieve accurate person identification, however, we note that neural networks have already been used to perform this task on people hidden from view <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib57" title="" class="ltx_ref">57</a>]</cite>. This research direction will be of significant interest in the near future.</p>
+</div>
+</section>
+<section id="Sx4" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Method</h2>
+
+<div id="Sx4.p1" class="ltx_para">
+<p id="Sx4.p1.1" class="ltx_p">Our initial experimental setup for acquiring the training datasets consists of the vl53l5 sensor, mounted on a Raspberry Pi 3B, and a Microsoft Azure Kinect DK camera that records the reference RGB image and the reference depth image. The two sensors, the vl53l5 and Kinect, are placed as close as possible to each other to limit any paralax issues. The radial lens distortion present in the Kinect depth image is corrected for. This ensures that there is a one-to-one correspondence between the spatial locations of the pixels in the depth image and the RGB image. A picture of the setup used for training is shown in the supplementary information.</p>
+</div>
+<div id="Sx4.p2" class="ltx_para">
+<p id="Sx4.p2.1" class="ltx_p">As the Kinect sensor has a larger field of view than the vl53l5 sensor, we crop the Kinect depth and RGB images appropriately. This means that the data provided to the network for training from the Kinect and vl53l5 sensor have the same field of view. Both the Kinect and vl53l5 sensor operate at about 20 fps, however, the data for both is acquired asynchronously. To match the frames of both devices in time, we save the time at which each frame is recorded and post-process the data to have as close a match as possible.</p>
+</div>
+<div id="Sx4.p3" class="ltx_para">
+<p id="Sx4.p3.1" class="ltx_p">Up to three people walk in front of the sensors in random directions, in different positions, and with different arm gestures.
+We recorded three different datasets containing one, two, or three persons. The one-person dataset contains 7500 frames, the two- and three-people datasets contain 11 000 frames each. In each case, the first 500 consecutive frames were set aside for validation.
+A picture of the setup can be found in Supplementary Information 1.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography" lang="en">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Zanfir, M., Leordeanu, M. &amp;
+Sminchisescu, C.
+
+</span>
+<span class="ltx_bibblock">The moving pose: An efficient 3d kinematics
+descriptor for low-latency action recognition and detection.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">2013 IEEE International Conference on
+Computer Vision</em> (2013).
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Farooq, A., Jalal, A. &amp;
+Kamal, S.
+
+</span>
+<span class="ltx_bibblock">Dense rgb-d map-based human
+tracking and activity recognition using skin joints features and
+self-organizing map.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib2.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>KSII Transactions on Internet and Information
+Systems</em> <span id="bib.bib2.2.2" class="ltx_text ltx_font_bold">9</span> (2018).
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Cippitelli, E., Gasparrini, S.,
+Gambi, E. &amp; Spinsante, S.
+
+</span>
+<span class="ltx_bibblock">A human activity recognition system
+using skeleton data from rgbd sensors.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib3.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Computational Intelligence and Neuroscience</em>
+(2016).
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Mathis, A. <em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">DeepLabCut: markerless pose
+estimation of user-defined body parts with deep learning.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib4.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib4.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Nature Neuroscience</em>
+<span id="bib.bib4.3.2" class="ltx_text ltx_font_bold">21</span> (2018).
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Moeslund, T. B., Hilton, A. &amp;
+Kruger, V.
+
+</span>
+<span class="ltx_bibblock">A survey of advances in
+vision-based human motion capture and analysis.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib5.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Computer Vision and Image Understanding</em>
+(2006).
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Xiong, X. <em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">S3D-CNN: skeleton-based 3D
+consecutive-low-pooling neural network for fall detection.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib6.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib6.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Applied Intelligence</em>
+<span id="bib.bib6.3.2" class="ltx_text ltx_font_bold">50</span> (2020).
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Bian, Z.-P., Hou, J.,
+Chau, L.-P. &amp; Magnenat-Thalmann, N.
+
+</span>
+<span class="ltx_bibblock">Fall Detection Based on Body Part
+Tracking Using a Depth Camera.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib7.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Journal of Biomedical and Health
+Informatics</em> <span id="bib.bib7.2.2" class="ltx_text ltx_font_bold">19</span> (2015).
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Serpa, Y. R., Nogueira, M. B.,
+Neto, P. P. M. &amp; Rodrigues, M. A. F.
+
+</span>
+<span class="ltx_bibblock">Evaluating pose estimation as a solution to the fall
+detection problem.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">2020 IEEE International Conference on
+Serious Games and Applications for Health</em> (2020).
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Wu, Q., Xu, G., Wei, F.,
+Chen, L. &amp; Zhang, S.
+
+</span>
+<span class="ltx_bibblock">Rgb-d videos-based early prediction
+of infant cerebral palsy via general movements complexity.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib9.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Access</em> <span id="bib.bib9.2.2" class="ltx_text ltx_font_bold">9</span>
+(2021).
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Gu, Y. <em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Home-based physical therapy with an interactive
+computer vision system.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib10.2.1" class="ltx_emph ltx_font_italic">2019 IEEE/CVF International Conference
+on Computer Vision Workshop</em> (2019).
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Withanage, K. I., Lee, I.,
+Brinkworth, R., Mackintosh, S. &amp;
+Thewlis, D.
+
+</span>
+<span class="ltx_bibblock">Fall recovery subactivity
+recognition with rgb-d cameras.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib11.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Transactions on Industrial Informatics</em>
+<span id="bib.bib11.2.2" class="ltx_text ltx_font_bold">12</span> (2016).
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Torres, C., Fried, J. C.,
+Rose, K. &amp; Manjunath, B. S.
+
+</span>
+<span class="ltx_bibblock">A multiview multimodal system for
+monitoring patient sleep.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib12.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib12.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Transactions on Multimedia</em>
+<span id="bib.bib12.2.2" class="ltx_text ltx_font_bold">20</span> (2018).
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Park, S., Chang, J. Y.,
+Jeong, H., Lee, J.-H. &amp;
+Park, J.-Y.
+
+</span>
+<span class="ltx_bibblock">Accurate and Efficient 3D Human Pose Estimation
+Algorithm using Single Depth Images for Pose Analysis in Golf.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib13.1.1" class="ltx_emph ltx_font_italic">2017 IEEE Conference on Computer Vision
+and Pattern Recognition Workshops</em> (2017).
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Lewandowski, B., Liebner, J.,
+Wengefeld, T., Müller, S. &amp;
+Gross, H.-M.
+
+</span>
+<span class="ltx_bibblock">Fast and robust 3d person detector and posture
+estimator for mobile robotic applications.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib14.1.1" class="ltx_emph ltx_font_italic">2019 International Conference on
+Robotics and Automation</em> (2019).
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Yang, Z., Li, Y., Yang,
+J. &amp; Luo, J.
+
+</span>
+<span class="ltx_bibblock">Action recognition with
+spatio–temporal visual attention on skeleton image sequences.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib15.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Transactions on Circuits and Systems for
+Video Technology</em> <span id="bib.bib15.2.2" class="ltx_text ltx_font_bold">29</span> (2019).
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Keçeli, A. S., Kaya, A. &amp;
+Can, A. B.
+
+</span>
+<span class="ltx_bibblock">Action recognition with skeletal volume and deep
+learning.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">2017 25th Signal Processing and
+Communications Applications Conference</em> (2017).
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Liu, J., Rahmani, H.,
+Akhtar, N. &amp; Mian, A.
+
+</span>
+<span class="ltx_bibblock">Learning human pose models from
+synthesized data for robust rgb-d action recognition.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib17.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>International Journal of Computer Vision</em>
+<span id="bib.bib17.2.2" class="ltx_text ltx_font_bold">127</span> (2019).
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Baldi, T. L., Farina, F.,
+Garulli, A., Giannitrapani, A. &amp;
+Prattichizzo, D.
+
+</span>
+<span class="ltx_bibblock">Upper Body Pose Estimation Using
+Wearable Inertial Sensors and Multiplicative Kalman Filter.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib18.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib18.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Sensors Journal</em>
+<span id="bib.bib18.2.2" class="ltx_text ltx_font_bold">20</span> (2020).
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Yun, X. &amp; Bachmann, E. R.
+
+</span>
+<span class="ltx_bibblock">Design, implementation, and
+experimental results of a quaternion-based Kalman filter for human body
+motion tracking.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib19.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Transactions on Robotics</em>
+<span id="bib.bib19.2.2" class="ltx_text ltx_font_bold">22</span> (2006).
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+von Marcard, T., Henschel, R.,
+Black, M. J., Rosenhahn, B. &amp;
+Pons-Moll, G.
+
+</span>
+<span class="ltx_bibblock">Recovering Accurate 3D Human Pose in the Wild Using
+IMUs and a Moving Camera.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib20.1.1" class="ltx_emph ltx_font_italic">Computer Vision - ECCV 2018, PT X</em>,
+vol. 11214 (2018).
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Gilbert, A., Trumble, M.,
+Malleson, C., Hilton, A. &amp;
+Collomosse, J.
+
+</span>
+<span class="ltx_bibblock">Fusing Visual and Inertial Sensors
+with Semantics for 3D Human Pose Estimation.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib21.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib21.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>International Journal of Computer Vision</em>
+<span id="bib.bib21.2.2" class="ltx_text ltx_font_bold">127</span> (2019).
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Aminian, K. &amp; Najafi, B.
+
+</span>
+<span class="ltx_bibblock">Capturing human motion using
+body-fixed sensors: Outdoor measurement and clinical applications.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib22.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib22.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Journal of Visualization and Computer
+Animation</em> (2004).
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+De-Magalhaes, F. A., Vannozzi, G.,
+Gatta, G. &amp; Fantozzi, S.
+
+</span>
+<span class="ltx_bibblock">Wearable inertial sensors in
+swimming motion analysis: a systematic review.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib23.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib23.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Journal of Sports Sciences</em>
+<span id="bib.bib23.2.2" class="ltx_text ltx_font_bold">33</span> (2014).
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Eckardt, F., Münz, A. &amp;
+Witte, K.
+
+</span>
+<span class="ltx_bibblock">Application of a full body inertial
+measurement system in dressage riding.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib24.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib24.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Journal of Equine Veterinary Science</em>
+<span id="bib.bib24.2.2" class="ltx_text ltx_font_bold">34</span> (2014).
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+Vlasic, D., Baran, I.,
+Matusik, W. &amp; Popovic, J.
+
+</span>
+<span class="ltx_bibblock">Articulated mesh animation from
+multi-view silhouettes.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib25.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib25.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>ACM Trans. Graph.</em>
+<span id="bib.bib25.2.2" class="ltx_text ltx_font_bold">27</span> (2008).
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+Carranza, J., Theobalt, C.,
+Magnor, M. &amp; Seidel, H.
+
+</span>
+<span class="ltx_bibblock">Free-viewpoint video of human
+actors.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib26.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib26.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>ACM Trans. Graph.</em>
+<span id="bib.bib26.2.2" class="ltx_text ltx_font_bold">22</span> (2003).
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+Iskakov, K., Burkov, E.,
+Lempitsky, V. &amp; Malkov, Y.
+
+</span>
+<span class="ltx_bibblock">Learnable Triangulation of Human Pose.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib27.1.1" class="ltx_emph ltx_font_italic">2019 IEEE/CVF International Conference
+on Computer Vision</em> (2019).
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+Mehrizi, R. <em id="bib.bib28.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Toward marker-free 3D pose estimation in lifting: A
+deep multi-view solution.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib28.2.1" class="ltx_emph ltx_font_italic">Proceedings - 13th IEEE International
+Conference on Automatic Face and Gesture Recognition, FG 2018</em>
+(2018).
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+Lee, J., Chai, J.,
+Reitsma, P. S. A., Hodgins, J. K. &amp;
+Pollard, N. S.
+
+</span>
+<span class="ltx_bibblock">Interactive control of avatars animated with human
+motion data.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib29.1.1" class="ltx_emph ltx_font_italic">Proceedings of the 29th Annual
+Conference on Computer Graphics and Interactive Techniques</em>
+(2002).
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+Poppe, R.
+
+</span>
+<span class="ltx_bibblock">Vision-based human motion
+analysis: An overview.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib30.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib30.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Computer Vision and Image Understanding</em>
+<span id="bib.bib30.2.2" class="ltx_text ltx_font_bold">108</span> (2007).
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+Moeslund, T. B., Hilton, A. &amp;
+Kruger, V.
+
+</span>
+<span class="ltx_bibblock">A survey of advances in
+vision-based human motion capture and analysis.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib31.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib31.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Computer Vision and Image Understanding</em>
+<span id="bib.bib31.2.2" class="ltx_text ltx_font_bold">104</span> (2006).
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+Bala, P. C. <em id="bib.bib32.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Automated markerless pose
+estimation in freely moving macaques with OpenMonkeyStudio.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib32.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib32.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Nature Communications</em>
+<span id="bib.bib32.3.2" class="ltx_text ltx_font_bold">11</span> (2020).
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+Kidzinski, L. <em id="bib.bib33.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Deep neural networks enable
+quantitative movement analysis using single-camera videos.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib33.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib33.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Nature Communications</em>
+<span id="bib.bib33.3.2" class="ltx_text ltx_font_bold">11</span> (2020).
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+Rogez, G., Weinzaepfel, P. &amp;
+Schmid, C.
+
+</span>
+<span class="ltx_bibblock">LCR-Net plus plus : Multi-Person
+2D and 3D Pose Detection in Natural Images.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib34.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib34.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Transactions on Pattern Analysis and
+Machine Intelligence</em> <span id="bib.bib34.2.2" class="ltx_text ltx_font_bold">42</span>
+(2020).
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+Mehta, D. <em id="bib.bib35.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">XNect: Real-time Multi-Person 3D
+Motion Capture with a Single RGB Camera.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib35.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib35.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>ACM Trans. Graph.</em>
+<span id="bib.bib35.3.2" class="ltx_text ltx_font_bold">39</span> (2020).
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+Benzine, A., Luvison, B.,
+Pham, Q. C. &amp; Achard, C.
+
+</span>
+<span class="ltx_bibblock">Single-shot 3D multi-person pose
+estimation in complex images.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib36.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib36.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Pattern Recognition</em>
+<span id="bib.bib36.2.2" class="ltx_text ltx_font_bold">112</span> (2021).
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+Liu, J. <em id="bib.bib37.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Feature Boosting Network For 3D
+Pose Estimation.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib37.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib37.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Transactions on Pattern Analysis and
+Machine Intelligence</em> <span id="bib.bib37.3.2" class="ltx_text ltx_font_bold">42</span>
+(2020).
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+Agarwal, A. &amp; Triggs, B.
+
+</span>
+<span class="ltx_bibblock">Recovering 3d human pose from
+monocular images.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib38.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib38.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Transactions on Pattern Analysis and
+Machine Intelligence</em> <span id="bib.bib38.2.2" class="ltx_text ltx_font_bold">28</span> (2006).
+
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock">
+Chen, C.-H. &amp; Ramanan, D.
+
+</span>
+<span class="ltx_bibblock">3D Human Pose Estimation=2D Pose Estimation plus
+Matching.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib39.1.1" class="ltx_emph ltx_font_italic">2017 IEEE Conference on Computer Vision
+and Pattern Recognition</em> (2017).
+
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock">
+Zhe, W.
+
+</span>
+<span class="ltx_bibblock">https://github.com/wangzheallen/awesome-human-pose-estimation
+(2020).
+
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock">
+Zhou, Y., Dong, H. &amp;
+Saddik, A. E.
+
+</span>
+<span class="ltx_bibblock">Learning to Estimate 3D Human Pose
+From Point Cloud.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib41.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib41.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Sensors Journal</em>
+<span id="bib.bib41.2.2" class="ltx_text ltx_font_bold">20</span> (2020).
+
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock">
+Zhang, Z., Hu, L., Deng,
+X. &amp; Xia, S.
+
+</span>
+<span class="ltx_bibblock">Weakly Supervised Adversarial
+Learning for 3D Human Pose Estimation from Point Clouds.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib42.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib42.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>IEEE Transactions on Visualization and Computer
+Graphics</em> <span id="bib.bib42.2.2" class="ltx_text ltx_font_bold">26</span> (2020).
+
+</span>
+</li>
+<li id="bib.bib43" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[43]</span>
+<span class="ltx_bibblock">
+Moon, G., Chang, J. Y. &amp;
+Lee, K. M.
+
+</span>
+<span class="ltx_bibblock">V2V-PoseNet: Voxel-to-Voxel Prediction Network for
+Accurate 3D Hand and Human Pose Estimation from a Single Depth Map.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib43.1.1" class="ltx_emph ltx_font_italic">2018 IEEE/CVF Conference on Computer
+Vision and Pattern Recognition</em> (2018).
+
+</span>
+</li>
+<li id="bib.bib44" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[44]</span>
+<span class="ltx_bibblock">
+Chen, L., Wei, H. &amp;
+Ferryman, J.
+
+</span>
+<span class="ltx_bibblock">A survey of human motion analysis
+using depth imagery.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib44.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib44.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Pattern Recognition Letters</em>
+<span id="bib.bib44.2.2" class="ltx_text ltx_font_bold">34</span> (2013).
+
+</span>
+</li>
+<li id="bib.bib45" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[45]</span>
+<span class="ltx_bibblock">
+Sun, M.-J. <em id="bib.bib45.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Single-pixel three-dimensional
+imaging with time-based depth resolution.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib45.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib45.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Nature Communications</em>
+<span id="bib.bib45.3.2" class="ltx_text ltx_font_bold">7</span> (2016).
+
+</span>
+</li>
+<li id="bib.bib46" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[46]</span>
+<span class="ltx_bibblock">
+Zhang, Z., Ma, X. &amp;
+Zhong, J.
+
+</span>
+<span class="ltx_bibblock">Single-pixel imaging by means of
+Fourier spectrum acquisition.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib46.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib46.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Nature Communications</em>
+<span id="bib.bib46.2.2" class="ltx_text ltx_font_bold">6</span> (2015).
+
+</span>
+</li>
+<li id="bib.bib47" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[47]</span>
+<span class="ltx_bibblock">
+Turpin, A. <em id="bib.bib47.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Spatial images from temporal
+data.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib47.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib47.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Optica</em> <span id="bib.bib47.3.2" class="ltx_text ltx_font_bold">7</span>
+(2020).
+
+</span>
+</li>
+<li id="bib.bib48" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[48]</span>
+<span class="ltx_bibblock">
+Turpin, A. <em id="bib.bib48.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">3d imaging from multipath temporal
+echoes.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib48.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib48.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Phys. Rev. Lett.</em>
+<span id="bib.bib48.3.2" class="ltx_text ltx_font_bold">126</span> (2021).
+
+</span>
+</li>
+<li id="bib.bib49" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[49]</span>
+<span class="ltx_bibblock">
+Zhao, M. <em id="bib.bib49.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Rf-based 3d skeletons.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib49.2.1" class="ltx_emph ltx_font_italic">Proceedings of the 2018 Conference of
+the ACM Special Interest Group on Data Communication</em>
+(2018).
+
+</span>
+</li>
+<li id="bib.bib50" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[50]</span>
+<span class="ltx_bibblock">
+Zhao, M. <em id="bib.bib50.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Through-wall human pose estimation using radio
+signals.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib50.2.1" class="ltx_emph ltx_font_italic">2018 IEEE/CVF Conference on Computer
+Vision and Pattern Recognition (CVPR)</em> (2018).
+
+</span>
+</li>
+<li id="bib.bib51" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[51]</span>
+<span class="ltx_bibblock">
+Nishimura, M., Lindell, D. B.,
+Metzler, C. &amp; Wetzstein, G.
+
+</span>
+<span class="ltx_bibblock">Disambiguating monocular depth estimation with a
+single transient.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib51.1.1" class="ltx_emph ltx_font_italic">Computer Vision – ECCV 2020</em>
+(Springer International Publishing,
+2020).
+
+</span>
+</li>
+<li id="bib.bib52" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[52]</span>
+<span class="ltx_bibblock">
+Lindell, D. B., O’Toole, M. &amp;
+Wetzstein, G.
+
+</span>
+<span class="ltx_bibblock">Single-Photon 3D Imaging with Deep
+Sensor Fusion.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib52.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib52.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>ACM Trans. Graph.</em> (2018).
+
+</span>
+</li>
+<li id="bib.bib53" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[53]</span>
+<span class="ltx_bibblock">
+Sun, Q. <em id="bib.bib53.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">End-to-end learned, optically coded
+super-resolution spad camera.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib53.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib53.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>ACM Trans. Graph.</em>
+<span id="bib.bib53.3.2" class="ltx_text ltx_font_bold">39</span> (2020).
+
+</span>
+</li>
+<li id="bib.bib54" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[54]</span>
+<span class="ltx_bibblock">
+Ruget, A. <em id="bib.bib54.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Robust super-resolution depth
+imaging via a multi-feature fusion deep network.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib54.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib54.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Opt. Express</em> <span id="bib.bib54.3.2" class="ltx_text ltx_font_bold">29</span>
+(2021).
+
+</span>
+</li>
+<li id="bib.bib55" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[55]</span>
+<span class="ltx_bibblock">
+Callenberg, C., Shi, Z.,
+Heide, F. &amp; Hullin, M. B.
+
+</span>
+<span class="ltx_bibblock">Low-cost spad sensing for
+non-line-of-sight tracking, material classification and depth imaging.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib55.1.1" class="ltx_emph ltx_font_italic"><span id="bib.bib55.1.1.1" class="ltx_ERROR undefined">\JournalTitle</span>ACM Trans. Graph.</em>
+<span id="bib.bib55.2.2" class="ltx_text ltx_font_bold">40</span> (2021).
+
+</span>
+</li>
+<li id="bib.bib56" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[56]</span>
+<span class="ltx_bibblock">
+Cao, Z., Simon, T., Wei,
+S.-E. &amp; Sheikh, Y.
+
+</span>
+<span class="ltx_bibblock">Realtime multi-person 2d pose estimation using part
+affinity fields.
+
+</span>
+<span class="ltx_bibblock">In <em id="bib.bib56.1.1" class="ltx_emph ltx_font_italic">2017 IEEE Conference on Computer Vision
+and Pattern Recognition</em> (2017).
+
+</span>
+</li>
+<li id="bib.bib57" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[57]</span>
+<span class="ltx_bibblock">
+Caramazza, P. <em id="bib.bib57.1.1" class="ltx_emph ltx_font_italic">et al.</em>
+
+</span>
+<span class="ltx_bibblock">Neural network identification of
+people hidden from view with a single-pixel, single-photon detector.
+
+</span>
+<span class="ltx_bibblock"><em id="bib.bib57.2.1" class="ltx_emph ltx_font_italic"><span id="bib.bib57.2.1.1" class="ltx_ERROR undefined">\JournalTitle</span>Scientific Reports</em>
+<span id="bib.bib57.3.2" class="ltx_text ltx_font_bold">8</span> (2018).
+
+</span>
+</li>
+</ul>
+</section>
+<section id="Sx5" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Code availability</h2>
+
+<div id="Sx5.p1" class="ltx_para">
+<p id="Sx5.p1.1" class="ltx_p">Code for generating the 3D pose from the ToF sensor can be found at https://github.com/HWQuantum/Real-time-low-cost-multi-person-3D-pose-estimation.</p>
+</div>
+</section>
+<section id="Sx6" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Funding</h2>
+
+<div id="Sx6.p1" class="ltx_para">
+<p id="Sx6.p1.1" class="ltx_p">This work was supported by EPSRC through grants EP/S001638/1 and EP/T00097X/1. Also it is supported by the UK Royal Academy of Engineering Research Fellowship Scheme (Project
+RF/201718/17128) and DSTL Dasa project DSTLX1000147844).</p>
+</div>
+</section>
+<section id="Sx7" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Acknowledgements</h2>
+
+<div id="Sx7.p1" class="ltx_para">
+<p id="Sx7.p1.1" class="ltx_p">We thank the authors of OpenPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib56" title="" class="ltx_ref">56</a>]</cite> for their code. We thank Frédéric Ruget for his guidance on the figures.</p>
+</div>
+</section>
+<section id="Sx8" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Author contributions statement</h2>
+
+<div id="Sx8.p1" class="ltx_para">
+<p id="Sx8.p1.1" class="ltx_p">A.R, B.H, A.H, and J.L conceived the experiment. A.R, M.T, G.M, B.H, and J.L conducted the experiment. A.R implemented the algorithm. F.Z, S.S, I.G, S.M, A.H, and J.L contributed to the algorithm development. All authors contributed to the writing and reviewing of the manuscript.</p>
+</div>
+</section>
+<section id="Sx9" class="ltx_section" lang="en">
+<h2 class="ltx_title ltx_title_section">Competing interests</h2>
+
+<div id="Sx9.p1" class="ltx_para">
+<p id="Sx9.p1.1" class="ltx_p">The authors declare no competing interests.</p>
+</div>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2110.11413" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2110.11414" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2110.11414">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2110.11414" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2110.11415" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Sat Mar  9 01:07:08 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,1071 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2109.11801] Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation</title><meta property="og:description" content="The Robotics community has started to heavily rely on increasingly realistic 3D simulators for large-scale training of robots on massive amounts of data. But once robots are deployed in the real-world, the simulation g…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2109.11801">
+
+<!--Generated on Fri Mar  8 00:30:40 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">
+<span id="id1.id1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>: Visualizing the Sim2Real Gap
+<br class="ltx_break">in Robot Ego-Pose Estimation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+<br class="ltx_break"><span id="id2.1.id1" class="ltx_text ltx_font_bold">Théo Jaunet
+<br class="ltx_break"></span>Liris, INSA-Lyon 
+<br class="ltx_break">&amp;
+<br class="ltx_break"><span id="id3.2.id2" class="ltx_text ltx_font_bold">Guillaume Bono</span> 
+<br class="ltx_break">Liris, INSA-Lyon 
+<br class="ltx_break">
+<br class="ltx_break"><span id="id4.3.id3" class="ltx_text ltx_font_bold">Romain Vuillemot</span> 
+<br class="ltx_break">Liris, École Centrale de Lyon 
+<br class="ltx_break">&amp;
+<br class="ltx_break"><span id="id5.4.id4" class="ltx_text ltx_font_bold">Christian Wolf</span> 
+<br class="ltx_break">Liris, INSA-Lyon 
+<br class="ltx_break">
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id6.id1" class="ltx_p">The Robotics community has started to heavily rely on increasingly realistic 3D simulators for large-scale training of robots on massive amounts of data. But once robots are deployed in the real-world, the simulation gap, as well as changes in the real-world (e.g. lights, objects displacements) lead to errors. In this paper, we introduce <span id="id6.id1.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>, a visual analytics tool to assist experts in understanding and reducing this gap for robot ego-pose estimation tasks, i. e. the estimation of a robot’s position using trained models. <span id="id6.id1.2" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span> displays details of a given model and the performance of its instances in both simulation and real-world. Experts can identify environment differences that impact model predictions at a given location and explore through direct interactions with the model hypothesis to fix it. We detail the design of the tool, and case studies related to the exploit of the regression to the mean bias and how it can be addressed, and how models are perturbed by vanishing landmarks such as bikes.</p>
+</div>
+<figure id="S0.F1" class="ltx_figure"><img src="/html/2109.11801/assets/x1.png" id="S0.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="251" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Using <span id="S0.F1.3.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>, the sim2real gap of a Data Augmentation model can be compared against other models (e. g., Vanilla or Fine-tuned) and displayed on the real-world environment map along with its performance metrics. In particular, <span id="S0.F1.4.2" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span> shows ① this model is particularly effective in simulation but we identified errors in the environment, such as the model failing to regress its position because of a closed-door that was opened in training. Such an error can then be selected by instance on the map ② to identify key features extracted by the model either as superimposed on the heat-map ③ or as a first-person view ④.</figcaption>
+</figure>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Visual navigation is at the core of most autonomous robotic applications such as self-driving cars or service robotics. One of the main challenges for the robot is to efficiently explore the environment, to robustly identify navigational space, and eventually be able to find the shortest paths in complex environments with obstacles. The Robotics and Deep Learning communities have introduced models trained with Reinforcement Learning (RL), Inverse RL, or Imitation Learning, targeting complex scenarios requiring visual reasoning beyond waypoint navigation and novel ways to interact with robots, e. g., combining vision, robotics, and natural language processing through queries like “<em id="S1.p1.1.1" class="ltx_emph ltx_font_italic">Where are my keys?</em>”. Current learning algorithms are not sampled efficiently enough, this kind of capability requires an extremely large amount of data. In the case of RL, this is in the hundreds of millions or in the billions of interactions — this simply cannot be addressed in a reasonable amount of time using a physical robot in a real environment, which also may damage itself in the process.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">To tackle this issue, the field heavily relies on simulation, where training can proceed significantly faster than in physical (wall clock) time on fast modern hardware, easily distributing multiple simulated environments over a large number of cores and machines. However, neural networks trained in simulated environments often perform poorly when deployed on real-world robots and environments, mainly due to the<em id="S1.p2.1.1" class="ltx_emph ltx_font_italic">“Sim2Real gap”</em>, — i. e. the lack of accuracy and fidelity in simulating real-world environment conditions such as, among others, image acquisition conditions, sensors noise, but also furniture changes and other moved objects. The exact nature of the gap is often difficult to pinpoint. It is well known that adversarial examples, where only a few pixel shifts occur, considered as small artifacts by humans, or which might even be undetectable by humans, can directly alter the decisions of trained models <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">The sim2real gap is currently addressed by various methods, including domain randomization, where the physical reality is considered to be a single parametrization of a large variety of simulations <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>, <a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>, and Domain Adaptation, i. e. explicitly adapting a model trained in simulation to the real-world <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>. However, identifying the sources of the sim2real gap would help experts in designing and optimizing transfer methods by directly targeting simulators and design choices of the agents themselves. To this end, we propose <span id="S1.p3.1.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>, a visual analytics interface aiming to understand the gap between a simulator and a real-world environment. We claim that this tool is helpful to gather insights on the studied agents’ behavior by comparing decisions made in simulation and in the real-world physical environment. <span id="S1.p3.1.2" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span> exposes different trajectories, and their divergences, in which a user can dive deeply for further analysis. In addition to behavior analysis, it provides features designed to explore and study the models’ inner representations, and thus grasp differences between the simulated environment and the real-world as perceived by agents. Experts can rely on multiple-coordinated views, which can be used to compare model performances estimated with different metrics such as a distance, orientation, or a UMAP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite> projection of latent representations. In addition, experts dispose of three different approaches to highlight the estimated sim2real gap overlaid over either 3D projective inputs or over a bird’s eye view (“Geo-map”) of the environment.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p"><span id="S1.p4.1.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span> targets domain experts, referred to as <em id="S1.p4.1.2" class="ltx_emph ltx_font_italic">model builders and trainers</em> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>. The goal is assistance during real-world deployment, pinpointing root causes of decisions. Once a model is trained in simulation, those experts are often required to adapt it to real-world conditions through transfer learning and similar procedures. <span id="S1.p4.1.3" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span> provides information on the robot’s behavior and has been designed to help end-users, building trust <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>. In Section <a href="#S5" title="5 Case studies ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, we report on insights gained through experiments using <span id="S1.p4.1.4" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>, on how a selection of pre-trained neural models exploits specific sensor data, hints on their internal reasoning, and sensibility to sim2real gaps.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Context and problem definition</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.2" class="ltx_p">We study trained models for Ego-Localization of mobile robots in navigation scenarios, which regress the coordinates <math id="S2.p1.1.m1.2" class="ltx_Math" alttext="(x,y)" display="inline"><semantics id="S2.p1.1.m1.2a"><mrow id="S2.p1.1.m1.2.3.2" xref="S2.p1.1.m1.2.3.1.cmml"><mo stretchy="false" id="S2.p1.1.m1.2.3.2.1" xref="S2.p1.1.m1.2.3.1.cmml">(</mo><mi id="S2.p1.1.m1.1.1" xref="S2.p1.1.m1.1.1.cmml">x</mi><mo id="S2.p1.1.m1.2.3.2.2" xref="S2.p1.1.m1.2.3.1.cmml">,</mo><mi id="S2.p1.1.m1.2.2" xref="S2.p1.1.m1.2.2.cmml">y</mi><mo stretchy="false" id="S2.p1.1.m1.2.3.2.3" xref="S2.p1.1.m1.2.3.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.1.m1.2b"><interval closure="open" id="S2.p1.1.m1.2.3.1.cmml" xref="S2.p1.1.m1.2.3.2"><ci id="S2.p1.1.m1.1.1.cmml" xref="S2.p1.1.m1.1.1">𝑥</ci><ci id="S2.p1.1.m1.2.2.cmml" xref="S2.p1.1.m1.2.2">𝑦</ci></interval></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.1.m1.2c">(x,y)</annotation></semantics></math> and camera angle <math id="S2.p1.2.m2.1" class="ltx_Math" alttext="\alpha" display="inline"><semantics id="S2.p1.2.m2.1a"><mi id="S2.p1.2.m2.1.1" xref="S2.p1.2.m2.1.1.cmml">α</mi><annotation-xml encoding="MathML-Content" id="S2.p1.2.m2.1b"><ci id="S2.p1.2.m2.1.1.cmml" xref="S2.p1.2.m2.1.1">𝛼</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.2.m2.1c">\alpha</annotation></semantics></math> from observed RGB and depth images. Physical robots take these inputs from a depth-cam, whereas in the simulation they are rendered using computer graphics software from a 3D scan of the environment.
+Fig. <a href="#S2.F2" title="Figure 2 ‣ 2 Context and problem definition ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> provides a concrete example, where two images are taken at the same spatial coordinates ①, one from simulation and the other from a physical robot. As our goal is to estimate the sim2real gap, we do not focus on generalization to unseen environments. Instead, our simulated environment corresponds to a 3D scanned version of the same physical environment in which the robot navigates, which allows precise estimation of the difference in localization performance, as gap leads to differences in predicted positions. The full extent of the gap, and how it may affect models is hard to understand by humans, which makes it difficult to take design choices and optimize decisions for sim2real transfer.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2109.11801/assets/x2.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="157" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>In the studied robot ego-localization task, an RGB-D image ①, is given to a trained model ②, which uses it to regress the location (<math id="S2.F2.3.m1.2" class="ltx_Math" alttext="x,y" display="inline"><semantics id="S2.F2.3.m1.2b"><mrow id="S2.F2.3.m1.2.3.2" xref="S2.F2.3.m1.2.3.1.cmml"><mi id="S2.F2.3.m1.1.1" xref="S2.F2.3.m1.1.1.cmml">x</mi><mo id="S2.F2.3.m1.2.3.2.1" xref="S2.F2.3.m1.2.3.1.cmml">,</mo><mi id="S2.F2.3.m1.2.2" xref="S2.F2.3.m1.2.2.cmml">y</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.F2.3.m1.2c"><list id="S2.F2.3.m1.2.3.1.cmml" xref="S2.F2.3.m1.2.3.2"><ci id="S2.F2.3.m1.1.1.cmml" xref="S2.F2.3.m1.1.1">𝑥</ci><ci id="S2.F2.3.m1.2.2.cmml" xref="S2.F2.3.m1.2.2">𝑦</ci></list></annotation-xml><annotation encoding="application/x-tex" id="S2.F2.3.m1.2d">x,y</annotation></semantics></math>), and orientation angle (<math id="S2.F2.4.m2.1" class="ltx_Math" alttext="\alpha" display="inline"><semantics id="S2.F2.4.m2.1b"><mi id="S2.F2.4.m2.1.1" xref="S2.F2.4.m2.1.1.cmml">α</mi><annotation-xml encoding="MathML-Content" id="S2.F2.4.m2.1c"><ci id="S2.F2.4.m2.1.1.cmml" xref="S2.F2.4.m2.1.1">𝛼</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.F2.4.m2.1d">\alpha</annotation></semantics></math>) in the environment from which this image was taken from ③. As illustrated above, images taken from the same coordinates in simulation and real-world ① may lead to different predictions due to differences, such as here, among others, the additional presence of a bike in the scene. We are interested in reducing the gap between the <span id="S2.F2.7.1" class="ltx_text ltx_font_smallcaps" style="color:#000000;background-color:#98A7F4;">sim</span><span id="S2.F2.8.2" class="ltx_text" style="color:#000000;"> and <span id="S2.F2.8.2.1" class="ltx_text ltx_font_smallcaps" style="background-color:#F4A798;">real</span> predictions.</span></figcaption>
+</figure>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p"><span id="S2.p2.1.1" class="ltx_text ltx_font_bold">Simulation</span> — we use the Habitat <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite> simulator and load a high fidelity 3D scan of a modern office building created with the Matterport3D software <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> from individual 360-degree camera images taken at multiple viewpoints.
+The environment is of size <math id="S2.p2.1.m1.1" class="ltx_Math" alttext="22\times 22" display="inline"><semantics id="S2.p2.1.m1.1a"><mrow id="S2.p2.1.m1.1.1" xref="S2.p2.1.m1.1.1.cmml"><mn id="S2.p2.1.m1.1.1.2" xref="S2.p2.1.m1.1.1.2.cmml">22</mn><mo lspace="0.222em" rspace="0.222em" id="S2.p2.1.m1.1.1.1" xref="S2.p2.1.m1.1.1.1.cmml">×</mo><mn id="S2.p2.1.m1.1.1.3" xref="S2.p2.1.m1.1.1.3.cmml">22</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p2.1.m1.1b"><apply id="S2.p2.1.m1.1.1.cmml" xref="S2.p2.1.m1.1.1"><times id="S2.p2.1.m1.1.1.1.cmml" xref="S2.p2.1.m1.1.1.1"></times><cn type="integer" id="S2.p2.1.m1.1.1.2.cmml" xref="S2.p2.1.m1.1.1.2">22</cn><cn type="integer" id="S2.p2.1.m1.1.1.3.cmml" xref="S2.p2.1.m1.1.1.3">22</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p2.1.m1.1c">22\times 22</annotation></semantics></math> meters and can potentially contain differences to the physical place due to estimation errors of geometry, texture, lighting, alignment of the individual views, as well as changes done after the acquisition, such as moved furniture, or opened/closed doors.
+The Habitat simulator handles environment rendering and agent physics, starting with its shape and size (e. g., a cylindrical with diameter 0.2m and height 1.5m), its action space (e. g., turn left, right or move forward), and sensors — a simulated e. g., RGB-D camera. Depending on the hardware, the simulator can produce up to 10.000 frames per second, allowing to train agents on billions of interactions in a matter of days.</p>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.2" class="ltx_p"><span id="S2.p3.2.1" class="ltx_text ltx_font_bold">Real-world</span> —
+Our physical robot is a “<em id="S2.p3.2.2" class="ltx_emph ltx_font_italic">Locobot</em>” <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> featuring an RGB-D camera and an additional <span id="S2.p3.2.3" class="ltx_text ltx_font_smallcaps">lidar</span> sensor which we installed. We use the <span id="S2.p3.2.4" class="ltx_text ltx_font_smallcaps">lidar</span> and the <em id="S2.p3.2.5" class="ltx_emph ltx_font_italic">ROS NavStack</em> to collect ground truth information on the robot’s position <math id="S2.p3.1.m1.2" class="ltx_Math" alttext="(x^{*},y^{*})" display="inline"><semantics id="S2.p3.1.m1.2a"><mrow id="S2.p3.1.m1.2.2.2" xref="S2.p3.1.m1.2.2.3.cmml"><mo stretchy="false" id="S2.p3.1.m1.2.2.2.3" xref="S2.p3.1.m1.2.2.3.cmml">(</mo><msup id="S2.p3.1.m1.1.1.1.1" xref="S2.p3.1.m1.1.1.1.1.cmml"><mi id="S2.p3.1.m1.1.1.1.1.2" xref="S2.p3.1.m1.1.1.1.1.2.cmml">x</mi><mo id="S2.p3.1.m1.1.1.1.1.3" xref="S2.p3.1.m1.1.1.1.1.3.cmml">∗</mo></msup><mo id="S2.p3.1.m1.2.2.2.4" xref="S2.p3.1.m1.2.2.3.cmml">,</mo><msup id="S2.p3.1.m1.2.2.2.2" xref="S2.p3.1.m1.2.2.2.2.cmml"><mi id="S2.p3.1.m1.2.2.2.2.2" xref="S2.p3.1.m1.2.2.2.2.2.cmml">y</mi><mo id="S2.p3.1.m1.2.2.2.2.3" xref="S2.p3.1.m1.2.2.2.2.3.cmml">∗</mo></msup><mo stretchy="false" id="S2.p3.1.m1.2.2.2.5" xref="S2.p3.1.m1.2.2.3.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.p3.1.m1.2b"><interval closure="open" id="S2.p3.1.m1.2.2.3.cmml" xref="S2.p3.1.m1.2.2.2"><apply id="S2.p3.1.m1.1.1.1.1.cmml" xref="S2.p3.1.m1.1.1.1.1"><csymbol cd="ambiguous" id="S2.p3.1.m1.1.1.1.1.1.cmml" xref="S2.p3.1.m1.1.1.1.1">superscript</csymbol><ci id="S2.p3.1.m1.1.1.1.1.2.cmml" xref="S2.p3.1.m1.1.1.1.1.2">𝑥</ci><times id="S2.p3.1.m1.1.1.1.1.3.cmml" xref="S2.p3.1.m1.1.1.1.1.3"></times></apply><apply id="S2.p3.1.m1.2.2.2.2.cmml" xref="S2.p3.1.m1.2.2.2.2"><csymbol cd="ambiguous" id="S2.p3.1.m1.2.2.2.2.1.cmml" xref="S2.p3.1.m1.2.2.2.2">superscript</csymbol><ci id="S2.p3.1.m1.2.2.2.2.2.cmml" xref="S2.p3.1.m1.2.2.2.2.2">𝑦</ci><times id="S2.p3.1.m1.2.2.2.2.3.cmml" xref="S2.p3.1.m1.2.2.2.2.3"></times></apply></interval></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.1.m1.2c">(x^{*},y^{*})</annotation></semantics></math> and angle <math id="S2.p3.2.m2.1" class="ltx_Math" alttext="\alpha^{*}" display="inline"><semantics id="S2.p3.2.m2.1a"><msup id="S2.p3.2.m2.1.1" xref="S2.p3.2.m2.1.1.cmml"><mi id="S2.p3.2.m2.1.1.2" xref="S2.p3.2.m2.1.1.2.cmml">α</mi><mo id="S2.p3.2.m2.1.1.3" xref="S2.p3.2.m2.1.1.3.cmml">∗</mo></msup><annotation-xml encoding="MathML-Content" id="S2.p3.2.m2.1b"><apply id="S2.p3.2.m2.1.1.cmml" xref="S2.p3.2.m2.1.1"><csymbol cd="ambiguous" id="S2.p3.2.m2.1.1.1.cmml" xref="S2.p3.2.m2.1.1">superscript</csymbol><ci id="S2.p3.2.m2.1.1.2.cmml" xref="S2.p3.2.m2.1.1.2">𝛼</ci><times id="S2.p3.2.m2.1.1.3.cmml" xref="S2.p3.2.m2.1.1.3"></times></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p3.2.m2.1c">\alpha^{*}</annotation></semantics></math>, used as a reference to evaluate ego-pose localization performances on the real-world. To increase precision, we do not build the map online with SLAM, but instead, export a global map from the 3D scan described above and align this map with the <span id="S2.p3.2.6" class="ltx_text ltx_font_smallcaps">lidar</span> scan using the <em id="S2.p3.2.7" class="ltx_emph ltx_font_italic">ROS NavStack</em>.</p>
+</div>
+<div id="S2.p4" class="ltx_para">
+<p id="S2.p4.10" class="ltx_p"><span id="S2.p4.10.1" class="ltx_text ltx_font_bold">Ego-pose estimation: the trained agent</span> —
+Traditionally, ego-pose estimation of robots is performed from various inputs such as <span id="S2.p4.10.2" class="ltx_text ltx_font_smallcaps">lidar</span>, odometry, or visual input. Localization from RGB data is classically performed from keypoint-based approaches and matching/alignment <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. More recently, this task has been addressed using end-to-end training of deep networks.
+We opted for the latter, and, inspired by poseNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>, trained a deep convolutional network to take a stacked RGB-D image <math id="S2.p4.1.m1.1" class="ltx_Math" alttext="X_{i}" display="inline"><semantics id="S2.p4.1.m1.1a"><msub id="S2.p4.1.m1.1.1" xref="S2.p4.1.m1.1.1.cmml"><mi id="S2.p4.1.m1.1.1.2" xref="S2.p4.1.m1.1.1.2.cmml">X</mi><mi id="S2.p4.1.m1.1.1.3" xref="S2.p4.1.m1.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S2.p4.1.m1.1b"><apply id="S2.p4.1.m1.1.1.cmml" xref="S2.p4.1.m1.1.1"><csymbol cd="ambiguous" id="S2.p4.1.m1.1.1.1.cmml" xref="S2.p4.1.m1.1.1">subscript</csymbol><ci id="S2.p4.1.m1.1.1.2.cmml" xref="S2.p4.1.m1.1.1.2">𝑋</ci><ci id="S2.p4.1.m1.1.1.3.cmml" xref="S2.p4.1.m1.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.1.m1.1c">X_{i}</annotation></semantics></math> of shape <math id="S2.p4.2.m2.1" class="ltx_Math" alttext="(256{\times}256{\times}4)" display="inline"><semantics id="S2.p4.2.m2.1a"><mrow id="S2.p4.2.m2.1.1.1" xref="S2.p4.2.m2.1.1.1.1.cmml"><mo stretchy="false" id="S2.p4.2.m2.1.1.1.2" xref="S2.p4.2.m2.1.1.1.1.cmml">(</mo><mrow id="S2.p4.2.m2.1.1.1.1" xref="S2.p4.2.m2.1.1.1.1.cmml"><mn id="S2.p4.2.m2.1.1.1.1.2" xref="S2.p4.2.m2.1.1.1.1.2.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S2.p4.2.m2.1.1.1.1.1" xref="S2.p4.2.m2.1.1.1.1.1.cmml">×</mo><mn id="S2.p4.2.m2.1.1.1.1.3" xref="S2.p4.2.m2.1.1.1.1.3.cmml">256</mn><mo lspace="0.222em" rspace="0.222em" id="S2.p4.2.m2.1.1.1.1.1a" xref="S2.p4.2.m2.1.1.1.1.1.cmml">×</mo><mn id="S2.p4.2.m2.1.1.1.1.4" xref="S2.p4.2.m2.1.1.1.1.4.cmml">4</mn></mrow><mo stretchy="false" id="S2.p4.2.m2.1.1.1.3" xref="S2.p4.2.m2.1.1.1.1.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.2.m2.1b"><apply id="S2.p4.2.m2.1.1.1.1.cmml" xref="S2.p4.2.m2.1.1.1"><times id="S2.p4.2.m2.1.1.1.1.1.cmml" xref="S2.p4.2.m2.1.1.1.1.1"></times><cn type="integer" id="S2.p4.2.m2.1.1.1.1.2.cmml" xref="S2.p4.2.m2.1.1.1.1.2">256</cn><cn type="integer" id="S2.p4.2.m2.1.1.1.1.3.cmml" xref="S2.p4.2.m2.1.1.1.1.3">256</cn><cn type="integer" id="S2.p4.2.m2.1.1.1.1.4.cmml" xref="S2.p4.2.m2.1.1.1.1.4">4</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.2.m2.1c">(256{\times}256{\times}4)</annotation></semantics></math> and directly output a vector <math id="S2.p4.3.m3.3" class="ltx_Math" alttext="Y_{i}=(x_{i},y_{i},\alpha_{i})" display="inline"><semantics id="S2.p4.3.m3.3a"><mrow id="S2.p4.3.m3.3.3" xref="S2.p4.3.m3.3.3.cmml"><msub id="S2.p4.3.m3.3.3.5" xref="S2.p4.3.m3.3.3.5.cmml"><mi id="S2.p4.3.m3.3.3.5.2" xref="S2.p4.3.m3.3.3.5.2.cmml">Y</mi><mi id="S2.p4.3.m3.3.3.5.3" xref="S2.p4.3.m3.3.3.5.3.cmml">i</mi></msub><mo id="S2.p4.3.m3.3.3.4" xref="S2.p4.3.m3.3.3.4.cmml">=</mo><mrow id="S2.p4.3.m3.3.3.3.3" xref="S2.p4.3.m3.3.3.3.4.cmml"><mo stretchy="false" id="S2.p4.3.m3.3.3.3.3.4" xref="S2.p4.3.m3.3.3.3.4.cmml">(</mo><msub id="S2.p4.3.m3.1.1.1.1.1" xref="S2.p4.3.m3.1.1.1.1.1.cmml"><mi id="S2.p4.3.m3.1.1.1.1.1.2" xref="S2.p4.3.m3.1.1.1.1.1.2.cmml">x</mi><mi id="S2.p4.3.m3.1.1.1.1.1.3" xref="S2.p4.3.m3.1.1.1.1.1.3.cmml">i</mi></msub><mo id="S2.p4.3.m3.3.3.3.3.5" xref="S2.p4.3.m3.3.3.3.4.cmml">,</mo><msub id="S2.p4.3.m3.2.2.2.2.2" xref="S2.p4.3.m3.2.2.2.2.2.cmml"><mi id="S2.p4.3.m3.2.2.2.2.2.2" xref="S2.p4.3.m3.2.2.2.2.2.2.cmml">y</mi><mi id="S2.p4.3.m3.2.2.2.2.2.3" xref="S2.p4.3.m3.2.2.2.2.2.3.cmml">i</mi></msub><mo id="S2.p4.3.m3.3.3.3.3.6" xref="S2.p4.3.m3.3.3.3.4.cmml">,</mo><msub id="S2.p4.3.m3.3.3.3.3.3" xref="S2.p4.3.m3.3.3.3.3.3.cmml"><mi id="S2.p4.3.m3.3.3.3.3.3.2" xref="S2.p4.3.m3.3.3.3.3.3.2.cmml">α</mi><mi id="S2.p4.3.m3.3.3.3.3.3.3" xref="S2.p4.3.m3.3.3.3.3.3.3.cmml">i</mi></msub><mo stretchy="false" id="S2.p4.3.m3.3.3.3.3.7" xref="S2.p4.3.m3.3.3.3.4.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.3.m3.3b"><apply id="S2.p4.3.m3.3.3.cmml" xref="S2.p4.3.m3.3.3"><eq id="S2.p4.3.m3.3.3.4.cmml" xref="S2.p4.3.m3.3.3.4"></eq><apply id="S2.p4.3.m3.3.3.5.cmml" xref="S2.p4.3.m3.3.3.5"><csymbol cd="ambiguous" id="S2.p4.3.m3.3.3.5.1.cmml" xref="S2.p4.3.m3.3.3.5">subscript</csymbol><ci id="S2.p4.3.m3.3.3.5.2.cmml" xref="S2.p4.3.m3.3.3.5.2">𝑌</ci><ci id="S2.p4.3.m3.3.3.5.3.cmml" xref="S2.p4.3.m3.3.3.5.3">𝑖</ci></apply><vector id="S2.p4.3.m3.3.3.3.4.cmml" xref="S2.p4.3.m3.3.3.3.3"><apply id="S2.p4.3.m3.1.1.1.1.1.cmml" xref="S2.p4.3.m3.1.1.1.1.1"><csymbol cd="ambiguous" id="S2.p4.3.m3.1.1.1.1.1.1.cmml" xref="S2.p4.3.m3.1.1.1.1.1">subscript</csymbol><ci id="S2.p4.3.m3.1.1.1.1.1.2.cmml" xref="S2.p4.3.m3.1.1.1.1.1.2">𝑥</ci><ci id="S2.p4.3.m3.1.1.1.1.1.3.cmml" xref="S2.p4.3.m3.1.1.1.1.1.3">𝑖</ci></apply><apply id="S2.p4.3.m3.2.2.2.2.2.cmml" xref="S2.p4.3.m3.2.2.2.2.2"><csymbol cd="ambiguous" id="S2.p4.3.m3.2.2.2.2.2.1.cmml" xref="S2.p4.3.m3.2.2.2.2.2">subscript</csymbol><ci id="S2.p4.3.m3.2.2.2.2.2.2.cmml" xref="S2.p4.3.m3.2.2.2.2.2.2">𝑦</ci><ci id="S2.p4.3.m3.2.2.2.2.2.3.cmml" xref="S2.p4.3.m3.2.2.2.2.2.3">𝑖</ci></apply><apply id="S2.p4.3.m3.3.3.3.3.3.cmml" xref="S2.p4.3.m3.3.3.3.3.3"><csymbol cd="ambiguous" id="S2.p4.3.m3.3.3.3.3.3.1.cmml" xref="S2.p4.3.m3.3.3.3.3.3">subscript</csymbol><ci id="S2.p4.3.m3.3.3.3.3.3.2.cmml" xref="S2.p4.3.m3.3.3.3.3.3.2">𝛼</ci><ci id="S2.p4.3.m3.3.3.3.3.3.3.cmml" xref="S2.p4.3.m3.3.3.3.3.3.3">𝑖</ci></apply></vector></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.3.m3.3c">Y_{i}=(x_{i},y_{i},\alpha_{i})</annotation></semantics></math> of three values: the coordinates <math id="S2.p4.4.m4.2" class="ltx_Math" alttext="x_{i},y_{i}" display="inline"><semantics id="S2.p4.4.m4.2a"><mrow id="S2.p4.4.m4.2.2.2" xref="S2.p4.4.m4.2.2.3.cmml"><msub id="S2.p4.4.m4.1.1.1.1" xref="S2.p4.4.m4.1.1.1.1.cmml"><mi id="S2.p4.4.m4.1.1.1.1.2" xref="S2.p4.4.m4.1.1.1.1.2.cmml">x</mi><mi id="S2.p4.4.m4.1.1.1.1.3" xref="S2.p4.4.m4.1.1.1.1.3.cmml">i</mi></msub><mo id="S2.p4.4.m4.2.2.2.3" xref="S2.p4.4.m4.2.2.3.cmml">,</mo><msub id="S2.p4.4.m4.2.2.2.2" xref="S2.p4.4.m4.2.2.2.2.cmml"><mi id="S2.p4.4.m4.2.2.2.2.2" xref="S2.p4.4.m4.2.2.2.2.2.cmml">y</mi><mi id="S2.p4.4.m4.2.2.2.2.3" xref="S2.p4.4.m4.2.2.2.2.3.cmml">i</mi></msub></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.4.m4.2b"><list id="S2.p4.4.m4.2.2.3.cmml" xref="S2.p4.4.m4.2.2.2"><apply id="S2.p4.4.m4.1.1.1.1.cmml" xref="S2.p4.4.m4.1.1.1.1"><csymbol cd="ambiguous" id="S2.p4.4.m4.1.1.1.1.1.cmml" xref="S2.p4.4.m4.1.1.1.1">subscript</csymbol><ci id="S2.p4.4.m4.1.1.1.1.2.cmml" xref="S2.p4.4.m4.1.1.1.1.2">𝑥</ci><ci id="S2.p4.4.m4.1.1.1.1.3.cmml" xref="S2.p4.4.m4.1.1.1.1.3">𝑖</ci></apply><apply id="S2.p4.4.m4.2.2.2.2.cmml" xref="S2.p4.4.m4.2.2.2.2"><csymbol cd="ambiguous" id="S2.p4.4.m4.2.2.2.2.1.cmml" xref="S2.p4.4.m4.2.2.2.2">subscript</csymbol><ci id="S2.p4.4.m4.2.2.2.2.2.cmml" xref="S2.p4.4.m4.2.2.2.2.2">𝑦</ci><ci id="S2.p4.4.m4.2.2.2.2.3.cmml" xref="S2.p4.4.m4.2.2.2.2.3">𝑖</ci></apply></list></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.4.m4.2c">x_{i},y_{i}</annotation></semantics></math> and the orientation angle <math id="S2.p4.5.m5.1" class="ltx_Math" alttext="\alpha_{i}" display="inline"><semantics id="S2.p4.5.m5.1a"><msub id="S2.p4.5.m5.1.1" xref="S2.p4.5.m5.1.1.cmml"><mi id="S2.p4.5.m5.1.1.2" xref="S2.p4.5.m5.1.1.2.cmml">α</mi><mi id="S2.p4.5.m5.1.1.3" xref="S2.p4.5.m5.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S2.p4.5.m5.1b"><apply id="S2.p4.5.m5.1.1.cmml" xref="S2.p4.5.m5.1.1"><csymbol cd="ambiguous" id="S2.p4.5.m5.1.1.1.cmml" xref="S2.p4.5.m5.1.1">subscript</csymbol><ci id="S2.p4.5.m5.1.1.2.cmml" xref="S2.p4.5.m5.1.1.2">𝛼</ci><ci id="S2.p4.5.m5.1.1.3.cmml" xref="S2.p4.5.m5.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.5.m5.1c">\alpha_{i}</annotation></semantics></math>.
+The model is trained on <math id="S2.p4.6.m6.1" class="ltx_Math" alttext="60.000" display="inline"><semantics id="S2.p4.6.m6.1a"><mn id="S2.p4.6.m6.1.1" xref="S2.p4.6.m6.1.1.cmml">60.000</mn><annotation-xml encoding="MathML-Content" id="S2.p4.6.m6.1b"><cn type="float" id="S2.p4.6.m6.1.1.cmml" xref="S2.p4.6.m6.1.1">60.000</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.6.m6.1c">60.000</annotation></semantics></math> images sampled from the simulator with varying positions and orientations while assuring a minimal distance of <math id="S2.p4.7.m7.1" class="ltx_Math" alttext="0.3" display="inline"><semantics id="S2.p4.7.m7.1a"><mn id="S2.p4.7.m7.1.1" xref="S2.p4.7.m7.1.1.cmml">0.3</mn><annotation-xml encoding="MathML-Content" id="S2.p4.7.m7.1b"><cn type="float" id="S2.p4.7.m7.1.1.cmml" xref="S2.p4.7.m7.1.1">0.3</cn></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.7.m7.1c">0.3</annotation></semantics></math> meters between data points. We optimize the following loss function between predictions <math id="S2.p4.8.m8.3" class="ltx_Math" alttext="Y_{i}=(x_{i},y_{i},\alpha_{i})" display="inline"><semantics id="S2.p4.8.m8.3a"><mrow id="S2.p4.8.m8.3.3" xref="S2.p4.8.m8.3.3.cmml"><msub id="S2.p4.8.m8.3.3.5" xref="S2.p4.8.m8.3.3.5.cmml"><mi id="S2.p4.8.m8.3.3.5.2" xref="S2.p4.8.m8.3.3.5.2.cmml">Y</mi><mi id="S2.p4.8.m8.3.3.5.3" xref="S2.p4.8.m8.3.3.5.3.cmml">i</mi></msub><mo id="S2.p4.8.m8.3.3.4" xref="S2.p4.8.m8.3.3.4.cmml">=</mo><mrow id="S2.p4.8.m8.3.3.3.3" xref="S2.p4.8.m8.3.3.3.4.cmml"><mo stretchy="false" id="S2.p4.8.m8.3.3.3.3.4" xref="S2.p4.8.m8.3.3.3.4.cmml">(</mo><msub id="S2.p4.8.m8.1.1.1.1.1" xref="S2.p4.8.m8.1.1.1.1.1.cmml"><mi id="S2.p4.8.m8.1.1.1.1.1.2" xref="S2.p4.8.m8.1.1.1.1.1.2.cmml">x</mi><mi id="S2.p4.8.m8.1.1.1.1.1.3" xref="S2.p4.8.m8.1.1.1.1.1.3.cmml">i</mi></msub><mo id="S2.p4.8.m8.3.3.3.3.5" xref="S2.p4.8.m8.3.3.3.4.cmml">,</mo><msub id="S2.p4.8.m8.2.2.2.2.2" xref="S2.p4.8.m8.2.2.2.2.2.cmml"><mi id="S2.p4.8.m8.2.2.2.2.2.2" xref="S2.p4.8.m8.2.2.2.2.2.2.cmml">y</mi><mi id="S2.p4.8.m8.2.2.2.2.2.3" xref="S2.p4.8.m8.2.2.2.2.2.3.cmml">i</mi></msub><mo id="S2.p4.8.m8.3.3.3.3.6" xref="S2.p4.8.m8.3.3.3.4.cmml">,</mo><msub id="S2.p4.8.m8.3.3.3.3.3" xref="S2.p4.8.m8.3.3.3.3.3.cmml"><mi id="S2.p4.8.m8.3.3.3.3.3.2" xref="S2.p4.8.m8.3.3.3.3.3.2.cmml">α</mi><mi id="S2.p4.8.m8.3.3.3.3.3.3" xref="S2.p4.8.m8.3.3.3.3.3.3.cmml">i</mi></msub><mo stretchy="false" id="S2.p4.8.m8.3.3.3.3.7" xref="S2.p4.8.m8.3.3.3.4.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.8.m8.3b"><apply id="S2.p4.8.m8.3.3.cmml" xref="S2.p4.8.m8.3.3"><eq id="S2.p4.8.m8.3.3.4.cmml" xref="S2.p4.8.m8.3.3.4"></eq><apply id="S2.p4.8.m8.3.3.5.cmml" xref="S2.p4.8.m8.3.3.5"><csymbol cd="ambiguous" id="S2.p4.8.m8.3.3.5.1.cmml" xref="S2.p4.8.m8.3.3.5">subscript</csymbol><ci id="S2.p4.8.m8.3.3.5.2.cmml" xref="S2.p4.8.m8.3.3.5.2">𝑌</ci><ci id="S2.p4.8.m8.3.3.5.3.cmml" xref="S2.p4.8.m8.3.3.5.3">𝑖</ci></apply><vector id="S2.p4.8.m8.3.3.3.4.cmml" xref="S2.p4.8.m8.3.3.3.3"><apply id="S2.p4.8.m8.1.1.1.1.1.cmml" xref="S2.p4.8.m8.1.1.1.1.1"><csymbol cd="ambiguous" id="S2.p4.8.m8.1.1.1.1.1.1.cmml" xref="S2.p4.8.m8.1.1.1.1.1">subscript</csymbol><ci id="S2.p4.8.m8.1.1.1.1.1.2.cmml" xref="S2.p4.8.m8.1.1.1.1.1.2">𝑥</ci><ci id="S2.p4.8.m8.1.1.1.1.1.3.cmml" xref="S2.p4.8.m8.1.1.1.1.1.3">𝑖</ci></apply><apply id="S2.p4.8.m8.2.2.2.2.2.cmml" xref="S2.p4.8.m8.2.2.2.2.2"><csymbol cd="ambiguous" id="S2.p4.8.m8.2.2.2.2.2.1.cmml" xref="S2.p4.8.m8.2.2.2.2.2">subscript</csymbol><ci id="S2.p4.8.m8.2.2.2.2.2.2.cmml" xref="S2.p4.8.m8.2.2.2.2.2.2">𝑦</ci><ci id="S2.p4.8.m8.2.2.2.2.2.3.cmml" xref="S2.p4.8.m8.2.2.2.2.2.3">𝑖</ci></apply><apply id="S2.p4.8.m8.3.3.3.3.3.cmml" xref="S2.p4.8.m8.3.3.3.3.3"><csymbol cd="ambiguous" id="S2.p4.8.m8.3.3.3.3.3.1.cmml" xref="S2.p4.8.m8.3.3.3.3.3">subscript</csymbol><ci id="S2.p4.8.m8.3.3.3.3.3.2.cmml" xref="S2.p4.8.m8.3.3.3.3.3.2">𝛼</ci><ci id="S2.p4.8.m8.3.3.3.3.3.3.cmml" xref="S2.p4.8.m8.3.3.3.3.3.3">𝑖</ci></apply></vector></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.8.m8.3c">Y_{i}=(x_{i},y_{i},\alpha_{i})</annotation></semantics></math> and ground truth (GT) <math id="S2.p4.9.m9.3" class="ltx_Math" alttext="Y^{*}_{i}=(x^{*}_{i},y^{*}_{i},\alpha^{*}_{i})" display="inline"><semantics id="S2.p4.9.m9.3a"><mrow id="S2.p4.9.m9.3.3" xref="S2.p4.9.m9.3.3.cmml"><msubsup id="S2.p4.9.m9.3.3.5" xref="S2.p4.9.m9.3.3.5.cmml"><mi id="S2.p4.9.m9.3.3.5.2.2" xref="S2.p4.9.m9.3.3.5.2.2.cmml">Y</mi><mi id="S2.p4.9.m9.3.3.5.3" xref="S2.p4.9.m9.3.3.5.3.cmml">i</mi><mo id="S2.p4.9.m9.3.3.5.2.3" xref="S2.p4.9.m9.3.3.5.2.3.cmml">∗</mo></msubsup><mo id="S2.p4.9.m9.3.3.4" xref="S2.p4.9.m9.3.3.4.cmml">=</mo><mrow id="S2.p4.9.m9.3.3.3.3" xref="S2.p4.9.m9.3.3.3.4.cmml"><mo stretchy="false" id="S2.p4.9.m9.3.3.3.3.4" xref="S2.p4.9.m9.3.3.3.4.cmml">(</mo><msubsup id="S2.p4.9.m9.1.1.1.1.1" xref="S2.p4.9.m9.1.1.1.1.1.cmml"><mi id="S2.p4.9.m9.1.1.1.1.1.2.2" xref="S2.p4.9.m9.1.1.1.1.1.2.2.cmml">x</mi><mi id="S2.p4.9.m9.1.1.1.1.1.3" xref="S2.p4.9.m9.1.1.1.1.1.3.cmml">i</mi><mo id="S2.p4.9.m9.1.1.1.1.1.2.3" xref="S2.p4.9.m9.1.1.1.1.1.2.3.cmml">∗</mo></msubsup><mo id="S2.p4.9.m9.3.3.3.3.5" xref="S2.p4.9.m9.3.3.3.4.cmml">,</mo><msubsup id="S2.p4.9.m9.2.2.2.2.2" xref="S2.p4.9.m9.2.2.2.2.2.cmml"><mi id="S2.p4.9.m9.2.2.2.2.2.2.2" xref="S2.p4.9.m9.2.2.2.2.2.2.2.cmml">y</mi><mi id="S2.p4.9.m9.2.2.2.2.2.3" xref="S2.p4.9.m9.2.2.2.2.2.3.cmml">i</mi><mo id="S2.p4.9.m9.2.2.2.2.2.2.3" xref="S2.p4.9.m9.2.2.2.2.2.2.3.cmml">∗</mo></msubsup><mo id="S2.p4.9.m9.3.3.3.3.6" xref="S2.p4.9.m9.3.3.3.4.cmml">,</mo><msubsup id="S2.p4.9.m9.3.3.3.3.3" xref="S2.p4.9.m9.3.3.3.3.3.cmml"><mi id="S2.p4.9.m9.3.3.3.3.3.2.2" xref="S2.p4.9.m9.3.3.3.3.3.2.2.cmml">α</mi><mi id="S2.p4.9.m9.3.3.3.3.3.3" xref="S2.p4.9.m9.3.3.3.3.3.3.cmml">i</mi><mo id="S2.p4.9.m9.3.3.3.3.3.2.3" xref="S2.p4.9.m9.3.3.3.3.3.2.3.cmml">∗</mo></msubsup><mo stretchy="false" id="S2.p4.9.m9.3.3.3.3.7" xref="S2.p4.9.m9.3.3.3.4.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.p4.9.m9.3b"><apply id="S2.p4.9.m9.3.3.cmml" xref="S2.p4.9.m9.3.3"><eq id="S2.p4.9.m9.3.3.4.cmml" xref="S2.p4.9.m9.3.3.4"></eq><apply id="S2.p4.9.m9.3.3.5.cmml" xref="S2.p4.9.m9.3.3.5"><csymbol cd="ambiguous" id="S2.p4.9.m9.3.3.5.1.cmml" xref="S2.p4.9.m9.3.3.5">subscript</csymbol><apply id="S2.p4.9.m9.3.3.5.2.cmml" xref="S2.p4.9.m9.3.3.5"><csymbol cd="ambiguous" id="S2.p4.9.m9.3.3.5.2.1.cmml" xref="S2.p4.9.m9.3.3.5">superscript</csymbol><ci id="S2.p4.9.m9.3.3.5.2.2.cmml" xref="S2.p4.9.m9.3.3.5.2.2">𝑌</ci><times id="S2.p4.9.m9.3.3.5.2.3.cmml" xref="S2.p4.9.m9.3.3.5.2.3"></times></apply><ci id="S2.p4.9.m9.3.3.5.3.cmml" xref="S2.p4.9.m9.3.3.5.3">𝑖</ci></apply><vector id="S2.p4.9.m9.3.3.3.4.cmml" xref="S2.p4.9.m9.3.3.3.3"><apply id="S2.p4.9.m9.1.1.1.1.1.cmml" xref="S2.p4.9.m9.1.1.1.1.1"><csymbol cd="ambiguous" id="S2.p4.9.m9.1.1.1.1.1.1.cmml" xref="S2.p4.9.m9.1.1.1.1.1">subscript</csymbol><apply id="S2.p4.9.m9.1.1.1.1.1.2.cmml" xref="S2.p4.9.m9.1.1.1.1.1"><csymbol cd="ambiguous" id="S2.p4.9.m9.1.1.1.1.1.2.1.cmml" xref="S2.p4.9.m9.1.1.1.1.1">superscript</csymbol><ci id="S2.p4.9.m9.1.1.1.1.1.2.2.cmml" xref="S2.p4.9.m9.1.1.1.1.1.2.2">𝑥</ci><times id="S2.p4.9.m9.1.1.1.1.1.2.3.cmml" xref="S2.p4.9.m9.1.1.1.1.1.2.3"></times></apply><ci id="S2.p4.9.m9.1.1.1.1.1.3.cmml" xref="S2.p4.9.m9.1.1.1.1.1.3">𝑖</ci></apply><apply id="S2.p4.9.m9.2.2.2.2.2.cmml" xref="S2.p4.9.m9.2.2.2.2.2"><csymbol cd="ambiguous" id="S2.p4.9.m9.2.2.2.2.2.1.cmml" xref="S2.p4.9.m9.2.2.2.2.2">subscript</csymbol><apply id="S2.p4.9.m9.2.2.2.2.2.2.cmml" xref="S2.p4.9.m9.2.2.2.2.2"><csymbol cd="ambiguous" id="S2.p4.9.m9.2.2.2.2.2.2.1.cmml" xref="S2.p4.9.m9.2.2.2.2.2">superscript</csymbol><ci id="S2.p4.9.m9.2.2.2.2.2.2.2.cmml" xref="S2.p4.9.m9.2.2.2.2.2.2.2">𝑦</ci><times id="S2.p4.9.m9.2.2.2.2.2.2.3.cmml" xref="S2.p4.9.m9.2.2.2.2.2.2.3"></times></apply><ci id="S2.p4.9.m9.2.2.2.2.2.3.cmml" xref="S2.p4.9.m9.2.2.2.2.2.3">𝑖</ci></apply><apply id="S2.p4.9.m9.3.3.3.3.3.cmml" xref="S2.p4.9.m9.3.3.3.3.3"><csymbol cd="ambiguous" id="S2.p4.9.m9.3.3.3.3.3.1.cmml" xref="S2.p4.9.m9.3.3.3.3.3">subscript</csymbol><apply id="S2.p4.9.m9.3.3.3.3.3.2.cmml" xref="S2.p4.9.m9.3.3.3.3.3"><csymbol cd="ambiguous" id="S2.p4.9.m9.3.3.3.3.3.2.1.cmml" xref="S2.p4.9.m9.3.3.3.3.3">superscript</csymbol><ci id="S2.p4.9.m9.3.3.3.3.3.2.2.cmml" xref="S2.p4.9.m9.3.3.3.3.3.2.2">𝛼</ci><times id="S2.p4.9.m9.3.3.3.3.3.2.3.cmml" xref="S2.p4.9.m9.3.3.3.3.3.2.3"></times></apply><ci id="S2.p4.9.m9.3.3.3.3.3.3.cmml" xref="S2.p4.9.m9.3.3.3.3.3.3">𝑖</ci></apply></vector></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.9.m9.3c">Y^{*}_{i}=(x^{*}_{i},y^{*}_{i},\alpha^{*}_{i})</annotation></semantics></math> over training samples <math id="S2.p4.10.m10.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S2.p4.10.m10.1a"><mi id="S2.p4.10.m10.1.1" xref="S2.p4.10.m10.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S2.p4.10.m10.1b"><ci id="S2.p4.10.m10.1.1.cmml" xref="S2.p4.10.m10.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.10.m10.1c">i</annotation></semantics></math>:</p>
+<table id="S2.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E1.m1.2" class="ltx_math_unparsed" alttext="\mathcal{L}=(1-\gamma)\sum_{i}\left|\left|\ \ \begin{bmatrix}x\\
+y\\
+\end{bmatrix}-\begin{bmatrix}x^{*}\\
+y^{*}\\
+\end{bmatrix}\ \ \right|\right|_{2}^{2}\ +\gamma\sum_{i}|\alpha-\alpha^{*}|\textrm{mod}~{}2\pi" display="block"><semantics id="S2.E1.m1.2a"><mrow id="S2.E1.m1.2b"><mi class="ltx_font_mathcaligraphic" id="S2.E1.m1.2.3">ℒ</mi><mo id="S2.E1.m1.2.4">=</mo><mrow id="S2.E1.m1.2.5"><mo stretchy="false" id="S2.E1.m1.2.5.1">(</mo><mn id="S2.E1.m1.2.5.2">1</mn><mo id="S2.E1.m1.2.5.3">−</mo><mi id="S2.E1.m1.2.5.4">γ</mi><mo stretchy="false" id="S2.E1.m1.2.5.5">)</mo></mrow><munder id="S2.E1.m1.2.6"><mo movablelimits="false" rspace="0em" id="S2.E1.m1.2.6.2">∑</mo><mi id="S2.E1.m1.2.6.3">i</mi></munder><mo fence="false" rspace="0.167em" id="S2.E1.m1.2.7">|</mo><mo fence="false" id="S2.E1.m1.2.8">|</mo><mspace width="1.167em" id="S2.E1.m1.2.9"></mspace><mrow id="S2.E1.m1.1.1.3"><mo id="S2.E1.m1.1.1.3.1">[</mo><mtable displaystyle="true" rowspacing="0pt" id="S2.E1.m1.1.1.1.1"><mtr id="S2.E1.m1.1.1.1.1a"><mtd id="S2.E1.m1.1.1.1.1b"><mi id="S2.E1.m1.1.1.1.1.1.1.1">x</mi></mtd></mtr><mtr id="S2.E1.m1.1.1.1.1c"><mtd id="S2.E1.m1.1.1.1.1d"><mi id="S2.E1.m1.1.1.1.1.2.1.1">y</mi></mtd></mtr></mtable><mo id="S2.E1.m1.1.1.3.2">]</mo></mrow><mo id="S2.E1.m1.2.10">−</mo><mrow id="S2.E1.m1.2.2.3"><mo id="S2.E1.m1.2.2.3.1">[</mo><mtable displaystyle="true" rowspacing="0pt" id="S2.E1.m1.2.2.1.1"><mtr id="S2.E1.m1.2.2.1.1a"><mtd id="S2.E1.m1.2.2.1.1b"><msup id="S2.E1.m1.2.2.1.1.1.1.1"><mi id="S2.E1.m1.2.2.1.1.1.1.1.2">x</mi><mo id="S2.E1.m1.2.2.1.1.1.1.1.3">∗</mo></msup></mtd></mtr><mtr id="S2.E1.m1.2.2.1.1c"><mtd id="S2.E1.m1.2.2.1.1d"><msup id="S2.E1.m1.2.2.1.1.2.1.1"><mi id="S2.E1.m1.2.2.1.1.2.1.1.2">y</mi><mo id="S2.E1.m1.2.2.1.1.2.1.1.3">∗</mo></msup></mtd></mtr></mtable><mo id="S2.E1.m1.2.2.3.2">]</mo></mrow><mspace width="1em" id="S2.E1.m1.2.11"></mspace><mo fence="false" rspace="0.167em" id="S2.E1.m1.2.12">|</mo><msubsup id="S2.E1.m1.2.13"><mo fence="false" id="S2.E1.m1.2.13.2.2">|</mo><mn id="S2.E1.m1.2.13.2.3">2</mn><mn id="S2.E1.m1.2.13.3">2</mn></msubsup><mo lspace="0em" id="S2.E1.m1.2.14">+</mo><mi id="S2.E1.m1.2.15">γ</mi><munder id="S2.E1.m1.2.16"><mo movablelimits="false" rspace="0em" id="S2.E1.m1.2.16.2">∑</mo><mi id="S2.E1.m1.2.16.3">i</mi></munder><mo fence="false" rspace="0.167em" stretchy="false" id="S2.E1.m1.2.17">|</mo><mi id="S2.E1.m1.2.18">α</mi><mo id="S2.E1.m1.2.19">−</mo><msup id="S2.E1.m1.2.20"><mi id="S2.E1.m1.2.20.2">α</mi><mo id="S2.E1.m1.2.20.3">∗</mo></msup><mo fence="false" rspace="0.167em" stretchy="false" id="S2.E1.m1.2.21">|</mo><mtext id="S2.E1.m1.2.22">mod</mtext><mn id="S2.E1.m1.2.23">2</mn><mi id="S2.E1.m1.2.24">π</mi></mrow><annotation encoding="application/x-tex" id="S2.E1.m1.2c">\mathcal{L}=(1-\gamma)\sum_{i}\left|\left|\ \ \begin{bmatrix}x\\
+y\\
+\end{bmatrix}-\begin{bmatrix}x^{*}\\
+y^{*}\\
+\end{bmatrix}\ \ \right|\right|_{2}^{2}\ +\gamma\sum_{i}|\alpha-\alpha^{*}|\textrm{mod}~{}2\pi</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S2.p4.13" class="ltx_p">where <math id="S2.p4.11.m1.1" class="ltx_math_unparsed" alttext="||.||_{2}" display="inline"><semantics id="S2.p4.11.m1.1a"><mrow id="S2.p4.11.m1.1b"><mo fence="false" rspace="0.167em" stretchy="false" id="S2.p4.11.m1.1.1">|</mo><mo fence="false" stretchy="false" id="S2.p4.11.m1.1.2">|</mo><mo lspace="0.167em" rspace="0.167em" id="S2.p4.11.m1.1.3">.</mo><mo fence="false" rspace="0.167em" stretchy="false" id="S2.p4.11.m1.1.4">|</mo><msub id="S2.p4.11.m1.1.5"><mo fence="false" stretchy="false" id="S2.p4.11.m1.1.5.2">|</mo><mn id="S2.p4.11.m1.1.5.3">2</mn></msub></mrow><annotation encoding="application/x-tex" id="S2.p4.11.m1.1c">||.||_{2}</annotation></semantics></math> is the <math id="S2.p4.12.m2.1" class="ltx_Math" alttext="L_{2}" display="inline"><semantics id="S2.p4.12.m2.1a"><msub id="S2.p4.12.m2.1.1" xref="S2.p4.12.m2.1.1.cmml"><mi id="S2.p4.12.m2.1.1.2" xref="S2.p4.12.m2.1.1.2.cmml">L</mi><mn id="S2.p4.12.m2.1.1.3" xref="S2.p4.12.m2.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S2.p4.12.m2.1b"><apply id="S2.p4.12.m2.1.1.cmml" xref="S2.p4.12.m2.1.1"><csymbol cd="ambiguous" id="S2.p4.12.m2.1.1.1.cmml" xref="S2.p4.12.m2.1.1">subscript</csymbol><ci id="S2.p4.12.m2.1.1.2.cmml" xref="S2.p4.12.m2.1.1.2">𝐿</ci><cn type="integer" id="S2.p4.12.m2.1.1.3.cmml" xref="S2.p4.12.m2.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.12.m2.1c">L_{2}</annotation></semantics></math> norm and <math id="S2.p4.13.m3.1" class="ltx_Math" alttext="\gamma" display="inline"><semantics id="S2.p4.13.m3.1a"><mi id="S2.p4.13.m3.1.1" xref="S2.p4.13.m3.1.1.cmml">γ</mi><annotation-xml encoding="MathML-Content" id="S2.p4.13.m3.1b"><ci id="S2.p4.13.m3.1.1.cmml" xref="S2.p4.13.m3.1.1">𝛾</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p4.13.m3.1c">\gamma</annotation></semantics></math> is a weighting hyper-parameter set to 0.3 in our experiments.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Related work</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p"><span id="S3.p1.1.1" class="ltx_text ltx_font_bold">Closing the sim2real gap and transfer learning</span> —
+Addressing the sim2real gap relies on methods for knowledge transfer, which usually combine a large number of samples from simulation and/or interactions obtained with a simulator simulation with a significantly smaller number of samples collected from the real-world. Although machine learning is a primary way of addressing the transfer, it remains important to assess and analyze the main sources of discrepancies between simulation and real environments. A common strategy is to introduce noise to the agent state based on statistics collected in the real-world <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>. Additionally, tweaking the collision detection algorithm to prevent wall sliding has been shown to improve the performance in the real-world of navigation policies trained in simulation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, which tend to exploit inaccurate physics simulation. Another approach is to uniformly alter simulation parameters through domain randomization, e. g., modifying lighting and object textures, to encourage models to learn invariant features during training <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>, <a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite>. This line of work highly benefits from domain expert knowledge on the targeted environment, which can provide randomizations closer to reality <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">A different family of methods addresses the sim2real gap through Domain Adaption, which focuses on modifying trained models’ and their features learned from simulation to match those needed for high performance in real environments. This has been explored by different statistical methods from the machine learning toolbox, including discriminative adversarial losses <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>. Feature-wise adaptation has also been addressed by extensive use of loss <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>, and through fine-tuning <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>. Instead of creating invariant features, other approaches perform Domain Adaption at pixel level <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. Despite great results, Domain Adaptation suffers from the need for real-world data, which is often hard to come by. We argue that there is a need for the assistance of domain experts and model builders to understand the main sources of sim2real gaps, which can then be leveraged for targeted adapted domain transfer, e.g. through specific types of representations or custom losses.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p"><span id="S3.p3.1.1" class="ltx_text ltx_font_bold">Visual analytics and interpretability of deep networks</span> —
+Due to their often generic computational structures, their extremely high number of trainable parameters (up to the orders billions) and the enormous amounts of data on which they have been trained, deep neural networks have a reputation of not being interpretable and providing predictions that cannot be understood by humans, hindering their deployment to critical applications. The main challenge is to return control over the decision process to humans, engineers, and model builders, which has been delegated to training data. This arguably requires the design of new tools capable of analyzing the decision process of trained models. The goal is to help domain experts to improve models, closing the loop, and build trust in end-users. These goals have been addressed by, both, the visualization, and machine learning communities <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>.</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.1" class="ltx_p">Convolutional neural networks have been studied by exposing their gradients over input images, along with filters <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite>. Combined with visual analytics <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>, this approach provided a glimpse on how sensible the neurons of those models are to different patterns in the input. Gradients can also be visualized combined with input images to highlight elements towards which the model is attracted to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>, with respect to the desired output (e. g., a class).</p>
+</div>
+<div id="S3.p5" class="ltx_para">
+<p id="S3.p5.1" class="ltx_p">More recently those approaches have been extended with class driven attributions of features <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>, <a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> which can also be formulated as a graph to determine the decision process of a model through interpretation of features (e. g., black fur for bears) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>. However, these approaches are often limited to image classification tasks such as ImageNet, as they need features to exploit human interpretable concepts from given images.</p>
+</div>
+<div id="S3.p6" class="ltx_para">
+<p id="S3.p6.1" class="ltx_p"><span id="S3.p6.1.1" class="ltx_text ltx_font_bold">Interpretable robotics</span> —
+This classical line of work remains an under-explored challenge when applied to regression tasks such as robot ego-localization, our targeted application, in which attributions may be harder to interpret. To our knowledge, visualization of transfer learning, and especially targeting sim2real is an under-explored area, in particular for navigation tasks, where experiments with real physical robots are harder to perform compared to, say, grasping problems.
+In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite>, the evolution of features is explored before and after transfer through pair-wise alignment. Systems such as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite> address transfer gaps through multi-coordinated views and an in-depth analysis for models weights and features w.r.t. domains. In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, the focus is on inspecting the latent memory of agents navigating in simulated environments.
+Finally, common visualizations consist in heatmaps designed to illustrate results from papers in ML communities such as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>, <a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite>.</p>
+</div>
+<div id="S3.p7" class="ltx_para">
+<p id="S3.p7.1" class="ltx_p">Despite providing insights on how models adapt to different domains, and in contrast to our work, those methods have not been designed to directly target what parts of the environment, or which sensor settings may produce sim2real gaps, which we consider as relevant information for domain experts.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>: A visual analytics tool to explore the sim2real gap</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We introduce <span id="S4.p1.1.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>, an interactive visual analytics tool designed to assist domain experts in conducting in-depth analyses of the performance gaps between simulation and real environments of models whose primary task is ego-localization. The tool is implemented in JavaScript and the D3 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> library to run in modern browsers and directly interacts with models implemented in Pytorch <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>. The tool and its source code are available as an open-source project at: 
+<br class="ltx_break"><a target="_blank" href="https://github.com/Theo-Jaunet/sim2realViz" title="" class="ltx_ref ltx_url ltx_font_typewriter" style="font-size:90%;">https://github.com/Theo-Jaunet/sim2realViz</a> .</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Tasks analysis</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">Prior to the design of <span id="S4.SS1.p1.1.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>, we conducted interviews with <math id="S4.SS1.p1.1.m1.1" class="ltx_Math" alttext="3" display="inline"><semantics id="S4.SS1.p1.1.m1.1a"><mn id="S4.SS1.p1.1.m1.1.1" xref="S4.SS1.p1.1.m1.1.1.cmml">3</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.1.m1.1b"><cn type="integer" id="S4.SS1.p1.1.m1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1">3</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.1.m1.1c">3</annotation></semantics></math> experts in Robotics and discussed their workflow, with the objective being to address and identify sim2real gaps. Two of those experts, co-author of this work, then took part in the design of <span id="S4.SS1.p1.1.2" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>. The workflow of interrogated experts consisted in identifying failure cases through statistics or video replaying a robot’s trajectory, and then manually finding equivalent images in simulation to compare to. From those discussions, and literature review introduced in sec. <a href="#S3" title="3 Related work ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, we distill their process in the following three families of tasks.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<ol id="S4.I1" class="ltx_enumerate">
+<li id="S4.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span id="S4.I1.i1.1.1.1" class="ltx_text ltx_font_bold">T1.</span></span> 
+<div id="S4.I1.i1.p1" class="ltx_para">
+<p id="S4.I1.i1.p1.1" class="ltx_p"><span id="S4.I1.i1.p1.1.1" class="ltx_text ltx_font_bold">Fine-grained assessment of model performance gap between SIM and REAL</span>
+ — What is the best performing sim2real transfer method (e. g., fine-tuning, domain randomization etc.)? What are the optimal hyper-parameters? Answering those questions requires experts to study a large number of predictions in SIM and REAL from a large number of observed images and evaluate performance distribution over different environment conditions and factors of variation.</p>
+</div>
+</li>
+<li id="S4.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span id="S4.I1.i2.1.1.1" class="ltx_text ltx_font_bold">T2.</span></span> 
+<div id="S4.I1.i2.p1" class="ltx_para">
+<p id="S4.I1.i2.p1.1" class="ltx_p"><span id="S4.I1.i2.p1.1.1" class="ltx_text ltx_font_bold">Identification of the source of the performance gap</span>
+ — what are the factors of variation in the environment, agent, or trained model, which are responsible for the performance gap? This is inherently difficult, as the sources may be due to the global environment (differences in e.g., lightening, 3D scanning performance), the agent (e. g., differences in camera focal length or height) or changes due to the time span between scanning and physical deployment (e. g., furniture changes). In addition, some gaps may also be beyond human comprehension such as adversarial noise. For a human designer, it may not immediately be clear, which differences will have the largest impact on prediction performance.</p>
+</div>
+</li>
+<li id="S4.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span id="S4.I1.i3.1.1.1" class="ltx_text ltx_font_bold">T3.</span></span> 
+<div id="S4.I1.i3.p1" class="ltx_para">
+<p id="S4.I1.i3.p1.1" class="ltx_p"><span id="S4.I1.i3.p1.1.1" class="ltx_text ltx_font_bold">Closing the sim2real gaps</span>
+ — successful knowledge transfer requires the simulator to be as close as possible to the real-world scenario with respect to the factors of variation identified in <a href="#S4.I1.i2" title="item T2. ‣ 4.1 Tasks analysis ‣ 4 Sim2RealViz: A visual analytics tool to explore the sim2real gap ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text ltx_font_bold">T2.</span></span></a> The goal is to close the loop and increase prediction performance using the insights gained from using <span id="S4.I1.i3.p1.1.2" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span>.</p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Design rationale</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">Our design is centered around the comparison of simulation instances and real-world ones.
+As we deal with complex objects, and because sim2real gaps can emerge from various sources, we implemented several views with different comparison strategies <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>. As illustrated in Fig. <a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, <span id="S4.SS2.p1.1.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span> follows the <em id="S4.SS2.p1.1.2" class="ltx_emph ltx_font_italic">overview+detail</em> interface scheme <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> with a range from the most global views (left), to the most specific ones (right). To ease the comparison, simulation and real-world data are displayed next to each other within each view, with, if possible, simulation on the left side and real-world on the right side. The objective of the <em id="S4.SS2.p1.1.3" class="ltx_emph ltx_font_italic">Statistics view</em> (Fig. <a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> ①) is to help in quickly identifying the performance of a model and to grasp global behavior with simple visualizations. The <em id="S4.SS2.p1.1.4" class="ltx_emph ltx_font_italic">Geo-map</em> (Fig. <a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> ②), is key in providing context on the instance predictions, and for users to grasp what factors of variation may cause sim2real gaps. Finally, the <em id="S4.SS2.p1.1.5" class="ltx_emph ltx_font_italic">Instance view</em> (Fig. <a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> ③), displays how models may perceive sim2real gaps under different scopes. To encode the main information related to the gap we used three colors corresponding to either <span id="S4.SS2.p1.1.6" class="ltx_text ltx_font_smallcaps" style="color:#000000;background-color:#98A7F4;">sim</span><span id="S4.SS2.p1.1.7" class="ltx_text" style="color:#000000;">, <span id="S4.SS2.p1.1.7.1" class="ltx_text ltx_font_smallcaps" style="background-color:#F4A798;">real</span>, or <span id="S4.SS2.p1.1.7.2" class="ltx_text ltx_font_smallcaps" style="background-color:#E3B34D;">gt</span>, accross the visualizations. We also used color to encode the distance between two sets of coordinates or the intensity of the models’ attention towards parts of input images using a continuous turbo <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite> color scale, commonly used by experts, to emphasize the most critical instances, i. e. those with high values.</span></p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection" style="color:#000000;">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Main-stream workflow</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p"><span id="S4.SS3.p1.1.1" class="ltx_text" style="color:#000000;">We now provide a typical workflow of use of </span><span id="S4.SS3.p1.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.SS3.p1.1.3" class="ltx_text" style="color:#000000;">:</span></p>
+</div>
+<div id="S4.SS3.p2" class="ltx_para">
+<ol id="S4.I2" class="ltx_enumerate">
+<li id="S4.I2.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S4.I2.i1.p1" class="ltx_para">
+<p id="S4.I2.i1.p1.1" class="ltx_p"><span id="S4.I2.i1.p1.1.1" class="ltx_text" style="color:#000000;">Models are pre-loaded and their overall performances on both </span><span id="S4.I2.i1.p1.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;background-color:#98A7F4;">sim</span><span id="S4.I2.i1.p1.1.3" class="ltx_text" style="color:#000000;"> and </span><span id="S4.I2.i1.p1.1.4" class="ltx_text ltx_font_smallcaps" style="color:#000000;background-color:#F4A798;">real</span><span id="S4.I2.i1.p1.1.5" class="ltx_text" style="color:#000000;"> are displayed on the top left of </span><span id="S4.I2.i1.p1.1.6" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.I2.i1.p1.1.7" class="ltx_text" style="color:#000000;"> (Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.I2.i1.p1.1.8" class="ltx_text" style="color:#000000;"> ①).</span></p>
+</div>
+</li>
+<li id="S4.I2.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S4.I2.i2.p1" class="ltx_para">
+<p id="S4.I2.i2.p1.1" class="ltx_p"><span id="S4.I2.i2.p1.1.1" class="ltx_text" style="color:#000000;">After model selection, users can start a fine-grained performance analysis of </span><span id="S4.I2.i2.p1.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">sim</span><span id="S4.I2.i2.p1.1.3" class="ltx_text" style="color:#000000;"> and </span><span id="S4.I2.i2.p1.1.4" class="ltx_text ltx_font_smallcaps" style="color:#000000;">real</span><span id="S4.I2.i2.p1.1.5" class="ltx_text" style="color:#000000;"> models by observing global statistics views such as a UMAP </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.I2.i2.p1.1.6.1" class="ltx_text" style="color:#000000;">[</span><a href="#bib.bib24" title="" class="ltx_ref">24</a><span id="S4.I2.i2.p1.1.7.2" class="ltx_text" style="color:#000000;">]</span></cite><span id="S4.I2.i2.p1.1.8" class="ltx_text" style="color:#000000;"> projection of embeddings in which each dot is an instance, and its color encodes how far it is to its counterpart (sim or real). Followed by a radial bar chart of predicted or ground-truth orientation, and finally, a distribution of positions in which each room is a bar, and their height corresponds to how many predictions there is. In any of those views, users can select a set of instances to be inspected (e. g., a cluster in UMAP).</span></p>
+</div>
+</li>
+<li id="S4.I2.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S4.I2.i3.p1" class="ltx_para">
+<p id="S4.I2.i3.p1.1" class="ltx_p"><span id="S4.I2.i3.p1.1.1" class="ltx_text" style="color:#000000;">Any such selection updates a geo-map (Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.I2.i3.p1.1.2" class="ltx_text" style="color:#000000;"> ②), i.e. a “geometric” bird’s eye view, in which users can inspect the predictions in a finer scale. Users can adapt the geo-map to either </span><em id="S4.I2.i3.p1.1.3" class="ltx_emph ltx_font_italic" style="color:#000000;">color</em><span id="S4.I2.i3.p1.1.4" class="ltx_text" style="color:#000000;">-mode which only displays ground-truth positions with their colors indicating how far sim and real predictions are, or </span><em id="S4.I2.i3.p1.1.5" class="ltx_emph ltx_font_italic" style="color:#000000;">full</em><span id="S4.I2.i3.p1.1.6" class="ltx_text" style="color:#000000;">-mode which displays sim predictions, ground-truth positions, and real predictions. Instances can be selected for further inspection by mouse-hovering them.</span></p>
+</div>
+</li>
+<li id="S4.I2.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span> 
+<div id="S4.I2.i4.p1" class="ltx_para">
+<p id="S4.I2.i4.p1.1" class="ltx_p"><span id="S4.I2.i4.p1.1.1" class="ltx_text" style="color:#000000;">An instance selection updates the instance view (Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.I2.i4.p1.1.2" class="ltx_text" style="color:#000000;"> ③) and displays heatmaps, which highlights the portions of images on which the model most focuses on, or which it perceives as different. Such a heatmap is also back-projected over the geo-map to highlight portions of the environment, which most likely carry sim2real gaps (Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.I2.i4.p1.1.3" class="ltx_text" style="color:#000000;"> ④).</span></p>
+</div>
+</li>
+</ol>
+</div>
+<div id="S4.SS3.p3" class="ltx_para">
+<p id="S4.SS3.p3.1" class="ltx_p"><span id="S4.SS3.p3.1.1" class="ltx_text" style="color:#000000;">The views in </span><span id="S4.SS3.p3.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.SS3.p3.1.3" class="ltx_text" style="color:#000000;"> are multi-coordinated, i.e. any of them, including the geo-map, can be used as an entry point to formulate complex queries such as “</span><em id="S4.SS3.p3.1.4" class="ltx_emph ltx_font_italic" style="color:#000000;">what are the instances which perform poorly in simulation, but good in real-world while being in a selected region of the environment?</em><span id="S4.SS3.p3.1.5" class="ltx_text" style="color:#000000;">”. Concretely, those combinations of selection can be done using sets operations (</span><em id="S4.SS3.p3.1.6" class="ltx_emph ltx_font_italic" style="color:#000000;"><span id="S4.SS3.p3.1.6.1" class="ltx_text ltx_font_upright">{</span>union, intersection, and complementary<span id="S4.SS3.p3.1.6.2" class="ltx_text ltx_font_upright">}</span></em><span id="S4.SS3.p3.1.7" class="ltx_text" style="color:#000000;">), which can be selected through interactions with the corresponding views. This is further emphasized by the fact that the performance differences between simulation and real-world are also color-encoded on the geo-map.</span></p>
+</div>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection" style="color:#000000;">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span>Heatmaps</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.1" class="ltx_p"><span id="S4.SS4.p1.1.1" class="ltx_text" style="color:#000000;">To facilitate the inspection of the sim2real gap through image comparisons, </span><span id="S4.SS4.p1.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.SS4.p1.1.3" class="ltx_text" style="color:#000000;"> provides heatmaps superimposed over images, from a selected instance, to draw user attention towards key portions of inputs extracted by the trained model (Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.SS4.p1.1.4" class="ltx_text" style="color:#000000;"> ③). Feature-wise visualizations are essential, as visual differences between simulated and real-world images perceived by humans may not correspond to differences in features with a high impact on model decisions. Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.SS4.p1.1.5" class="ltx_text" style="color:#000000;"> ③ illustrates the result of three approaches to generate those heatmaps, as follows (from top to bottom):</span></p>
+</div>
+<div id="S4.SS4.p2" class="ltx_para">
+<p id="S4.SS4.p2.1" class="ltx_p"><span id="S4.SS4.p2.1.1" class="ltx_text ltx_font_bold" style="color:#000000;">Regression activation mapping</span><span id="S4.SS4.p2.1.2" class="ltx_text" style="color:#000000;"> — Inspired by grad-CAM </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.SS4.p2.1.3.1" class="ltx_text" style="color:#000000;">[</span><a href="#bib.bib33" title="" class="ltx_ref">33</a><span id="S4.SS4.p2.1.4.2" class="ltx_text" style="color:#000000;">]</span></cite><span id="S4.SS4.p2.1.5" class="ltx_text" style="color:#000000;"> and RAM </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.SS4.p2.1.6.1" class="ltx_text" style="color:#000000;">[</span><a href="#bib.bib41" title="" class="ltx_ref">41</a><span id="S4.SS4.p2.1.7.2" class="ltx_text" style="color:#000000;">]</span></cite><span id="S4.SS4.p2.1.8" class="ltx_text" style="color:#000000;">, we design heatmaps to highlight regions in the input, which have a high impact on model prediction. For each forward-pass of a model, we collect feature maps from the last CNN layer and multiply them by the weights of the last FC layer, obtaining an overlay of the size of the feature map, which is then re-scaled to fit the input image and normalized to fit a turbo color scale (Sec. </span><a href="#S4.SS2" title="4.2 Design rationale ‣ 4 Sim2RealViz: A visual analytics tool to explore the sim2real gap ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">4.2</span></a><span id="S4.SS4.p2.1.9" class="ltx_text" style="color:#000000;">). Similarity of activation maps between two similar </span><span id="S4.SS4.p2.1.10" class="ltx_text ltx_font_smallcaps" style="color:#000000;">sim</span><span id="S4.SS4.p2.1.11" class="ltx_text" style="color:#000000;"> and </span><span id="S4.SS4.p2.1.12" class="ltx_text ltx_font_smallcaps" style="color:#000000;">real</span><span id="S4.SS4.p2.1.13" class="ltx_text" style="color:#000000;"> images suggests a similarity of the two input images from the model’s reasoning perspective.</span></p>
+</div>
+<div id="S4.SS4.p3" class="ltx_para">
+<p id="S4.SS4.p3.1" class="ltx_p"><span id="S4.SS4.p3.1.1" class="ltx_text ltx_font_bold" style="color:#000000;">Sim/Real occlusion</span><span id="S4.SS4.p3.1.2" class="ltx_text" style="color:#000000;"> — Occlusion sensitivity </span><cite class="ltx_cite ltx_citemacro_cite"><span id="S4.SS4.p3.1.3.1" class="ltx_text" style="color:#000000;">[</span><a href="#bib.bib42" title="" class="ltx_ref">42</a><span id="S4.SS4.p3.1.4.2" class="ltx_text" style="color:#000000;">]</span></cite><span id="S4.SS4.p3.1.5" class="ltx_text" style="color:#000000;"> is a common method to visualize how neural networks in computer vision rely on some portions of their input images. It consists in applying gray patches over an image, forwarding it to a model, and observing its impact on the model’s prediction. By sampling a set of patches, we can then overlay the input with this information, blue color indicating that the occluded prediction is closer to the original ground truth, and red otherwise.</span></p>
+</div>
+<div id="S4.SS4.p4" class="ltx_para">
+<p id="S4.SS4.p4.4" class="ltx_p"><span id="S4.SS4.p4.4.1" class="ltx_text" style="color:#000000;">In our case, the intuition and solution are slightly different from the standard case. We are interested in areas of the input image, where the model performance is improved when the real-world observation is replaced by simulated information, indicating a strong sim2Real gap. We, therefore, occlude input REAL images with RGB or Depth patches from the corresponding simulated image. Thus, a further advantage of this approach is the possibility to discriminate between gaps in RGB or Depth input. The size of the patches is governed by a Heisenberg-like uncertainty trade-off between localization performance and measurement power. After experimenting with patch size ranging from
+</span><math id="S4.SS4.p4.1.m1.1" class="ltx_Math" alttext="2\times 2" display="inline"><semantics id="S4.SS4.p4.1.m1.1a"><mrow id="S4.SS4.p4.1.m1.1.1" xref="S4.SS4.p4.1.m1.1.1.cmml"><mn mathcolor="#000000" id="S4.SS4.p4.1.m1.1.1.2" xref="S4.SS4.p4.1.m1.1.1.2.cmml">2</mn><mo lspace="0.222em" mathcolor="#000000" rspace="0.222em" id="S4.SS4.p4.1.m1.1.1.1" xref="S4.SS4.p4.1.m1.1.1.1.cmml">×</mo><mn mathcolor="#000000" id="S4.SS4.p4.1.m1.1.1.3" xref="S4.SS4.p4.1.m1.1.1.3.cmml">2</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p4.1.m1.1b"><apply id="S4.SS4.p4.1.m1.1.1.cmml" xref="S4.SS4.p4.1.m1.1.1"><times id="S4.SS4.p4.1.m1.1.1.1.cmml" xref="S4.SS4.p4.1.m1.1.1.1"></times><cn type="integer" id="S4.SS4.p4.1.m1.1.1.2.cmml" xref="S4.SS4.p4.1.m1.1.1.2">2</cn><cn type="integer" id="S4.SS4.p4.1.m1.1.1.3.cmml" xref="S4.SS4.p4.1.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p4.1.m1.1c">2\times 2</annotation></semantics></math><span id="S4.SS4.p4.4.2" class="ltx_text" style="color:#000000;"> pixels to </span><math id="S4.SS4.p4.2.m2.1" class="ltx_Math" alttext="128\times 128" display="inline"><semantics id="S4.SS4.p4.2.m2.1a"><mrow id="S4.SS4.p4.2.m2.1.1" xref="S4.SS4.p4.2.m2.1.1.cmml"><mn mathcolor="#000000" id="S4.SS4.p4.2.m2.1.1.2" xref="S4.SS4.p4.2.m2.1.1.2.cmml">128</mn><mo lspace="0.222em" mathcolor="#000000" rspace="0.222em" id="S4.SS4.p4.2.m2.1.1.1" xref="S4.SS4.p4.2.m2.1.1.1.cmml">×</mo><mn mathcolor="#000000" id="S4.SS4.p4.2.m2.1.1.3" xref="S4.SS4.p4.2.m2.1.1.3.cmml">128</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p4.2.m2.1b"><apply id="S4.SS4.p4.2.m2.1.1.cmml" xref="S4.SS4.p4.2.m2.1.1"><times id="S4.SS4.p4.2.m2.1.1.1.cmml" xref="S4.SS4.p4.2.m2.1.1.1"></times><cn type="integer" id="S4.SS4.p4.2.m2.1.1.2.cmml" xref="S4.SS4.p4.2.m2.1.1.2">128</cn><cn type="integer" id="S4.SS4.p4.2.m2.1.1.3.cmml" xref="S4.SS4.p4.2.m2.1.1.3">128</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p4.2.m2.1c">128\times 128</annotation></semantics></math><span id="S4.SS4.p4.4.3" class="ltx_text" style="color:#000000;">, we concluded that patches of </span><math id="S4.SS4.p4.3.m3.1" class="ltx_Math" alttext="40\times 40" display="inline"><semantics id="S4.SS4.p4.3.m3.1a"><mrow id="S4.SS4.p4.3.m3.1.1" xref="S4.SS4.p4.3.m3.1.1.cmml"><mn mathcolor="#000000" id="S4.SS4.p4.3.m3.1.1.2" xref="S4.SS4.p4.3.m3.1.1.2.cmml">40</mn><mo lspace="0.222em" mathcolor="#000000" rspace="0.222em" id="S4.SS4.p4.3.m3.1.1.1" xref="S4.SS4.p4.3.m3.1.1.1.cmml">×</mo><mn mathcolor="#000000" id="S4.SS4.p4.3.m3.1.1.3" xref="S4.SS4.p4.3.m3.1.1.3.cmml">40</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p4.3.m3.1b"><apply id="S4.SS4.p4.3.m3.1.1.cmml" xref="S4.SS4.p4.3.m3.1.1"><times id="S4.SS4.p4.3.m3.1.1.1.cmml" xref="S4.SS4.p4.3.m3.1.1.1"></times><cn type="integer" id="S4.SS4.p4.3.m3.1.1.2.cmml" xref="S4.SS4.p4.3.m3.1.1.2">40</cn><cn type="integer" id="S4.SS4.p4.3.m3.1.1.3.cmml" xref="S4.SS4.p4.3.m3.1.1.3">40</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p4.3.m3.1c">40\times 40</annotation></semantics></math><span id="S4.SS4.p4.4.4" class="ltx_text" style="color:#000000;"> pixels, i. e. a total of </span><math id="S4.SS4.p4.4.m4.1" class="ltx_Math" alttext="6\times 6" display="inline"><semantics id="S4.SS4.p4.4.m4.1a"><mrow id="S4.SS4.p4.4.m4.1.1" xref="S4.SS4.p4.4.m4.1.1.cmml"><mn mathcolor="#000000" id="S4.SS4.p4.4.m4.1.1.2" xref="S4.SS4.p4.4.m4.1.1.2.cmml">6</mn><mo lspace="0.222em" mathcolor="#000000" rspace="0.222em" id="S4.SS4.p4.4.m4.1.1.1" xref="S4.SS4.p4.4.m4.1.1.1.cmml">×</mo><mn mathcolor="#000000" id="S4.SS4.p4.4.m4.1.1.3" xref="S4.SS4.p4.4.m4.1.1.3.cmml">6</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p4.4.m4.1b"><apply id="S4.SS4.p4.4.m4.1.1.cmml" xref="S4.SS4.p4.4.m4.1.1"><times id="S4.SS4.p4.4.m4.1.1.1.cmml" xref="S4.SS4.p4.4.m4.1.1.1"></times><cn type="integer" id="S4.SS4.p4.4.m4.1.1.2.cmml" xref="S4.SS4.p4.4.m4.1.1.2">6</cn><cn type="integer" id="S4.SS4.p4.4.m4.1.1.3.cmml" xref="S4.SS4.p4.4.m4.1.1.3">6</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p4.4.m4.1c">6\times 6</annotation></semantics></math><span id="S4.SS4.p4.4.5" class="ltx_text" style="color:#000000;"> patches per image, are the more suitable to analyze images on our computer as we estimated that response time for such an interaction should be less than one second. This is due to the fact that this is displayed on mouse-over, hence multiple instances can quickly be probed by an user, and a longer interaction time dampens the usability and user experience of </span><span id="S4.SS4.p4.4.6" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.SS4.p4.4.7" class="ltx_text" style="color:#000000;">.</span></p>
+</div>
+<div id="S4.SS4.p5" class="ltx_para">
+<p id="S4.SS4.p5.1" class="ltx_p"><span id="S4.SS4.p5.1.1" class="ltx_text ltx_font_bold" style="color:#000000;">Features map distance</span><span id="S4.SS4.p5.1.2" class="ltx_text" style="color:#000000;"> — Another approach implemented in </span><span id="S4.SS4.p5.1.3" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.SS4.p5.1.4" class="ltx_text" style="color:#000000;"> is to gather the feature map of the last CNN layer during a forward pass on both the simulation and its corresponding real-world image, and then compute a distance between them. The result is a matrix with the size of the feature map which is then overlaid like the activation mapping. After some iterations, we opted for the product of the cosine distance which favors small changes, and L1 which is more inclined to produce small spots. Such a product offers a trade-off between highlighting every change and face over-plotting while focusing only on one specific spot with the risk of losing relevant changes.</span></p>
+</div>
+<figure id="S4.F3" class="ltx_figure"><img src="/html/2109.11801/assets/x3.png" id="S4.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="140" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering" style="color:#000000;"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Conversion from pixels on a first-person point of view image to coordinates on a bird’s eye geo-map (left). Such a process, used in <span id="S4.F3.5.1" class="ltx_text ltx_font_smallcaps">Sim2RealViz</span> to display global heatmaps (right) on the geo-map, relies on ground-truth, image, and camera information. To optimize their computation, geo-maps are discretized into squares larger than a pixel, as a trade-off between the accuracy of projections, and the time to provide feedback to users upon interactions</figcaption>
+</figure>
+</section>
+<section id="S4.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection" style="color:#000000;">
+<span class="ltx_tag ltx_tag_subsection">4.5 </span>Contextualization on the global geo-map</h3>
+
+<div id="S4.SS5.p1" class="ltx_para">
+<p id="S4.SS5.p1.4" class="ltx_p"><span id="S4.SS5.p1.4.1" class="ltx_text" style="color:#000000;">As illustrated in Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.SS5.p1.4.2" class="ltx_text" style="color:#000000;"> ④ and in Fig. </span><a href="#S4.F3" title="Figure 3 ‣ 4.4 Heatmaps ‣ 4 Sim2RealViz: A visual analytics tool to explore the sim2real gap ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">3</span></a><span id="S4.SS5.p1.4.3" class="ltx_text" style="color:#000000;">, information from the individual first-person 3D projective input images, including heatmaps, can be projected into the global bird’s eye view, and thus overlaid over the geo-map. This is possible thanks to ground truth information, i. e. coordinates, and orientation of the instance, combined with information of the calibrated onboard cameras (simulated and real) themselves such as its field-of-view, position on the robot, resolution, and the range of the depth sensor. To do so, the environment is discretized in </span><math id="S4.SS5.p1.1.m1.1" class="ltx_Math" alttext="264\times 264" display="inline"><semantics id="S4.SS5.p1.1.m1.1a"><mrow id="S4.SS5.p1.1.m1.1.1" xref="S4.SS5.p1.1.m1.1.1.cmml"><mn mathcolor="#000000" id="S4.SS5.p1.1.m1.1.1.2" xref="S4.SS5.p1.1.m1.1.1.2.cmml">264</mn><mo lspace="0.222em" mathcolor="#000000" rspace="0.222em" id="S4.SS5.p1.1.m1.1.1.1" xref="S4.SS5.p1.1.m1.1.1.1.cmml">×</mo><mn mathcolor="#000000" id="S4.SS5.p1.1.m1.1.1.3" xref="S4.SS5.p1.1.m1.1.1.3.cmml">264</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.1.m1.1b"><apply id="S4.SS5.p1.1.m1.1.1.cmml" xref="S4.SS5.p1.1.m1.1.1"><times id="S4.SS5.p1.1.m1.1.1.1.cmml" xref="S4.SS5.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS5.p1.1.m1.1.1.2.cmml" xref="S4.SS5.p1.1.m1.1.1.2">264</cn><cn type="integer" id="S4.SS5.p1.1.m1.1.1.3.cmml" xref="S4.SS5.p1.1.m1.1.1.3">264</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.1.m1.1c">264\times 264</annotation></semantics></math><span id="S4.SS5.p1.4.4" class="ltx_text" style="color:#000000;"> blocks initially filled with zeroes, and images are downsampled to </span><math id="S4.SS5.p1.2.m2.1" class="ltx_Math" alttext="128{\times}128" display="inline"><semantics id="S4.SS5.p1.2.m2.1a"><mrow id="S4.SS5.p1.2.m2.1.1" xref="S4.SS5.p1.2.m2.1.1.cmml"><mn mathcolor="#000000" id="S4.SS5.p1.2.m2.1.1.2" xref="S4.SS5.p1.2.m2.1.1.2.cmml">128</mn><mo lspace="0.222em" mathcolor="#000000" rspace="0.222em" id="S4.SS5.p1.2.m2.1.1.1" xref="S4.SS5.p1.2.m2.1.1.1.cmml">×</mo><mn mathcolor="#000000" id="S4.SS5.p1.2.m2.1.1.3" xref="S4.SS5.p1.2.m2.1.1.3.cmml">128</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.2.m2.1b"><apply id="S4.SS5.p1.2.m2.1.1.cmml" xref="S4.SS5.p1.2.m2.1.1"><times id="S4.SS5.p1.2.m2.1.1.1.cmml" xref="S4.SS5.p1.2.m2.1.1.1"></times><cn type="integer" id="S4.SS5.p1.2.m2.1.1.2.cmml" xref="S4.SS5.p1.2.m2.1.1.2">128</cn><cn type="integer" id="S4.SS5.p1.2.m2.1.1.3.cmml" xref="S4.SS5.p1.2.m2.1.1.3">128</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.2.m2.1c">128{\times}128</annotation></semantics></math><span id="S4.SS5.p1.4.5" class="ltx_text" style="color:#000000;">. Each cell is converted into (</span><math id="S4.SS5.p1.3.m3.2" class="ltx_Math" alttext="x,y" display="inline"><semantics id="S4.SS5.p1.3.m3.2a"><mrow id="S4.SS5.p1.3.m3.2.3.2" xref="S4.SS5.p1.3.m3.2.3.1.cmml"><mi mathcolor="#000000" id="S4.SS5.p1.3.m3.1.1" xref="S4.SS5.p1.3.m3.1.1.cmml">x</mi><mo mathcolor="#000000" id="S4.SS5.p1.3.m3.2.3.2.1" xref="S4.SS5.p1.3.m3.2.3.1.cmml">,</mo><mi mathcolor="#000000" id="S4.SS5.p1.3.m3.2.2" xref="S4.SS5.p1.3.m3.2.2.cmml">y</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.3.m3.2b"><list id="S4.SS5.p1.3.m3.2.3.1.cmml" xref="S4.SS5.p1.3.m3.2.3.2"><ci id="S4.SS5.p1.3.m3.1.1.cmml" xref="S4.SS5.p1.3.m3.1.1">𝑥</ci><ci id="S4.SS5.p1.3.m3.2.2.cmml" xref="S4.SS5.p1.3.m3.2.2">𝑦</ci></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.3.m3.2c">x,y</annotation></semantics></math><span id="S4.SS5.p1.4.6" class="ltx_text" style="color:#000000;">) coordinates, and its average value from a heatmap is summed with the closest environment block to (</span><math id="S4.SS5.p1.4.m4.2" class="ltx_Math" alttext="x,y" display="inline"><semantics id="S4.SS5.p1.4.m4.2a"><mrow id="S4.SS5.p1.4.m4.2.3.2" xref="S4.SS5.p1.4.m4.2.3.1.cmml"><mi mathcolor="#000000" id="S4.SS5.p1.4.m4.1.1" xref="S4.SS5.p1.4.m4.1.1.cmml">x</mi><mo mathcolor="#000000" id="S4.SS5.p1.4.m4.2.3.2.1" xref="S4.SS5.p1.4.m4.2.3.1.cmml">,</mo><mi mathcolor="#000000" id="S4.SS5.p1.4.m4.2.2" xref="S4.SS5.p1.4.m4.2.2.cmml">y</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.4.m4.2b"><list id="S4.SS5.p1.4.m4.2.3.1.cmml" xref="S4.SS5.p1.4.m4.2.3.2"><ci id="S4.SS5.p1.4.m4.1.1.cmml" xref="S4.SS5.p1.4.m4.1.1">𝑥</ci><ci id="S4.SS5.p1.4.m4.2.2.cmml" xref="S4.SS5.p1.4.m4.2.2">𝑦</ci></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.4.m4.2c">x,y</annotation></semantics></math><span id="S4.SS5.p1.4.7" class="ltx_text" style="color:#000000;">) coordinates. Finally, the values of environment blocks are normalized to fit the turbo color scale and then displayed as an overlay on the </span><em id="S4.SS5.p1.4.8" class="ltx_emph ltx_font_italic" style="color:#000000;">geo-map</em><span id="S4.SS5.p1.4.9" class="ltx_text" style="color:#000000;">.
+This process can also be applied to the complete dataset available at once to provide an overview of sim2real gaps of the environment as perceived by a model. Fig. </span><a href="#S4.F3" title="Figure 3 ‣ 4.4 Heatmaps ‣ 4 Sim2RealViz: A visual analytics tool to explore the sim2real gap ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">3</span></a><span id="S4.SS5.p1.4.10" class="ltx_text" style="color:#000000;"> shows the conversion of heatmaps from the complete real-world dataset to a geo-map overlay using different aggregation strategies. This overlay can be displayed using the button </span><em id="S4.SS5.p1.4.11" class="ltx_emph ltx_font_italic" style="color:#000000;">make-heat</em><span id="S4.SS5.p1.4.12" class="ltx_text" style="color:#000000;"> from the geo-map view (fig </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.SS5.p1.4.13" class="ltx_text" style="color:#000000;"> ②).</span></p>
+</div>
+</section>
+<section id="S4.SS6" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection" style="color:#000000;">
+<span class="ltx_tag ltx_tag_subsection">4.6 </span>Exploration of input configurations</h3>
+
+<div id="S4.SS6.p1" class="ltx_para">
+<p id="S4.SS6.p1.1" class="ltx_p"><span id="S4.SS6.p1.1.1" class="ltx_text" style="color:#000000;">To check the impact of simulation gaps due to global imaging parameters, </span><span id="S4.SS6.p1.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.SS6.p1.1.3" class="ltx_text" style="color:#000000;"> provides ways to adjust real-world images through filters such as brightness, contrast, temperature, and dynamic range of depth. As illustrated in Fig. </span><a href="#S4.F4" title="Figure 4 ‣ 4.6 Exploration of input configurations ‣ 4 Sim2RealViz: A visual analytics tool to explore the sim2real gap ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">4</span></a><span id="S4.SS6.p1.1.4" class="ltx_text" style="color:#000000;">, those filters can are generated with sliders on the right of instance view (Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S4.SS6.p1.1.5" class="ltx_text" style="color:#000000;"> ④). Any adjustment on a selected instance updates the corresponding prediction in real-time. Once a set of adjustments is validated by the user, it can be saved, applied to the whole real-world dataset, and treated as a new model in the </span><em id="S4.SS6.p1.1.6" class="ltx_emph ltx_font_italic" style="color:#000000;">model gaps overview ①</em><span id="S4.SS6.p1.1.7" class="ltx_text" style="color:#000000;"> for further analysis.</span></p>
+</div>
+<figure id="S4.F4" class="ltx_figure ltx_align_floatright"><img src="/html/2109.11801/assets/x4.png" id="S4.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="166" height="112" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering" style="color:#000000;"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>By clicking on the <em id="S4.F4.7.1" class="ltx_emph ltx_font_italic">adjust</em> button (on the top-right of Fig. <a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>), users can display sliders on the right of instance view Fig. <a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> ④) that can be used to fine-tuning real-world images with filters and observe how it affect models’ prediction.</figcaption>
+</figure>
+<div id="S4.SS6.p2" class="ltx_para">
+<p id="S4.SS6.p2.3" class="ltx_p"><span id="S4.SS6.p2.3.1" class="ltx_text" style="color:#000000;">The configuration of inputs can also be used on images from simulation, to analyze the performance of the model under specific Domain Randomization configurations, or simulation settings such as, for example, the height of the camera, or its FoV. Of course, to have an impact of the simulation on real-world images, the models need to be retrained outside of </span><span id="S4.SS6.p2.3.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.SS6.p2.3.3" class="ltx_text" style="color:#000000;">. To do so, one must first generate a new dataset with the modified settings, in our case </span><math id="S4.SS6.p2.1.m1.1" class="ltx_Math" alttext="60k" display="inline"><semantics id="S4.SS6.p2.1.m1.1a"><mrow id="S4.SS6.p2.1.m1.1.1" xref="S4.SS6.p2.1.m1.1.1.cmml"><mn mathcolor="#000000" id="S4.SS6.p2.1.m1.1.1.2" xref="S4.SS6.p2.1.m1.1.1.2.cmml">60</mn><mo lspace="0em" rspace="0em" id="S4.SS6.p2.1.m1.1.1.1" xref="S4.SS6.p2.1.m1.1.1.1.cmml">​</mo><mi mathcolor="#000000" id="S4.SS6.p2.1.m1.1.1.3" xref="S4.SS6.p2.1.m1.1.1.3.cmml">k</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS6.p2.1.m1.1b"><apply id="S4.SS6.p2.1.m1.1.1.cmml" xref="S4.SS6.p2.1.m1.1.1"><times id="S4.SS6.p2.1.m1.1.1.1.cmml" xref="S4.SS6.p2.1.m1.1.1.1"></times><cn type="integer" id="S4.SS6.p2.1.m1.1.1.2.cmml" xref="S4.SS6.p2.1.m1.1.1.2">60</cn><ci id="S4.SS6.p2.1.m1.1.1.3.cmml" xref="S4.SS6.p2.1.m1.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS6.p2.1.m1.1c">60k</annotation></semantics></math><span id="S4.SS6.p2.3.4" class="ltx_text" style="color:#000000;"> images, which can take around half a hour as we also need to enforce diversity of sample images (coordinates and orientation). Then, train from scratch our model takes around </span><math id="S4.SS6.p2.2.m2.1" class="ltx_Math" alttext="3" display="inline"><semantics id="S4.SS6.p2.2.m2.1a"><mn mathcolor="#000000" id="S4.SS6.p2.2.m2.1.1" xref="S4.SS6.p2.2.m2.1.1.cmml">3</mn><annotation-xml encoding="MathML-Content" id="S4.SS6.p2.2.m2.1b"><cn type="integer" id="S4.SS6.p2.2.m2.1.1.cmml" xref="S4.SS6.p2.2.m2.1.1">3</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS6.p2.2.m2.1c">3</annotation></semantics></math><span id="S4.SS6.p2.3.5" class="ltx_text" style="color:#000000;"> to </span><math id="S4.SS6.p2.3.m3.1" class="ltx_Math" alttext="4" display="inline"><semantics id="S4.SS6.p2.3.m3.1a"><mn mathcolor="#000000" id="S4.SS6.p2.3.m3.1.1" xref="S4.SS6.p2.3.m3.1.1.cmml">4</mn><annotation-xml encoding="MathML-Content" id="S4.SS6.p2.3.m3.1b"><cn type="integer" id="S4.SS6.p2.3.m3.1.1.cmml" xref="S4.SS6.p2.3.m3.1.1">4</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS6.p2.3.m3.1c">4</annotation></semantics></math><span id="S4.SS6.p2.3.6" class="ltx_text" style="color:#000000;"> hours on our single NVIDIA Quadro P4000 GPU. Despite such a delay, adjusting simulation images in </span><span id="S4.SS6.p2.3.7" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S4.SS6.p2.3.8" class="ltx_text" style="color:#000000;"> can be useful to help manually extracting parameters of the real-world camera, and hence assist in the configuration of the simulator. Producing images, by configuring the simulator with direct feedback, should reduce the workload usually required to configure simulators and real-world robots.</span></p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section" style="color:#000000;">
+<span class="ltx_tag ltx_tag_section">5 </span>Case studies</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p"><span id="S5.p1.1.1" class="ltx_text" style="color:#000000;">We report on illustrative case studies we conducted to demonstrate how </span><span id="S5.p1.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p1.1.3" class="ltx_text" style="color:#000000;"> can be used to provide insights on how different neural models may be influenced by sim2real gaps. During these experiments, </span><span id="S5.p1.1.4" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p1.1.5" class="ltx_text" style="color:#000000;"> is loaded
+with the following methods for sim2real transfer: </span><em id="S5.p1.1.6" class="ltx_emph ltx_font_italic" style="color:#000000;">vanilla</em><span id="S5.p1.1.7" class="ltx_text" style="color:#000000;"> (i. e. no transfer, deployment as-is), </span><em id="S5.p1.1.8" class="ltx_emph ltx_font_italic" style="color:#000000;">dataAug</em><span id="S5.p1.1.9" class="ltx_text" style="color:#000000;"> (i. e. with Domain Randomization over brightness, contrast, dynamic range, hue), </span><em id="S5.p1.1.10" class="ltx_emph ltx_font_italic" style="color:#000000;">fine-tuning</em><span id="S5.p1.1.11" class="ltx_text" style="color:#000000;"> on real-world images, and </span><em id="S5.p1.1.12" class="ltx_emph ltx_font_italic" style="color:#000000;">perlin</em><span id="S5.p1.1.13" class="ltx_text" style="color:#000000;">, a hand-crafted noise on depth images designed to be similar to real-world noise. We use visual data extracted from two different trajectories of the physical Locobot agent in the real environment performed with several months between them and at different times of the day, which provides a diverse range of sim2real gaps and optimizes generalization. Those models and data are available in our GitHub repository at: </span><a target="_blank" href="https://github.com/Theo-Jaunet/sim2realViz" title="" class="ltx_ref ltx_url ltx_font_typewriter" style="font-size:90%;color:#000000;">https://github.com/Theo-Jaunet/sim2realViz</a><span id="S5.p1.1.14" class="ltx_text" style="color:#000000;"> .</span></p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p"><span id="S5.p2.1.1" class="ltx_text" style="color:#000000;">Insights on sim2real gaps grasped using </span><span id="S5.p2.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p2.1.3" class="ltx_text" style="color:#000000;"> can be leveraged from two different perspectives echoing current sim2real transfer approaches. First, similar to Domain Adaptation, we can provide global modifications of the </span><span id="S5.p2.1.4" class="ltx_text ltx_font_smallcaps" style="color:#000000;background-color:#F4A798;">real</span><span id="S5.p2.1.5" class="ltx_text" style="color:#000000;"> images (e. g., brightness), which can be placed as filters and used in </span><span id="S5.p2.1.6" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p2.1.7" class="ltx_text" style="color:#000000;">. Second, related to Domain Randomization, by modifying the simulator settings (e. g., adding or removing objects in the environment), and then by training a new model on it. In what follows, we describe several types of sim2real gaps, which have been identified and partially addressed in our experiments.</span></p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p"><span id="S5.p3.1.1" class="ltx_text ltx_font_bold" style="color:#000000;">Unveiling biases in predictions</span><span id="S5.p3.1.2" class="ltx_text" style="color:#000000;"> —
+Once loaded, users can observe how models perform on simulated and real-world data provided by different models trained and transferred with different methods, as shown in Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S5.p3.1.3" class="ltx_text" style="color:#000000;"> ①. We report that best real-world performances are reached using </span><em id="S5.p3.1.4" class="ltx_emph ltx_font_italic" style="color:#000000;">dataAug</em><span id="S5.p3.1.5" class="ltx_text" style="color:#000000;">, with an average of 84% accuracy, rather than </span><em id="S5.p3.1.6" class="ltx_emph ltx_font_italic" style="color:#000000;">Fine-tuning</em><span id="S5.p3.1.7" class="ltx_text" style="color:#000000;">, with an average accuracy of 80%. This performance is evaluated on traj#1, whereas traj#2 had been used for fine-tuning on real-world data, ensuring generalization over experimental conditions in the environment. In what follows we will focus on the </span><em id="S5.p3.1.8" class="ltx_emph ltx_font_italic" style="color:#000000;">dataAug</em><span id="S5.p3.1.9" class="ltx_text" style="color:#000000;"> model, which a user can further analyze by clicking on its corresponding diamond (Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S5.p3.1.10" class="ltx_text" style="color:#000000;"> ①). This updates every other views to display data extracted from this model. To assess what the worst real-world prediction is, users can use the </span><em id="S5.p3.1.11" class="ltx_emph ltx_font_italic" style="color:#000000;">min</em><span id="S5.p3.1.12" class="ltx_text" style="color:#000000;"> filter on the top of Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S5.p3.1.13" class="ltx_text" style="color:#000000;"> ①. This removes from each view of </span><span id="S5.p3.1.14" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p3.1.15" class="ltx_text" style="color:#000000;"> instances whose real-world performances are not among the bottom </span><math id="S5.p3.1.m1.1" class="ltx_Math" alttext="15\%" display="inline"><semantics id="S5.p3.1.m1.1a"><mrow id="S5.p3.1.m1.1.1" xref="S5.p3.1.m1.1.1.cmml"><mn mathcolor="#000000" id="S5.p3.1.m1.1.1.2" xref="S5.p3.1.m1.1.1.2.cmml">15</mn><mo mathcolor="#000000" id="S5.p3.1.m1.1.1.1" xref="S5.p3.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.p3.1.m1.1b"><apply id="S5.p3.1.m1.1.1.cmml" xref="S5.p3.1.m1.1.1"><csymbol cd="latexml" id="S5.p3.1.m1.1.1.1.cmml" xref="S5.p3.1.m1.1.1.1">percent</csymbol><cn type="integer" id="S5.p3.1.m1.1.1.2.cmml" xref="S5.p3.1.m1.1.1.2">15</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p3.1.m1.1c">15\%</annotation></semantics></math><span id="S5.p3.1.16" class="ltx_text" style="color:#000000;">. In our case, the remaining data displayed corresponds to instances sampled from the right corridor regardless of the model used. We conjecture, that corridors are among the most difficult instances as they are quite large and lack discriminative landmarks. However, in opposition, by using the </span><em id="S5.p3.1.17" class="ltx_emph ltx_font_italic" style="color:#000000;">max</em><span id="S5.p3.1.18" class="ltx_text" style="color:#000000;"> filter, we can also observe that the left-side corridor is among the most successful predictions. By hovering those corridor instances with a successful transfer, we can inspect activation heatmaps and observe that model attention is driven towards the limit between a wooden path (unique to the left corridor) and a wall. Thus, the model seems to have learned to discriminate between corridors, which suggests that the confusion between them may be due to other reasons. By switching the encoding on the geo-map to </span><em id="S5.p3.1.19" class="ltx_emph ltx_font_italic" style="color:#000000;">full</em><span id="S5.p3.1.20" class="ltx_text" style="color:#000000;"> using the slider on the middle top of </span><span id="S5.p3.1.21" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p3.1.22" class="ltx_text" style="color:#000000;">, the geo-map updates to display </span><span id="S5.p3.1.23" class="ltx_text ltx_font_smallcaps" style="color:#000000;background-color:#98A7F4;">sim</span><span id="S5.p3.1.24" class="ltx_text" style="color:#000000;">, </span><span id="S5.p3.1.25" class="ltx_text ltx_font_smallcaps" style="color:#000000;background-color:#F4A798;">real</span><span id="S5.p3.1.26" class="ltx_text" style="color:#000000;">, and </span><span id="S5.p3.1.27" class="ltx_text ltx_font_smallcaps" style="color:#000000;background-color:#E3B34D;">gt</span><span id="S5.p3.1.28" class="ltx_text" style="color:#000000;">positions (Fig. </span><a href="#S5.F5" title="Figure 5 ‣ 5 Case studies ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">5</span></a><span id="S5.p3.1.29" class="ltx_text" style="color:#000000;"> ①). With this, we can observe that the </span><em id="S5.p3.1.30" class="ltx_emph ltx_font_italic" style="color:#000000;">vanilla</em><span id="S5.p3.1.31" class="ltx_text" style="color:#000000;"> model, incorrectly predicts real-world positions from the half right of the environment in the half left. Since those instances are correctly predicted in simulation, this indicates a very strong bias from most of the half right real-world instances. A similar phenomenon is also observed for the </span><em id="S5.p3.1.32" class="ltx_emph ltx_font_italic" style="color:#000000;">dataAug</em><span id="S5.p3.1.33" class="ltx_text" style="color:#000000;"> model with instances on the right corridor creating predictions pointing to the middle of the environment, which is also an unreachable area.</span></p>
+</div>
+<figure id="S5.F5" class="ltx_figure"><img src="/html/2109.11801/assets/x5.png" id="S5.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="346" height="162" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering" style="color:#000000;"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>By using the <em id="S5.F5.5.1" class="ltx_emph ltx_font_italic">full</em> encoding, we can observe that most real-world predictions are located in the half left of the environment ①. Hence, instances sampled from the half right of the environment provide the worst predictions. However, when we slightly increase the brightness of each real-world image, we can observe that instances are more evenly distributed over the environment ②.</figcaption>
+</figure>
+<figure id="S5.F6" class="ltx_figure ltx_align_floatright"><img src="/html/2109.11801/assets/x6.png" id="S5.F6.g1" class="ltx_graphics ltx_centering ltx_img_square" width="212" height="226" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering" style="color:#000000;"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>With global heatmaps of <em id="S5.F6.5.1" class="ltx_emph ltx_font_italic">feature-distance</em>, we can observe (in red) areas of the environment that may be affected by a sim2real gap. Those areas correspond to changes in objects present in the simulation, for instance as illustrated here, a fire-extinguisher. By removing such objects in simulation and retraining a model on them, we can observe that they disappeared from most highlighted areas.</figcaption>
+</figure>
+<div id="S5.p4" class="ltx_para">
+<p id="S5.p4.1" class="ltx_p"><span id="S5.p4.1.1" class="ltx_text ltx_font_bold" style="color:#000000;">Closing the loop with filters</span><span id="S5.p4.1.2" class="ltx_text" style="color:#000000;"> —
+We verify the hypothesis of regression to the mean, which is often an “easy” short-cut solution for a model in absence of regularities in data, or when regularities are not learned. The following focuses on the </span><em id="S5.p4.1.3" class="ltx_emph ltx_font_italic" style="color:#000000;">vanilla</em><span id="S5.p4.1.4" class="ltx_text" style="color:#000000;"> model, as it is the one with the most real-world predictions on the half left of the environment. We perform global adjustments of the imaging parameters of the real-world images as described in Sec. </span><a href="#S4.SS6" title="4.6 Exploration of input configurations ‣ 4 Sim2RealViz: A visual analytics tool to explore the sim2real gap ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">4.6</span></a><span id="S5.p4.1.5" class="ltx_text" style="color:#000000;">, in particular setting both RGB and depth input to zero (i. e. uniform black images), leading to the same constant predictions in the middle of the environment, corroborating the hypothesis.</span></p>
+</div>
+<div id="S5.p5" class="ltx_para">
+<p id="S5.p5.1" class="ltx_p"><span id="S5.p5.1.1" class="ltx_text" style="color:#000000;">While adjusting the brightness filter, we noticed that making images from the right corridor darker, yielded real-world predictions to be even more to the half left of the environment. In opposition, by making those images 15% brighter, yielded real-world predictions, more accurately, in the half right of the environment leading to a slight improvement of the overall performance of 1.5% (Fig </span><a href="#S5.F5" title="Figure 5 ‣ 5 Case studies ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">5</span></a><span id="S5.p5.1.2" class="ltx_text" style="color:#000000;"> ②).</span></p>
+</div>
+<div id="S5.p6" class="ltx_para">
+<p id="S5.p6.1" class="ltx_p"><span id="S5.p6.1.1" class="ltx_text ltx_font_bold" style="color:#000000;">Sim2real gaps due to layout changes</span><span id="S5.p6.1.2" class="ltx_text" style="color:#000000;"> —
+Trained models deployed to real environments need to be resilient to dynamic layout changes such as opened/closed doors, the presence of humans or moved furniture and other objects. In </span><span id="S5.p6.1.3" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p6.1.4" class="ltx_text" style="color:#000000;">, this can be investigated using the global heatmap with </span><em id="S5.p6.1.5" class="ltx_emph ltx_font_italic" style="color:#000000;">feat-dist</em><span id="S5.p6.1.6" class="ltx_text" style="color:#000000;">, displayable with the </span><em id="S5.p6.1.7" class="ltx_emph ltx_font_italic" style="color:#000000;">make heat</em><span id="S5.p6.1.8" class="ltx_text" style="color:#000000;"> button on the middle top of </span><span id="S5.p6.1.9" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p6.1.10" class="ltx_text" style="color:#000000;">  as seen in Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S5.p6.1.11" class="ltx_text" style="color:#000000;">. In such geo-map overlay, some areas of the environment noticeably stand out (red in Fig. </span><a href="#S5.F6" title="Figure 6 ‣ 5 Case studies ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">6</span></a><span id="S5.p6.1.12" class="ltx_text" style="color:#000000;">). By hovering over instances on the geo-map nearby those areas, and browsing their corresponding images (as in Fig. </span><a href="#S0.F1" title="Figure 1 ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">1</span></a><span id="S5.p6.1.13" class="ltx_text" style="color:#000000;"> ④), we can observe that those areas are triggered by different factors. For instance, in Fig. </span><a href="#S5.F6" title="Figure 6 ‣ 5 Case studies ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">6</span></a><span id="S5.p6.1.14" class="ltx_text" style="color:#000000;"> ②, the highlighted area corresponds to the presence of a bike in the simulated data, which was not present when the real-world data had been captured. Other areas correspond to changed furniture, and imperfections of the simulation when rendering, for instance, a fire-extinguisher (Fig </span><a href="#S5.F6" title="Figure 6 ‣ 5 Case studies ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">6</span></a><span id="S5.p6.1.15" class="ltx_text" style="color:#000000;"> ①). Such behavior, which can be observed across models, may benefit from specific attention while addressing sim2real transfer.</span></p>
+</div>
+<div id="S5.p7" class="ltx_para">
+<p id="S5.p7.1" class="ltx_p"><span id="S5.p7.1.1" class="ltx_text ltx_font_bold" style="color:#000000;">Editing the simulator</span><span id="S5.p7.1.2" class="ltx_text" style="color:#000000;"> —
+In order to test such a hypothesis, we manually edited the simulator and removed objects corresponding to two red areas using </span><em id="S5.p7.1.3" class="ltx_emph ltx_font_italic" style="color:#000000;">blender</em><span id="S5.p7.1.4" class="ltx_text" style="color:#000000;">, a 3D modeling software. This new simulation is then used to generate </span><math id="S5.p7.1.m1.1" class="ltx_Math" alttext="60k" display="inline"><semantics id="S5.p7.1.m1.1a"><mrow id="S5.p7.1.m1.1.1" xref="S5.p7.1.m1.1.1.cmml"><mn mathcolor="#000000" id="S5.p7.1.m1.1.1.2" xref="S5.p7.1.m1.1.1.2.cmml">60</mn><mo lspace="0em" rspace="0em" id="S5.p7.1.m1.1.1.1" xref="S5.p7.1.m1.1.1.1.cmml">​</mo><mi mathcolor="#000000" id="S5.p7.1.m1.1.1.3" xref="S5.p7.1.m1.1.1.3.cmml">k</mi></mrow><annotation-xml encoding="MathML-Content" id="S5.p7.1.m1.1b"><apply id="S5.p7.1.m1.1.1.cmml" xref="S5.p7.1.m1.1.1"><times id="S5.p7.1.m1.1.1.1.cmml" xref="S5.p7.1.m1.1.1.1"></times><cn type="integer" id="S5.p7.1.m1.1.1.2.cmml" xref="S5.p7.1.m1.1.1.2">60</cn><ci id="S5.p7.1.m1.1.1.3.cmml" xref="S5.p7.1.m1.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p7.1.m1.1c">60k</annotation></semantics></math><span id="S5.p7.1.5" class="ltx_text" style="color:#000000;"> new images. Using these data, we trained a new </span><em id="S5.p7.1.6" class="ltx_emph ltx_font_italic" style="color:#000000;">dataAug</em><span id="S5.p7.1.7" class="ltx_text" style="color:#000000;"> model and loaded its predictions in </span><span id="S5.p7.1.8" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p7.1.9" class="ltx_text" style="color:#000000;"> to evaluate the influence of those changes on real-world performance. Fig. </span><a href="#S5.F6" title="Figure 6 ‣ 5 Case studies ‣ Sim2RealViz: Visualizing the Sim2Real Gap in Robot Ego-Pose Estimation" class="ltx_ref" style="color:#000000;"><span class="ltx_text ltx_ref_tag">6</span></a><span id="S5.p7.1.10" class="ltx_text" style="color:#000000;"> shows the global </span><em id="S5.p7.1.11" class="ltx_emph ltx_font_italic" style="color:#000000;">feat-dist</em><span id="S5.p7.1.12" class="ltx_text" style="color:#000000;"> heatmap on trajectory#1 created with the new model, taking into account the changes. We can see that the areas with the most significant differences are more uniformly distributed over the environment. Since global heatmaps are normalized over the complete dataset, this indicates that, to the model, those areas are now closer in feature space.</span></p>
+</div>
+<div id="S5.p8" class="ltx_para">
+<p id="S5.p8.1" class="ltx_p"><span id="S5.p8.1.1" class="ltx_text" style="color:#000000;">The experiments described above have lead to a better understanding of the sim2real gap of our baseline agent, and we reported more robust localization performance once these insights were leveraged to modify the simulator or by learning filters for the existing model. We hope that </span><span id="S5.p8.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S5.p8.1.3" class="ltx_text" style="color:#000000;"> will be adopted and facilitate the design and training of trained robotic agents.</span></p>
+</div>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section" style="color:#000000;">
+<span class="ltx_tag ltx_tag_section">6 </span>Conclusion and perspectives</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p"><span id="S6.p1.1.1" class="ltx_text" style="color:#000000;">We introduced </span><span id="S6.p1.1.2" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S6.p1.1.3" class="ltx_text" style="color:#000000;">, an interactive visual analytics tool designed to perform an in-depth analysis of the emergence of sim2real gaps from neural networks applied to robot ego-localization. </span><span id="S6.p1.1.4" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S6.p1.1.5" class="ltx_text" style="color:#000000;"> supports both overview and comparison of the performances of different neural models, which instances can be browsed based on metrics such as performance or distribution. Those metrics can be combined using set operations to formulate more elaborated queries. We also reported scenarios of use of </span><span id="S6.p1.1.6" class="ltx_text ltx_font_smallcaps" style="color:#000000;">Sim2RealViz</span><span id="S6.p1.1.7" class="ltx_text" style="color:#000000;"> to investigate how models are inclined to exploit biases, such as regression to the mean, and are easily disturbed by layout changes, such as moved objects.</span></p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography" style="color:#000000;">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text" style="color:#000000;">
+M. Bostock, V. Ogievetsky, and J. Heer.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.2.1" class="ltx_text" style="color:#000000;">D3: Data-Driven Documents.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">IEEE Trans. Visualization &amp; Comp. Graphics (Proc. InfoVis)</span><span id="bib.bib1.4.2" class="ltx_text" style="color:#000000;">,
+2011.
+</span>
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text" style="color:#000000;">
+K. Bousmalis, A. Irpan, P. Wohlhart, Y. Bai, M. Kelcey, M. Kalakrishnan,
+L. Downs, J. Ibarz, P. Pastor, K. Konolige, et al.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.2.1" class="ltx_text" style="color:#000000;">Using simulation and domain adaptation to improve efficiency of deep
+robotic grasping.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib2.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">2018 IEEE international conference on robotics and automation
+(ICRA)</span><span id="bib.bib2.5.3" class="ltx_text" style="color:#000000;">, pp. 4243–4250. IEEE, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text" style="color:#000000;">
+K. Bousmalis, N. Silberman, D. Dohan, D. Erhan, and D. Krishnan.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.2.1" class="ltx_text" style="color:#000000;">Unsupervised pixel-level domain adaptation with generative
+adversarial networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib3.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span><span id="bib.bib3.5.3" class="ltx_text" style="color:#000000;">, pp. 3722–3731, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text" style="color:#000000;">
+E. Brachmann, M. Humenberger, C. Rother, and T. Sattler.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.2.1" class="ltx_text" style="color:#000000;">On the limits of pseudo ground truth in visual camera
+re-localisation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib4.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">preprint arxiv:2109.00524</span><span id="bib.bib4.5.3" class="ltx_text" style="color:#000000;">, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text" style="color:#000000;">
+S. Carter, Z. Armstrong, L. Schubert, I. Johnson, and C. Olah.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.2.1" class="ltx_text" style="color:#000000;">Activation atlas.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">Distill</span><span id="bib.bib5.4.2" class="ltx_text" style="color:#000000;">, 2019.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.5.1" class="ltx_text" style="color:#000000;">https://distill.pub/2019/activation-atlas. doi: 10 . 23915/distill . 00015
+</span>
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text" style="color:#000000;">
+A. Chadha and Y. Andreopoulos.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.2.1" class="ltx_text" style="color:#000000;">Improved techniques for adversarial discriminative domain adaptation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">IEEE Transactions on Image Processing</span><span id="bib.bib6.4.2" class="ltx_text" style="color:#000000;">, 29:2622–2637, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text" style="color:#000000;">
+A. Chang, A. Dai, T. Funkhouser, M. Halber, M. Niessner, M. Savva, S. Song,
+A. Zeng, and Y. Zhang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.2.1" class="ltx_text" style="color:#000000;">Matterport3D: Learning from RGB-D Data in Indoor Environments.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">International Conference on 3D Vision (3DV)</span><span id="bib.bib7.4.2" class="ltx_text" style="color:#000000;">, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text" style="color:#000000;">
+A. Cockburn, A. Karlson, and B. B. Bederson.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.2.1" class="ltx_text" style="color:#000000;">A review of overview+ detail, zooming, and focus+ context interfaces.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">ACM Computing Surveys (CSUR)</span><span id="bib.bib8.4.2" class="ltx_text" style="color:#000000;">, 41(1):1–31, 2009.
+</span>
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text" style="color:#000000;">
+A. D. Dragan, K. C. Lee, and S. S. Srinivasa.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.2.1" class="ltx_text" style="color:#000000;">Legibility and predictability of robot motion.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib9.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">2013 8th ACM/IEEE International Conference on Human-Robot
+Interaction (HRI)</span><span id="bib.bib9.5.3" class="ltx_text" style="color:#000000;">, pp. 301–308. IEEE, 2013.
+</span>
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span id="bib.bib10.1.1" class="ltx_text" style="color:#000000;">
+K. Fang, Y. Bai, S. Hinterstoisser, S. Savarese, and M. Kalakrishnan.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.2.1" class="ltx_text" style="color:#000000;">Multi-task domain adaptation for deep learning of instance grasping
+from simulation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib10.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">2018 IEEE International Conference on Robotics and Automation
+(ICRA)</span><span id="bib.bib10.5.3" class="ltx_text" style="color:#000000;">, pp. 3516–3523. IEEE, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span id="bib.bib11.1.1" class="ltx_text" style="color:#000000;">
+M. Gleicher, D. Albers, R. Walker, I. Jusufi, C. D. Hansen, and J. C. Roberts.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.2.1" class="ltx_text" style="color:#000000;">Visual comparison for information visualization.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">Information Visualization</span><span id="bib.bib11.4.2" class="ltx_text" style="color:#000000;">, 10(4):289–309, Oct. 2011. doi: 10 . 1177/1473871611416549
+</span>
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span id="bib.bib12.1.1" class="ltx_text" style="color:#000000;">
+I. J. Goodfellow, J. Shlens, and C. Szegedy.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.2.1" class="ltx_text" style="color:#000000;">Explaining and harnessing adversarial examples.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">arXiv preprint arXiv:1412.6572</span><span id="bib.bib12.4.2" class="ltx_text" style="color:#000000;">, 2014.
+</span>
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text" style="color:#000000;">
+F. Hohman, H. Park, C. Robinson, and D. H. Chau.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.2.1" class="ltx_text" style="color:#000000;">Summit: Scaling deep learning interpretability by visualizing
+activation and attribution summarizations.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">IEEE Transactions on Visualization and Computer Graphics
+(TVCG)</span><span id="bib.bib13.4.2" class="ltx_text" style="color:#000000;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text" style="color:#000000;">
+F. M. Hohman, M. Kahng, R. Pienta, and D. H. Chau.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.2.1" class="ltx_text" style="color:#000000;">Visual Analytics in Deep Learning: An Interrogative Survey for the
+Next Frontiers.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">IEEE Transactions on Visualization and Computer Graphics</span><span id="bib.bib14.4.2" class="ltx_text" style="color:#000000;">, 2019.
+doi: 10 . 1109/TVCG . 2018 . 2843369
+</span>
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span id="bib.bib15.1.1" class="ltx_text" style="color:#000000;">
+S. James, P. Wohlhart, M. Kalakrishnan, D. Kalashnikov, A. Irpan, J. Ibarz,
+S. Levine, R. Hadsell, and K. Bousmalis.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.2.1" class="ltx_text" style="color:#000000;">Sim-to-real via sim-to-sim: Data-efficient robotic grasping via
+randomized-to-canonical adaptation networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib15.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition</span><span id="bib.bib15.5.3" class="ltx_text" style="color:#000000;">, pp. 12627–12637, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text" style="color:#000000;">
+T. Jaunet, R. Vuillemot, and C. Wolf.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.2.1" class="ltx_text" style="color:#000000;">Drlviz: Understanding decisions and memory in deep reinforcement
+learning.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">Computer Graphics Forum (EuroVis)</span><span id="bib.bib16.4.2" class="ltx_text" style="color:#000000;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span id="bib.bib17.1.1" class="ltx_text" style="color:#000000;">
+A. Kadian, J. Truong, A. Gokaslan, A. Clegg, E. Wijmans, S. Lee, M. Savva,
+S. Chernova, and D. Batra.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.2.1" class="ltx_text" style="color:#000000;">Sim2real predictivity: Does evaluation in simulation predict
+real-world performance?
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">IEEE Robotics and Automation Letters</span><span id="bib.bib17.4.2" class="ltx_text" style="color:#000000;">, 5(4):6670–6677, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span id="bib.bib18.1.1" class="ltx_text" style="color:#000000;">
+A. Kendall, M. Grimes, and R. Cipolla.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.2.1" class="ltx_text" style="color:#000000;">Posenet: A convolutional network for real-time 6-dof camera
+relocalization.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib18.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE international conference on computer
+vision</span><span id="bib.bib18.5.3" class="ltx_text" style="color:#000000;">, pp. 2938–2946, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text" style="color:#000000;">
+Z. C. Lipton.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.2.1" class="ltx_text" style="color:#000000;">The mythos of model interpretability: In machine learning, the
+concept of interpretability is both important and slippery.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">Queue</span><span id="bib.bib19.4.2" class="ltx_text" style="color:#000000;">, 16(3):31–57, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text" style="color:#000000;">
+M. Liu, S. Liu, H. Su, K. Cao, and J. Zhu.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.2.1" class="ltx_text" style="color:#000000;">Analyzing the noise robustness of deep neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib20.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">2018 IEEE Conference on Visual Analytics Science and
+Technology (VAST)</span><span id="bib.bib20.5.3" class="ltx_text" style="color:#000000;">, pp. 60–71. IEEE, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text" style="color:#000000;">
+M. Liu, J. Shi, Z. Li, C. Li, J. Zhu, and S. Liu.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.2.1" class="ltx_text" style="color:#000000;">Towards better analysis of deep convolutional neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">IEEE transactions on visualization and computer graphics</span><span id="bib.bib21.4.2" class="ltx_text" style="color:#000000;">,
+23(1):91–100, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span id="bib.bib22.1.1" class="ltx_text" style="color:#000000;">
+LoCoBot: An Open Source Low Cost Robot.
+</span>
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="http://www.locobot.org" title="" class="ltx_ref ltx_url ltx_font_typewriter" style="color:#000000;">http://www.locobot.org</a><span id="bib.bib22.2.1" class="ltx_text" style="color:#000000;">.
+</span>
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span id="bib.bib23.1.1" class="ltx_text" style="color:#000000;">
+Y. Ma, A. Fan, J. He, A. Nelakurthi, and R. Maciejewski.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.2.1" class="ltx_text" style="color:#000000;">A visual analytics framework for explaining and diagnosing transfer
+learning processes.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">IEEE Transactions on Visualization and Computer Graphics</span><span id="bib.bib23.4.2" class="ltx_text" style="color:#000000;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span id="bib.bib24.1.1" class="ltx_text" style="color:#000000;">
+L. McInnes, J. Healy, and J. Melville.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.2.1" class="ltx_text" style="color:#000000;">Umap: Uniform manifold approximation and projection for dimension
+reduction.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">arXiv preprint arXiv:1802.03426</span><span id="bib.bib24.4.2" class="ltx_text" style="color:#000000;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span id="bib.bib25.1.1" class="ltx_text" style="color:#000000;">
+B. Mehta, M. Diaz, F. Golemo, C. J. Pal, and L. Paull.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.2.1" class="ltx_text" style="color:#000000;">Active domain randomization.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib25.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Conference on Robot Learning</span><span id="bib.bib25.5.3" class="ltx_text" style="color:#000000;">, pp. 1162–1176. PMLR, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span id="bib.bib26.1.1" class="ltx_text" style="color:#000000;">
+A. Mikhailov.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.2.1" class="ltx_text" style="color:#000000;">Google ai blog: Turbo, an improved rainbow colormap for
+visualization.
+</span>
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html" title="" class="ltx_ref ltx_url ltx_font_typewriter" style="color:#000000;">https://ai.googleblog.com/2019/08/turbo-improved-rainbow-colormap-for.html</a><span id="bib.bib26.3.1" class="ltx_text" style="color:#000000;">.
+</span>
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span id="bib.bib27.1.1" class="ltx_text" style="color:#000000;">
+S.-M. Moosavi-Dezfooli, A. Fawzi, and P. Frossard.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.2.1" class="ltx_text" style="color:#000000;">Deepfool: a simple and accurate method to fool deep neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib27.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span><span id="bib.bib27.5.3" class="ltx_text" style="color:#000000;">, pp. 2574–2582, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span id="bib.bib28.1.1" class="ltx_text" style="color:#000000;">
+C. Olah, A. Satyanarayan, I. Johnson, S. Carter, L. Schubert, K. Ye, and
+A. Mordvintsev.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.2.1" class="ltx_text" style="color:#000000;">The building blocks of interpretability.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">Distill</span><span id="bib.bib28.4.2" class="ltx_text" style="color:#000000;">, 2018.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.5.1" class="ltx_text" style="color:#000000;">https://distill.pub/2018/building-blocks. doi: 10 . 23915/distill . 00010
+</span>
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span id="bib.bib29.1.1" class="ltx_text" style="color:#000000;">
+A. Paszke, S. Gross, F. Massa, A. Lerer, J. Bradbury, G. Chanan, T. Killeen,
+Z. Lin, N. Gimelshein, L. Antiga, A. Desmaison, A. Kopf, E. Yang, Z. DeVito,
+M. Raison, A. Tejani, S. Chilamkurthy, B. Steiner, L. Fang, J. Bai, and
+S. Chintala.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.2.1" class="ltx_text" style="color:#000000;">Pytorch: An imperative style, high-performance deep learning library.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib29.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Advances in Neural Information Processing Systems 32</span><span id="bib.bib29.5.3" class="ltx_text" style="color:#000000;">, pp.
+8024–8035. Curran Associates, Inc., 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock"><span id="bib.bib30.1.1" class="ltx_text" style="color:#000000;">
+A. Prakash, S. Boochoon, M. Brophy, D. Acuna, E. Cameracci, G. State,
+O. Shapira, and S. Birchfield.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib30.2.1" class="ltx_text" style="color:#000000;">Structured domain randomization: Bridging the reality gap by
+context-aware synthetic data.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib30.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib30.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">2019 International Conference on Robotics and Automation
+(ICRA)</span><span id="bib.bib30.5.3" class="ltx_text" style="color:#000000;">, pp. 7249–7255. IEEE, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock"><span id="bib.bib31.1.1" class="ltx_text" style="color:#000000;">
+A. A. Rusu, M. Večerík, T. Rothörl, N. Heess, R. Pascanu, and
+R. Hadsell.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib31.2.1" class="ltx_text" style="color:#000000;">Sim-to-real robot learning from pixels with progressive nets.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib31.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib31.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Conference on Robot Learning</span><span id="bib.bib31.5.3" class="ltx_text" style="color:#000000;">, pp. 262–270. PMLR, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock"><span id="bib.bib32.1.1" class="ltx_text" style="color:#000000;">
+M. Savva, A. Kadian, O. Maksymets, Y. Zhao, E. Wijmans, B. Jain, J. Straub,
+J. Liu, V. Koltun, J. Malik, D. Parikh, and D. Batra.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib32.2.1" class="ltx_text" style="color:#000000;">Habitat: A Platform for Embodied AI Research.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib32.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib32.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE/CVF International Conference on
+Computer Vision (ICCV)</span><span id="bib.bib32.5.3" class="ltx_text" style="color:#000000;">, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock"><span id="bib.bib33.1.1" class="ltx_text" style="color:#000000;">
+R. R. Selvaraju, M. Cogswell, A. Das, R. Vedantam, D. Parikh, and D. Batra.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib33.2.1" class="ltx_text" style="color:#000000;">Grad-cam: Visual explanations from deep networks via gradient-based
+localization.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib33.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib33.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE international conference on computer
+vision</span><span id="bib.bib33.5.3" class="ltx_text" style="color:#000000;">, pp. 618–626, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock"><span id="bib.bib34.1.1" class="ltx_text" style="color:#000000;">
+J. T. Springenberg, A. Dosovitskiy, T. Brox, and M. Riedmiller.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib34.2.1" class="ltx_text" style="color:#000000;">Striving for Simplicity: The All Convolutional Net.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib34.3.1" class="ltx_text" style="color:#000000;">12 2014.
+</span>
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock"><span id="bib.bib35.1.1" class="ltx_text" style="color:#000000;">
+H. Strobelt, S. Gehrmann, H. Pfister, and A. M. Rush.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib35.2.1" class="ltx_text" style="color:#000000;">Lstmvis: A tool for visual analysis of hidden state dynamics in
+recurrent neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib35.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">IEEE transactions on visualization and computer graphics</span><span id="bib.bib35.4.2" class="ltx_text" style="color:#000000;">,
+24(1):667–676, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock"><span id="bib.bib36.1.1" class="ltx_text" style="color:#000000;">
+R. Szabó, D. Katona, M. Csillag, A. Csiszárik, and D. Varga.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib36.2.1" class="ltx_text" style="color:#000000;">Visualizing transfer learning.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib36.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">arXiv preprint arXiv:2007.07628</span><span id="bib.bib36.4.2" class="ltx_text" style="color:#000000;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock"><span id="bib.bib37.1.1" class="ltx_text" style="color:#000000;">
+J. Tobin, R. Fong, A. Ray, J. Schneider, W. Zaremba, and P. Abbeel.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib37.2.1" class="ltx_text" style="color:#000000;">Domain randomization for transferring deep neural networks from
+simulation to the real world.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib37.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib37.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">2017 IEEE/RSJ international conference on intelligent robots
+and systems (IROS)</span><span id="bib.bib37.5.3" class="ltx_text" style="color:#000000;">, pp. 23–30. IEEE, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock"><span id="bib.bib38.1.1" class="ltx_text" style="color:#000000;">
+J. Tremblay, A. Prakash, D. Acuna, M. Brophy, V. Jampani, C. Anil, T. To,
+E. Cameracci, S. Boochoon, and S. Birchfield.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib38.2.1" class="ltx_text" style="color:#000000;">Training deep networks with synthetic data: Bridging the reality gap
+by domain randomization.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib38.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib38.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition (CVPR) Workshops</span><span id="bib.bib38.5.3" class="ltx_text" style="color:#000000;">, June 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock"><span id="bib.bib39.1.1" class="ltx_text" style="color:#000000;">
+E. Tzeng, C. Devin, J. Hoffman, C. Finn, P. Abbeel, S. Levine, K. Saenko, and
+T. Darrell.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib39.2.1" class="ltx_text" style="color:#000000;">Adapting deep visuomotor representations with weak pairwise
+constraints.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib39.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib39.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Algorithmic Foundations of Robotics XII</span><span id="bib.bib39.5.3" class="ltx_text" style="color:#000000;">, pp. 688–703.
+Springer, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock"><span id="bib.bib40.1.1" class="ltx_text" style="color:#000000;">
+E. Tzeng, J. Hoffman, K. Saenko, and T. Darrell.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib40.2.1" class="ltx_text" style="color:#000000;">Adversarial discriminative domain adaptation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib40.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib40.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span><span id="bib.bib40.5.3" class="ltx_text" style="color:#000000;">, pp. 7167–7176, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock"><span id="bib.bib41.1.1" class="ltx_text" style="color:#000000;">
+Z. Wang and J. Yang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib41.2.1" class="ltx_text" style="color:#000000;">Diabetic retinopathy detection via deep convolutional networks for
+discriminative localization and visual explanation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib41.3.1" class="ltx_text ltx_font_italic" style="color:#000000;">arXiv preprint arXiv:1703.10757</span><span id="bib.bib41.4.2" class="ltx_text" style="color:#000000;">, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock"><span id="bib.bib42.1.1" class="ltx_text" style="color:#000000;">
+M. D. Zeiler and R. Fergus.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib42.2.1" class="ltx_text" style="color:#000000;">Visualizing and understanding convolutional networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib42.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib42.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">European conference on computer vision</span><span id="bib.bib42.5.3" class="ltx_text" style="color:#000000;">, pp. 818–833.
+Springer, 2014.
+</span>
+</span>
+</li>
+<li id="bib.bib43" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[43]</span>
+<span class="ltx_bibblock"><span id="bib.bib43.1.1" class="ltx_text" style="color:#000000;">
+F. Zhu, L. Zhu, and Y. Yang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib43.2.1" class="ltx_text" style="color:#000000;">Sim-real joint reinforcement transfer for 3d indoor navigation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib43.3.1" class="ltx_text" style="color:#000000;">In </span><span id="bib.bib43.4.2" class="ltx_text ltx_font_italic" style="color:#000000;">Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition</span><span id="bib.bib43.5.3" class="ltx_text" style="color:#000000;">, pp. 11388–11397, 2019.
+</span>
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2109.11800" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2109.11801" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2109.11801">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2109.11801" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2109.11802" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Fri Mar  8 00:30:40 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,1531 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2011.13669] Towards real-time object recognition and pose estimation in point clouds</title><meta property="og:description" content="Object recognition and 6DoF pose estimation are quite challenging tasks in computer vision applications. Despite efficiency in such tasks, standard methods deliver far from real-time processing rates. This paper presen…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Towards real-time object recognition and pose estimation in point clouds">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Towards real-time object recognition and pose estimation in point clouds">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2011.13669">
+
+<!--Generated on Tue Mar 19 05:49:52 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Towards real-time object recognition and pose estimation in point clouds</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Marlon Marcon<sup id="id12.12.id1" class="ltx_sup"><span id="id12.12.id1.1" class="ltx_text ltx_font_italic">1</span></sup>
+<img src="/html/2011.13669/assets/orcid.png" id="id2.2.g1" class="ltx_graphics ltx_img_square" width="12" height="12" alt="[Uncaptioned image]">
+, Olga Regina Pereira Bellon<sup id="id13.13.id2" class="ltx_sup"><span id="id13.13.id2.1" class="ltx_text ltx_font_italic">2</span></sup>
+<img src="/html/2011.13669/assets/orcid.png" id="id5.5.g2" class="ltx_graphics ltx_img_square" width="12" height="12" alt="[Uncaptioned image]">
+, Luciano Silva<sup id="id14.14.id3" class="ltx_sup"><span id="id14.14.id3.1" class="ltx_text ltx_font_italic">2</span></sup>
+<img src="/html/2011.13669/assets/orcid.png" id="id8.8.g3" class="ltx_graphics ltx_img_square" width="12" height="12" alt="[Uncaptioned image]">
+ 
+<br class="ltx_break">
+<span id="id10.10.1" class="ltx_inline-block ltx_minipage ltx_align_top" style="width:448.1pt;">
+<span id="id10.10.1.1" class="ltx_p"><sup id="id10.10.1.1.1" class="ltx_sup"><span id="id10.10.1.1.1.1" class="ltx_text ltx_font_italic">1</span></sup><span id="id10.10.1.1.2" class="ltx_text ltx_font_italic">Dapartment of Software Engineering, Federal University of Technology - Paraná, Dois Vizinhos, Brazil</span></span>
+</span> 
+<br class="ltx_break">
+<span id="id11.11.2" class="ltx_inline-block ltx_minipage ltx_align_top" style="width:448.1pt;">
+<span id="id11.11.2.1" class="ltx_p"><sup id="id11.11.2.1.1" class="ltx_sup"><span id="id11.11.2.1.1.1" class="ltx_text ltx_font_italic">2</span></sup><span id="id11.11.2.1.2" class="ltx_text ltx_font_italic">Department of Computer Science, Federal University of Paraná, Curitiba, Brazil</span></span>
+</span> 
+<br class="ltx_break"><span id="id15.15.id4" class="ltx_text ltx_font_italic">marlonmarcon@utfpr.edu.br, olga@ufpr.br, luciano@inf.ufpr.br</span> 
+<br class="ltx_break">
+</span><span class="ltx_author_notes"><img src="/html/2011.13669/assets/orcid.png" id="id3.3.g1" class="ltx_graphics ltx_img_square" width="12" height="12" alt="[Uncaptioned image]"> https://orcid.org/0000-0001-9748-2824<img src="/html/2011.13669/assets/orcid.png" id="id6.6.g1" class="ltx_graphics ltx_img_square" width="12" height="12" alt="[Uncaptioned image]"> https://orcid.org/0000-0003-2683-9704<img src="/html/2011.13669/assets/orcid.png" id="id9.9.g1" class="ltx_graphics ltx_img_square" width="12" height="12" alt="[Uncaptioned image]"> https://orcid.org/0000-0001-6341-1323</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id16.id1" class="ltx_p">Object recognition and 6DoF pose estimation are quite challenging tasks in computer vision applications. Despite efficiency in such tasks, standard methods deliver far from real-time processing rates. This paper presents a novel pipeline to estimate a fine 6DoF pose of objects, applied to realistic scenarios in real-time. We split our proposal into three main parts. Firstly, a Color feature classification leverages the use of pre-trained CNN color features trained on the ImageNet for object detection. A Feature-based registration module conducts a coarse pose estimation, and finally, a Fine-adjustment step performs an ICP-based dense registration. Our proposal achieves, in the best case, an accuracy performance of almost 83% on the RGB-D Scenes dataset. Regarding processing time, the object detection task is done at a frame processing rate up to 90 FPS, and the pose estimation at almost 14 FPS in a full execution strategy. We discuss that due to the proposal’s modularity, we could let the full execution occurs only when necessary and perform a scheduled execution that unlocks real-time processing, even for multitask situations.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>INTRODUCTION</h2>
+
+<div id="S1.p1" class="ltx_para ltx_noindent">
+<p id="S1.p1.1" class="ltx_p">Object recognition and 6D pose estimation represent a central role in a broad spectrum of computer vision applications, such as object grasping and manipulation, bin picking tasks, and industrial assemblies verification <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx35" title="" class="ltx_ref">Vock et al., 2019</a>]</cite>. Successful object recognition, highly reliable pose estimation, and near real-time operation are essential capabilities and current challenges for robot perception systems.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">A methodology usually employed to estimate rigid transformations between scenes and objects is centered on a feature-based template matching approach. Assuming we have a known item or a part of an object, this technique involves searching all the occurrences in a larger and usually cluttered scene <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx35" title="" class="ltx_ref">Vock et al., 2019</a>]</cite>. However, due to natural occlusions, such occurrences may be represented only by a partial view of an object. The template is often another point cloud, and the main challenge of the template matching approach is to maintain the runtime feasibility and preserve the robustness.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Template matching approaches rely on RANSAC-based feature matching algorithms, following the pipeline proposed by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx3" title="" class="ltx_ref">Aldoma et al., 2012b</a>]</cite>. RANSAC algorithm has proven to be one of the most versatile and robust. Unfortunately, for large or dense point clouds, its runtime becomes a significant limitation in several of the example applications mentioned above <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx35" title="" class="ltx_ref">Vock et al., 2019</a>]</cite>. When we seek a 6Dof estimation pose, the real-time is a more challenging task <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Marcon et al., 2019</a>]</cite>. In an extensive benchmark of full cloud object detection and pose estimation, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx14" title="" class="ltx_ref">Hodan et al., 2018</a>]</cite> reported runtime of a second per test target on average.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Deep learning strategies for object recognition and classification problems have been extensively studied for RGB images. As the demand for good quality labeled data increases, large datasets are becoming available, serving as a significant benchmark of methods (deep or not) and as training data for real applications. ImageNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx11" title="" class="ltx_ref">Deng et al., 2009</a>]</cite> is, undoubtedly, the most studied dataset and the <span id="S1.p4.1.1" class="ltx_text ltx_font_italic">de-facto</span> standard on such recognition tasks. This dataset presents more than 20,000 categories, but a subset with 1,000 categories, known as ImageNet Large Scale Visual Recognition Challenge (ILSVRC), is mostly used.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">Training a model on ImageNet is quite a challenging task in terms of computational resources and time consumption. Fortunately, transferring its models offer efficient solutions in different contexts, acting as a blackbox feature extractor. Studies like <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx1" title="" class="ltx_ref">Agrawal et al., 2014</a>]</cite> explore and corroborate this high capacity of transferring such models to different contexts and applications. Regarding the use of pre-trained CNN features, some approaches handle the object recognition on the Washington RGB-D Object dataset, e.g., <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx39" title="" class="ltx_ref">Zia et al., 2017</a>]</cite> with the VGG architecture and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx7" title="" class="ltx_ref">Caglayan et al., 2020</a>]</cite> evaluate several popular deep networks, such as AlexNet, VGG, ResNet, and DenseNet.</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p">This paper introduces a novel pipeline to deal with point cloud pose estimation in uncontrolled environments and cluttered scenes. Our proposed pipeline recognizes the object using color feature descriptors, crops the selected bounding-box reducing the scenes’ searching surface, and finally estimates the object’s pose in a traditional local feature-based approach. Despite adopting well-known techniques in the 2D/3D computer vision field, our proposal’s novelty centers on the smooth integration between 2D and 3D methods to provide a solution efficient in terms of accuracy and time.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>BACKGROUND</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">Recognition systems work with objects, which are digital representations of tangible real-world items that exist physically in a scene. Such systems are unavoidably machine-learning-based approaches that use features to locate and identify objects in a scene reliably. Together with the recognition, another task is to estimate the location and orientation of the detected items. In a 3D world, we estimate six degrees of freedom (6DoF), which refers to the geometrical transformation representing a rigid body’s movement in a 3D space, i.e., the combination of translation and rotation.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Color feature extraction</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">As a mark on the deep learning history, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx16" title="" class="ltx_ref">Krizhevsky et al., 2012</a>]</cite> presented the first Deep Convolutional Architecture employed on the ILSVRC, an 8-layer architecture dubbed AlexNet. This network was the first to prove that deep learning could beat hand-crafted methods when trained on a large scale dataset. After that, ConvNets became more accurate, deeper, and bigger in terms of parameters. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx30" title="" class="ltx_ref">Simonyan and Zisserman, 2015</a>]</cite> propose VGG, a network that doubled the depth of AlexNet, but exploring tiny filters (<math id="S2.SS1.p1.1.m1.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S2.SS1.p1.1.m1.1a"><mrow id="S2.SS1.p1.1.m1.1.1" xref="S2.SS1.p1.1.m1.1.1.cmml"><mn id="S2.SS1.p1.1.m1.1.1.2" xref="S2.SS1.p1.1.m1.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS1.p1.1.m1.1.1.1" xref="S2.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S2.SS1.p1.1.m1.1.1.3" xref="S2.SS1.p1.1.m1.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.1.m1.1b"><apply id="S2.SS1.p1.1.m1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1"><times id="S2.SS1.p1.1.m1.1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S2.SS1.p1.1.m1.1.1.2.cmml" xref="S2.SS1.p1.1.m1.1.1.2">3</cn><cn type="integer" id="S2.SS1.p1.1.m1.1.1.3.cmml" xref="S2.SS1.p1.1.m1.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.1.m1.1c">3\times 3</annotation></semantics></math>), and became the runner-up on the ILSVRC, one step back the GoogLeNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx31" title="" class="ltx_ref">Szegedy et al., 2015</a>]</cite>, with 22 layers. GoogLeNet relies on the Inception architecture <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx32" title="" class="ltx_ref">Szegedy et al., 2016</a>]</cite>. Another type of ConvNets, called ResNets <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">He et al., 2016</a>]</cite>, uses the concept of residual blocks that use skip-connection blocks that learn residual functions regarding the input. Many architectures have been proposed based on these findings, such as ResNet with 50, 101, and 152 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">He et al., 2016</a>]</cite>. Also, based on developments regarding the residual blocks, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx36" title="" class="ltx_ref">Xie et al., 2017</a>]</cite> developed the ResNeXt architecture. The basis upon ResNeXt blocks resides on parallel ResNet-like blocks, which have the output summed before the residual calculation. Some architectures propose the use of Deep Learning features on resource-limited devices, such as smartphones and embedded systems. The most prominent architecture is the MobileNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx28" title="" class="ltx_ref">Sandler et al., 2018</a>]</cite>. Another family of leading networks is the EfficientNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx33" title="" class="ltx_ref">Tan and Le, 2019</a>]</cite>. Relying on the use of these lighter architectures, EfficientNet proposes very deep architectures without compromise resource efficiency.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Pose estimation</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">As presented in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx3" title="" class="ltx_ref">Aldoma et al., 2012b</a>]</cite>, a comprehensive registration process usually consists of two steps: coarse and fine registrations. We can produce a coarse registration transformation by performing a manual alignment, motion tracking or, the most common, by using the local feature matching. Local-feature-matching-based algorithms automatically obtain corresponding points from two or multiple point-clouds, coarsely registering by minimizing the distance between them. These methods have been extensively studied and have confirmed to be compliant and computer efficient <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx12" title="" class="ltx_ref">Guo et al., 2016</a>]</cite>. After coarsely registering the point clouds, a fine-registration algorithm is applied to refine the initial coarse registration iteratively. Examples of fine-registration algorithms include the ICP algorithm that perform point-to-point alignment <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx5" title="" class="ltx_ref">Besl and McKay, 1992</a>]</cite>, or point-to-plane <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Chen and Medioni, 1992</a>]</cite>. These algorithms are suitable for matching between point-clouds of isolated scenes (3D registration) or between a scene and a model (3D object recognition). This proposal adopted two approaches to generate the initial alignment: a traditional feature-based RANSAC and the Fast Global Registration (FGR) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx38" title="" class="ltx_ref">Zhou et al., 2016</a>]</cite>.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>PROPOSED APPROACH</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">In this section, we explain in detail our proposed approach. Our proposed pipeline starts from an RGB image and its corresponding point cloud, generated from RGB and depth images. These inputs are submitted to our three-stage architecture: color feature classification, feature-based registration, and fine adjustment. We depict our proposal in <a href="#S3.F1" title="Figure 1 ‣ 3 PROPOSED APPROACH ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Figure 1</span></a> and present these steps in the next sections.</p>
+</div>
+<figure id="S3.F1" class="ltx_figure"><img src="/html/2011.13669/assets/figures/pipeline.png" id="S3.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="562" height="322" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Pipeline of the proposed approach to pose estimation. To estimate the pre-segmented object’s instance, we extract its features by a deep learning color-based extractor and a pre-trained ML classifier. After selecting the objects database, the view with the highest number of correspondences resulting from a feature-based registration algorithm. Finally, we apply an ICP dense registration algorithm to estimate the position and pose of the object.</figcaption>
+</figure>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Color feature classification</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">Our proposal starts detecting the target object and estimating a bounding box of it. After this detection, we preprocess the image and submit to a deep-learning-based color feature extractor. The preprocessing step includes image cropping and resizing to adjust to the network input dimensions. The deep network architectures employed in our experiments output a feature vector, 1000 bins long, used to predict the object’s instance, by a pre-trained ML classifier. We emphasize that our approach is size-independent regarding the feature vector, but for a fair comparison we chose networks with the same output size.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.2" class="ltx_p">In our trials, we explored the achievements of <a href="#S4.T2" title="Table 2 ‣ 4.4.1 Object detection benchmark ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>, and selected the most accurate networks: ResNet101 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">He et al., 2016</a>]</cite>, MobileNet v2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx28" title="" class="ltx_ref">Sandler et al., 2018</a>]</cite>, ResNeXt101 32<math id="S3.SS1.p2.1.m1.1" class="ltx_Math" alttext="\times" display="inline"><semantics id="S3.SS1.p2.1.m1.1a"><mo id="S3.SS1.p2.1.m1.1.1" xref="S3.SS1.p2.1.m1.1.1.cmml">×</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.1.m1.1b"><times id="S3.SS1.p2.1.m1.1.1.cmml" xref="S3.SS1.p2.1.m1.1.1"></times></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.1.m1.1c">\times</annotation></semantics></math>8d <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx36" title="" class="ltx_ref">Xie et al., 2017</a>]</cite>, and EfficientNet-B7 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx33" title="" class="ltx_ref">Tan and Le, 2019</a>]</cite>. These networks input a <math id="S3.SS1.p2.2.m2.1" class="ltx_Math" alttext="224\times 244" display="inline"><semantics id="S3.SS1.p2.2.m2.1a"><mrow id="S3.SS1.p2.2.m2.1.1" xref="S3.SS1.p2.2.m2.1.1.cmml"><mn id="S3.SS1.p2.2.m2.1.1.2" xref="S3.SS1.p2.2.m2.1.1.2.cmml">224</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p2.2.m2.1.1.1" xref="S3.SS1.p2.2.m2.1.1.1.cmml">×</mo><mn id="S3.SS1.p2.2.m2.1.1.3" xref="S3.SS1.p2.2.m2.1.1.3.cmml">244</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.2.m2.1b"><apply id="S3.SS1.p2.2.m2.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1"><times id="S3.SS1.p2.2.m2.1.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1.1"></times><cn type="integer" id="S3.SS1.p2.2.m2.1.1.2.cmml" xref="S3.SS1.p2.2.m2.1.1.2">224</cn><cn type="integer" id="S3.SS1.p2.2.m2.1.1.3.cmml" xref="S3.SS1.p2.2.m2.1.1.3">244</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.2.m2.1c">224\times 244</annotation></semantics></math> pixel image and output a 1000 bins feature vector. We employed the Logistic regression classifier, chosen after a performance evaluation of standard classifiers, to name: Support Vector Classifier (SVC) with linear and radial-based kernels, Random forest, Multilayer perceptron, and Gaussian naïve Bayes. We explore two variants of our ML model: a pre-trained on the Washington RGB-D Object dataset, and a distinct model, also in such dataset, but with a reduced number of objects, i.e., those annotated on the Washington RGB-D Scenes dataset. The latter provides an application-oriented approach, reducing the number of achievable classes, the inference time, and model size (<a href="#S4.T4" title="Table 4 ‣ 4.4.2 Object recognition in real-world scenes ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 4</span></a>). To verify the best accurate classifier, we do not perform object detection. Instead, we get the ground-truth bounding boxes provided by the dataset, hence verifying for each ML system which is the best feasible performance.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Feature-based registration</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">We build a model database by extracting and storing useful information about the objects in a previous step. The database is composed of information concerning each item, as well as the extracted features of them. We choose a local-descriptors-based approach to estimate the object’s pose. For each instance of an object, we store several partial views of it. Between these views, our method will select the most likely to the correspondent object on the scene.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">Based on the predicted objects’ classes, we can select a set of described views from the models’ database. We then perform a feature-based registration between these views and the point cloud of the scene’s object (previously cropped based on the detected bounding box). This method will estimate a transformation based on the correspondences between a scene and a partial view of an object. Then, the view with the highest number of inliers and at least three correspondences is selected. The estimated affine transformation will be input to the ICP algorithm and perform a dense registration.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.1" class="ltx_p">We process each cloud with a uniform sampling as a keypoint extractor, adopting a leaf size of 1 cm. After, we describe each keypoint using the FPFH <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx25" title="" class="ltx_ref">Rusu et al., 2009</a>]</cite> descriptor with a radius of 5 cm. We choose this descriptor due to its processing time and size (33 bins), well-suited for real-time applications. Methods like CSHOT <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx27" title="" class="ltx_ref">Salti et al., 2014</a>]</cite> describes the color and geometric information and has proven to be an accurate solution applied to single object recognition on RGB-D Object dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx22" title="" class="ltx_ref">Ouadiay et al., 2016</a>]</cite>. However, with a descriptor length of 1344 bins, it is not suitable for real-time feature-matching. Another proposal that deals with color is PFHRGB <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx26" title="" class="ltx_ref">Rusu et al., 2008</a>]</cite>, which, despite being shorter (250 bins) than CSHOT, presents inefficient calculation time <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Marcon et al., 2019</a>]</cite>.</p>
+</div>
+<div id="S3.SS2.p4" class="ltx_para">
+<p id="S3.SS2.p4.1" class="ltx_p">To perform the coarse registration step, we test two methods previously presented: RANSAC and FGR. We considered for both techniques an inlier correspondence distance lower than 1 cm between scene and models. We set the convergence criteria for RANSAC to 4M iterations and 500 validation steps, and for FGR to 100 iterations, following <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx9" title="" class="ltx_ref">Choi et al., 2015</a>]</cite> and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx38" title="" class="ltx_ref">Zhou et al., 2016</a>]</cite>.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Fine-adjustment</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">The previous step outputs an affine transformation that could work as a final pose of the object concerning the scene. However, to guarantee a fine-adjustment, we employ an additional step to the process. We adopt the ICP algorithm, based on the point-to-plane approach <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">Chen and Medioni, 1992</a>]</cite>, to perform a dense registration. We use the transformation resultant from the registration step, the scene, and best-fitted view clouds as input. We set the maximum correspondence distance threshold to 1 cm. It is important to point that again, our proposal is generic, and the fine adjustment algorithm employed in this stage is flexible. Methods such as ICP point-to-point <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx5" title="" class="ltx_ref">Besl and McKay, 1992</a>]</cite> and ColoredICP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx23" title="" class="ltx_ref">Park et al., 2017</a>]</cite> are perfectly adapted to our pipeline.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>EXPERIMENTAL RESULTS</h2>
+
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Dataset</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">We validate our proposal on the Washington RGB-D Object and Scenes datasets. Proposed by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Lai et al., 2011a</a>]</cite> the RGB-D Object contains a collection of 300 instances of household objects, grouped in 51 distinct categories. Each object includes a set of views, captured from different viewpoints with a Kinect sensor. A collection of 3 images, including RGB, depth, and mask is presented for each view. In total, this dataset has about 250 thousand distinct images. The authors also provide a dataset of scenes, named RGB-D Scenes. This evaluation dataset has eight video sequences of every-day environments. A Kinect sensor positioned at a human eye-level height acquires all the images at a <math id="S4.SS1.p1.1.m1.1" class="ltx_Math" alttext="640\times 480" display="inline"><semantics id="S4.SS1.p1.1.m1.1a"><mrow id="S4.SS1.p1.1.m1.1.1" xref="S4.SS1.p1.1.m1.1.1.cmml"><mn id="S4.SS1.p1.1.m1.1.1.2" xref="S4.SS1.p1.1.m1.1.1.2.cmml">640</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p1.1.m1.1.1.1" xref="S4.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS1.p1.1.m1.1.1.3" xref="S4.SS1.p1.1.m1.1.1.3.cmml">480</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.1.m1.1b"><apply id="S4.SS1.p1.1.m1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1"><times id="S4.SS1.p1.1.m1.1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS1.p1.1.m1.1.1.2.cmml" xref="S4.SS1.p1.1.m1.1.1.2">640</cn><cn type="integer" id="S4.SS1.p1.1.m1.1.1.3.cmml" xref="S4.SS1.p1.1.m1.1.1.3">480</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.1.m1.1c">640\times 480</annotation></semantics></math> resolution. This dataset is related to the first one, composed of 13 of the 51 object categories on the Object dataset. These objects are positioned over tables, desks, and kitchen surfaces, cluttered with viewpoints and occlusion variation, and have annotation at category and instance levels. A bidimensional bounding box represents the ground-truth of each object’s position. <a href="#S4.F2" title="Figure 2 ‣ 4.1 Dataset ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Figure 2</span></a> presents examples of both datasets. <a href="#S4.T1" title="Table 1 ‣ 4.1 Dataset ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 1</span></a> gives some details regarding the name and size of the sequences, and their average number of objects.</p>
+</div>
+<figure id="S4.F2" class="ltx_figure"><img src="/html/2011.13669/assets/x1.png" id="S4.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="664" height="279" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Examples of models and scenes from the Washington RGB-D Scenes dataset (top row), and objects from the RGB-D Object dataset (bottom row). Source: Adapted from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Lai et al., 2011a</a>]</cite>.</figcaption>
+</figure>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Details regarding the RGB-D Scenes datasets. </figcaption>
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_t" style="padding:1.5pt 2.0pt;">Scene</th>
+<th id="S4.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:1.5pt 2.0pt;">Number of frames</th>
+<th id="S4.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:1.5pt 2.0pt;">Models per frame</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.2.1" class="ltx_tr">
+<th id="S4.T1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding:1.5pt 2.0pt;">desk_1</th>
+<td id="S4.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 2.0pt;">98</td>
+<td id="S4.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 2.0pt;">1.89</td>
+</tr>
+<tr id="S4.T1.1.3.2" class="ltx_tr">
+<th id="S4.T1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">desk_2</th>
+<td id="S4.T1.1.3.2.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">190</td>
+<td id="S4.T1.1.3.2.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">1.85</td>
+</tr>
+<tr id="S4.T1.1.4.3" class="ltx_tr">
+<th id="S4.T1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">desk_3</th>
+<td id="S4.T1.1.4.3.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">228</td>
+<td id="S4.T1.1.4.3.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">2.56</td>
+</tr>
+<tr id="S4.T1.1.5.4" class="ltx_tr">
+<th id="S4.T1.1.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">kitchen_small_1</th>
+<td id="S4.T1.1.5.4.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">180</td>
+<td id="S4.T1.1.5.4.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">3.55</td>
+</tr>
+<tr id="S4.T1.1.6.5" class="ltx_tr">
+<th id="S4.T1.1.6.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">meeting_small_1</th>
+<td id="S4.T1.1.6.5.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">180</td>
+<td id="S4.T1.1.6.5.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">8.79</td>
+</tr>
+<tr id="S4.T1.1.7.6" class="ltx_tr">
+<th id="S4.T1.1.7.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">table_1</th>
+<td id="S4.T1.1.7.6.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">125</td>
+<td id="S4.T1.1.7.6.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">5.92</td>
+</tr>
+<tr id="S4.T1.1.8.7" class="ltx_tr">
+<th id="S4.T1.1.8.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">table_small_1</th>
+<td id="S4.T1.1.8.7.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">199</td>
+<td id="S4.T1.1.8.7.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">3.68</td>
+</tr>
+<tr id="S4.T1.1.9.8" class="ltx_tr">
+<th id="S4.T1.1.9.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">table_small_2</th>
+<td id="S4.T1.1.9.8.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">234</td>
+<td id="S4.T1.1.9.8.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">2.89</td>
+</tr>
+<tr id="S4.T1.1.10.9" class="ltx_tr">
+<th id="S4.T1.1.10.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_t" style="padding:1.5pt 2.0pt;">Average</th>
+<td id="S4.T1.1.10.9.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_t" style="padding:1.5pt 2.0pt;">179.25</td>
+<td id="S4.T1.1.10.9.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_t" style="padding:1.5pt 2.0pt;">3.89</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Evaluation Protocol</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">We evaluate our proposal, quantitatively, and qualitatively. First, we consider CNN feature extraction and classification accuracy based on the models trained in the Object dataset (<a href="#S4.T2" title="Table 2 ‣ 4.4.1 Object detection benchmark ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 2</span></a>). We also verify the entire dataset’s processing time, looking at the frame processing rate in both classification and pose estimation scenarios.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">As the Scenes dataset does not provide ground-truth annotations concerning the objects’ pose, we had to find a plausible metric to evaluate the registration results. We adopted two different metrics: the Root mean squared error (RMSE) and an inlier ratio measurement. The latter represents the overlapping area between the source (model) and the target (scene). It is calculated based on the ratio between inlier correspondences and the number of points on the target. We also evaluate the correctness of predictions, both of object presence and pose. To do so, we follow <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Marcon et al., 2019</a>]</cite> and employ the Intersection over Union metric (IoU), defined as:</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<table id="S4.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E1.m1.1" class="ltx_Math" alttext="IoU=\frac{BB_{GT}\cap BB_{Est}}{BB_{GT}\cup BB_{Est}}" display="block"><semantics id="S4.E1.m1.1a"><mrow id="S4.E1.m1.1.1" xref="S4.E1.m1.1.1.cmml"><mrow id="S4.E1.m1.1.1.2" xref="S4.E1.m1.1.1.2.cmml"><mi id="S4.E1.m1.1.1.2.2" xref="S4.E1.m1.1.1.2.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.2.1" xref="S4.E1.m1.1.1.2.1.cmml">​</mo><mi id="S4.E1.m1.1.1.2.3" xref="S4.E1.m1.1.1.2.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.2.1a" xref="S4.E1.m1.1.1.2.1.cmml">​</mo><mi id="S4.E1.m1.1.1.2.4" xref="S4.E1.m1.1.1.2.4.cmml">U</mi></mrow><mo id="S4.E1.m1.1.1.1" xref="S4.E1.m1.1.1.1.cmml">=</mo><mfrac id="S4.E1.m1.1.1.3" xref="S4.E1.m1.1.1.3.cmml"><mrow id="S4.E1.m1.1.1.3.2" xref="S4.E1.m1.1.1.3.2.cmml"><mrow id="S4.E1.m1.1.1.3.2.2" xref="S4.E1.m1.1.1.3.2.2.cmml"><mi id="S4.E1.m1.1.1.3.2.2.2" xref="S4.E1.m1.1.1.3.2.2.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.2.2.1" xref="S4.E1.m1.1.1.3.2.2.1.cmml">​</mo><msub id="S4.E1.m1.1.1.3.2.2.3" xref="S4.E1.m1.1.1.3.2.2.3.cmml"><mi id="S4.E1.m1.1.1.3.2.2.3.2" xref="S4.E1.m1.1.1.3.2.2.3.2.cmml">B</mi><mrow id="S4.E1.m1.1.1.3.2.2.3.3" xref="S4.E1.m1.1.1.3.2.2.3.3.cmml"><mi id="S4.E1.m1.1.1.3.2.2.3.3.2" xref="S4.E1.m1.1.1.3.2.2.3.3.2.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.2.2.3.3.1" xref="S4.E1.m1.1.1.3.2.2.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.2.2.3.3.3" xref="S4.E1.m1.1.1.3.2.2.3.3.3.cmml">T</mi></mrow></msub></mrow><mo id="S4.E1.m1.1.1.3.2.1" xref="S4.E1.m1.1.1.3.2.1.cmml">∩</mo><mrow id="S4.E1.m1.1.1.3.2.3" xref="S4.E1.m1.1.1.3.2.3.cmml"><mi id="S4.E1.m1.1.1.3.2.3.2" xref="S4.E1.m1.1.1.3.2.3.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.2.3.1" xref="S4.E1.m1.1.1.3.2.3.1.cmml">​</mo><msub id="S4.E1.m1.1.1.3.2.3.3" xref="S4.E1.m1.1.1.3.2.3.3.cmml"><mi id="S4.E1.m1.1.1.3.2.3.3.2" xref="S4.E1.m1.1.1.3.2.3.3.2.cmml">B</mi><mrow id="S4.E1.m1.1.1.3.2.3.3.3" xref="S4.E1.m1.1.1.3.2.3.3.3.cmml"><mi id="S4.E1.m1.1.1.3.2.3.3.3.2" xref="S4.E1.m1.1.1.3.2.3.3.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.2.3.3.3.1" xref="S4.E1.m1.1.1.3.2.3.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.2.3.3.3.3" xref="S4.E1.m1.1.1.3.2.3.3.3.3.cmml">s</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.2.3.3.3.1a" xref="S4.E1.m1.1.1.3.2.3.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.2.3.3.3.4" xref="S4.E1.m1.1.1.3.2.3.3.3.4.cmml">t</mi></mrow></msub></mrow></mrow><mrow id="S4.E1.m1.1.1.3.3" xref="S4.E1.m1.1.1.3.3.cmml"><mrow id="S4.E1.m1.1.1.3.3.2" xref="S4.E1.m1.1.1.3.3.2.cmml"><mi id="S4.E1.m1.1.1.3.3.2.2" xref="S4.E1.m1.1.1.3.3.2.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.2.1" xref="S4.E1.m1.1.1.3.3.2.1.cmml">​</mo><msub id="S4.E1.m1.1.1.3.3.2.3" xref="S4.E1.m1.1.1.3.3.2.3.cmml"><mi id="S4.E1.m1.1.1.3.3.2.3.2" xref="S4.E1.m1.1.1.3.3.2.3.2.cmml">B</mi><mrow id="S4.E1.m1.1.1.3.3.2.3.3" xref="S4.E1.m1.1.1.3.3.2.3.3.cmml"><mi id="S4.E1.m1.1.1.3.3.2.3.3.2" xref="S4.E1.m1.1.1.3.3.2.3.3.2.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.2.3.3.1" xref="S4.E1.m1.1.1.3.3.2.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.2.3.3.3" xref="S4.E1.m1.1.1.3.3.2.3.3.3.cmml">T</mi></mrow></msub></mrow><mo id="S4.E1.m1.1.1.3.3.1" xref="S4.E1.m1.1.1.3.3.1.cmml">∪</mo><mrow id="S4.E1.m1.1.1.3.3.3" xref="S4.E1.m1.1.1.3.3.3.cmml"><mi id="S4.E1.m1.1.1.3.3.3.2" xref="S4.E1.m1.1.1.3.3.3.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.3.1" xref="S4.E1.m1.1.1.3.3.3.1.cmml">​</mo><msub id="S4.E1.m1.1.1.3.3.3.3" xref="S4.E1.m1.1.1.3.3.3.3.cmml"><mi id="S4.E1.m1.1.1.3.3.3.3.2" xref="S4.E1.m1.1.1.3.3.3.3.2.cmml">B</mi><mrow id="S4.E1.m1.1.1.3.3.3.3.3" xref="S4.E1.m1.1.1.3.3.3.3.3.cmml"><mi id="S4.E1.m1.1.1.3.3.3.3.3.2" xref="S4.E1.m1.1.1.3.3.3.3.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.3.3.3.1" xref="S4.E1.m1.1.1.3.3.3.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.3.3.3.3" xref="S4.E1.m1.1.1.3.3.3.3.3.3.cmml">s</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.3.3.3.1a" xref="S4.E1.m1.1.1.3.3.3.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.3.3.3.4" xref="S4.E1.m1.1.1.3.3.3.3.3.4.cmml">t</mi></mrow></msub></mrow></mrow></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S4.E1.m1.1b"><apply id="S4.E1.m1.1.1.cmml" xref="S4.E1.m1.1.1"><eq id="S4.E1.m1.1.1.1.cmml" xref="S4.E1.m1.1.1.1"></eq><apply id="S4.E1.m1.1.1.2.cmml" xref="S4.E1.m1.1.1.2"><times id="S4.E1.m1.1.1.2.1.cmml" xref="S4.E1.m1.1.1.2.1"></times><ci id="S4.E1.m1.1.1.2.2.cmml" xref="S4.E1.m1.1.1.2.2">𝐼</ci><ci id="S4.E1.m1.1.1.2.3.cmml" xref="S4.E1.m1.1.1.2.3">𝑜</ci><ci id="S4.E1.m1.1.1.2.4.cmml" xref="S4.E1.m1.1.1.2.4">𝑈</ci></apply><apply id="S4.E1.m1.1.1.3.cmml" xref="S4.E1.m1.1.1.3"><divide id="S4.E1.m1.1.1.3.1.cmml" xref="S4.E1.m1.1.1.3"></divide><apply id="S4.E1.m1.1.1.3.2.cmml" xref="S4.E1.m1.1.1.3.2"><intersect id="S4.E1.m1.1.1.3.2.1.cmml" xref="S4.E1.m1.1.1.3.2.1"></intersect><apply id="S4.E1.m1.1.1.3.2.2.cmml" xref="S4.E1.m1.1.1.3.2.2"><times id="S4.E1.m1.1.1.3.2.2.1.cmml" xref="S4.E1.m1.1.1.3.2.2.1"></times><ci id="S4.E1.m1.1.1.3.2.2.2.cmml" xref="S4.E1.m1.1.1.3.2.2.2">𝐵</ci><apply id="S4.E1.m1.1.1.3.2.2.3.cmml" xref="S4.E1.m1.1.1.3.2.2.3"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.3.2.2.3.1.cmml" xref="S4.E1.m1.1.1.3.2.2.3">subscript</csymbol><ci id="S4.E1.m1.1.1.3.2.2.3.2.cmml" xref="S4.E1.m1.1.1.3.2.2.3.2">𝐵</ci><apply id="S4.E1.m1.1.1.3.2.2.3.3.cmml" xref="S4.E1.m1.1.1.3.2.2.3.3"><times id="S4.E1.m1.1.1.3.2.2.3.3.1.cmml" xref="S4.E1.m1.1.1.3.2.2.3.3.1"></times><ci id="S4.E1.m1.1.1.3.2.2.3.3.2.cmml" xref="S4.E1.m1.1.1.3.2.2.3.3.2">𝐺</ci><ci id="S4.E1.m1.1.1.3.2.2.3.3.3.cmml" xref="S4.E1.m1.1.1.3.2.2.3.3.3">𝑇</ci></apply></apply></apply><apply id="S4.E1.m1.1.1.3.2.3.cmml" xref="S4.E1.m1.1.1.3.2.3"><times id="S4.E1.m1.1.1.3.2.3.1.cmml" xref="S4.E1.m1.1.1.3.2.3.1"></times><ci id="S4.E1.m1.1.1.3.2.3.2.cmml" xref="S4.E1.m1.1.1.3.2.3.2">𝐵</ci><apply id="S4.E1.m1.1.1.3.2.3.3.cmml" xref="S4.E1.m1.1.1.3.2.3.3"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.3.2.3.3.1.cmml" xref="S4.E1.m1.1.1.3.2.3.3">subscript</csymbol><ci id="S4.E1.m1.1.1.3.2.3.3.2.cmml" xref="S4.E1.m1.1.1.3.2.3.3.2">𝐵</ci><apply id="S4.E1.m1.1.1.3.2.3.3.3.cmml" xref="S4.E1.m1.1.1.3.2.3.3.3"><times id="S4.E1.m1.1.1.3.2.3.3.3.1.cmml" xref="S4.E1.m1.1.1.3.2.3.3.3.1"></times><ci id="S4.E1.m1.1.1.3.2.3.3.3.2.cmml" xref="S4.E1.m1.1.1.3.2.3.3.3.2">𝐸</ci><ci id="S4.E1.m1.1.1.3.2.3.3.3.3.cmml" xref="S4.E1.m1.1.1.3.2.3.3.3.3">𝑠</ci><ci id="S4.E1.m1.1.1.3.2.3.3.3.4.cmml" xref="S4.E1.m1.1.1.3.2.3.3.3.4">𝑡</ci></apply></apply></apply></apply><apply id="S4.E1.m1.1.1.3.3.cmml" xref="S4.E1.m1.1.1.3.3"><union id="S4.E1.m1.1.1.3.3.1.cmml" xref="S4.E1.m1.1.1.3.3.1"></union><apply id="S4.E1.m1.1.1.3.3.2.cmml" xref="S4.E1.m1.1.1.3.3.2"><times id="S4.E1.m1.1.1.3.3.2.1.cmml" xref="S4.E1.m1.1.1.3.3.2.1"></times><ci id="S4.E1.m1.1.1.3.3.2.2.cmml" xref="S4.E1.m1.1.1.3.3.2.2">𝐵</ci><apply id="S4.E1.m1.1.1.3.3.2.3.cmml" xref="S4.E1.m1.1.1.3.3.2.3"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.3.3.2.3.1.cmml" xref="S4.E1.m1.1.1.3.3.2.3">subscript</csymbol><ci id="S4.E1.m1.1.1.3.3.2.3.2.cmml" xref="S4.E1.m1.1.1.3.3.2.3.2">𝐵</ci><apply id="S4.E1.m1.1.1.3.3.2.3.3.cmml" xref="S4.E1.m1.1.1.3.3.2.3.3"><times id="S4.E1.m1.1.1.3.3.2.3.3.1.cmml" xref="S4.E1.m1.1.1.3.3.2.3.3.1"></times><ci id="S4.E1.m1.1.1.3.3.2.3.3.2.cmml" xref="S4.E1.m1.1.1.3.3.2.3.3.2">𝐺</ci><ci id="S4.E1.m1.1.1.3.3.2.3.3.3.cmml" xref="S4.E1.m1.1.1.3.3.2.3.3.3">𝑇</ci></apply></apply></apply><apply id="S4.E1.m1.1.1.3.3.3.cmml" xref="S4.E1.m1.1.1.3.3.3"><times id="S4.E1.m1.1.1.3.3.3.1.cmml" xref="S4.E1.m1.1.1.3.3.3.1"></times><ci id="S4.E1.m1.1.1.3.3.3.2.cmml" xref="S4.E1.m1.1.1.3.3.3.2">𝐵</ci><apply id="S4.E1.m1.1.1.3.3.3.3.cmml" xref="S4.E1.m1.1.1.3.3.3.3"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.3.3.3.3.1.cmml" xref="S4.E1.m1.1.1.3.3.3.3">subscript</csymbol><ci id="S4.E1.m1.1.1.3.3.3.3.2.cmml" xref="S4.E1.m1.1.1.3.3.3.3.2">𝐵</ci><apply id="S4.E1.m1.1.1.3.3.3.3.3.cmml" xref="S4.E1.m1.1.1.3.3.3.3.3"><times id="S4.E1.m1.1.1.3.3.3.3.3.1.cmml" xref="S4.E1.m1.1.1.3.3.3.3.3.1"></times><ci id="S4.E1.m1.1.1.3.3.3.3.3.2.cmml" xref="S4.E1.m1.1.1.3.3.3.3.3.2">𝐸</ci><ci id="S4.E1.m1.1.1.3.3.3.3.3.3.cmml" xref="S4.E1.m1.1.1.3.3.3.3.3.3">𝑠</ci><ci id="S4.E1.m1.1.1.3.3.3.3.3.4.cmml" xref="S4.E1.m1.1.1.3.3.3.3.3.4">𝑡</ci></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E1.m1.1c">IoU=\frac{BB_{GT}\cap BB_{Est}}{BB_{GT}\cup BB_{Est}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S4.SS2.p4" class="ltx_para ltx_noindent">
+<p id="S4.SS2.p4.2" class="ltx_p">we consider <math id="S4.SS2.p4.1.m1.1" class="ltx_Math" alttext="BB_{GT}" display="inline"><semantics id="S4.SS2.p4.1.m1.1a"><mrow id="S4.SS2.p4.1.m1.1.1" xref="S4.SS2.p4.1.m1.1.1.cmml"><mi id="S4.SS2.p4.1.m1.1.1.2" xref="S4.SS2.p4.1.m1.1.1.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p4.1.m1.1.1.1" xref="S4.SS2.p4.1.m1.1.1.1.cmml">​</mo><msub id="S4.SS2.p4.1.m1.1.1.3" xref="S4.SS2.p4.1.m1.1.1.3.cmml"><mi id="S4.SS2.p4.1.m1.1.1.3.2" xref="S4.SS2.p4.1.m1.1.1.3.2.cmml">B</mi><mrow id="S4.SS2.p4.1.m1.1.1.3.3" xref="S4.SS2.p4.1.m1.1.1.3.3.cmml"><mi id="S4.SS2.p4.1.m1.1.1.3.3.2" xref="S4.SS2.p4.1.m1.1.1.3.3.2.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p4.1.m1.1.1.3.3.1" xref="S4.SS2.p4.1.m1.1.1.3.3.1.cmml">​</mo><mi id="S4.SS2.p4.1.m1.1.1.3.3.3" xref="S4.SS2.p4.1.m1.1.1.3.3.3.cmml">T</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p4.1.m1.1b"><apply id="S4.SS2.p4.1.m1.1.1.cmml" xref="S4.SS2.p4.1.m1.1.1"><times id="S4.SS2.p4.1.m1.1.1.1.cmml" xref="S4.SS2.p4.1.m1.1.1.1"></times><ci id="S4.SS2.p4.1.m1.1.1.2.cmml" xref="S4.SS2.p4.1.m1.1.1.2">𝐵</ci><apply id="S4.SS2.p4.1.m1.1.1.3.cmml" xref="S4.SS2.p4.1.m1.1.1.3"><csymbol cd="ambiguous" id="S4.SS2.p4.1.m1.1.1.3.1.cmml" xref="S4.SS2.p4.1.m1.1.1.3">subscript</csymbol><ci id="S4.SS2.p4.1.m1.1.1.3.2.cmml" xref="S4.SS2.p4.1.m1.1.1.3.2">𝐵</ci><apply id="S4.SS2.p4.1.m1.1.1.3.3.cmml" xref="S4.SS2.p4.1.m1.1.1.3.3"><times id="S4.SS2.p4.1.m1.1.1.3.3.1.cmml" xref="S4.SS2.p4.1.m1.1.1.3.3.1"></times><ci id="S4.SS2.p4.1.m1.1.1.3.3.2.cmml" xref="S4.SS2.p4.1.m1.1.1.3.3.2">𝐺</ci><ci id="S4.SS2.p4.1.m1.1.1.3.3.3.cmml" xref="S4.SS2.p4.1.m1.1.1.3.3.3">𝑇</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p4.1.m1.1c">BB_{GT}</annotation></semantics></math> the 3D projection of the 2D bounding box, provided as ground-truth. <math id="S4.SS2.p4.2.m2.1" class="ltx_Math" alttext="BB_{Est}" display="inline"><semantics id="S4.SS2.p4.2.m2.1a"><mrow id="S4.SS2.p4.2.m2.1.1" xref="S4.SS2.p4.2.m2.1.1.cmml"><mi id="S4.SS2.p4.2.m2.1.1.2" xref="S4.SS2.p4.2.m2.1.1.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p4.2.m2.1.1.1" xref="S4.SS2.p4.2.m2.1.1.1.cmml">​</mo><msub id="S4.SS2.p4.2.m2.1.1.3" xref="S4.SS2.p4.2.m2.1.1.3.cmml"><mi id="S4.SS2.p4.2.m2.1.1.3.2" xref="S4.SS2.p4.2.m2.1.1.3.2.cmml">B</mi><mrow id="S4.SS2.p4.2.m2.1.1.3.3" xref="S4.SS2.p4.2.m2.1.1.3.3.cmml"><mi id="S4.SS2.p4.2.m2.1.1.3.3.2" xref="S4.SS2.p4.2.m2.1.1.3.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p4.2.m2.1.1.3.3.1" xref="S4.SS2.p4.2.m2.1.1.3.3.1.cmml">​</mo><mi id="S4.SS2.p4.2.m2.1.1.3.3.3" xref="S4.SS2.p4.2.m2.1.1.3.3.3.cmml">s</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p4.2.m2.1.1.3.3.1a" xref="S4.SS2.p4.2.m2.1.1.3.3.1.cmml">​</mo><mi id="S4.SS2.p4.2.m2.1.1.3.3.4" xref="S4.SS2.p4.2.m2.1.1.3.3.4.cmml">t</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p4.2.m2.1b"><apply id="S4.SS2.p4.2.m2.1.1.cmml" xref="S4.SS2.p4.2.m2.1.1"><times id="S4.SS2.p4.2.m2.1.1.1.cmml" xref="S4.SS2.p4.2.m2.1.1.1"></times><ci id="S4.SS2.p4.2.m2.1.1.2.cmml" xref="S4.SS2.p4.2.m2.1.1.2">𝐵</ci><apply id="S4.SS2.p4.2.m2.1.1.3.cmml" xref="S4.SS2.p4.2.m2.1.1.3"><csymbol cd="ambiguous" id="S4.SS2.p4.2.m2.1.1.3.1.cmml" xref="S4.SS2.p4.2.m2.1.1.3">subscript</csymbol><ci id="S4.SS2.p4.2.m2.1.1.3.2.cmml" xref="S4.SS2.p4.2.m2.1.1.3.2">𝐵</ci><apply id="S4.SS2.p4.2.m2.1.1.3.3.cmml" xref="S4.SS2.p4.2.m2.1.1.3.3"><times id="S4.SS2.p4.2.m2.1.1.3.3.1.cmml" xref="S4.SS2.p4.2.m2.1.1.3.3.1"></times><ci id="S4.SS2.p4.2.m2.1.1.3.3.2.cmml" xref="S4.SS2.p4.2.m2.1.1.3.3.2">𝐸</ci><ci id="S4.SS2.p4.2.m2.1.1.3.3.3.cmml" xref="S4.SS2.p4.2.m2.1.1.3.3.3">𝑠</ci><ci id="S4.SS2.p4.2.m2.1.1.3.3.4.cmml" xref="S4.SS2.p4.2.m2.1.1.3.3.4">𝑡</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p4.2.m2.1c">BB_{Est}</annotation></semantics></math> refers to the 3D bounding box that circumscribes the selected object view after applying the resulting transformation.</p>
+</div>
+<div id="S4.SS2.p5" class="ltx_para">
+<p id="S4.SS2.p5.1" class="ltx_p">We found experimentally that, for this particular dataset, when we estimate the IoU between the object 3D BB and the scene 2D projection, often the former is fully contained in the latter. However, due to their sizes, the calculated IoU is too low. Hence, we consider another metric, which we call Model Intersection Ratio (MIR) that represent the intersection volume over the model estimation volume:</p>
+</div>
+<div id="S4.SS2.p6" class="ltx_para">
+<table id="S4.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E2.m1.1" class="ltx_Math" alttext="MIR=\frac{BB_{GT}\cap BB_{Est}}{BB_{Est}}" display="block"><semantics id="S4.E2.m1.1a"><mrow id="S4.E2.m1.1.1" xref="S4.E2.m1.1.1.cmml"><mrow id="S4.E2.m1.1.1.2" xref="S4.E2.m1.1.1.2.cmml"><mi id="S4.E2.m1.1.1.2.2" xref="S4.E2.m1.1.1.2.2.cmml">M</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.2.1" xref="S4.E2.m1.1.1.2.1.cmml">​</mo><mi id="S4.E2.m1.1.1.2.3" xref="S4.E2.m1.1.1.2.3.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.2.1a" xref="S4.E2.m1.1.1.2.1.cmml">​</mo><mi id="S4.E2.m1.1.1.2.4" xref="S4.E2.m1.1.1.2.4.cmml">R</mi></mrow><mo id="S4.E2.m1.1.1.1" xref="S4.E2.m1.1.1.1.cmml">=</mo><mfrac id="S4.E2.m1.1.1.3" xref="S4.E2.m1.1.1.3.cmml"><mrow id="S4.E2.m1.1.1.3.2" xref="S4.E2.m1.1.1.3.2.cmml"><mrow id="S4.E2.m1.1.1.3.2.2" xref="S4.E2.m1.1.1.3.2.2.cmml"><mi id="S4.E2.m1.1.1.3.2.2.2" xref="S4.E2.m1.1.1.3.2.2.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.3.2.2.1" xref="S4.E2.m1.1.1.3.2.2.1.cmml">​</mo><msub id="S4.E2.m1.1.1.3.2.2.3" xref="S4.E2.m1.1.1.3.2.2.3.cmml"><mi id="S4.E2.m1.1.1.3.2.2.3.2" xref="S4.E2.m1.1.1.3.2.2.3.2.cmml">B</mi><mrow id="S4.E2.m1.1.1.3.2.2.3.3" xref="S4.E2.m1.1.1.3.2.2.3.3.cmml"><mi id="S4.E2.m1.1.1.3.2.2.3.3.2" xref="S4.E2.m1.1.1.3.2.2.3.3.2.cmml">G</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.3.2.2.3.3.1" xref="S4.E2.m1.1.1.3.2.2.3.3.1.cmml">​</mo><mi id="S4.E2.m1.1.1.3.2.2.3.3.3" xref="S4.E2.m1.1.1.3.2.2.3.3.3.cmml">T</mi></mrow></msub></mrow><mo id="S4.E2.m1.1.1.3.2.1" xref="S4.E2.m1.1.1.3.2.1.cmml">∩</mo><mrow id="S4.E2.m1.1.1.3.2.3" xref="S4.E2.m1.1.1.3.2.3.cmml"><mi id="S4.E2.m1.1.1.3.2.3.2" xref="S4.E2.m1.1.1.3.2.3.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.3.2.3.1" xref="S4.E2.m1.1.1.3.2.3.1.cmml">​</mo><msub id="S4.E2.m1.1.1.3.2.3.3" xref="S4.E2.m1.1.1.3.2.3.3.cmml"><mi id="S4.E2.m1.1.1.3.2.3.3.2" xref="S4.E2.m1.1.1.3.2.3.3.2.cmml">B</mi><mrow id="S4.E2.m1.1.1.3.2.3.3.3" xref="S4.E2.m1.1.1.3.2.3.3.3.cmml"><mi id="S4.E2.m1.1.1.3.2.3.3.3.2" xref="S4.E2.m1.1.1.3.2.3.3.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.3.2.3.3.3.1" xref="S4.E2.m1.1.1.3.2.3.3.3.1.cmml">​</mo><mi id="S4.E2.m1.1.1.3.2.3.3.3.3" xref="S4.E2.m1.1.1.3.2.3.3.3.3.cmml">s</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.3.2.3.3.3.1a" xref="S4.E2.m1.1.1.3.2.3.3.3.1.cmml">​</mo><mi id="S4.E2.m1.1.1.3.2.3.3.3.4" xref="S4.E2.m1.1.1.3.2.3.3.3.4.cmml">t</mi></mrow></msub></mrow></mrow><mrow id="S4.E2.m1.1.1.3.3" xref="S4.E2.m1.1.1.3.3.cmml"><mi id="S4.E2.m1.1.1.3.3.2" xref="S4.E2.m1.1.1.3.3.2.cmml">B</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.3.3.1" xref="S4.E2.m1.1.1.3.3.1.cmml">​</mo><msub id="S4.E2.m1.1.1.3.3.3" xref="S4.E2.m1.1.1.3.3.3.cmml"><mi id="S4.E2.m1.1.1.3.3.3.2" xref="S4.E2.m1.1.1.3.3.3.2.cmml">B</mi><mrow id="S4.E2.m1.1.1.3.3.3.3" xref="S4.E2.m1.1.1.3.3.3.3.cmml"><mi id="S4.E2.m1.1.1.3.3.3.3.2" xref="S4.E2.m1.1.1.3.3.3.3.2.cmml">E</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.3.3.3.3.1" xref="S4.E2.m1.1.1.3.3.3.3.1.cmml">​</mo><mi id="S4.E2.m1.1.1.3.3.3.3.3" xref="S4.E2.m1.1.1.3.3.3.3.3.cmml">s</mi><mo lspace="0em" rspace="0em" id="S4.E2.m1.1.1.3.3.3.3.1a" xref="S4.E2.m1.1.1.3.3.3.3.1.cmml">​</mo><mi id="S4.E2.m1.1.1.3.3.3.3.4" xref="S4.E2.m1.1.1.3.3.3.3.4.cmml">t</mi></mrow></msub></mrow></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S4.E2.m1.1b"><apply id="S4.E2.m1.1.1.cmml" xref="S4.E2.m1.1.1"><eq id="S4.E2.m1.1.1.1.cmml" xref="S4.E2.m1.1.1.1"></eq><apply id="S4.E2.m1.1.1.2.cmml" xref="S4.E2.m1.1.1.2"><times id="S4.E2.m1.1.1.2.1.cmml" xref="S4.E2.m1.1.1.2.1"></times><ci id="S4.E2.m1.1.1.2.2.cmml" xref="S4.E2.m1.1.1.2.2">𝑀</ci><ci id="S4.E2.m1.1.1.2.3.cmml" xref="S4.E2.m1.1.1.2.3">𝐼</ci><ci id="S4.E2.m1.1.1.2.4.cmml" xref="S4.E2.m1.1.1.2.4">𝑅</ci></apply><apply id="S4.E2.m1.1.1.3.cmml" xref="S4.E2.m1.1.1.3"><divide id="S4.E2.m1.1.1.3.1.cmml" xref="S4.E2.m1.1.1.3"></divide><apply id="S4.E2.m1.1.1.3.2.cmml" xref="S4.E2.m1.1.1.3.2"><intersect id="S4.E2.m1.1.1.3.2.1.cmml" xref="S4.E2.m1.1.1.3.2.1"></intersect><apply id="S4.E2.m1.1.1.3.2.2.cmml" xref="S4.E2.m1.1.1.3.2.2"><times id="S4.E2.m1.1.1.3.2.2.1.cmml" xref="S4.E2.m1.1.1.3.2.2.1"></times><ci id="S4.E2.m1.1.1.3.2.2.2.cmml" xref="S4.E2.m1.1.1.3.2.2.2">𝐵</ci><apply id="S4.E2.m1.1.1.3.2.2.3.cmml" xref="S4.E2.m1.1.1.3.2.2.3"><csymbol cd="ambiguous" id="S4.E2.m1.1.1.3.2.2.3.1.cmml" xref="S4.E2.m1.1.1.3.2.2.3">subscript</csymbol><ci id="S4.E2.m1.1.1.3.2.2.3.2.cmml" xref="S4.E2.m1.1.1.3.2.2.3.2">𝐵</ci><apply id="S4.E2.m1.1.1.3.2.2.3.3.cmml" xref="S4.E2.m1.1.1.3.2.2.3.3"><times id="S4.E2.m1.1.1.3.2.2.3.3.1.cmml" xref="S4.E2.m1.1.1.3.2.2.3.3.1"></times><ci id="S4.E2.m1.1.1.3.2.2.3.3.2.cmml" xref="S4.E2.m1.1.1.3.2.2.3.3.2">𝐺</ci><ci id="S4.E2.m1.1.1.3.2.2.3.3.3.cmml" xref="S4.E2.m1.1.1.3.2.2.3.3.3">𝑇</ci></apply></apply></apply><apply id="S4.E2.m1.1.1.3.2.3.cmml" xref="S4.E2.m1.1.1.3.2.3"><times id="S4.E2.m1.1.1.3.2.3.1.cmml" xref="S4.E2.m1.1.1.3.2.3.1"></times><ci id="S4.E2.m1.1.1.3.2.3.2.cmml" xref="S4.E2.m1.1.1.3.2.3.2">𝐵</ci><apply id="S4.E2.m1.1.1.3.2.3.3.cmml" xref="S4.E2.m1.1.1.3.2.3.3"><csymbol cd="ambiguous" id="S4.E2.m1.1.1.3.2.3.3.1.cmml" xref="S4.E2.m1.1.1.3.2.3.3">subscript</csymbol><ci id="S4.E2.m1.1.1.3.2.3.3.2.cmml" xref="S4.E2.m1.1.1.3.2.3.3.2">𝐵</ci><apply id="S4.E2.m1.1.1.3.2.3.3.3.cmml" xref="S4.E2.m1.1.1.3.2.3.3.3"><times id="S4.E2.m1.1.1.3.2.3.3.3.1.cmml" xref="S4.E2.m1.1.1.3.2.3.3.3.1"></times><ci id="S4.E2.m1.1.1.3.2.3.3.3.2.cmml" xref="S4.E2.m1.1.1.3.2.3.3.3.2">𝐸</ci><ci id="S4.E2.m1.1.1.3.2.3.3.3.3.cmml" xref="S4.E2.m1.1.1.3.2.3.3.3.3">𝑠</ci><ci id="S4.E2.m1.1.1.3.2.3.3.3.4.cmml" xref="S4.E2.m1.1.1.3.2.3.3.3.4">𝑡</ci></apply></apply></apply></apply><apply id="S4.E2.m1.1.1.3.3.cmml" xref="S4.E2.m1.1.1.3.3"><times id="S4.E2.m1.1.1.3.3.1.cmml" xref="S4.E2.m1.1.1.3.3.1"></times><ci id="S4.E2.m1.1.1.3.3.2.cmml" xref="S4.E2.m1.1.1.3.3.2">𝐵</ci><apply id="S4.E2.m1.1.1.3.3.3.cmml" xref="S4.E2.m1.1.1.3.3.3"><csymbol cd="ambiguous" id="S4.E2.m1.1.1.3.3.3.1.cmml" xref="S4.E2.m1.1.1.3.3.3">subscript</csymbol><ci id="S4.E2.m1.1.1.3.3.3.2.cmml" xref="S4.E2.m1.1.1.3.3.3.2">𝐵</ci><apply id="S4.E2.m1.1.1.3.3.3.3.cmml" xref="S4.E2.m1.1.1.3.3.3.3"><times id="S4.E2.m1.1.1.3.3.3.3.1.cmml" xref="S4.E2.m1.1.1.3.3.3.3.1"></times><ci id="S4.E2.m1.1.1.3.3.3.3.2.cmml" xref="S4.E2.m1.1.1.3.3.3.3.2">𝐸</ci><ci id="S4.E2.m1.1.1.3.3.3.3.3.cmml" xref="S4.E2.m1.1.1.3.3.3.3.3">𝑠</ci><ci id="S4.E2.m1.1.1.3.3.3.3.4.cmml" xref="S4.E2.m1.1.1.3.3.3.3.4">𝑡</ci></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E2.m1.1c">MIR=\frac{BB_{GT}\cap BB_{Est}}{BB_{Est}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S4.SS2.p7" class="ltx_para">
+<p id="S4.SS2.p7.2" class="ltx_p">With the MIR metric, we guarantee that despite the IoU, when the estimation transform places the object inside (or nearly inside) the ground-truth 3D projection, a successful detection is performed. We consider a true positive when the <math id="S4.SS2.p7.1.m1.1" class="ltx_Math" alttext="IoU\geq 0.25" display="inline"><semantics id="S4.SS2.p7.1.m1.1a"><mrow id="S4.SS2.p7.1.m1.1.1" xref="S4.SS2.p7.1.m1.1.1.cmml"><mrow id="S4.SS2.p7.1.m1.1.1.2" xref="S4.SS2.p7.1.m1.1.1.2.cmml"><mi id="S4.SS2.p7.1.m1.1.1.2.2" xref="S4.SS2.p7.1.m1.1.1.2.2.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p7.1.m1.1.1.2.1" xref="S4.SS2.p7.1.m1.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p7.1.m1.1.1.2.3" xref="S4.SS2.p7.1.m1.1.1.2.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p7.1.m1.1.1.2.1a" xref="S4.SS2.p7.1.m1.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p7.1.m1.1.1.2.4" xref="S4.SS2.p7.1.m1.1.1.2.4.cmml">U</mi></mrow><mo id="S4.SS2.p7.1.m1.1.1.1" xref="S4.SS2.p7.1.m1.1.1.1.cmml">≥</mo><mn id="S4.SS2.p7.1.m1.1.1.3" xref="S4.SS2.p7.1.m1.1.1.3.cmml">0.25</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p7.1.m1.1b"><apply id="S4.SS2.p7.1.m1.1.1.cmml" xref="S4.SS2.p7.1.m1.1.1"><geq id="S4.SS2.p7.1.m1.1.1.1.cmml" xref="S4.SS2.p7.1.m1.1.1.1"></geq><apply id="S4.SS2.p7.1.m1.1.1.2.cmml" xref="S4.SS2.p7.1.m1.1.1.2"><times id="S4.SS2.p7.1.m1.1.1.2.1.cmml" xref="S4.SS2.p7.1.m1.1.1.2.1"></times><ci id="S4.SS2.p7.1.m1.1.1.2.2.cmml" xref="S4.SS2.p7.1.m1.1.1.2.2">𝐼</ci><ci id="S4.SS2.p7.1.m1.1.1.2.3.cmml" xref="S4.SS2.p7.1.m1.1.1.2.3">𝑜</ci><ci id="S4.SS2.p7.1.m1.1.1.2.4.cmml" xref="S4.SS2.p7.1.m1.1.1.2.4">𝑈</ci></apply><cn type="float" id="S4.SS2.p7.1.m1.1.1.3.cmml" xref="S4.SS2.p7.1.m1.1.1.3">0.25</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p7.1.m1.1c">IoU\geq 0.25</annotation></semantics></math> or the <math id="S4.SS2.p7.2.m2.1" class="ltx_Math" alttext="MIR\geq 0.90" display="inline"><semantics id="S4.SS2.p7.2.m2.1a"><mrow id="S4.SS2.p7.2.m2.1.1" xref="S4.SS2.p7.2.m2.1.1.cmml"><mrow id="S4.SS2.p7.2.m2.1.1.2" xref="S4.SS2.p7.2.m2.1.1.2.cmml"><mi id="S4.SS2.p7.2.m2.1.1.2.2" xref="S4.SS2.p7.2.m2.1.1.2.2.cmml">M</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p7.2.m2.1.1.2.1" xref="S4.SS2.p7.2.m2.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p7.2.m2.1.1.2.3" xref="S4.SS2.p7.2.m2.1.1.2.3.cmml">I</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p7.2.m2.1.1.2.1a" xref="S4.SS2.p7.2.m2.1.1.2.1.cmml">​</mo><mi id="S4.SS2.p7.2.m2.1.1.2.4" xref="S4.SS2.p7.2.m2.1.1.2.4.cmml">R</mi></mrow><mo id="S4.SS2.p7.2.m2.1.1.1" xref="S4.SS2.p7.2.m2.1.1.1.cmml">≥</mo><mn id="S4.SS2.p7.2.m2.1.1.3" xref="S4.SS2.p7.2.m2.1.1.3.cmml">0.90</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p7.2.m2.1b"><apply id="S4.SS2.p7.2.m2.1.1.cmml" xref="S4.SS2.p7.2.m2.1.1"><geq id="S4.SS2.p7.2.m2.1.1.1.cmml" xref="S4.SS2.p7.2.m2.1.1.1"></geq><apply id="S4.SS2.p7.2.m2.1.1.2.cmml" xref="S4.SS2.p7.2.m2.1.1.2"><times id="S4.SS2.p7.2.m2.1.1.2.1.cmml" xref="S4.SS2.p7.2.m2.1.1.2.1"></times><ci id="S4.SS2.p7.2.m2.1.1.2.2.cmml" xref="S4.SS2.p7.2.m2.1.1.2.2">𝑀</ci><ci id="S4.SS2.p7.2.m2.1.1.2.3.cmml" xref="S4.SS2.p7.2.m2.1.1.2.3">𝐼</ci><ci id="S4.SS2.p7.2.m2.1.1.2.4.cmml" xref="S4.SS2.p7.2.m2.1.1.2.4">𝑅</ci></apply><cn type="float" id="S4.SS2.p7.2.m2.1.1.3.cmml" xref="S4.SS2.p7.2.m2.1.1.3">0.90</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p7.2.m2.1c">MIR\geq 0.90</annotation></semantics></math>.</p>
+</div>
+<div id="S4.SS2.p8" class="ltx_para">
+<p id="S4.SS2.p8.1" class="ltx_p">We compared our proposal with the standard 3D object recognition and pose estimation pipeline <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx3" title="" class="ltx_ref">Aldoma et al., 2012b</a>]</cite>, and with a boosted version of such pipeline, proposed by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Marcon et al., 2019</a>]</cite>. To calculate precision-recall curves (PRC), we varied the threshold on the minimum geometrically consistent correspondences, starting from at least three, related to each object’s best-suited partial view. The area under the PRC curve (AUC) is then calculated and provides comparative results that assess our proposals’ efficiency against traditional approaches.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Implementation details</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">We performed our tests on a Linux Ubuntu 18.04 LTS machine, equipped with a CPU Ryzen 7 2700X, 32GB of RAM, and a GPU Geforce RTX 2070 Super. To process the point clouds, perform keypoint extraction, description with FPFH, and registration with RANSAC and FGR, we used the Open3D Library. We preprocess images using Pillow and OpenCV. Deep learning models were implemented in PyTorch, and the pre-trained models extracted from torchvision. To implement traditional and boosted versions of object recognition and pose estimation pipelines, we use PCL 1.8.1, OpenCV 3.4.2, and the saliency detection of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx15" title="" class="ltx_ref">Hou et al., 2017</a>]</cite>, following <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Marcon et al., 2019</a>]</cite>.</p>
+</div>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span>Results</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.1" class="ltx_p">This section summarizes the Washington RGB-D Scenes’ experimental evaluation results in terms of accuracy and processing time.</p>
+</div>
+<section id="S4.SS4.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.4.1 </span>Object detection benchmark</h4>
+
+<div id="S4.SS4.SSS1.p1" class="ltx_para">
+<p id="S4.SS4.SSS1.p1.1" class="ltx_p">To assess the generalization capacity of CNN pre-trained models, we perform an object detection evaluation on the Object dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Lai et al., 2011a</a>]</cite>. <a href="#S4.T2" title="Table 2 ‣ 4.4.1 Object detection benchmark ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 2</span></a> present results regarding classification of partial views of objects. We evaluate the instance recognition scenario, following <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Lai et al., 2011a</a>]</cite>, i.e., considering Alternating contiguous frame (ACF) and Leave-sequence-out (LSO) scenarios. We compared our results with state-of-the-art object detection methods on this dataset. We perceived that pre-trained networks provide reliable results as off-the-shelf color feature extractors. In both evaluation approaches, tested networks present competitive results concerning the other competitors. In LSO, ResNet101 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">He et al., 2016</a>]</cite> features figures in the third position, and in ACF, 5 of 7 architectures outperform previous proposals.</p>
+</div>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Comparison of CNN color features on the Washington RGB-D Object dataset. The best result reported in <span id="S4.T2.15.1" class="ltx_text" style="color:#0000FF;">blue</span>, the second best in <span id="S4.T2.16.2" class="ltx_text" style="color:#218C21;">green</span>, and the third in <span id="S4.T2.17.3" class="ltx_text" style="color:#FF0000;">red</span>. </figcaption>
+<div id="S4.T2.11" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:215.8pt;height:229.2pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-27.7pt,29.4pt) scale(0.795988647859936,0.795988647859936) ;">
+<table id="S4.T2.11.11" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T2.11.11.12.1" class="ltx_tr">
+<th id="S4.T2.11.11.12.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_t" style="padding:1.5pt 2.0pt;">Method</th>
+<th id="S4.T2.11.11.12.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:1.5pt 2.0pt;">LSO</th>
+<th id="S4.T2.11.11.12.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:1.5pt 2.0pt;">ACF</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding:1.5pt 2.0pt;">Lai <span id="S4.T2.1.1.1.2.1" class="ltx_text ltx_font_italic">et al.</span> (RF) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Lai et al., 2011a</a>]</cite>
+</th>
+<td id="S4.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 2.0pt;">59.9</td>
+<td id="S4.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 2.0pt;">90.1 <math id="S4.T2.1.1.1.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.1.1.1.1.m1.1a"><mo id="S4.T2.1.1.1.1.m1.1.1" xref="S4.T2.1.1.1.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.1.1.1.1.m1.1b"><csymbol cd="latexml" id="S4.T2.1.1.1.1.m1.1.1.cmml" xref="S4.T2.1.1.1.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.1.1.1.1.m1.1c">\pm</annotation></semantics></math> 0.8</td>
+</tr>
+<tr id="S4.T2.2.2.2" class="ltx_tr">
+<th id="S4.T2.2.2.2.2" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">Lai <span id="S4.T2.2.2.2.2.1" class="ltx_text ltx_font_italic">et al.</span> (kSVC) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Lai et al., 2011a</a>]</cite>
+</th>
+<td id="S4.T2.2.2.2.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">60.7</td>
+<td id="S4.T2.2.2.2.1" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">91.0 <math id="S4.T2.2.2.2.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.2.2.2.1.m1.1a"><mo id="S4.T2.2.2.2.1.m1.1.1" xref="S4.T2.2.2.2.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.2.2.2.1.m1.1b"><csymbol cd="latexml" id="S4.T2.2.2.2.1.m1.1.1.cmml" xref="S4.T2.2.2.2.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.2.2.2.1.m1.1c">\pm</annotation></semantics></math> 0.5</td>
+</tr>
+<tr id="S4.T2.3.3.3" class="ltx_tr">
+<th id="S4.T2.3.3.3.2" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">IDL <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx18" title="" class="ltx_ref">Lai et al., 2011b</a>]</cite>
+</th>
+<td id="S4.T2.3.3.3.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">-</td>
+<td id="S4.T2.3.3.3.1" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">54.8 <math id="S4.T2.3.3.3.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.3.3.3.1.m1.1a"><mo id="S4.T2.3.3.3.1.m1.1.1" xref="S4.T2.3.3.3.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.3.3.3.1.m1.1b"><csymbol cd="latexml" id="S4.T2.3.3.3.1.m1.1.1.cmml" xref="S4.T2.3.3.3.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.3.3.3.1.m1.1c">\pm</annotation></semantics></math> 0.6</td>
+</tr>
+<tr id="S4.T2.11.11.13.1" class="ltx_tr">
+<th id="S4.T2.11.11.13.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">SP+HMP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx6" title="" class="ltx_ref">Bo et al., 2013</a>]</cite>
+</th>
+<td id="S4.T2.11.11.13.1.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">92.1</td>
+<td id="S4.T2.11.11.13.1.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">-</td>
+</tr>
+<tr id="S4.T2.11.11.14.2" class="ltx_tr">
+<th id="S4.T2.11.11.14.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">Multi-Modal <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx29" title="" class="ltx_ref">Schwarz et al., 2015</a>]</cite>
+</th>
+<td id="S4.T2.11.11.14.2.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">92.0</td>
+<td id="S4.T2.11.11.14.2.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">-</td>
+</tr>
+<tr id="S4.T2.11.11.15.3" class="ltx_tr">
+<th id="S4.T2.11.11.15.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">MDSI-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx4" title="" class="ltx_ref">Asif et al., 2017</a>]</cite>
+</th>
+<td id="S4.T2.11.11.15.3.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;"><span id="S4.T2.11.11.15.3.2.1" class="ltx_text" style="color:#0000FF;">97.7</span></td>
+<td id="S4.T2.11.11.15.3.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">-</td>
+</tr>
+<tr id="S4.T2.11.11.16.4" class="ltx_tr">
+<th id="S4.T2.11.11.16.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">MM-LRF-ELM <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx19" title="" class="ltx_ref">Liu et al., 2018</a>]</cite>
+</th>
+<td id="S4.T2.11.11.16.4.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">91.0</td>
+<td id="S4.T2.11.11.16.4.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">-</td>
+</tr>
+<tr id="S4.T2.11.11.17.5" class="ltx_tr">
+<th id="S4.T2.11.11.17.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">HP-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx37" title="" class="ltx_ref">Zaki et al., 2019</a>]</cite>
+</th>
+<td id="S4.T2.11.11.17.5.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;"><span id="S4.T2.11.11.17.5.2.1" class="ltx_text" style="color:#218C21;">95.5</span></td>
+<td id="S4.T2.11.11.17.5.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">-</td>
+</tr>
+<tr id="S4.T2.4.4.4" class="ltx_tr">
+<th id="S4.T2.4.4.4.2" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding:1.5pt 2.0pt;">AlexNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx16" title="" class="ltx_ref">Krizhevsky et al., 2012</a>]</cite>
+</th>
+<td id="S4.T2.4.4.4.3" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 2.0pt;">89.8</td>
+<td id="S4.T2.4.4.4.1" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 2.0pt;">93.9 <math id="S4.T2.4.4.4.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.4.4.4.1.m1.1a"><mo id="S4.T2.4.4.4.1.m1.1.1" xref="S4.T2.4.4.4.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.4.4.4.1.m1.1b"><csymbol cd="latexml" id="S4.T2.4.4.4.1.m1.1.1.cmml" xref="S4.T2.4.4.4.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.4.4.4.1.m1.1c">\pm</annotation></semantics></math> 0.4</td>
+</tr>
+<tr id="S4.T2.5.5.5" class="ltx_tr">
+<th id="S4.T2.5.5.5.2" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">ResNet101<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">He et al., 2016</a>]</cite>
+</th>
+<td id="S4.T2.5.5.5.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;"><span id="S4.T2.5.5.5.3.1" class="ltx_text" style="color:#FF0000;">94.1</span></td>
+<td id="S4.T2.5.5.5.1" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">95.3 <math id="S4.T2.5.5.5.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.5.5.5.1.m1.1a"><mo id="S4.T2.5.5.5.1.m1.1.1" xref="S4.T2.5.5.5.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.5.5.5.1.m1.1b"><csymbol cd="latexml" id="S4.T2.5.5.5.1.m1.1.1.cmml" xref="S4.T2.5.5.5.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.5.5.5.1.m1.1c">\pm</annotation></semantics></math> 0.3</td>
+</tr>
+<tr id="S4.T2.6.6.6" class="ltx_tr">
+<th id="S4.T2.6.6.6.2" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">VGG16 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx30" title="" class="ltx_ref">Simonyan and Zisserman, 2015</a>]</cite>
+</th>
+<td id="S4.T2.6.6.6.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">88.8</td>
+<td id="S4.T2.6.6.6.1" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">91.0 <math id="S4.T2.6.6.6.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.6.6.6.1.m1.1a"><mo id="S4.T2.6.6.6.1.m1.1.1" xref="S4.T2.6.6.6.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.6.6.6.1.m1.1b"><csymbol cd="latexml" id="S4.T2.6.6.6.1.m1.1.1.cmml" xref="S4.T2.6.6.6.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.6.6.6.1.m1.1c">\pm</annotation></semantics></math> 0.6</td>
+</tr>
+<tr id="S4.T2.7.7.7" class="ltx_tr">
+<th id="S4.T2.7.7.7.2" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">Inception v3 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx32" title="" class="ltx_ref">Szegedy et al., 2016</a>]</cite>
+</th>
+<td id="S4.T2.7.7.7.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">88.1</td>
+<td id="S4.T2.7.7.7.1" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">90.3 <math id="S4.T2.7.7.7.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.7.7.7.1.m1.1a"><mo id="S4.T2.7.7.7.1.m1.1.1" xref="S4.T2.7.7.7.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.7.7.7.1.m1.1b"><csymbol cd="latexml" id="S4.T2.7.7.7.1.m1.1.1.cmml" xref="S4.T2.7.7.7.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.7.7.7.1.m1.1c">\pm</annotation></semantics></math> 0.4</td>
+</tr>
+<tr id="S4.T2.8.8.8" class="ltx_tr">
+<th id="S4.T2.8.8.8.2" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">MobileNet v2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx28" title="" class="ltx_ref">Sandler et al., 2018</a>]</cite>
+</th>
+<td id="S4.T2.8.8.8.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">93.8</td>
+<td id="S4.T2.8.8.8.1" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;"><span id="S4.T2.8.8.8.1.1" class="ltx_text" style="color:#0000FF;">95.8 <math id="S4.T2.8.8.8.1.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.8.8.8.1.1.m1.1a"><mo mathcolor="#0000FF" id="S4.T2.8.8.8.1.1.m1.1.1" xref="S4.T2.8.8.8.1.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.8.8.8.1.1.m1.1b"><csymbol cd="latexml" id="S4.T2.8.8.8.1.1.m1.1.1.cmml" xref="S4.T2.8.8.8.1.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.8.8.8.1.1.m1.1c">\pm</annotation></semantics></math> 0.3</span></td>
+</tr>
+<tr id="S4.T2.10.10.10" class="ltx_tr">
+<th id="S4.T2.9.9.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding:1.5pt 2.0pt;">ResNeXt101 <math id="S4.T2.9.9.9.1.m1.1" class="ltx_Math" alttext="32\times 8" display="inline"><semantics id="S4.T2.9.9.9.1.m1.1a"><mrow id="S4.T2.9.9.9.1.m1.1.1" xref="S4.T2.9.9.9.1.m1.1.1.cmml"><mn id="S4.T2.9.9.9.1.m1.1.1.2" xref="S4.T2.9.9.9.1.m1.1.1.2.cmml">32</mn><mo lspace="0.222em" rspace="0.222em" id="S4.T2.9.9.9.1.m1.1.1.1" xref="S4.T2.9.9.9.1.m1.1.1.1.cmml">×</mo><mn id="S4.T2.9.9.9.1.m1.1.1.3" xref="S4.T2.9.9.9.1.m1.1.1.3.cmml">8</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.T2.9.9.9.1.m1.1b"><apply id="S4.T2.9.9.9.1.m1.1.1.cmml" xref="S4.T2.9.9.9.1.m1.1.1"><times id="S4.T2.9.9.9.1.m1.1.1.1.cmml" xref="S4.T2.9.9.9.1.m1.1.1.1"></times><cn type="integer" id="S4.T2.9.9.9.1.m1.1.1.2.cmml" xref="S4.T2.9.9.9.1.m1.1.1.2">32</cn><cn type="integer" id="S4.T2.9.9.9.1.m1.1.1.3.cmml" xref="S4.T2.9.9.9.1.m1.1.1.3">8</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.9.9.9.1.m1.1c">32\times 8</annotation></semantics></math>d <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx36" title="" class="ltx_ref">Xie et al., 2017</a>]</cite>
+</th>
+<td id="S4.T2.10.10.10.3" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;">93.9</td>
+<td id="S4.T2.10.10.10.2" class="ltx_td ltx_align_center" style="padding:1.5pt 2.0pt;"><span id="S4.T2.10.10.10.2.1" class="ltx_text" style="color:#218C21;">95.7 <math id="S4.T2.10.10.10.2.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.10.10.10.2.1.m1.1a"><mo mathcolor="#218C21" id="S4.T2.10.10.10.2.1.m1.1.1" xref="S4.T2.10.10.10.2.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.10.10.10.2.1.m1.1b"><csymbol cd="latexml" id="S4.T2.10.10.10.2.1.m1.1.1.cmml" xref="S4.T2.10.10.10.2.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.10.10.10.2.1.m1.1c">\pm</annotation></semantics></math> 0.4</span></td>
+</tr>
+<tr id="S4.T2.11.11.11" class="ltx_tr">
+<th id="S4.T2.11.11.11.2" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" style="padding:1.5pt 2.0pt;">EfficientNet B7 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx33" title="" class="ltx_ref">Tan and Le, 2019</a>]</cite>
+</th>
+<td id="S4.T2.11.11.11.3" class="ltx_td ltx_align_center ltx_border_b" style="padding:1.5pt 2.0pt;">93.8</td>
+<td id="S4.T2.11.11.11.1" class="ltx_td ltx_align_center ltx_border_b" style="padding:1.5pt 2.0pt;"><span id="S4.T2.11.11.11.1.1" class="ltx_text" style="color:#FF0000;">95.6 <math id="S4.T2.11.11.11.1.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T2.11.11.11.1.1.m1.1a"><mo mathcolor="#FF0000" id="S4.T2.11.11.11.1.1.m1.1.1" xref="S4.T2.11.11.11.1.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T2.11.11.11.1.1.m1.1b"><csymbol cd="latexml" id="S4.T2.11.11.11.1.1.m1.1.1.cmml" xref="S4.T2.11.11.11.1.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T2.11.11.11.1.1.m1.1c">\pm</annotation></semantics></math> 0.5</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<figure id="S4.T3" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Instance classification performance on the RGB-D Scenes datasets. </figcaption>
+<table id="S4.T3.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T3.1.1.1" class="ltx_tr">
+<th id="S4.T3.1.1.1.1" class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"></th>
+<th id="S4.T3.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;" colspan="2">MobileNet v2</th>
+<th id="S4.T3.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;" colspan="2">Resnet101</th>
+<th id="S4.T3.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;" colspan="2">ResNeXt101 32x8d</th>
+<th id="S4.T3.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;" colspan="2">EfficientNet-B7</th>
+</tr>
+<tr id="S4.T3.1.2.2" class="ltx_tr">
+<th id="S4.T3.1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">Scene</th>
+<th id="S4.T3.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Acc</th>
+<th id="S4.T3.1.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">FPS</th>
+<th id="S4.T3.1.2.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Acc</th>
+<th id="S4.T3.1.2.2.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">FPS</th>
+<th id="S4.T3.1.2.2.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Acc</th>
+<th id="S4.T3.1.2.2.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">FPS</th>
+<th id="S4.T3.1.2.2.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Acc</th>
+<th id="S4.T3.1.2.2.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">FPS</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T3.1.3.1" class="ltx_tr">
+<th id="S4.T3.1.3.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">desk_1</th>
+<td id="S4.T3.1.3.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">42.70%</td>
+<td id="S4.T3.1.3.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">13.03</td>
+<td id="S4.T3.1.3.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">51.89%</td>
+<td id="S4.T3.1.3.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">9.66</td>
+<td id="S4.T3.1.3.1.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">48.11%</td>
+<td id="S4.T3.1.3.1.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">7.63</td>
+<td id="S4.T3.1.3.1.8" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">49.73%</td>
+<td id="S4.T3.1.3.1.9" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">6.55</td>
+</tr>
+<tr id="S4.T3.1.4.2" class="ltx_tr">
+<th id="S4.T3.1.4.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">desk_2</th>
+<td id="S4.T3.1.4.2.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">41.76%</td>
+<td id="S4.T3.1.4.2.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">12.95</td>
+<td id="S4.T3.1.4.2.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">38.92%</td>
+<td id="S4.T3.1.4.2.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">9.31</td>
+<td id="S4.T3.1.4.2.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">55.40%</td>
+<td id="S4.T3.1.4.2.7" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">7.93</td>
+<td id="S4.T3.1.4.2.8" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">76.42%</td>
+<td id="S4.T3.1.4.2.9" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">6.35</td>
+</tr>
+<tr id="S4.T3.1.5.3" class="ltx_tr">
+<th id="S4.T3.1.5.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">desk_3</th>
+<td id="S4.T3.1.5.3.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">72.77%</td>
+<td id="S4.T3.1.5.3.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">9.84</td>
+<td id="S4.T3.1.5.3.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">52.57%</td>
+<td id="S4.T3.1.5.3.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">7.09</td>
+<td id="S4.T3.1.5.3.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">52.91%</td>
+<td id="S4.T3.1.5.3.7" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">5.78</td>
+<td id="S4.T3.1.5.3.8" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">90.58%</td>
+<td id="S4.T3.1.5.3.9" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">4.60</td>
+</tr>
+<tr id="S4.T3.1.6.4" class="ltx_tr">
+<th id="S4.T3.1.6.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">kitchen_small_1</th>
+<td id="S4.T3.1.6.4.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">36.31%</td>
+<td id="S4.T3.1.6.4.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">7.97</td>
+<td id="S4.T3.1.6.4.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">34.74%</td>
+<td id="S4.T3.1.6.4.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">5.29</td>
+<td id="S4.T3.1.6.4.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">48.20%</td>
+<td id="S4.T3.1.6.4.7" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">4.12</td>
+<td id="S4.T3.1.6.4.8" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">56.81%</td>
+<td id="S4.T3.1.6.4.9" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">3.25</td>
+</tr>
+<tr id="S4.T3.1.7.5" class="ltx_tr">
+<th id="S4.T3.1.7.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">meeting_small_1</th>
+<td id="S4.T3.1.7.5.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">41.40%</td>
+<td id="S4.T3.1.7.5.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">3.29</td>
+<td id="S4.T3.1.7.5.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">38.05%</td>
+<td id="S4.T3.1.7.5.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">2.35</td>
+<td id="S4.T3.1.7.5.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">42.92%</td>
+<td id="S4.T3.1.7.5.7" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.74</td>
+<td id="S4.T3.1.7.5.8" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">50.63%</td>
+<td id="S4.T3.1.7.5.9" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.33</td>
+</tr>
+<tr id="S4.T3.1.8.6" class="ltx_tr">
+<th id="S4.T3.1.8.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">table_1</th>
+<td id="S4.T3.1.8.6.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">56.76%</td>
+<td id="S4.T3.1.8.6.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">4.62</td>
+<td id="S4.T3.1.8.6.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">38.11%</td>
+<td id="S4.T3.1.8.6.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">3.43</td>
+<td id="S4.T3.1.8.6.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">31.08%</td>
+<td id="S4.T3.1.8.6.7" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">2.49</td>
+<td id="S4.T3.1.8.6.8" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">61.49%</td>
+<td id="S4.T3.1.8.6.9" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">2.00</td>
+</tr>
+<tr id="S4.T3.1.9.7" class="ltx_tr">
+<th id="S4.T3.1.9.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">table_small_1</th>
+<td id="S4.T3.1.9.7.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">75.03%</td>
+<td id="S4.T3.1.9.7.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">7.50</td>
+<td id="S4.T3.1.9.7.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">63.30%</td>
+<td id="S4.T3.1.9.7.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">5.33</td>
+<td id="S4.T3.1.9.7.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">65.35%</td>
+<td id="S4.T3.1.9.7.7" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">3.89</td>
+<td id="S4.T3.1.9.7.8" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">83.36%</td>
+<td id="S4.T3.1.9.7.9" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">3.16</td>
+</tr>
+<tr id="S4.T3.1.10.8" class="ltx_tr">
+<th id="S4.T3.1.10.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">table_small_2</th>
+<td id="S4.T3.1.10.8.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">55.39%</td>
+<td id="S4.T3.1.10.8.3" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">9.13</td>
+<td id="S4.T3.1.10.8.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">45.35%</td>
+<td id="S4.T3.1.10.8.5" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">6.88</td>
+<td id="S4.T3.1.10.8.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">49.34%</td>
+<td id="S4.T3.1.10.8.7" class="ltx_td ltx_align_center ltx_border_r" style="padding-top:1.5pt;padding-bottom:1.5pt;">5.04</td>
+<td id="S4.T3.1.10.8.8" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">65.88%</td>
+<td id="S4.T3.1.10.8.9" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">4.10</td>
+</tr>
+<tr id="S4.T3.1.11.9" class="ltx_tr">
+<th id="S4.T3.1.11.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Average</th>
+<td id="S4.T3.1.11.9.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">52.77%</td>
+<td id="S4.T3.1.11.9.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">6.99</td>
+<td id="S4.T3.1.11.9.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">45.37%</td>
+<td id="S4.T3.1.11.9.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">5.03</td>
+<td id="S4.T3.1.11.9.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">49.16%</td>
+<td id="S4.T3.1.11.9.7" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">3.80</td>
+<td id="S4.T3.1.11.9.8" class="ltx_td ltx_align_center ltx_border_b ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">66.86%</td>
+<td id="S4.T3.1.11.9.9" class="ltx_td ltx_align_center ltx_border_b ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">3.02</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS4.SSS1.p2" class="ltx_para">
+<p id="S4.SS4.SSS1.p2.1" class="ltx_p">Despite the significant results, this evaluation is essential to select the most suitable to perform object recognition in realistic scenarios, such as those presented by the Scenes dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx17" title="" class="ltx_ref">Lai et al., 2011a</a>]</cite>. As the trials’ output, we selected the top-four architectures to apply in our proposed pipeline.</p>
+</div>
+</section>
+<section id="S4.SS4.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.4.2 </span>Object recognition in real-world scenes</h4>
+
+<div id="S4.SS4.SSS2.p1" class="ltx_para">
+<p id="S4.SS4.SSS2.p1.1" class="ltx_p">We opposed the selected CNN architectures examining only a classification based on the RGB information, taking the annotated bounding box, and submitting to the <span id="S4.SS4.SSS2.p1.1.1" class="ltx_text ltx_font_italic">Color Feature Classification</span> stage of our pipeline (as in Section <a href="#S3.SS1" title="3.1 Color feature classification ‣ 3 PROPOSED APPROACH ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.1</span></a>). <a href="#S4.T3" title="Table 3 ‣ 4.4.1 Object detection benchmark ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 3</span></a> relates to instance-level recognition.</p>
+</div>
+<div id="S4.SS4.SSS2.p2" class="ltx_para">
+<p id="S4.SS4.SSS2.p2.1" class="ltx_p">The first outcome of this evaluation is the dominance of two networks over the other competitors considering different aspects. EfficientNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx33" title="" class="ltx_ref">Tan and Le, 2019</a>]</cite> architecture outperforms in terms of accuracy, and MobileNet v2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx28" title="" class="ltx_ref">Sandler et al., 2018</a>]</cite> in terms of processing time w.r.t. the others in almost all scenes.</p>
+</div>
+<div id="S4.SS4.SSS2.p3" class="ltx_para">
+<p id="S4.SS4.SSS2.p3.1" class="ltx_p">EfficientNet reaches an average accuracy of almost 67%, followed by MobileNet v2, with almost 53%. However, when we aim efficiency in processing time, EfficientNet does not perform so well, being the slowest network with a frame-rate of 3.02 per second. On the other hand, the MobileNet v2 fulfills the network’s main proposal to be time-efficient and accurate for embedded applications. It presents the second-best accuracy and the best frame-rate, with almost 7 FPS.</p>
+</div>
+<div id="S4.SS4.SSS2.p4" class="ltx_para">
+<p id="S4.SS4.SSS2.p4.1" class="ltx_p">The full-set of the Object dataset contains 51 categories and 300 distinct instances. Concerning the Scenes dataset, the number of annotated samples drops to 6 categories and 22 instances, i.e., only a small set of objects of Object dataset is achievable on the Scenes dataset. When we use a model trained on the full-set, most categories or instances will never be detected. Thou, we learned a lighter classifier that considers only such specific instances (<a href="#S4.T4" title="Table 4 ‣ 4.4.2 Object recognition in real-world scenes ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 4</span></a>).</p>
+</div>
+<figure id="S4.T4" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Performance comparison between full and a specific training set with objects from the Scenes dataset. </figcaption>
+<table id="S4.T4.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T4.1.1.1" class="ltx_tr">
+<th id="S4.T4.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" style="padding:1.5pt 5.0pt;" rowspan="2"><span id="S4.T4.1.1.1.1.1" class="ltx_text">DeepNet</span></th>
+<th id="S4.T4.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding:1.5pt 5.0pt;" colspan="2">Full</th>
+<th id="S4.T4.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:1.5pt 5.0pt;" colspan="2">Scenes</th>
+</tr>
+<tr id="S4.T4.1.2.2" class="ltx_tr">
+<th id="S4.T4.1.2.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:1.5pt 5.0pt;">Acc</th>
+<th id="S4.T4.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding:1.5pt 5.0pt;">FPS</th>
+<th id="S4.T4.1.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:1.5pt 5.0pt;">Acc</th>
+<th id="S4.T4.1.2.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding:1.5pt 5.0pt;">FPS</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T4.1.3.1" class="ltx_tr">
+<th id="S4.T4.1.3.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t" style="padding:1.5pt 5.0pt;">MobileNet v2</th>
+<td id="S4.T4.1.3.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 5.0pt;">52.77%</td>
+<td id="S4.T4.1.3.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding:1.5pt 5.0pt;">6.99</td>
+<td id="S4.T4.1.3.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 5.0pt;">67.35%</td>
+<td id="S4.T4.1.3.1.5" class="ltx_td ltx_align_center ltx_border_t" style="padding:1.5pt 5.0pt;">24.62</td>
+</tr>
+<tr id="S4.T4.1.4.2" class="ltx_tr">
+<th id="S4.T4.1.4.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding:1.5pt 5.0pt;">Resnet101</th>
+<td id="S4.T4.1.4.2.2" class="ltx_td ltx_align_center" style="padding:1.5pt 5.0pt;">45.37%</td>
+<td id="S4.T4.1.4.2.3" class="ltx_td ltx_align_center ltx_border_r" style="padding:1.5pt 5.0pt;">5.03</td>
+<td id="S4.T4.1.4.2.4" class="ltx_td ltx_align_center" style="padding:1.5pt 5.0pt;">61.41%</td>
+<td id="S4.T4.1.4.2.5" class="ltx_td ltx_align_center" style="padding:1.5pt 5.0pt;">13.94</td>
+</tr>
+<tr id="S4.T4.1.5.3" class="ltx_tr">
+<th id="S4.T4.1.5.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" style="padding:1.5pt 5.0pt;">ResNeXt101 32x8d</th>
+<td id="S4.T4.1.5.3.2" class="ltx_td ltx_align_center" style="padding:1.5pt 5.0pt;">49.16%</td>
+<td id="S4.T4.1.5.3.3" class="ltx_td ltx_align_center ltx_border_r" style="padding:1.5pt 5.0pt;">3.80</td>
+<td id="S4.T4.1.5.3.4" class="ltx_td ltx_align_center" style="padding:1.5pt 5.0pt;">59.04%</td>
+<td id="S4.T4.1.5.3.5" class="ltx_td ltx_align_center" style="padding:1.5pt 5.0pt;">8.86</td>
+</tr>
+<tr id="S4.T4.1.6.4" class="ltx_tr">
+<th id="S4.T4.1.6.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_r" style="padding:1.5pt 5.0pt;">EfficientNet-B7</th>
+<td id="S4.T4.1.6.4.2" class="ltx_td ltx_align_center ltx_border_b" style="padding:1.5pt 5.0pt;">66.86%</td>
+<td id="S4.T4.1.6.4.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r" style="padding:1.5pt 5.0pt;">3.02</td>
+<td id="S4.T4.1.6.4.4" class="ltx_td ltx_align_center ltx_border_b" style="padding:1.5pt 5.0pt;">82.94%</td>
+<td id="S4.T4.1.6.4.5" class="ltx_td ltx_align_center ltx_border_b" style="padding:1.5pt 5.0pt;">5.88</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS4.SSS2.p5" class="ltx_para">
+<p id="S4.SS4.SSS2.p5.1" class="ltx_p">After this change on the model specificity, we distinguish a noticeable improvement in accuracy and the processing time, achieving MobileNet v2 a near real-time performance on average. A significant gain on accuracy was established, with over 10% for every architecture, pulling the best result to 83% for EfficientNet.</p>
+</div>
+<div id="S4.SS4.SSS2.p6" class="ltx_para">
+<p id="S4.SS4.SSS2.p6.1" class="ltx_p">Regarding the frame processing rate, it is essential to notice that the average number of models varies from 1.85 to 8.79 over the scenes, with almost four objects per frame in mean (<a href="#S4.T3" title="Table 3 ‣ 4.4.1 Object detection benchmark ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 3</span></a>). Thus, we can infer that our proposal can deliver a near-real-time FPS, inclusive in a multi-classification problem. When we consider only a single target, the performance is almost four times faster, as presented in <a href="#S4.T7" title="Table 7 ‣ 4.4.4 Time processing evaluation ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 7</span></a>, on the <span id="S4.SS4.SSS2.p6.1.1" class="ltx_text ltx_font_italic">Color only</span> column.</p>
+</div>
+</section>
+<section id="S4.SS4.SSS3" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.4.3 </span>Pose estimation results</h4>
+
+<div id="S4.SS4.SSS3.p1" class="ltx_para">
+<p id="S4.SS4.SSS3.p1.1" class="ltx_p">Based on the assumption that we mapped the objects we aim to detect in a real-world scenario, we adopted those models trained on the RGB-D Object dataset subset. We considered only the instance detection situation. The reason for disregarding categories is that we could have intra-class misclassifications, corrupting the pose alignment step. For each instance detected by the <span id="S4.SS4.SSS3.p1.1.1" class="ltx_text ltx_font_italic">Color feature classification</span> stage, we take ten views of the referred object from the models’ database.</p>
+</div>
+<figure id="S4.T5" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Comparison between feature-based registration methods. Values reported consider the processing time (in seconds) for ten views of the same object and the ICP for the best one selected. </figcaption>
+<table id="S4.T5.4" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T5.4.4" class="ltx_tr">
+<th id="S4.T5.4.4.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Methods</th>
+<th id="S4.T5.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">
+<table id="S4.T5.1.1.1.1" class="ltx_tabular ltx_align_middle">
+<tr id="S4.T5.1.1.1.1.2" class="ltx_tr">
+<td id="S4.T5.1.1.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">Feature-based</td>
+</tr>
+<tr id="S4.T5.1.1.1.1.1" class="ltx_tr">
+<td id="S4.T5.1.1.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">time (<math id="S4.T5.1.1.1.1.1.1.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S4.T5.1.1.1.1.1.1.m1.1a"><mo stretchy="false" id="S4.T5.1.1.1.1.1.1.m1.1.1" xref="S4.T5.1.1.1.1.1.1.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S4.T5.1.1.1.1.1.1.m1.1b"><ci id="S4.T5.1.1.1.1.1.1.m1.1.1.cmml" xref="S4.T5.1.1.1.1.1.1.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.T5.1.1.1.1.1.1.m1.1c">\downarrow</annotation></semantics></math>)</td>
+</tr>
+</table>
+</th>
+<th id="S4.T5.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">ICP time (<math id="S4.T5.2.2.2.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S4.T5.2.2.2.m1.1a"><mo stretchy="false" id="S4.T5.2.2.2.m1.1.1" xref="S4.T5.2.2.2.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S4.T5.2.2.2.m1.1b"><ci id="S4.T5.2.2.2.m1.1.1.cmml" xref="S4.T5.2.2.2.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.T5.2.2.2.m1.1c">\downarrow</annotation></semantics></math>)</th>
+<th id="S4.T5.3.3.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Inlier ratio (<math id="S4.T5.3.3.3.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S4.T5.3.3.3.m1.1a"><mo stretchy="false" id="S4.T5.3.3.3.m1.1.1" xref="S4.T5.3.3.3.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S4.T5.3.3.3.m1.1b"><ci id="S4.T5.3.3.3.m1.1.1.cmml" xref="S4.T5.3.3.3.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.T5.3.3.3.m1.1c">\uparrow</annotation></semantics></math>)</th>
+<th id="S4.T5.4.4.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">RMSE (<math id="S4.T5.4.4.4.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S4.T5.4.4.4.m1.1a"><mo stretchy="false" id="S4.T5.4.4.4.m1.1.1" xref="S4.T5.4.4.4.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S4.T5.4.4.4.m1.1b"><ci id="S4.T5.4.4.4.m1.1.1.cmml" xref="S4.T5.4.4.4.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.T5.4.4.4.m1.1c">\downarrow</annotation></semantics></math>)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T5.4.5.1" class="ltx_tr">
+<th id="S4.T5.4.5.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">RANSAC</th>
+<td id="S4.T5.4.5.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.7688</td>
+<td id="S4.T5.4.5.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0061</td>
+<td id="S4.T5.4.5.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.2689</td>
+<td id="S4.T5.4.5.1.5" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0055</td>
+</tr>
+<tr id="S4.T5.4.6.2" class="ltx_tr">
+<th id="S4.T5.4.6.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">FGR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx38" title="" class="ltx_ref">Zhou et al., 2016</a>]</cite>
+</th>
+<td id="S4.T5.4.6.2.2" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0580</td>
+<td id="S4.T5.4.6.2.3" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0075</td>
+<td id="S4.T5.4.6.2.4" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.1895</td>
+<td id="S4.T5.4.6.2.5" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0059</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS4.SSS3.p2" class="ltx_para">
+<p id="S4.SS4.SSS3.p2.1" class="ltx_p">In <a href="#S4.T5" title="Table 5 ‣ 4.4.3 Pose estimation results ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 5</span></a> we report an evaluation concerning the Feature-based registration and Fine-adjustment stages of our pipeline. Getting a set of ten randomly selected views of the same object, we perform a coarse estimation by using RANSAC or FGR. We evaluate quantitatively such methods concerning the inlier ratio, RMSE, and execution time. We apply the resulting affine transformation as the input of an ICP dense registration and evaluate if this input can imply differences in the processing time.</p>
+</div>
+<div id="S4.SS4.SSS3.p3" class="ltx_para">
+<p id="S4.SS4.SSS3.p3.1" class="ltx_p">Indeed, the FGR method is much faster than RANSAC. However, we observe that for both metrics RANSAC outperforms it. The Inlier ratio presented by the latter is around 50% higher than the faster method and also shows an RMSE more consistent. The transformation generated by the coarse alignment algorithm also impacts the ICP execution and we notice that a better estimation can speed up the fine-adjustment process.</p>
+</div>
+<div id="S4.SS4.SSS3.p4" class="ltx_para">
+<p id="S4.SS4.SSS3.p4.1" class="ltx_p">To evaluate more deeply if the ICP, after the feature-matching application, can surpass problems like a more rough estimation, we must assess an annotated pose. Unfortunately, the adopted dataset does not offer such data, and further studies may verify that affirmation on a pose-annotated dataset. However, we can evaluate the estimation correctness by employing the IoU and MIR metrics and verify if the feature-based registration step’s estimation is reliable compared to standard approaches. In <a href="#S4.T6" title="Table 6 ‣ 4.4.3 Pose estimation results ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 6</span></a> we perform such comparison regarding the AUC and FPS values of different setup of our proposed pipeline, the standard <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx3" title="" class="ltx_ref">Aldoma et al., 2012b</a>]</cite>, and the boosted <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Marcon et al., 2019</a>]</cite> pipelines.</p>
+</div>
+<figure id="S4.T6" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 6: </span>Comparison of the proposed pipeline with standard object recognition and pose estimation approaches. Baseline refer to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx2" title="" class="ltx_ref">Aldoma et al., 2012a</a>]</cite> and Boost to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Marcon et al., 2019</a>]</cite>. Every trial employed FPFH <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx25" title="" class="ltx_ref">Rusu et al., 2009</a>]</cite> as local descriptor with a uniform sampling as keypoint detector. Excepting the fisrt two rows, leaf size was set to 1 cm.. </figcaption>
+<table id="S4.T6.3" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T6.3.4.1" class="ltx_tr">
+<th id="S4.T6.3.4.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Method</th>
+<td id="S4.T6.3.4.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">AUC</td>
+<td id="S4.T6.3.4.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">FPS</td>
+</tr>
+<tr id="S4.T6.1.1" class="ltx_tr">
+<th id="S4.T6.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Baseline <math id="S4.T6.1.1.1.m1.1" class="ltx_Math" alttext="US_{0.02}" display="inline"><semantics id="S4.T6.1.1.1.m1.1a"><mrow id="S4.T6.1.1.1.m1.1.1" xref="S4.T6.1.1.1.m1.1.1.cmml"><mi id="S4.T6.1.1.1.m1.1.1.2" xref="S4.T6.1.1.1.m1.1.1.2.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.T6.1.1.1.m1.1.1.1" xref="S4.T6.1.1.1.m1.1.1.1.cmml">​</mo><msub id="S4.T6.1.1.1.m1.1.1.3" xref="S4.T6.1.1.1.m1.1.1.3.cmml"><mi id="S4.T6.1.1.1.m1.1.1.3.2" xref="S4.T6.1.1.1.m1.1.1.3.2.cmml">S</mi><mn id="S4.T6.1.1.1.m1.1.1.3.3" xref="S4.T6.1.1.1.m1.1.1.3.3.cmml">0.02</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.T6.1.1.1.m1.1b"><apply id="S4.T6.1.1.1.m1.1.1.cmml" xref="S4.T6.1.1.1.m1.1.1"><times id="S4.T6.1.1.1.m1.1.1.1.cmml" xref="S4.T6.1.1.1.m1.1.1.1"></times><ci id="S4.T6.1.1.1.m1.1.1.2.cmml" xref="S4.T6.1.1.1.m1.1.1.2">𝑈</ci><apply id="S4.T6.1.1.1.m1.1.1.3.cmml" xref="S4.T6.1.1.1.m1.1.1.3"><csymbol cd="ambiguous" id="S4.T6.1.1.1.m1.1.1.3.1.cmml" xref="S4.T6.1.1.1.m1.1.1.3">subscript</csymbol><ci id="S4.T6.1.1.1.m1.1.1.3.2.cmml" xref="S4.T6.1.1.1.m1.1.1.3.2">𝑆</ci><cn type="float" id="S4.T6.1.1.1.m1.1.1.3.3.cmml" xref="S4.T6.1.1.1.m1.1.1.3.3">0.02</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.1.1.1.m1.1c">US_{0.02}</annotation></semantics></math>
+</th>
+<td id="S4.T6.1.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0401</td>
+<td id="S4.T6.1.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0023</td>
+</tr>
+<tr id="S4.T6.2.2" class="ltx_tr">
+<th id="S4.T6.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">Boost <math id="S4.T6.2.2.1.m1.1" class="ltx_Math" alttext="US_{0.02}" display="inline"><semantics id="S4.T6.2.2.1.m1.1a"><mrow id="S4.T6.2.2.1.m1.1.1" xref="S4.T6.2.2.1.m1.1.1.cmml"><mi id="S4.T6.2.2.1.m1.1.1.2" xref="S4.T6.2.2.1.m1.1.1.2.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.T6.2.2.1.m1.1.1.1" xref="S4.T6.2.2.1.m1.1.1.1.cmml">​</mo><msub id="S4.T6.2.2.1.m1.1.1.3" xref="S4.T6.2.2.1.m1.1.1.3.cmml"><mi id="S4.T6.2.2.1.m1.1.1.3.2" xref="S4.T6.2.2.1.m1.1.1.3.2.cmml">S</mi><mn id="S4.T6.2.2.1.m1.1.1.3.3" xref="S4.T6.2.2.1.m1.1.1.3.3.cmml">0.02</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.T6.2.2.1.m1.1b"><apply id="S4.T6.2.2.1.m1.1.1.cmml" xref="S4.T6.2.2.1.m1.1.1"><times id="S4.T6.2.2.1.m1.1.1.1.cmml" xref="S4.T6.2.2.1.m1.1.1.1"></times><ci id="S4.T6.2.2.1.m1.1.1.2.cmml" xref="S4.T6.2.2.1.m1.1.1.2">𝑈</ci><apply id="S4.T6.2.2.1.m1.1.1.3.cmml" xref="S4.T6.2.2.1.m1.1.1.3"><csymbol cd="ambiguous" id="S4.T6.2.2.1.m1.1.1.3.1.cmml" xref="S4.T6.2.2.1.m1.1.1.3">subscript</csymbol><ci id="S4.T6.2.2.1.m1.1.1.3.2.cmml" xref="S4.T6.2.2.1.m1.1.1.3.2">𝑆</ci><cn type="float" id="S4.T6.2.2.1.m1.1.1.3.3.cmml" xref="S4.T6.2.2.1.m1.1.1.3.3">0.02</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.2.2.1.m1.1c">US_{0.02}</annotation></semantics></math>
+</th>
+<td id="S4.T6.2.2.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0868</td>
+<td id="S4.T6.2.2.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0918</td>
+</tr>
+<tr id="S4.T6.3.3" class="ltx_tr">
+<th id="S4.T6.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">Boost <math id="S4.T6.3.3.1.m1.1" class="ltx_Math" alttext="US_{0.01}" display="inline"><semantics id="S4.T6.3.3.1.m1.1a"><mrow id="S4.T6.3.3.1.m1.1.1" xref="S4.T6.3.3.1.m1.1.1.cmml"><mi id="S4.T6.3.3.1.m1.1.1.2" xref="S4.T6.3.3.1.m1.1.1.2.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.T6.3.3.1.m1.1.1.1" xref="S4.T6.3.3.1.m1.1.1.1.cmml">​</mo><msub id="S4.T6.3.3.1.m1.1.1.3" xref="S4.T6.3.3.1.m1.1.1.3.cmml"><mi id="S4.T6.3.3.1.m1.1.1.3.2" xref="S4.T6.3.3.1.m1.1.1.3.2.cmml">S</mi><mn id="S4.T6.3.3.1.m1.1.1.3.3" xref="S4.T6.3.3.1.m1.1.1.3.3.cmml">0.01</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.T6.3.3.1.m1.1b"><apply id="S4.T6.3.3.1.m1.1.1.cmml" xref="S4.T6.3.3.1.m1.1.1"><times id="S4.T6.3.3.1.m1.1.1.1.cmml" xref="S4.T6.3.3.1.m1.1.1.1"></times><ci id="S4.T6.3.3.1.m1.1.1.2.cmml" xref="S4.T6.3.3.1.m1.1.1.2">𝑈</ci><apply id="S4.T6.3.3.1.m1.1.1.3.cmml" xref="S4.T6.3.3.1.m1.1.1.3"><csymbol cd="ambiguous" id="S4.T6.3.3.1.m1.1.1.3.1.cmml" xref="S4.T6.3.3.1.m1.1.1.3">subscript</csymbol><ci id="S4.T6.3.3.1.m1.1.1.3.2.cmml" xref="S4.T6.3.3.1.m1.1.1.3.2">𝑆</ci><cn type="float" id="S4.T6.3.3.1.m1.1.1.3.3.cmml" xref="S4.T6.3.3.1.m1.1.1.3.3">0.01</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.T6.3.3.1.m1.1c">US_{0.01}</annotation></semantics></math>
+</th>
+<td id="S4.T6.3.3.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.1372</td>
+<td id="S4.T6.3.3.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.0339</td>
+</tr>
+<tr id="S4.T6.3.5.2" class="ltx_tr">
+<th id="S4.T6.3.5.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Resnet101 + FGR</th>
+<td id="S4.T6.3.5.2.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.2228</td>
+<td id="S4.T6.3.5.2.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">13.8321</td>
+</tr>
+<tr id="S4.T6.3.6.3" class="ltx_tr">
+<th id="S4.T6.3.6.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">ResNet101 + RANSAC</th>
+<td id="S4.T6.3.6.3.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.2092</td>
+<td id="S4.T6.3.6.3.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.9649</td>
+</tr>
+<tr id="S4.T6.3.7.4" class="ltx_tr">
+<th id="S4.T6.3.7.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">MobileNet v2 + FGR</th>
+<td id="S4.T6.3.7.4.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.2922</td>
+<td id="S4.T6.3.7.4.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">13.8939</td>
+</tr>
+<tr id="S4.T6.3.8.5" class="ltx_tr">
+<th id="S4.T6.3.8.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">MobileNet v2 + RANSAC</th>
+<td id="S4.T6.3.8.5.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.2781</td>
+<td id="S4.T6.3.8.5.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.8905</td>
+</tr>
+<tr id="S4.T6.3.9.6" class="ltx_tr">
+<th id="S4.T6.3.9.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">ResNeXt101 32x8d + FGR</th>
+<td id="S4.T6.3.9.6.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.2090</td>
+<td id="S4.T6.3.9.6.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">14.1813</td>
+</tr>
+<tr id="S4.T6.3.10.7" class="ltx_tr">
+<th id="S4.T6.3.10.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">ResNeXt101 32x8d + RANSAC</th>
+<td id="S4.T6.3.10.7.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.1947</td>
+<td id="S4.T6.3.10.7.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">2.0268</td>
+</tr>
+<tr id="S4.T6.3.11.8" class="ltx_tr">
+<th id="S4.T6.3.11.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">EfficientNet-B7 + FGR</th>
+<td id="S4.T6.3.11.8.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.4123</td>
+<td id="S4.T6.3.11.8.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">8.9429</td>
+</tr>
+<tr id="S4.T6.3.12.9" class="ltx_tr">
+<th id="S4.T6.3.12.9.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">EfficientNet-B7 + RANSAC</th>
+<td id="S4.T6.3.12.9.2" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">0.2994</td>
+<td id="S4.T6.3.12.9.3" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.4344</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS4.SSS3.p5" class="ltx_para">
+<p id="S4.SS4.SSS3.p5.8" class="ltx_p">Results of <a href="#S4.T6" title="Table 6 ‣ 4.4.3 Pose estimation results ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 6</span></a> confirm our claim that performing the object detection on the RGB images improves results compared to traditional approaches. Both standard and boosted pipelines present accuracy results worst than all trials we run in our pipeline, even considering the same conditions of descriptors and leaf size, e.g., 1 cm of leaf size in Boost <math id="S4.SS4.SSS3.p5.1.m1.1" class="ltx_Math" alttext="US_{0.01}" display="inline"><semantics id="S4.SS4.SSS3.p5.1.m1.1a"><mrow id="S4.SS4.SSS3.p5.1.m1.1.1" xref="S4.SS4.SSS3.p5.1.m1.1.1.cmml"><mi id="S4.SS4.SSS3.p5.1.m1.1.1.2" xref="S4.SS4.SSS3.p5.1.m1.1.1.2.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.SS4.SSS3.p5.1.m1.1.1.1" xref="S4.SS4.SSS3.p5.1.m1.1.1.1.cmml">​</mo><msub id="S4.SS4.SSS3.p5.1.m1.1.1.3" xref="S4.SS4.SSS3.p5.1.m1.1.1.3.cmml"><mi id="S4.SS4.SSS3.p5.1.m1.1.1.3.2" xref="S4.SS4.SSS3.p5.1.m1.1.1.3.2.cmml">S</mi><mn id="S4.SS4.SSS3.p5.1.m1.1.1.3.3" xref="S4.SS4.SSS3.p5.1.m1.1.1.3.3.cmml">0.01</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.SSS3.p5.1.m1.1b"><apply id="S4.SS4.SSS3.p5.1.m1.1.1.cmml" xref="S4.SS4.SSS3.p5.1.m1.1.1"><times id="S4.SS4.SSS3.p5.1.m1.1.1.1.cmml" xref="S4.SS4.SSS3.p5.1.m1.1.1.1"></times><ci id="S4.SS4.SSS3.p5.1.m1.1.1.2.cmml" xref="S4.SS4.SSS3.p5.1.m1.1.1.2">𝑈</ci><apply id="S4.SS4.SSS3.p5.1.m1.1.1.3.cmml" xref="S4.SS4.SSS3.p5.1.m1.1.1.3"><csymbol cd="ambiguous" id="S4.SS4.SSS3.p5.1.m1.1.1.3.1.cmml" xref="S4.SS4.SSS3.p5.1.m1.1.1.3">subscript</csymbol><ci id="S4.SS4.SSS3.p5.1.m1.1.1.3.2.cmml" xref="S4.SS4.SSS3.p5.1.m1.1.1.3.2">𝑆</ci><cn type="float" id="S4.SS4.SSS3.p5.1.m1.1.1.3.3.cmml" xref="S4.SS4.SSS3.p5.1.m1.1.1.3.3">0.01</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.SSS3.p5.1.m1.1c">US_{0.01}</annotation></semantics></math> trial. When we consider time processing, the difference is even more discrepant when our approach presents in the best case, a frame-rate of 14.18 against 0.09 FPS on the best standard approaches, which represents a remarkable improvement of more than <math id="S4.SS4.SSS3.p5.2.m2.1" class="ltx_math_unparsed" alttext="150\times" display="inline"><semantics id="S4.SS4.SSS3.p5.2.m2.1a"><mrow id="S4.SS4.SSS3.p5.2.m2.1b"><mn id="S4.SS4.SSS3.p5.2.m2.1.1">150</mn><mo lspace="0.222em" id="S4.SS4.SSS3.p5.2.m2.1.2">×</mo></mrow><annotation encoding="application/x-tex" id="S4.SS4.SSS3.p5.2.m2.1c">150\times</annotation></semantics></math> in speed. When using the EfficientNet/FGR pair, our proposal presents AUC (0.4123) three times higher than the Boosted pipeline (0.1372). We did not run the Baseline <math id="S4.SS4.SSS3.p5.3.m3.1" class="ltx_Math" alttext="US_{0.01}" display="inline"><semantics id="S4.SS4.SSS3.p5.3.m3.1a"><mrow id="S4.SS4.SSS3.p5.3.m3.1.1" xref="S4.SS4.SSS3.p5.3.m3.1.1.cmml"><mi id="S4.SS4.SSS3.p5.3.m3.1.1.2" xref="S4.SS4.SSS3.p5.3.m3.1.1.2.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.SS4.SSS3.p5.3.m3.1.1.1" xref="S4.SS4.SSS3.p5.3.m3.1.1.1.cmml">​</mo><msub id="S4.SS4.SSS3.p5.3.m3.1.1.3" xref="S4.SS4.SSS3.p5.3.m3.1.1.3.cmml"><mi id="S4.SS4.SSS3.p5.3.m3.1.1.3.2" xref="S4.SS4.SSS3.p5.3.m3.1.1.3.2.cmml">S</mi><mn id="S4.SS4.SSS3.p5.3.m3.1.1.3.3" xref="S4.SS4.SSS3.p5.3.m3.1.1.3.3.cmml">0.01</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.SSS3.p5.3.m3.1b"><apply id="S4.SS4.SSS3.p5.3.m3.1.1.cmml" xref="S4.SS4.SSS3.p5.3.m3.1.1"><times id="S4.SS4.SSS3.p5.3.m3.1.1.1.cmml" xref="S4.SS4.SSS3.p5.3.m3.1.1.1"></times><ci id="S4.SS4.SSS3.p5.3.m3.1.1.2.cmml" xref="S4.SS4.SSS3.p5.3.m3.1.1.2">𝑈</ci><apply id="S4.SS4.SSS3.p5.3.m3.1.1.3.cmml" xref="S4.SS4.SSS3.p5.3.m3.1.1.3"><csymbol cd="ambiguous" id="S4.SS4.SSS3.p5.3.m3.1.1.3.1.cmml" xref="S4.SS4.SSS3.p5.3.m3.1.1.3">subscript</csymbol><ci id="S4.SS4.SSS3.p5.3.m3.1.1.3.2.cmml" xref="S4.SS4.SSS3.p5.3.m3.1.1.3.2">𝑆</ci><cn type="float" id="S4.SS4.SSS3.p5.3.m3.1.1.3.3.cmml" xref="S4.SS4.SSS3.p5.3.m3.1.1.3.3">0.01</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.SSS3.p5.3.m3.1c">US_{0.01}</annotation></semantics></math> because this method is very time-consuming and does not represent a reasonable choice regarding the boosted version (Boost <math id="S4.SS4.SSS3.p5.4.m4.1" class="ltx_Math" alttext="US_{0.01}" display="inline"><semantics id="S4.SS4.SSS3.p5.4.m4.1a"><mrow id="S4.SS4.SSS3.p5.4.m4.1.1" xref="S4.SS4.SSS3.p5.4.m4.1.1.cmml"><mi id="S4.SS4.SSS3.p5.4.m4.1.1.2" xref="S4.SS4.SSS3.p5.4.m4.1.1.2.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.SS4.SSS3.p5.4.m4.1.1.1" xref="S4.SS4.SSS3.p5.4.m4.1.1.1.cmml">​</mo><msub id="S4.SS4.SSS3.p5.4.m4.1.1.3" xref="S4.SS4.SSS3.p5.4.m4.1.1.3.cmml"><mi id="S4.SS4.SSS3.p5.4.m4.1.1.3.2" xref="S4.SS4.SSS3.p5.4.m4.1.1.3.2.cmml">S</mi><mn id="S4.SS4.SSS3.p5.4.m4.1.1.3.3" xref="S4.SS4.SSS3.p5.4.m4.1.1.3.3.cmml">0.01</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.SSS3.p5.4.m4.1b"><apply id="S4.SS4.SSS3.p5.4.m4.1.1.cmml" xref="S4.SS4.SSS3.p5.4.m4.1.1"><times id="S4.SS4.SSS3.p5.4.m4.1.1.1.cmml" xref="S4.SS4.SSS3.p5.4.m4.1.1.1"></times><ci id="S4.SS4.SSS3.p5.4.m4.1.1.2.cmml" xref="S4.SS4.SSS3.p5.4.m4.1.1.2">𝑈</ci><apply id="S4.SS4.SSS3.p5.4.m4.1.1.3.cmml" xref="S4.SS4.SSS3.p5.4.m4.1.1.3"><csymbol cd="ambiguous" id="S4.SS4.SSS3.p5.4.m4.1.1.3.1.cmml" xref="S4.SS4.SSS3.p5.4.m4.1.1.3">subscript</csymbol><ci id="S4.SS4.SSS3.p5.4.m4.1.1.3.2.cmml" xref="S4.SS4.SSS3.p5.4.m4.1.1.3.2">𝑆</ci><cn type="float" id="S4.SS4.SSS3.p5.4.m4.1.1.3.3.cmml" xref="S4.SS4.SSS3.p5.4.m4.1.1.3.3">0.01</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.SSS3.p5.4.m4.1c">US_{0.01}</annotation></semantics></math>). We found a frame rate of <math id="S4.SS4.SSS3.p5.5.m5.1" class="ltx_Math" alttext="0.0005" display="inline"><semantics id="S4.SS4.SSS3.p5.5.m5.1a"><mn id="S4.SS4.SSS3.p5.5.m5.1.1" xref="S4.SS4.SSS3.p5.5.m5.1.1.cmml">0.0005</mn><annotation-xml encoding="MathML-Content" id="S4.SS4.SSS3.p5.5.m5.1b"><cn type="float" id="S4.SS4.SSS3.p5.5.m5.1.1.cmml" xref="S4.SS4.SSS3.p5.5.m5.1.1">0.0005</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.SSS3.p5.5.m5.1c">0.0005</annotation></semantics></math> for a small set of frames experimentally. Besides, the boosted pipeline <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx21" title="" class="ltx_ref">Marcon et al., 2019</a>]</cite> gains on accuracy and time performance regarding the traditional version, as seen on the trials with a leaf size of <math id="S4.SS4.SSS3.p5.6.m6.1" class="ltx_Math" alttext="0.02" display="inline"><semantics id="S4.SS4.SSS3.p5.6.m6.1a"><mn id="S4.SS4.SSS3.p5.6.m6.1.1" xref="S4.SS4.SSS3.p5.6.m6.1.1.cmml">0.02</mn><annotation-xml encoding="MathML-Content" id="S4.SS4.SSS3.p5.6.m6.1b"><cn type="float" id="S4.SS4.SSS3.p5.6.m6.1.1.cmml" xref="S4.SS4.SSS3.p5.6.m6.1.1">0.02</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.SSS3.p5.6.m6.1c">0.02</annotation></semantics></math> (Baseline <math id="S4.SS4.SSS3.p5.7.m7.1" class="ltx_Math" alttext="US_{0.02}" display="inline"><semantics id="S4.SS4.SSS3.p5.7.m7.1a"><mrow id="S4.SS4.SSS3.p5.7.m7.1.1" xref="S4.SS4.SSS3.p5.7.m7.1.1.cmml"><mi id="S4.SS4.SSS3.p5.7.m7.1.1.2" xref="S4.SS4.SSS3.p5.7.m7.1.1.2.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.SS4.SSS3.p5.7.m7.1.1.1" xref="S4.SS4.SSS3.p5.7.m7.1.1.1.cmml">​</mo><msub id="S4.SS4.SSS3.p5.7.m7.1.1.3" xref="S4.SS4.SSS3.p5.7.m7.1.1.3.cmml"><mi id="S4.SS4.SSS3.p5.7.m7.1.1.3.2" xref="S4.SS4.SSS3.p5.7.m7.1.1.3.2.cmml">S</mi><mn id="S4.SS4.SSS3.p5.7.m7.1.1.3.3" xref="S4.SS4.SSS3.p5.7.m7.1.1.3.3.cmml">0.02</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.SSS3.p5.7.m7.1b"><apply id="S4.SS4.SSS3.p5.7.m7.1.1.cmml" xref="S4.SS4.SSS3.p5.7.m7.1.1"><times id="S4.SS4.SSS3.p5.7.m7.1.1.1.cmml" xref="S4.SS4.SSS3.p5.7.m7.1.1.1"></times><ci id="S4.SS4.SSS3.p5.7.m7.1.1.2.cmml" xref="S4.SS4.SSS3.p5.7.m7.1.1.2">𝑈</ci><apply id="S4.SS4.SSS3.p5.7.m7.1.1.3.cmml" xref="S4.SS4.SSS3.p5.7.m7.1.1.3"><csymbol cd="ambiguous" id="S4.SS4.SSS3.p5.7.m7.1.1.3.1.cmml" xref="S4.SS4.SSS3.p5.7.m7.1.1.3">subscript</csymbol><ci id="S4.SS4.SSS3.p5.7.m7.1.1.3.2.cmml" xref="S4.SS4.SSS3.p5.7.m7.1.1.3.2">𝑆</ci><cn type="float" id="S4.SS4.SSS3.p5.7.m7.1.1.3.3.cmml" xref="S4.SS4.SSS3.p5.7.m7.1.1.3.3">0.02</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.SSS3.p5.7.m7.1c">US_{0.02}</annotation></semantics></math> and Boost <math id="S4.SS4.SSS3.p5.8.m8.1" class="ltx_Math" alttext="US_{0.02}" display="inline"><semantics id="S4.SS4.SSS3.p5.8.m8.1a"><mrow id="S4.SS4.SSS3.p5.8.m8.1.1" xref="S4.SS4.SSS3.p5.8.m8.1.1.cmml"><mi id="S4.SS4.SSS3.p5.8.m8.1.1.2" xref="S4.SS4.SSS3.p5.8.m8.1.1.2.cmml">U</mi><mo lspace="0em" rspace="0em" id="S4.SS4.SSS3.p5.8.m8.1.1.1" xref="S4.SS4.SSS3.p5.8.m8.1.1.1.cmml">​</mo><msub id="S4.SS4.SSS3.p5.8.m8.1.1.3" xref="S4.SS4.SSS3.p5.8.m8.1.1.3.cmml"><mi id="S4.SS4.SSS3.p5.8.m8.1.1.3.2" xref="S4.SS4.SSS3.p5.8.m8.1.1.3.2.cmml">S</mi><mn id="S4.SS4.SSS3.p5.8.m8.1.1.3.3" xref="S4.SS4.SSS3.p5.8.m8.1.1.3.3.cmml">0.02</mn></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.SSS3.p5.8.m8.1b"><apply id="S4.SS4.SSS3.p5.8.m8.1.1.cmml" xref="S4.SS4.SSS3.p5.8.m8.1.1"><times id="S4.SS4.SSS3.p5.8.m8.1.1.1.cmml" xref="S4.SS4.SSS3.p5.8.m8.1.1.1"></times><ci id="S4.SS4.SSS3.p5.8.m8.1.1.2.cmml" xref="S4.SS4.SSS3.p5.8.m8.1.1.2">𝑈</ci><apply id="S4.SS4.SSS3.p5.8.m8.1.1.3.cmml" xref="S4.SS4.SSS3.p5.8.m8.1.1.3"><csymbol cd="ambiguous" id="S4.SS4.SSS3.p5.8.m8.1.1.3.1.cmml" xref="S4.SS4.SSS3.p5.8.m8.1.1.3">subscript</csymbol><ci id="S4.SS4.SSS3.p5.8.m8.1.1.3.2.cmml" xref="S4.SS4.SSS3.p5.8.m8.1.1.3.2">𝑆</ci><cn type="float" id="S4.SS4.SSS3.p5.8.m8.1.1.3.3.cmml" xref="S4.SS4.SSS3.p5.8.m8.1.1.3.3">0.02</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.SSS3.p5.8.m8.1c">US_{0.02}</annotation></semantics></math>), and such behavior is also expected on a smaller leaf size.</p>
+</div>
+</section>
+<section id="S4.SS4.SSS4" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.4.4 </span>Time processing evaluation</h4>
+
+<div id="S4.SS4.SSS4.p1" class="ltx_para">
+<p id="S4.SS4.SSS4.p1.1" class="ltx_p">Now we report the processing rate regarding executing the three stages of our proposed pipeline. <a href="#S4.T7" title="Table 7 ‣ 4.4.4 Time processing evaluation ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Table 7</span></a> presents the frame processing rate based on a single target object scenario. We evaluate referring to the first stage execution (<span id="S4.SS4.SSS4.p1.1.1" class="ltx_text ltx_font_italic">Color only</span>), the early two stages (Columns <span id="S4.SS4.SSS4.p1.1.2" class="ltx_text ltx_font_italic">RANSAC</span>, and <span id="S4.SS4.SSS4.p1.1.3" class="ltx_text ltx_font_italic">FGR</span>), and a pipeline’s full execution (<span id="S4.SS4.SSS4.p1.1.4" class="ltx_text ltx_font_italic">+ICP</span>).</p>
+</div>
+<figure id="S4.T7" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 7: </span>Single target pose estimation FPS. <span id="S4.T7.2.1" class="ltx_text ltx_font_italic">Color only</span> refers to object classification, other columns refer to the pose aligment step, coarse (RANSAC and FGR) or fine (plus ICP). </figcaption>
+<table id="S4.T7.3" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T7.3.1.1" class="ltx_tr">
+<th id="S4.T7.3.1.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;"></th>
+<th id="S4.T7.3.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">Color only</th>
+<th id="S4.T7.3.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">RANSAC</th>
+<th id="S4.T7.3.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">FGR</th>
+<th id="S4.T7.3.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">RANSAC + ICP</th>
+<th id="S4.T7.3.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">FGR + ICP</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T7.3.2.1" class="ltx_tr">
+<th id="S4.T7.3.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">MobileNet v2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx28" title="" class="ltx_ref">Sandler et al., 2018</a>]</cite>
+</th>
+<td id="S4.T7.3.2.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">89.49</td>
+<td id="S4.T7.3.2.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.89</td>
+<td id="S4.T7.3.2.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">13.89</td>
+<td id="S4.T7.3.2.1.5" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.82</td>
+<td id="S4.T7.3.2.1.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-top:1.5pt;padding-bottom:1.5pt;">13.57</td>
+</tr>
+<tr id="S4.T7.3.3.2" class="ltx_tr">
+<th id="S4.T7.3.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">ResNet101 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">He et al., 2016</a>]</cite>
+</th>
+<td id="S4.T7.3.3.2.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">52.45</td>
+<td id="S4.T7.3.3.2.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.96</td>
+<td id="S4.T7.3.3.2.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">13.83</td>
+<td id="S4.T7.3.3.2.5" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.81</td>
+<td id="S4.T7.3.3.2.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">13.39</td>
+</tr>
+<tr id="S4.T7.3.4.3" class="ltx_tr">
+<th id="S4.T7.3.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-top:1.5pt;padding-bottom:1.5pt;">ResNeXt101 32x8d <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx36" title="" class="ltx_ref">Xie et al., 2017</a>]</cite>
+</th>
+<td id="S4.T7.3.4.3.2" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">33.73</td>
+<td id="S4.T7.3.4.3.3" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">2.03</td>
+<td id="S4.T7.3.4.3.4" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">14.18</td>
+<td id="S4.T7.3.4.3.5" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">2.09</td>
+<td id="S4.T7.3.4.3.6" class="ltx_td ltx_align_center" style="padding-top:1.5pt;padding-bottom:1.5pt;">13.32</td>
+</tr>
+<tr id="S4.T7.3.5.4" class="ltx_tr">
+<th id="S4.T7.3.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">EfficientNet-B7 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx33" title="" class="ltx_ref">Tan and Le, 2019</a>]</cite>
+</th>
+<td id="S4.T7.3.5.4.2" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">22.51</td>
+<td id="S4.T7.3.5.4.3" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.43</td>
+<td id="S4.T7.3.5.4.4" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">8.94</td>
+<td id="S4.T7.3.5.4.5" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">1.40</td>
+<td id="S4.T7.3.5.4.6" class="ltx_td ltx_align_center ltx_border_b" style="padding-top:1.5pt;padding-bottom:1.5pt;">8.55</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS4.SSS4.p2" class="ltx_para">
+<p id="S4.SS4.SSS4.p2.1" class="ltx_p">At first sight, one can conjecture that a RANSAC-based approach is unpromising when presenting around 2 FPS. However, considering an FGR-based process, the results are indeed encouraging, with 8 FPS for the best accurate method, and more than 13 for the others. For many applications that deal with real-time, a frame rate around eight or more is acceptable. We agree that <span id="S4.SS4.SSS4.p2.1.1" class="ltx_text ltx_font_italic">the facto</span> standard for real-time is at least 30 FPS, however, due to the modularity of our proposed pipeline, the stages are independent, and we could use the full execution only to indispensable situations.</p>
+</div>
+<figure id="S4.F3" class="ltx_figure">
+<table id="S4.F3.2" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.F3.1.1" class="ltx_tr">
+<td id="S4.F3.1.1.1" class="ltx_td ltx_align_center" style="padding-top:1pt;padding-bottom:1pt;"><img src="/html/2011.13669/assets/x2.png" id="S4.F3.1.1.1.g1" class="ltx_graphics ltx_img_landscape" width="315" height="192" alt="Refer to caption"></td>
+</tr>
+<tr id="S4.F3.2.3.1" class="ltx_tr">
+<td id="S4.F3.2.3.1.1" class="ltx_td ltx_align_center" style="padding-top:1pt;padding-bottom:1pt;">(a) FGR</td>
+</tr>
+<tr id="S4.F3.2.2" class="ltx_tr">
+<td id="S4.F3.2.2.1" class="ltx_td ltx_align_center" style="padding-top:1pt;padding-bottom:1pt;">
+<img src="/html/2011.13669/assets/x3.png" id="S4.F3.2.2.1.g1" class="ltx_graphics ltx_img_landscape" width="315" height="192" alt="Refer to caption">
+</td>
+</tr>
+<tr id="S4.F3.2.4.2" class="ltx_tr">
+<td id="S4.F3.2.4.2.1" class="ltx_td ltx_align_center" style="padding-top:1pt;padding-bottom:1pt;">(b) RANSAC</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Processing time (in seconds) of each step of the execution of proposed approach. We consider only successfully detected objects on this comparison. (a) presents times referring to the FGR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx38" title="" class="ltx_ref">Zhou et al., 2016</a>]</cite> method, and (b) to RANSAC.</figcaption>
+</figure>
+<div id="S4.SS4.SSS4.p3" class="ltx_para">
+<p id="S4.SS4.SSS4.p3.1" class="ltx_p">An application scenario may include a target object’s location and pose recovering, for instance, by a robot or a visually impaired person. The system could execute a scheduled procedure, localizing this object adopting only the first stage of the pipeline, in real-time. Then, as the subject approaches the objective, we could execute the second stage, estimating a rough transformation, e.g., once a second. Finally, when the object is next to the user, we can run the full pipeline, including the fine-adjustment stage.</p>
+</div>
+<div id="S4.SS4.SSS4.p4" class="ltx_para">
+<p id="S4.SS4.SSS4.p4.1" class="ltx_p">To investigate more deeply the processing time of a successfully detected object of our pipeline, we summarize how much time takes each substep in <a href="#S4.F3" title="Figure 3 ‣ 4.4.4 Time processing evaluation ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Figure 3</span></a>. We can infer that two main steps negatively impact the time processing: classification and feature-based estimation. Regarding the former, the correct selection of the network to extract color features is fundamental to speed-up the whole process, presenting a significant difference between the faster <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx28" title="" class="ltx_ref">Sandler et al., 2018</a>]</cite> and the slower <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx33" title="" class="ltx_ref">Tan and Le, 2019</a>]</cite>. We perceive a considerable impact in time processing when using RANSAC instead of FGR for the feature-based stage. In this implementation, we do not use any concurrent processing, which could significantly improve such time for both coarse pose estimation methods. Our pipeline is highly flexible, and the use of recent proposals may enhance our results on coarse estimation, for instance DGR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx10" title="" class="ltx_ref">Choy et al., 2020</a>]</cite>.</p>
+</div>
+</section>
+<section id="S4.SS4.SSS5" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.4.5 </span>Qualitative results</h4>
+
+<figure id="S4.F4" class="ltx_figure"><img src="/html/2011.13669/assets/figures/qualitative_pose_estimation.png" id="S4.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="568" height="304" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Qualitative visualizations of successful pose alignment.</figcaption>
+</figure>
+<div id="S4.SS4.SSS5.p1" class="ltx_para">
+<p id="S4.SS4.SSS5.p1.1" class="ltx_p">We provide qualitative visualizations of our proposed method (RANSAC + ICP) in <a href="#S4.F4" title="Figure 4 ‣ 4.4.5 Qualitative results ‣ 4.4 Results ‣ 4 EXPERIMENTAL RESULTS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Figure 4</span></a>. Our method succeeds in aligning several different shaped models, such as planes (<span id="S4.SS4.SSS5.p1.1.1" class="ltx_text ltx_font_italic">cereal box</span>), cylinders (<span id="S4.SS4.SSS5.p1.1.2" class="ltx_text ltx_font_italic">soda can</span>, <span id="S4.SS4.SSS5.p1.1.3" class="ltx_text ltx_font_italic">coffee mugs</span>, and <span id="S4.SS4.SSS5.p1.1.4" class="ltx_text ltx_font_italic">flashlights</span>), and free form models (<span id="S4.SS4.SSS5.p1.1.5" class="ltx_text ltx_font_italic">caps</span>). As we perform a rigid transformation to align objects and scenes, the model’s choice is fundamental. Examples like the <span id="S4.SS4.SSS5.p1.1.6" class="ltx_text ltx_font_italic">red cap</span> that present a crumple on top harm the alignment estimation. Otherwise, we confirm the robustness of the combination of coarse and fine alignments on the bowl object (bottom row, on the left), partially cropped on the scene cloud. Still, our method infers the pose correctly.</p>
+</div>
+<div id="S4.SS4.SSS5.p2" class="ltx_para">
+<p id="S4.SS4.SSS5.p2.1" class="ltx_p">In <a href="#S5.F5" title="Figure 5 ‣ 5 CONCLUSIONS ‣ Towards real-time object recognition and pose estimation in point clouds" class="ltx_ref ltx_refmacro_autoref"><span class="ltx_text ltx_ref_tag">Figure 5</span></a>, we present some wrong alignments of our proposals. We can observe that the objects’ main shape weights a lot on the alignment results. For instance, the <span id="S4.SS4.SSS5.p2.1.1" class="ltx_text ltx_font_italic">mugs</span> had the body well aligned but a misalignment on the handle. We also perceive a flip on the cereal box because of the large plane at the front. The <span id="S4.SS4.SSS5.p2.1.2" class="ltx_text ltx_font_italic">bowl</span> in the rightmost example fails in aligning, though, different from the previous figure, where the method robustly handled a partial view of a <span id="S4.SS4.SSS5.p2.1.3" class="ltx_text ltx_font_italic">bowl</span>, this particular case, have about 50% only of the object visible. The ICP algorithm estimates a locally minimal transformation, and such misalignments may occur because of inaccurate inputs produced by RANSAC/FGR methods. We espy three potential solutions: using novel CNN-based estimation methods, e.g., DGR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx10" title="" class="ltx_ref">Choy et al., 2020</a>]</cite>; adopting more robust local descriptors to the feature-based registration phase, also considering color-based approaches; increasing the number of selected 2.5D views to enhance pose covering of the scenes’ objects. The last two cited solutions may negatively affect time-performance. Despite the misalignments verified, as we reduce the surface search on the scene cloud, we always have an estimation next or even inside the 3D projection of the 2D bounding box outputted by the detection.</p>
+</div>
+</section>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>CONCLUSIONS</h2>
+
+<figure id="S5.F5" class="ltx_figure"><img src="/html/2011.13669/assets/figures/wrong_pose_estimation.png" id="S5.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="568" height="148" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Qualitative visualizations of wrong pose alignment. From left to right: two examples of coffee mugs with a misoriented handles, flipped cereal box, and a rotated bowl.</figcaption>
+</figure>
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.2" class="ltx_p">3D pose estimation is a challenging task, mainly for real-time applications. Sometimes developers must surrender on the precision, aiming the response time. In this paper, we introduced a novel pipeline that proposes to combine the power of color features extractors deep networks, with a local descriptors pipeline to pose estimation in point clouds. We evaluated the detection of objects and achieved almost 83% on an instance situation, in the best case. This precision is also accompanied by a high frame processing rate, arriving up to 90 FPS. The pose estimation rate is plausible for some applications, and by scheduling the stages of our pipeline, we can reach standard real-time processing. We show experimentally massive improvements concerning accuracy and time processing compared to standard approaches for object recognition and pose estimation. Our approach is <math id="S5.p1.1.m1.1" class="ltx_math_unparsed" alttext="3\times" display="inline"><semantics id="S5.p1.1.m1.1a"><mrow id="S5.p1.1.m1.1b"><mn id="S5.p1.1.m1.1.1">3</mn><mo lspace="0.222em" id="S5.p1.1.m1.1.2">×</mo></mrow><annotation encoding="application/x-tex" id="S5.p1.1.m1.1c">3\times</annotation></semantics></math> more efficient and <math id="S5.p1.2.m2.1" class="ltx_math_unparsed" alttext="150\times" display="inline"><semantics id="S5.p1.2.m2.1a"><mrow id="S5.p1.2.m2.1b"><mn id="S5.p1.2.m2.1.1">150</mn><mo lspace="0.222em" id="S5.p1.2.m2.1.2">×</mo></mrow><annotation encoding="application/x-tex" id="S5.p1.2.m2.1c">150\times</annotation></semantics></math> faster than traditional and grounded methodologies.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">Our three-staged detachable pipeline can be used according to the user/application needs: the color feature classification provides object detection in real-time; the feature-based registration estimates an imprecise but sometimes efficient pose of the scenes’ object; the third stage performs a fine alignment of the estimation, resulting in a more accurate result. We believe that our proposal’s adoption may help researchers and the industry develop reliable and time-efficient solutions for scene recognition problems from RGB-D data.</p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p">Parallelization strategies can improve time results even more and also different local descriptors and keypoint extractors could support this. Findings on the deepnets architectures can help developing an integrated region proposal and object detection algorithm, and state-of-the-art deep learning methods such as SSD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx20" title="" class="ltx_ref">Liu et al., 2016</a>]</cite>, YOLO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx24" title="" class="ltx_ref">Redmon et al., 2016</a>]</cite>, and EfficientDet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx34" title="" class="ltx_ref">Tan et al., 2020</a>]</cite> enable such potentiality.</p>
+</div>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>ACKNOWLEDGMENTS</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">We would like to thank UTFPR-DV for partly supporting this research work</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">REFERENCES</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bibx1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Agrawal et al., 2014</span>
+<span class="ltx_bibblock">
+Agrawal, P., Girshick, R., and Malik, J. (2014).
+
+</span>
+<span class="ltx_bibblock">Analyzing the performance of multilayer neural networks for object
+recognition.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx1.1.1" class="ltx_text ltx_font_italic">European conference on computer vision</span>, pages 329–344.
+Springer.
+
+</span>
+</li>
+<li id="bib.bibx2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Aldoma et al., 2012a</span>
+<span class="ltx_bibblock">
+Aldoma, A., Marton, Z., Tombari, F., Wohlkinger, W., Potthast, C., Zeisl, B.,
+and Vincze, M. (2012a).
+
+</span>
+<span class="ltx_bibblock">Three-dimensional object recognition and 6 DoF pose estimation.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx2.1.1" class="ltx_text ltx_font_italic">IEEE Robotics &amp; Automation Magazine</span>, pages 80–91.
+
+</span>
+</li>
+<li id="bib.bibx3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Aldoma et al., 2012b</span>
+<span class="ltx_bibblock">
+Aldoma, A., Marton, Z.-C., Tombari, F., Wohlkinger, W., Potthast, C., Zeisl,
+B., Rusu, R. B., Gedikli, S., and Vincze, M. (2012b).
+
+</span>
+<span class="ltx_bibblock">Tutorial: Point cloud library: Three-dimensional object recognition
+and 6 DoF pose estimation.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx3.1.1" class="ltx_text ltx_font_italic">IEEE Robotics &amp; Automation Magazine</span>, 19(3):80–91.
+
+</span>
+</li>
+<li id="bib.bibx4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Asif et al., 2017</span>
+<span class="ltx_bibblock">
+Asif, U., Bennamoun, M., and Sohel, F. A. (2017).
+
+</span>
+<span class="ltx_bibblock">A multi-modal, discriminative and spatially invariant CNN for
+RGB-D object labeling.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx4.1.1" class="ltx_text ltx_font_italic">IEEE transactions on pattern analysis and machine intelligence</span>,
+40(9):2051–2065.
+
+</span>
+</li>
+<li id="bib.bibx5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Besl and McKay, 1992</span>
+<span class="ltx_bibblock">
+Besl, P. J. and McKay, N. D. (1992).
+
+</span>
+<span class="ltx_bibblock">Method for registration of 3-D shapes.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx5.1.1" class="ltx_text ltx_font_italic">Sensor fusion IV: control paradigms and data structures</span>,
+volume 1611, pages 586–606. International Society for Optics and Photonics.
+
+</span>
+</li>
+<li id="bib.bibx6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bo et al., 2013</span>
+<span class="ltx_bibblock">
+Bo, L., Ren, X., and Fox, D. (2013).
+
+</span>
+<span class="ltx_bibblock">Unsupervised feature learning for RGB-D based object recognition.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx6.1.1" class="ltx_text ltx_font_italic">Experimental robotics</span>, pages 387–402. Springer.
+
+</span>
+</li>
+<li id="bib.bibx7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Caglayan et al., 2020</span>
+<span class="ltx_bibblock">
+Caglayan, A., Imamoglu, N., Can, A. B., and Nakamura, R. (2020).
+
+</span>
+<span class="ltx_bibblock">When CNNs meet random RNNs: Towards multi-level analysis for
+RGB-D object and scene recognition.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx7.1.1" class="ltx_text ltx_font_italic">arXiv preprint arXiv:2004.12349</span>.
+
+</span>
+</li>
+<li id="bib.bibx8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen and Medioni, 1992</span>
+<span class="ltx_bibblock">
+Chen, Y. and Medioni, G. (1992).
+
+</span>
+<span class="ltx_bibblock">Object modelling by registration of multiple range images.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx8.1.1" class="ltx_text ltx_font_italic">Image and vision computing</span>, 10(3):145–155.
+
+</span>
+</li>
+<li id="bib.bibx9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Choi et al., 2015</span>
+<span class="ltx_bibblock">
+Choi, S., Zhou, Q.-Y., and Koltun, V. (2015).
+
+</span>
+<span class="ltx_bibblock">Robust reconstruction of indoor scenes.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx9.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition</span>, pages 5556–5565.
+
+</span>
+</li>
+<li id="bib.bibx10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Choy et al., 2020</span>
+<span class="ltx_bibblock">
+Choy, C., Dong, W., and Koltun, V. (2020).
+
+</span>
+<span class="ltx_bibblock">Deep global registration.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx10.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition</span>, pages 2514–2523.
+
+</span>
+</li>
+<li id="bib.bibx11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Deng et al., 2009</span>
+<span class="ltx_bibblock">
+Deng, J., Dong, W., Socher, R., Li, L.-J., Li, K., and Fei-Fei, L. (2009).
+
+</span>
+<span class="ltx_bibblock">Imagenet: A large-scale hierarchical image database.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx11.1.1" class="ltx_text ltx_font_italic">2009 IEEE conference on computer vision and pattern
+recognition</span>, pages 248–255. Ieee.
+
+</span>
+</li>
+<li id="bib.bibx12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Guo et al., 2016</span>
+<span class="ltx_bibblock">
+Guo, Y., Bennamoun, M., Sohel, F., Lu, M., Wan, J., and Kwok, N. M. (2016).
+
+</span>
+<span class="ltx_bibblock">A comprehensive performance evaluation of 3D local feature
+descriptors.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx12.1.1" class="ltx_text ltx_font_italic">International Journal of Computer Vision</span>, 116(1):66–89.
+
+</span>
+</li>
+<li id="bib.bibx13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">He et al., 2016</span>
+<span class="ltx_bibblock">
+He, K., Zhang, X., Ren, S., and Sun, J. (2016).
+
+</span>
+<span class="ltx_bibblock">Deep residual learning for image recognition.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx13.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span>, pages 770–778.
+
+</span>
+</li>
+<li id="bib.bibx14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hodan et al., 2018</span>
+<span class="ltx_bibblock">
+Hodan, T., Michel, F., Brachmann, E., Kehl, W., GlentBuch, A., Kraft, D.,
+Drost, B., Vidal, J., Ihrke, S., Zabulis, X., et al. (2018).
+
+</span>
+<span class="ltx_bibblock">Bop: Benchmark for 6D object pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx14.1.1" class="ltx_text ltx_font_italic">Proceedings of the European Conference on Computer Vision
+(ECCV)</span>, pages 19–34.
+
+</span>
+</li>
+<li id="bib.bibx15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hou et al., 2017</span>
+<span class="ltx_bibblock">
+Hou, Q., Cheng, M.-M., Hu, X., Borji, A., Tu, Z., and Torr, P. H. (2017).
+
+</span>
+<span class="ltx_bibblock">Deeply supervised salient object detection with short connections.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx15.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition</span>, pages 3203–3212.
+
+</span>
+</li>
+<li id="bib.bibx16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Krizhevsky et al., 2012</span>
+<span class="ltx_bibblock">
+Krizhevsky, A., Sutskever, I., and Hinton, G. E. (2012).
+
+</span>
+<span class="ltx_bibblock">Imagenet classification with deep convolutional neural networks.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx16.1.1" class="ltx_text ltx_font_italic">Advances in neural information processing systems</span>, pages
+1097–1105.
+
+</span>
+</li>
+<li id="bib.bibx17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lai et al., 2011a</span>
+<span class="ltx_bibblock">
+Lai, K., Bo, L., Ren, X., and Fox, D. (2011a).
+
+</span>
+<span class="ltx_bibblock">A large-scale hierarchical multi-view RGB-D object dataset.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx17.1.1" class="ltx_text ltx_font_italic">2011 IEEE international conference on robotics and
+automation</span>, pages 1817–1824. IEEE.
+
+</span>
+</li>
+<li id="bib.bibx18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lai et al., 2011b</span>
+<span class="ltx_bibblock">
+Lai, K., Bo, L., Ren, X., and Fox, D. (2011b).
+
+</span>
+<span class="ltx_bibblock">Sparse distance learning for object recognition combining rgb and
+depth information.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx18.1.1" class="ltx_text ltx_font_italic">2011 IEEE International Conference on Robotics and
+Automation</span>, pages 4007–4013. IEEE.
+
+</span>
+</li>
+<li id="bib.bibx19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al., 2018</span>
+<span class="ltx_bibblock">
+Liu, H., Li, F., Xu, X., and Sun, F. (2018).
+
+</span>
+<span class="ltx_bibblock">Multi-modal local receptive field extreme learning machine for object
+recognition.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx19.1.1" class="ltx_text ltx_font_italic">Neurocomputing</span>, 277:4–11.
+
+</span>
+</li>
+<li id="bib.bibx20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al., 2016</span>
+<span class="ltx_bibblock">
+Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S., Fu, C.-Y., and Berg,
+A. C. (2016).
+
+</span>
+<span class="ltx_bibblock">SSD: Single shot multibox detector.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx20.1.1" class="ltx_text ltx_font_italic">European conference on computer vision</span>, pages 21–37.
+Springer.
+
+</span>
+</li>
+<li id="bib.bibx21" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Marcon et al., 2019</span>
+<span class="ltx_bibblock">
+Marcon, M., Spezialetti, R., Salti, S., Silva, L., and Di Stefano, L. (2019).
+
+</span>
+<span class="ltx_bibblock">Boosting object recognition in point clouds by saliency detection.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx21.1.1" class="ltx_text ltx_font_italic">International Conference on Image Analysis and Processing</span>,
+pages 321–331. Springer.
+
+</span>
+</li>
+<li id="bib.bibx22" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ouadiay et al., 2016</span>
+<span class="ltx_bibblock">
+Ouadiay, F. Z., Zrira, N., Bouyakhf, E. H., and Himmi, M. M. (2016).
+
+</span>
+<span class="ltx_bibblock">3d object categorization and recognition based on deep belief
+networks and point clouds.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx22.1.1" class="ltx_text ltx_font_italic">Proceedings of the 13th International Conference on
+Informatics in Control, Automation and Robotics - Volume 2: ICINCO,</span>, pages
+311–318. INSTICC, SciTePress.
+
+</span>
+</li>
+<li id="bib.bibx23" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Park et al., 2017</span>
+<span class="ltx_bibblock">
+Park, J., Zhou, Q.-Y., and Koltun, V. (2017).
+
+</span>
+<span class="ltx_bibblock">Colored point cloud registration revisited.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx23.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE International Conference on Computer
+Vision</span>, pages 143–152.
+
+</span>
+</li>
+<li id="bib.bibx24" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Redmon et al., 2016</span>
+<span class="ltx_bibblock">
+Redmon, J., Divvala, S., Girshick, R., and Farhadi, A. (2016).
+
+</span>
+<span class="ltx_bibblock">You only look once: Unified, real-time object detection.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx24.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span>, pages 779–788.
+
+</span>
+</li>
+<li id="bib.bibx25" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rusu et al., 2009</span>
+<span class="ltx_bibblock">
+Rusu, R. B., Blodow, N., and Beetz, M. (2009).
+
+</span>
+<span class="ltx_bibblock">Fast point feature histograms (FPFH) for 3D registration.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx25.1.1" class="ltx_text ltx_font_italic">2009 IEEE international conference on robotics and
+automation</span>, pages 3212–3217. IEEE.
+
+</span>
+</li>
+<li id="bib.bibx26" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rusu et al., 2008</span>
+<span class="ltx_bibblock">
+Rusu, R. B., Blodow, N., Marton, Z. C., and Beetz, M. (2008).
+
+</span>
+<span class="ltx_bibblock">Aligning point cloud views using persistent feature histograms.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx26.1.1" class="ltx_text ltx_font_italic">2008 IEEE/RSJ international conference on intelligent robots
+and systems</span>, pages 3384–3391. IEEE.
+
+</span>
+</li>
+<li id="bib.bibx27" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Salti et al., 2014</span>
+<span class="ltx_bibblock">
+Salti, S., Tombari, F., and Di Stefano, L. (2014).
+
+</span>
+<span class="ltx_bibblock">SHOT: Unique signatures of histograms for surface and texture
+description.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx27.1.1" class="ltx_text ltx_font_italic">Computer Vision and Image Understanding</span>, 125:251–264.
+
+</span>
+</li>
+<li id="bib.bibx28" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sandler et al., 2018</span>
+<span class="ltx_bibblock">
+Sandler, M., Howard, A., Zhu, M., Zhmoginov, A., and Chen, L.-C. (2018).
+
+</span>
+<span class="ltx_bibblock">Mobilenetv2: Inverted residuals and linear bottlenecks.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx28.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span>, pages 4510–4520.
+
+</span>
+</li>
+<li id="bib.bibx29" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Schwarz et al., 2015</span>
+<span class="ltx_bibblock">
+Schwarz, M., Schulz, H., and Behnke, S. (2015).
+
+</span>
+<span class="ltx_bibblock">RGB-D object recognition and pose estimation based on pre-trained
+convolutional neural network features.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx29.1.1" class="ltx_text ltx_font_italic">2015 IEEE international conference on robotics and automation
+(ICRA)</span>, pages 1329–1335. IEEE.
+
+</span>
+</li>
+<li id="bib.bibx30" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Simonyan and Zisserman, 2015</span>
+<span class="ltx_bibblock">
+Simonyan, K. and Zisserman, A. (2015).
+
+</span>
+<span class="ltx_bibblock">Very deep convolutional networks for large-scale image recognition.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx30.1.1" class="ltx_text ltx_font_italic">International Conference on Learning Representations</span>.
+
+</span>
+</li>
+<li id="bib.bibx31" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Szegedy et al., 2015</span>
+<span class="ltx_bibblock">
+Szegedy, C., Liu, W., Jia, Y., Sermanet, P., Reed, S., Anguelov, D., Erhan, D.,
+Vanhoucke, V., and Rabinovich, A. (2015).
+
+</span>
+<span class="ltx_bibblock">Going deeper with convolutions.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx31.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span>, pages 1–9.
+
+</span>
+</li>
+<li id="bib.bibx32" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Szegedy et al., 2016</span>
+<span class="ltx_bibblock">
+Szegedy, C., Vanhoucke, V., Ioffe, S., Shlens, J., and Wojna, Z. (2016).
+
+</span>
+<span class="ltx_bibblock">Rethinking the inception architecture for computer vision.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx32.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span>, pages 2818–2826.
+
+</span>
+</li>
+<li id="bib.bibx33" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Tan and Le, 2019</span>
+<span class="ltx_bibblock">
+Tan, M. and Le, Q. (2019).
+
+</span>
+<span class="ltx_bibblock">Efficientnet: Rethinking model scaling for convolutional neural
+networks.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx33.1.1" class="ltx_text ltx_font_italic">International Conference on Machine Learning</span>, pages
+6105–6114.
+
+</span>
+</li>
+<li id="bib.bibx34" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Tan et al., 2020</span>
+<span class="ltx_bibblock">
+Tan, M., Pang, R., and Le, Q. V. (2020).
+
+</span>
+<span class="ltx_bibblock">Efficientdet: Scalable and efficient object detection.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx34.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition</span>, pages 10781–10790.
+
+</span>
+</li>
+<li id="bib.bibx35" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Vock et al., 2019</span>
+<span class="ltx_bibblock">
+Vock, R., Dieckmann, A., Ochmann, S., and Klein, R. (2019).
+
+</span>
+<span class="ltx_bibblock">Fast template matching and pose estimation in 3D point clouds.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx35.1.1" class="ltx_text ltx_font_italic">Computers &amp; Graphics</span>, 79:36–45.
+
+</span>
+</li>
+<li id="bib.bibx36" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xie et al., 2017</span>
+<span class="ltx_bibblock">
+Xie, S., Girshick, R., Dollár, P., Tu, Z., and He, K. (2017).
+
+</span>
+<span class="ltx_bibblock">Aggregated residual transformations for deep neural networks.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx36.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span>, pages 1492–1500.
+
+</span>
+</li>
+<li id="bib.bibx37" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zaki et al., 2019</span>
+<span class="ltx_bibblock">
+Zaki, H. F., Shafait, F., and Mian, A. (2019).
+
+</span>
+<span class="ltx_bibblock">Viewpoint invariant semantic object and scene categorization with
+RGB-D sensors.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bibx37.1.1" class="ltx_text ltx_font_italic">Autonomous Robots</span>, 43(4):1005–1022.
+
+</span>
+</li>
+<li id="bib.bibx38" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhou et al., 2016</span>
+<span class="ltx_bibblock">
+Zhou, Q.-Y., Park, J., and Koltun, V. (2016).
+
+</span>
+<span class="ltx_bibblock">Fast global registration.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx38.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision</span>, pages 766–782.
+Springer.
+
+</span>
+</li>
+<li id="bib.bibx39" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zia et al., 2017</span>
+<span class="ltx_bibblock">
+Zia, S., Yuksel, B., Yuret, D., and Yemez, Y. (2017).
+
+</span>
+<span class="ltx_bibblock">RGB-D object recognition using deep convolutional neural networks.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bibx39.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE International Conference on Computer
+Vision Workshops</span>, pages 896–903.
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2011.13668" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2011.13669" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2011.13669">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2011.13669" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2011.13670" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Tue Mar 19 05:49:52 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

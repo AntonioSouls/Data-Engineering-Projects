@@ -1,0 +1,1185 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2011.08771] A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task</title><meta property="og:description" content="Recently, 3D version has been improved greatly due to the development of deep neural networks. A high quality dataset is important to the deep learning method. Existing datasets for 3D vision has been constructed, such…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2011.08771">
+
+<!--Generated on Tue Mar 19 04:50:27 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document" style="font-size:173%;">A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Minglei Lu<sup id="id7.7.id1" class="ltx_sup"><span id="id7.7.id1.1" class="ltx_text ltx_font_italic">1</span></sup>, Yu Guo<sup id="id8.8.id2" class="ltx_sup"><span id="id8.8.id2.1" class="ltx_text ltx_font_italic">2</span></sup>, Fei Wang<sup id="id9.9.id3" class="ltx_sup"><span id="id9.9.id3.1" class="ltx_text ltx_font_italic">1</span></sup>, Zheng Dang<sup id="id10.10.id4" class="ltx_sup"><span id="id10.10.id4.1" class="ltx_text ltx_font_italic">1</span></sup>
+</span><span class="ltx_author_notes"><sup id="id11.11.id1" class="ltx_sup"><span id="id11.11.id1.1" class="ltx_text ltx_font_italic">1</span></sup>Institute of Artificial Intelligence and Robotics, Xi’an Jiaotong University, China
+<span id="id12.12.id2" class="ltx_text ltx_font_typewriter" style="font-size:90%;">am12345@stu.xjtu.edu.cn, wfx@mail.xjtu.edu.cn, dangzheng713@stu.xjtu.edu.cn</span><sup id="id13.13.id1" class="ltx_sup"><span id="id13.13.id1.1" class="ltx_text ltx_font_italic">2</span></sup>School of Software Engineering, Xi’an Jiaotong University, China <span id="id14.14.id2" class="ltx_text ltx_font_typewriter" style="font-size:90%;">yu.guo@xjtu.edu.cn</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id15.id1" class="ltx_p">Recently, 3D version has been improved greatly due to the development of deep neural networks. A high quality dataset is important to the deep learning method. Existing datasets for 3D vision has been constructed, such as Bigbird and YCB. However, the depth sensors used to make these datasets are out of date, which made the resolution and accuracy of the datasets cannot full fill the higher standards of demand. Although the equipment and technology got better, but no one was trying to collect new and better dataset. Here we are trying to fill that gap. To this end, we propose a new method for object reconstruction, which takes into account the speed, accuracy and robustness. Our method could be used to produce large dataset with better and more accurate annotation. More importantly, our data is more close to the rendering data, which shrinking the gap between the real data and synthetic data further.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">INTRODUCTION</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">The quality of the dataset usually determines the upper limit of the accuracy that the algorithm can achieve. Using more accurate annotated dataset, the accuracy could be further improved has been validated in the paper <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. Thus making a high precision dataset is not a trivial task. Reconstruction is traditional topic in computer vision, which has been widely used in many applications, such as robot manipulation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> and augmented reality <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>.
+With the development of deep learning method and pose estimation, the need for highly accurate dataset is becoming more and more urgent.
+</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">At the same time, depth sensor technology has also been developed.
+Primesense-based RGB-D cameras like the Microsoft Kinect <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> and Intel RealSense <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> is the first generation of depth sensors, and have been gradually replaced by higher precision and resolution cameras such as Orbbec
+Astra, Basler ToF, TENGJU.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">There are several paper <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> which also give the way to reconstruct objects’ mesh and genereate RGB-D data. But these paper have been written in 4 years ago, and the devices and methods used could not be considered as the state of the art method today. To this end, we redesign the pipeline, adjust the equipment setting and give a new dataset capturing solution using the commercial equipment available today.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">RELATED WORK</span>
+</h2>
+
+<figure id="S2.F1" class="ltx_figure ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.08771/assets/picture/17.jpg" id="S2.F1.1.g1" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="126" height="160" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.08771/assets/picture/30.jpg" id="S2.F1.2.g2" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="126" height="160" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.08771/assets/picture/18.jpg" id="S2.F1.3.g3" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="126" height="160" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>The left image shows Bigbird’s outcome, the middle image shows YCB’s outcome and the right image shows ours(in order to have a better view, we only sample one tenth of the points for projection). Our method achieves pixel level accuracy, and the details of the object’s edge is better.</figcaption>
+</figure>
+<figure id="S2.F2" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S2.F2.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/depth/xtion.jpg" id="S2.F2.sf1.g1" class="ltx_graphics ltx_img_landscape" width="108" height="81" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf1.2.1.1" class="ltx_text" style="font-size:80%;">(a)</span> </span><span id="S2.F2.sf1.3.2" class="ltx_text" style="font-size:80%;">Xtion</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S2.F2.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/depth/astra.jpg" id="S2.F2.sf2.g1" class="ltx_graphics ltx_img_landscape" width="108" height="81" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf2.2.1.1" class="ltx_text" style="font-size:80%;">(b)</span> </span><span id="S2.F2.sf2.3.2" class="ltx_text" style="font-size:80%;">Astra</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S2.F2.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/depth/kinect.jpg" id="S2.F2.sf3.g1" class="ltx_graphics ltx_img_landscape" width="108" height="61" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf3.2.1.1" class="ltx_text" style="font-size:80%;">(c)</span> </span><span id="S2.F2.sf3.3.2" class="ltx_text" style="font-size:80%;">Kinect2</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S2.F2.sf4" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/depth/realsense.jpg" id="S2.F2.sf4.g1" class="ltx_graphics ltx_img_landscape" width="108" height="81" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf4.2.1.1" class="ltx_text" style="font-size:80%;">(d)</span> </span><span id="S2.F2.sf4.3.2" class="ltx_text" style="font-size:80%;">Realsense R200</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S2.F2.sf5" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/depth/basler.jpg" id="S2.F2.sf5.g1" class="ltx_graphics ltx_img_landscape" width="108" height="81" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf5.2.1.1" class="ltx_text" style="font-size:80%;">(e)</span> </span><span id="S2.F2.sf5.3.2" class="ltx_text" style="font-size:80%;">Basler ToF</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="S2.F2.sf6" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/depth/pico.jpg" id="S2.F2.sf6.g1" class="ltx_graphics ltx_img_landscape" width="108" height="83" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf6.2.1.1" class="ltx_text" style="font-size:80%;">(f)</span> </span><span id="S2.F2.sf6.3.2" class="ltx_text" style="font-size:80%;">pico flexx</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="S2.F2.sf7" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/depth/ensenso.jpg" id="S2.F2.sf7.g1" class="ltx_graphics ltx_img_landscape" width="108" height="87" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf7.2.1.1" class="ltx_text" style="font-size:80%;">(g)</span> </span><span id="S2.F2.sf7.3.2" class="ltx_text" style="font-size:80%;">Ensenso N35</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="S2.F2.sf8" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/depth/ours.jpg" id="S2.F2.sf8.g1" class="ltx_graphics ltx_img_landscape" width="108" height="82" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf8.2.1.1" class="ltx_text" style="font-size:80%;">(h)</span> </span><span id="S2.F2.sf8.3.2" class="ltx_text" style="font-size:80%;">Ours</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure id="S2.F2.sf9" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/31.jpg" id="S2.F2.sf9.g1" class="ltx_graphics ltx_img_landscape" width="108" height="85" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf9.2.1.1" class="ltx_text" style="font-size:80%;">(i)</span> </span><span id="S2.F2.sf9.3.2" class="ltx_text" style="font-size:80%;">Render</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Depth maps generated by several depth sensors(mentioned in YCB-M and ours) and by render method. Compared with depth map resolution in YCB (up to 1.3MP), ours has higher resolution(6MP) and the edge of object is sharper.</figcaption>
+</figure>
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">In the recent years, many mesh datasets of objects has been provided <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> of objects. They are widely used in various fields, such as 6D pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> and point cloud registration <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS1.5.1.1" class="ltx_text">II-A</span> </span><span id="S2.SS1.6.2" class="ltx_text ltx_font_italic">Data Collection</span>
+</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">To create a dataset, a method’s speed, accuracy, robustness and pipeline automation should all be considered. These affects are highly influenced by the performance of system and devices.
+Kinect is the first generation of the commercial depth sensor, the resolution of its depth map is <math id="S2.SS1.p1.1.m1.1" class="ltx_Math" alttext="640\times 480" display="inline"><semantics id="S2.SS1.p1.1.m1.1a"><mrow id="S2.SS1.p1.1.m1.1.1" xref="S2.SS1.p1.1.m1.1.1.cmml"><mn id="S2.SS1.p1.1.m1.1.1.2" xref="S2.SS1.p1.1.m1.1.1.2.cmml">640</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS1.p1.1.m1.1.1.1" xref="S2.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S2.SS1.p1.1.m1.1.1.3" xref="S2.SS1.p1.1.m1.1.1.3.cmml">480</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.1.m1.1b"><apply id="S2.SS1.p1.1.m1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1"><times id="S2.SS1.p1.1.m1.1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S2.SS1.p1.1.m1.1.1.2.cmml" xref="S2.SS1.p1.1.m1.1.1.2">640</cn><cn type="integer" id="S2.SS1.p1.1.m1.1.1.3.cmml" xref="S2.SS1.p1.1.m1.1.1.3">480</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.1.m1.1c">640\times 480</annotation></semantics></math>, the error is more than 1mm <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>.
+By using multiple sensors and calibrating between multiple color and depth sensors <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>, Bigbird <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> can construct a 3D reconstruction system and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> followed this method. The reprojection results by using this method shows than this method can successfully used for 3D reconstruction. But The details of the object are not well handled, and they did not provide a effective method to reconstruct the bottom of objects <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">YCB-M <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> compared several depth sensors spanning three depth sensing technology (active stereo, time-of-flight and structured light). They only use these sensors in collecting data in new scenes and marking ground truth, but the 3D object mesh models are still the old one.
+The quality of 3D model will also affect the performance of the algorithm, especially for the deep learning methods using synthetic data for training.</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.1" class="ltx_p">Recently there is a tendency people trying to use the synthetic for training, but evaluated on the real scene dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>, <a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>. Due to the huge gap of between the real scene and the synthetic data, these algorithm usually doesn’t work well on the real scene data <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>.</p>
+</div>
+<div id="S2.SS1.p4" class="ltx_para">
+<p id="S2.SS1.p4.1" class="ltx_p">Structured light sensing technology has been developed <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite> in these years, the accuracy and resolution of structured light camera have been greatly improved. Structured light camera can provide high quality point clouds and depth maps.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS2.5.1.1" class="ltx_text">II-B</span> </span><span id="S2.SS2.6.2" class="ltx_text ltx_font_italic">Contributions</span>
+</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Take advantage of the advances made by various devices and algorithms, we propose a fast high precision 3D reconstruction method. Our contributions can be summarized as follows:</p>
+<ul id="S2.I1" class="ltx_itemize">
+<li id="S2.I1.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1)</span> 
+<div id="S2.I1.ix1.p1" class="ltx_para">
+<p id="S2.I1.ix1.p1.1" class="ltx_p">We present a robust, high precision and fast 3D reconstruction method, and we can reconstruct the bottom scene of objects which is not mentioned in other methods of making data sets.</p>
+</div>
+</li>
+</ul>
+<ul id="S2.I2" class="ltx_itemize">
+<li id="S2.I2.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2)</span> 
+<div id="S2.I2.ix1.p1" class="ltx_para">
+<p id="S2.I2.ix1.p1.1" class="ltx_p">Our method can give more accurate annotation data, can be used to produce datasets with more accurate ground truth.</p>
+</div>
+</li>
+</ul>
+<ul id="S2.I3" class="ltx_itemize">
+<li id="S2.I3.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3)</span> 
+<div id="S2.I3.ix1.p1" class="ltx_para">
+<p id="S2.I3.ix1.p1.1" class="ltx_p">Our data is closer to the datasets generated by render, reducing the gap between real data and synthetic data.</p>
+</div>
+</li>
+</ul>
+<ul id="S2.I4" class="ltx_itemize">
+<li id="S2.I4.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4)</span> 
+<div id="S2.I4.ix1.p1" class="ltx_para">
+<p id="S2.I4.ix1.p1.1" class="ltx_p">We’ve given a couple of methods, and they all improve the results in our experiment.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">SYSTEM OVERVIEW</span>
+</h2>
+
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2011.08771/assets/picture/02.jpg" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_img_square" width="195" height="195" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Two cameras connected together using mount</figcaption>
+</figure>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2011.08771/assets/picture/01.jpg" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_square" width="216" height="235" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Side view of our system.We put the object on the center of chessboard and run the program to achieve automatic acquisition.</figcaption>
+</figure>
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.2" class="ltx_p">The sensors in our system comprise of one high resolution SONY ILCE-6000 camera(<math id="S3.p1.1.m1.1" class="ltx_Math" alttext="6000\times 4000" display="inline"><semantics id="S3.p1.1.m1.1a"><mrow id="S3.p1.1.m1.1.1" xref="S3.p1.1.m1.1.1.cmml"><mn id="S3.p1.1.m1.1.1.2" xref="S3.p1.1.m1.1.1.2.cmml">6000</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p1.1.m1.1.1.1" xref="S3.p1.1.m1.1.1.1.cmml">×</mo><mn id="S3.p1.1.m1.1.1.3" xref="S3.p1.1.m1.1.1.3.cmml">4000</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p1.1.m1.1b"><apply id="S3.p1.1.m1.1.1.cmml" xref="S3.p1.1.m1.1.1"><times id="S3.p1.1.m1.1.1.1.cmml" xref="S3.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.p1.1.m1.1.1.2.cmml" xref="S3.p1.1.m1.1.1.2">6000</cn><cn type="integer" id="S3.p1.1.m1.1.1.3.cmml" xref="S3.p1.1.m1.1.1.3">4000</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.1.m1.1c">6000\times 4000</annotation></semantics></math> resolution) and one TENGJU DH060 structured light camera(<math id="S3.p1.2.m2.1" class="ltx_Math" alttext="3072\times 2048" display="inline"><semantics id="S3.p1.2.m2.1a"><mrow id="S3.p1.2.m2.1.1" xref="S3.p1.2.m2.1.1.cmml"><mn id="S3.p1.2.m2.1.1.2" xref="S3.p1.2.m2.1.1.2.cmml">3072</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p1.2.m2.1.1.1" xref="S3.p1.2.m2.1.1.1.cmml">×</mo><mn id="S3.p1.2.m2.1.1.3" xref="S3.p1.2.m2.1.1.3.cmml">2048</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p1.2.m2.1b"><apply id="S3.p1.2.m2.1.1.cmml" xref="S3.p1.2.m2.1.1"><times id="S3.p1.2.m2.1.1.1.cmml" xref="S3.p1.2.m2.1.1.1"></times><cn type="integer" id="S3.p1.2.m2.1.1.2.cmml" xref="S3.p1.2.m2.1.1.2">3072</cn><cn type="integer" id="S3.p1.2.m2.1.1.3.cmml" xref="S3.p1.2.m2.1.1.3">2048</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.2.m2.1c">3072\times 2048</annotation></semantics></math> resolution). These two cameras are mounted to the end effector of a AUBO robot arm, as shown in Fig. <a href="#S3.F3" title="Figure 3 ‣ III SYSTEM OVERVIEW ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>. The object would be placed on a high-precision 7SC404-Z turntable. The turntable carries a tray with a diameter of 600mm. Around the tray, a LED light band is attached to the edge of it. In order to obtain the calibration data and accurately estimate the pose, a chessboard is placed at the cameras’ center of view.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">For the whole reconstruction process, we only calibrate the pose between cameras and the turntable one and only one time at the beginning. No matter capturing how many objects we keep using the same pose for reconstruction. To be specific, we rotate the turntable in increments of 22.5 degrees and place the robot arm at 2 positions to get the images of the chessboard. Then these images would be used to calculate the pose of the cameras. These calibrated camera poses would be used for the next process. After the calibration process, we place the object on the turntable and rerun the process to get the images of the object. From our experience, if the chessboard been occluded, normally leading to inferior at the reconstruction accuracy. Thanks to the high repositioning accuracy of the turntable and the robot arm, we could reuse the calibrated camera pose for the reconstruction process. This split capturing method gives us an advantage that we don’t have to worry about the chessboard been occluded by the object in the reconstruction process, which could be happened in the paper Bigbird <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> since they capture the object and chessboard at the same time <a href="#S3.F5" title="Figure 5 ‣ III SYSTEM OVERVIEW ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.</p>
+</div>
+<figure id="S3.F5" class="ltx_figure ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/03.jpg" id="S3.F5.1.g1" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="269" height="180" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/04.jpg" id="S3.F5.2.g2" class="ltx_graphics ltx_figure_panel ltx_img_landscape" width="269" height="216" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Comparison of our picture and Bigbird picture.The left is ours and we can see the object takes much more pixels than Bigbird’s picture in right, this makes object clearer in RGB image and gets more dense point cloud in one scene.</figcaption>
+</figure>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">We found two observation positions of the camera is enough to capture all the structure information of the object. The first position is placing the camera above the object and looking at the object. The second position is placing the camera at a level with the center of the object and looking at the center of the object.After the image capturing process, yielding 32 point clouds from the structured light camera and 32 high-resolution RGB images from the Sony camera which would be used for the following process.</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.1" class="ltx_p">For a single object, the process of data collection is as follows:</p>
+<ul id="S3.I1" class="ltx_itemize">
+<li id="S3.I1.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1)</span> 
+<div id="S3.I1.ix1.p1" class="ltx_para">
+<p id="S3.I1.ix1.p1.1" class="ltx_p">Start all cameras and robot arm and put one object at the center of the turntable.</p>
+</div>
+</li>
+</ul>
+<ul id="S3.I2" class="ltx_itemize">
+<li id="S3.I2.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2)</span> 
+<div id="S3.I2.ix1.p1" class="ltx_para">
+<p id="S3.I2.ix1.p1.1" class="ltx_p">Capture object images at two positions of the manipulator. For each location of manipulator, The turntable rotates to 16 angles. For each manipulator position, the process is as follows:</p>
+<ul id="S3.I2.ix1.I1" class="ltx_itemize">
+<li id="S3.I2.ix1.I1.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">a)</span> 
+<div id="S3.I2.ix1.I1.ix1.p1" class="ltx_para">
+<p id="S3.I2.ix1.I1.ix1.p1.1" class="ltx_p">Sony camera capture an image in 1/20s.</p>
+</div>
+</li>
+</ul>
+<ul id="S3.I2.ix1.I2" class="ltx_itemize">
+<li id="S3.I2.ix1.I2.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">b)</span> 
+<div id="S3.I2.ix1.I2.ix1.p1" class="ltx_para">
+<p id="S3.I2.ix1.I2.ix1.p1.1" class="ltx_p">The structured light camera turns on the structured light and captures 12 images for each eye at a speed of 10FPS, then the structured light camera turns off structured light and captures one RGB image. This step costs 1.9s.</p>
+</div>
+</li>
+</ul>
+<ul id="S3.I2.ix1.I3" class="ltx_itemize">
+<li id="S3.I2.ix1.I3.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">c)</span> 
+<div id="S3.I2.ix1.I3.ix1.p1" class="ltx_para">
+<p id="S3.I2.ix1.I3.ix1.p1.2" class="ltx_p">The structured light camera generates a raw point cloud from 24 images with structured light and the turntable rotates <math id="S3.I2.ix1.I3.ix1.p1.1.m1.1" class="ltx_Math" alttext="22.5^{\circ}" display="inline"><semantics id="S3.I2.ix1.I3.ix1.p1.1.m1.1a"><msup id="S3.I2.ix1.I3.ix1.p1.1.m1.1.1" xref="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.cmml"><mn id="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.2" xref="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.2.cmml">22.5</mn><mo id="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.3" xref="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.3.cmml">∘</mo></msup><annotation-xml encoding="MathML-Content" id="S3.I2.ix1.I3.ix1.p1.1.m1.1b"><apply id="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.cmml" xref="S3.I2.ix1.I3.ix1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.1.cmml" xref="S3.I2.ix1.I3.ix1.p1.1.m1.1.1">superscript</csymbol><cn type="float" id="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.2.cmml" xref="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.2">22.5</cn><compose id="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.3.cmml" xref="S3.I2.ix1.I3.ix1.p1.1.m1.1.1.3"></compose></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.ix1.I3.ix1.p1.1.m1.1c">22.5^{\circ}</annotation></semantics></math> at the same time.
+Rotating turntable and generating a raw point cloud will operate in parallel which will takes 5.6s. When turntable rotated <math id="S3.I2.ix1.I3.ix1.p1.2.m2.1" class="ltx_Math" alttext="360^{\circ}" display="inline"><semantics id="S3.I2.ix1.I3.ix1.p1.2.m2.1a"><msup id="S3.I2.ix1.I3.ix1.p1.2.m2.1.1" xref="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.cmml"><mn id="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.2" xref="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.2.cmml">360</mn><mo id="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.3" xref="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.3.cmml">∘</mo></msup><annotation-xml encoding="MathML-Content" id="S3.I2.ix1.I3.ix1.p1.2.m2.1b"><apply id="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.cmml" xref="S3.I2.ix1.I3.ix1.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.1.cmml" xref="S3.I2.ix1.I3.ix1.p1.2.m2.1.1">superscript</csymbol><cn type="integer" id="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.2.cmml" xref="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.2">360</cn><compose id="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.3.cmml" xref="S3.I2.ix1.I3.ix1.p1.2.m2.1.1.3"></compose></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.I2.ix1.I3.ix1.p1.2.m2.1c">360^{\circ}</annotation></semantics></math>, the robot arm moves to the next location. This process also operate simultaneously with previous two steps.</p>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div id="S3.p5" class="ltx_para">
+<p id="S3.p5.1" class="ltx_p">In order to capture the bottom structure and texture of the object, we reverse the object on the table and take a second shot of the object. The whole process costs about 7min.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">CALIBRATION</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">As the camera lenses of the structured light camera are industrial lens with low resolution and obvious color distortion, we use Sony camera to redraw color on the raw point cloud. The raw point cloud is defined under the camera’s left eye coordinate system. In order to align the raw point cloud and RGB image, we need to get the relative transformation between the structured light camera and RGB camera. We made a iron joint to fixed these two cameras, to make sure these two camera’s relative position won’t change during the data collection procedure. For this reason, the extrinsic matrix between these two cameras only need to be calibrate once.
+</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.5.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.6.2" class="ltx_text ltx_font_italic">Calibration between RGB camera and Depth camera</span>
+</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.4" class="ltx_p">In the calibration process, we capture n (n=75 in practice) chessboard images and use OpenCV’s camera calibration package <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite> which based on the method <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite> to calibrate both intrinsic and extrinsic parameters.
+we define <math id="S4.SS1.p1.1.m1.1" class="ltx_Math" alttext="\Gamma_{rgb}" display="inline"><semantics id="S4.SS1.p1.1.m1.1a"><msub id="S4.SS1.p1.1.m1.1.1" xref="S4.SS1.p1.1.m1.1.1.cmml"><mi mathvariant="normal" id="S4.SS1.p1.1.m1.1.1.2" xref="S4.SS1.p1.1.m1.1.1.2.cmml">Γ</mi><mrow id="S4.SS1.p1.1.m1.1.1.3" xref="S4.SS1.p1.1.m1.1.1.3.cmml"><mi id="S4.SS1.p1.1.m1.1.1.3.2" xref="S4.SS1.p1.1.m1.1.1.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.1.m1.1.1.3.1" xref="S4.SS1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p1.1.m1.1.1.3.3" xref="S4.SS1.p1.1.m1.1.1.3.3.cmml">g</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.1.m1.1.1.3.1a" xref="S4.SS1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p1.1.m1.1.1.3.4" xref="S4.SS1.p1.1.m1.1.1.3.4.cmml">b</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.1.m1.1b"><apply id="S4.SS1.p1.1.m1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S4.SS1.p1.1.m1.1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1">subscript</csymbol><ci id="S4.SS1.p1.1.m1.1.1.2.cmml" xref="S4.SS1.p1.1.m1.1.1.2">Γ</ci><apply id="S4.SS1.p1.1.m1.1.1.3.cmml" xref="S4.SS1.p1.1.m1.1.1.3"><times id="S4.SS1.p1.1.m1.1.1.3.1.cmml" xref="S4.SS1.p1.1.m1.1.1.3.1"></times><ci id="S4.SS1.p1.1.m1.1.1.3.2.cmml" xref="S4.SS1.p1.1.m1.1.1.3.2">𝑟</ci><ci id="S4.SS1.p1.1.m1.1.1.3.3.cmml" xref="S4.SS1.p1.1.m1.1.1.3.3">𝑔</ci><ci id="S4.SS1.p1.1.m1.1.1.3.4.cmml" xref="S4.SS1.p1.1.m1.1.1.3.4">𝑏</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.1.m1.1c">\Gamma_{rgb}</annotation></semantics></math> as the set of RGB camera’s extrinsic matrix and <math id="S4.SS1.p1.2.m2.1" class="ltx_Math" alttext="\Gamma_{depth}" display="inline"><semantics id="S4.SS1.p1.2.m2.1a"><msub id="S4.SS1.p1.2.m2.1.1" xref="S4.SS1.p1.2.m2.1.1.cmml"><mi mathvariant="normal" id="S4.SS1.p1.2.m2.1.1.2" xref="S4.SS1.p1.2.m2.1.1.2.cmml">Γ</mi><mrow id="S4.SS1.p1.2.m2.1.1.3" xref="S4.SS1.p1.2.m2.1.1.3.cmml"><mi id="S4.SS1.p1.2.m2.1.1.3.2" xref="S4.SS1.p1.2.m2.1.1.3.2.cmml">d</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.2.m2.1.1.3.1" xref="S4.SS1.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p1.2.m2.1.1.3.3" xref="S4.SS1.p1.2.m2.1.1.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.2.m2.1.1.3.1a" xref="S4.SS1.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p1.2.m2.1.1.3.4" xref="S4.SS1.p1.2.m2.1.1.3.4.cmml">p</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.2.m2.1.1.3.1b" xref="S4.SS1.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p1.2.m2.1.1.3.5" xref="S4.SS1.p1.2.m2.1.1.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.2.m2.1.1.3.1c" xref="S4.SS1.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p1.2.m2.1.1.3.6" xref="S4.SS1.p1.2.m2.1.1.3.6.cmml">h</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.2.m2.1b"><apply id="S4.SS1.p1.2.m2.1.1.cmml" xref="S4.SS1.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S4.SS1.p1.2.m2.1.1.1.cmml" xref="S4.SS1.p1.2.m2.1.1">subscript</csymbol><ci id="S4.SS1.p1.2.m2.1.1.2.cmml" xref="S4.SS1.p1.2.m2.1.1.2">Γ</ci><apply id="S4.SS1.p1.2.m2.1.1.3.cmml" xref="S4.SS1.p1.2.m2.1.1.3"><times id="S4.SS1.p1.2.m2.1.1.3.1.cmml" xref="S4.SS1.p1.2.m2.1.1.3.1"></times><ci id="S4.SS1.p1.2.m2.1.1.3.2.cmml" xref="S4.SS1.p1.2.m2.1.1.3.2">𝑑</ci><ci id="S4.SS1.p1.2.m2.1.1.3.3.cmml" xref="S4.SS1.p1.2.m2.1.1.3.3">𝑒</ci><ci id="S4.SS1.p1.2.m2.1.1.3.4.cmml" xref="S4.SS1.p1.2.m2.1.1.3.4">𝑝</ci><ci id="S4.SS1.p1.2.m2.1.1.3.5.cmml" xref="S4.SS1.p1.2.m2.1.1.3.5">𝑡</ci><ci id="S4.SS1.p1.2.m2.1.1.3.6.cmml" xref="S4.SS1.p1.2.m2.1.1.3.6">ℎ</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.2.m2.1c">\Gamma_{depth}</annotation></semantics></math> as the set of depth camera’s extrinsic matrix. <math id="S4.SS1.p1.3.m3.3" class="ltx_Math" alttext="\Gamma_{rgb}=\{T_{i}\in R^{4\times 4}:T_{1},\cdots,T_{n}\}" display="inline"><semantics id="S4.SS1.p1.3.m3.3a"><mrow id="S4.SS1.p1.3.m3.3.3" xref="S4.SS1.p1.3.m3.3.3.cmml"><msub id="S4.SS1.p1.3.m3.3.3.4" xref="S4.SS1.p1.3.m3.3.3.4.cmml"><mi mathvariant="normal" id="S4.SS1.p1.3.m3.3.3.4.2" xref="S4.SS1.p1.3.m3.3.3.4.2.cmml">Γ</mi><mrow id="S4.SS1.p1.3.m3.3.3.4.3" xref="S4.SS1.p1.3.m3.3.3.4.3.cmml"><mi id="S4.SS1.p1.3.m3.3.3.4.3.2" xref="S4.SS1.p1.3.m3.3.3.4.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.3.m3.3.3.4.3.1" xref="S4.SS1.p1.3.m3.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p1.3.m3.3.3.4.3.3" xref="S4.SS1.p1.3.m3.3.3.4.3.3.cmml">g</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.3.m3.3.3.4.3.1a" xref="S4.SS1.p1.3.m3.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p1.3.m3.3.3.4.3.4" xref="S4.SS1.p1.3.m3.3.3.4.3.4.cmml">b</mi></mrow></msub><mo id="S4.SS1.p1.3.m3.3.3.3" xref="S4.SS1.p1.3.m3.3.3.3.cmml">=</mo><mrow id="S4.SS1.p1.3.m3.3.3.2.2" xref="S4.SS1.p1.3.m3.3.3.2.3.cmml"><mo stretchy="false" id="S4.SS1.p1.3.m3.3.3.2.2.3" xref="S4.SS1.p1.3.m3.3.3.2.3.1.cmml">{</mo><mrow id="S4.SS1.p1.3.m3.2.2.1.1.1" xref="S4.SS1.p1.3.m3.2.2.1.1.1.cmml"><msub id="S4.SS1.p1.3.m3.2.2.1.1.1.2" xref="S4.SS1.p1.3.m3.2.2.1.1.1.2.cmml"><mi id="S4.SS1.p1.3.m3.2.2.1.1.1.2.2" xref="S4.SS1.p1.3.m3.2.2.1.1.1.2.2.cmml">T</mi><mi id="S4.SS1.p1.3.m3.2.2.1.1.1.2.3" xref="S4.SS1.p1.3.m3.2.2.1.1.1.2.3.cmml">i</mi></msub><mo id="S4.SS1.p1.3.m3.2.2.1.1.1.1" xref="S4.SS1.p1.3.m3.2.2.1.1.1.1.cmml">∈</mo><msup id="S4.SS1.p1.3.m3.2.2.1.1.1.3" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.cmml"><mi id="S4.SS1.p1.3.m3.2.2.1.1.1.3.2" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.2.cmml">R</mi><mrow id="S4.SS1.p1.3.m3.2.2.1.1.1.3.3" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.cmml"><mn id="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.2" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.2.cmml">4</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.1" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.1.cmml">×</mo><mn id="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.3" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.3.cmml">4</mn></mrow></msup></mrow><mo lspace="0.278em" rspace="0.278em" id="S4.SS1.p1.3.m3.3.3.2.2.4" xref="S4.SS1.p1.3.m3.3.3.2.3.1.cmml">:</mo><mrow id="S4.SS1.p1.3.m3.3.3.2.2.2.2" xref="S4.SS1.p1.3.m3.3.3.2.2.2.3.cmml"><msub id="S4.SS1.p1.3.m3.3.3.2.2.2.1.1" xref="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.cmml"><mi id="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.2" xref="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.2.cmml">T</mi><mn id="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.3" xref="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.3.cmml">1</mn></msub><mo id="S4.SS1.p1.3.m3.3.3.2.2.2.2.3" xref="S4.SS1.p1.3.m3.3.3.2.2.2.3.cmml">,</mo><mi mathvariant="normal" id="S4.SS1.p1.3.m3.1.1" xref="S4.SS1.p1.3.m3.1.1.cmml">⋯</mi><mo id="S4.SS1.p1.3.m3.3.3.2.2.2.2.4" xref="S4.SS1.p1.3.m3.3.3.2.2.2.3.cmml">,</mo><msub id="S4.SS1.p1.3.m3.3.3.2.2.2.2.2" xref="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.cmml"><mi id="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.2" xref="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.2.cmml">T</mi><mi id="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.3" xref="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.3.cmml">n</mi></msub></mrow><mo stretchy="false" id="S4.SS1.p1.3.m3.3.3.2.2.5" xref="S4.SS1.p1.3.m3.3.3.2.3.1.cmml">}</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.3.m3.3b"><apply id="S4.SS1.p1.3.m3.3.3.cmml" xref="S4.SS1.p1.3.m3.3.3"><eq id="S4.SS1.p1.3.m3.3.3.3.cmml" xref="S4.SS1.p1.3.m3.3.3.3"></eq><apply id="S4.SS1.p1.3.m3.3.3.4.cmml" xref="S4.SS1.p1.3.m3.3.3.4"><csymbol cd="ambiguous" id="S4.SS1.p1.3.m3.3.3.4.1.cmml" xref="S4.SS1.p1.3.m3.3.3.4">subscript</csymbol><ci id="S4.SS1.p1.3.m3.3.3.4.2.cmml" xref="S4.SS1.p1.3.m3.3.3.4.2">Γ</ci><apply id="S4.SS1.p1.3.m3.3.3.4.3.cmml" xref="S4.SS1.p1.3.m3.3.3.4.3"><times id="S4.SS1.p1.3.m3.3.3.4.3.1.cmml" xref="S4.SS1.p1.3.m3.3.3.4.3.1"></times><ci id="S4.SS1.p1.3.m3.3.3.4.3.2.cmml" xref="S4.SS1.p1.3.m3.3.3.4.3.2">𝑟</ci><ci id="S4.SS1.p1.3.m3.3.3.4.3.3.cmml" xref="S4.SS1.p1.3.m3.3.3.4.3.3">𝑔</ci><ci id="S4.SS1.p1.3.m3.3.3.4.3.4.cmml" xref="S4.SS1.p1.3.m3.3.3.4.3.4">𝑏</ci></apply></apply><apply id="S4.SS1.p1.3.m3.3.3.2.3.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2"><csymbol cd="latexml" id="S4.SS1.p1.3.m3.3.3.2.3.1.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.3">conditional-set</csymbol><apply id="S4.SS1.p1.3.m3.2.2.1.1.1.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1"><in id="S4.SS1.p1.3.m3.2.2.1.1.1.1.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.1"></in><apply id="S4.SS1.p1.3.m3.2.2.1.1.1.2.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p1.3.m3.2.2.1.1.1.2.1.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.2">subscript</csymbol><ci id="S4.SS1.p1.3.m3.2.2.1.1.1.2.2.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.2.2">𝑇</ci><ci id="S4.SS1.p1.3.m3.2.2.1.1.1.2.3.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.2.3">𝑖</ci></apply><apply id="S4.SS1.p1.3.m3.2.2.1.1.1.3.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3"><csymbol cd="ambiguous" id="S4.SS1.p1.3.m3.2.2.1.1.1.3.1.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3">superscript</csymbol><ci id="S4.SS1.p1.3.m3.2.2.1.1.1.3.2.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.2">𝑅</ci><apply id="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.3"><times id="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.1.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.1"></times><cn type="integer" id="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.2.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.2">4</cn><cn type="integer" id="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.3.cmml" xref="S4.SS1.p1.3.m3.2.2.1.1.1.3.3.3">4</cn></apply></apply></apply><list id="S4.SS1.p1.3.m3.3.3.2.2.2.3.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.2"><apply id="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.1.1"><csymbol cd="ambiguous" id="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.1.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.1.1">subscript</csymbol><ci id="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.2.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.2">𝑇</ci><cn type="integer" id="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.3.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.1.1.3">1</cn></apply><ci id="S4.SS1.p1.3.m3.1.1.cmml" xref="S4.SS1.p1.3.m3.1.1">⋯</ci><apply id="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.1.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.2.2">subscript</csymbol><ci id="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.2.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.2">𝑇</ci><ci id="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.3.cmml" xref="S4.SS1.p1.3.m3.3.3.2.2.2.2.2.3">𝑛</ci></apply></list></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.3.m3.3c">\Gamma_{rgb}=\{T_{i}\in R^{4\times 4}:T_{1},\cdots,T_{n}\}</annotation></semantics></math> and <math id="S4.SS1.p1.4.m4.3" class="ltx_Math" alttext="\Gamma_{depth}=\{T_{i}^{\prime}\in R^{4\times 4}:T_{1}^{\prime},\cdots,T_{n}^{\prime}\}" display="inline"><semantics id="S4.SS1.p1.4.m4.3a"><mrow id="S4.SS1.p1.4.m4.3.3" xref="S4.SS1.p1.4.m4.3.3.cmml"><msub id="S4.SS1.p1.4.m4.3.3.4" xref="S4.SS1.p1.4.m4.3.3.4.cmml"><mi mathvariant="normal" id="S4.SS1.p1.4.m4.3.3.4.2" xref="S4.SS1.p1.4.m4.3.3.4.2.cmml">Γ</mi><mrow id="S4.SS1.p1.4.m4.3.3.4.3" xref="S4.SS1.p1.4.m4.3.3.4.3.cmml"><mi id="S4.SS1.p1.4.m4.3.3.4.3.2" xref="S4.SS1.p1.4.m4.3.3.4.3.2.cmml">d</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.4.m4.3.3.4.3.1" xref="S4.SS1.p1.4.m4.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p1.4.m4.3.3.4.3.3" xref="S4.SS1.p1.4.m4.3.3.4.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.4.m4.3.3.4.3.1a" xref="S4.SS1.p1.4.m4.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p1.4.m4.3.3.4.3.4" xref="S4.SS1.p1.4.m4.3.3.4.3.4.cmml">p</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.4.m4.3.3.4.3.1b" xref="S4.SS1.p1.4.m4.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p1.4.m4.3.3.4.3.5" xref="S4.SS1.p1.4.m4.3.3.4.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p1.4.m4.3.3.4.3.1c" xref="S4.SS1.p1.4.m4.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p1.4.m4.3.3.4.3.6" xref="S4.SS1.p1.4.m4.3.3.4.3.6.cmml">h</mi></mrow></msub><mo id="S4.SS1.p1.4.m4.3.3.3" xref="S4.SS1.p1.4.m4.3.3.3.cmml">=</mo><mrow id="S4.SS1.p1.4.m4.3.3.2.2" xref="S4.SS1.p1.4.m4.3.3.2.3.cmml"><mo stretchy="false" id="S4.SS1.p1.4.m4.3.3.2.2.3" xref="S4.SS1.p1.4.m4.3.3.2.3.1.cmml">{</mo><mrow id="S4.SS1.p1.4.m4.2.2.1.1.1" xref="S4.SS1.p1.4.m4.2.2.1.1.1.cmml"><msubsup id="S4.SS1.p1.4.m4.2.2.1.1.1.2" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2.cmml"><mi id="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.2" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.2.cmml">T</mi><mi id="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.3" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.3.cmml">i</mi><mo id="S4.SS1.p1.4.m4.2.2.1.1.1.2.3" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2.3.cmml">′</mo></msubsup><mo id="S4.SS1.p1.4.m4.2.2.1.1.1.1" xref="S4.SS1.p1.4.m4.2.2.1.1.1.1.cmml">∈</mo><msup id="S4.SS1.p1.4.m4.2.2.1.1.1.3" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.cmml"><mi id="S4.SS1.p1.4.m4.2.2.1.1.1.3.2" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.2.cmml">R</mi><mrow id="S4.SS1.p1.4.m4.2.2.1.1.1.3.3" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.cmml"><mn id="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.2" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.2.cmml">4</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.1" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.1.cmml">×</mo><mn id="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.3" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.3.cmml">4</mn></mrow></msup></mrow><mo lspace="0.278em" rspace="0.278em" id="S4.SS1.p1.4.m4.3.3.2.2.4" xref="S4.SS1.p1.4.m4.3.3.2.3.1.cmml">:</mo><mrow id="S4.SS1.p1.4.m4.3.3.2.2.2.2" xref="S4.SS1.p1.4.m4.3.3.2.2.2.3.cmml"><msubsup id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.cmml"><mi id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.2" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.2.cmml">T</mi><mn id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.3" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.3.cmml">1</mn><mo id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.3" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.3.cmml">′</mo></msubsup><mo id="S4.SS1.p1.4.m4.3.3.2.2.2.2.3" xref="S4.SS1.p1.4.m4.3.3.2.2.2.3.cmml">,</mo><mi mathvariant="normal" id="S4.SS1.p1.4.m4.1.1" xref="S4.SS1.p1.4.m4.1.1.cmml">⋯</mi><mo id="S4.SS1.p1.4.m4.3.3.2.2.2.2.4" xref="S4.SS1.p1.4.m4.3.3.2.2.2.3.cmml">,</mo><msubsup id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.cmml"><mi id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.2" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.2.cmml">T</mi><mi id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.3" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.3.cmml">n</mi><mo id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.3" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.3.cmml">′</mo></msubsup></mrow><mo stretchy="false" id="S4.SS1.p1.4.m4.3.3.2.2.5" xref="S4.SS1.p1.4.m4.3.3.2.3.1.cmml">}</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.4.m4.3b"><apply id="S4.SS1.p1.4.m4.3.3.cmml" xref="S4.SS1.p1.4.m4.3.3"><eq id="S4.SS1.p1.4.m4.3.3.3.cmml" xref="S4.SS1.p1.4.m4.3.3.3"></eq><apply id="S4.SS1.p1.4.m4.3.3.4.cmml" xref="S4.SS1.p1.4.m4.3.3.4"><csymbol cd="ambiguous" id="S4.SS1.p1.4.m4.3.3.4.1.cmml" xref="S4.SS1.p1.4.m4.3.3.4">subscript</csymbol><ci id="S4.SS1.p1.4.m4.3.3.4.2.cmml" xref="S4.SS1.p1.4.m4.3.3.4.2">Γ</ci><apply id="S4.SS1.p1.4.m4.3.3.4.3.cmml" xref="S4.SS1.p1.4.m4.3.3.4.3"><times id="S4.SS1.p1.4.m4.3.3.4.3.1.cmml" xref="S4.SS1.p1.4.m4.3.3.4.3.1"></times><ci id="S4.SS1.p1.4.m4.3.3.4.3.2.cmml" xref="S4.SS1.p1.4.m4.3.3.4.3.2">𝑑</ci><ci id="S4.SS1.p1.4.m4.3.3.4.3.3.cmml" xref="S4.SS1.p1.4.m4.3.3.4.3.3">𝑒</ci><ci id="S4.SS1.p1.4.m4.3.3.4.3.4.cmml" xref="S4.SS1.p1.4.m4.3.3.4.3.4">𝑝</ci><ci id="S4.SS1.p1.4.m4.3.3.4.3.5.cmml" xref="S4.SS1.p1.4.m4.3.3.4.3.5">𝑡</ci><ci id="S4.SS1.p1.4.m4.3.3.4.3.6.cmml" xref="S4.SS1.p1.4.m4.3.3.4.3.6">ℎ</ci></apply></apply><apply id="S4.SS1.p1.4.m4.3.3.2.3.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2"><csymbol cd="latexml" id="S4.SS1.p1.4.m4.3.3.2.3.1.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.3">conditional-set</csymbol><apply id="S4.SS1.p1.4.m4.2.2.1.1.1.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1"><in id="S4.SS1.p1.4.m4.2.2.1.1.1.1.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.1"></in><apply id="S4.SS1.p1.4.m4.2.2.1.1.1.2.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p1.4.m4.2.2.1.1.1.2.1.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2">superscript</csymbol><apply id="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.1.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2">subscript</csymbol><ci id="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.2.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.2">𝑇</ci><ci id="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.3.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2.2.3">𝑖</ci></apply><ci id="S4.SS1.p1.4.m4.2.2.1.1.1.2.3.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.2.3">′</ci></apply><apply id="S4.SS1.p1.4.m4.2.2.1.1.1.3.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3"><csymbol cd="ambiguous" id="S4.SS1.p1.4.m4.2.2.1.1.1.3.1.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3">superscript</csymbol><ci id="S4.SS1.p1.4.m4.2.2.1.1.1.3.2.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.2">𝑅</ci><apply id="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.3"><times id="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.1.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.1"></times><cn type="integer" id="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.2.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.2">4</cn><cn type="integer" id="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.3.cmml" xref="S4.SS1.p1.4.m4.2.2.1.1.1.3.3.3">4</cn></apply></apply></apply><list id="S4.SS1.p1.4.m4.3.3.2.2.2.3.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2"><apply id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1"><csymbol cd="ambiguous" id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.1.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1">superscript</csymbol><apply id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1"><csymbol cd="ambiguous" id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.1.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1">subscript</csymbol><ci id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.2.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.2">𝑇</ci><cn type="integer" id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.3.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.2.3">1</cn></apply><ci id="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.3.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.1.1.3">′</ci></apply><ci id="S4.SS1.p1.4.m4.1.1.cmml" xref="S4.SS1.p1.4.m4.1.1">⋯</ci><apply id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.1.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2">superscript</csymbol><apply id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.1.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2">subscript</csymbol><ci id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.2.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.2">𝑇</ci><ci id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.3.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.2.3">𝑛</ci></apply><ci id="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.3.cmml" xref="S4.SS1.p1.4.m4.3.3.2.2.2.2.2.3">′</ci></apply></list></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.4.m4.3c">\Gamma_{depth}=\{T_{i}^{\prime}\in R^{4\times 4}:T_{1}^{\prime},\cdots,T_{n}^{\prime}\}</annotation></semantics></math>, we use these two notions in the next step.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.2" class="ltx_p">From each scene, we can calculate the transformation between two cameras using the extrinsic matrix of two cameras. Due to the fact that these two cameras have been fixed to the end effector of the robot arm, there will not have any relative movement during the data acquisition process. Theoretically, no matter we use which pair of the extrisic matrices to calculate the <math id="S4.SS1.p2.1.m1.1" class="ltx_Math" alttext="t_{trans}" display="inline"><semantics id="S4.SS1.p2.1.m1.1a"><msub id="S4.SS1.p2.1.m1.1.1" xref="S4.SS1.p2.1.m1.1.1.cmml"><mi id="S4.SS1.p2.1.m1.1.1.2" xref="S4.SS1.p2.1.m1.1.1.2.cmml">t</mi><mrow id="S4.SS1.p2.1.m1.1.1.3" xref="S4.SS1.p2.1.m1.1.1.3.cmml"><mi id="S4.SS1.p2.1.m1.1.1.3.2" xref="S4.SS1.p2.1.m1.1.1.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.1.m1.1.1.3.1" xref="S4.SS1.p2.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.1.m1.1.1.3.3" xref="S4.SS1.p2.1.m1.1.1.3.3.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.1.m1.1.1.3.1a" xref="S4.SS1.p2.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.1.m1.1.1.3.4" xref="S4.SS1.p2.1.m1.1.1.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.1.m1.1.1.3.1b" xref="S4.SS1.p2.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.1.m1.1.1.3.5" xref="S4.SS1.p2.1.m1.1.1.3.5.cmml">n</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.1.m1.1.1.3.1c" xref="S4.SS1.p2.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.1.m1.1.1.3.6" xref="S4.SS1.p2.1.m1.1.1.3.6.cmml">s</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.1.m1.1b"><apply id="S4.SS1.p2.1.m1.1.1.cmml" xref="S4.SS1.p2.1.m1.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.1.m1.1.1.1.cmml" xref="S4.SS1.p2.1.m1.1.1">subscript</csymbol><ci id="S4.SS1.p2.1.m1.1.1.2.cmml" xref="S4.SS1.p2.1.m1.1.1.2">𝑡</ci><apply id="S4.SS1.p2.1.m1.1.1.3.cmml" xref="S4.SS1.p2.1.m1.1.1.3"><times id="S4.SS1.p2.1.m1.1.1.3.1.cmml" xref="S4.SS1.p2.1.m1.1.1.3.1"></times><ci id="S4.SS1.p2.1.m1.1.1.3.2.cmml" xref="S4.SS1.p2.1.m1.1.1.3.2">𝑡</ci><ci id="S4.SS1.p2.1.m1.1.1.3.3.cmml" xref="S4.SS1.p2.1.m1.1.1.3.3">𝑟</ci><ci id="S4.SS1.p2.1.m1.1.1.3.4.cmml" xref="S4.SS1.p2.1.m1.1.1.3.4">𝑎</ci><ci id="S4.SS1.p2.1.m1.1.1.3.5.cmml" xref="S4.SS1.p2.1.m1.1.1.3.5">𝑛</ci><ci id="S4.SS1.p2.1.m1.1.1.3.6.cmml" xref="S4.SS1.p2.1.m1.1.1.3.6">𝑠</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.1.m1.1c">t_{trans}</annotation></semantics></math> should have the same result. However, due to the noise, the calculated value in different scenarios will have a small residual, and the value is normally distributed around the ground truth. Thus we construct an optimization problem to refine the transformation matrix <math id="S4.SS1.p2.2.m2.1" class="ltx_Math" alttext="T_{relative}" display="inline"><semantics id="S4.SS1.p2.2.m2.1a"><msub id="S4.SS1.p2.2.m2.1.1" xref="S4.SS1.p2.2.m2.1.1.cmml"><mi id="S4.SS1.p2.2.m2.1.1.2" xref="S4.SS1.p2.2.m2.1.1.2.cmml">T</mi><mrow id="S4.SS1.p2.2.m2.1.1.3" xref="S4.SS1.p2.2.m2.1.1.3.cmml"><mi id="S4.SS1.p2.2.m2.1.1.3.2" xref="S4.SS1.p2.2.m2.1.1.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.2.m2.1.1.3.1" xref="S4.SS1.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.2.m2.1.1.3.3" xref="S4.SS1.p2.2.m2.1.1.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.2.m2.1.1.3.1a" xref="S4.SS1.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.2.m2.1.1.3.4" xref="S4.SS1.p2.2.m2.1.1.3.4.cmml">l</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.2.m2.1.1.3.1b" xref="S4.SS1.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.2.m2.1.1.3.5" xref="S4.SS1.p2.2.m2.1.1.3.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.2.m2.1.1.3.1c" xref="S4.SS1.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.2.m2.1.1.3.6" xref="S4.SS1.p2.2.m2.1.1.3.6.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.2.m2.1.1.3.1d" xref="S4.SS1.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.2.m2.1.1.3.7" xref="S4.SS1.p2.2.m2.1.1.3.7.cmml">i</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.2.m2.1.1.3.1e" xref="S4.SS1.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.2.m2.1.1.3.8" xref="S4.SS1.p2.2.m2.1.1.3.8.cmml">v</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p2.2.m2.1.1.3.1f" xref="S4.SS1.p2.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p2.2.m2.1.1.3.9" xref="S4.SS1.p2.2.m2.1.1.3.9.cmml">e</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.2.m2.1b"><apply id="S4.SS1.p2.2.m2.1.1.cmml" xref="S4.SS1.p2.2.m2.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.2.m2.1.1.1.cmml" xref="S4.SS1.p2.2.m2.1.1">subscript</csymbol><ci id="S4.SS1.p2.2.m2.1.1.2.cmml" xref="S4.SS1.p2.2.m2.1.1.2">𝑇</ci><apply id="S4.SS1.p2.2.m2.1.1.3.cmml" xref="S4.SS1.p2.2.m2.1.1.3"><times id="S4.SS1.p2.2.m2.1.1.3.1.cmml" xref="S4.SS1.p2.2.m2.1.1.3.1"></times><ci id="S4.SS1.p2.2.m2.1.1.3.2.cmml" xref="S4.SS1.p2.2.m2.1.1.3.2">𝑟</ci><ci id="S4.SS1.p2.2.m2.1.1.3.3.cmml" xref="S4.SS1.p2.2.m2.1.1.3.3">𝑒</ci><ci id="S4.SS1.p2.2.m2.1.1.3.4.cmml" xref="S4.SS1.p2.2.m2.1.1.3.4">𝑙</ci><ci id="S4.SS1.p2.2.m2.1.1.3.5.cmml" xref="S4.SS1.p2.2.m2.1.1.3.5">𝑎</ci><ci id="S4.SS1.p2.2.m2.1.1.3.6.cmml" xref="S4.SS1.p2.2.m2.1.1.3.6">𝑡</ci><ci id="S4.SS1.p2.2.m2.1.1.3.7.cmml" xref="S4.SS1.p2.2.m2.1.1.3.7">𝑖</ci><ci id="S4.SS1.p2.2.m2.1.1.3.8.cmml" xref="S4.SS1.p2.2.m2.1.1.3.8">𝑣</ci><ci id="S4.SS1.p2.2.m2.1.1.3.9.cmml" xref="S4.SS1.p2.2.m2.1.1.3.9">𝑒</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.2.m2.1c">T_{relative}</annotation></semantics></math> between RGB camera and depth camera.</p>
+</div>
+<div id="S4.SS1.p3" class="ltx_para">
+<p id="S4.SS1.p3.5" class="ltx_p">To this end, for scene <math id="S4.SS1.p3.1.m1.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S4.SS1.p3.1.m1.1a"><mi id="S4.SS1.p3.1.m1.1.1" xref="S4.SS1.p3.1.m1.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.1.m1.1b"><ci id="S4.SS1.p3.1.m1.1.1.cmml" xref="S4.SS1.p3.1.m1.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.1.m1.1c">i</annotation></semantics></math>, the transformation between two cameras is <math id="S4.SS1.p3.2.m2.1" class="ltx_Math" alttext="T_{i}^{\prime\prime}=T_{i}^{\prime}T_{i}^{-1}" display="inline"><semantics id="S4.SS1.p3.2.m2.1a"><mrow id="S4.SS1.p3.2.m2.1.1" xref="S4.SS1.p3.2.m2.1.1.cmml"><msubsup id="S4.SS1.p3.2.m2.1.1.2" xref="S4.SS1.p3.2.m2.1.1.2.cmml"><mi id="S4.SS1.p3.2.m2.1.1.2.2.2" xref="S4.SS1.p3.2.m2.1.1.2.2.2.cmml">T</mi><mi id="S4.SS1.p3.2.m2.1.1.2.2.3" xref="S4.SS1.p3.2.m2.1.1.2.2.3.cmml">i</mi><mo id="S4.SS1.p3.2.m2.1.1.2.3" xref="S4.SS1.p3.2.m2.1.1.2.3.cmml">′′</mo></msubsup><mo id="S4.SS1.p3.2.m2.1.1.1" xref="S4.SS1.p3.2.m2.1.1.1.cmml">=</mo><mrow id="S4.SS1.p3.2.m2.1.1.3" xref="S4.SS1.p3.2.m2.1.1.3.cmml"><msubsup id="S4.SS1.p3.2.m2.1.1.3.2" xref="S4.SS1.p3.2.m2.1.1.3.2.cmml"><mi id="S4.SS1.p3.2.m2.1.1.3.2.2.2" xref="S4.SS1.p3.2.m2.1.1.3.2.2.2.cmml">T</mi><mi id="S4.SS1.p3.2.m2.1.1.3.2.2.3" xref="S4.SS1.p3.2.m2.1.1.3.2.2.3.cmml">i</mi><mo id="S4.SS1.p3.2.m2.1.1.3.2.3" xref="S4.SS1.p3.2.m2.1.1.3.2.3.cmml">′</mo></msubsup><mo lspace="0em" rspace="0em" id="S4.SS1.p3.2.m2.1.1.3.1" xref="S4.SS1.p3.2.m2.1.1.3.1.cmml">​</mo><msubsup id="S4.SS1.p3.2.m2.1.1.3.3" xref="S4.SS1.p3.2.m2.1.1.3.3.cmml"><mi id="S4.SS1.p3.2.m2.1.1.3.3.2.2" xref="S4.SS1.p3.2.m2.1.1.3.3.2.2.cmml">T</mi><mi id="S4.SS1.p3.2.m2.1.1.3.3.2.3" xref="S4.SS1.p3.2.m2.1.1.3.3.2.3.cmml">i</mi><mrow id="S4.SS1.p3.2.m2.1.1.3.3.3" xref="S4.SS1.p3.2.m2.1.1.3.3.3.cmml"><mo id="S4.SS1.p3.2.m2.1.1.3.3.3a" xref="S4.SS1.p3.2.m2.1.1.3.3.3.cmml">−</mo><mn id="S4.SS1.p3.2.m2.1.1.3.3.3.2" xref="S4.SS1.p3.2.m2.1.1.3.3.3.2.cmml">1</mn></mrow></msubsup></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.2.m2.1b"><apply id="S4.SS1.p3.2.m2.1.1.cmml" xref="S4.SS1.p3.2.m2.1.1"><eq id="S4.SS1.p3.2.m2.1.1.1.cmml" xref="S4.SS1.p3.2.m2.1.1.1"></eq><apply id="S4.SS1.p3.2.m2.1.1.2.cmml" xref="S4.SS1.p3.2.m2.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p3.2.m2.1.1.2.1.cmml" xref="S4.SS1.p3.2.m2.1.1.2">superscript</csymbol><apply id="S4.SS1.p3.2.m2.1.1.2.2.cmml" xref="S4.SS1.p3.2.m2.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p3.2.m2.1.1.2.2.1.cmml" xref="S4.SS1.p3.2.m2.1.1.2">subscript</csymbol><ci id="S4.SS1.p3.2.m2.1.1.2.2.2.cmml" xref="S4.SS1.p3.2.m2.1.1.2.2.2">𝑇</ci><ci id="S4.SS1.p3.2.m2.1.1.2.2.3.cmml" xref="S4.SS1.p3.2.m2.1.1.2.2.3">𝑖</ci></apply><ci id="S4.SS1.p3.2.m2.1.1.2.3.cmml" xref="S4.SS1.p3.2.m2.1.1.2.3">′′</ci></apply><apply id="S4.SS1.p3.2.m2.1.1.3.cmml" xref="S4.SS1.p3.2.m2.1.1.3"><times id="S4.SS1.p3.2.m2.1.1.3.1.cmml" xref="S4.SS1.p3.2.m2.1.1.3.1"></times><apply id="S4.SS1.p3.2.m2.1.1.3.2.cmml" xref="S4.SS1.p3.2.m2.1.1.3.2"><csymbol cd="ambiguous" id="S4.SS1.p3.2.m2.1.1.3.2.1.cmml" xref="S4.SS1.p3.2.m2.1.1.3.2">superscript</csymbol><apply id="S4.SS1.p3.2.m2.1.1.3.2.2.cmml" xref="S4.SS1.p3.2.m2.1.1.3.2"><csymbol cd="ambiguous" id="S4.SS1.p3.2.m2.1.1.3.2.2.1.cmml" xref="S4.SS1.p3.2.m2.1.1.3.2">subscript</csymbol><ci id="S4.SS1.p3.2.m2.1.1.3.2.2.2.cmml" xref="S4.SS1.p3.2.m2.1.1.3.2.2.2">𝑇</ci><ci id="S4.SS1.p3.2.m2.1.1.3.2.2.3.cmml" xref="S4.SS1.p3.2.m2.1.1.3.2.2.3">𝑖</ci></apply><ci id="S4.SS1.p3.2.m2.1.1.3.2.3.cmml" xref="S4.SS1.p3.2.m2.1.1.3.2.3">′</ci></apply><apply id="S4.SS1.p3.2.m2.1.1.3.3.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3"><csymbol cd="ambiguous" id="S4.SS1.p3.2.m2.1.1.3.3.1.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3">superscript</csymbol><apply id="S4.SS1.p3.2.m2.1.1.3.3.2.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3"><csymbol cd="ambiguous" id="S4.SS1.p3.2.m2.1.1.3.3.2.1.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3">subscript</csymbol><ci id="S4.SS1.p3.2.m2.1.1.3.3.2.2.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3.2.2">𝑇</ci><ci id="S4.SS1.p3.2.m2.1.1.3.3.2.3.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3.2.3">𝑖</ci></apply><apply id="S4.SS1.p3.2.m2.1.1.3.3.3.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3.3"><minus id="S4.SS1.p3.2.m2.1.1.3.3.3.1.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3.3"></minus><cn type="integer" id="S4.SS1.p3.2.m2.1.1.3.3.3.2.cmml" xref="S4.SS1.p3.2.m2.1.1.3.3.3.2">1</cn></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.2.m2.1c">T_{i}^{\prime\prime}=T_{i}^{\prime}T_{i}^{-1}</annotation></semantics></math>, <math id="S4.SS1.p3.3.m3.1" class="ltx_Math" alttext="T_{i}\in\Gamma_{rgb}" display="inline"><semantics id="S4.SS1.p3.3.m3.1a"><mrow id="S4.SS1.p3.3.m3.1.1" xref="S4.SS1.p3.3.m3.1.1.cmml"><msub id="S4.SS1.p3.3.m3.1.1.2" xref="S4.SS1.p3.3.m3.1.1.2.cmml"><mi id="S4.SS1.p3.3.m3.1.1.2.2" xref="S4.SS1.p3.3.m3.1.1.2.2.cmml">T</mi><mi id="S4.SS1.p3.3.m3.1.1.2.3" xref="S4.SS1.p3.3.m3.1.1.2.3.cmml">i</mi></msub><mo id="S4.SS1.p3.3.m3.1.1.1" xref="S4.SS1.p3.3.m3.1.1.1.cmml">∈</mo><msub id="S4.SS1.p3.3.m3.1.1.3" xref="S4.SS1.p3.3.m3.1.1.3.cmml"><mi mathvariant="normal" id="S4.SS1.p3.3.m3.1.1.3.2" xref="S4.SS1.p3.3.m3.1.1.3.2.cmml">Γ</mi><mrow id="S4.SS1.p3.3.m3.1.1.3.3" xref="S4.SS1.p3.3.m3.1.1.3.3.cmml"><mi id="S4.SS1.p3.3.m3.1.1.3.3.2" xref="S4.SS1.p3.3.m3.1.1.3.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.3.m3.1.1.3.3.1" xref="S4.SS1.p3.3.m3.1.1.3.3.1.cmml">​</mo><mi id="S4.SS1.p3.3.m3.1.1.3.3.3" xref="S4.SS1.p3.3.m3.1.1.3.3.3.cmml">g</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.3.m3.1.1.3.3.1a" xref="S4.SS1.p3.3.m3.1.1.3.3.1.cmml">​</mo><mi id="S4.SS1.p3.3.m3.1.1.3.3.4" xref="S4.SS1.p3.3.m3.1.1.3.3.4.cmml">b</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.3.m3.1b"><apply id="S4.SS1.p3.3.m3.1.1.cmml" xref="S4.SS1.p3.3.m3.1.1"><in id="S4.SS1.p3.3.m3.1.1.1.cmml" xref="S4.SS1.p3.3.m3.1.1.1"></in><apply id="S4.SS1.p3.3.m3.1.1.2.cmml" xref="S4.SS1.p3.3.m3.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p3.3.m3.1.1.2.1.cmml" xref="S4.SS1.p3.3.m3.1.1.2">subscript</csymbol><ci id="S4.SS1.p3.3.m3.1.1.2.2.cmml" xref="S4.SS1.p3.3.m3.1.1.2.2">𝑇</ci><ci id="S4.SS1.p3.3.m3.1.1.2.3.cmml" xref="S4.SS1.p3.3.m3.1.1.2.3">𝑖</ci></apply><apply id="S4.SS1.p3.3.m3.1.1.3.cmml" xref="S4.SS1.p3.3.m3.1.1.3"><csymbol cd="ambiguous" id="S4.SS1.p3.3.m3.1.1.3.1.cmml" xref="S4.SS1.p3.3.m3.1.1.3">subscript</csymbol><ci id="S4.SS1.p3.3.m3.1.1.3.2.cmml" xref="S4.SS1.p3.3.m3.1.1.3.2">Γ</ci><apply id="S4.SS1.p3.3.m3.1.1.3.3.cmml" xref="S4.SS1.p3.3.m3.1.1.3.3"><times id="S4.SS1.p3.3.m3.1.1.3.3.1.cmml" xref="S4.SS1.p3.3.m3.1.1.3.3.1"></times><ci id="S4.SS1.p3.3.m3.1.1.3.3.2.cmml" xref="S4.SS1.p3.3.m3.1.1.3.3.2">𝑟</ci><ci id="S4.SS1.p3.3.m3.1.1.3.3.3.cmml" xref="S4.SS1.p3.3.m3.1.1.3.3.3">𝑔</ci><ci id="S4.SS1.p3.3.m3.1.1.3.3.4.cmml" xref="S4.SS1.p3.3.m3.1.1.3.3.4">𝑏</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.3.m3.1c">T_{i}\in\Gamma_{rgb}</annotation></semantics></math> and <math id="S4.SS1.p3.4.m4.1" class="ltx_Math" alttext="T_{i}^{\prime}\in\Gamma_{depth}" display="inline"><semantics id="S4.SS1.p3.4.m4.1a"><mrow id="S4.SS1.p3.4.m4.1.1" xref="S4.SS1.p3.4.m4.1.1.cmml"><msubsup id="S4.SS1.p3.4.m4.1.1.2" xref="S4.SS1.p3.4.m4.1.1.2.cmml"><mi id="S4.SS1.p3.4.m4.1.1.2.2.2" xref="S4.SS1.p3.4.m4.1.1.2.2.2.cmml">T</mi><mi id="S4.SS1.p3.4.m4.1.1.2.2.3" xref="S4.SS1.p3.4.m4.1.1.2.2.3.cmml">i</mi><mo id="S4.SS1.p3.4.m4.1.1.2.3" xref="S4.SS1.p3.4.m4.1.1.2.3.cmml">′</mo></msubsup><mo id="S4.SS1.p3.4.m4.1.1.1" xref="S4.SS1.p3.4.m4.1.1.1.cmml">∈</mo><msub id="S4.SS1.p3.4.m4.1.1.3" xref="S4.SS1.p3.4.m4.1.1.3.cmml"><mi mathvariant="normal" id="S4.SS1.p3.4.m4.1.1.3.2" xref="S4.SS1.p3.4.m4.1.1.3.2.cmml">Γ</mi><mrow id="S4.SS1.p3.4.m4.1.1.3.3" xref="S4.SS1.p3.4.m4.1.1.3.3.cmml"><mi id="S4.SS1.p3.4.m4.1.1.3.3.2" xref="S4.SS1.p3.4.m4.1.1.3.3.2.cmml">d</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.4.m4.1.1.3.3.1" xref="S4.SS1.p3.4.m4.1.1.3.3.1.cmml">​</mo><mi id="S4.SS1.p3.4.m4.1.1.3.3.3" xref="S4.SS1.p3.4.m4.1.1.3.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.4.m4.1.1.3.3.1a" xref="S4.SS1.p3.4.m4.1.1.3.3.1.cmml">​</mo><mi id="S4.SS1.p3.4.m4.1.1.3.3.4" xref="S4.SS1.p3.4.m4.1.1.3.3.4.cmml">p</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.4.m4.1.1.3.3.1b" xref="S4.SS1.p3.4.m4.1.1.3.3.1.cmml">​</mo><mi id="S4.SS1.p3.4.m4.1.1.3.3.5" xref="S4.SS1.p3.4.m4.1.1.3.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.4.m4.1.1.3.3.1c" xref="S4.SS1.p3.4.m4.1.1.3.3.1.cmml">​</mo><mi id="S4.SS1.p3.4.m4.1.1.3.3.6" xref="S4.SS1.p3.4.m4.1.1.3.3.6.cmml">h</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.4.m4.1b"><apply id="S4.SS1.p3.4.m4.1.1.cmml" xref="S4.SS1.p3.4.m4.1.1"><in id="S4.SS1.p3.4.m4.1.1.1.cmml" xref="S4.SS1.p3.4.m4.1.1.1"></in><apply id="S4.SS1.p3.4.m4.1.1.2.cmml" xref="S4.SS1.p3.4.m4.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p3.4.m4.1.1.2.1.cmml" xref="S4.SS1.p3.4.m4.1.1.2">superscript</csymbol><apply id="S4.SS1.p3.4.m4.1.1.2.2.cmml" xref="S4.SS1.p3.4.m4.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p3.4.m4.1.1.2.2.1.cmml" xref="S4.SS1.p3.4.m4.1.1.2">subscript</csymbol><ci id="S4.SS1.p3.4.m4.1.1.2.2.2.cmml" xref="S4.SS1.p3.4.m4.1.1.2.2.2">𝑇</ci><ci id="S4.SS1.p3.4.m4.1.1.2.2.3.cmml" xref="S4.SS1.p3.4.m4.1.1.2.2.3">𝑖</ci></apply><ci id="S4.SS1.p3.4.m4.1.1.2.3.cmml" xref="S4.SS1.p3.4.m4.1.1.2.3">′</ci></apply><apply id="S4.SS1.p3.4.m4.1.1.3.cmml" xref="S4.SS1.p3.4.m4.1.1.3"><csymbol cd="ambiguous" id="S4.SS1.p3.4.m4.1.1.3.1.cmml" xref="S4.SS1.p3.4.m4.1.1.3">subscript</csymbol><ci id="S4.SS1.p3.4.m4.1.1.3.2.cmml" xref="S4.SS1.p3.4.m4.1.1.3.2">Γ</ci><apply id="S4.SS1.p3.4.m4.1.1.3.3.cmml" xref="S4.SS1.p3.4.m4.1.1.3.3"><times id="S4.SS1.p3.4.m4.1.1.3.3.1.cmml" xref="S4.SS1.p3.4.m4.1.1.3.3.1"></times><ci id="S4.SS1.p3.4.m4.1.1.3.3.2.cmml" xref="S4.SS1.p3.4.m4.1.1.3.3.2">𝑑</ci><ci id="S4.SS1.p3.4.m4.1.1.3.3.3.cmml" xref="S4.SS1.p3.4.m4.1.1.3.3.3">𝑒</ci><ci id="S4.SS1.p3.4.m4.1.1.3.3.4.cmml" xref="S4.SS1.p3.4.m4.1.1.3.3.4">𝑝</ci><ci id="S4.SS1.p3.4.m4.1.1.3.3.5.cmml" xref="S4.SS1.p3.4.m4.1.1.3.3.5">𝑡</ci><ci id="S4.SS1.p3.4.m4.1.1.3.3.6.cmml" xref="S4.SS1.p3.4.m4.1.1.3.3.6">ℎ</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.4.m4.1c">T_{i}^{\prime}\in\Gamma_{depth}</annotation></semantics></math>. We define <math id="S4.SS1.p3.5.m5.3" class="ltx_Math" alttext="\Gamma_{relative}=\{T_{i}^{\prime\prime}\in R^{4\times 4}:T_{1}^{\prime\prime},T_{2}^{\prime\prime},\cdots,T_{n}^{\prime\prime}\}" display="inline"><semantics id="S4.SS1.p3.5.m5.3a"><mrow id="S4.SS1.p3.5.m5.3.3" xref="S4.SS1.p3.5.m5.3.3.cmml"><msub id="S4.SS1.p3.5.m5.3.3.4" xref="S4.SS1.p3.5.m5.3.3.4.cmml"><mi mathvariant="normal" id="S4.SS1.p3.5.m5.3.3.4.2" xref="S4.SS1.p3.5.m5.3.3.4.2.cmml">Γ</mi><mrow id="S4.SS1.p3.5.m5.3.3.4.3" xref="S4.SS1.p3.5.m5.3.3.4.3.cmml"><mi id="S4.SS1.p3.5.m5.3.3.4.3.2" xref="S4.SS1.p3.5.m5.3.3.4.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.5.m5.3.3.4.3.1" xref="S4.SS1.p3.5.m5.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p3.5.m5.3.3.4.3.3" xref="S4.SS1.p3.5.m5.3.3.4.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.5.m5.3.3.4.3.1a" xref="S4.SS1.p3.5.m5.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p3.5.m5.3.3.4.3.4" xref="S4.SS1.p3.5.m5.3.3.4.3.4.cmml">l</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.5.m5.3.3.4.3.1b" xref="S4.SS1.p3.5.m5.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p3.5.m5.3.3.4.3.5" xref="S4.SS1.p3.5.m5.3.3.4.3.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.5.m5.3.3.4.3.1c" xref="S4.SS1.p3.5.m5.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p3.5.m5.3.3.4.3.6" xref="S4.SS1.p3.5.m5.3.3.4.3.6.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.5.m5.3.3.4.3.1d" xref="S4.SS1.p3.5.m5.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p3.5.m5.3.3.4.3.7" xref="S4.SS1.p3.5.m5.3.3.4.3.7.cmml">i</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.5.m5.3.3.4.3.1e" xref="S4.SS1.p3.5.m5.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p3.5.m5.3.3.4.3.8" xref="S4.SS1.p3.5.m5.3.3.4.3.8.cmml">v</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p3.5.m5.3.3.4.3.1f" xref="S4.SS1.p3.5.m5.3.3.4.3.1.cmml">​</mo><mi id="S4.SS1.p3.5.m5.3.3.4.3.9" xref="S4.SS1.p3.5.m5.3.3.4.3.9.cmml">e</mi></mrow></msub><mo id="S4.SS1.p3.5.m5.3.3.3" xref="S4.SS1.p3.5.m5.3.3.3.cmml">=</mo><mrow id="S4.SS1.p3.5.m5.3.3.2.2" xref="S4.SS1.p3.5.m5.3.3.2.3.cmml"><mo stretchy="false" id="S4.SS1.p3.5.m5.3.3.2.2.3" xref="S4.SS1.p3.5.m5.3.3.2.3.1.cmml">{</mo><mrow id="S4.SS1.p3.5.m5.2.2.1.1.1" xref="S4.SS1.p3.5.m5.2.2.1.1.1.cmml"><msubsup id="S4.SS1.p3.5.m5.2.2.1.1.1.2" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2.cmml"><mi id="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.2" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.2.cmml">T</mi><mi id="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.3" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.3.cmml">i</mi><mo id="S4.SS1.p3.5.m5.2.2.1.1.1.2.3" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2.3.cmml">′′</mo></msubsup><mo id="S4.SS1.p3.5.m5.2.2.1.1.1.1" xref="S4.SS1.p3.5.m5.2.2.1.1.1.1.cmml">∈</mo><msup id="S4.SS1.p3.5.m5.2.2.1.1.1.3" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.cmml"><mi id="S4.SS1.p3.5.m5.2.2.1.1.1.3.2" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.2.cmml">R</mi><mrow id="S4.SS1.p3.5.m5.2.2.1.1.1.3.3" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.cmml"><mn id="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.2" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.2.cmml">4</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.1" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.1.cmml">×</mo><mn id="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.3" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.3.cmml">4</mn></mrow></msup></mrow><mo lspace="0.278em" rspace="0.278em" id="S4.SS1.p3.5.m5.3.3.2.2.4" xref="S4.SS1.p3.5.m5.3.3.2.3.1.cmml">:</mo><mrow id="S4.SS1.p3.5.m5.3.3.2.2.2.3" xref="S4.SS1.p3.5.m5.3.3.2.2.2.4.cmml"><msubsup id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.cmml"><mi id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.2" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.2.cmml">T</mi><mn id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.3" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.3.cmml">1</mn><mo id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.3" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.3.cmml">′′</mo></msubsup><mo id="S4.SS1.p3.5.m5.3.3.2.2.2.3.4" xref="S4.SS1.p3.5.m5.3.3.2.2.2.4.cmml">,</mo><msubsup id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.cmml"><mi id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.2" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.2.cmml">T</mi><mn id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.3" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.3.cmml">2</mn><mo id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.3" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.3.cmml">′′</mo></msubsup><mo id="S4.SS1.p3.5.m5.3.3.2.2.2.3.5" xref="S4.SS1.p3.5.m5.3.3.2.2.2.4.cmml">,</mo><mi mathvariant="normal" id="S4.SS1.p3.5.m5.1.1" xref="S4.SS1.p3.5.m5.1.1.cmml">⋯</mi><mo id="S4.SS1.p3.5.m5.3.3.2.2.2.3.6" xref="S4.SS1.p3.5.m5.3.3.2.2.2.4.cmml">,</mo><msubsup id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.cmml"><mi id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.2" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.2.cmml">T</mi><mi id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.3" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.3.cmml">n</mi><mo id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.3" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.3.cmml">′′</mo></msubsup></mrow><mo stretchy="false" id="S4.SS1.p3.5.m5.3.3.2.2.5" xref="S4.SS1.p3.5.m5.3.3.2.3.1.cmml">}</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p3.5.m5.3b"><apply id="S4.SS1.p3.5.m5.3.3.cmml" xref="S4.SS1.p3.5.m5.3.3"><eq id="S4.SS1.p3.5.m5.3.3.3.cmml" xref="S4.SS1.p3.5.m5.3.3.3"></eq><apply id="S4.SS1.p3.5.m5.3.3.4.cmml" xref="S4.SS1.p3.5.m5.3.3.4"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.3.3.4.1.cmml" xref="S4.SS1.p3.5.m5.3.3.4">subscript</csymbol><ci id="S4.SS1.p3.5.m5.3.3.4.2.cmml" xref="S4.SS1.p3.5.m5.3.3.4.2">Γ</ci><apply id="S4.SS1.p3.5.m5.3.3.4.3.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3"><times id="S4.SS1.p3.5.m5.3.3.4.3.1.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.1"></times><ci id="S4.SS1.p3.5.m5.3.3.4.3.2.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.2">𝑟</ci><ci id="S4.SS1.p3.5.m5.3.3.4.3.3.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.3">𝑒</ci><ci id="S4.SS1.p3.5.m5.3.3.4.3.4.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.4">𝑙</ci><ci id="S4.SS1.p3.5.m5.3.3.4.3.5.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.5">𝑎</ci><ci id="S4.SS1.p3.5.m5.3.3.4.3.6.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.6">𝑡</ci><ci id="S4.SS1.p3.5.m5.3.3.4.3.7.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.7">𝑖</ci><ci id="S4.SS1.p3.5.m5.3.3.4.3.8.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.8">𝑣</ci><ci id="S4.SS1.p3.5.m5.3.3.4.3.9.cmml" xref="S4.SS1.p3.5.m5.3.3.4.3.9">𝑒</ci></apply></apply><apply id="S4.SS1.p3.5.m5.3.3.2.3.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2"><csymbol cd="latexml" id="S4.SS1.p3.5.m5.3.3.2.3.1.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.3">conditional-set</csymbol><apply id="S4.SS1.p3.5.m5.2.2.1.1.1.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1"><in id="S4.SS1.p3.5.m5.2.2.1.1.1.1.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.1"></in><apply id="S4.SS1.p3.5.m5.2.2.1.1.1.2.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.2.2.1.1.1.2.1.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2">superscript</csymbol><apply id="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.1.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2">subscript</csymbol><ci id="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.2.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.2">𝑇</ci><ci id="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.3.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2.2.3">𝑖</ci></apply><ci id="S4.SS1.p3.5.m5.2.2.1.1.1.2.3.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.2.3">′′</ci></apply><apply id="S4.SS1.p3.5.m5.2.2.1.1.1.3.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.2.2.1.1.1.3.1.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3">superscript</csymbol><ci id="S4.SS1.p3.5.m5.2.2.1.1.1.3.2.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.2">𝑅</ci><apply id="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.3"><times id="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.1.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.1"></times><cn type="integer" id="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.2.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.2">4</cn><cn type="integer" id="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.3.cmml" xref="S4.SS1.p3.5.m5.2.2.1.1.1.3.3.3">4</cn></apply></apply></apply><list id="S4.SS1.p3.5.m5.3.3.2.2.2.4.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3"><apply id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.1.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1">superscript</csymbol><apply id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.1.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1">subscript</csymbol><ci id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.2.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.2">𝑇</ci><cn type="integer" id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.3.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.2.3">1</cn></apply><ci id="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.3.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.1.1.3">′′</ci></apply><apply id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.1.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2">superscript</csymbol><apply id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.1.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2">subscript</csymbol><ci id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.2.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.2">𝑇</ci><cn type="integer" id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.3.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.2.3">2</cn></apply><ci id="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.3.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.2.2.3">′′</ci></apply><ci id="S4.SS1.p3.5.m5.1.1.cmml" xref="S4.SS1.p3.5.m5.1.1">⋯</ci><apply id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.1.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3">superscript</csymbol><apply id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3"><csymbol cd="ambiguous" id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.1.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3">subscript</csymbol><ci id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.2.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.2">𝑇</ci><ci id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.3.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.2.3">𝑛</ci></apply><ci id="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.3.cmml" xref="S4.SS1.p3.5.m5.3.3.2.2.2.3.3.3">′′</ci></apply></list></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p3.5.m5.3c">\Gamma_{relative}=\{T_{i}^{\prime\prime}\in R^{4\times 4}:T_{1}^{\prime\prime},T_{2}^{\prime\prime},\cdots,T_{n}^{\prime\prime}\}</annotation></semantics></math> as the set of transformations between two cameras. The loss function is given by:</p>
+</div>
+<div id="S4.SS1.p4" class="ltx_para">
+<table id="S4.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E1.m1.1" class="ltx_Math" alttext="T_{relative}=\mathop{\mathrm{argmin}}_{t}\sum_{i=1}^{n}\left\|T_{i}^{\prime\prime}-t\right\|_{1}" display="block"><semantics id="S4.E1.m1.1a"><mrow id="S4.E1.m1.1.1" xref="S4.E1.m1.1.1.cmml"><msub id="S4.E1.m1.1.1.3" xref="S4.E1.m1.1.1.3.cmml"><mi id="S4.E1.m1.1.1.3.2" xref="S4.E1.m1.1.1.3.2.cmml">T</mi><mrow id="S4.E1.m1.1.1.3.3" xref="S4.E1.m1.1.1.3.3.cmml"><mi id="S4.E1.m1.1.1.3.3.2" xref="S4.E1.m1.1.1.3.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.1" xref="S4.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.3" xref="S4.E1.m1.1.1.3.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.1a" xref="S4.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.4" xref="S4.E1.m1.1.1.3.3.4.cmml">l</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.1b" xref="S4.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.5" xref="S4.E1.m1.1.1.3.3.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.1c" xref="S4.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.6" xref="S4.E1.m1.1.1.3.3.6.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.1d" xref="S4.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.7" xref="S4.E1.m1.1.1.3.3.7.cmml">i</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.1e" xref="S4.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.8" xref="S4.E1.m1.1.1.3.3.8.cmml">v</mi><mo lspace="0em" rspace="0em" id="S4.E1.m1.1.1.3.3.1f" xref="S4.E1.m1.1.1.3.3.1.cmml">​</mo><mi id="S4.E1.m1.1.1.3.3.9" xref="S4.E1.m1.1.1.3.3.9.cmml">e</mi></mrow></msub><mo rspace="0.1389em" id="S4.E1.m1.1.1.2" xref="S4.E1.m1.1.1.2.cmml">=</mo><mrow id="S4.E1.m1.1.1.1" xref="S4.E1.m1.1.1.1.cmml"><munder id="S4.E1.m1.1.1.1.2" xref="S4.E1.m1.1.1.1.2.cmml"><mo lspace="0.1389em" movablelimits="false" rspace="0em" id="S4.E1.m1.1.1.1.2.2" xref="S4.E1.m1.1.1.1.2.2.cmml">argmin</mo><mi id="S4.E1.m1.1.1.1.2.3" xref="S4.E1.m1.1.1.1.2.3.cmml">t</mi></munder><mrow id="S4.E1.m1.1.1.1.1" xref="S4.E1.m1.1.1.1.1.cmml"><munderover id="S4.E1.m1.1.1.1.1.2" xref="S4.E1.m1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S4.E1.m1.1.1.1.1.2.2.2" xref="S4.E1.m1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S4.E1.m1.1.1.1.1.2.2.3" xref="S4.E1.m1.1.1.1.1.2.2.3.cmml"><mi id="S4.E1.m1.1.1.1.1.2.2.3.2" xref="S4.E1.m1.1.1.1.1.2.2.3.2.cmml">i</mi><mo id="S4.E1.m1.1.1.1.1.2.2.3.1" xref="S4.E1.m1.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S4.E1.m1.1.1.1.1.2.2.3.3" xref="S4.E1.m1.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S4.E1.m1.1.1.1.1.2.3" xref="S4.E1.m1.1.1.1.1.2.3.cmml">n</mi></munderover><msub id="S4.E1.m1.1.1.1.1.1" xref="S4.E1.m1.1.1.1.1.1.cmml"><mrow id="S4.E1.m1.1.1.1.1.1.1.1" xref="S4.E1.m1.1.1.1.1.1.1.2.cmml"><mo id="S4.E1.m1.1.1.1.1.1.1.1.2" xref="S4.E1.m1.1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S4.E1.m1.1.1.1.1.1.1.1.1" xref="S4.E1.m1.1.1.1.1.1.1.1.1.cmml"><msubsup id="S4.E1.m1.1.1.1.1.1.1.1.1.2" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.2" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.2.cmml">T</mi><mi id="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.3" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.3.cmml">i</mi><mo id="S4.E1.m1.1.1.1.1.1.1.1.1.2.3" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2.3.cmml">′′</mo></msubsup><mo id="S4.E1.m1.1.1.1.1.1.1.1.1.1" xref="S4.E1.m1.1.1.1.1.1.1.1.1.1.cmml">−</mo><mi id="S4.E1.m1.1.1.1.1.1.1.1.1.3" xref="S4.E1.m1.1.1.1.1.1.1.1.1.3.cmml">t</mi></mrow><mo id="S4.E1.m1.1.1.1.1.1.1.1.3" xref="S4.E1.m1.1.1.1.1.1.1.2.1.cmml">‖</mo></mrow><mn id="S4.E1.m1.1.1.1.1.1.3" xref="S4.E1.m1.1.1.1.1.1.3.cmml">1</mn></msub></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.E1.m1.1b"><apply id="S4.E1.m1.1.1.cmml" xref="S4.E1.m1.1.1"><eq id="S4.E1.m1.1.1.2.cmml" xref="S4.E1.m1.1.1.2"></eq><apply id="S4.E1.m1.1.1.3.cmml" xref="S4.E1.m1.1.1.3"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.3.1.cmml" xref="S4.E1.m1.1.1.3">subscript</csymbol><ci id="S4.E1.m1.1.1.3.2.cmml" xref="S4.E1.m1.1.1.3.2">𝑇</ci><apply id="S4.E1.m1.1.1.3.3.cmml" xref="S4.E1.m1.1.1.3.3"><times id="S4.E1.m1.1.1.3.3.1.cmml" xref="S4.E1.m1.1.1.3.3.1"></times><ci id="S4.E1.m1.1.1.3.3.2.cmml" xref="S4.E1.m1.1.1.3.3.2">𝑟</ci><ci id="S4.E1.m1.1.1.3.3.3.cmml" xref="S4.E1.m1.1.1.3.3.3">𝑒</ci><ci id="S4.E1.m1.1.1.3.3.4.cmml" xref="S4.E1.m1.1.1.3.3.4">𝑙</ci><ci id="S4.E1.m1.1.1.3.3.5.cmml" xref="S4.E1.m1.1.1.3.3.5">𝑎</ci><ci id="S4.E1.m1.1.1.3.3.6.cmml" xref="S4.E1.m1.1.1.3.3.6">𝑡</ci><ci id="S4.E1.m1.1.1.3.3.7.cmml" xref="S4.E1.m1.1.1.3.3.7">𝑖</ci><ci id="S4.E1.m1.1.1.3.3.8.cmml" xref="S4.E1.m1.1.1.3.3.8">𝑣</ci><ci id="S4.E1.m1.1.1.3.3.9.cmml" xref="S4.E1.m1.1.1.3.3.9">𝑒</ci></apply></apply><apply id="S4.E1.m1.1.1.1.cmml" xref="S4.E1.m1.1.1.1"><apply id="S4.E1.m1.1.1.1.2.cmml" xref="S4.E1.m1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.1.2.1.cmml" xref="S4.E1.m1.1.1.1.2">subscript</csymbol><ci id="S4.E1.m1.1.1.1.2.2.cmml" xref="S4.E1.m1.1.1.1.2.2">argmin</ci><ci id="S4.E1.m1.1.1.1.2.3.cmml" xref="S4.E1.m1.1.1.1.2.3">𝑡</ci></apply><apply id="S4.E1.m1.1.1.1.1.cmml" xref="S4.E1.m1.1.1.1.1"><apply id="S4.E1.m1.1.1.1.1.2.cmml" xref="S4.E1.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.1.1.2.1.cmml" xref="S4.E1.m1.1.1.1.1.2">superscript</csymbol><apply id="S4.E1.m1.1.1.1.1.2.2.cmml" xref="S4.E1.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.1.1.2.2.1.cmml" xref="S4.E1.m1.1.1.1.1.2">subscript</csymbol><sum id="S4.E1.m1.1.1.1.1.2.2.2.cmml" xref="S4.E1.m1.1.1.1.1.2.2.2"></sum><apply id="S4.E1.m1.1.1.1.1.2.2.3.cmml" xref="S4.E1.m1.1.1.1.1.2.2.3"><eq id="S4.E1.m1.1.1.1.1.2.2.3.1.cmml" xref="S4.E1.m1.1.1.1.1.2.2.3.1"></eq><ci id="S4.E1.m1.1.1.1.1.2.2.3.2.cmml" xref="S4.E1.m1.1.1.1.1.2.2.3.2">𝑖</ci><cn type="integer" id="S4.E1.m1.1.1.1.1.2.2.3.3.cmml" xref="S4.E1.m1.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S4.E1.m1.1.1.1.1.2.3.cmml" xref="S4.E1.m1.1.1.1.1.2.3">𝑛</ci></apply><apply id="S4.E1.m1.1.1.1.1.1.cmml" xref="S4.E1.m1.1.1.1.1.1"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.1.1.1.2.cmml" xref="S4.E1.m1.1.1.1.1.1">subscript</csymbol><apply id="S4.E1.m1.1.1.1.1.1.1.2.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S4.E1.m1.1.1.1.1.1.1.2.1.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.2">norm</csymbol><apply id="S4.E1.m1.1.1.1.1.1.1.1.1.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1"><minus id="S4.E1.m1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.1"></minus><apply id="S4.E1.m1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2">superscript</csymbol><apply id="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.1.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.2.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.2">𝑇</ci><ci id="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.3.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2.2.3">𝑖</ci></apply><ci id="S4.E1.m1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.2.3">′′</ci></apply><ci id="S4.E1.m1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E1.m1.1.1.1.1.1.1.1.1.3">𝑡</ci></apply></apply><cn type="integer" id="S4.E1.m1.1.1.1.1.1.3.cmml" xref="S4.E1.m1.1.1.1.1.1.3">1</cn></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E1.m1.1c">T_{relative}=\mathop{\mathrm{argmin}}_{t}\sum_{i=1}^{n}\left\|T_{i}^{\prime\prime}-t\right\|_{1}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S4.SS1.p5" class="ltx_para">
+<p id="S4.SS1.p5.1" class="ltx_p">where <math id="S4.SS1.p5.1.m1.1" class="ltx_Math" alttext="T_{relative}" display="inline"><semantics id="S4.SS1.p5.1.m1.1a"><msub id="S4.SS1.p5.1.m1.1.1" xref="S4.SS1.p5.1.m1.1.1.cmml"><mi id="S4.SS1.p5.1.m1.1.1.2" xref="S4.SS1.p5.1.m1.1.1.2.cmml">T</mi><mrow id="S4.SS1.p5.1.m1.1.1.3" xref="S4.SS1.p5.1.m1.1.1.3.cmml"><mi id="S4.SS1.p5.1.m1.1.1.3.2" xref="S4.SS1.p5.1.m1.1.1.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p5.1.m1.1.1.3.1" xref="S4.SS1.p5.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p5.1.m1.1.1.3.3" xref="S4.SS1.p5.1.m1.1.1.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p5.1.m1.1.1.3.1a" xref="S4.SS1.p5.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p5.1.m1.1.1.3.4" xref="S4.SS1.p5.1.m1.1.1.3.4.cmml">l</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p5.1.m1.1.1.3.1b" xref="S4.SS1.p5.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p5.1.m1.1.1.3.5" xref="S4.SS1.p5.1.m1.1.1.3.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p5.1.m1.1.1.3.1c" xref="S4.SS1.p5.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p5.1.m1.1.1.3.6" xref="S4.SS1.p5.1.m1.1.1.3.6.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p5.1.m1.1.1.3.1d" xref="S4.SS1.p5.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p5.1.m1.1.1.3.7" xref="S4.SS1.p5.1.m1.1.1.3.7.cmml">i</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p5.1.m1.1.1.3.1e" xref="S4.SS1.p5.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p5.1.m1.1.1.3.8" xref="S4.SS1.p5.1.m1.1.1.3.8.cmml">v</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p5.1.m1.1.1.3.1f" xref="S4.SS1.p5.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p5.1.m1.1.1.3.9" xref="S4.SS1.p5.1.m1.1.1.3.9.cmml">e</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p5.1.m1.1b"><apply id="S4.SS1.p5.1.m1.1.1.cmml" xref="S4.SS1.p5.1.m1.1.1"><csymbol cd="ambiguous" id="S4.SS1.p5.1.m1.1.1.1.cmml" xref="S4.SS1.p5.1.m1.1.1">subscript</csymbol><ci id="S4.SS1.p5.1.m1.1.1.2.cmml" xref="S4.SS1.p5.1.m1.1.1.2">𝑇</ci><apply id="S4.SS1.p5.1.m1.1.1.3.cmml" xref="S4.SS1.p5.1.m1.1.1.3"><times id="S4.SS1.p5.1.m1.1.1.3.1.cmml" xref="S4.SS1.p5.1.m1.1.1.3.1"></times><ci id="S4.SS1.p5.1.m1.1.1.3.2.cmml" xref="S4.SS1.p5.1.m1.1.1.3.2">𝑟</ci><ci id="S4.SS1.p5.1.m1.1.1.3.3.cmml" xref="S4.SS1.p5.1.m1.1.1.3.3">𝑒</ci><ci id="S4.SS1.p5.1.m1.1.1.3.4.cmml" xref="S4.SS1.p5.1.m1.1.1.3.4">𝑙</ci><ci id="S4.SS1.p5.1.m1.1.1.3.5.cmml" xref="S4.SS1.p5.1.m1.1.1.3.5">𝑎</ci><ci id="S4.SS1.p5.1.m1.1.1.3.6.cmml" xref="S4.SS1.p5.1.m1.1.1.3.6">𝑡</ci><ci id="S4.SS1.p5.1.m1.1.1.3.7.cmml" xref="S4.SS1.p5.1.m1.1.1.3.7">𝑖</ci><ci id="S4.SS1.p5.1.m1.1.1.3.8.cmml" xref="S4.SS1.p5.1.m1.1.1.3.8">𝑣</ci><ci id="S4.SS1.p5.1.m1.1.1.3.9.cmml" xref="S4.SS1.p5.1.m1.1.1.3.9">𝑒</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p5.1.m1.1c">T_{relative}</annotation></semantics></math> denotes the final relative transformation matrix between RGB camera and depth camera.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.5.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.6.2" class="ltx_text ltx_font_italic">Calibration for each scene</span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">For each turntable angle and manipulator position, we can calibrate the transformation matrix for this scene.
+The transformation matrix represents the relative transformation between the depth camera coordinate and the reference coordinate <a href="#S4.F6" title="Figure 6 ‣ IV-B Calibration for each scene ‣ IV CALIBRATION ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>, which could be calculate by using checkerboard and solvePnP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>.</p>
+</div>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2011.08771/assets/picture/22.jpg" id="S4.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="173" height="116" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>This picture shows the reference coordinate, the origin is the center of chessboard corners, the The blue, green and red axis represent X , Y and Z axis respectively.</figcaption>
+</figure>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">By transforming point clouds from camera coordinates to the reference coordinate, we realize point cloud fusion under multi-view. We can define a rough bounding box for each object. We put all objects in the center of the chessboard. We can estimate the length and width of the bounding box by using corners of the chessboard, and give a rough estimation of the height with a ruler. The bounding box is used to segment objects from point clouds(because of the high quality of point clouds generated by the structured light camera, we do not need to be very strict in bounding box’s segmentation), as shown in Fig. <a href="#S4.F7" title="Figure 7 ‣ IV-B Calibration for each scene ‣ IV CALIBRATION ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>.</p>
+</div>
+<figure id="S4.F7" class="ltx_figure"><img src="/html/2011.08771/assets/picture/21.jpg" id="S4.F7.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="173" height="116" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>We can give each object a rough bounding box for segmentation.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Mesh Generation</span>
+</h2>
+
+<figure id="S5.F8" class="ltx_figure ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/06.jpg" id="S5.F8.1.g1" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="269" height="392" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/07.jpg" id="S5.F8.2.g2" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="269" height="392" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>The left image is the result of segmentation of the original point cloud, the right image shows the filtered point cloud. We can see all noise points have been removed.</figcaption>
+</figure>
+<figure id="S5.F9" class="ltx_figure ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/11.jpg" id="S5.F9.1.g1" class="ltx_graphics ltx_figure_panel ltx_img_square" width="269" height="291" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/12.jpg" id="S5.F9.2.g2" class="ltx_graphics ltx_figure_panel ltx_img_square" width="269" height="291" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>The left image shows the coordinate origin is below the chessboard plane. The right image shows after scale equalization the coordinate origin is on the chessboard plane.</figcaption>
+</figure>
+<figure id="S5.F10" class="ltx_figure ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/09.jpg" id="S5.F10.1.g1" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="269" height="458" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/10.jpg" id="S5.F10.2.g2" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="269" height="458" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 10: </span>The left point cloud is generated without scale equalization, the right point cloud is generated with scale equalization, the cloud is much clearer and well-aligned.</figcaption>
+</figure>
+<figure id="S5.F11" class="ltx_figure ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/13.jpg" id="S5.F11.1.g1" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="269" height="495" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/14.jpg" id="S5.F11.2.g2" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="269" height="495" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 11: </span>The left image shows a good initial value for registration. The right image show a good outcome of point cloud registration using Colored-ICP.</figcaption>
+</figure>
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">As the calibration process is done, it’s able to capture the structure of the object. The system runs the following steps:</p>
+<ul id="S5.I1" class="ltx_itemize">
+<li id="S5.I1.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1)</span> 
+<div id="S5.I1.ix1.p1" class="ltx_para">
+<p id="S5.I1.ix1.p1.1" class="ltx_p">Collect data from two cameras in 16 scenarios for chessboard and object separately.</p>
+</div>
+</li>
+</ul>
+<ul id="S5.I2" class="ltx_itemize">
+<li id="S5.I2.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2)</span> 
+<div id="S5.I2.ix1.p1" class="ltx_para">
+<p id="S5.I2.ix1.p1.1" class="ltx_p">Calculate all poses by using chessboard for each camera position.</p>
+</div>
+</li>
+</ul>
+<ul id="S5.I3" class="ltx_itemize">
+<li id="S5.I3.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3)</span> 
+<div id="S5.I3.ix1.p1" class="ltx_para">
+<p id="S5.I3.ix1.p1.1" class="ltx_p">Segment raw point cloud by bounding box and remove noise points <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>. The details are summarized in Section <a href="#S5.SS1" title="V-A Point Cloud Filtering ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">V-A</span></span></a>.</p>
+</div>
+</li>
+</ul>
+<ul id="S5.I4" class="ltx_itemize">
+<li id="S5.I4.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4)</span> 
+<div id="S5.I4.ix1.p1" class="ltx_para">
+<p id="S5.I4.ix1.p1.1" class="ltx_p">Fuse all point clouds to the reference coordinate, and improve the point cloud quality via scale equalization. This part of the details is in Section <a href="#S5.SS2" title="V-B Scale Equalization ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">V-B</span></span></a>.</p>
+</div>
+</li>
+</ul>
+<ul id="S5.I5" class="ltx_itemize">
+<li id="S5.I5.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">5)</span> 
+<div id="S5.I5.ix1.p1" class="ltx_para">
+<p id="S5.I5.ix1.p1.1" class="ltx_p">Register two point clouds by Colored Point Cloud Registration <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>, one is that the object is put forward, and the other is upside down. This part of the details is in Section <a href="#S5.SS3" title="V-C Merging Two Point Clouds ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">V-C</span></span></a>.</p>
+</div>
+</li>
+</ul>
+<ul id="S5.I6" class="ltx_itemize">
+<li id="S5.I6.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">6)</span> 
+<div id="S5.I6.ix1.p1" class="ltx_para">
+<p id="S5.I6.ix1.p1.1" class="ltx_p">Generation a mesh through Poisson Reconstruction <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>.</p>
+</div>
+</li>
+</ul>
+<ul id="S5.I7" class="ltx_itemize">
+<li id="S5.I7.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">7)</span> 
+<div id="S5.I7.ix1.p1" class="ltx_para">
+<p id="S5.I7.ix1.p1.1" class="ltx_p">Dye mesh to improve texture resolution. Section <a href="#S5.SS4" title="V-D Improve Texture Quality ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">V-D</span></span></a>.</p>
+</div>
+</li>
+</ul>
+</div>
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS1.5.1.1" class="ltx_text">V-A</span> </span><span id="S5.SS1.6.2" class="ltx_text ltx_font_italic">Point Cloud Filtering</span>
+</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.1" class="ltx_p">The raw point clouds got from the structured light camera, will get filter by the bounding box which mentioned in Section <a href="#S4.SS2" title="IV-B Calibration for each scene ‣ IV CALIBRATION ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-B</span></span></a> first. This process will get rid of the most of the unusual outliers. In Fig. <a href="#S5.F8" title="Figure 8 ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>, we visualize qualitative results of this process.</p>
+</div>
+</section>
+<section id="S5.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS2.5.1.1" class="ltx_text">V-B</span> </span><span id="S5.SS2.6.2" class="ltx_text ltx_font_italic">Scale Equalization</span>
+</h3>
+
+<div id="S5.SS2.p1" class="ltx_para">
+<p id="S5.SS2.p1.5" class="ltx_p">The plane where the chessboard placed is defined as the reference plane, and we move the original point of the coordinate to the center of the chessboard. We compute the transformation <math id="S5.SS2.p1.1.m1.1" class="ltx_Math" alttext="T_{cam\_ref}" display="inline"><semantics id="S5.SS2.p1.1.m1.1a"><msub id="S5.SS2.p1.1.m1.1.1" xref="S5.SS2.p1.1.m1.1.1.cmml"><mi id="S5.SS2.p1.1.m1.1.1.2" xref="S5.SS2.p1.1.m1.1.1.2.cmml">T</mi><mrow id="S5.SS2.p1.1.m1.1.1.3" xref="S5.SS2.p1.1.m1.1.1.3.cmml"><mi id="S5.SS2.p1.1.m1.1.1.3.2" xref="S5.SS2.p1.1.m1.1.1.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.1.m1.1.1.3.1" xref="S5.SS2.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.1.m1.1.1.3.3" xref="S5.SS2.p1.1.m1.1.1.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.1.m1.1.1.3.1a" xref="S5.SS2.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.1.m1.1.1.3.4" xref="S5.SS2.p1.1.m1.1.1.3.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.1.m1.1.1.3.1b" xref="S5.SS2.p1.1.m1.1.1.3.1.cmml">​</mo><mi mathvariant="normal" id="S5.SS2.p1.1.m1.1.1.3.5" xref="S5.SS2.p1.1.m1.1.1.3.5.cmml">_</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.1.m1.1.1.3.1c" xref="S5.SS2.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.1.m1.1.1.3.6" xref="S5.SS2.p1.1.m1.1.1.3.6.cmml">r</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.1.m1.1.1.3.1d" xref="S5.SS2.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.1.m1.1.1.3.7" xref="S5.SS2.p1.1.m1.1.1.3.7.cmml">e</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.1.m1.1.1.3.1e" xref="S5.SS2.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.1.m1.1.1.3.8" xref="S5.SS2.p1.1.m1.1.1.3.8.cmml">f</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.1.m1.1b"><apply id="S5.SS2.p1.1.m1.1.1.cmml" xref="S5.SS2.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S5.SS2.p1.1.m1.1.1.1.cmml" xref="S5.SS2.p1.1.m1.1.1">subscript</csymbol><ci id="S5.SS2.p1.1.m1.1.1.2.cmml" xref="S5.SS2.p1.1.m1.1.1.2">𝑇</ci><apply id="S5.SS2.p1.1.m1.1.1.3.cmml" xref="S5.SS2.p1.1.m1.1.1.3"><times id="S5.SS2.p1.1.m1.1.1.3.1.cmml" xref="S5.SS2.p1.1.m1.1.1.3.1"></times><ci id="S5.SS2.p1.1.m1.1.1.3.2.cmml" xref="S5.SS2.p1.1.m1.1.1.3.2">𝑐</ci><ci id="S5.SS2.p1.1.m1.1.1.3.3.cmml" xref="S5.SS2.p1.1.m1.1.1.3.3">𝑎</ci><ci id="S5.SS2.p1.1.m1.1.1.3.4.cmml" xref="S5.SS2.p1.1.m1.1.1.3.4">𝑚</ci><ci id="S5.SS2.p1.1.m1.1.1.3.5.cmml" xref="S5.SS2.p1.1.m1.1.1.3.5">_</ci><ci id="S5.SS2.p1.1.m1.1.1.3.6.cmml" xref="S5.SS2.p1.1.m1.1.1.3.6">𝑟</ci><ci id="S5.SS2.p1.1.m1.1.1.3.7.cmml" xref="S5.SS2.p1.1.m1.1.1.3.7">𝑒</ci><ci id="S5.SS2.p1.1.m1.1.1.3.8.cmml" xref="S5.SS2.p1.1.m1.1.1.3.8">𝑓</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.1.m1.1c">T_{cam\_ref}</annotation></semantics></math> from the camera coordinate to the reference coordinate via solvePnP. We notice the structured light camera has a system error, to be specific, when we transform the chessboard’s point cloud to the reference coordinate, it doesn’t overlap with the XOY plane but slightly above the XOY plane. The result of the system error is evidenced by Fig. <a href="#S5.F10" title="Figure 10 ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a>. In order to address this issue, we use a scale <math id="S5.SS2.p1.2.m2.1" class="ltx_Math" alttext="\alpha" display="inline"><semantics id="S5.SS2.p1.2.m2.1a"><mi id="S5.SS2.p1.2.m2.1.1" xref="S5.SS2.p1.2.m2.1.1.cmml">α</mi><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.2.m2.1b"><ci id="S5.SS2.p1.2.m2.1.1.cmml" xref="S5.SS2.p1.2.m2.1.1">𝛼</ci></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.2.m2.1c">\alpha</annotation></semantics></math> to fine tune the point cloud. The depth map got from the structured light camera is represented by <math id="S5.SS2.p1.3.m3.1" class="ltx_Math" alttext="I_{depth}" display="inline"><semantics id="S5.SS2.p1.3.m3.1a"><msub id="S5.SS2.p1.3.m3.1.1" xref="S5.SS2.p1.3.m3.1.1.cmml"><mi id="S5.SS2.p1.3.m3.1.1.2" xref="S5.SS2.p1.3.m3.1.1.2.cmml">I</mi><mrow id="S5.SS2.p1.3.m3.1.1.3" xref="S5.SS2.p1.3.m3.1.1.3.cmml"><mi id="S5.SS2.p1.3.m3.1.1.3.2" xref="S5.SS2.p1.3.m3.1.1.3.2.cmml">d</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.3.m3.1.1.3.1" xref="S5.SS2.p1.3.m3.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.3.m3.1.1.3.3" xref="S5.SS2.p1.3.m3.1.1.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.3.m3.1.1.3.1a" xref="S5.SS2.p1.3.m3.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.3.m3.1.1.3.4" xref="S5.SS2.p1.3.m3.1.1.3.4.cmml">p</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.3.m3.1.1.3.1b" xref="S5.SS2.p1.3.m3.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.3.m3.1.1.3.5" xref="S5.SS2.p1.3.m3.1.1.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.3.m3.1.1.3.1c" xref="S5.SS2.p1.3.m3.1.1.3.1.cmml">​</mo><mi id="S5.SS2.p1.3.m3.1.1.3.6" xref="S5.SS2.p1.3.m3.1.1.3.6.cmml">h</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.3.m3.1b"><apply id="S5.SS2.p1.3.m3.1.1.cmml" xref="S5.SS2.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S5.SS2.p1.3.m3.1.1.1.cmml" xref="S5.SS2.p1.3.m3.1.1">subscript</csymbol><ci id="S5.SS2.p1.3.m3.1.1.2.cmml" xref="S5.SS2.p1.3.m3.1.1.2">𝐼</ci><apply id="S5.SS2.p1.3.m3.1.1.3.cmml" xref="S5.SS2.p1.3.m3.1.1.3"><times id="S5.SS2.p1.3.m3.1.1.3.1.cmml" xref="S5.SS2.p1.3.m3.1.1.3.1"></times><ci id="S5.SS2.p1.3.m3.1.1.3.2.cmml" xref="S5.SS2.p1.3.m3.1.1.3.2">𝑑</ci><ci id="S5.SS2.p1.3.m3.1.1.3.3.cmml" xref="S5.SS2.p1.3.m3.1.1.3.3">𝑒</ci><ci id="S5.SS2.p1.3.m3.1.1.3.4.cmml" xref="S5.SS2.p1.3.m3.1.1.3.4">𝑝</ci><ci id="S5.SS2.p1.3.m3.1.1.3.5.cmml" xref="S5.SS2.p1.3.m3.1.1.3.5">𝑡</ci><ci id="S5.SS2.p1.3.m3.1.1.3.6.cmml" xref="S5.SS2.p1.3.m3.1.1.3.6">ℎ</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.3.m3.1c">I_{depth}</annotation></semantics></math>, the fine tuned depth map is <math id="S5.SS2.p1.4.m4.1" class="ltx_Math" alttext="\tilde{I}_{depth}=\alpha\cdot I_{depth}" display="inline"><semantics id="S5.SS2.p1.4.m4.1a"><mrow id="S5.SS2.p1.4.m4.1.1" xref="S5.SS2.p1.4.m4.1.1.cmml"><msub id="S5.SS2.p1.4.m4.1.1.2" xref="S5.SS2.p1.4.m4.1.1.2.cmml"><mover accent="true" id="S5.SS2.p1.4.m4.1.1.2.2" xref="S5.SS2.p1.4.m4.1.1.2.2.cmml"><mi id="S5.SS2.p1.4.m4.1.1.2.2.2" xref="S5.SS2.p1.4.m4.1.1.2.2.2.cmml">I</mi><mo id="S5.SS2.p1.4.m4.1.1.2.2.1" xref="S5.SS2.p1.4.m4.1.1.2.2.1.cmml">~</mo></mover><mrow id="S5.SS2.p1.4.m4.1.1.2.3" xref="S5.SS2.p1.4.m4.1.1.2.3.cmml"><mi id="S5.SS2.p1.4.m4.1.1.2.3.2" xref="S5.SS2.p1.4.m4.1.1.2.3.2.cmml">d</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.4.m4.1.1.2.3.1" xref="S5.SS2.p1.4.m4.1.1.2.3.1.cmml">​</mo><mi id="S5.SS2.p1.4.m4.1.1.2.3.3" xref="S5.SS2.p1.4.m4.1.1.2.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.4.m4.1.1.2.3.1a" xref="S5.SS2.p1.4.m4.1.1.2.3.1.cmml">​</mo><mi id="S5.SS2.p1.4.m4.1.1.2.3.4" xref="S5.SS2.p1.4.m4.1.1.2.3.4.cmml">p</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.4.m4.1.1.2.3.1b" xref="S5.SS2.p1.4.m4.1.1.2.3.1.cmml">​</mo><mi id="S5.SS2.p1.4.m4.1.1.2.3.5" xref="S5.SS2.p1.4.m4.1.1.2.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.4.m4.1.1.2.3.1c" xref="S5.SS2.p1.4.m4.1.1.2.3.1.cmml">​</mo><mi id="S5.SS2.p1.4.m4.1.1.2.3.6" xref="S5.SS2.p1.4.m4.1.1.2.3.6.cmml">h</mi></mrow></msub><mo id="S5.SS2.p1.4.m4.1.1.1" xref="S5.SS2.p1.4.m4.1.1.1.cmml">=</mo><mrow id="S5.SS2.p1.4.m4.1.1.3" xref="S5.SS2.p1.4.m4.1.1.3.cmml"><mi id="S5.SS2.p1.4.m4.1.1.3.2" xref="S5.SS2.p1.4.m4.1.1.3.2.cmml">α</mi><mo lspace="0.222em" rspace="0.222em" id="S5.SS2.p1.4.m4.1.1.3.1" xref="S5.SS2.p1.4.m4.1.1.3.1.cmml">⋅</mo><msub id="S5.SS2.p1.4.m4.1.1.3.3" xref="S5.SS2.p1.4.m4.1.1.3.3.cmml"><mi id="S5.SS2.p1.4.m4.1.1.3.3.2" xref="S5.SS2.p1.4.m4.1.1.3.3.2.cmml">I</mi><mrow id="S5.SS2.p1.4.m4.1.1.3.3.3" xref="S5.SS2.p1.4.m4.1.1.3.3.3.cmml"><mi id="S5.SS2.p1.4.m4.1.1.3.3.3.2" xref="S5.SS2.p1.4.m4.1.1.3.3.3.2.cmml">d</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.4.m4.1.1.3.3.3.1" xref="S5.SS2.p1.4.m4.1.1.3.3.3.1.cmml">​</mo><mi id="S5.SS2.p1.4.m4.1.1.3.3.3.3" xref="S5.SS2.p1.4.m4.1.1.3.3.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.4.m4.1.1.3.3.3.1a" xref="S5.SS2.p1.4.m4.1.1.3.3.3.1.cmml">​</mo><mi id="S5.SS2.p1.4.m4.1.1.3.3.3.4" xref="S5.SS2.p1.4.m4.1.1.3.3.3.4.cmml">p</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.4.m4.1.1.3.3.3.1b" xref="S5.SS2.p1.4.m4.1.1.3.3.3.1.cmml">​</mo><mi id="S5.SS2.p1.4.m4.1.1.3.3.3.5" xref="S5.SS2.p1.4.m4.1.1.3.3.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S5.SS2.p1.4.m4.1.1.3.3.3.1c" xref="S5.SS2.p1.4.m4.1.1.3.3.3.1.cmml">​</mo><mi id="S5.SS2.p1.4.m4.1.1.3.3.3.6" xref="S5.SS2.p1.4.m4.1.1.3.3.3.6.cmml">h</mi></mrow></msub></mrow></mrow><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.4.m4.1b"><apply id="S5.SS2.p1.4.m4.1.1.cmml" xref="S5.SS2.p1.4.m4.1.1"><eq id="S5.SS2.p1.4.m4.1.1.1.cmml" xref="S5.SS2.p1.4.m4.1.1.1"></eq><apply id="S5.SS2.p1.4.m4.1.1.2.cmml" xref="S5.SS2.p1.4.m4.1.1.2"><csymbol cd="ambiguous" id="S5.SS2.p1.4.m4.1.1.2.1.cmml" xref="S5.SS2.p1.4.m4.1.1.2">subscript</csymbol><apply id="S5.SS2.p1.4.m4.1.1.2.2.cmml" xref="S5.SS2.p1.4.m4.1.1.2.2"><ci id="S5.SS2.p1.4.m4.1.1.2.2.1.cmml" xref="S5.SS2.p1.4.m4.1.1.2.2.1">~</ci><ci id="S5.SS2.p1.4.m4.1.1.2.2.2.cmml" xref="S5.SS2.p1.4.m4.1.1.2.2.2">𝐼</ci></apply><apply id="S5.SS2.p1.4.m4.1.1.2.3.cmml" xref="S5.SS2.p1.4.m4.1.1.2.3"><times id="S5.SS2.p1.4.m4.1.1.2.3.1.cmml" xref="S5.SS2.p1.4.m4.1.1.2.3.1"></times><ci id="S5.SS2.p1.4.m4.1.1.2.3.2.cmml" xref="S5.SS2.p1.4.m4.1.1.2.3.2">𝑑</ci><ci id="S5.SS2.p1.4.m4.1.1.2.3.3.cmml" xref="S5.SS2.p1.4.m4.1.1.2.3.3">𝑒</ci><ci id="S5.SS2.p1.4.m4.1.1.2.3.4.cmml" xref="S5.SS2.p1.4.m4.1.1.2.3.4">𝑝</ci><ci id="S5.SS2.p1.4.m4.1.1.2.3.5.cmml" xref="S5.SS2.p1.4.m4.1.1.2.3.5">𝑡</ci><ci id="S5.SS2.p1.4.m4.1.1.2.3.6.cmml" xref="S5.SS2.p1.4.m4.1.1.2.3.6">ℎ</ci></apply></apply><apply id="S5.SS2.p1.4.m4.1.1.3.cmml" xref="S5.SS2.p1.4.m4.1.1.3"><ci id="S5.SS2.p1.4.m4.1.1.3.1.cmml" xref="S5.SS2.p1.4.m4.1.1.3.1">⋅</ci><ci id="S5.SS2.p1.4.m4.1.1.3.2.cmml" xref="S5.SS2.p1.4.m4.1.1.3.2">𝛼</ci><apply id="S5.SS2.p1.4.m4.1.1.3.3.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3"><csymbol cd="ambiguous" id="S5.SS2.p1.4.m4.1.1.3.3.1.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3">subscript</csymbol><ci id="S5.SS2.p1.4.m4.1.1.3.3.2.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3.2">𝐼</ci><apply id="S5.SS2.p1.4.m4.1.1.3.3.3.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3.3"><times id="S5.SS2.p1.4.m4.1.1.3.3.3.1.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3.3.1"></times><ci id="S5.SS2.p1.4.m4.1.1.3.3.3.2.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3.3.2">𝑑</ci><ci id="S5.SS2.p1.4.m4.1.1.3.3.3.3.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3.3.3">𝑒</ci><ci id="S5.SS2.p1.4.m4.1.1.3.3.3.4.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3.3.4">𝑝</ci><ci id="S5.SS2.p1.4.m4.1.1.3.3.3.5.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3.3.5">𝑡</ci><ci id="S5.SS2.p1.4.m4.1.1.3.3.3.6.cmml" xref="S5.SS2.p1.4.m4.1.1.3.3.3.6">ℎ</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.4.m4.1c">\tilde{I}_{depth}=\alpha\cdot I_{depth}</annotation></semantics></math>. The scale <math id="S5.SS2.p1.5.m5.1" class="ltx_Math" alttext="\alpha" display="inline"><semantics id="S5.SS2.p1.5.m5.1a"><mi id="S5.SS2.p1.5.m5.1.1" xref="S5.SS2.p1.5.m5.1.1.cmml">α</mi><annotation-xml encoding="MathML-Content" id="S5.SS2.p1.5.m5.1b"><ci id="S5.SS2.p1.5.m5.1.1.cmml" xref="S5.SS2.p1.5.m5.1.1">𝛼</ci></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p1.5.m5.1c">\alpha</annotation></semantics></math> is calculated as follow:</p>
+</div>
+<div id="S5.SS2.p2" class="ltx_para">
+<ul id="S5.I8" class="ltx_itemize">
+<li id="S5.I8.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1)</span> 
+<div id="S5.I8.ix1.p1" class="ltx_para">
+<p id="S5.I8.ix1.p1.1" class="ltx_p">We use all the point on the chessboard plane to estimate the equation of the plane and using RANSAC <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite> to refine the result. The equation is defined under the reference coordinate system, which is represented as <math id="S5.I8.ix1.p1.1.m1.1" class="ltx_Math" alttext="ax+by+cz+d=0" display="inline"><semantics id="S5.I8.ix1.p1.1.m1.1a"><mrow id="S5.I8.ix1.p1.1.m1.1.1" xref="S5.I8.ix1.p1.1.m1.1.1.cmml"><mrow id="S5.I8.ix1.p1.1.m1.1.1.2" xref="S5.I8.ix1.p1.1.m1.1.1.2.cmml"><mrow id="S5.I8.ix1.p1.1.m1.1.1.2.2" xref="S5.I8.ix1.p1.1.m1.1.1.2.2.cmml"><mi id="S5.I8.ix1.p1.1.m1.1.1.2.2.2" xref="S5.I8.ix1.p1.1.m1.1.1.2.2.2.cmml">a</mi><mo lspace="0em" rspace="0em" id="S5.I8.ix1.p1.1.m1.1.1.2.2.1" xref="S5.I8.ix1.p1.1.m1.1.1.2.2.1.cmml">​</mo><mi id="S5.I8.ix1.p1.1.m1.1.1.2.2.3" xref="S5.I8.ix1.p1.1.m1.1.1.2.2.3.cmml">x</mi></mrow><mo id="S5.I8.ix1.p1.1.m1.1.1.2.1" xref="S5.I8.ix1.p1.1.m1.1.1.2.1.cmml">+</mo><mrow id="S5.I8.ix1.p1.1.m1.1.1.2.3" xref="S5.I8.ix1.p1.1.m1.1.1.2.3.cmml"><mi id="S5.I8.ix1.p1.1.m1.1.1.2.3.2" xref="S5.I8.ix1.p1.1.m1.1.1.2.3.2.cmml">b</mi><mo lspace="0em" rspace="0em" id="S5.I8.ix1.p1.1.m1.1.1.2.3.1" xref="S5.I8.ix1.p1.1.m1.1.1.2.3.1.cmml">​</mo><mi id="S5.I8.ix1.p1.1.m1.1.1.2.3.3" xref="S5.I8.ix1.p1.1.m1.1.1.2.3.3.cmml">y</mi></mrow><mo id="S5.I8.ix1.p1.1.m1.1.1.2.1a" xref="S5.I8.ix1.p1.1.m1.1.1.2.1.cmml">+</mo><mrow id="S5.I8.ix1.p1.1.m1.1.1.2.4" xref="S5.I8.ix1.p1.1.m1.1.1.2.4.cmml"><mi id="S5.I8.ix1.p1.1.m1.1.1.2.4.2" xref="S5.I8.ix1.p1.1.m1.1.1.2.4.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S5.I8.ix1.p1.1.m1.1.1.2.4.1" xref="S5.I8.ix1.p1.1.m1.1.1.2.4.1.cmml">​</mo><mi id="S5.I8.ix1.p1.1.m1.1.1.2.4.3" xref="S5.I8.ix1.p1.1.m1.1.1.2.4.3.cmml">z</mi></mrow><mo id="S5.I8.ix1.p1.1.m1.1.1.2.1b" xref="S5.I8.ix1.p1.1.m1.1.1.2.1.cmml">+</mo><mi id="S5.I8.ix1.p1.1.m1.1.1.2.5" xref="S5.I8.ix1.p1.1.m1.1.1.2.5.cmml">d</mi></mrow><mo id="S5.I8.ix1.p1.1.m1.1.1.1" xref="S5.I8.ix1.p1.1.m1.1.1.1.cmml">=</mo><mn id="S5.I8.ix1.p1.1.m1.1.1.3" xref="S5.I8.ix1.p1.1.m1.1.1.3.cmml">0</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.I8.ix1.p1.1.m1.1b"><apply id="S5.I8.ix1.p1.1.m1.1.1.cmml" xref="S5.I8.ix1.p1.1.m1.1.1"><eq id="S5.I8.ix1.p1.1.m1.1.1.1.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.1"></eq><apply id="S5.I8.ix1.p1.1.m1.1.1.2.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2"><plus id="S5.I8.ix1.p1.1.m1.1.1.2.1.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.1"></plus><apply id="S5.I8.ix1.p1.1.m1.1.1.2.2.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.2"><times id="S5.I8.ix1.p1.1.m1.1.1.2.2.1.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.2.1"></times><ci id="S5.I8.ix1.p1.1.m1.1.1.2.2.2.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.2.2">𝑎</ci><ci id="S5.I8.ix1.p1.1.m1.1.1.2.2.3.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.2.3">𝑥</ci></apply><apply id="S5.I8.ix1.p1.1.m1.1.1.2.3.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.3"><times id="S5.I8.ix1.p1.1.m1.1.1.2.3.1.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.3.1"></times><ci id="S5.I8.ix1.p1.1.m1.1.1.2.3.2.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.3.2">𝑏</ci><ci id="S5.I8.ix1.p1.1.m1.1.1.2.3.3.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.3.3">𝑦</ci></apply><apply id="S5.I8.ix1.p1.1.m1.1.1.2.4.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.4"><times id="S5.I8.ix1.p1.1.m1.1.1.2.4.1.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.4.1"></times><ci id="S5.I8.ix1.p1.1.m1.1.1.2.4.2.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.4.2">𝑐</ci><ci id="S5.I8.ix1.p1.1.m1.1.1.2.4.3.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.4.3">𝑧</ci></apply><ci id="S5.I8.ix1.p1.1.m1.1.1.2.5.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.2.5">𝑑</ci></apply><cn type="integer" id="S5.I8.ix1.p1.1.m1.1.1.3.cmml" xref="S5.I8.ix1.p1.1.m1.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.I8.ix1.p1.1.m1.1c">ax+by+cz+d=0</annotation></semantics></math>.</p>
+</div>
+</li>
+</ul>
+<ul id="S5.I9" class="ltx_itemize">
+<li id="S5.I9.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2)</span> 
+<div id="S5.I9.ix1.p1" class="ltx_para">
+<p id="S5.I9.ix1.p1.2" class="ltx_p">We use the transformation <math id="S5.I9.ix1.p1.1.m1.1" class="ltx_Math" alttext="T_{cam\_ref}" display="inline"><semantics id="S5.I9.ix1.p1.1.m1.1a"><msub id="S5.I9.ix1.p1.1.m1.1.1" xref="S5.I9.ix1.p1.1.m1.1.1.cmml"><mi id="S5.I9.ix1.p1.1.m1.1.1.2" xref="S5.I9.ix1.p1.1.m1.1.1.2.cmml">T</mi><mrow id="S5.I9.ix1.p1.1.m1.1.1.3" xref="S5.I9.ix1.p1.1.m1.1.1.3.cmml"><mi id="S5.I9.ix1.p1.1.m1.1.1.3.2" xref="S5.I9.ix1.p1.1.m1.1.1.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S5.I9.ix1.p1.1.m1.1.1.3.1" xref="S5.I9.ix1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.I9.ix1.p1.1.m1.1.1.3.3" xref="S5.I9.ix1.p1.1.m1.1.1.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S5.I9.ix1.p1.1.m1.1.1.3.1a" xref="S5.I9.ix1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.I9.ix1.p1.1.m1.1.1.3.4" xref="S5.I9.ix1.p1.1.m1.1.1.3.4.cmml">m</mi><mo lspace="0em" rspace="0em" id="S5.I9.ix1.p1.1.m1.1.1.3.1b" xref="S5.I9.ix1.p1.1.m1.1.1.3.1.cmml">​</mo><mi mathvariant="normal" id="S5.I9.ix1.p1.1.m1.1.1.3.5" xref="S5.I9.ix1.p1.1.m1.1.1.3.5.cmml">_</mi><mo lspace="0em" rspace="0em" id="S5.I9.ix1.p1.1.m1.1.1.3.1c" xref="S5.I9.ix1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.I9.ix1.p1.1.m1.1.1.3.6" xref="S5.I9.ix1.p1.1.m1.1.1.3.6.cmml">r</mi><mo lspace="0em" rspace="0em" id="S5.I9.ix1.p1.1.m1.1.1.3.1d" xref="S5.I9.ix1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.I9.ix1.p1.1.m1.1.1.3.7" xref="S5.I9.ix1.p1.1.m1.1.1.3.7.cmml">e</mi><mo lspace="0em" rspace="0em" id="S5.I9.ix1.p1.1.m1.1.1.3.1e" xref="S5.I9.ix1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S5.I9.ix1.p1.1.m1.1.1.3.8" xref="S5.I9.ix1.p1.1.m1.1.1.3.8.cmml">f</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S5.I9.ix1.p1.1.m1.1b"><apply id="S5.I9.ix1.p1.1.m1.1.1.cmml" xref="S5.I9.ix1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S5.I9.ix1.p1.1.m1.1.1.1.cmml" xref="S5.I9.ix1.p1.1.m1.1.1">subscript</csymbol><ci id="S5.I9.ix1.p1.1.m1.1.1.2.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.2">𝑇</ci><apply id="S5.I9.ix1.p1.1.m1.1.1.3.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3"><times id="S5.I9.ix1.p1.1.m1.1.1.3.1.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3.1"></times><ci id="S5.I9.ix1.p1.1.m1.1.1.3.2.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3.2">𝑐</ci><ci id="S5.I9.ix1.p1.1.m1.1.1.3.3.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3.3">𝑎</ci><ci id="S5.I9.ix1.p1.1.m1.1.1.3.4.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3.4">𝑚</ci><ci id="S5.I9.ix1.p1.1.m1.1.1.3.5.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3.5">_</ci><ci id="S5.I9.ix1.p1.1.m1.1.1.3.6.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3.6">𝑟</ci><ci id="S5.I9.ix1.p1.1.m1.1.1.3.7.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3.7">𝑒</ci><ci id="S5.I9.ix1.p1.1.m1.1.1.3.8.cmml" xref="S5.I9.ix1.p1.1.m1.1.1.3.8">𝑓</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.I9.ix1.p1.1.m1.1c">T_{cam\_ref}</annotation></semantics></math> to get the coordinates of the camera coordinate’s origin in the reference coordinate system <math id="S5.I9.ix1.p1.2.m2.3" class="ltx_Math" alttext="(x^{\prime},y^{\prime},z^{\prime})" display="inline"><semantics id="S5.I9.ix1.p1.2.m2.3a"><mrow id="S5.I9.ix1.p1.2.m2.3.3.3" xref="S5.I9.ix1.p1.2.m2.3.3.4.cmml"><mo stretchy="false" id="S5.I9.ix1.p1.2.m2.3.3.3.4" xref="S5.I9.ix1.p1.2.m2.3.3.4.cmml">(</mo><msup id="S5.I9.ix1.p1.2.m2.1.1.1.1" xref="S5.I9.ix1.p1.2.m2.1.1.1.1.cmml"><mi id="S5.I9.ix1.p1.2.m2.1.1.1.1.2" xref="S5.I9.ix1.p1.2.m2.1.1.1.1.2.cmml">x</mi><mo id="S5.I9.ix1.p1.2.m2.1.1.1.1.3" xref="S5.I9.ix1.p1.2.m2.1.1.1.1.3.cmml">′</mo></msup><mo id="S5.I9.ix1.p1.2.m2.3.3.3.5" xref="S5.I9.ix1.p1.2.m2.3.3.4.cmml">,</mo><msup id="S5.I9.ix1.p1.2.m2.2.2.2.2" xref="S5.I9.ix1.p1.2.m2.2.2.2.2.cmml"><mi id="S5.I9.ix1.p1.2.m2.2.2.2.2.2" xref="S5.I9.ix1.p1.2.m2.2.2.2.2.2.cmml">y</mi><mo id="S5.I9.ix1.p1.2.m2.2.2.2.2.3" xref="S5.I9.ix1.p1.2.m2.2.2.2.2.3.cmml">′</mo></msup><mo id="S5.I9.ix1.p1.2.m2.3.3.3.6" xref="S5.I9.ix1.p1.2.m2.3.3.4.cmml">,</mo><msup id="S5.I9.ix1.p1.2.m2.3.3.3.3" xref="S5.I9.ix1.p1.2.m2.3.3.3.3.cmml"><mi id="S5.I9.ix1.p1.2.m2.3.3.3.3.2" xref="S5.I9.ix1.p1.2.m2.3.3.3.3.2.cmml">z</mi><mo id="S5.I9.ix1.p1.2.m2.3.3.3.3.3" xref="S5.I9.ix1.p1.2.m2.3.3.3.3.3.cmml">′</mo></msup><mo stretchy="false" id="S5.I9.ix1.p1.2.m2.3.3.3.7" xref="S5.I9.ix1.p1.2.m2.3.3.4.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.I9.ix1.p1.2.m2.3b"><vector id="S5.I9.ix1.p1.2.m2.3.3.4.cmml" xref="S5.I9.ix1.p1.2.m2.3.3.3"><apply id="S5.I9.ix1.p1.2.m2.1.1.1.1.cmml" xref="S5.I9.ix1.p1.2.m2.1.1.1.1"><csymbol cd="ambiguous" id="S5.I9.ix1.p1.2.m2.1.1.1.1.1.cmml" xref="S5.I9.ix1.p1.2.m2.1.1.1.1">superscript</csymbol><ci id="S5.I9.ix1.p1.2.m2.1.1.1.1.2.cmml" xref="S5.I9.ix1.p1.2.m2.1.1.1.1.2">𝑥</ci><ci id="S5.I9.ix1.p1.2.m2.1.1.1.1.3.cmml" xref="S5.I9.ix1.p1.2.m2.1.1.1.1.3">′</ci></apply><apply id="S5.I9.ix1.p1.2.m2.2.2.2.2.cmml" xref="S5.I9.ix1.p1.2.m2.2.2.2.2"><csymbol cd="ambiguous" id="S5.I9.ix1.p1.2.m2.2.2.2.2.1.cmml" xref="S5.I9.ix1.p1.2.m2.2.2.2.2">superscript</csymbol><ci id="S5.I9.ix1.p1.2.m2.2.2.2.2.2.cmml" xref="S5.I9.ix1.p1.2.m2.2.2.2.2.2">𝑦</ci><ci id="S5.I9.ix1.p1.2.m2.2.2.2.2.3.cmml" xref="S5.I9.ix1.p1.2.m2.2.2.2.2.3">′</ci></apply><apply id="S5.I9.ix1.p1.2.m2.3.3.3.3.cmml" xref="S5.I9.ix1.p1.2.m2.3.3.3.3"><csymbol cd="ambiguous" id="S5.I9.ix1.p1.2.m2.3.3.3.3.1.cmml" xref="S5.I9.ix1.p1.2.m2.3.3.3.3">superscript</csymbol><ci id="S5.I9.ix1.p1.2.m2.3.3.3.3.2.cmml" xref="S5.I9.ix1.p1.2.m2.3.3.3.3.2">𝑧</ci><ci id="S5.I9.ix1.p1.2.m2.3.3.3.3.3.cmml" xref="S5.I9.ix1.p1.2.m2.3.3.3.3.3">′</ci></apply></vector></annotation-xml><annotation encoding="application/x-tex" id="S5.I9.ix1.p1.2.m2.3c">(x^{\prime},y^{\prime},z^{\prime})</annotation></semantics></math>.</p>
+</div>
+</li>
+</ul>
+<ul id="S5.I10" class="ltx_itemize">
+<li id="S5.I10.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3)</span> 
+<div id="S5.I10.ix1.p1" class="ltx_para">
+<p id="S5.I10.ix1.p1.7" class="ltx_p">The distance from the origin to the chessboard plane is represented as <math id="S5.I10.ix1.p1.1.m1.1" class="ltx_Math" alttext="d_{0}" display="inline"><semantics id="S5.I10.ix1.p1.1.m1.1a"><msub id="S5.I10.ix1.p1.1.m1.1.1" xref="S5.I10.ix1.p1.1.m1.1.1.cmml"><mi id="S5.I10.ix1.p1.1.m1.1.1.2" xref="S5.I10.ix1.p1.1.m1.1.1.2.cmml">d</mi><mn id="S5.I10.ix1.p1.1.m1.1.1.3" xref="S5.I10.ix1.p1.1.m1.1.1.3.cmml">0</mn></msub><annotation-xml encoding="MathML-Content" id="S5.I10.ix1.p1.1.m1.1b"><apply id="S5.I10.ix1.p1.1.m1.1.1.cmml" xref="S5.I10.ix1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.1.m1.1.1.1.cmml" xref="S5.I10.ix1.p1.1.m1.1.1">subscript</csymbol><ci id="S5.I10.ix1.p1.1.m1.1.1.2.cmml" xref="S5.I10.ix1.p1.1.m1.1.1.2">𝑑</ci><cn type="integer" id="S5.I10.ix1.p1.1.m1.1.1.3.cmml" xref="S5.I10.ix1.p1.1.m1.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.I10.ix1.p1.1.m1.1c">d_{0}</annotation></semantics></math>, and the distance from <math id="S5.I10.ix1.p1.2.m2.3" class="ltx_Math" alttext="(x^{\prime},y^{\prime},z^{\prime})" display="inline"><semantics id="S5.I10.ix1.p1.2.m2.3a"><mrow id="S5.I10.ix1.p1.2.m2.3.3.3" xref="S5.I10.ix1.p1.2.m2.3.3.4.cmml"><mo stretchy="false" id="S5.I10.ix1.p1.2.m2.3.3.3.4" xref="S5.I10.ix1.p1.2.m2.3.3.4.cmml">(</mo><msup id="S5.I10.ix1.p1.2.m2.1.1.1.1" xref="S5.I10.ix1.p1.2.m2.1.1.1.1.cmml"><mi id="S5.I10.ix1.p1.2.m2.1.1.1.1.2" xref="S5.I10.ix1.p1.2.m2.1.1.1.1.2.cmml">x</mi><mo id="S5.I10.ix1.p1.2.m2.1.1.1.1.3" xref="S5.I10.ix1.p1.2.m2.1.1.1.1.3.cmml">′</mo></msup><mo id="S5.I10.ix1.p1.2.m2.3.3.3.5" xref="S5.I10.ix1.p1.2.m2.3.3.4.cmml">,</mo><msup id="S5.I10.ix1.p1.2.m2.2.2.2.2" xref="S5.I10.ix1.p1.2.m2.2.2.2.2.cmml"><mi id="S5.I10.ix1.p1.2.m2.2.2.2.2.2" xref="S5.I10.ix1.p1.2.m2.2.2.2.2.2.cmml">y</mi><mo id="S5.I10.ix1.p1.2.m2.2.2.2.2.3" xref="S5.I10.ix1.p1.2.m2.2.2.2.2.3.cmml">′</mo></msup><mo id="S5.I10.ix1.p1.2.m2.3.3.3.6" xref="S5.I10.ix1.p1.2.m2.3.3.4.cmml">,</mo><msup id="S5.I10.ix1.p1.2.m2.3.3.3.3" xref="S5.I10.ix1.p1.2.m2.3.3.3.3.cmml"><mi id="S5.I10.ix1.p1.2.m2.3.3.3.3.2" xref="S5.I10.ix1.p1.2.m2.3.3.3.3.2.cmml">z</mi><mo id="S5.I10.ix1.p1.2.m2.3.3.3.3.3" xref="S5.I10.ix1.p1.2.m2.3.3.3.3.3.cmml">′</mo></msup><mo stretchy="false" id="S5.I10.ix1.p1.2.m2.3.3.3.7" xref="S5.I10.ix1.p1.2.m2.3.3.4.cmml">)</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.I10.ix1.p1.2.m2.3b"><vector id="S5.I10.ix1.p1.2.m2.3.3.4.cmml" xref="S5.I10.ix1.p1.2.m2.3.3.3"><apply id="S5.I10.ix1.p1.2.m2.1.1.1.1.cmml" xref="S5.I10.ix1.p1.2.m2.1.1.1.1"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.2.m2.1.1.1.1.1.cmml" xref="S5.I10.ix1.p1.2.m2.1.1.1.1">superscript</csymbol><ci id="S5.I10.ix1.p1.2.m2.1.1.1.1.2.cmml" xref="S5.I10.ix1.p1.2.m2.1.1.1.1.2">𝑥</ci><ci id="S5.I10.ix1.p1.2.m2.1.1.1.1.3.cmml" xref="S5.I10.ix1.p1.2.m2.1.1.1.1.3">′</ci></apply><apply id="S5.I10.ix1.p1.2.m2.2.2.2.2.cmml" xref="S5.I10.ix1.p1.2.m2.2.2.2.2"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.2.m2.2.2.2.2.1.cmml" xref="S5.I10.ix1.p1.2.m2.2.2.2.2">superscript</csymbol><ci id="S5.I10.ix1.p1.2.m2.2.2.2.2.2.cmml" xref="S5.I10.ix1.p1.2.m2.2.2.2.2.2">𝑦</ci><ci id="S5.I10.ix1.p1.2.m2.2.2.2.2.3.cmml" xref="S5.I10.ix1.p1.2.m2.2.2.2.2.3">′</ci></apply><apply id="S5.I10.ix1.p1.2.m2.3.3.3.3.cmml" xref="S5.I10.ix1.p1.2.m2.3.3.3.3"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.2.m2.3.3.3.3.1.cmml" xref="S5.I10.ix1.p1.2.m2.3.3.3.3">superscript</csymbol><ci id="S5.I10.ix1.p1.2.m2.3.3.3.3.2.cmml" xref="S5.I10.ix1.p1.2.m2.3.3.3.3.2">𝑧</ci><ci id="S5.I10.ix1.p1.2.m2.3.3.3.3.3.cmml" xref="S5.I10.ix1.p1.2.m2.3.3.3.3.3">′</ci></apply></vector></annotation-xml><annotation encoding="application/x-tex" id="S5.I10.ix1.p1.2.m2.3c">(x^{\prime},y^{\prime},z^{\prime})</annotation></semantics></math> to chessboard plane is represented as <math id="S5.I10.ix1.p1.3.m3.1" class="ltx_Math" alttext="d_{1}" display="inline"><semantics id="S5.I10.ix1.p1.3.m3.1a"><msub id="S5.I10.ix1.p1.3.m3.1.1" xref="S5.I10.ix1.p1.3.m3.1.1.cmml"><mi id="S5.I10.ix1.p1.3.m3.1.1.2" xref="S5.I10.ix1.p1.3.m3.1.1.2.cmml">d</mi><mn id="S5.I10.ix1.p1.3.m3.1.1.3" xref="S5.I10.ix1.p1.3.m3.1.1.3.cmml">1</mn></msub><annotation-xml encoding="MathML-Content" id="S5.I10.ix1.p1.3.m3.1b"><apply id="S5.I10.ix1.p1.3.m3.1.1.cmml" xref="S5.I10.ix1.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.3.m3.1.1.1.cmml" xref="S5.I10.ix1.p1.3.m3.1.1">subscript</csymbol><ci id="S5.I10.ix1.p1.3.m3.1.1.2.cmml" xref="S5.I10.ix1.p1.3.m3.1.1.2">𝑑</ci><cn type="integer" id="S5.I10.ix1.p1.3.m3.1.1.3.cmml" xref="S5.I10.ix1.p1.3.m3.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.I10.ix1.p1.3.m3.1c">d_{1}</annotation></semantics></math>, scale <math id="S5.I10.ix1.p1.4.m4.1" class="ltx_Math" alttext="\alpha=\displaystyle\frac{d_{0}+d_{1}}{d_{1}}" display="inline"><semantics id="S5.I10.ix1.p1.4.m4.1a"><mrow id="S5.I10.ix1.p1.4.m4.1.1" xref="S5.I10.ix1.p1.4.m4.1.1.cmml"><mi id="S5.I10.ix1.p1.4.m4.1.1.2" xref="S5.I10.ix1.p1.4.m4.1.1.2.cmml">α</mi><mo id="S5.I10.ix1.p1.4.m4.1.1.1" xref="S5.I10.ix1.p1.4.m4.1.1.1.cmml">=</mo><mstyle displaystyle="true" id="S5.I10.ix1.p1.4.m4.1.1.3" xref="S5.I10.ix1.p1.4.m4.1.1.3.cmml"><mfrac id="S5.I10.ix1.p1.4.m4.1.1.3a" xref="S5.I10.ix1.p1.4.m4.1.1.3.cmml"><mrow id="S5.I10.ix1.p1.4.m4.1.1.3.2" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.cmml"><msub id="S5.I10.ix1.p1.4.m4.1.1.3.2.2" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.2.cmml"><mi id="S5.I10.ix1.p1.4.m4.1.1.3.2.2.2" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.2.2.cmml">d</mi><mn id="S5.I10.ix1.p1.4.m4.1.1.3.2.2.3" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.2.3.cmml">0</mn></msub><mo id="S5.I10.ix1.p1.4.m4.1.1.3.2.1" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.1.cmml">+</mo><msub id="S5.I10.ix1.p1.4.m4.1.1.3.2.3" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.3.cmml"><mi id="S5.I10.ix1.p1.4.m4.1.1.3.2.3.2" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.3.2.cmml">d</mi><mn id="S5.I10.ix1.p1.4.m4.1.1.3.2.3.3" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.3.3.cmml">1</mn></msub></mrow><msub id="S5.I10.ix1.p1.4.m4.1.1.3.3" xref="S5.I10.ix1.p1.4.m4.1.1.3.3.cmml"><mi id="S5.I10.ix1.p1.4.m4.1.1.3.3.2" xref="S5.I10.ix1.p1.4.m4.1.1.3.3.2.cmml">d</mi><mn id="S5.I10.ix1.p1.4.m4.1.1.3.3.3" xref="S5.I10.ix1.p1.4.m4.1.1.3.3.3.cmml">1</mn></msub></mfrac></mstyle></mrow><annotation-xml encoding="MathML-Content" id="S5.I10.ix1.p1.4.m4.1b"><apply id="S5.I10.ix1.p1.4.m4.1.1.cmml" xref="S5.I10.ix1.p1.4.m4.1.1"><eq id="S5.I10.ix1.p1.4.m4.1.1.1.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.1"></eq><ci id="S5.I10.ix1.p1.4.m4.1.1.2.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.2">𝛼</ci><apply id="S5.I10.ix1.p1.4.m4.1.1.3.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3"><divide id="S5.I10.ix1.p1.4.m4.1.1.3.1.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3"></divide><apply id="S5.I10.ix1.p1.4.m4.1.1.3.2.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2"><plus id="S5.I10.ix1.p1.4.m4.1.1.3.2.1.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.1"></plus><apply id="S5.I10.ix1.p1.4.m4.1.1.3.2.2.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.2"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.4.m4.1.1.3.2.2.1.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.2">subscript</csymbol><ci id="S5.I10.ix1.p1.4.m4.1.1.3.2.2.2.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.2.2">𝑑</ci><cn type="integer" id="S5.I10.ix1.p1.4.m4.1.1.3.2.2.3.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.2.3">0</cn></apply><apply id="S5.I10.ix1.p1.4.m4.1.1.3.2.3.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.3"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.4.m4.1.1.3.2.3.1.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.3">subscript</csymbol><ci id="S5.I10.ix1.p1.4.m4.1.1.3.2.3.2.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.3.2">𝑑</ci><cn type="integer" id="S5.I10.ix1.p1.4.m4.1.1.3.2.3.3.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.2.3.3">1</cn></apply></apply><apply id="S5.I10.ix1.p1.4.m4.1.1.3.3.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.3"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.4.m4.1.1.3.3.1.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.3">subscript</csymbol><ci id="S5.I10.ix1.p1.4.m4.1.1.3.3.2.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.3.2">𝑑</ci><cn type="integer" id="S5.I10.ix1.p1.4.m4.1.1.3.3.3.cmml" xref="S5.I10.ix1.p1.4.m4.1.1.3.3.3">1</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.I10.ix1.p1.4.m4.1c">\alpha=\displaystyle\frac{d_{0}+d_{1}}{d_{1}}</annotation></semantics></math>, for each scene <math id="S5.I10.ix1.p1.5.m5.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S5.I10.ix1.p1.5.m5.1a"><mi id="S5.I10.ix1.p1.5.m5.1.1" xref="S5.I10.ix1.p1.5.m5.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S5.I10.ix1.p1.5.m5.1b"><ci id="S5.I10.ix1.p1.5.m5.1.1.cmml" xref="S5.I10.ix1.p1.5.m5.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S5.I10.ix1.p1.5.m5.1c">i</annotation></semantics></math> we can get a scale <math id="S5.I10.ix1.p1.6.m6.1" class="ltx_Math" alttext="\alpha_{i}" display="inline"><semantics id="S5.I10.ix1.p1.6.m6.1a"><msub id="S5.I10.ix1.p1.6.m6.1.1" xref="S5.I10.ix1.p1.6.m6.1.1.cmml"><mi id="S5.I10.ix1.p1.6.m6.1.1.2" xref="S5.I10.ix1.p1.6.m6.1.1.2.cmml">α</mi><mi id="S5.I10.ix1.p1.6.m6.1.1.3" xref="S5.I10.ix1.p1.6.m6.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S5.I10.ix1.p1.6.m6.1b"><apply id="S5.I10.ix1.p1.6.m6.1.1.cmml" xref="S5.I10.ix1.p1.6.m6.1.1"><csymbol cd="ambiguous" id="S5.I10.ix1.p1.6.m6.1.1.1.cmml" xref="S5.I10.ix1.p1.6.m6.1.1">subscript</csymbol><ci id="S5.I10.ix1.p1.6.m6.1.1.2.cmml" xref="S5.I10.ix1.p1.6.m6.1.1.2">𝛼</ci><ci id="S5.I10.ix1.p1.6.m6.1.1.3.cmml" xref="S5.I10.ix1.p1.6.m6.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.I10.ix1.p1.6.m6.1c">\alpha_{i}</annotation></semantics></math>. By calculate all 32 scenarios we can get 32 scales. The final scale <math id="S5.I10.ix1.p1.7.m7.1" class="ltx_Math" alttext="\alpha" display="inline"><semantics id="S5.I10.ix1.p1.7.m7.1a"><mi id="S5.I10.ix1.p1.7.m7.1.1" xref="S5.I10.ix1.p1.7.m7.1.1.cmml">α</mi><annotation-xml encoding="MathML-Content" id="S5.I10.ix1.p1.7.m7.1b"><ci id="S5.I10.ix1.p1.7.m7.1.1.cmml" xref="S5.I10.ix1.p1.7.m7.1.1">𝛼</ci></annotation-xml><annotation encoding="application/x-tex" id="S5.I10.ix1.p1.7.m7.1c">\alpha</annotation></semantics></math> is determined by averaging them.</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S5.SS2.p3" class="ltx_para">
+<p id="S5.SS2.p3.1" class="ltx_p">For the experiment, we set the scale <math id="S5.SS2.p3.1.m1.1" class="ltx_Math" alttext="\alpha=1.00223" display="inline"><semantics id="S5.SS2.p3.1.m1.1a"><mrow id="S5.SS2.p3.1.m1.1.1" xref="S5.SS2.p3.1.m1.1.1.cmml"><mi id="S5.SS2.p3.1.m1.1.1.2" xref="S5.SS2.p3.1.m1.1.1.2.cmml">α</mi><mo id="S5.SS2.p3.1.m1.1.1.1" xref="S5.SS2.p3.1.m1.1.1.1.cmml">=</mo><mn id="S5.SS2.p3.1.m1.1.1.3" xref="S5.SS2.p3.1.m1.1.1.3.cmml">1.00223</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.SS2.p3.1.m1.1b"><apply id="S5.SS2.p3.1.m1.1.1.cmml" xref="S5.SS2.p3.1.m1.1.1"><eq id="S5.SS2.p3.1.m1.1.1.1.cmml" xref="S5.SS2.p3.1.m1.1.1.1"></eq><ci id="S5.SS2.p3.1.m1.1.1.2.cmml" xref="S5.SS2.p3.1.m1.1.1.2">𝛼</ci><cn type="float" id="S5.SS2.p3.1.m1.1.1.3.cmml" xref="S5.SS2.p3.1.m1.1.1.3">1.00223</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS2.p3.1.m1.1c">\alpha=1.00223</annotation></semantics></math>. Fig. <a href="#S5.F10" title="Figure 10 ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a> exhibits the effect of the scale equalization step.</p>
+</div>
+<figure id="S5.F12" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S5.F12.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/mesh/23.jpg" id="S5.F12.1.g1" class="ltx_graphics ltx_img_square" width="117" height="100" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S5.F12.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/mesh/24.jpg" id="S5.F12.2.g1" class="ltx_graphics ltx_img_square" width="117" height="100" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S5.F12.3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/mesh/25.jpg" id="S5.F12.3.g1" class="ltx_graphics ltx_img_square" width="117" height="100" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S5.F12.4" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/mesh/26.jpg" id="S5.F12.4.g1" class="ltx_graphics ltx_img_square" width="117" height="100" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_many">
+<figure id="S5.F12.5" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2011.08771/assets/picture/mesh/27.jpg" id="S5.F12.5.g1" class="ltx_graphics ltx_img_square" width="117" height="100" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 12: </span>These are several meshes of our data. Our reconstruction method has good results in shape, color and resolution and the meshes look like real things.</figcaption>
+</figure>
+</section>
+<section id="S5.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS3.5.1.1" class="ltx_text">V-C</span> </span><span id="S5.SS3.6.2" class="ltx_text ltx_font_italic">Merging Two Point Clouds</span>
+</h3>
+
+<div id="S5.SS3.p1" class="ltx_para">
+<p id="S5.SS3.p1.1" class="ltx_p">As we capture the object at two positions, upright and upside down, here we need to concatenate these two point cloud together to get the full structure of the object. Here we choose to use point cloud registration method, such as ICP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>, Go-ICP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>, Colored-ICP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite> and FGR <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite>. For many symmetrical objects, it has ambiguity problem when only using the depth information. Letting the texture information involved this issue could be alleviated. In practice, we found the Colored-ICP is the best one to fit this purpose. We know the position of these two point cloud, thus could provide a very good initial value for Colored-ICP. Besides, we only using the middle overlapping part of the object for the registration process. The qualitative result is shown in Fig. <a href="#S5.F11" title="Figure 11 ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">11</span></a>.</p>
+</div>
+</section>
+<section id="S5.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS4.5.1.1" class="ltx_text">V-D</span> </span><span id="S5.SS4.6.2" class="ltx_text ltx_font_italic">Improve Texture Quality</span>
+</h3>
+
+<div id="S5.SS4.p1" class="ltx_para">
+<p id="S5.SS4.p1.1" class="ltx_p">We can get a complete and textured point cloud of the object after the merging process, as shown in the right image in Fig. <a href="#S5.F11" title="Figure 11 ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">11</span></a>. To be notices, the texture details on mesh generated by Poisson reconstruction are blurred, as shown in Fig. <a href="#S5.F13" title="Figure 13 ‣ V-D Improve Texture Quality ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">13</span></a>. In order to improve the quality of the texture, we re-dye the object’s color. First, we transform all vertices of the mesh to the camera view. Then using method <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite> to removal the hidden points and keep the visible points. Then we re-project these points to the 2D image plane and use the RGB images which captured by the Sony Camera to get the color at the position of the visible points. This method significantly improves the texture details of object, as shown in Fig. <a href="#S5.F13" title="Figure 13 ‣ V-D Improve Texture Quality ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">13</span></a>.</p>
+</div>
+<figure id="S5.F13" class="ltx_figure ltx_align_center">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/15.jpg" id="S5.F13.1.g1" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="281" height="541" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.08771/assets/picture/16.jpg" id="S5.F13.2.g2" class="ltx_graphics ltx_figure_panel ltx_img_portrait" width="281" height="541" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 13: </span>The left image shows the fuzzy texture of mesh, the right image shows the effect of re dyeing. Through the comparison, we can see that the improvement of the edge is obvious.</figcaption>
+</figure>
+</section>
+<section id="S5.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS5.5.1.1" class="ltx_text">V-E</span> </span><span id="S5.SS5.6.2" class="ltx_text ltx_font_italic">Accuracy</span>
+</h3>
+
+<div id="S5.SS5.p1" class="ltx_para">
+<p id="S5.SS5.p1.1" class="ltx_p">In order to measure the accuracy of our method, we follow Bigbird’s protocol, projecting a representative mesh onto an image from Sony camera(which is only used to get color information). Compared with Bigbird’s outcome, we can see that our method could fit the contour of the object better, as shown in Fig. <a href="#S2.F1" title="Figure 1 ‣ II RELATED WORK ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. Using our method to generate datasets can have more accurate annotation, which is not trivial in 6D pose estimation.</p>
+</div>
+<div id="S5.SS5.p2" class="ltx_para">
+<p id="S5.SS5.p2.1" class="ltx_p">At the same time, we compare the size of the model with the size of the real object. In order to get accurate measurement result, we choose a metal column. We compare the size of the bounding box of the mesh with its actual physic size. Our reconstruction error is less then 0.2mm, the result is summarized in Table <a href="#S5.T1" title="TABLE I ‣ V-E Accuracy ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>.</p>
+</div>
+<figure id="S5.T1" class="ltx_table">
+<table id="S5.T1.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T1.1.1.1" class="ltx_tr">
+<td id="S5.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" rowspan="2"><span id="S5.T1.1.1.1.1.1" class="ltx_text">direction</span></td>
+<td id="S5.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" colspan="2">length of bounding box(mm)</td>
+<td id="S5.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" rowspan="2"><span id="S5.T1.1.1.1.3.1" class="ltx_text">error(mm)</span></td>
+<td id="S5.T1.1.1.1.4" class="ltx_td"></td>
+</tr>
+<tr id="S5.T1.1.2.2" class="ltx_tr">
+<td id="S5.T1.1.2.2.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">mesh</td>
+<td id="S5.T1.1.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">real</td>
+<td id="S5.T1.1.2.2.3" class="ltx_td"></td>
+</tr>
+<tr id="S5.T1.1.3.3" class="ltx_tr">
+<td id="S5.T1.1.3.3.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">x</td>
+<td id="S5.T1.1.3.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">77.89</td>
+<td id="S5.T1.1.3.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">77.96</td>
+<td id="S5.T1.1.3.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.07</td>
+<td id="S5.T1.1.3.3.5" class="ltx_td"></td>
+</tr>
+<tr id="S5.T1.1.4.4" class="ltx_tr">
+<td id="S5.T1.1.4.4.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">y</td>
+<td id="S5.T1.1.4.4.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">78.09</td>
+<td id="S5.T1.1.4.4.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">77.98</td>
+<td id="S5.T1.1.4.4.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.11</td>
+<td id="S5.T1.1.4.4.5" class="ltx_td"></td>
+</tr>
+<tr id="S5.T1.1.5.5" class="ltx_tr">
+<td id="S5.T1.1.5.5.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t">z</td>
+<td id="S5.T1.1.5.5.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">85.32</td>
+<td id="S5.T1.1.5.5.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">85.48</td>
+<td id="S5.T1.1.5.5.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">0.16</td>
+<td id="S5.T1.1.5.5.5" class="ltx_td"></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Error of reconstruction</figcaption>
+</figure>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span id="S6.1.1" class="ltx_text ltx_font_smallcaps">Presentation of Our Data</span>
+</h2>
+
+<section id="S6.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S6.SS1.5.1.1" class="ltx_text">VI-A</span> </span><span id="S6.SS1.6.2" class="ltx_text ltx_font_italic">Mesh data</span>
+</h3>
+
+<div id="S6.SS1.p1" class="ltx_para">
+<p id="S6.SS1.p1.1" class="ltx_p">At present, we have completed the acquisition of tens of objects(some are shown in Fig. <a href="#S5.F12" title="Figure 12 ‣ V-B Scale Equalization ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">12</span></a>), and will expand the amount of objects to more than 100 in future work.</p>
+</div>
+</section>
+<section id="S6.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S6.SS2.5.1.1" class="ltx_text">VI-B</span> </span><span id="S6.SS2.6.2" class="ltx_text ltx_font_italic">Depth Map and Point Cloud</span>
+</h3>
+
+<div id="S6.SS2.p1" class="ltx_para">
+<p id="S6.SS2.p1.1" class="ltx_p">While generating mesh, we can generate depth map from each scenarios, as shown in Fig. <a href="#S2.F2" title="Figure 2 ‣ II RELATED WORK ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.The highest resolution of those depth cameras is 1.3MP(belongs to Ensenso N35), but its depth map’s quality is not the best. Compared with depth maps from several depth sensors, our depth map has higher resolution(6MP) and the edge of object is more sharp. Also we provide high-quality, dense point clouds of objects
+(the resolution of point cloud is 0.1 mm), as shown in the right image in Fig. <a href="#S5.F11" title="Figure 11 ‣ V Mesh Generation ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">11</span></a>.</p>
+</div>
+<div id="S6.SS2.p2" class="ltx_para">
+<p id="S6.SS2.p2.1" class="ltx_p">Compared all other sensors’ result in Fig. <a href="#S2.F2" title="Figure 2 ‣ II RELATED WORK ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, our results is sharp and clean at the edge of the objects. Our data is closer to the data generated by render, the result in Fig. <a href="#S2.F2" title="Figure 2 ‣ II RELATED WORK ‣ A Method to Generate High Precision Mesh Model and RGB-D Dataset for 6D Pose Estimation Task" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> confirms our statement, which is reducing the gap between the real data and the synthetic data.</p>
+</div>
+</section>
+</section>
+<section id="S7" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VII </span><span id="S7.1.1" class="ltx_text ltx_font_smallcaps">CONCLUSION</span>
+</h2>
+
+<div id="S7.p1" class="ltx_para">
+<p id="S7.p1.1" class="ltx_p">We present a robust, high precision and fast 3D reconstruction method. Using this method, we can provide high resolution meshes, high precision point clouds, high resolution depth maps and high resolution RGB images. In addition, we can generate more accurate ground truth annotation than the existing methods. Our algorithm is fully automatic and efficient, and has the ability to make large datasets. At the same time, the data generated by our algorithm is closer to the data generated by render, which reducing the gap between real data and synthetic data.</p>
+</div>
+<div id="S7.p2" class="ltx_para">
+<p id="S7.p2.1" class="ltx_p">In the future, we will use this system to make a large 3D dataset with accurate ground truth to facilitate the 6D pose estimation task.</p>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography" style="font-size:90%;">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text" style="font-size:90%;">
+Till Grenzdörffer, Martin Günther, and Joachim Hertzberg.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.2.1" class="ltx_text" style="font-size:90%;">Ycb-m: A multi-camera rgb-d dataset for object recognition and 6dof
+pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib1.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICRA</span><span id="bib.bib1.5.3" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text" style="font-size:90%;">
+Sunao Hashimoto, Akihiko Ishida, Masahiko Inami, and Takeo Igarashi.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.2.1" class="ltx_text" style="font-size:90%;">Touchme: An augmented reality based remote robot manipulation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib2.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">The 21st International Conference on Artificial Reality and
+Telexistence</span><span id="bib.bib2.5.3" class="ltx_text" style="font-size:90%;">, volume 2, 2011.
+</span>
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text" style="font-size:90%;">
+Tomas Hodan, Daniel Barath, and Jiri Matas.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.2.1" class="ltx_text" style="font-size:90%;">EPOS: Estimating 6D Pose of Objects with Symmetries.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib3.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">CVPR</span><span id="bib.bib3.5.3" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text" style="font-size:90%;">
+Julie Carmigniani, Borko Furht, Marco Anisetti, Paolo Ceravolo, Ernesto
+Damiani, and Misa Ivkovic.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.2.1" class="ltx_text" style="font-size:90%;">Augmented reality technologies, systems and applications.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Multimedia tools and applications</span><span id="bib.bib4.4.2" class="ltx_text" style="font-size:90%;">, 51(1):341–377, 2011.
+</span>
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text" style="font-size:90%;">
+Zhengyou Zhang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.2.1" class="ltx_text" style="font-size:90%;">Microsoft kinect sensor and its effect.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE multimedia</span><span id="bib.bib5.4.2" class="ltx_text" style="font-size:90%;">, 19(2):4–10, 2012.
+</span>
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text" style="font-size:90%;">
+Mark Draelos, Qiang Qiu, Alex Bronstein, and Guillermo Sapiro.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.2.1" class="ltx_text" style="font-size:90%;">Intel realsense= real low cost gaze.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib6.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICIP</span><span id="bib.bib6.5.3" class="ltx_text" style="font-size:90%;">, pages 2520–2524, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text" style="font-size:90%;">
+Arjun Singh, James Sha, Karthik S Narayan, Tudor Achim, and Pieter Abbeel.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.2.1" class="ltx_text" style="font-size:90%;">Bigbird: A large-scale 3d database of object instances.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib7.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICRA</span><span id="bib.bib7.5.3" class="ltx_text" style="font-size:90%;">, pages 509–516, 2014.
+</span>
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text" style="font-size:90%;">
+Berk Calli, Arjun Singh, Aaron Walsman, Siddhartha Srinivasa, Pieter Abbeel,
+and Aaron M Dollar.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.2.1" class="ltx_text" style="font-size:90%;">The ycb object and model set: Towards common benchmarks for
+manipulation research.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib8.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICAR</span><span id="bib.bib8.5.3" class="ltx_text" style="font-size:90%;">, pages 510–517, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text" style="font-size:90%;">
+Alexander Kasper, Zhixing Xue, and Rüdiger Dillmann.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.2.1" class="ltx_text" style="font-size:90%;">The kit object models database: An object model database for object
+recognition, localization and manipulation in service robotics.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib9.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IJRR</span><span id="bib.bib9.5.3" class="ltx_text" style="font-size:90%;">, pages 927–934, 2012.
+</span>
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span id="bib.bib10.1.1" class="ltx_text" style="font-size:90%;">
+Stefan Hinterstoisser, Vincent Lepetit, Slobodan Ilic, Stefan Holzer, Gary
+Bradski, Kurt Konolige, and Nassir Navab.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.2.1" class="ltx_text" style="font-size:90%;">Model based training, detection and pose estimation of texture-less
+3d objects in heavily cluttered scenes.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib10.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ACCVa</span><span id="bib.bib10.5.3" class="ltx_text" style="font-size:90%;">, pages 548–562, 2012.
+</span>
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span id="bib.bib11.1.1" class="ltx_text" style="font-size:90%;">
+Yu Xiang, Tanner Schmidt, Venkatraman Narayanan, and Dieter Fox.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.2.1" class="ltx_text" style="font-size:90%;">Posecnn: A convolutional neural network for 6d object pose estimation
+in cluttered scenes.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib11.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">RSS</span><span id="bib.bib11.5.3" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span id="bib.bib12.1.1" class="ltx_text" style="font-size:90%;">
+Yinlin Hu, Joachim Hugonot, Pascal Fua, and Mathieu Salzmann.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.2.1" class="ltx_text" style="font-size:90%;">Segmentation-driven 6d object pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib12.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">CVPR</span><span id="bib.bib12.5.3" class="ltx_text" style="font-size:90%;">, pages 3385–3394, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text" style="font-size:90%;">
+Yue Wang and Justin M Solomon.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.2.1" class="ltx_text" style="font-size:90%;">Prnet: Self-supervised learning for partial-to-partial registration.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib13.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">NIPS</span><span id="bib.bib13.5.3" class="ltx_text" style="font-size:90%;">, pages 8812–8824, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text" style="font-size:90%;">
+Zan Gojcic, Caifa Zhou, Jan D Wegner, Leonidas J Guibas, and Tolga Birdal.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.2.1" class="ltx_text" style="font-size:90%;">Learning multiview 3d point cloud registration.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib14.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">CVPR</span><span id="bib.bib14.5.3" class="ltx_text" style="font-size:90%;">, pages 5545–5554, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span id="bib.bib15.1.1" class="ltx_text" style="font-size:90%;">
+Christopher Choy, Wei Dong, and Vladlen Koltun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.2.1" class="ltx_text" style="font-size:90%;">Deep global registration.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CVPR</span><span id="bib.bib15.4.2" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text" style="font-size:90%;">
+Zi Jian Yew and Gim Hee Lee.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.2.1" class="ltx_text" style="font-size:90%;">Rpm-net: Robust point matching using learned features.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib16.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">CVPR</span><span id="bib.bib16.5.3" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span id="bib.bib17.1.1" class="ltx_text" style="font-size:90%;">
+S Zennaro, Matteo Munaro, Simone Milani, Pietro Zanuttigh, A Bernardi, Stefano
+Ghidoni, and Emanuele Menegatti.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.2.1" class="ltx_text" style="font-size:90%;">Performance evaluation of the 1st and 2nd generation kinect for
+multimedia applications.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib17.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICME</span><span id="bib.bib17.5.3" class="ltx_text" style="font-size:90%;">, pages 1–6, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span id="bib.bib18.1.1" class="ltx_text" style="font-size:90%;">
+Daniel Herrera, Juho Kannala, and Janne Heikkilä.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.2.1" class="ltx_text" style="font-size:90%;">Accurate and practical calibration of a depth and color camera pair.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib18.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">CAIP</span><span id="bib.bib18.5.3" class="ltx_text" style="font-size:90%;">, pages 437–445, 2011.
+</span>
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text" style="font-size:90%;">
+A Geiger, F Moosmann, O Car, and B Schuster.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.2.1" class="ltx_text" style="font-size:90%;">A toolbox for automatic calibration of range and camera sensors using
+a single shot.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib19.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICRA</span><span id="bib.bib19.5.3" class="ltx_text" style="font-size:90%;">, 2012.
+</span>
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text" style="font-size:90%;">
+Kiru Park, Timothy Patten, Johann Prankl, and Markus Vincze.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.2.1" class="ltx_text" style="font-size:90%;">Multi-task template matching for object detection, segmentation and
+pose estimation using depth images.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib20.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICRA</span><span id="bib.bib20.5.3" class="ltx_text" style="font-size:90%;">, pages 7207–7213, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text" style="font-size:90%;">
+Kentaro Wada, Edgar Sucar, Stephen James, Daniel Lenton, and Andrew J. Davison.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.2.1" class="ltx_text" style="font-size:90%;">Morefusion: Multi-object reasoning for 6d pose estimation from
+volumetric fusion.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib21.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">CVPR</span><span id="bib.bib21.5.3" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span id="bib.bib22.1.1" class="ltx_text" style="font-size:90%;">
+Yue Wang and Justin M Solomon.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.2.1" class="ltx_text" style="font-size:90%;">Deep closest point: Learning representations for point cloud
+registration.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib22.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICCV</span><span id="bib.bib22.5.3" class="ltx_text" style="font-size:90%;">, pages 3523–3532, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span id="bib.bib23.1.1" class="ltx_text" style="font-size:90%;">
+Daniel Scharstein and Richard Szeliski.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.2.1" class="ltx_text" style="font-size:90%;">High-accuracy stereo depth maps using structured light.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib23.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICCV</span><span id="bib.bib23.5.3" class="ltx_text" style="font-size:90%;">, pages I–I, 2003.
+</span>
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span id="bib.bib24.1.1" class="ltx_text" style="font-size:90%;">
+Jianfeng Wang, Cha Zhang, Wenwu Zhu, Zhengyou Zhang, Zixiang Xiong, and
+Philip A Chou.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.2.1" class="ltx_text" style="font-size:90%;">3d scene reconstruction by multiple structured-light based commodity
+depth cameras.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib24.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICASSP</span><span id="bib.bib24.5.3" class="ltx_text" style="font-size:90%;">, pages 5429–5432, 2012.
+</span>
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span id="bib.bib25.1.1" class="ltx_text" style="font-size:90%;">
+Gary Bradski and Adrian Kaehler.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.2.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Learning OpenCV: Computer vision with the OpenCV library</span><span id="bib.bib25.3.2" class="ltx_text" style="font-size:90%;">.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.4.1" class="ltx_text" style="font-size:90%;">” O’Reilly Media, Inc.”, 2008.
+</span>
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span id="bib.bib26.1.1" class="ltx_text" style="font-size:90%;">
+Zhengyou Zhang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.2.1" class="ltx_text" style="font-size:90%;">Flexible camera calibration by viewing a plane from unknown
+orientations.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib26.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICCV</span><span id="bib.bib26.5.3" class="ltx_text" style="font-size:90%;">, pages 666–673, 1999.
+</span>
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span id="bib.bib27.1.1" class="ltx_text" style="font-size:90%;">
+Adrian Penate-Sanchez, Juan Andrade-Cetto, and Francesc Moreno-Noguer.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.2.1" class="ltx_text" style="font-size:90%;">Exhaustive linearization for robust camera pose and focal length
+estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">TPAMI</span><span id="bib.bib27.4.2" class="ltx_text" style="font-size:90%;">, 35(10):2387–2400, 2013.
+</span>
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span id="bib.bib28.1.1" class="ltx_text" style="font-size:90%;">
+Qian-Yi Zhou, Jaesik Park, and Vladlen Koltun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.2.1" class="ltx_text" style="font-size:90%;">Open3d: A modern library for 3d data processing.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib28.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">arXiv Preprint</span><span id="bib.bib28.5.3" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span id="bib.bib29.1.1" class="ltx_text" style="font-size:90%;">
+Jaesik Park, Qian-Yi Zhou, and Vladlen Koltun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.2.1" class="ltx_text" style="font-size:90%;">Colored point cloud registration revisited.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib29.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ICCV</span><span id="bib.bib29.5.3" class="ltx_text" style="font-size:90%;">, pages 143–152, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock"><span id="bib.bib30.1.1" class="ltx_text" style="font-size:90%;">
+Michael Kazhdan, Matthew Bolitho, and Hugues Hoppe.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib30.2.1" class="ltx_text" style="font-size:90%;">Poisson surface reconstruction.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib30.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib30.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">SGP</span><span id="bib.bib30.5.3" class="ltx_text" style="font-size:90%;">, volume 7, 2006.
+</span>
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock"><span id="bib.bib31.1.1" class="ltx_text" style="font-size:90%;">
+P. Besl and N. Mckay.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib31.2.1" class="ltx_text" style="font-size:90%;">A method for registration of 3d shapes.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib31.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">PAMI</span><span id="bib.bib31.4.2" class="ltx_text" style="font-size:90%;">, 14(2):239–256, February 1992.
+</span>
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock"><span id="bib.bib32.1.1" class="ltx_text" style="font-size:90%;">
+Jiaolong Yang, Hongdong Li, Dylan Campbell, and Yunde Jia.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib32.2.1" class="ltx_text" style="font-size:90%;">Go-icp: A globally optimal solution to 3d icp point-set registration.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib32.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">TPAMI</span><span id="bib.bib32.4.2" class="ltx_text" style="font-size:90%;">, 38(11):2241–2254, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock"><span id="bib.bib33.1.1" class="ltx_text" style="font-size:90%;">
+Qian-Yi Zhou, Jaesik Park, and Vladlen Koltun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib33.2.1" class="ltx_text" style="font-size:90%;">Fast global registration.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib33.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib33.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ECCV</span><span id="bib.bib33.5.3" class="ltx_text" style="font-size:90%;">, pages 766–782. Springer, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock"><span id="bib.bib34.1.1" class="ltx_text" style="font-size:90%;">
+Sagi Katz, Ayellet Tal, and Ronen Basri.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib34.2.1" class="ltx_text" style="font-size:90%;">Direct visibility of point sets.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib34.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib34.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">SIGGRAPH</span><span id="bib.bib34.5.3" class="ltx_text" style="font-size:90%;">, pages 24–es, 2007.
+</span>
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2011.08770" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2011.08771" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2011.08771">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2011.08771" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2011.08772" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Tue Mar 19 04:50:27 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

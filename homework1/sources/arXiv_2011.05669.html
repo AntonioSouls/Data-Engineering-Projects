@@ -1,0 +1,688 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2011.05669] A Hybrid Approach for 6DoF Pose Estimation</title><meta property="og:description" content="We propose a method for 6DoF pose estimation of rigid objects that uses a state-of-the-art deep learning based instance detector to segment object instances in an RGB image, followed by a point-pair based voting method…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="A Hybrid Approach for 6DoF Pose Estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="A Hybrid Approach for 6DoF Pose Estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2011.05669">
+
+<!--Generated on Sat Mar  2 08:52:00 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span id="id1" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">institutetext: </span>MVTec Software GmbH, Munich, Germany
+<br class="ltx_break"><span id="id1.1" class="ltx_note ltx_role_email"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">email: </span>{koenig,drost}@mvtec.com</span></span></span></span></span></span>
+<h1 class="ltx_title ltx_title_document">A Hybrid Approach for 6DoF Pose Estimation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Rebecca König 
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_orcid"><a target="_blank" href="https://orcid.org/0000-0002-4169-6759" title="ORCID identifier" class="ltx_ref">0000-0002-4169-6759</a></span>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Bertram Drost
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_orcid"><a target="_blank" href="https://orcid.org/0000-0002-4109-6999" title="ORCID identifier" class="ltx_ref">0000-0002-4109-6999</a></span>
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">We propose a method for 6DoF pose estimation of rigid objects that uses a state-of-the-art deep learning based instance detector to segment object instances in an RGB image, followed by a point-pair based voting method to recover the object’s pose. We additionally use an automatic method selection that chooses the instance detector and the training set as that with the highest performance on the validation set. This hybrid approach leverages the best of learning and classic approaches, using CNNs to filter highly unstructured data and cut through the clutter, and a local geometric approach with proven convergence for robust pose estimation.
+The method is evaluated on the BOP core datasets where it significantly exceeds the baseline method and is the best fast method in the BOP 2020 Challenge.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Many of the recently published approaches for 6DoF object detection, especially on the BOP benchmark <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>, follow a two-stage pipeline. The first stage is a state of the art deep learning object detector that outputs the potential locations of object instances, often as bounding boxes or instance masks. The second stage iterates over those instances and, for each, estimates the instance’s pose.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">The main technical differences in the approaches are in the second, pose estimation stage. The deep-learning based approaches can roughly be categorized by the type of data representation they use (mostly image-based convolutions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> vs. Graph-based networks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>), and the kind of pose estimation they employ (direct regression of pose parameters <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, regression of 3D model coordinates of the scene points usually followed by PnP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, or employing a codebook for estimating the rotation of an object <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>).</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">A key observation from the BOP 2019 challenge was that while point-pair voting based methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>, which are not learning based, overall had the highest recognition rates, they were also among the slowest methods. One reason is the large search space, as the voting is performed on the complete scene without pre-segmentation or pre-detection of instances. Well-trained deep-learning based instance segmentation methods, on the other hand, estimate the locations of the objects in a scene rather fast.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">We therefore combine the two approaches and perform the point-pair voting of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> only on locations returned by an instance segmentation network. This combines the advantages of both methods: the deep network’s ability to quickly filter through complex real-world data and to narrow down the search space, and the provable robustness of the point-pair voting for recovering the pose.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Method</h2>
+
+<figure id="S2.F1" class="ltx_figure"><img src="/html/2011.05669/assets/figures/method.png" id="S2.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="538" height="167" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Overview of the method, which follows a classical two-stage approach. First, a state-of-the-art network is used to find object instances (masks and object IDs) in the RGB image. Second, the point-pair voting is used to recover an object pose for each instance, using the depth image.</figcaption>
+</figure>
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">We use a detection pipeline that uses a Deep-Learning based instance segmentation method as first stage, which returns regions and class IDs, followed by a point-pair voting in the regions of the detected instances as second stage. To account for the large domain differences in the BOP datasets, we automatically select the best instance segmentation method and training dataset based on the performance on the validation set.</p>
+</div>
+<section id="S2.SS0.SSS0.Px1" class="ltx_paragraph">
+<h3 class="ltx_title ltx_title_paragraph">Instance Segmentation</h3>
+
+<div id="S2.SS0.SSS0.Px1.p1" class="ltx_para">
+<p id="S2.SS0.SSS0.Px1.p1.1" class="ltx_p">The datasets in the BOP benchmark cover a variety of different object types and object placements. The objects have different geometric features and textures, while the placements range from isolated single objects to cluttered, unordered heaps of objects of the same instance. We found that a single object detector does not always cover all those cases properly. Instead, we train for each dataset a Mask-RCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> and a RetinaMask <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> network and automatically select the detector with the highest mean average precision (mAP) with an Intersection over Union (IoU) threshold at 0.5 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> on the validation set. We use Mask-RCNN for the datasets YCB-V, T-LESS and ITODD, and RetinaMask for LM-O, HB, TUD-L and IC-BIN. We assume that Mask-RCNN performs better on these datasets since they have many classes of which some are very similar to each other. The two-stage approach of Mask-RCNN is probably better suited for these kind of datasets whereas RetinaMask directly classifies the anchor-boxes.</p>
+</div>
+</section>
+<section id="S2.SS0.SSS0.Px2" class="ltx_paragraph">
+<h3 class="ltx_title ltx_title_paragraph">Training Set</h3>
+
+<div id="S2.SS0.SSS0.Px2.p1" class="ltx_para">
+<p id="S2.SS0.SSS0.Px2.p1.1" class="ltx_p">For successfully training a deep learning model, the choice of the training data is crucial. In the best case, the training and test data come from the same distribution. Then, it should be relatively easy for the model to generalize from the training to the test images. Unfortunately, not all datasets in the BOP challenge have real labeled training images available.
+To train the instance segmentation methods we use real training images whenever provided for a dataset, i.e. TUD-L and YCB-V. For all other datasets we generate synthetic training images. Since we a priori do not know the distribution of test images, we apply the same augmentation strategy for all datasets.
+The augmentation is done by cropping the objects from either validation images (e.g. HB) or synthetic training images (e.g. IC-BIN) and pasting them randomly on images from the COCO dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>. Thereby we vary the objects’ rotation, translation and scale. At most 20 objects are pasted into one image. For each dataset we generate 10000 such images. We use 10 percent of them as validation images and 90 percent as training images. Some example images are shown in Figure <a href="#S2.F2" title="Figure 2 ‣ Training Set ‣ 2 Method ‣ A Hybrid Approach for 6DoF Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. Comparing these synthetic images to the real test data, it is obvious that the domain gap is large. Therefore, it is important to avoid overfitting on the training data as much as possible. During training we additionally apply online augmentation to 70 percent of the samples by either flipping them horizontally or applying color variations. This further increases the variance in the training data and increases the generalization capability of the instance segmentation method.</p>
+</div>
+<div id="S2.SS0.SSS0.Px2.p2" class="ltx_para">
+<p id="S2.SS0.SSS0.Px2.p2.1" class="ltx_p">For each dataset, we also evaluated if including the provided PBR images <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> further close the domain gap. We choose the final training set based on the mAP on the validation set. Based on this metric, the PBR images are additionally used in training for the datasets LM-O, YCB-V, ITODD and T-LESS. We report the mAP values of the final models on both the validation and the BOP test set in Table <a href="#S2.T1" title="Table 1 ‣ Training Set ‣ 2 Method ‣ A Hybrid Approach for 6DoF Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. For most datasets the gap between validation and test set is significant. It can additionally be seen that the augmentation method is not suited equally for each dataset.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/hb_image99000022.jpg" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="144" height="108" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/icbin_image99004499.jpg" id="S2.F2.g2" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="144" height="108" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/itodd_image99000001.jpg" id="S2.F2.g3" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="144" height="108" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/lmo_image99008165.jpg" id="S2.F2.g4" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="144" height="108" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Examples of our synthetic training images.</figcaption>
+</figure>
+<figure id="S2.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>mAP values at IoU threshold 0.5 of the final models evaluated on the validation and BOP test set respectively. Datasets marked with * are evaluated class agnostic, since there is no ground truth information for the test set available.</figcaption>
+<table id="S2.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T1.1.1.1" class="ltx_tr">
+<th id="S2.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r"><span id="S2.T1.1.1.1.1.1" class="ltx_text ltx_font_bold">Dataset</span></th>
+<th id="S2.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column" colspan="2">LM-O</th>
+<th id="S2.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column" colspan="2">T-LESS</th>
+<th id="S2.T1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column" colspan="2">TUD-L</th>
+<th id="S2.T1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column" colspan="2">IC-BIN</th>
+<th id="S2.T1.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column" colspan="2">ITODD*</th>
+<th id="S2.T1.1.1.1.7" class="ltx_td ltx_align_center ltx_th ltx_th_column" colspan="2">HB*</th>
+<th id="S2.T1.1.1.1.8" class="ltx_td ltx_align_center ltx_th ltx_th_column" colspan="2">YCB-V</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T1.1.2.1" class="ltx_tr">
+<th id="S2.T1.1.2.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t"><span id="S2.T1.1.2.1.1.1" class="ltx_text ltx_font_bold">split</span></th>
+<td id="S2.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">val</td>
+<td id="S2.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">test</td>
+<td id="S2.T1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">val</td>
+<td id="S2.T1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">test</td>
+<td id="S2.T1.1.2.1.6" class="ltx_td ltx_align_center ltx_border_t">val</td>
+<td id="S2.T1.1.2.1.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">test</td>
+<td id="S2.T1.1.2.1.8" class="ltx_td ltx_align_center ltx_border_t">val</td>
+<td id="S2.T1.1.2.1.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">test</td>
+<td id="S2.T1.1.2.1.10" class="ltx_td ltx_align_center ltx_border_t">val</td>
+<td id="S2.T1.1.2.1.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">test</td>
+<td id="S2.T1.1.2.1.12" class="ltx_td ltx_align_center ltx_border_t">val</td>
+<td id="S2.T1.1.2.1.13" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">test</td>
+<td id="S2.T1.1.2.1.14" class="ltx_td ltx_align_center ltx_border_t">val</td>
+<td id="S2.T1.1.2.1.15" class="ltx_td ltx_align_center ltx_border_t">test</td>
+</tr>
+<tr id="S2.T1.1.3.2" class="ltx_tr">
+<th id="S2.T1.1.3.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t"><span id="S2.T1.1.3.2.1.1" class="ltx_text ltx_font_bold">mAP@IoU0.5</span></th>
+<td id="S2.T1.1.3.2.2" class="ltx_td ltx_align_center ltx_border_t">87.7</td>
+<td id="S2.T1.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">66.7</td>
+<td id="S2.T1.1.3.2.4" class="ltx_td ltx_align_center ltx_border_t">69.0</td>
+<td id="S2.T1.1.3.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">72.6</td>
+<td id="S2.T1.1.3.2.6" class="ltx_td ltx_align_center ltx_border_t">100.0</td>
+<td id="S2.T1.1.3.2.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">94.6</td>
+<td id="S2.T1.1.3.2.8" class="ltx_td ltx_align_center ltx_border_t">84.6</td>
+<td id="S2.T1.1.3.2.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">34.2</td>
+<td id="S2.T1.1.3.2.10" class="ltx_td ltx_align_center ltx_border_t">66.1</td>
+<td id="S2.T1.1.3.2.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">42.1</td>
+<td id="S2.T1.1.3.2.12" class="ltx_td ltx_align_center ltx_border_t">72.9</td>
+<td id="S2.T1.1.3.2.13" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">70.8</td>
+<td id="S2.T1.1.3.2.14" class="ltx_td ltx_align_center ltx_border_t">73.4</td>
+<td id="S2.T1.1.3.2.15" class="ltx_td ltx_align_center ltx_border_t">82.9</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S2.SS0.SSS0.Px3" class="ltx_paragraph">
+<h3 class="ltx_title ltx_title_paragraph">Training Details</h3>
+
+<div id="S2.SS0.SSS0.Px3.p1" class="ltx_para">
+<p id="S2.SS0.SSS0.Px3.p1.1" class="ltx_p">For both Mask-RCNN and RetinaMask we use a ResNet-50 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> as backbone with input dimensions 512x384x3 (512x384x1 for ITODD). We also include a Feature Pyramid Network (FPN) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> in the model. The models were pre-trained on the COCO dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>. As anchor parameters we always use the default setting of three aspect ratios (0.5, 1.0 and 2.0) and three subscales. The minimum and maximum levels of the FPN are automatically determined by the object sizes in the training set. We train the models with Stochastic Gradient Descent (SGD) using an initial learning rate of 0.0001 and a momentum of 0.9 for 20 epochs. For regularization we add a L2-loss on the weights with factor <math id="S2.SS0.SSS0.Px3.p1.1.m1.1" class="ltx_Math" alttext="10^{-5}" display="inline"><semantics id="S2.SS0.SSS0.Px3.p1.1.m1.1a"><msup id="S2.SS0.SSS0.Px3.p1.1.m1.1.1" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.cmml"><mn id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.2" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.2.cmml">10</mn><mrow id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3.cmml"><mo id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3a" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3.cmml">−</mo><mn id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3.2" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3.2.cmml">5</mn></mrow></msup><annotation-xml encoding="MathML-Content" id="S2.SS0.SSS0.Px3.p1.1.m1.1b"><apply id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.cmml" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.1.cmml" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1">superscript</csymbol><cn type="integer" id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.2.cmml" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.2">10</cn><apply id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3.cmml" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3"><minus id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3.1.cmml" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3"></minus><cn type="integer" id="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3.2.cmml" xref="S2.SS0.SSS0.Px3.p1.1.m1.1.1.3.2">5</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS0.SSS0.Px3.p1.1.m1.1c">10^{-5}</annotation></semantics></math>. We apply early stopping, i.e. we evaluate at every epoch and choose the model with the best mAP.
+Results on some example images are shown in Figure <a href="#S2.F3" title="Figure 3 ‣ Training Details ‣ 2 Method ‣ A Hybrid Approach for 6DoF Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+<figure id="S2.F3" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/lmo_result_0001.jpg" id="S2.F3.g1" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/tless_result_0010.jpg" id="S2.F3.g2" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/tudl_result_0000.jpg" id="S2.F3.g3" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/icbin_result_0000.jpg" id="S2.F3.g4" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/lmo_result_0005.jpg" id="S2.F3.g5" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/tless_result_0011.jpg" id="S2.F3.g6" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/tudl_result_0003.jpg" id="S2.F3.g7" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_4"><img src="/html/2011.05669/assets/figures/icbin_result_0014.jpg" id="S2.F3.g8" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.05669/assets/figures/itodd_result_0004.jpg" id="S2.F3.g9" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.05669/assets/figures/hb_result_0000.jpg" id="S2.F3.g10" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.05669/assets/figures/ycbv_result_0000.jpg" id="S2.F3.g11" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.05669/assets/figures/itodd_result_0008.jpg" id="S2.F3.g12" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.05669/assets/figures/hb_result_0005.jpg" id="S2.F3.g13" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_3"><img src="/html/2011.05669/assets/figures/ycbv_result_0010.jpg" id="S2.F3.g14" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="144" height="122" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Qualtitative results of instance segmentation on some example images for all datasets.</figcaption>
+</figure>
+</section>
+<section id="S2.SS0.SSS0.Px4" class="ltx_paragraph">
+<h3 class="ltx_title ltx_title_paragraph">Pose Estimation</h3>
+
+<div id="S2.SS0.SSS0.Px4.p1" class="ltx_para">
+<p id="S2.SS0.SSS0.Px4.p1.1" class="ltx_p">Given a set of instance masks and their corresponding object ID, we apply the point-pair voting of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> to recover the pose of the object instances, using the implementation in HALCON 20.05 progress <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>. Note that this method uses depth only and performs the alignment using only the 3D points and their normal vectors. We experimented with variants of the method that also include edges in the depth or RGB images, but found those to be significantly slower while only marginally improving the results. This is in contrast to the results of the BOP 2019 challenge, where point-pair based methods that also included edges in the voting, refinement, or verification stage significantly exceeded the baseline method. We believe that this is due to the good segmentation from the instance segmentation network.</p>
+</div>
+<div id="S2.SS0.SSS0.Px4.p2" class="ltx_para">
+<p id="S2.SS0.SSS0.Px4.p2.1" class="ltx_p">For datasets where textured objects are available and where the texture is relevant to find the correct pose from a set of symmetric poses (YCB-V), we use a feature-point based approach <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> to select the symmetry pose that best matches the instance segmented in the RGB image. After recovering an object pose, the object is rendered at the found location in all symmetric positions and the feature points are extracted. The symmetry with the most matching feature points between rendered object and scene is used as final pose.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Results</h2>
+
+<figure id="S3.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Comparison of the proposed approach with its baseline method, which performs point pair voting only, on the BOP core datasets</figcaption>
+<table id="S3.T2.18.18" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T2.18.18.19.1" class="ltx_tr">
+<th id="S3.T2.18.18.19.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r"><span id="S3.T2.18.18.19.1.1.1" class="ltx_text ltx_font_bold">Dataset</span></th>
+<th id="S3.T2.18.18.19.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column">LM-O</th>
+<th id="S3.T2.18.18.19.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column">T-LESS</th>
+<th id="S3.T2.18.18.19.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column">TUD-L</th>
+<th id="S3.T2.18.18.19.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column">IC-BIN</th>
+<th id="S3.T2.18.18.19.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column">ITODD</th>
+<th id="S3.T2.18.18.19.1.7" class="ltx_td ltx_align_center ltx_th ltx_th_column">HB</th>
+<th id="S3.T2.18.18.19.1.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r">YCB-V</th>
+<th id="S3.T2.18.18.19.1.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r">avg.</th>
+<th id="S3.T2.18.18.19.1.10" class="ltx_td ltx_align_center ltx_th ltx_th_column">time</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T2.9.9.9" class="ltx_tr">
+<th id="S3.T2.9.9.9.10" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">Voting only <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>
+</th>
+<td id="S3.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_border_t"><math id="S3.T2.1.1.1.1.m1.1" class="ltx_Math" alttext="0.527" display="inline"><semantics id="S3.T2.1.1.1.1.m1.1a"><mn id="S3.T2.1.1.1.1.m1.1.1" xref="S3.T2.1.1.1.1.m1.1.1.cmml">0.527</mn><annotation-xml encoding="MathML-Content" id="S3.T2.1.1.1.1.m1.1b"><cn type="float" id="S3.T2.1.1.1.1.m1.1.1.cmml" xref="S3.T2.1.1.1.1.m1.1.1">0.527</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.1.1.1.1.m1.1c">0.527</annotation></semantics></math></td>
+<td id="S3.T2.2.2.2.2" class="ltx_td ltx_align_center ltx_border_t"><math id="S3.T2.2.2.2.2.m1.1" class="ltx_Math" alttext="0.444" display="inline"><semantics id="S3.T2.2.2.2.2.m1.1a"><mn id="S3.T2.2.2.2.2.m1.1.1" xref="S3.T2.2.2.2.2.m1.1.1.cmml">0.444</mn><annotation-xml encoding="MathML-Content" id="S3.T2.2.2.2.2.m1.1b"><cn type="float" id="S3.T2.2.2.2.2.m1.1.1.cmml" xref="S3.T2.2.2.2.2.m1.1.1">0.444</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.2.2.2.2.m1.1c">0.444</annotation></semantics></math></td>
+<td id="S3.T2.3.3.3.3" class="ltx_td ltx_align_center ltx_border_t"><math id="S3.T2.3.3.3.3.m1.1" class="ltx_Math" alttext="0.775" display="inline"><semantics id="S3.T2.3.3.3.3.m1.1a"><mn id="S3.T2.3.3.3.3.m1.1.1" xref="S3.T2.3.3.3.3.m1.1.1.cmml">0.775</mn><annotation-xml encoding="MathML-Content" id="S3.T2.3.3.3.3.m1.1b"><cn type="float" id="S3.T2.3.3.3.3.m1.1.1.cmml" xref="S3.T2.3.3.3.3.m1.1.1">0.775</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.3.3.3.3.m1.1c">0.775</annotation></semantics></math></td>
+<td id="S3.T2.4.4.4.4" class="ltx_td ltx_align_center ltx_border_t"><math id="S3.T2.4.4.4.4.m1.1" class="ltx_Math" alttext="0.388" display="inline"><semantics id="S3.T2.4.4.4.4.m1.1a"><mn id="S3.T2.4.4.4.4.m1.1.1" xref="S3.T2.4.4.4.4.m1.1.1.cmml">0.388</mn><annotation-xml encoding="MathML-Content" id="S3.T2.4.4.4.4.m1.1b"><cn type="float" id="S3.T2.4.4.4.4.m1.1.1.cmml" xref="S3.T2.4.4.4.4.m1.1.1">0.388</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.4.4.4.4.m1.1c">0.388</annotation></semantics></math></td>
+<td id="S3.T2.5.5.5.5" class="ltx_td ltx_align_center ltx_border_t"><math id="S3.T2.5.5.5.5.m1.1" class="ltx_Math" alttext="0.316" display="inline"><semantics id="S3.T2.5.5.5.5.m1.1a"><mn id="S3.T2.5.5.5.5.m1.1.1" xref="S3.T2.5.5.5.5.m1.1.1.cmml">0.316</mn><annotation-xml encoding="MathML-Content" id="S3.T2.5.5.5.5.m1.1b"><cn type="float" id="S3.T2.5.5.5.5.m1.1.1.cmml" xref="S3.T2.5.5.5.5.m1.1.1">0.316</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.5.5.5.5.m1.1c">0.316</annotation></semantics></math></td>
+<td id="S3.T2.6.6.6.6" class="ltx_td ltx_align_center ltx_border_t"><math id="S3.T2.6.6.6.6.m1.1" class="ltx_Math" alttext="0.615" display="inline"><semantics id="S3.T2.6.6.6.6.m1.1a"><mn id="S3.T2.6.6.6.6.m1.1.1" xref="S3.T2.6.6.6.6.m1.1.1.cmml">0.615</mn><annotation-xml encoding="MathML-Content" id="S3.T2.6.6.6.6.m1.1b"><cn type="float" id="S3.T2.6.6.6.6.m1.1.1.cmml" xref="S3.T2.6.6.6.6.m1.1.1">0.615</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.6.6.6.6.m1.1c">0.615</annotation></semantics></math></td>
+<td id="S3.T2.7.7.7.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><math id="S3.T2.7.7.7.7.m1.1" class="ltx_Math" alttext="0.344" display="inline"><semantics id="S3.T2.7.7.7.7.m1.1a"><mn id="S3.T2.7.7.7.7.m1.1.1" xref="S3.T2.7.7.7.7.m1.1.1.cmml">0.344</mn><annotation-xml encoding="MathML-Content" id="S3.T2.7.7.7.7.m1.1b"><cn type="float" id="S3.T2.7.7.7.7.m1.1.1.cmml" xref="S3.T2.7.7.7.7.m1.1.1">0.344</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.7.7.7.7.m1.1c">0.344</annotation></semantics></math></td>
+<td id="S3.T2.8.8.8.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><math id="S3.T2.8.8.8.8.m1.1" class="ltx_Math" alttext="0.487" display="inline"><semantics id="S3.T2.8.8.8.8.m1.1a"><mn id="S3.T2.8.8.8.8.m1.1.1" xref="S3.T2.8.8.8.8.m1.1.1.cmml">0.487</mn><annotation-xml encoding="MathML-Content" id="S3.T2.8.8.8.8.m1.1b"><cn type="float" id="S3.T2.8.8.8.8.m1.1.1.cmml" xref="S3.T2.8.8.8.8.m1.1.1">0.487</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.8.8.8.8.m1.1c">0.487</annotation></semantics></math></td>
+<td id="S3.T2.9.9.9.9" class="ltx_td ltx_align_center ltx_border_t"><math id="S3.T2.9.9.9.9.m1.1" class="ltx_Math" alttext="7.704s" display="inline"><semantics id="S3.T2.9.9.9.9.m1.1a"><mrow id="S3.T2.9.9.9.9.m1.1.1" xref="S3.T2.9.9.9.9.m1.1.1.cmml"><mn id="S3.T2.9.9.9.9.m1.1.1.2" xref="S3.T2.9.9.9.9.m1.1.1.2.cmml">7.704</mn><mo lspace="0em" rspace="0em" id="S3.T2.9.9.9.9.m1.1.1.1" xref="S3.T2.9.9.9.9.m1.1.1.1.cmml">​</mo><mi id="S3.T2.9.9.9.9.m1.1.1.3" xref="S3.T2.9.9.9.9.m1.1.1.3.cmml">s</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.T2.9.9.9.9.m1.1b"><apply id="S3.T2.9.9.9.9.m1.1.1.cmml" xref="S3.T2.9.9.9.9.m1.1.1"><times id="S3.T2.9.9.9.9.m1.1.1.1.cmml" xref="S3.T2.9.9.9.9.m1.1.1.1"></times><cn type="float" id="S3.T2.9.9.9.9.m1.1.1.2.cmml" xref="S3.T2.9.9.9.9.m1.1.1.2">7.704</cn><ci id="S3.T2.9.9.9.9.m1.1.1.3.cmml" xref="S3.T2.9.9.9.9.m1.1.1.3">𝑠</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.9.9.9.9.m1.1c">7.704s</annotation></semantics></math></td>
+</tr>
+<tr id="S3.T2.18.18.18" class="ltx_tr">
+<th id="S3.T2.18.18.18.10" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">Ours</th>
+<td id="S3.T2.10.10.10.1" class="ltx_td ltx_align_center"><math id="S3.T2.10.10.10.1.m1.1" class="ltx_Math" alttext="0.631" display="inline"><semantics id="S3.T2.10.10.10.1.m1.1a"><mn id="S3.T2.10.10.10.1.m1.1.1" xref="S3.T2.10.10.10.1.m1.1.1.cmml">0.631</mn><annotation-xml encoding="MathML-Content" id="S3.T2.10.10.10.1.m1.1b"><cn type="float" id="S3.T2.10.10.10.1.m1.1.1.cmml" xref="S3.T2.10.10.10.1.m1.1.1">0.631</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.10.10.10.1.m1.1c">0.631</annotation></semantics></math></td>
+<td id="S3.T2.11.11.11.2" class="ltx_td ltx_align_center"><math id="S3.T2.11.11.11.2.m1.1" class="ltx_Math" alttext="0.655" display="inline"><semantics id="S3.T2.11.11.11.2.m1.1a"><mn id="S3.T2.11.11.11.2.m1.1.1" xref="S3.T2.11.11.11.2.m1.1.1.cmml">0.655</mn><annotation-xml encoding="MathML-Content" id="S3.T2.11.11.11.2.m1.1b"><cn type="float" id="S3.T2.11.11.11.2.m1.1.1.cmml" xref="S3.T2.11.11.11.2.m1.1.1">0.655</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.11.11.11.2.m1.1c">0.655</annotation></semantics></math></td>
+<td id="S3.T2.12.12.12.3" class="ltx_td ltx_align_center"><math id="S3.T2.12.12.12.3.m1.1" class="ltx_Math" alttext="0.920" display="inline"><semantics id="S3.T2.12.12.12.3.m1.1a"><mn id="S3.T2.12.12.12.3.m1.1.1" xref="S3.T2.12.12.12.3.m1.1.1.cmml">0.920</mn><annotation-xml encoding="MathML-Content" id="S3.T2.12.12.12.3.m1.1b"><cn type="float" id="S3.T2.12.12.12.3.m1.1.1.cmml" xref="S3.T2.12.12.12.3.m1.1.1">0.920</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.12.12.12.3.m1.1c">0.920</annotation></semantics></math></td>
+<td id="S3.T2.13.13.13.4" class="ltx_td ltx_align_center"><math id="S3.T2.13.13.13.4.m1.1" class="ltx_Math" alttext="0.430" display="inline"><semantics id="S3.T2.13.13.13.4.m1.1a"><mn id="S3.T2.13.13.13.4.m1.1.1" xref="S3.T2.13.13.13.4.m1.1.1.cmml">0.430</mn><annotation-xml encoding="MathML-Content" id="S3.T2.13.13.13.4.m1.1b"><cn type="float" id="S3.T2.13.13.13.4.m1.1.1.cmml" xref="S3.T2.13.13.13.4.m1.1.1">0.430</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.13.13.13.4.m1.1c">0.430</annotation></semantics></math></td>
+<td id="S3.T2.14.14.14.5" class="ltx_td ltx_align_center"><math id="S3.T2.14.14.14.5.m1.1" class="ltx_Math" alttext="0.483" display="inline"><semantics id="S3.T2.14.14.14.5.m1.1a"><mn id="S3.T2.14.14.14.5.m1.1.1" xref="S3.T2.14.14.14.5.m1.1.1.cmml">0.483</mn><annotation-xml encoding="MathML-Content" id="S3.T2.14.14.14.5.m1.1b"><cn type="float" id="S3.T2.14.14.14.5.m1.1.1.cmml" xref="S3.T2.14.14.14.5.m1.1.1">0.483</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.14.14.14.5.m1.1c">0.483</annotation></semantics></math></td>
+<td id="S3.T2.15.15.15.6" class="ltx_td ltx_align_center"><math id="S3.T2.15.15.15.6.m1.1" class="ltx_Math" alttext="0.651" display="inline"><semantics id="S3.T2.15.15.15.6.m1.1a"><mn id="S3.T2.15.15.15.6.m1.1.1" xref="S3.T2.15.15.15.6.m1.1.1.cmml">0.651</mn><annotation-xml encoding="MathML-Content" id="S3.T2.15.15.15.6.m1.1b"><cn type="float" id="S3.T2.15.15.15.6.m1.1.1.cmml" xref="S3.T2.15.15.15.6.m1.1.1">0.651</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.15.15.15.6.m1.1c">0.651</annotation></semantics></math></td>
+<td id="S3.T2.16.16.16.7" class="ltx_td ltx_align_center ltx_border_r"><math id="S3.T2.16.16.16.7.m1.1" class="ltx_Math" alttext="0.701" display="inline"><semantics id="S3.T2.16.16.16.7.m1.1a"><mn id="S3.T2.16.16.16.7.m1.1.1" xref="S3.T2.16.16.16.7.m1.1.1.cmml">0.701</mn><annotation-xml encoding="MathML-Content" id="S3.T2.16.16.16.7.m1.1b"><cn type="float" id="S3.T2.16.16.16.7.m1.1.1.cmml" xref="S3.T2.16.16.16.7.m1.1.1">0.701</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.16.16.16.7.m1.1c">0.701</annotation></semantics></math></td>
+<td id="S3.T2.17.17.17.8" class="ltx_td ltx_align_center ltx_border_r"><math id="S3.T2.17.17.17.8.m1.1" class="ltx_Math" alttext="0.639" display="inline"><semantics id="S3.T2.17.17.17.8.m1.1a"><mn id="S3.T2.17.17.17.8.m1.1.1" xref="S3.T2.17.17.17.8.m1.1.1.cmml">0.639</mn><annotation-xml encoding="MathML-Content" id="S3.T2.17.17.17.8.m1.1b"><cn type="float" id="S3.T2.17.17.17.8.m1.1.1.cmml" xref="S3.T2.17.17.17.8.m1.1.1">0.639</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.17.17.17.8.m1.1c">0.639</annotation></semantics></math></td>
+<td id="S3.T2.18.18.18.9" class="ltx_td ltx_align_center"><math id="S3.T2.18.18.18.9.m1.1" class="ltx_Math" alttext="0.633s" display="inline"><semantics id="S3.T2.18.18.18.9.m1.1a"><mrow id="S3.T2.18.18.18.9.m1.1.1" xref="S3.T2.18.18.18.9.m1.1.1.cmml"><mn id="S3.T2.18.18.18.9.m1.1.1.2" xref="S3.T2.18.18.18.9.m1.1.1.2.cmml">0.633</mn><mo lspace="0em" rspace="0em" id="S3.T2.18.18.18.9.m1.1.1.1" xref="S3.T2.18.18.18.9.m1.1.1.1.cmml">​</mo><mi id="S3.T2.18.18.18.9.m1.1.1.3" xref="S3.T2.18.18.18.9.m1.1.1.3.cmml">s</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.T2.18.18.18.9.m1.1b"><apply id="S3.T2.18.18.18.9.m1.1.1.cmml" xref="S3.T2.18.18.18.9.m1.1.1"><times id="S3.T2.18.18.18.9.m1.1.1.1.cmml" xref="S3.T2.18.18.18.9.m1.1.1.1"></times><cn type="float" id="S3.T2.18.18.18.9.m1.1.1.2.cmml" xref="S3.T2.18.18.18.9.m1.1.1.2">0.633</cn><ci id="S3.T2.18.18.18.9.m1.1.1.3.cmml" xref="S3.T2.18.18.18.9.m1.1.1.3">𝑠</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.18.18.18.9.m1.1c">0.633s</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<section id="S3.SS0.SSS0.Px1" class="ltx_paragraph">
+<h3 class="ltx_title ltx_title_paragraph">Comparison to Baseline</h3>
+
+<div id="S3.SS0.SSS0.Px1.p1" class="ltx_para">
+<p id="S3.SS0.SSS0.Px1.p1.1" class="ltx_p">Compared to the baseline approach <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, which searches the complete scene, the proposed approach is over 12 times faster and has a 15% higher average recognition rate on the BOP core datasets (see Table <a href="#S3.T2" title="Table 2 ‣ 3 Results ‣ A Hybrid Approach for 6DoF Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>). While the speedup is due to the reduced search space, the increased recognition rate can be explained by using the RGB images as additional modalities. Since the baseline method uses geometry only, it often finds false positives if clutter is similarly shaped as an object. This is common for objects with large planar sides (such as boxes), which are then found in background planes. The reduction of the search space based on the RGB images effectively avoids this.</p>
+</div>
+<figure id="S3.T3" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Leaderboard of the BOP 2020 Challenge. The methods are sorted by the average recognition rate over all seven core datasets. The proposed method has the overall rank 2 and is the best method with a runtime faster than 1 second. The baseline method without instance segmentation pre-processing has rank 12. Time is the average runtime per image.</figcaption>
+<table id="S3.T3.1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T3.1.1.1" class="ltx_tr">
+<th id="S3.T3.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column">Rank</th>
+<th id="S3.T3.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column">Method</th>
+<th id="S3.T3.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column">Test Modality</th>
+<th id="S3.T3.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column"><math id="S3.T3.1.1.1.1.m1.1" class="ltx_Math" alttext="AR_{Core}" display="inline"><semantics id="S3.T3.1.1.1.1.m1.1a"><mrow id="S3.T3.1.1.1.1.m1.1.1" xref="S3.T3.1.1.1.1.m1.1.1.cmml"><mi id="S3.T3.1.1.1.1.m1.1.1.2" xref="S3.T3.1.1.1.1.m1.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S3.T3.1.1.1.1.m1.1.1.1" xref="S3.T3.1.1.1.1.m1.1.1.1.cmml">​</mo><msub id="S3.T3.1.1.1.1.m1.1.1.3" xref="S3.T3.1.1.1.1.m1.1.1.3.cmml"><mi id="S3.T3.1.1.1.1.m1.1.1.3.2" xref="S3.T3.1.1.1.1.m1.1.1.3.2.cmml">R</mi><mrow id="S3.T3.1.1.1.1.m1.1.1.3.3" xref="S3.T3.1.1.1.1.m1.1.1.3.3.cmml"><mi id="S3.T3.1.1.1.1.m1.1.1.3.3.2" xref="S3.T3.1.1.1.1.m1.1.1.3.3.2.cmml">C</mi><mo lspace="0em" rspace="0em" id="S3.T3.1.1.1.1.m1.1.1.3.3.1" xref="S3.T3.1.1.1.1.m1.1.1.3.3.1.cmml">​</mo><mi id="S3.T3.1.1.1.1.m1.1.1.3.3.3" xref="S3.T3.1.1.1.1.m1.1.1.3.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.T3.1.1.1.1.m1.1.1.3.3.1a" xref="S3.T3.1.1.1.1.m1.1.1.3.3.1.cmml">​</mo><mi id="S3.T3.1.1.1.1.m1.1.1.3.3.4" xref="S3.T3.1.1.1.1.m1.1.1.3.3.4.cmml">r</mi><mo lspace="0em" rspace="0em" id="S3.T3.1.1.1.1.m1.1.1.3.3.1b" xref="S3.T3.1.1.1.1.m1.1.1.3.3.1.cmml">​</mo><mi id="S3.T3.1.1.1.1.m1.1.1.3.3.5" xref="S3.T3.1.1.1.1.m1.1.1.3.3.5.cmml">e</mi></mrow></msub></mrow><annotation-xml encoding="MathML-Content" id="S3.T3.1.1.1.1.m1.1b"><apply id="S3.T3.1.1.1.1.m1.1.1.cmml" xref="S3.T3.1.1.1.1.m1.1.1"><times id="S3.T3.1.1.1.1.m1.1.1.1.cmml" xref="S3.T3.1.1.1.1.m1.1.1.1"></times><ci id="S3.T3.1.1.1.1.m1.1.1.2.cmml" xref="S3.T3.1.1.1.1.m1.1.1.2">𝐴</ci><apply id="S3.T3.1.1.1.1.m1.1.1.3.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.T3.1.1.1.1.m1.1.1.3.1.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3">subscript</csymbol><ci id="S3.T3.1.1.1.1.m1.1.1.3.2.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3.2">𝑅</ci><apply id="S3.T3.1.1.1.1.m1.1.1.3.3.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3.3"><times id="S3.T3.1.1.1.1.m1.1.1.3.3.1.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3.3.1"></times><ci id="S3.T3.1.1.1.1.m1.1.1.3.3.2.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3.3.2">𝐶</ci><ci id="S3.T3.1.1.1.1.m1.1.1.3.3.3.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3.3.3">𝑜</ci><ci id="S3.T3.1.1.1.1.m1.1.1.3.3.4.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3.3.4">𝑟</ci><ci id="S3.T3.1.1.1.1.m1.1.1.3.3.5.cmml" xref="S3.T3.1.1.1.1.m1.1.1.3.3.5">𝑒</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T3.1.1.1.1.m1.1c">AR_{Core}</annotation></semantics></math></th>
+<th id="S3.T3.1.1.1.5" class="ltx_td ltx_align_right ltx_th ltx_th_column">Time (s)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T3.1.1.2.1" class="ltx_tr">
+<td id="S3.T3.1.1.2.1.1" class="ltx_td ltx_align_center ltx_border_t">1</td>
+<td id="S3.T3.1.1.2.1.2" class="ltx_td ltx_align_left ltx_border_t">CosyPose SYNT+REAL-ICP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>
+</td>
+<td id="S3.T3.1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">RGB-D</td>
+<td id="S3.T3.1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">0.698</td>
+<td id="S3.T3.1.1.2.1.5" class="ltx_td ltx_align_right ltx_border_t">13.74</td>
+</tr>
+<tr id="S3.T3.1.1.3.2" class="ltx_tr" style="background-color:#CCFFFF;">
+<td id="S3.T3.1.1.3.2.1" class="ltx_td ltx_align_center"><span id="S3.T3.1.1.3.2.1.1" class="ltx_text" style="background-color:#CCFFFF;">2</span></td>
+<td id="S3.T3.1.1.3.2.2" class="ltx_td ltx_align_left"><span id="S3.T3.1.1.3.2.2.1" class="ltx_text" style="background-color:#CCFFFF;">Koenig-Hybrid-DL-PointPairs (ours)</span></td>
+<td id="S3.T3.1.1.3.2.3" class="ltx_td ltx_align_center"><span id="S3.T3.1.1.3.2.3.1" class="ltx_text" style="background-color:#CCFFFF;">RGB-D</span></td>
+<td id="S3.T3.1.1.3.2.4" class="ltx_td ltx_align_center"><span id="S3.T3.1.1.3.2.4.1" class="ltx_text" style="background-color:#CCFFFF;">0.639</span></td>
+<td id="S3.T3.1.1.3.2.5" class="ltx_td ltx_align_right"><span id="S3.T3.1.1.3.2.5.1" class="ltx_text" style="background-color:#CCFFFF;">0.63</span></td>
+</tr>
+<tr id="S3.T3.1.1.4.3" class="ltx_tr">
+<td id="S3.T3.1.1.4.3.1" class="ltx_td ltx_align_center">3</td>
+<td id="S3.T3.1.1.4.3.2" class="ltx_td ltx_align_left">CosyPose SYNT+REAL</td>
+<td id="S3.T3.1.1.4.3.3" class="ltx_td ltx_align_center">RGB</td>
+<td id="S3.T3.1.1.4.3.4" class="ltx_td ltx_align_center">0.637</td>
+<td id="S3.T3.1.1.4.3.5" class="ltx_td ltx_align_right">0.44</td>
+</tr>
+<tr id="S3.T3.1.1.5.4" class="ltx_tr">
+<td id="S3.T3.1.1.5.4.1" class="ltx_td ltx_align_center">4</td>
+<td id="S3.T3.1.1.5.4.2" class="ltx_td ltx_align_left">Pix2Pose-BOP20_w/ICP-ICCV19 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>
+</td>
+<td id="S3.T3.1.1.5.4.3" class="ltx_td ltx_align_center">RGB-D</td>
+<td id="S3.T3.1.1.5.4.4" class="ltx_td ltx_align_center">0.591</td>
+<td id="S3.T3.1.1.5.4.5" class="ltx_td ltx_align_right">4.84</td>
+</tr>
+<tr id="S3.T3.1.1.6.5" class="ltx_tr">
+<td id="S3.T3.1.1.6.5.1" class="ltx_td ltx_align_center">5</td>
+<td id="S3.T3.1.1.6.5.2" class="ltx_td ltx_align_left">CosyPose PBR</td>
+<td id="S3.T3.1.1.6.5.3" class="ltx_td ltx_align_center">RGB</td>
+<td id="S3.T3.1.1.6.5.4" class="ltx_td ltx_align_center">0.570</td>
+<td id="S3.T3.1.1.6.5.5" class="ltx_td ltx_align_right">0.47</td>
+</tr>
+<tr id="S3.T3.1.1.7.6" class="ltx_tr">
+<td id="S3.T3.1.1.7.6.1" class="ltx_td ltx_align_center">6</td>
+<td id="S3.T3.1.1.7.6.2" class="ltx_td ltx_align_left">Vidal-Sensors18 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>
+</td>
+<td id="S3.T3.1.1.7.6.3" class="ltx_td ltx_align_center">D</td>
+<td id="S3.T3.1.1.7.6.4" class="ltx_td ltx_align_center">0.569</td>
+<td id="S3.T3.1.1.7.6.5" class="ltx_td ltx_align_right">3.22</td>
+</tr>
+<tr id="S3.T3.1.1.8.7" class="ltx_tr">
+<td id="S3.T3.1.1.8.7.1" class="ltx_td ltx_align_center">7</td>
+<td id="S3.T3.1.1.8.7.2" class="ltx_td ltx_align_left">CDPNv2 (RGB-only &amp; ICP) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>
+</td>
+<td id="S3.T3.1.1.8.7.3" class="ltx_td ltx_align_center">RGB-D</td>
+<td id="S3.T3.1.1.8.7.4" class="ltx_td ltx_align_center">0.568</td>
+<td id="S3.T3.1.1.8.7.5" class="ltx_td ltx_align_right">1.46</td>
+</tr>
+<tr id="S3.T3.1.1.9.8" class="ltx_tr">
+<td id="S3.T3.1.1.9.8.1" class="ltx_td ltx_align_center">8</td>
+<td id="S3.T3.1.1.9.8.2" class="ltx_td ltx_align_left">Drost-CVPR10-Edges</td>
+<td id="S3.T3.1.1.9.8.3" class="ltx_td ltx_align_center">RGB-D</td>
+<td id="S3.T3.1.1.9.8.4" class="ltx_td ltx_align_center">0.550</td>
+<td id="S3.T3.1.1.9.8.5" class="ltx_td ltx_align_right">87.56</td>
+</tr>
+<tr id="S3.T3.1.1.10.9" class="ltx_tr">
+<td id="S3.T3.1.1.10.9.1" class="ltx_td ltx_align_center">9</td>
+<td id="S3.T3.1.1.10.9.2" class="ltx_td ltx_align_left">CDPNv2 (PBR-only &amp; ICP)</td>
+<td id="S3.T3.1.1.10.9.3" class="ltx_td ltx_align_center">RGB-D</td>
+<td id="S3.T3.1.1.10.9.4" class="ltx_td ltx_align_center">0.534</td>
+<td id="S3.T3.1.1.10.9.5" class="ltx_td ltx_align_right">1.49</td>
+</tr>
+<tr id="S3.T3.1.1.11.10" class="ltx_tr">
+<td id="S3.T3.1.1.11.10.1" class="ltx_td ltx_align_center">10</td>
+<td id="S3.T3.1.1.11.10.2" class="ltx_td ltx_align_left">CDPNv2 (RGB-only)</td>
+<td id="S3.T3.1.1.11.10.3" class="ltx_td ltx_align_center">RGB</td>
+<td id="S3.T3.1.1.11.10.4" class="ltx_td ltx_align_center">0.529</td>
+<td id="S3.T3.1.1.11.10.5" class="ltx_td ltx_align_right">0.93</td>
+</tr>
+<tr id="S3.T3.1.1.12.11" class="ltx_tr">
+<td id="S3.T3.1.1.12.11.1" class="ltx_td ltx_align_center">11</td>
+<td id="S3.T3.1.1.12.11.2" class="ltx_td ltx_align_left">Drost-CVPR10-3D-Edges</td>
+<td id="S3.T3.1.1.12.11.3" class="ltx_td ltx_align_center">D</td>
+<td id="S3.T3.1.1.12.11.4" class="ltx_td ltx_align_center">0.500</td>
+<td id="S3.T3.1.1.12.11.5" class="ltx_td ltx_align_right">80.05</td>
+</tr>
+<tr id="S3.T3.1.1.13.12" class="ltx_tr" style="background-color:#E6FFFF;">
+<td id="S3.T3.1.1.13.12.1" class="ltx_td ltx_align_center"><span id="S3.T3.1.1.13.12.1.1" class="ltx_text" style="background-color:#E6FFFF;">12</span></td>
+<td id="S3.T3.1.1.13.12.2" class="ltx_td ltx_align_left"><span id="S3.T3.1.1.13.12.2.1" class="ltx_text" style="background-color:#E6FFFF;">Drost-CVPR10-3D-Only <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> (baseline)</span></td>
+<td id="S3.T3.1.1.13.12.3" class="ltx_td ltx_align_center"><span id="S3.T3.1.1.13.12.3.1" class="ltx_text" style="background-color:#E6FFFF;">D</span></td>
+<td id="S3.T3.1.1.13.12.4" class="ltx_td ltx_align_center"><span id="S3.T3.1.1.13.12.4.1" class="ltx_text" style="background-color:#E6FFFF;">0.487</span></td>
+<td id="S3.T3.1.1.13.12.5" class="ltx_td ltx_align_right"><span id="S3.T3.1.1.13.12.5.1" class="ltx_text" style="background-color:#E6FFFF;">7.70</span></td>
+</tr>
+<tr id="S3.T3.1.1.14.13" class="ltx_tr">
+<td id="S3.T3.1.1.14.13.1" class="ltx_td ltx_align_center">13</td>
+<td id="S3.T3.1.1.14.13.2" class="ltx_td ltx_align_left">CDPN_BOP19 (RGB-only)</td>
+<td id="S3.T3.1.1.14.13.3" class="ltx_td ltx_align_center">RGB</td>
+<td id="S3.T3.1.1.14.13.4" class="ltx_td ltx_align_center">0.479</td>
+<td id="S3.T3.1.1.14.13.5" class="ltx_td ltx_align_right">0.48</td>
+</tr>
+<tr id="S3.T3.1.1.15.14" class="ltx_tr">
+<td id="S3.T3.1.1.15.14.1" class="ltx_td ltx_align_center">14</td>
+<td id="S3.T3.1.1.15.14.2" class="ltx_td ltx_align_left">CDPNv2 (PBR-only &amp; RGB-only)</td>
+<td id="S3.T3.1.1.15.14.3" class="ltx_td ltx_align_center">RGB</td>
+<td id="S3.T3.1.1.15.14.4" class="ltx_td ltx_align_center">0.472</td>
+<td id="S3.T3.1.1.15.14.5" class="ltx_td ltx_align_right">0.97</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section id="S3.SS0.SSS0.Px2" class="ltx_paragraph">
+<h3 class="ltx_title ltx_title_paragraph">BOP Challenge 2020</h3>
+
+<div id="S3.SS0.SSS0.Px2.p1" class="ltx_para">
+<p id="S3.SS0.SSS0.Px2.p1.1" class="ltx_p">The method was submitted to the BOP 2020 challenge where it scored the overall second place (Table <a href="#S3.T3" title="Table 3 ‣ Comparison to Baseline ‣ 3 Results ‣ A Hybrid Approach for 6DoF Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>) and was the best performing method with an average runtime of less than 1 second per image. Notably, the introduced method has <math id="S3.SS0.SSS0.Px2.p1.1.m1.1" class="ltx_Math" alttext="7\%" display="inline"><semantics id="S3.SS0.SSS0.Px2.p1.1.m1.1a"><mrow id="S3.SS0.SSS0.Px2.p1.1.m1.1.1" xref="S3.SS0.SSS0.Px2.p1.1.m1.1.1.cmml"><mn id="S3.SS0.SSS0.Px2.p1.1.m1.1.1.2" xref="S3.SS0.SSS0.Px2.p1.1.m1.1.1.2.cmml">7</mn><mo id="S3.SS0.SSS0.Px2.p1.1.m1.1.1.1" xref="S3.SS0.SSS0.Px2.p1.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.SS0.SSS0.Px2.p1.1.m1.1b"><apply id="S3.SS0.SSS0.Px2.p1.1.m1.1.1.cmml" xref="S3.SS0.SSS0.Px2.p1.1.m1.1.1"><csymbol cd="latexml" id="S3.SS0.SSS0.Px2.p1.1.m1.1.1.1.cmml" xref="S3.SS0.SSS0.Px2.p1.1.m1.1.1.1">percent</csymbol><cn type="integer" id="S3.SS0.SSS0.Px2.p1.1.m1.1.1.2.cmml" xref="S3.SS0.SSS0.Px2.p1.1.m1.1.1.2">7</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS0.SSS0.Px2.p1.1.m1.1c">7\%</annotation></semantics></math> higher average recognition rate than the winner of the BOP 2019 challenge, while being around 5 times faster.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Conclusion</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We introduced a method that recovers the rigid 3D pose of an object in an RGB-D scene, using a two-stage detector. The first stage is a state of the art, off the shelf instance segmentation network that detects, segments and identifies object instances in the RGB image. The second stage is a vanilla point pair voting scheme that recovers the locally optimal rigid pose. Additionally, we automatically select the best instance segmentation network and training set using the validation error.</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">The proposed method is fast and robust, and significantly outperforms the baseline method in both runtime and detection performance and is the second best method in the BOP 2020 challenge, and the best with a runtime of less than one second.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Denninger, M., Sundermeyer, M., Winkelbauer, D., Zidan, Y., Olefir, D.,
+Elbadrawy, M., Lodhi, A., Katam, H.: Blenderproc. arXiv preprint
+arXiv:1911.01911 (2019)
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Drost, B., Ulrich, M., Navab, N., Ilic, S.: Model globally, match locally:
+Efficient and robust 3d object recognition. In: CVPR (2010)
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Everingham, M., Van Gool, L., Williams, C.K., Winn, J., Zisserman, A.: The
+pascal visual object classes (voc) challenge. IJCV <span id="bib.bib3.1.1" class="ltx_text ltx_font_bold">88</span>(2), 303–338
+(2010)
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Fu, C.Y., Shvets, M., Berg, A.C.: Retinamask: Learning to predict masks
+improves state-of-the-art single-shot detection for free. arXiv:1901.03353
+(2019)
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Gao, G., Lauri, M., Zhang, J., Frintrop, S.: Occlusion resistant object
+rotation regression from point cloud segments. In: ECCV (2018)
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+He, K., Gkioxari, G., Dollár, P., Girshick, R.: Mask r-cnn. In: ICCV (2017)
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image
+recognition. In: CVPR (2016)
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Hodan, T., Barath, D., Matas, J.: Epos: Estimating 6d pose of objects with
+symmetries. In: CVPR (2020)
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Hodan, T., Michel, F., Brachmann, E., Kehl, W., GlentBuch, A., Kraft, D.,
+Drost, B., Vidal, J., Ihrke, S., Zabulis, X., et al.: Bop: Benchmark for 6d
+object pose estimation. In: ECCV (2018)
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Labbe, Y., Carpentier, J., Aubry, M., Sivic, J.: Cosypose: Consistent
+multi-view multi-object 6d pose estimation. In: ECCV (2020)
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Lepetit, V., Fua, P.: Keypoint recognition using randomized trees. IEEE
+transactions on pattern analysis and machine intelligence <span id="bib.bib11.1.1" class="ltx_text ltx_font_bold">28</span>(9),
+1465–1479 (2006)
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Li, Z., Wang, G., Ji, X.: Cdpn: Coordinates-based disentangled pose network for
+real-time rgb-based 6-dof object pose estimation. In: ICCV (2019)
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Lin, T.Y., Dollár, P., Girshick, R., He, K., Hariharan, B., Belongie, S.:
+Feature pyramid networks for object detection. In: Proceedings of the IEEE
+conference on computer vision and pattern recognition. pp. 2117–2125 (2017)
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Lin, T.Y., Maire, M., Belongie, S., Hays, J., Perona, P., Ramanan, D.,
+Dollár, P., Zitnick, C.L.: Microsoft coco: Common objects in context. In:
+ECCV (2014)
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+MVTec Software GmbH: HALCON 20.05 progress. MVTec (2020),
+<a target="_blank" href="https://www.mvtec.com" title="" class="ltx_ref">https://www.mvtec.com</a>
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Ozuysal, M., Fua, P., Lepetit, V.: Fast keypoint recognition in ten lines of
+code. In: CVPR (2007)
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Park, K., Patten, T., Vincze, M.: Pix2pose: Pixel-wise coordinate regression of
+objects for 6d pose estimation. In: ICCV (2019)
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Sundermeyer, M., Durner, M., Puang, E.Y., Marton, Z.C., Vaskevicius, N., Arras,
+K.O., Triebel, R.: Multi-path learning for object pose estimation across
+domains. In: CVPR (2020)
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Sundermeyer, M., Marton, Z.C., Durner, M., Triebel, R.: Augmented autoencoders:
+Implicit 3d orientation learning for 6d object detection. International
+Journal of Computer Vision <span id="bib.bib19.1.1" class="ltx_text ltx_font_bold">128</span>(3), 714–729 (2020)
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Vidal, J., Lin, C.Y., Lladó, X., Martí, R.: A method for 6d pose
+estimation of free-form rigid objects using point pair features on range
+data. Sensors <span id="bib.bib20.1.1" class="ltx_text ltx_font_bold">18</span>(8),  2678 (2018)
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Zakharov, S., Shugurov, I., Ilic, S.: DPOD: dense 6d pose object detector in
+RGB images. CoRR <span id="bib.bib21.1.1" class="ltx_text ltx_font_bold">abs/1902.11020</span> (2019),
+<a target="_blank" href="http://arxiv.org/abs/1902.11020" title="" class="ltx_ref">http://arxiv.org/abs/1902.11020</a>
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2011.05668" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2011.05669" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2011.05669">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2011.05669" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2011.05670" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Sat Mar  2 08:52:00 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

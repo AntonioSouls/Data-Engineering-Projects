@@ -1,0 +1,819 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2105.13789] USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY</title><meta property="og:description" content="Recent interest in on-orbit servicing and Active Debris Removal (ADR) missions have driven the need for technologies to enable non-cooperative rendezvous manoeuvres. Such manoeuvres put heavy burden on the perception c…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2105.13789">
+
+<!--Generated on Mon Feb 26 22:45:35 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<div id="p1" class="ltx_para">
+<span id="p1.1" class="ltx_ERROR undefined">\footauth</span>
+<p id="p1.2" class="ltx_p">M. Hogan, D. Rondao, N. Aouf, O. Dubois-Matra
+<span id="p1.2.1" class="ltx_text" lang="en-GB"></span></p>
+</div>
+<h1 class="ltx_title ltx_title_document">USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Maxwell Hogan
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">City, University of London, ECV1 0HB London, United Kingdom
+<br class="ltx_break"><span id="id1.1.id1" class="ltx_text ltx_font_typewriter">{firstname.lastname}@city.ac.uk</span>
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Duarte Rondao
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">City, University of London, ECV1 0HB London, United Kingdom
+<br class="ltx_break"><span id="id2.1.id1" class="ltx_text ltx_font_typewriter">{firstname.lastname}@city.ac.uk</span>
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Nabil Aouf
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">City, University of London, ECV1 0HB London, United Kingdom
+<br class="ltx_break"><span id="id3.1.id1" class="ltx_text ltx_font_typewriter">{firstname.lastname}@city.ac.uk</span>
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Olivier Dubois-Matra
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">European Space Agency, ESTEC, Keplerlaan 1, 2201 AZ Noordwijk, The Netherlands
+<br class="ltx_break"><span id="id4.1.id1" class="ltx_text ltx_font_typewriter">olivier.dubois-matra@esa.int</span>
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id5.id1" class="ltx_p"><span id="id5.id1.1" class="ltx_text" lang="en-GB">Recent interest in on-orbit servicing and <span title="" class="ltx_glossaryref">Active Debris Removal (ADR)</span> missions have driven the need for technologies to enable non-cooperative rendezvous manoeuvres. Such manoeuvres put heavy burden on the perception capabilities of a chaser spacecraft. This paper demonstrates <span title="" class="ltx_glossaryref">Convolutional Neural Networks (CNNs)</span> capable of providing an initial coarse pose estimation of a target from a passive thermal infrared camera feed. Thermal cameras offer a promising alternative to visible cameras, which struggle in low light conditions and are susceptible to overexposure. Often, thermal information on the target is not available <span id="id5.id1.1.1" class="ltx_text ltx_font_italic">a priori</span>; this paper therefore proposes using visible images to train networks. The robustness of the models is demonstrated on two different targets, first on synthetic data, and then in a laboratory environment for a realistic scenario that might be faced during an <span title="" class="ltx_glossaryref">ADR</span> mission. Given that there is much concern over the use of <span title="" class="ltx_glossaryref">CNNs</span> in critical applications due to their black box nature, we use innovative techniques to explain what is important to our network and fault conditions.</span></p>
+<section id="Sx1" class="ltx_section" lang="en-GB">
+<h2 class="ltx_title ltx_title_section">KEYWORDS</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">Deep Learning; Explainable Artificial Intelligence, Computer Vision; Spacecraft Pose Estimation; Active Debris Removal.</p>
+</div>
+</section>
+</div>
+<section id="S1" class="ltx_section" lang="en-GB">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>INTRODUCTION</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Autonomous rendezvous and docking missions such as the <span title="" class="ltx_glossaryref">International Space Station (ISS)</span> resupply missions undertaken by the European <span title="" class="ltx_glossaryref">Automated Transfer Vehicle (ATV)</span> and more recently, SpaceX Cargo Dragon have had the advantage of a cooperating target. Markers and additional sensors on the target, and a physical interface to grapple, were used to ensure a safe rendezvous. However, recent interests have shifted to technologies for use in situations where the target is unresponsive such as <span title="" class="ltx_glossaryref">Active Debris Removal (ADR)</span> missions. The lack of aid from the target puts higher responsibility on the chaser’s <span title="" class="ltx_glossaryref">Guidance, Navigation, and Control (GNC)</span> system. To the authors’ knowledge, such a manoeuvre has only been achieved once with the capture of and relaunch of the IntelSat VI satellite which required human intervention for success <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx1" title="" class="ltx_ref">1</a>]</cite>.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">A natural solution might be the use of a <span title="" class="ltx_glossaryref">LIght Detection and Ranging (LIDAR)</span> system which has already seen use on the Space Shuttle. <span title="" class="ltx_glossaryref">LIDAR</span> sensors can supply range information with high accuracy without being susceptible to illumination changes which can be expected in on orbit conditions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx2" title="" class="ltx_ref">2</a>]</cite>. However, they remain difficult to install on small craft due to their size and heavy power requirements. On the other hand, passive sensors such as visible and infrared cameras are characterised by a lower hardware complexity and cheaper power consumption <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx2" title="" class="ltx_ref">2</a>]</cite>.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">It is the motivation of this project to extend the capabilities of passive sensors for close-range relative navigation. Other works have presented the use of <span title="" class="ltx_glossaryref">Convolutional Neural Networks (CNNs)</span> to provide pose estimation of non-cooperative spacecraft on visible images; however, these works have proposed their use as a full-fledged coarse estimator <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx3" title="" class="ltx_ref">3</a>, <a href="#bib.bibx4" title="" class="ltx_ref">4</a>]</cite>. <span title="" class="ltx_glossaryref">CNNs</span> do not take into consideration the previous prediction and ignore the temporal relationship between predictions. This can result in high variance between the solutions of contiguous frames.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">We have chosen to focus on a simpler problem statement which is to provide an initial estimation of the pose so that a more precise algorithm can make refinements. This had been previously achieved by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx5" title="" class="ltx_ref">5</a>]</cite> where a Bayesian classifier, a traditional machine learning algorithm, was used to match 2D features from a visible camera feed to keyframes of the 3D target that were learned offline. This method does automatically extract feature from an image but these features must be determined by the developer beforehand. This presents a difficulty since a developer would have to consider the effect of a large possible scenarios when they are making their decision. Conversely, the features that are extracted by a <span title="" class="ltx_glossaryref">CNNs</span> are learned through optimisation. A <span title="" class="ltx_glossaryref">CNNs</span> can instead learn generalisations about the data that make it more stable for dealing with fringe cases.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.2" class="ltx_p">Visible light cameras (<math id="S1.p5.1.m1.2" class="ltx_Math" alttext="0.38\text{\,}\mathrm{\SIUnitSymbolMicro m}0.75\text{\,}\mathrm{\SIUnitSymbolMicro m}" display="inline"><semantics id="S1.p5.1.m1.2a"><mrow id="S1.p5.1.m1.2.2.4" xref="S1.p5.1.m1.2.2.3.cmml"><mrow id="S1.p5.1.m1.1.1.1.1.1.1" xref="S1.p5.1.m1.1.1.1.1.1.1.cmml"><mn id="S1.p5.1.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S1.p5.1.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">0.38</mn><mtext id="S1.p5.1.m1.1.1.1.1.1.1.2.2.2.2.2" xref="S1.p5.1.m1.1.1.1.1.1.1.2.2.2.2.2.cmml"> </mtext><mrow class="ltx_unit" id="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3" xref="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3.cmml"><mi mathvariant="normal" id="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3.2" xref="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3.cmml">µ</mi><mo lspace="0em" rspace="0em" id="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3.1" xref="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3.cmml">​</mo><mi mathvariant="normal" id="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3.3" xref="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3.cmml">m</mi></mrow></mrow><mtext id="S1.p5.1.m1.2.2.4.1" xref="S1.p5.1.m1.2.2.3.1.cmml">–</mtext><mrow id="S1.p5.1.m1.2.2.2.2.2.2" xref="S1.p5.1.m1.2.2.2.2.2.2.cmml"><mn id="S1.p5.1.m1.2.2.2.2.2.2.1.1.1.1.1" xref="S1.p5.1.m1.2.2.2.2.2.2.1.1.1.1.1.cmml">0.75</mn><mtext id="S1.p5.1.m1.2.2.2.2.2.2.2.2.2.2.2" xref="S1.p5.1.m1.2.2.2.2.2.2.2.2.2.2.2.cmml"> </mtext><mrow class="ltx_unit" id="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3" xref="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3.cmml"><mi mathvariant="normal" id="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3.2" xref="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3.cmml">µ</mi><mo lspace="0em" rspace="0em" id="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3.1" xref="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3.cmml">​</mo><mi mathvariant="normal" id="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3.3" xref="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3.cmml">m</mi></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S1.p5.1.m1.2b"><apply id="S1.p5.1.m1.2.2.3.cmml" xref="S1.p5.1.m1.2.2.4"><csymbol cd="latexml" id="S1.p5.1.m1.2.2.3.1.cmml" xref="S1.p5.1.m1.2.2.4.1">range</csymbol><apply id="S1.p5.1.m1.1.1.1.1.1.1.cmml" xref="S1.p5.1.m1.1.1.1.1.1.1"><csymbol cd="latexml" id="S1.p5.1.m1.1.1.1.1.1.1.2.2.2.2.2.cmml" xref="S1.p5.1.m1.1.1.1.1.1.1.2.2.2.2.2">times</csymbol><cn type="float" id="S1.p5.1.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S1.p5.1.m1.1.1.1.1.1.1.1.1.1.1.1">0.38</cn><csymbol cd="latexml" id="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3.cmml" xref="S1.p5.1.m1.1.1.1.1.1.1.3.3.3.3.3">micrometer</csymbol></apply><apply id="S1.p5.1.m1.2.2.2.2.2.2.cmml" xref="S1.p5.1.m1.2.2.2.2.2.2"><csymbol cd="latexml" id="S1.p5.1.m1.2.2.2.2.2.2.2.2.2.2.2.cmml" xref="S1.p5.1.m1.2.2.2.2.2.2.2.2.2.2.2">times</csymbol><cn type="float" id="S1.p5.1.m1.2.2.2.2.2.2.1.1.1.1.1.cmml" xref="S1.p5.1.m1.2.2.2.2.2.2.1.1.1.1.1">0.75</cn><csymbol cd="latexml" id="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3.cmml" xref="S1.p5.1.m1.2.2.2.2.2.2.3.3.3.3.3">micrometer</csymbol></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.p5.1.m1.2c">0.38\text{\,}\mathrm{\SIUnitSymbolMicro m}0.75\text{\,}\mathrm{\SIUnitSymbolMicro m}</annotation></semantics></math>) struggle to match the reliability of continuous measurements of active sensors due to the poor illumination conditions in eclipse and oversaturation from reflective surfaces or direct light from the sun. One the other hand, recent studies suggest that thermal infrared (or <span id="S1.p5.2.1" class="ltx_ERROR undefined">\glsxtrshort</span>lwir [<span id="S1.p5.2.2" class="ltx_ERROR undefined">\glsxtrlong</span>*lwir]) based cameras offer a promising alternative to vision-based or active technologies for non-cooperative rendezvous missions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx6" title="" class="ltx_ref">6</a>, <a href="#bib.bibx7" title="" class="ltx_ref">7</a>]</cite>. According to a report by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx7" title="" class="ltx_ref">7</a>]</cite>, objects under direct illumination from the Sun should appear smoother in <span title="" class="ltx_glossaryref">LWIR</span> (<math id="S1.p5.2.m2.2" class="ltx_Math" alttext="8\text{\,}\mathrm{\SIUnitSymbolMicro m}14\text{\,}\mathrm{\SIUnitSymbolMicro m}" display="inline"><semantics id="S1.p5.2.m2.2a"><mrow id="S1.p5.2.m2.2.2.4" xref="S1.p5.2.m2.2.2.3.cmml"><mrow id="S1.p5.2.m2.1.1.1.1.1.1" xref="S1.p5.2.m2.1.1.1.1.1.1.cmml"><mn id="S1.p5.2.m2.1.1.1.1.1.1.1.1.1.1.1" xref="S1.p5.2.m2.1.1.1.1.1.1.1.1.1.1.1.cmml">8</mn><mtext id="S1.p5.2.m2.1.1.1.1.1.1.2.2.2.2.2" xref="S1.p5.2.m2.1.1.1.1.1.1.2.2.2.2.2.cmml"> </mtext><mrow class="ltx_unit" id="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3" xref="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3.cmml"><mi mathvariant="normal" id="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3.2" xref="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3.cmml">µ</mi><mo lspace="0em" rspace="0em" id="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3.1" xref="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3.cmml">​</mo><mi mathvariant="normal" id="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3.3" xref="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3.cmml">m</mi></mrow></mrow><mtext id="S1.p5.2.m2.2.2.4.1" xref="S1.p5.2.m2.2.2.3.1.cmml">–</mtext><mrow id="S1.p5.2.m2.2.2.2.2.2.2" xref="S1.p5.2.m2.2.2.2.2.2.2.cmml"><mn id="S1.p5.2.m2.2.2.2.2.2.2.1.1.1.1.1" xref="S1.p5.2.m2.2.2.2.2.2.2.1.1.1.1.1.cmml">14</mn><mtext id="S1.p5.2.m2.2.2.2.2.2.2.2.2.2.2.2" xref="S1.p5.2.m2.2.2.2.2.2.2.2.2.2.2.2.cmml"> </mtext><mrow class="ltx_unit" id="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3" xref="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3.cmml"><mi mathvariant="normal" id="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3.2" xref="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3.cmml">µ</mi><mo lspace="0em" rspace="0em" id="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3.1" xref="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3.cmml">​</mo><mi mathvariant="normal" id="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3.3" xref="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3.cmml">m</mi></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S1.p5.2.m2.2b"><apply id="S1.p5.2.m2.2.2.3.cmml" xref="S1.p5.2.m2.2.2.4"><csymbol cd="latexml" id="S1.p5.2.m2.2.2.3.1.cmml" xref="S1.p5.2.m2.2.2.4.1">range</csymbol><apply id="S1.p5.2.m2.1.1.1.1.1.1.cmml" xref="S1.p5.2.m2.1.1.1.1.1.1"><csymbol cd="latexml" id="S1.p5.2.m2.1.1.1.1.1.1.2.2.2.2.2.cmml" xref="S1.p5.2.m2.1.1.1.1.1.1.2.2.2.2.2">times</csymbol><cn type="integer" id="S1.p5.2.m2.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S1.p5.2.m2.1.1.1.1.1.1.1.1.1.1.1">8</cn><csymbol cd="latexml" id="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3.cmml" xref="S1.p5.2.m2.1.1.1.1.1.1.3.3.3.3.3">micrometer</csymbol></apply><apply id="S1.p5.2.m2.2.2.2.2.2.2.cmml" xref="S1.p5.2.m2.2.2.2.2.2.2"><csymbol cd="latexml" id="S1.p5.2.m2.2.2.2.2.2.2.2.2.2.2.2.cmml" xref="S1.p5.2.m2.2.2.2.2.2.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S1.p5.2.m2.2.2.2.2.2.2.1.1.1.1.1.cmml" xref="S1.p5.2.m2.2.2.2.2.2.2.1.1.1.1.1">14</cn><csymbol cd="latexml" id="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3.cmml" xref="S1.p5.2.m2.2.2.2.2.2.2.3.3.3.3.3">micrometer</csymbol></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.p5.2.m2.2c">8\text{\,}\mathrm{\SIUnitSymbolMicro m}14\text{\,}\mathrm{\SIUnitSymbolMicro m}</annotation></semantics></math>) when compared to visible due to reflective surfaces such as thermal insulators. An additional benefit of <span title="" class="ltx_glossaryref">LWIR</span> images is the lack of shadows created by incident light; therefore, these should require less intensive pre-processing to clean the image.</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p">A significant challenge in the development of <span title="" class="ltx_glossaryref">LWIR</span>-based <span title="" class="ltx_glossaryref">CNNs</span> is the lack of relevant thermal infrared datasets for training. Nevertheless, visible data of a target is often easily acquired and often already available. Therefore, it is the motivation of this study to investigate the robustness of a <span title="" class="ltx_glossaryref">CNN</span> tested on thermal images which has been trained exclusively on synthetic visible images. In the first phase of development, we focused primarily on synthetic data generated by the Astos camera simulator<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><a target="_blank" href="https://www.astos.de/products/camsim" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://www.astos.de/products/camsim</a>.</span></span></span> and limited our pose estimate to a single degree of freedom. We trained two models based on Resnet18 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">8</a>]</cite> and Resnet34 on visible images of our considered target spacecraft, Envisat.</p>
+</div>
+<div id="S1.p7" class="ltx_para">
+<p id="S1.p7.1" class="ltx_p">From our results on our synthetic images, we were able to demonstrate that Resnet-based architectures trained on visible images can be robust on <span title="" class="ltx_glossaryref">LWIR</span> images. We also found that the deeper networks were able to achieve higher F1 scores. Work by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx6" title="" class="ltx_ref">6</a>]</cite> has found that thermal infrared has its own unique challenges. These include noise and low resolution, reflections, halo effects or saturation, and history effects due to the time it takes temperature variations to propagate. These effects are difficult to model even when the thermal signature of the target is properly known. Hence, moving forward into the second stage of our phase of our development, we sought to demonstrate our model’s robustness in going from synthetic to real imagery.</p>
+</div>
+<div id="S1.p8" class="ltx_para">
+<p id="S1.p8.1" class="ltx_p">The aforementioned works on the use of <span title="" class="ltx_glossaryref">CNNs</span> for this application have failed to recognise they are complex and unintuitive tools, making them hard to trust in critical applications. This mistrust is based on the difficulty in understanding the origin source of failure cases and the consequent obstacles in debugging. This issue is not limited to our application: e.g., there is much concern over the use of <span title="" class="ltx_glossaryref">Deep Neural Networks (DNNs)</span> in general for Earth-bound autonomous vehicles <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx9" title="" class="ltx_ref">9</a>]</cite>. In this study we investigate our network further to attempt to explain reasons for failure using Grad-CAM and better understand what it focuses on to make good predictions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx10" title="" class="ltx_ref">10</a>]</cite>.</p>
+</div>
+<div id="S1.p9" class="ltx_para">
+<p id="S1.p9.1" class="ltx_p">Grad-CAM allows us to explore which regions of the image, and thus which parts of the target, were most important to the model in making its decisions. Any image processing technique that utilises model-based pose estimation must consider the possibility that the non-cooperative target may be damaged, may contain movable sections, or that the model might contain incorrect dimensions or be missing features. Thus, the knowledge provided by Grad-CAM can assist in mission planning since we can consider whether a network’s reliance on certain features may be inappropriate or not.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section" lang="en-GB">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>METHODOLOGY</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Viewsphere Sampling</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">The objective of our algorithm is to provide an initial estimate of the relative orientation of the target based on its appearance. This information can then be passed to more precise pose estimation algorithms, or be used to cross-reference with another sensor reading, or algorithm prediction. In our study, we are not attempting to predict the roll angle of the camera, nor the position of the target relative to the chaser; instead, we are interested in recovering the viewpoint under which the target is being imaged by the chaser, modelled as a classification problem.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">We utilise the same concept as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx5" title="" class="ltx_ref">5</a>]</cite> of viewsphere sampling which is taken from 3D object detection. This concept imagines a sphere around the target, the surface of which is covered in cameras pointed toward the target at the centre, as can be seen in Fig. <a href="#S2.F1" title="Figure 1 ‣ 2.1 Viewsphere Sampling ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. Any viewpoint can be described using the spherical coordinates of a camera on this sphere.</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.1" class="ltx_p">During the first phase of our development we focused on one <span title="" class="ltx_glossaryref">Degree-Of-Freedom (DOF)</span>, therefore the labels only corresponded to the azimuth. We used 10 classes, so that each class would represent a range of facets within 18 degrees from the centre of that class. The images in this dataset depicted the target spacecraft in a continuous roll, therefore there is variance in the observed facet within the classes.</p>
+</div>
+<div id="S2.SS1.p4" class="ltx_para">
+<p id="S2.SS1.p4.1" class="ltx_p">During the second phase, we wanted to extend the pose estimation to two <span title="" class="ltx_glossaryref">DOFs</span>. Hence, each image was given two labels, one for the azimuth, and one for the elevation. We generated images for discrete steps of 10 degrees which were at the centre of our classes, therefore there is no variance in the observed facet within the class. Our new class scheme meant that each class represented a range of facets with 5 degrees from the centre of the class.</p>
+</div>
+<figure id="S2.F1" class="ltx_figure"><img src="/html/2105.13789/assets/fig1.png" id="S2.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="314" height="207" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F1.2.1.1" class="ltx_text" style="font-size:90%;">Figure 1</span>: </span><span id="S2.F1.3.2" class="ltx_text" style="font-size:90%;">Illustration of a viewsphere around our target spacecraft, Jason-1 (not to scale).</span></figcaption>
+</figure>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Network Architecture</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p"><span title="" class="ltx_glossaryref">CNNs</span> are specifically suited for multidimensional data such as images <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx11" title="" class="ltx_ref">11</a>]</cite>. They work on optimising convolutional kernels that are used to extract features from images. Deeper networks with more layers can extract more complicated features. However, deeper networks are also more prone to overfitting, something which can be problematic for our application since our test set is a different modality to our training set. We want our network to be good at generalising the shapes of the object since the textures and shades will appear different between the visible and thermal modalities.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">In order to overcome overfitting, the <span title="" class="ltx_glossaryref">CNNs</span> used in this study are adapted versions of ResNet. This network has demonstrated good generalisation from winning many competitions in image recognition and classifications <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx8" title="" class="ltx_ref">8</a>]</cite>. It uses skip connections between layers in order to avoid the issue of vanishing gradients which occurs when training networks using gradient descent algorithms. In order to assist in training, ResNet utilises batch normalisation right after a convolution layer, and before an activation layer, this helps the gradient stay consistent, and not get so large that they slow down the network, or prevent it from training.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">Unlike visible images, thermal images only have one colour channel that represents the heat radiance. Therefore, the first layer of the model was adapted to accept an image with a depth of 1. In our implementation we use a focus module, which was inspired from the first layer of YoloV5 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx12" title="" class="ltx_ref">12</a>]</cite>. The focus module transfers spatial information to the channel dimension, allowing us to use higher resolution input images without needing to adapt any other layers of the network, or increase the depth of the network. The benefit of a higher resolution image is that the features of the target are maintained, an important benefit when running inference on <span title="" class="ltx_glossaryref">LWIR</span> images which are typically lower resolution than visible images.</p>
+</div>
+<div id="S2.SS2.p4" class="ltx_para">
+<p id="S2.SS2.p4.1" class="ltx_p">The final layer of the <span title="" class="ltx_glossaryref">CNNs</span> was adapted to suit our labels; in the first phase we adapted the number of outputs to 10, one for each class. This was changed again in the second phase when we shifted to predicting to two degrees of freedom. A single fully connected layer to predict would significantly reduce the number of samples available per class, whilst unnecessarily increasing the complexity of the model with a single layer with 648 possible classes. Therefore, two linear layers were added in parallel, one for each degree of freedom, one with 36 outputs for azimuth and the other with 18 for elevation.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Envisat Dataset</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">During the first phase of our development, we used a synthetic dataset generated by the Astos camera simulator featuring Envisat, a decommissioned oceanography satellite. Envisat was launched in 2002 and operated for over ten years until its mission was concluded in 2012 when communication was lost; it is currently adrift in near-Earth polar orbit.</p>
+</div>
+<div id="S2.SS3.p2" class="ltx_para">
+<p id="S2.SS3.p2.1" class="ltx_p">The dataset contains images of Envisat, in both visible and <span title="" class="ltx_glossaryref">LWIR</span> modalities, arranged in sequences that simulate certain scenarios that might be faced by a chaser spacecraft as it approaches. The dataset has been previously used to assess classical feature detection and description algorithms in the context of space rendezvous; see <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">13</a>]</cite> for details on the data generation for both modalities.</p>
+</div>
+<div id="S2.SS3.p3" class="ltx_para">
+<p id="S2.SS3.p3.2" class="ltx_p">For the present study, we consider a dataset formed through a <math id="S2.SS3.p3.1.m1.2" class="ltx_Math" alttext="50\text{\,}\mathrm{\char 37\relax}50\text{\,}\mathrm{\char 37\relax}" display="inline"><semantics id="S2.SS3.p3.1.m1.2a"><mrow id="S2.SS3.p3.1.m1.2.2.4" xref="S2.SS3.p3.1.m1.2.2.3.cmml"><mrow id="S2.SS3.p3.1.m1.1.1.1.1.1.1" xref="S2.SS3.p3.1.m1.1.1.1.1.1.1.cmml"><mn id="S2.SS3.p3.1.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S2.SS3.p3.1.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">50</mn><mtext id="S2.SS3.p3.1.m1.1.1.1.1.1.1.2.2.2.2.2" xref="S2.SS3.p3.1.m1.1.1.1.1.1.1.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S2.SS3.p3.1.m1.1.1.1.1.1.1.3.3.3.3.3" xref="S2.SS3.p3.1.m1.1.1.1.1.1.1.3.3.3.3.3.cmml">%</mi></mrow><mtext id="S2.SS3.p3.1.m1.2.2.4.1" xref="S2.SS3.p3.1.m1.2.2.3.1.cmml">–</mtext><mrow id="S2.SS3.p3.1.m1.2.2.2.2.2.2" xref="S2.SS3.p3.1.m1.2.2.2.2.2.2.cmml"><mn id="S2.SS3.p3.1.m1.2.2.2.2.2.2.1.1.1.1.1" xref="S2.SS3.p3.1.m1.2.2.2.2.2.2.1.1.1.1.1.cmml">50</mn><mtext id="S2.SS3.p3.1.m1.2.2.2.2.2.2.2.2.2.2.2" xref="S2.SS3.p3.1.m1.2.2.2.2.2.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S2.SS3.p3.1.m1.2.2.2.2.2.2.3.3.3.3.3" xref="S2.SS3.p3.1.m1.2.2.2.2.2.2.3.3.3.3.3.cmml">%</mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS3.p3.1.m1.2b"><apply id="S2.SS3.p3.1.m1.2.2.3.cmml" xref="S2.SS3.p3.1.m1.2.2.4"><csymbol cd="latexml" id="S2.SS3.p3.1.m1.2.2.3.1.cmml" xref="S2.SS3.p3.1.m1.2.2.4.1">range</csymbol><apply id="S2.SS3.p3.1.m1.1.1.1.1.1.1.cmml" xref="S2.SS3.p3.1.m1.1.1.1.1.1.1"><csymbol cd="latexml" id="S2.SS3.p3.1.m1.1.1.1.1.1.1.2.2.2.2.2.cmml" xref="S2.SS3.p3.1.m1.1.1.1.1.1.1.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS3.p3.1.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S2.SS3.p3.1.m1.1.1.1.1.1.1.1.1.1.1.1">50</cn><csymbol cd="latexml" id="S2.SS3.p3.1.m1.1.1.1.1.1.1.3.3.3.3.3.cmml" xref="S2.SS3.p3.1.m1.1.1.1.1.1.1.3.3.3.3.3">percent</csymbol></apply><apply id="S2.SS3.p3.1.m1.2.2.2.2.2.2.cmml" xref="S2.SS3.p3.1.m1.2.2.2.2.2.2"><csymbol cd="latexml" id="S2.SS3.p3.1.m1.2.2.2.2.2.2.2.2.2.2.2.cmml" xref="S2.SS3.p3.1.m1.2.2.2.2.2.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS3.p3.1.m1.2.2.2.2.2.2.1.1.1.1.1.cmml" xref="S2.SS3.p3.1.m1.2.2.2.2.2.2.1.1.1.1.1">50</cn><csymbol cd="latexml" id="S2.SS3.p3.1.m1.2.2.2.2.2.2.3.3.3.3.3.cmml" xref="S2.SS3.p3.1.m1.2.2.2.2.2.2.3.3.3.3.3">percent</csymbol></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS3.p3.1.m1.2c">50\text{\,}\mathrm{\char 37\relax}50\text{\,}\mathrm{\char 37\relax}</annotation></semantics></math> sampling from two simulated trajectories:
+
+<span id="S2.I1" class="ltx_inline-enumerate">
+<span id="S2.I1.i1" class="ltx_inline-item"><span class="ltx_tag ltx_tag_inline-item">1)</span> <span id="S2.I1.i1.1" class="ltx_text">a negative V-bar approach vector such that the target is imaged against a black, deep space background; and
+</span></span>
+<span id="S2.I1.i2" class="ltx_inline-item"><span class="ltx_tag ltx_tag_inline-item">2)</span> <span id="S2.I1.i2.1" class="ltx_text">a negative R-bar approach, such that the target is imaged against the earth.
+</span></span>
+</span>
+In both cases, the chaser is at a hold point at <math id="S2.SS3.p3.2.m2.3" class="ltx_Math" alttext="50\text{\,}\mathrm{m}" display="inline"><semantics id="S2.SS3.p3.2.m2.3a"><mrow id="S2.SS3.p3.2.m2.3.3" xref="S2.SS3.p3.2.m2.3.3.cmml"><mn id="S2.SS3.p3.2.m2.1.1.1.1.1.1" xref="S2.SS3.p3.2.m2.1.1.1.1.1.1.cmml">50</mn><mtext id="S2.SS3.p3.2.m2.2.2.2.2.2.2" xref="S2.SS3.p3.2.m2.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S2.SS3.p3.2.m2.3.3.3.3.3.3" xref="S2.SS3.p3.2.m2.3.3.3.3.3.3.cmml">m</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS3.p3.2.m2.3b"><apply id="S2.SS3.p3.2.m2.3.3.cmml" xref="S2.SS3.p3.2.m2.3.3"><csymbol cd="latexml" id="S2.SS3.p3.2.m2.2.2.2.2.2.2.cmml" xref="S2.SS3.p3.2.m2.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS3.p3.2.m2.1.1.1.1.1.1.cmml" xref="S2.SS3.p3.2.m2.1.1.1.1.1.1">50</cn><csymbol cd="latexml" id="S2.SS3.p3.2.m2.3.3.3.3.3.3.cmml" xref="S2.SS3.p3.2.m2.3.3.3.3.3.3">meter</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS3.p3.2.m2.3c">50\text{\,}\mathrm{m}</annotation></semantics></math> relative distance, and the target is spinning about a single axis. Figure <a href="#S2.F2.sf1" title="In Figure 2 ‣ 2.3 Envisat Dataset ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2(a)</span></a> shows an example of one such image from the R-bar sampling with the earth in the background, whereas Fig. <a href="#S2.F2.sf2" title="In Figure 2 ‣ 2.3 Envisat Dataset ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2(b)</span></a> shows the same image in the <span title="" class="ltx_glossaryref">LWIR</span>.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S2.F2.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/x1.png" id="S2.F2.sf1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="487" height="155" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="S2.F2.sf1.3.2" class="ltx_text" style="font-size:90%;">Visible</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S2.F2.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/x2.png" id="S2.F2.sf2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="524" height="155" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="S2.F2.sf2.3.2" class="ltx_text" style="font-size:90%;">Thermal infrared</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.2.1.1" class="ltx_text" style="font-size:90%;">Figure 2</span>: </span><span id="S2.F2.3.2" class="ltx_text" style="font-size:90%;">Example images from the R-bar approach in the Astos Dataset featuring the Envisat spacecraft.</span></figcaption>
+</figure>
+<div id="S2.SS3.p4" class="ltx_para">
+<p id="S2.SS3.p4.2" class="ltx_p">Initially, a test was devised to train modified versions of Resnet18 and Resnet34 to be able to classify facets of the target into 10 classes, which each represent <math id="S2.SS3.p4.1.m1.3" class="ltx_Math" alttext="36\text{\,}\mathrm{deg}" display="inline"><semantics id="S2.SS3.p4.1.m1.3a"><mrow id="S2.SS3.p4.1.m1.3.3" xref="S2.SS3.p4.1.m1.3.3.cmml"><mn id="S2.SS3.p4.1.m1.1.1.1.1.1.1" xref="S2.SS3.p4.1.m1.1.1.1.1.1.1.cmml">36</mn><mtext id="S2.SS3.p4.1.m1.2.2.2.2.2.2" xref="S2.SS3.p4.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S2.SS3.p4.1.m1.3.3.3.3.3.3" xref="S2.SS3.p4.1.m1.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS3.p4.1.m1.3b"><apply id="S2.SS3.p4.1.m1.3.3.cmml" xref="S2.SS3.p4.1.m1.3.3"><csymbol cd="latexml" id="S2.SS3.p4.1.m1.2.2.2.2.2.2.cmml" xref="S2.SS3.p4.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS3.p4.1.m1.1.1.1.1.1.1.cmml" xref="S2.SS3.p4.1.m1.1.1.1.1.1.1">36</cn><csymbol cd="latexml" id="S2.SS3.p4.1.m1.3.3.3.3.3.3.cmml" xref="S2.SS3.p4.1.m1.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS3.p4.1.m1.3c">36\text{\,}\mathrm{deg}</annotation></semantics></math> of rotation along the azimuth. The network was trained purely on visible images, with each class containing 408. This included an even split of images taken from the R-bar and V-bar approach, and an even split of images showing the target in direct sunlight an eclipse. A subset of <math id="S2.SS3.p4.2.m2.3" class="ltx_Math" alttext="20\text{\,}\mathrm{\char 37\relax}" display="inline"><semantics id="S2.SS3.p4.2.m2.3a"><mrow id="S2.SS3.p4.2.m2.3.3" xref="S2.SS3.p4.2.m2.3.3.cmml"><mn id="S2.SS3.p4.2.m2.1.1.1.1.1.1" xref="S2.SS3.p4.2.m2.1.1.1.1.1.1.cmml">20</mn><mtext id="S2.SS3.p4.2.m2.2.2.2.2.2.2" xref="S2.SS3.p4.2.m2.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S2.SS3.p4.2.m2.3.3.3.3.3.3" xref="S2.SS3.p4.2.m2.3.3.3.3.3.3.cmml">%</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS3.p4.2.m2.3b"><apply id="S2.SS3.p4.2.m2.3.3.cmml" xref="S2.SS3.p4.2.m2.3.3"><csymbol cd="latexml" id="S2.SS3.p4.2.m2.2.2.2.2.2.2.cmml" xref="S2.SS3.p4.2.m2.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS3.p4.2.m2.1.1.1.1.1.1.cmml" xref="S2.SS3.p4.2.m2.1.1.1.1.1.1">20</cn><csymbol cd="latexml" id="S2.SS3.p4.2.m2.3.3.3.3.3.3.cmml" xref="S2.SS3.p4.2.m2.3.3.3.3.3.3">percent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS3.p4.2.m2.3c">20\text{\,}\mathrm{\char 37\relax}</annotation></semantics></math> of the training set was set aside as a validation set which could be used to stop training early to avoid over fitting. The test set contained the thermal counterparts of the visible images in the training set.</p>
+</div>
+<div id="S2.SS3.p5" class="ltx_para">
+<p id="S2.SS3.p5.1" class="ltx_p">Both the visible and the thermal images are stored in <span id="S2.SS3.p5.1.1" class="ltx_text ltx_font_typewriter">.PNG</span> format; as such, both have three colour channels in their current state. Whereas in the visible each channel represents the response in the red, green, and blue wavelengths separately, the thermal infrared represents a linear combination of the radiance for three sample wavelengths within the <span title="" class="ltx_glossaryref">LWIR</span> and the sensitivity of the simulated camera into a single image, and therefore the colour channels are all equal.</p>
+</div>
+</section>
+<section id="S2.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.4 </span>Jason-1 Dataset</h3>
+
+<div id="S2.SS4.p1" class="ltx_para">
+<p id="S2.SS4.p1.1" class="ltx_p">Our chosen target for the second phase was Jason-1, another decommissioned oceanography satellite, which is currently in low Earth orbit around the equator. Jason-1 was a joint venture between <span title="" class="ltx_glossaryref">National Aeronautics and Space Administration, USA (NASA)</span> and <span title="" class="ltx_glossaryref">Centre National d’Études Spatiales, France (CNES)</span>, and was originally launched in December 2001. In early 2012, Jason-1 was retired and placed into a graveyard orbit and contact was lost in June of that year. The satellite is not expected to re-enter Earth’s atmosphere for at least 1000 years; for this reason, as well as its in-operation, it is a prime candidate for an <span title="" class="ltx_glossaryref">ADR</span> mission <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx14" title="" class="ltx_ref">14</a>]</cite>.</p>
+</div>
+<div id="S2.SS4.p2" class="ltx_para">
+<p id="S2.SS4.p2.1" class="ltx_p">Utilising a free to use <span title="" class="ltx_glossaryref">Computer-Aided Design (CAD)</span> model of Jason-1 as a basis, a laboratory mock-up was created, with a 1:4 scale replica with 1-<span title="" class="ltx_glossaryref">DOF</span> in rotation. Figure <a href="#S2.F3" title="Figure 3 ‣ 2.4 Jason-1 Dataset ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> shows images collected of the mock-up in the lab in the visible and thermal infrared modalities. Whilst we tried to make our replica as faithful as possible to the real counterpart, some smaller components are not included since they would not be able to support themselves with their new scale, and other components needed to be reinforced such as the radiometer and the solar panels.</p>
+</div>
+<div id="S2.SS4.p3" class="ltx_para">
+<p id="S2.SS4.p3.1" class="ltx_p">We did not have access to information on the thermal signature of Jason-1 in order to choose the materials for our replica. Therefore, we had to postulate from the data we had on Envisat (see <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx13" title="" class="ltx_ref">13</a>, <a href="#bib.bibx15" title="" class="ltx_ref">15</a>]</cite> for details) and heated the mock-up manually to achieve a similar signature. Both crafts share many of the same components (e.g., insulating foil, radiators); however, the attained thermal signature on Jason-1 is only an approximation since in reality they share different orbits and hence different Sun exposure patterns.</p>
+</div>
+<div id="S2.SS4.p4" class="ltx_para">
+<p id="S2.SS4.p4.3" class="ltx_p">For training, we used the mechanical <span title="" class="ltx_glossaryref">CAD</span> model of the replica to generate synthetic visible images using the free and open source Blender modelling software.<span id="footnote2" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span><a target="_blank" href="https://www.blender.org" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://www.blender.org</a>.</span></span></span> The solar arrays of the <span title="" class="ltx_glossaryref">CAD</span> model were textured with real images from the target, whereas the foil was procedurally generated. Using the viewsphere sampling method outlined before (see Sec. <a href="#S2.SS1" title="2.1 Viewsphere Sampling ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2.1</span></a>), we generated all the possible facets of the 3D target at steps of <math id="S2.SS4.p4.1.m1.3" class="ltx_Math" alttext="10\text{\,}\mathrm{deg}" display="inline"><semantics id="S2.SS4.p4.1.m1.3a"><mrow id="S2.SS4.p4.1.m1.3.3" xref="S2.SS4.p4.1.m1.3.3.cmml"><mn id="S2.SS4.p4.1.m1.1.1.1.1.1.1" xref="S2.SS4.p4.1.m1.1.1.1.1.1.1.cmml">10</mn><mtext id="S2.SS4.p4.1.m1.2.2.2.2.2.2" xref="S2.SS4.p4.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S2.SS4.p4.1.m1.3.3.3.3.3.3" xref="S2.SS4.p4.1.m1.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p4.1.m1.3b"><apply id="S2.SS4.p4.1.m1.3.3.cmml" xref="S2.SS4.p4.1.m1.3.3"><csymbol cd="latexml" id="S2.SS4.p4.1.m1.2.2.2.2.2.2.cmml" xref="S2.SS4.p4.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS4.p4.1.m1.1.1.1.1.1.1.cmml" xref="S2.SS4.p4.1.m1.1.1.1.1.1.1">10</cn><csymbol cd="latexml" id="S2.SS4.p4.1.m1.3.3.3.3.3.3.cmml" xref="S2.SS4.p4.1.m1.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p4.1.m1.3c">10\text{\,}\mathrm{deg}</annotation></semantics></math>. Since we were working in two <span title="" class="ltx_glossaryref">DOFs</span>, we generated the facets across the entire <math id="S2.SS4.p4.2.m2.3" class="ltx_Math" alttext="360\text{\,}\mathrm{deg}" display="inline"><semantics id="S2.SS4.p4.2.m2.3a"><mrow id="S2.SS4.p4.2.m2.3.3" xref="S2.SS4.p4.2.m2.3.3.cmml"><mn id="S2.SS4.p4.2.m2.1.1.1.1.1.1" xref="S2.SS4.p4.2.m2.1.1.1.1.1.1.cmml">360</mn><mtext id="S2.SS4.p4.2.m2.2.2.2.2.2.2" xref="S2.SS4.p4.2.m2.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S2.SS4.p4.2.m2.3.3.3.3.3.3" xref="S2.SS4.p4.2.m2.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p4.2.m2.3b"><apply id="S2.SS4.p4.2.m2.3.3.cmml" xref="S2.SS4.p4.2.m2.3.3"><csymbol cd="latexml" id="S2.SS4.p4.2.m2.2.2.2.2.2.2.cmml" xref="S2.SS4.p4.2.m2.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS4.p4.2.m2.1.1.1.1.1.1.cmml" xref="S2.SS4.p4.2.m2.1.1.1.1.1.1">360</cn><csymbol cd="latexml" id="S2.SS4.p4.2.m2.3.3.3.3.3.3.cmml" xref="S2.SS4.p4.2.m2.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p4.2.m2.3c">360\text{\,}\mathrm{deg}</annotation></semantics></math> of azimuth and <math id="S2.SS4.p4.3.m3.3" class="ltx_Math" alttext="180\text{\,}\mathrm{deg}" display="inline"><semantics id="S2.SS4.p4.3.m3.3a"><mrow id="S2.SS4.p4.3.m3.3.3" xref="S2.SS4.p4.3.m3.3.3.cmml"><mn id="S2.SS4.p4.3.m3.1.1.1.1.1.1" xref="S2.SS4.p4.3.m3.1.1.1.1.1.1.cmml">180</mn><mtext id="S2.SS4.p4.3.m3.2.2.2.2.2.2" xref="S2.SS4.p4.3.m3.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S2.SS4.p4.3.m3.3.3.3.3.3.3" xref="S2.SS4.p4.3.m3.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p4.3.m3.3b"><apply id="S2.SS4.p4.3.m3.3.3.cmml" xref="S2.SS4.p4.3.m3.3.3"><csymbol cd="latexml" id="S2.SS4.p4.3.m3.2.2.2.2.2.2.cmml" xref="S2.SS4.p4.3.m3.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS4.p4.3.m3.1.1.1.1.1.1.cmml" xref="S2.SS4.p4.3.m3.1.1.1.1.1.1">180</cn><csymbol cd="latexml" id="S2.SS4.p4.3.m3.3.3.3.3.3.3.cmml" xref="S2.SS4.p4.3.m3.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p4.3.m3.3c">180\text{\,}\mathrm{deg}</annotation></semantics></math> of elevation, covering the complete viewsphere. Additionally, we created 21 copies of each image with different combinations of lighting conditions to create reflections and shadows on the body.</p>
+</div>
+<div id="S2.SS4.p5" class="ltx_para">
+<p id="S2.SS4.p5.1" class="ltx_p">As stated before, our network uses two fully connected layers in parallel, one to produce a class for azimuth, and one to predict a class for elevation. Therefore, images belonging to any one of the 36 azimuth classes could belong to the same class for elevation, and conversely an image belonging to a single azimuth class could belong to any of the 18 classes representing elevation. Considering we have 21 copies of each image, this means that each class of azimuth had 378 training images, and each class of elevation had 756 training images.</p>
+</div>
+<div id="S2.SS4.p6" class="ltx_para">
+<p id="S2.SS4.p6.2" class="ltx_p">For testing, we acquired a continuous sequence of images according to the laboratory setup in the next section. The replica Jason-1 rotates at <math id="S2.SS4.p6.1.m1.3" class="ltx_Math" alttext="6\text{\,}\mathrm{deg}" display="inline"><semantics id="S2.SS4.p6.1.m1.3a"><mrow id="S2.SS4.p6.1.m1.3.3" xref="S2.SS4.p6.1.m1.3.3.cmml"><mn id="S2.SS4.p6.1.m1.1.1.1.1.1.1" xref="S2.SS4.p6.1.m1.1.1.1.1.1.1.cmml">6</mn><mtext id="S2.SS4.p6.1.m1.2.2.2.2.2.2" xref="S2.SS4.p6.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S2.SS4.p6.1.m1.3.3.3.3.3.3" xref="S2.SS4.p6.1.m1.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p6.1.m1.3b"><apply id="S2.SS4.p6.1.m1.3.3.cmml" xref="S2.SS4.p6.1.m1.3.3"><csymbol cd="latexml" id="S2.SS4.p6.1.m1.2.2.2.2.2.2.cmml" xref="S2.SS4.p6.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS4.p6.1.m1.1.1.1.1.1.1.cmml" xref="S2.SS4.p6.1.m1.1.1.1.1.1.1">6</cn><csymbol cd="latexml" id="S2.SS4.p6.1.m1.3.3.3.3.3.3.cmml" xref="S2.SS4.p6.1.m1.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p6.1.m1.3c">6\text{\,}\mathrm{deg}</annotation></semantics></math> per second, and we captured two full rotations. Our cameras were acquiring at <math id="S2.SS4.p6.2.m2.3" class="ltx_Math" alttext="10\text{\,}\mathrm{Hz}" display="inline"><semantics id="S2.SS4.p6.2.m2.3a"><mrow id="S2.SS4.p6.2.m2.3.3" xref="S2.SS4.p6.2.m2.3.3.cmml"><mn id="S2.SS4.p6.2.m2.1.1.1.1.1.1" xref="S2.SS4.p6.2.m2.1.1.1.1.1.1.cmml">10</mn><mtext id="S2.SS4.p6.2.m2.2.2.2.2.2.2" xref="S2.SS4.p6.2.m2.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S2.SS4.p6.2.m2.3.3.3.3.3.3" xref="S2.SS4.p6.2.m2.3.3.3.3.3.3.cmml">Hz</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p6.2.m2.3b"><apply id="S2.SS4.p6.2.m2.3.3.cmml" xref="S2.SS4.p6.2.m2.3.3"><csymbol cd="latexml" id="S2.SS4.p6.2.m2.2.2.2.2.2.2.cmml" xref="S2.SS4.p6.2.m2.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS4.p6.2.m2.1.1.1.1.1.1.cmml" xref="S2.SS4.p6.2.m2.1.1.1.1.1.1">10</cn><csymbol cd="latexml" id="S2.SS4.p6.2.m2.3.3.3.3.3.3.cmml" xref="S2.SS4.p6.2.m2.3.3.3.3.3.3">hertz</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p6.2.m2.3c">10\text{\,}\mathrm{Hz}</annotation></semantics></math>, which would give us around 1200 images, in reality we captured 1174 images for the test set.</p>
+</div>
+<figure id="S2.F3" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S2.F3.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/fig3b.png" id="S2.F3.sf1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="349" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F3.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="S2.F3.sf1.3.2" class="ltx_text" style="font-size:90%;">Visible</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S2.F3.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/fig3a.png" id="S2.F3.sf2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="349" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F3.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="S2.F3.sf2.3.2" class="ltx_text" style="font-size:90%;">Thermal infrared</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F3.2.1.1" class="ltx_text" style="font-size:90%;">Figure 3</span>: </span><span id="S2.F3.3.2" class="ltx_text" style="font-size:90%;">Example images from the Jason-1 Dataset.</span></figcaption>
+</figure>
+</section>
+<section id="S2.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.5 </span>Laboratory Setup</h3>
+
+<div id="S2.SS5.p1" class="ltx_para">
+<p id="S2.SS5.p1.1" class="ltx_p">Data was collected in the <span title="" class="ltx_glossaryref">Autonomous Systems Laboratory (ASL)</span> at City, University of London. An image of the target mock-up within our laboratory setup can be seen in Fig. <a href="#S2.F4.sf1" title="In Figure 4 ‣ 2.5 Laboratory Setup ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4(a)</span></a>. A blackout curtain was placed behind the target to simulate a deep space background. A floodlight was used to illuminate the target.</p>
+</div>
+<div id="S2.SS5.p2" class="ltx_para">
+<p id="S2.SS5.p2.1" class="ltx_p">The facility is equipped with an OptiTrack motion tracking system that can record the 6-<span title="" class="ltx_glossaryref">DOF</span> of a target by detecting, tracking and triangulating markers that are placed in the target. The OptiTrack system was used to track the rotation of the target to provide the ground truth. We captured the target rotating around its vertical axis at a fixed distance of <math id="S2.SS5.p2.1.m1.3" class="ltx_Math" alttext="1\text{\,}\mathrm{m}" display="inline"><semantics id="S2.SS5.p2.1.m1.3a"><mrow id="S2.SS5.p2.1.m1.3.3" xref="S2.SS5.p2.1.m1.3.3.cmml"><mn id="S2.SS5.p2.1.m1.1.1.1.1.1.1" xref="S2.SS5.p2.1.m1.1.1.1.1.1.1.cmml">1</mn><mtext id="S2.SS5.p2.1.m1.2.2.2.2.2.2" xref="S2.SS5.p2.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S2.SS5.p2.1.m1.3.3.3.3.3.3" xref="S2.SS5.p2.1.m1.3.3.3.3.3.3.cmml">m</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS5.p2.1.m1.3b"><apply id="S2.SS5.p2.1.m1.3.3.cmml" xref="S2.SS5.p2.1.m1.3.3"><csymbol cd="latexml" id="S2.SS5.p2.1.m1.2.2.2.2.2.2.cmml" xref="S2.SS5.p2.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S2.SS5.p2.1.m1.1.1.1.1.1.1.cmml" xref="S2.SS5.p2.1.m1.1.1.1.1.1.1">1</cn><csymbol cd="latexml" id="S2.SS5.p2.1.m1.3.3.3.3.3.3.cmml" xref="S2.SS5.p2.1.m1.3.3.3.3.3.3">meter</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.p2.1.m1.3c">1\text{\,}\mathrm{m}</annotation></semantics></math>.</p>
+</div>
+<div id="S2.SS5.p3" class="ltx_para">
+<p id="S2.SS5.p3.1" class="ltx_p">Our camera setup can be seen in Fig. <a href="#S2.F4.sf2" title="In Figure 4 ‣ 2.5 Laboratory Setup ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4(b)</span></a>, with which both visible and thermal infrared images were captured simultaneously. This allowed us to compare the performance of our network on the real visible and real <span title="" class="ltx_glossaryref">LWIR</span>. The cameras are mounted side to side with a very small baseline to minimise the discrepancy between the images.</p>
+</div>
+<figure id="S2.F4" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S2.F4.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/setup-city-overall.jpg" id="S2.F4.sf1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="449" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F4.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="S2.F4.sf1.3.2" class="ltx_text" style="font-size:90%;">Equipment layout</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S2.F4.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/setup-city-cams.jpg" id="S2.F4.sf2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="449" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F4.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="S2.F4.sf2.3.2" class="ltx_text" style="font-size:90%;">Multimodal camera configuration</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F4.2.1.1" class="ltx_text" style="font-size:90%;">Figure 4</span>: </span><span title="" class="ltx_glossaryref" style="font-size:90%;">ASL</span><span id="S2.F4.3.2" class="ltx_text" style="font-size:90%;"> setup at City, University of London, for the acquisition of real images.</span></figcaption>
+</figure>
+</section>
+<section id="S2.SS6" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.6 </span>Augmentation Techniques</h3>
+
+<figure id="S2.F5" class="ltx_figure"><img src="/html/2105.13789/assets/fig4.png" id="S2.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="120" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F5.2.1.1" class="ltx_text" style="font-size:90%;">Figure 5</span>: </span><span id="S2.F5.3.2" class="ltx_text" style="font-size:90%;">Montage of images exemplifying some of the transformations introduced by our data augmentation pipeline.
+
+</span></figcaption>
+</figure>
+<div id="S2.SS6.p1" class="ltx_para">
+<p id="S2.SS6.p1.1" class="ltx_p">Image augmentation is a powerful tool which can be used to generate more data for which the network can learn from. However, it must be representative of the data that the developer is intending to encounter in the real-world when deploying the model. Carelessness could result in unwanted biases introduced into the dataset. In the first phase, we used augmentations including colour augmentation to randomly change the brightness and hue before converting to greyscale. This would create new images of Envisat with different shades which would mimic what we may expect from thermal images.</p>
+</div>
+<div id="S2.SS6.p2" class="ltx_para">
+<p id="S2.SS6.p2.1" class="ltx_p">We also applied positional and scale augmentations to randomly shift the image around the frame and scale up or down the image. When we moved to the second stage, we increased the magnitude of the translation and scale augmentations in order to make the network more robust to the variance of the target’s location within the frame. We took advantage of a technique presented by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx4" title="" class="ltx_ref">4</a>]</cite> which used homography augmentations to warp the image in such a way to simulate variance in the camera rotation and roll.</p>
+</div>
+<div id="S2.SS6.p3" class="ltx_para">
+<p id="S2.SS6.p3.1" class="ltx_p">We are concerned about our network’s robustness to variance in the thermal signature. As such, we wanted to prevent the network from becoming too dependent on certain shades of different components. The thermal signature could change depending on the time that the target had been in direct sunlight and for how long. Therefore, when we moved into the second stage of development we began to train on the red and blue channels of the synthetic images and validate on the green channel. Moreover, we randomly augmented the gain and contrast of the training set.</p>
+</div>
+<div id="S2.SS6.p4" class="ltx_para">
+<p id="S2.SS6.p4.1" class="ltx_p">Our images were generated with an alpha channel so that we could easily mask the target and modify the background prior to it being loaded into the model. In order to simulate a diverse background, Perlin noise was generated and inserted into the background via the alpha channel. Perlin noise is typically employed by visual effects artists to increase the appearance of realism in computer graphics. In addition, we introduced additive Gaussian noise across the image to simulate sensor noise, and employed Gaussian blur so that features would appear softer, similar to what may be seen in thermal images.</p>
+</div>
+<div id="S2.SS6.p5" class="ltx_para">
+<p id="S2.SS6.p5.1" class="ltx_p">Like <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx4" title="" class="ltx_ref">4</a>]</cite>, we also employed patch dropout to randomly remove super pixels from the image, thus occluding certain features. This would encourage the network to rely on a more diverse group of features in order to make its predictions, making it more robust to differences between the computer model and the replica. Figure <a href="#S2.F5" title="Figure 5 ‣ 2.6 Augmentation Techniques ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> shows examples images after our augmentations had been applied.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section" lang="en-GB">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>RESULTS</h2>
+
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Evaluation on Synthetic Dataset</h3>
+
+<figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S3.T1.2.1.1" class="ltx_text" style="font-size:90%;">Table 1</span>: </span><span id="S3.T1.3.2" class="ltx_text" style="font-size:90%;">Performance metrics of our Resnet18 and Resnet34 architectures on the Envisat test set composed of synthetic thermal infrared images.</span></figcaption>
+<table id="S3.T1.4" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T1.4.1.1" class="ltx_tr">
+<th id="S3.T1.4.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t"><span id="S3.T1.4.1.1.1.1" class="ltx_text ltx_font_bold">Architecture</span></th>
+<th id="S3.T1.4.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T1.4.1.1.2.1" class="ltx_text ltx_font_bold">Precision</span></th>
+<th id="S3.T1.4.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T1.4.1.1.3.1" class="ltx_text ltx_font_bold">Recall</span></th>
+<th id="S3.T1.4.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t"><span id="S3.T1.4.1.1.4.1" class="ltx_text ltx_font_bold">F1 Score</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T1.4.2.1" class="ltx_tr">
+<td id="S3.T1.4.2.1.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">Resnet18</td>
+<td id="S3.T1.4.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.819</td>
+<td id="S3.T1.4.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.839</td>
+<td id="S3.T1.4.2.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.819</td>
+</tr>
+<tr id="S3.T1.4.3.2" class="ltx_tr">
+<td id="S3.T1.4.3.2.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t">Resnet34</td>
+<td id="S3.T1.4.3.2.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">0.883</td>
+<td id="S3.T1.4.3.2.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">0.896</td>
+<td id="S3.T1.4.3.2.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">0.883</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S3.F6" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F6.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/fig5a.png" id="S3.F6.sf1.g1" class="ltx_graphics ltx_centering ltx_img_square" width="598" height="598" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F6.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="S3.F6.sf1.3.2" class="ltx_text" style="font-size:90%;">Resnet18</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F6.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/fig5b.png" id="S3.F6.sf2.g1" class="ltx_graphics ltx_centering ltx_img_square" width="598" height="598" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F6.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="S3.F6.sf2.3.2" class="ltx_text" style="font-size:90%;">Resnet34</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F6.2.1.1" class="ltx_text" style="font-size:90%;">Figure 6</span>: </span><span id="S3.F6.3.2" class="ltx_text" style="font-size:90%;">Confusion matrices of results of our models on the Envisat test set composed of synthetic thermal infrared images.</span></figcaption>
+</figure>
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">As stated before, in the first phase of development, we focused on proving the ResNet’s architecture suitability for our application. In order to do so we had to demonstrate that it was capable of classifying previously unseen <span title="" class="ltx_glossaryref">LWIR</span> facets of our target. For this purpose, the precision, recall, and F1 score metrics are used; these are commonly employed to gauge the performance of a classification algorithm. Precision can be calculated using Eq. (<a href="#S3.E1" title="In 3.1 Evaluation on Synthetic Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>), and is a measure of how many of the predictions allocated to a given class were in fact correct. Recall is calculated using Eq. (<a href="#S3.E2" title="In 3.1 Evaluation on Synthetic Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>); as can be seen this metric accounts for false positives that occur in a given class.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<table id="S4.EGx1" class="ltx_equationgroup ltx_eqn_align ltx_eqn_table">
+
+<tbody id="S3.E1"><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><span id="S3.E1.2.1.1.1" class="ltx_text ltx_markedasmath">precision</span></td>
+<td class="ltx_td ltx_align_left ltx_eqn_cell"><math id="S3.E1.m2.1" class="ltx_Math" alttext="\displaystyle=\frac{\text{true positives}}{\text{true positives}+\text{false positives}}" display="inline"><semantics id="S3.E1.m2.1a"><mrow id="S3.E1.m2.1.1" xref="S3.E1.m2.1.1.cmml"><mi id="S3.E1.m2.1.1.2" xref="S3.E1.m2.1.1.2.cmml"></mi><mo id="S3.E1.m2.1.1.1" xref="S3.E1.m2.1.1.1.cmml">=</mo><mstyle displaystyle="true" id="S3.E1.m2.1.1.3" xref="S3.E1.m2.1.1.3.cmml"><mfrac id="S3.E1.m2.1.1.3a" xref="S3.E1.m2.1.1.3.cmml"><mtext id="S3.E1.m2.1.1.3.2" xref="S3.E1.m2.1.1.3.2a.cmml">true positives</mtext><mrow id="S3.E1.m2.1.1.3.3" xref="S3.E1.m2.1.1.3.3.cmml"><mtext id="S3.E1.m2.1.1.3.3.2" xref="S3.E1.m2.1.1.3.3.2a.cmml">true positives</mtext><mo id="S3.E1.m2.1.1.3.3.1" xref="S3.E1.m2.1.1.3.3.1.cmml">+</mo><mtext id="S3.E1.m2.1.1.3.3.3" xref="S3.E1.m2.1.1.3.3.3a.cmml">false positives</mtext></mrow></mfrac></mstyle></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m2.1b"><apply id="S3.E1.m2.1.1.cmml" xref="S3.E1.m2.1.1"><eq id="S3.E1.m2.1.1.1.cmml" xref="S3.E1.m2.1.1.1"></eq><csymbol cd="latexml" id="S3.E1.m2.1.1.2.cmml" xref="S3.E1.m2.1.1.2">absent</csymbol><apply id="S3.E1.m2.1.1.3.cmml" xref="S3.E1.m2.1.1.3"><divide id="S3.E1.m2.1.1.3.1.cmml" xref="S3.E1.m2.1.1.3"></divide><ci id="S3.E1.m2.1.1.3.2a.cmml" xref="S3.E1.m2.1.1.3.2"><mtext id="S3.E1.m2.1.1.3.2.cmml" xref="S3.E1.m2.1.1.3.2">true positives</mtext></ci><apply id="S3.E1.m2.1.1.3.3.cmml" xref="S3.E1.m2.1.1.3.3"><plus id="S3.E1.m2.1.1.3.3.1.cmml" xref="S3.E1.m2.1.1.3.3.1"></plus><ci id="S3.E1.m2.1.1.3.3.2a.cmml" xref="S3.E1.m2.1.1.3.3.2"><mtext id="S3.E1.m2.1.1.3.3.2.cmml" xref="S3.E1.m2.1.1.3.3.2">true positives</mtext></ci><ci id="S3.E1.m2.1.1.3.3.3a.cmml" xref="S3.E1.m2.1.1.3.3.3"><mtext id="S3.E1.m2.1.1.3.3.3.cmml" xref="S3.E1.m2.1.1.3.3.3">false positives</mtext></ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m2.1c">\displaystyle=\frac{\text{true positives}}{\text{true positives}+\text{false positives}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+<tbody id="S3.E2"><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><span id="S3.E2.2.1.1.1" class="ltx_text ltx_markedasmath">recall</span></td>
+<td class="ltx_td ltx_align_left ltx_eqn_cell"><math id="S3.E2.m2.1" class="ltx_Math" alttext="\displaystyle=\frac{\text{true positives}}{\text{true positives}+\text{false negatives}}" display="inline"><semantics id="S3.E2.m2.1a"><mrow id="S3.E2.m2.1.1" xref="S3.E2.m2.1.1.cmml"><mi id="S3.E2.m2.1.1.2" xref="S3.E2.m2.1.1.2.cmml"></mi><mo id="S3.E2.m2.1.1.1" xref="S3.E2.m2.1.1.1.cmml">=</mo><mstyle displaystyle="true" id="S3.E2.m2.1.1.3" xref="S3.E2.m2.1.1.3.cmml"><mfrac id="S3.E2.m2.1.1.3a" xref="S3.E2.m2.1.1.3.cmml"><mtext id="S3.E2.m2.1.1.3.2" xref="S3.E2.m2.1.1.3.2a.cmml">true positives</mtext><mrow id="S3.E2.m2.1.1.3.3" xref="S3.E2.m2.1.1.3.3.cmml"><mtext id="S3.E2.m2.1.1.3.3.2" xref="S3.E2.m2.1.1.3.3.2a.cmml">true positives</mtext><mo id="S3.E2.m2.1.1.3.3.1" xref="S3.E2.m2.1.1.3.3.1.cmml">+</mo><mtext id="S3.E2.m2.1.1.3.3.3" xref="S3.E2.m2.1.1.3.3.3a.cmml">false negatives</mtext></mrow></mfrac></mstyle></mrow><annotation-xml encoding="MathML-Content" id="S3.E2.m2.1b"><apply id="S3.E2.m2.1.1.cmml" xref="S3.E2.m2.1.1"><eq id="S3.E2.m2.1.1.1.cmml" xref="S3.E2.m2.1.1.1"></eq><csymbol cd="latexml" id="S3.E2.m2.1.1.2.cmml" xref="S3.E2.m2.1.1.2">absent</csymbol><apply id="S3.E2.m2.1.1.3.cmml" xref="S3.E2.m2.1.1.3"><divide id="S3.E2.m2.1.1.3.1.cmml" xref="S3.E2.m2.1.1.3"></divide><ci id="S3.E2.m2.1.1.3.2a.cmml" xref="S3.E2.m2.1.1.3.2"><mtext id="S3.E2.m2.1.1.3.2.cmml" xref="S3.E2.m2.1.1.3.2">true positives</mtext></ci><apply id="S3.E2.m2.1.1.3.3.cmml" xref="S3.E2.m2.1.1.3.3"><plus id="S3.E2.m2.1.1.3.3.1.cmml" xref="S3.E2.m2.1.1.3.3.1"></plus><ci id="S3.E2.m2.1.1.3.3.2a.cmml" xref="S3.E2.m2.1.1.3.3.2"><mtext id="S3.E2.m2.1.1.3.3.2.cmml" xref="S3.E2.m2.1.1.3.3.2">true positives</mtext></ci><ci id="S3.E2.m2.1.1.3.3.3a.cmml" xref="S3.E2.m2.1.1.3.3.3"><mtext id="S3.E2.m2.1.1.3.3.3.cmml" xref="S3.E2.m2.1.1.3.3.3">false negatives</mtext></ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m2.1c">\displaystyle=\frac{\text{true positives}}{\text{true positives}+\text{false negatives}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS1.p3" class="ltx_para">
+<p id="S3.SS1.p3.1" class="ltx_p">F1 score takes into account both precision and recall, and is calculated with Eq. (<a href="#S3.E3" title="In 3.1 Evaluation on Synthetic Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>). Given that false negatives and false positives are equally unwanted in our application, the F1 score will be an appropriate global metric to judge our network.</p>
+</div>
+<div id="S3.SS1.p4" class="ltx_para">
+<table id="S3.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E3.m1.1" class="ltx_Math" alttext="\text{F1}_{\text{score}}=2\times\frac{\text{precision}\times\text{recall}}{\text{precision}+\text{recall}}" display="block"><semantics id="S3.E3.m1.1a"><mrow id="S3.E3.m1.1.1" xref="S3.E3.m1.1.1.cmml"><msub id="S3.E3.m1.1.1.2" xref="S3.E3.m1.1.1.2.cmml"><mtext id="S3.E3.m1.1.1.2.2" xref="S3.E3.m1.1.1.2.2a.cmml">F1</mtext><mtext id="S3.E3.m1.1.1.2.3" xref="S3.E3.m1.1.1.2.3a.cmml">score</mtext></msub><mo id="S3.E3.m1.1.1.1" xref="S3.E3.m1.1.1.1.cmml">=</mo><mrow id="S3.E3.m1.1.1.3" xref="S3.E3.m1.1.1.3.cmml"><mn id="S3.E3.m1.1.1.3.2" xref="S3.E3.m1.1.1.3.2.cmml">2</mn><mo lspace="0.222em" rspace="0.222em" id="S3.E3.m1.1.1.3.1" xref="S3.E3.m1.1.1.3.1.cmml">×</mo><mfrac id="S3.E3.m1.1.1.3.3" xref="S3.E3.m1.1.1.3.3.cmml"><mrow id="S3.E3.m1.1.1.3.3.2" xref="S3.E3.m1.1.1.3.3.2.cmml"><mtext id="S3.E3.m1.1.1.3.3.2.2" xref="S3.E3.m1.1.1.3.3.2.2a.cmml">precision</mtext><mo lspace="0.222em" rspace="0.222em" id="S3.E3.m1.1.1.3.3.2.1" xref="S3.E3.m1.1.1.3.3.2.1.cmml">×</mo><mtext id="S3.E3.m1.1.1.3.3.2.3" xref="S3.E3.m1.1.1.3.3.2.3a.cmml">recall</mtext></mrow><mrow id="S3.E3.m1.1.1.3.3.3" xref="S3.E3.m1.1.1.3.3.3.cmml"><mtext id="S3.E3.m1.1.1.3.3.3.2" xref="S3.E3.m1.1.1.3.3.3.2a.cmml">precision</mtext><mo id="S3.E3.m1.1.1.3.3.3.1" xref="S3.E3.m1.1.1.3.3.3.1.cmml">+</mo><mtext id="S3.E3.m1.1.1.3.3.3.3" xref="S3.E3.m1.1.1.3.3.3.3a.cmml">recall</mtext></mrow></mfrac></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E3.m1.1b"><apply id="S3.E3.m1.1.1.cmml" xref="S3.E3.m1.1.1"><eq id="S3.E3.m1.1.1.1.cmml" xref="S3.E3.m1.1.1.1"></eq><apply id="S3.E3.m1.1.1.2.cmml" xref="S3.E3.m1.1.1.2"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.2.1.cmml" xref="S3.E3.m1.1.1.2">subscript</csymbol><ci id="S3.E3.m1.1.1.2.2a.cmml" xref="S3.E3.m1.1.1.2.2"><mtext id="S3.E3.m1.1.1.2.2.cmml" xref="S3.E3.m1.1.1.2.2">F1</mtext></ci><ci id="S3.E3.m1.1.1.2.3a.cmml" xref="S3.E3.m1.1.1.2.3"><mtext mathsize="70%" id="S3.E3.m1.1.1.2.3.cmml" xref="S3.E3.m1.1.1.2.3">score</mtext></ci></apply><apply id="S3.E3.m1.1.1.3.cmml" xref="S3.E3.m1.1.1.3"><times id="S3.E3.m1.1.1.3.1.cmml" xref="S3.E3.m1.1.1.3.1"></times><cn type="integer" id="S3.E3.m1.1.1.3.2.cmml" xref="S3.E3.m1.1.1.3.2">2</cn><apply id="S3.E3.m1.1.1.3.3.cmml" xref="S3.E3.m1.1.1.3.3"><divide id="S3.E3.m1.1.1.3.3.1.cmml" xref="S3.E3.m1.1.1.3.3"></divide><apply id="S3.E3.m1.1.1.3.3.2.cmml" xref="S3.E3.m1.1.1.3.3.2"><times id="S3.E3.m1.1.1.3.3.2.1.cmml" xref="S3.E3.m1.1.1.3.3.2.1"></times><ci id="S3.E3.m1.1.1.3.3.2.2a.cmml" xref="S3.E3.m1.1.1.3.3.2.2"><mtext id="S3.E3.m1.1.1.3.3.2.2.cmml" xref="S3.E3.m1.1.1.3.3.2.2">precision</mtext></ci><ci id="S3.E3.m1.1.1.3.3.2.3a.cmml" xref="S3.E3.m1.1.1.3.3.2.3"><mtext id="S3.E3.m1.1.1.3.3.2.3.cmml" xref="S3.E3.m1.1.1.3.3.2.3">recall</mtext></ci></apply><apply id="S3.E3.m1.1.1.3.3.3.cmml" xref="S3.E3.m1.1.1.3.3.3"><plus id="S3.E3.m1.1.1.3.3.3.1.cmml" xref="S3.E3.m1.1.1.3.3.3.1"></plus><ci id="S3.E3.m1.1.1.3.3.3.2a.cmml" xref="S3.E3.m1.1.1.3.3.3.2"><mtext id="S3.E3.m1.1.1.3.3.3.2.cmml" xref="S3.E3.m1.1.1.3.3.3.2">precision</mtext></ci><ci id="S3.E3.m1.1.1.3.3.3.3a.cmml" xref="S3.E3.m1.1.1.3.3.3.3"><mtext id="S3.E3.m1.1.1.3.3.3.3.cmml" xref="S3.E3.m1.1.1.3.3.3.3">recall</mtext></ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E3.m1.1c">\text{F1}_{\text{score}}=2\times\frac{\text{precision}\times\text{recall}}{\text{precision}+\text{recall}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS1.p5" class="ltx_para">
+<p id="S3.SS1.p5.1" class="ltx_p">During this investigation we trained two models based on Resnet18 and Resnet34 architectures. Table <a href="#S3.T1" title="Table 1 ‣ 3.1 Evaluation on Synthetic Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> shows the average precision, average recall, and average F1 score across all the classes. It can be seen that the deeper network did perform better on the test set in all three metrics.</p>
+</div>
+<div id="S3.SS1.p6" class="ltx_para">
+<p id="S3.SS1.p6.1" class="ltx_p">These metrics do not measure the distance between the predicted class and the ground truth. In our application, a misclassification towards an adjacent class is not a major issue as it only represents a small rotation error. Hence, we also created the confusion matrices to look at where false predictions occurred; these can be observed in Fig. <a href="#S3.F6" title="Figure 6 ‣ 3.1 Evaluation on Synthetic Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>. One can see that the majority of false positives were misclassified as the adjacent class.</p>
+</div>
+<div id="S3.SS1.p7" class="ltx_para">
+<p id="S3.SS1.p7.1" class="ltx_p">Both these results from Table <a href="#S3.T1" title="Table 1 ‣ 3.1 Evaluation on Synthetic Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> and Fig. <a href="#S3.F6" title="Figure 6 ‣ 3.1 Evaluation on Synthetic Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> indicate that the networks we developed both performed well on the task presented to them. On the other hand, this represented a simpler problem as only one <span title="" class="ltx_glossaryref">DOF</span> was considered. In addition, a relatively small number of classes (10) was considered, which meant that each one contained a relatively large set of viewpoints. This allows more leeway for the model’s predictions.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Evaluation on Real Dataset</h3>
+
+<figure id="S3.F7" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F7.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/fig6a.png" id="S3.F7.sf1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="299" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F7.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="S3.F7.sf1.3.2" class="ltx_text" style="font-size:90%;">Azimuth error</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F7.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/fig6b.png" id="S3.F7.sf2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="299" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F7.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="S3.F7.sf2.3.2" class="ltx_text" style="font-size:90%;">Elevation error</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F7.2.1.1" class="ltx_text" style="font-size:90%;">Figure 7</span>: </span><span id="S3.F7.3.2" class="ltx_text" style="font-size:90%;">Histogram of results on the Jason-1 real visible, real thermal infrared, and synthetic visible trajectory test sets.</span></figcaption>
+</figure>
+<figure id="S3.T2" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S3.T2.5.2.1" class="ltx_text" style="font-size:90%;">Table 2</span>: </span><span id="S3.T2.2.2.1" class="ltx_text" style="font-size:90%;">Absolute angular errors <math id="S3.T2.2.2.1.m1.1" class="ltx_Math" alttext="\theta_{\text{error}}" display="inline"><semantics id="S3.T2.2.2.1.m1.1b"><msub id="S3.T2.2.2.1.m1.1.1" xref="S3.T2.2.2.1.m1.1.1.cmml"><mi id="S3.T2.2.2.1.m1.1.1.2" xref="S3.T2.2.2.1.m1.1.1.2.cmml">θ</mi><mtext id="S3.T2.2.2.1.m1.1.1.3" xref="S3.T2.2.2.1.m1.1.1.3a.cmml">error</mtext></msub><annotation-xml encoding="MathML-Content" id="S3.T2.2.2.1.m1.1c"><apply id="S3.T2.2.2.1.m1.1.1.cmml" xref="S3.T2.2.2.1.m1.1.1"><csymbol cd="ambiguous" id="S3.T2.2.2.1.m1.1.1.1.cmml" xref="S3.T2.2.2.1.m1.1.1">subscript</csymbol><ci id="S3.T2.2.2.1.m1.1.1.2.cmml" xref="S3.T2.2.2.1.m1.1.1.2">𝜃</ci><ci id="S3.T2.2.2.1.m1.1.1.3a.cmml" xref="S3.T2.2.2.1.m1.1.1.3"><mtext mathsize="70%" id="S3.T2.2.2.1.m1.1.1.3.cmml" xref="S3.T2.2.2.1.m1.1.1.3">error</mtext></ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.2.2.1.m1.1d">\theta_{\text{error}}</annotation></semantics></math> between the predicted viewpoint and the ground truth viewpoint.</span></figcaption>
+<table id="S3.T2.3.3" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T2.3.3.1" class="ltx_tr">
+<th id="S3.T2.3.3.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t" rowspan="2"><span id="S3.T2.3.3.1.2.1" class="ltx_text ltx_font_bold">Condition</span></th>
+<th id="S3.T2.3.3.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" colspan="2"><span id="S3.T2.3.3.1.1.1" class="ltx_text ltx_font_bold">Error (<math id="S3.T2.3.3.1.1.1.m1.1" class="ltx_Math" alttext="\mathrm{deg}" display="inline"><semantics id="S3.T2.3.3.1.1.1.m1.1a"><mi class="ltx_unit" id="S3.T2.3.3.1.1.1.m1.1.1" xref="S3.T2.3.3.1.1.1.m1.1.1.cmml">deg</mi><annotation-xml encoding="MathML-Content" id="S3.T2.3.3.1.1.1.m1.1b"><csymbol cd="latexml" id="S3.T2.3.3.1.1.1.m1.1.1.cmml" xref="S3.T2.3.3.1.1.1.m1.1.1">degree</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.3.3.1.1.1.m1.1c">\mathrm{deg}</annotation></semantics></math>)</span></th>
+</tr>
+<tr id="S3.T2.3.3.2.1" class="ltx_tr">
+<td id="S3.T2.3.3.2.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S3.T2.3.3.2.1.1.1" class="ltx_text ltx_font_bold">Mean</span></td>
+<td id="S3.T2.3.3.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S3.T2.3.3.2.1.2.1" class="ltx_text ltx_font_bold">Median</span></td>
+</tr>
+<tr id="S3.T2.3.3.3.2" class="ltx_tr">
+<th id="S3.T2.3.3.3.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Synthetic Visible</th>
+<td id="S3.T2.3.3.3.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">12.39</td>
+<td id="S3.T2.3.3.3.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">8.34</td>
+</tr>
+<tr id="S3.T2.3.3.4.3" class="ltx_tr">
+<th id="S3.T2.3.3.4.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Real Visible</th>
+<td id="S3.T2.3.3.4.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">18.23</td>
+<td id="S3.T2.3.3.4.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">10.15</td>
+</tr>
+<tr id="S3.T2.3.3.5.4" class="ltx_tr">
+<th id="S3.T2.3.3.5.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r ltx_border_t">Real Thermal</th>
+<td id="S3.T2.3.3.5.4.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">19.27</td>
+<td id="S3.T2.3.3.5.4.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">10.75</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">As mentioned in Section <a href="#S2.SS4" title="2.4 Jason-1 Dataset ‣ 2 METHODOLOGY ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2.4</span></a>, the Jason-1 training set was generated at discrete <math id="S3.SS2.p1.1.m1.3" class="ltx_Math" alttext="10\text{\,}\mathrm{deg}" display="inline"><semantics id="S3.SS2.p1.1.m1.3a"><mrow id="S3.SS2.p1.1.m1.3.3" xref="S3.SS2.p1.1.m1.3.3.cmml"><mn id="S3.SS2.p1.1.m1.1.1.1.1.1.1" xref="S3.SS2.p1.1.m1.1.1.1.1.1.1.cmml">10</mn><mtext id="S3.SS2.p1.1.m1.2.2.2.2.2.2" xref="S3.SS2.p1.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S3.SS2.p1.1.m1.3.3.3.3.3.3" xref="S3.SS2.p1.1.m1.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.1.m1.3b"><apply id="S3.SS2.p1.1.m1.3.3.cmml" xref="S3.SS2.p1.1.m1.3.3"><csymbol cd="latexml" id="S3.SS2.p1.1.m1.2.2.2.2.2.2.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p1.1.m1.1.1.1.1.1.1.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.1.1">10</cn><csymbol cd="latexml" id="S3.SS2.p1.1.m1.3.3.3.3.3.3.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.1.m1.3c">10\text{\,}\mathrm{deg}</annotation></semantics></math> steps in azimuth and elevation. However, the test set consists of a continuous trajectory which includes viewpoints in between those steps, thus evaluating the robustness of the model towards unseen perspectives. In addition to this, we created an additional test set by recreating this trajectory inside the Blender simulation environment by importing the ground truth recorded by Optitrack, along with the same lighting conditions. This provides a baseline test set which we could then use to compare the performance of our algorithm between synthetic and real data.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">The orientation of the target in the test sets was grouped into bins of <math id="S3.SS2.p2.1.m1.3" class="ltx_Math" alttext="10\text{\,}\mathrm{deg}" display="inline"><semantics id="S3.SS2.p2.1.m1.3a"><mrow id="S3.SS2.p2.1.m1.3.3" xref="S3.SS2.p2.1.m1.3.3.cmml"><mn id="S3.SS2.p2.1.m1.1.1.1.1.1.1" xref="S3.SS2.p2.1.m1.1.1.1.1.1.1.cmml">10</mn><mtext id="S3.SS2.p2.1.m1.2.2.2.2.2.2" xref="S3.SS2.p2.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S3.SS2.p2.1.m1.3.3.3.3.3.3" xref="S3.SS2.p2.1.m1.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p2.1.m1.3b"><apply id="S3.SS2.p2.1.m1.3.3.cmml" xref="S3.SS2.p2.1.m1.3.3"><csymbol cd="latexml" id="S3.SS2.p2.1.m1.2.2.2.2.2.2.cmml" xref="S3.SS2.p2.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p2.1.m1.1.1.1.1.1.1.cmml" xref="S3.SS2.p2.1.m1.1.1.1.1.1.1">10</cn><csymbol cd="latexml" id="S3.SS2.p2.1.m1.3.3.3.3.3.3.cmml" xref="S3.SS2.p2.1.m1.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p2.1.m1.3c">10\text{\,}\mathrm{deg}</annotation></semantics></math> in order to measure the distance between the predicted class and the ground truth class labels. Figure <a href="#S3.F7" title="Figure 7 ‣ 3.2 Evaluation on Real Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a> shows the results for the performance on both the azimuth and elevation. Each colour represents a different condition: green for the synthetic visible test set; orange for the real visible test set; and finally blue for the real thermal infrared test set. For all three conditions, the majority of the predicted classes are found on the left-hand side of the two graphs, indicating that the network performed well on both <span title="" class="ltx_glossaryref">DOFs</span>.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.6" class="ltx_p">The network performed better on the task of predicting the elevation — in all three conditions, over <math id="S3.SS2.p3.1.m1.3" class="ltx_Math" alttext="90\text{\,}\mathrm{\char 37\relax}" display="inline"><semantics id="S3.SS2.p3.1.m1.3a"><mrow id="S3.SS2.p3.1.m1.3.3" xref="S3.SS2.p3.1.m1.3.3.cmml"><mn id="S3.SS2.p3.1.m1.1.1.1.1.1.1" xref="S3.SS2.p3.1.m1.1.1.1.1.1.1.cmml">90</mn><mtext id="S3.SS2.p3.1.m1.2.2.2.2.2.2" xref="S3.SS2.p3.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S3.SS2.p3.1.m1.3.3.3.3.3.3" xref="S3.SS2.p3.1.m1.3.3.3.3.3.3.cmml">%</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p3.1.m1.3b"><apply id="S3.SS2.p3.1.m1.3.3.cmml" xref="S3.SS2.p3.1.m1.3.3"><csymbol cd="latexml" id="S3.SS2.p3.1.m1.2.2.2.2.2.2.cmml" xref="S3.SS2.p3.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p3.1.m1.1.1.1.1.1.1.cmml" xref="S3.SS2.p3.1.m1.1.1.1.1.1.1">90</cn><csymbol cd="latexml" id="S3.SS2.p3.1.m1.3.3.3.3.3.3.cmml" xref="S3.SS2.p3.1.m1.3.3.3.3.3.3">percent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p3.1.m1.3c">90\text{\,}\mathrm{\char 37\relax}</annotation></semantics></math> of the predictions were within a 1 bin distance, which is equivalent in a worst case scenario to an error of <math id="S3.SS2.p3.2.m2.3" class="ltx_Math" alttext="20\text{\,}\mathrm{deg}" display="inline"><semantics id="S3.SS2.p3.2.m2.3a"><mrow id="S3.SS2.p3.2.m2.3.3" xref="S3.SS2.p3.2.m2.3.3.cmml"><mn id="S3.SS2.p3.2.m2.1.1.1.1.1.1" xref="S3.SS2.p3.2.m2.1.1.1.1.1.1.cmml">20</mn><mtext id="S3.SS2.p3.2.m2.2.2.2.2.2.2" xref="S3.SS2.p3.2.m2.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S3.SS2.p3.2.m2.3.3.3.3.3.3" xref="S3.SS2.p3.2.m2.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p3.2.m2.3b"><apply id="S3.SS2.p3.2.m2.3.3.cmml" xref="S3.SS2.p3.2.m2.3.3"><csymbol cd="latexml" id="S3.SS2.p3.2.m2.2.2.2.2.2.2.cmml" xref="S3.SS2.p3.2.m2.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p3.2.m2.1.1.1.1.1.1.cmml" xref="S3.SS2.p3.2.m2.1.1.1.1.1.1">20</cn><csymbol cd="latexml" id="S3.SS2.p3.2.m2.3.3.3.3.3.3.cmml" xref="S3.SS2.p3.2.m2.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p3.2.m2.3c">20\text{\,}\mathrm{deg}</annotation></semantics></math>. In the case of the azimuth, only <math id="S3.SS2.p3.3.m3.3" class="ltx_Math" alttext="60\text{\,}\mathrm{\char 37\relax}" display="inline"><semantics id="S3.SS2.p3.3.m3.3a"><mrow id="S3.SS2.p3.3.m3.3.3" xref="S3.SS2.p3.3.m3.3.3.cmml"><mn id="S3.SS2.p3.3.m3.1.1.1.1.1.1" xref="S3.SS2.p3.3.m3.1.1.1.1.1.1.cmml">60</mn><mtext id="S3.SS2.p3.3.m3.2.2.2.2.2.2" xref="S3.SS2.p3.3.m3.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S3.SS2.p3.3.m3.3.3.3.3.3.3" xref="S3.SS2.p3.3.m3.3.3.3.3.3.3.cmml">%</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p3.3.m3.3b"><apply id="S3.SS2.p3.3.m3.3.3.cmml" xref="S3.SS2.p3.3.m3.3.3"><csymbol cd="latexml" id="S3.SS2.p3.3.m3.2.2.2.2.2.2.cmml" xref="S3.SS2.p3.3.m3.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p3.3.m3.1.1.1.1.1.1.cmml" xref="S3.SS2.p3.3.m3.1.1.1.1.1.1">60</cn><csymbol cd="latexml" id="S3.SS2.p3.3.m3.3.3.3.3.3.3.cmml" xref="S3.SS2.p3.3.m3.3.3.3.3.3.3">percent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p3.3.m3.3c">60\text{\,}\mathrm{\char 37\relax}</annotation></semantics></math> of the synthetic set and <math id="S3.SS2.p3.4.m4.3" class="ltx_Math" alttext="50\text{\,}\mathrm{\char 37\relax}" display="inline"><semantics id="S3.SS2.p3.4.m4.3a"><mrow id="S3.SS2.p3.4.m4.3.3" xref="S3.SS2.p3.4.m4.3.3.cmml"><mn id="S3.SS2.p3.4.m4.1.1.1.1.1.1" xref="S3.SS2.p3.4.m4.1.1.1.1.1.1.cmml">50</mn><mtext id="S3.SS2.p3.4.m4.2.2.2.2.2.2" xref="S3.SS2.p3.4.m4.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S3.SS2.p3.4.m4.3.3.3.3.3.3" xref="S3.SS2.p3.4.m4.3.3.3.3.3.3.cmml">%</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p3.4.m4.3b"><apply id="S3.SS2.p3.4.m4.3.3.cmml" xref="S3.SS2.p3.4.m4.3.3"><csymbol cd="latexml" id="S3.SS2.p3.4.m4.2.2.2.2.2.2.cmml" xref="S3.SS2.p3.4.m4.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p3.4.m4.1.1.1.1.1.1.cmml" xref="S3.SS2.p3.4.m4.1.1.1.1.1.1">50</cn><csymbol cd="latexml" id="S3.SS2.p3.4.m4.3.3.3.3.3.3.cmml" xref="S3.SS2.p3.4.m4.3.3.3.3.3.3">percent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p3.4.m4.3c">50\text{\,}\mathrm{\char 37\relax}</annotation></semantics></math> of the real sets were within 1 bin. Nevertheless, we did find that around <math id="S3.SS2.p3.5.m5.3" class="ltx_Math" alttext="80\text{\,}\mathrm{\char 37\relax}" display="inline"><semantics id="S3.SS2.p3.5.m5.3a"><mrow id="S3.SS2.p3.5.m5.3.3" xref="S3.SS2.p3.5.m5.3.3.cmml"><mn id="S3.SS2.p3.5.m5.1.1.1.1.1.1" xref="S3.SS2.p3.5.m5.1.1.1.1.1.1.cmml">80</mn><mtext id="S3.SS2.p3.5.m5.2.2.2.2.2.2" xref="S3.SS2.p3.5.m5.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S3.SS2.p3.5.m5.3.3.3.3.3.3" xref="S3.SS2.p3.5.m5.3.3.3.3.3.3.cmml">%</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p3.5.m5.3b"><apply id="S3.SS2.p3.5.m5.3.3.cmml" xref="S3.SS2.p3.5.m5.3.3"><csymbol cd="latexml" id="S3.SS2.p3.5.m5.2.2.2.2.2.2.cmml" xref="S3.SS2.p3.5.m5.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p3.5.m5.1.1.1.1.1.1.cmml" xref="S3.SS2.p3.5.m5.1.1.1.1.1.1">80</cn><csymbol cd="latexml" id="S3.SS2.p3.5.m5.3.3.3.3.3.3.cmml" xref="S3.SS2.p3.5.m5.3.3.3.3.3.3">percent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p3.5.m5.3c">80\text{\,}\mathrm{\char 37\relax}</annotation></semantics></math> of the predictions for both real sets were within 2 bins, and thus within <math id="S3.SS2.p3.6.m6.3" class="ltx_Math" alttext="30\text{\,}\mathrm{deg}" display="inline"><semantics id="S3.SS2.p3.6.m6.3a"><mrow id="S3.SS2.p3.6.m6.3.3" xref="S3.SS2.p3.6.m6.3.3.cmml"><mn id="S3.SS2.p3.6.m6.1.1.1.1.1.1" xref="S3.SS2.p3.6.m6.1.1.1.1.1.1.cmml">30</mn><mtext id="S3.SS2.p3.6.m6.2.2.2.2.2.2" xref="S3.SS2.p3.6.m6.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S3.SS2.p3.6.m6.3.3.3.3.3.3" xref="S3.SS2.p3.6.m6.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p3.6.m6.3b"><apply id="S3.SS2.p3.6.m6.3.3.cmml" xref="S3.SS2.p3.6.m6.3.3"><csymbol cd="latexml" id="S3.SS2.p3.6.m6.2.2.2.2.2.2.cmml" xref="S3.SS2.p3.6.m6.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p3.6.m6.1.1.1.1.1.1.cmml" xref="S3.SS2.p3.6.m6.1.1.1.1.1.1">30</cn><csymbol cd="latexml" id="S3.SS2.p3.6.m6.3.3.3.3.3.3.cmml" xref="S3.SS2.p3.6.m6.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p3.6.m6.3c">30\text{\,}\mathrm{deg}</annotation></semantics></math> (worst case scenario) from the ground truth.</p>
+</div>
+<div id="S3.SS2.p4" class="ltx_para">
+<p id="S3.SS2.p4.4" class="ltx_p">We also calculated the absolute error between the predicted facet and the ground truth using Eq. (<a href="#S3.E4" title="In 3.2 Evaluation on Real Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>). To do so, we consider an imaginary line-of-sight vector drawn from the camera to the centre of the target. For the ground truth we denote this vector as <math id="S3.SS2.p4.1.m1.1" class="ltx_Math" alttext="V_{\text{gt}}" display="inline"><semantics id="S3.SS2.p4.1.m1.1a"><msub id="S3.SS2.p4.1.m1.1.1" xref="S3.SS2.p4.1.m1.1.1.cmml"><mi id="S3.SS2.p4.1.m1.1.1.2" xref="S3.SS2.p4.1.m1.1.1.2.cmml">V</mi><mtext id="S3.SS2.p4.1.m1.1.1.3" xref="S3.SS2.p4.1.m1.1.1.3a.cmml">gt</mtext></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.p4.1.m1.1b"><apply id="S3.SS2.p4.1.m1.1.1.cmml" xref="S3.SS2.p4.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS2.p4.1.m1.1.1.1.cmml" xref="S3.SS2.p4.1.m1.1.1">subscript</csymbol><ci id="S3.SS2.p4.1.m1.1.1.2.cmml" xref="S3.SS2.p4.1.m1.1.1.2">𝑉</ci><ci id="S3.SS2.p4.1.m1.1.1.3a.cmml" xref="S3.SS2.p4.1.m1.1.1.3"><mtext mathsize="70%" id="S3.SS2.p4.1.m1.1.1.3.cmml" xref="S3.SS2.p4.1.m1.1.1.3">gt</mtext></ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p4.1.m1.1c">V_{\text{gt}}</annotation></semantics></math>; similarly for the prediction we use <math id="S3.SS2.p4.2.m2.1" class="ltx_Math" alttext="V_{\text{pr}}" display="inline"><semantics id="S3.SS2.p4.2.m2.1a"><msub id="S3.SS2.p4.2.m2.1.1" xref="S3.SS2.p4.2.m2.1.1.cmml"><mi id="S3.SS2.p4.2.m2.1.1.2" xref="S3.SS2.p4.2.m2.1.1.2.cmml">V</mi><mtext id="S3.SS2.p4.2.m2.1.1.3" xref="S3.SS2.p4.2.m2.1.1.3a.cmml">pr</mtext></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.p4.2.m2.1b"><apply id="S3.SS2.p4.2.m2.1.1.cmml" xref="S3.SS2.p4.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS2.p4.2.m2.1.1.1.cmml" xref="S3.SS2.p4.2.m2.1.1">subscript</csymbol><ci id="S3.SS2.p4.2.m2.1.1.2.cmml" xref="S3.SS2.p4.2.m2.1.1.2">𝑉</ci><ci id="S3.SS2.p4.2.m2.1.1.3a.cmml" xref="S3.SS2.p4.2.m2.1.1.3"><mtext mathsize="70%" id="S3.SS2.p4.2.m2.1.1.3.cmml" xref="S3.SS2.p4.2.m2.1.1.3">pr</mtext></ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p4.2.m2.1c">V_{\text{pr}}</annotation></semantics></math>. Since we are not considering the distance between the target and the chaser we can treat this as a unit vector. We can, therefore, take the inverse cosine of the dot product between the <math id="S3.SS2.p4.3.m3.1" class="ltx_Math" alttext="V_{\text{gt}}" display="inline"><semantics id="S3.SS2.p4.3.m3.1a"><msub id="S3.SS2.p4.3.m3.1.1" xref="S3.SS2.p4.3.m3.1.1.cmml"><mi id="S3.SS2.p4.3.m3.1.1.2" xref="S3.SS2.p4.3.m3.1.1.2.cmml">V</mi><mtext id="S3.SS2.p4.3.m3.1.1.3" xref="S3.SS2.p4.3.m3.1.1.3a.cmml">gt</mtext></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.p4.3.m3.1b"><apply id="S3.SS2.p4.3.m3.1.1.cmml" xref="S3.SS2.p4.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS2.p4.3.m3.1.1.1.cmml" xref="S3.SS2.p4.3.m3.1.1">subscript</csymbol><ci id="S3.SS2.p4.3.m3.1.1.2.cmml" xref="S3.SS2.p4.3.m3.1.1.2">𝑉</ci><ci id="S3.SS2.p4.3.m3.1.1.3a.cmml" xref="S3.SS2.p4.3.m3.1.1.3"><mtext mathsize="70%" id="S3.SS2.p4.3.m3.1.1.3.cmml" xref="S3.SS2.p4.3.m3.1.1.3">gt</mtext></ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p4.3.m3.1c">V_{\text{gt}}</annotation></semantics></math> and <math id="S3.SS2.p4.4.m4.1" class="ltx_Math" alttext="V_{\text{pr}}" display="inline"><semantics id="S3.SS2.p4.4.m4.1a"><msub id="S3.SS2.p4.4.m4.1.1" xref="S3.SS2.p4.4.m4.1.1.cmml"><mi id="S3.SS2.p4.4.m4.1.1.2" xref="S3.SS2.p4.4.m4.1.1.2.cmml">V</mi><mtext id="S3.SS2.p4.4.m4.1.1.3" xref="S3.SS2.p4.4.m4.1.1.3a.cmml">pr</mtext></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.p4.4.m4.1b"><apply id="S3.SS2.p4.4.m4.1.1.cmml" xref="S3.SS2.p4.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS2.p4.4.m4.1.1.1.cmml" xref="S3.SS2.p4.4.m4.1.1">subscript</csymbol><ci id="S3.SS2.p4.4.m4.1.1.2.cmml" xref="S3.SS2.p4.4.m4.1.1.2">𝑉</ci><ci id="S3.SS2.p4.4.m4.1.1.3a.cmml" xref="S3.SS2.p4.4.m4.1.1.3"><mtext mathsize="70%" id="S3.SS2.p4.4.m4.1.1.3.cmml" xref="S3.SS2.p4.4.m4.1.1.3">pr</mtext></ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p4.4.m4.1c">V_{\text{pr}}</annotation></semantics></math> to represent the principal angle error (disregarding the camera roll, since the viewpoint does not change with it):</p>
+</div>
+<div id="S3.SS2.p5" class="ltx_para">
+<table id="S3.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E4.m1.2" class="ltx_Math" alttext="\theta_{\text{error}}=\arccos{(V_{\text{gt}}\cdot V_{\text{pr}})}" display="block"><semantics id="S3.E4.m1.2a"><mrow id="S3.E4.m1.2.2" xref="S3.E4.m1.2.2.cmml"><msub id="S3.E4.m1.2.2.3" xref="S3.E4.m1.2.2.3.cmml"><mi id="S3.E4.m1.2.2.3.2" xref="S3.E4.m1.2.2.3.2.cmml">θ</mi><mtext id="S3.E4.m1.2.2.3.3" xref="S3.E4.m1.2.2.3.3a.cmml">error</mtext></msub><mo id="S3.E4.m1.2.2.2" xref="S3.E4.m1.2.2.2.cmml">=</mo><mrow id="S3.E4.m1.2.2.1.1" xref="S3.E4.m1.2.2.1.2.cmml"><mi id="S3.E4.m1.1.1" xref="S3.E4.m1.1.1.cmml">arccos</mi><mo id="S3.E4.m1.2.2.1.1a" xref="S3.E4.m1.2.2.1.2.cmml">⁡</mo><mrow id="S3.E4.m1.2.2.1.1.1" xref="S3.E4.m1.2.2.1.2.cmml"><mo stretchy="false" id="S3.E4.m1.2.2.1.1.1.2" xref="S3.E4.m1.2.2.1.2.cmml">(</mo><mrow id="S3.E4.m1.2.2.1.1.1.1" xref="S3.E4.m1.2.2.1.1.1.1.cmml"><msub id="S3.E4.m1.2.2.1.1.1.1.2" xref="S3.E4.m1.2.2.1.1.1.1.2.cmml"><mi id="S3.E4.m1.2.2.1.1.1.1.2.2" xref="S3.E4.m1.2.2.1.1.1.1.2.2.cmml">V</mi><mtext id="S3.E4.m1.2.2.1.1.1.1.2.3" xref="S3.E4.m1.2.2.1.1.1.1.2.3a.cmml">gt</mtext></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E4.m1.2.2.1.1.1.1.1" xref="S3.E4.m1.2.2.1.1.1.1.1.cmml">⋅</mo><msub id="S3.E4.m1.2.2.1.1.1.1.3" xref="S3.E4.m1.2.2.1.1.1.1.3.cmml"><mi id="S3.E4.m1.2.2.1.1.1.1.3.2" xref="S3.E4.m1.2.2.1.1.1.1.3.2.cmml">V</mi><mtext id="S3.E4.m1.2.2.1.1.1.1.3.3" xref="S3.E4.m1.2.2.1.1.1.1.3.3a.cmml">pr</mtext></msub></mrow><mo stretchy="false" id="S3.E4.m1.2.2.1.1.1.3" xref="S3.E4.m1.2.2.1.2.cmml">)</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E4.m1.2b"><apply id="S3.E4.m1.2.2.cmml" xref="S3.E4.m1.2.2"><eq id="S3.E4.m1.2.2.2.cmml" xref="S3.E4.m1.2.2.2"></eq><apply id="S3.E4.m1.2.2.3.cmml" xref="S3.E4.m1.2.2.3"><csymbol cd="ambiguous" id="S3.E4.m1.2.2.3.1.cmml" xref="S3.E4.m1.2.2.3">subscript</csymbol><ci id="S3.E4.m1.2.2.3.2.cmml" xref="S3.E4.m1.2.2.3.2">𝜃</ci><ci id="S3.E4.m1.2.2.3.3a.cmml" xref="S3.E4.m1.2.2.3.3"><mtext mathsize="70%" id="S3.E4.m1.2.2.3.3.cmml" xref="S3.E4.m1.2.2.3.3">error</mtext></ci></apply><apply id="S3.E4.m1.2.2.1.2.cmml" xref="S3.E4.m1.2.2.1.1"><arccos id="S3.E4.m1.1.1.cmml" xref="S3.E4.m1.1.1"></arccos><apply id="S3.E4.m1.2.2.1.1.1.1.cmml" xref="S3.E4.m1.2.2.1.1.1.1"><ci id="S3.E4.m1.2.2.1.1.1.1.1.cmml" xref="S3.E4.m1.2.2.1.1.1.1.1">⋅</ci><apply id="S3.E4.m1.2.2.1.1.1.1.2.cmml" xref="S3.E4.m1.2.2.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E4.m1.2.2.1.1.1.1.2.1.cmml" xref="S3.E4.m1.2.2.1.1.1.1.2">subscript</csymbol><ci id="S3.E4.m1.2.2.1.1.1.1.2.2.cmml" xref="S3.E4.m1.2.2.1.1.1.1.2.2">𝑉</ci><ci id="S3.E4.m1.2.2.1.1.1.1.2.3a.cmml" xref="S3.E4.m1.2.2.1.1.1.1.2.3"><mtext mathsize="70%" id="S3.E4.m1.2.2.1.1.1.1.2.3.cmml" xref="S3.E4.m1.2.2.1.1.1.1.2.3">gt</mtext></ci></apply><apply id="S3.E4.m1.2.2.1.1.1.1.3.cmml" xref="S3.E4.m1.2.2.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E4.m1.2.2.1.1.1.1.3.1.cmml" xref="S3.E4.m1.2.2.1.1.1.1.3">subscript</csymbol><ci id="S3.E4.m1.2.2.1.1.1.1.3.2.cmml" xref="S3.E4.m1.2.2.1.1.1.1.3.2">𝑉</ci><ci id="S3.E4.m1.2.2.1.1.1.1.3.3a.cmml" xref="S3.E4.m1.2.2.1.1.1.1.3.3"><mtext mathsize="70%" id="S3.E4.m1.2.2.1.1.1.1.3.3.cmml" xref="S3.E4.m1.2.2.1.1.1.1.3.3">pr</mtext></ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E4.m1.2c">\theta_{\text{error}}=\arccos{(V_{\text{gt}}\cdot V_{\text{pr}})}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS2.p6" class="ltx_para">
+<p id="S3.SS2.p6.4" class="ltx_p">Table <a href="#S3.T2" title="Table 2 ‣ 3.2 Evaluation on Real Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> shows the mean and median <math id="S3.SS2.p6.1.m1.1" class="ltx_Math" alttext="\theta_{\text{error}}" display="inline"><semantics id="S3.SS2.p6.1.m1.1a"><msub id="S3.SS2.p6.1.m1.1.1" xref="S3.SS2.p6.1.m1.1.1.cmml"><mi id="S3.SS2.p6.1.m1.1.1.2" xref="S3.SS2.p6.1.m1.1.1.2.cmml">θ</mi><mtext id="S3.SS2.p6.1.m1.1.1.3" xref="S3.SS2.p6.1.m1.1.1.3a.cmml">error</mtext></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.p6.1.m1.1b"><apply id="S3.SS2.p6.1.m1.1.1.cmml" xref="S3.SS2.p6.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS2.p6.1.m1.1.1.1.cmml" xref="S3.SS2.p6.1.m1.1.1">subscript</csymbol><ci id="S3.SS2.p6.1.m1.1.1.2.cmml" xref="S3.SS2.p6.1.m1.1.1.2">𝜃</ci><ci id="S3.SS2.p6.1.m1.1.1.3a.cmml" xref="S3.SS2.p6.1.m1.1.1.3"><mtext mathsize="70%" id="S3.SS2.p6.1.m1.1.1.3.cmml" xref="S3.SS2.p6.1.m1.1.1.3">error</mtext></ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p6.1.m1.1c">\theta_{\text{error}}</annotation></semantics></math> measured across the entire trajectory. It shows that for all three conditions the average error was less than <math id="S3.SS2.p6.2.m2.3" class="ltx_Math" alttext="20\text{\,}\mathrm{deg}" display="inline"><semantics id="S3.SS2.p6.2.m2.3a"><mrow id="S3.SS2.p6.2.m2.3.3" xref="S3.SS2.p6.2.m2.3.3.cmml"><mn id="S3.SS2.p6.2.m2.1.1.1.1.1.1" xref="S3.SS2.p6.2.m2.1.1.1.1.1.1.cmml">20</mn><mtext id="S3.SS2.p6.2.m2.2.2.2.2.2.2" xref="S3.SS2.p6.2.m2.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S3.SS2.p6.2.m2.3.3.3.3.3.3" xref="S3.SS2.p6.2.m2.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p6.2.m2.3b"><apply id="S3.SS2.p6.2.m2.3.3.cmml" xref="S3.SS2.p6.2.m2.3.3"><csymbol cd="latexml" id="S3.SS2.p6.2.m2.2.2.2.2.2.2.cmml" xref="S3.SS2.p6.2.m2.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p6.2.m2.1.1.1.1.1.1.cmml" xref="S3.SS2.p6.2.m2.1.1.1.1.1.1">20</cn><csymbol cd="latexml" id="S3.SS2.p6.2.m2.3.3.3.3.3.3.cmml" xref="S3.SS2.p6.2.m2.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p6.2.m2.3c">20\text{\,}\mathrm{deg}</annotation></semantics></math>. We also found that the average error for both the lab datasets were close. It can be seen that approximately <math id="S3.SS2.p6.3.m3.3" class="ltx_Math" alttext="10\text{\,}\mathrm{\char 37\relax}" display="inline"><semantics id="S3.SS2.p6.3.m3.3a"><mrow id="S3.SS2.p6.3.m3.3.3" xref="S3.SS2.p6.3.m3.3.3.cmml"><mn id="S3.SS2.p6.3.m3.1.1.1.1.1.1" xref="S3.SS2.p6.3.m3.1.1.1.1.1.1.cmml">10</mn><mtext id="S3.SS2.p6.3.m3.2.2.2.2.2.2" xref="S3.SS2.p6.3.m3.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" mathvariant="normal" id="S3.SS2.p6.3.m3.3.3.3.3.3.3" xref="S3.SS2.p6.3.m3.3.3.3.3.3.3.cmml">%</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p6.3.m3.3b"><apply id="S3.SS2.p6.3.m3.3.3.cmml" xref="S3.SS2.p6.3.m3.3.3"><csymbol cd="latexml" id="S3.SS2.p6.3.m3.2.2.2.2.2.2.cmml" xref="S3.SS2.p6.3.m3.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p6.3.m3.1.1.1.1.1.1.cmml" xref="S3.SS2.p6.3.m3.1.1.1.1.1.1">10</cn><csymbol cd="latexml" id="S3.SS2.p6.3.m3.3.3.3.3.3.3.cmml" xref="S3.SS2.p6.3.m3.3.3.3.3.3.3">percent</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p6.3.m3.3c">10\text{\,}\mathrm{\char 37\relax}</annotation></semantics></math> of the predictions on the real thermal images are located <math id="S3.SS2.p6.4.m4.3" class="ltx_Math" alttext="180\text{\,}\mathrm{deg}" display="inline"><semantics id="S3.SS2.p6.4.m4.3a"><mrow id="S3.SS2.p6.4.m4.3.3" xref="S3.SS2.p6.4.m4.3.3.cmml"><mn id="S3.SS2.p6.4.m4.1.1.1.1.1.1" xref="S3.SS2.p6.4.m4.1.1.1.1.1.1.cmml">180</mn><mtext id="S3.SS2.p6.4.m4.2.2.2.2.2.2" xref="S3.SS2.p6.4.m4.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S3.SS2.p6.4.m4.3.3.3.3.3.3" xref="S3.SS2.p6.4.m4.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p6.4.m4.3b"><apply id="S3.SS2.p6.4.m4.3.3.cmml" xref="S3.SS2.p6.4.m4.3.3"><csymbol cd="latexml" id="S3.SS2.p6.4.m4.2.2.2.2.2.2.cmml" xref="S3.SS2.p6.4.m4.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS2.p6.4.m4.1.1.1.1.1.1.cmml" xref="S3.SS2.p6.4.m4.1.1.1.1.1.1">180</cn><csymbol cd="latexml" id="S3.SS2.p6.4.m4.3.3.3.3.3.3.cmml" xref="S3.SS2.p6.4.m4.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p6.4.m4.3c">180\text{\,}\mathrm{deg}</annotation></semantics></math> away from the ground truth, as indicated by the spike on the right-hand side of the plot in Fig. <a href="#S3.F7" title="Figure 7 ‣ 3.2 Evaluation on Real Dataset ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>. This would contribute significantly to the average absolute error. We speculate that the cause of this phenomenon is due to the symmetrical nature of our target.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Evaluation Using Grad-CAM</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p"><span title="" class="ltx_glossaryref">DNNs</span> have achieved unprecedented performance in many applications, although they remain opaque tools. Simply inspecting the model’s structure, or analysing its weights, tells us very little about its decision-making behaviour. In addition, relying on simple metrics such as F1, recall and precision, can lead a developer to overestimate the capability of their models. In order to better understand the models developed on Jason-1, we have employed Grad-CAM to identify the sections of the target that the model relied on to make predictions.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.1" class="ltx_p">This could be done in different ways, either by encoding both predictions for azimuth and elevation, or we could treat them as mutually exclusive, and investigate one or the other. Initially we were interested in investigating where the network’s focus was considering both, since this will give us a general sense of how it made decisions. This is done in much the same way as outlined by <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bibx10" title="" class="ltx_ref">10</a>]</cite>, except since we have two outputs, each is one-hot encoded, and then summed together prior to backpropagation.</p>
+</div>
+<figure id="S3.F8" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F8.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/gradcam_imgs/ir30.png" id="S3.F8.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F8.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/gradcam_imgs/vis30.png" id="S3.F8.2.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F8.4.1.1" class="ltx_text" style="font-size:90%;">Figure 8</span>: </span><span id="S3.F8.5.2" class="ltx_text" style="font-size:90%;">Illustration of Grad-CAM for <span title="" class="ltx_glossaryref">DNN</span>-based spacecraft pose estimation explainability tested on the <span title="" class="ltx_glossaryref">LWIR</span> modality. The left figure shows the thermal infrared image which was fed to the network, overlaid with the Grad-CAM attention map generated by considering both the azimuth and elevation. The right figure shows the closest match according to the network.</span></figcaption>
+</figure>
+<div id="S3.SS3.p3" class="ltx_para">
+<p id="S3.SS3.p3.1" class="ltx_p">We discovered that, throughout the trajectory, the network’s attention was focused heavily on the central bus; an example is shown in Fig. <a href="#S3.F8" title="Figure 8 ‣ 3.3 Evaluation Using Grad-CAM ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>. This is logical since it is both the centre of the target and also where many of its unique components are found, such as the radiators and instrument antennas. These are the components which would be absent if we were looking at the target from a vastly different orientation.</p>
+</div>
+<figure id="S3.F9" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F9.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/gradcam_imgs/ir214.png" id="S3.F9.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F9.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/gradcam_imgs/vis214.png" id="S3.F9.2.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F9.4.1.1" class="ltx_text" style="font-size:90%;">Figure 9</span>: </span><span id="S3.F9.5.2" class="ltx_text" style="font-size:90%;">Illustration of a good match between the ground truth (left) and the prediction (right). The Grad-CAM was applied only taking into account the azimuth class.</span></figcaption>
+</figure>
+<div id="S3.SS3.p4" class="ltx_para">
+<p id="S3.SS3.p4.1" class="ltx_p">We were also interested in what caused the network to misclassify the azimuth of some thermal infrared images <math id="S3.SS3.p4.1.m1.3" class="ltx_Math" alttext="180\text{\,}\mathrm{deg}" display="inline"><semantics id="S3.SS3.p4.1.m1.3a"><mrow id="S3.SS3.p4.1.m1.3.3" xref="S3.SS3.p4.1.m1.3.3.cmml"><mn id="S3.SS3.p4.1.m1.1.1.1.1.1.1" xref="S3.SS3.p4.1.m1.1.1.1.1.1.1.cmml">180</mn><mtext id="S3.SS3.p4.1.m1.2.2.2.2.2.2" xref="S3.SS3.p4.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S3.SS3.p4.1.m1.3.3.3.3.3.3" xref="S3.SS3.p4.1.m1.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.1.m1.3b"><apply id="S3.SS3.p4.1.m1.3.3.cmml" xref="S3.SS3.p4.1.m1.3.3"><csymbol cd="latexml" id="S3.SS3.p4.1.m1.2.2.2.2.2.2.cmml" xref="S3.SS3.p4.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS3.p4.1.m1.1.1.1.1.1.1.cmml" xref="S3.SS3.p4.1.m1.1.1.1.1.1.1">180</cn><csymbol cd="latexml" id="S3.SS3.p4.1.m1.3.3.3.3.3.3.cmml" xref="S3.SS3.p4.1.m1.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.1.m1.3c">180\text{\,}\mathrm{deg}</annotation></semantics></math> away from the ground truth. Therefore, we applied Grad-CAM again, but this time only using the one-hot encoding of the azimuth class, and while completely ignoring the elevation prediction. Figure <a href="#S3.F9" title="Figure 9 ‣ 3.3 Evaluation Using Grad-CAM ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a> shows an example where this method is applied to a correctly predicted orientation. We can see that the focus is on the bus, but particularly concentrated at the top near what would be the radiometer.</p>
+</div>
+<figure id="S3.F10" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F10.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/gradcam_imgs/ir215.png" id="S3.F10.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F10.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/gradcam_imgs/vis215.png" id="S3.F10.2.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F10.4.1.1" class="ltx_text" style="font-size:90%;">Figure 10</span>: </span><span id="S3.F10.5.2" class="ltx_text" style="font-size:90%;">Illustration of a bad match between the ground truth (left) and the prediction (right). The Grad-CAM was applied only taking into account the azimuth class.</span></figcaption>
+</figure>
+<div id="S3.SS3.p5" class="ltx_para">
+<p id="S3.SS3.p5.1" class="ltx_p">Juxtaposed, Fig. <a href="#S3.F10" title="Figure 10 ‣ 3.3 Evaluation Using Grad-CAM ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a> shows the next frame which occurs in one of the instances where the model misclassified the target <math id="S3.SS3.p5.1.m1.3" class="ltx_Math" alttext="180\text{\,}\mathrm{deg}" display="inline"><semantics id="S3.SS3.p5.1.m1.3a"><mrow id="S3.SS3.p5.1.m1.3.3" xref="S3.SS3.p5.1.m1.3.3.cmml"><mn id="S3.SS3.p5.1.m1.1.1.1.1.1.1" xref="S3.SS3.p5.1.m1.1.1.1.1.1.1.cmml">180</mn><mtext id="S3.SS3.p5.1.m1.2.2.2.2.2.2" xref="S3.SS3.p5.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S3.SS3.p5.1.m1.3.3.3.3.3.3" xref="S3.SS3.p5.1.m1.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p5.1.m1.3b"><apply id="S3.SS3.p5.1.m1.3.3.cmml" xref="S3.SS3.p5.1.m1.3.3"><csymbol cd="latexml" id="S3.SS3.p5.1.m1.2.2.2.2.2.2.cmml" xref="S3.SS3.p5.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S3.SS3.p5.1.m1.1.1.1.1.1.1.cmml" xref="S3.SS3.p5.1.m1.1.1.1.1.1.1">180</cn><csymbol cd="latexml" id="S3.SS3.p5.1.m1.3.3.3.3.3.3.cmml" xref="S3.SS3.p5.1.m1.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p5.1.m1.3c">180\text{\,}\mathrm{deg}</annotation></semantics></math> out. We can see in this image the model’s focus has shifted away from the central bus to include the solar panels. This supports our speculation, stated in the previous section, that the symmetrical nature of the target caused the network to make the misclassification, since the solar panels are symmetrical. This is made more difficult in the thermal infrared, since the patterns on the front of the panels cannot be made out. Moreover, the supports for the panels radiated heat slower, and could be seen through the panels.</p>
+</div>
+<figure id="S3.F11" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F11.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/gradcam_imgs/revis215.png" id="S3.F11.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F11.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2105.13789/assets/gradcam_imgs/vis214.png" id="S3.F11.2.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F11.4.1.1" class="ltx_text" style="font-size:90%;">Figure 11</span>: </span><span id="S3.F11.5.2" class="ltx_text" style="font-size:90%;">Illustration of Grad-CAM for <span title="" class="ltx_glossaryref">DNN</span>-based spacecraft pose estimation explainability tested on the visible modality. The left image shows the visible image which was fed to the network, overlaid with the Grad-CAM attention map which was generated this only considering the azimuth. The right image shows the closest match according to the network.</span></figcaption>
+</figure>
+<div id="S3.SS3.p6" class="ltx_para">
+<p id="S3.SS3.p6.1" class="ltx_p">We investigated further by repeating this procedure on the real visible images we had collected. Figure <a href="#S3.F11" title="Figure 11 ‣ 3.3 Evaluation Using Grad-CAM ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">11</span></a> shows a frame from the visible camera that was captured at the same time as the offending frame shown in Fig. <a href="#S3.F10" title="Figure 10 ‣ 3.3 Evaluation Using Grad-CAM ‣ 3 RESULTS ‣ USING CONVOLUTIONAL NEURAL NETWORKS FOR RELATIVE POSE ESTIMATION OF A NON-COOPERATIVE SPACECRAFT WITH THERMAL INFRARED IMAGERY" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a> was captured. We found that, when viewing facets on this side of the target such as the one shown, much of the attention was on the surface of the solar panels. This indicates that the model is biased to search for this pattern, and the fact that it is absent from the thermal images put the network at a disadvantage.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section" lang="en-GB">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>CONCLUSION</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">Our goal in this study was to develop a <span title="" class="ltx_glossaryref">CNN</span> to predict the coarse viewpoint of a target as imaged by a rendezvousing chaser for the initialisation of spacecraft relative pose estimation algorithms, and to evaluate its robustness on thermal infrared imagery when it has been trained exclusively on visible images. During our investigation, we firstly demonstrated this capability on a synthetic dataset of the spacecraft Envisat. We then expanded our investigation to real images of the Jason-1 spacecraft captured in our laboratory. In this phase we demonstrated our network could perform just as well on real thermal infrared images as it could on real visible images.</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">Our experimental set up is currently limited to only one degree of rotation and does not allow us to test all possible permutations of azimuths and elevations. Therefore, we cannot verify our model’s performance on all possible orientations of a real target, which will need to be proven in order for our model to be deployed in the wild. Nevertheless, for the available facets of our real target, we have demonstrated our network is able to achieve an average accuracy greater than <math id="S4.p2.1.m1.3" class="ltx_Math" alttext="20\text{\,}\mathrm{deg}" display="inline"><semantics id="S4.p2.1.m1.3a"><mrow id="S4.p2.1.m1.3.3" xref="S4.p2.1.m1.3.3.cmml"><mn id="S4.p2.1.m1.1.1.1.1.1.1" xref="S4.p2.1.m1.1.1.1.1.1.1.cmml">20</mn><mtext id="S4.p2.1.m1.2.2.2.2.2.2" xref="S4.p2.1.m1.2.2.2.2.2.2.cmml"> </mtext><mi class="ltx_unit" id="S4.p2.1.m1.3.3.3.3.3.3" xref="S4.p2.1.m1.3.3.3.3.3.3.cmml">deg</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.p2.1.m1.3b"><apply id="S4.p2.1.m1.3.3.cmml" xref="S4.p2.1.m1.3.3"><csymbol cd="latexml" id="S4.p2.1.m1.2.2.2.2.2.2.cmml" xref="S4.p2.1.m1.2.2.2.2.2.2">times</csymbol><cn type="integer" id="S4.p2.1.m1.1.1.1.1.1.1.cmml" xref="S4.p2.1.m1.1.1.1.1.1.1">20</cn><csymbol cd="latexml" id="S4.p2.1.m1.3.3.3.3.3.3.cmml" xref="S4.p2.1.m1.3.3.3.3.3.3">degree</csymbol></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.p2.1.m1.3c">20\text{\,}\mathrm{deg}</annotation></semantics></math> in both modalities.</p>
+</div>
+<div id="S4.p3" class="ltx_para">
+<p id="S4.p3.1" class="ltx_p">Moreover, we have gone a step further by attempting to explain how our network makes decisions. From our investigations with Grad-CAM we were able to better understand that the features on the central bus were key to the network’s performance. Furthermore, we were able to better understand its failure modes, which we identified as the textures on the solar panels. This weakness can be removed from the <span title="" class="ltx_glossaryref">CAD</span> model in future work to achieve better performance in later iterations.</p>
+</div>
+<div id="S4.p4" class="ltx_para">
+<p id="S4.p4.1" class="ltx_p">As mentioned, the focus of our network tended towards the central bus of the target, therefore future work will examine how well the Grad-CAM maps match the target’s location within the frame. From our observations in this study, we expect this can be used to explicitly predict a coarse position of the target. In addition, we will also investigate the performance of our network in other conditions which might occur on orbit such as in eclipse. This will allow us to evaluate in conditions where we’d expect thermal images to provide better clarity of the target than visible.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography" lang="en-GB">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bibx1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">Robert W. Fricke
+</span>
+<span class="ltx_bibblock">“STS-49: Space shuttle mission report” Provided by the SAO/NASA Astrophysics Data System, 1992
+</span>
+<span class="ltx_bibblock">URL: <a target="_blank" href="https://ui.adsabs.harvard.edu/abs/1992sts..reptQ....F" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://ui.adsabs.harvard.edu/abs/1992sts..reptQ....F</a>
+</span>
+</li>
+<li id="bib.bibx2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">Roberto Opromolla, Giancarmine Fasano, Giancarlo Rufino and Michele Grassi
+</span>
+<span class="ltx_bibblock">“A review of cooperative and uncooperative spacecraft pose determination techniques for close-proximity operations”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx2.1.1" class="ltx_emph ltx_font_italic">Progress in Aerospace Sciences</em> <span id="bib.bibx2.2.2" class="ltx_text ltx_font_bold">93</span>, 2017, pp. 53–72
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/https://doi.org/10.1016/j.paerosci.2017.07.001" title="" class="ltx_ref ltx_href">https://doi.org/10.1016/j.paerosci.2017.07.001</a>
+</span>
+</li>
+<li id="bib.bibx3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">Sumant Sharma and Simone D’Amico
+</span>
+<span class="ltx_bibblock">“Pose Estimation for Non-Cooperative Rendezvous Using Neural Networks”, 2019
+</span>
+<span class="ltx_bibblock">arXiv:<a target="_blank" href="https://arxiv.org/abs/1906.09868" title="" class="ltx_ref ltx_href">1906.09868 [cs.CV]</a>
+</span>
+</li>
+<li id="bib.bibx4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">Pedro F. Proença and Yang Gao
+</span>
+<span class="ltx_bibblock">“Deep Learning for Spacecraft Pose Estimation from Photorealistic Rendering”, 2019
+</span>
+<span class="ltx_bibblock">arXiv:<a target="_blank" href="https://arxiv.org/abs/1907.04298" title="" class="ltx_ref ltx_href">1907.04298 [cs.CV]</a>
+</span>
+</li>
+<li id="bib.bibx5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">Duarte Rondao, Nabil Aouf, Mark A. Richardson and Vincent Dubanchet
+</span>
+<span class="ltx_bibblock">“Robust On-Manifold Optimization for Uncooperative Space Relative Navigation with a Single Camera”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx5.1.1" class="ltx_emph ltx_font_italic">Journal of Guidance, Control, and Dynamics</em> <span id="bib.bibx5.2.2" class="ltx_text ltx_font_bold">44.6</span>, 2021, pp. 1157–1182
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.2514/1.G004794" title="" class="ltx_ref ltx_href">10.2514/1.G004794</a>
+</span>
+</li>
+<li id="bib.bibx6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">Kiana Hajebi and John S. Zelek
+</span>
+<span class="ltx_bibblock">“Structure from Infrared Stereo Images”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx6.1.1" class="ltx_emph ltx_font_italic">2008 Canadian Conference on Computer and Robot Vision</em>, 2008, pp. 105–112
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/CRV.2008.9" title="" class="ltx_ref ltx_href">10.1109/CRV.2008.9</a>
+</span>
+</li>
+<li id="bib.bibx7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">Ö. Yılmaz, N. Aouf, L. Majewski, M.O.G. Sanchez-Gestido and G. Ortega
+</span>
+<span class="ltx_bibblock">“Using Infrared Based Relative Navigation for Active Debris Removal”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx7.1.1" class="ltx_emph ltx_font_italic">10<sup id="bib.bibx7.1.1.1" class="ltx_sup">th</sup> International ESA Conference on Guidance, Navigation and Control Systems</em>
+</span>
+<span class="ltx_bibblock">Salzburg, Austria: ESA, 2017, pp. 1–16
+</span>
+</li>
+<li id="bib.bibx8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">Kaiming He, Xiangyu Zhang, Shaoqing Ren and Jian Sun
+</span>
+<span class="ltx_bibblock">“Deep Residual Learning for Image Recognition”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx8.1.1" class="ltx_emph ltx_font_italic">2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</em>
+</span>
+<span class="ltx_bibblock">IEEE, 2016
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/cvpr.2016.90" title="" class="ltx_ref ltx_href">10.1109/cvpr.2016.90</a>
+</span>
+</li>
+<li id="bib.bibx9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">Lei He, Nabil Aouf and Bifeng Song
+</span>
+<span class="ltx_bibblock">“Explainable Deep Reinforcement Learning for UAV Autonomous Navigation”, 2021
+</span>
+<span class="ltx_bibblock">arXiv:<a target="_blank" href="https://arxiv.org/abs/2009.14551" title="" class="ltx_ref ltx_href">2009.14551 [cs.RO]</a>
+</span>
+</li>
+<li id="bib.bibx10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">Ramprasaath R. Selvaraju et al.
+</span>
+<span class="ltx_bibblock">“Grad-CAM: Visual Explanations from Deep Networks via Gradient-Based Localization”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx10.1.1" class="ltx_emph ltx_font_italic">International Journal of Computer Vision</em> <span id="bib.bibx10.2.2" class="ltx_text ltx_font_bold">128.2</span>
+</span>
+<span class="ltx_bibblock">Springer ScienceBusiness Media LLC, 2019, pp. 336–359
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1007/s11263-019-01228-7" title="" class="ltx_ref ltx_href">10.1007/s11263-019-01228-7</a>
+</span>
+</li>
+<li id="bib.bibx11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">Y. LeCun et al.
+</span>
+<span class="ltx_bibblock">“Handwritten Digit Recognition: Applications of Neural Network Chips and Automatic Learning”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx11.1.1" class="ltx_emph ltx_font_italic">IEEE Communications Magazine</em> <span id="bib.bibx11.2.2" class="ltx_text ltx_font_bold">27.11</span>
+</span>
+<span class="ltx_bibblock">Institute of ElectricalElectronics Engineers (IEEE), 1989, pp. 41–46
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.1109/35.41400" title="" class="ltx_ref ltx_href">10.1109/35.41400</a>
+</span>
+</li>
+<li id="bib.bibx12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">Glenn Jocher et al.
+</span>
+<span class="ltx_bibblock">“Ultralytics/YOLOv5”
+</span>
+<span class="ltx_bibblock">Zenodo, 2021
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/10.5281/zenodo.4679653" title="" class="ltx_ref ltx_href">10.5281/zenodo.4679653</a>
+</span>
+</li>
+<li id="bib.bibx13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">Duarte Rondao, Nabil Aouf, Mark A. Richardson and Olivier Dubois-Matra
+</span>
+<span class="ltx_bibblock">“Benchmarking of local feature detectors and descriptors for multispectral relative navigation in space”
+</span>
+<span class="ltx_bibblock">In <em id="bib.bibx13.1.1" class="ltx_emph ltx_font_italic">Acta Astronautica</em> <span id="bib.bibx13.2.2" class="ltx_text ltx_font_bold">172</span>, 2020, pp. 100–122
+</span>
+<span class="ltx_bibblock">DOI: <a target="_blank" href="https://dx.doi.org/https://doi.org/10.1016/j.actaastro.2020.03.049" title="" class="ltx_ref ltx_href">https://doi.org/10.1016/j.actaastro.2020.03.049</a>
+</span>
+</li>
+<li id="bib.bibx14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">“Long-Running Jason-1 Ocean Satellite Takes Final Bow”, 2013
+</span>
+<span class="ltx_bibblock">URL: <a target="_blank" href="https://www.jpl.nasa.gov/news/long-running-jason-1-ocean-satellite-takes-final-bow" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://www.jpl.nasa.gov/news/long-running-jason-1-ocean-satellite-takes-final-bow</a>
+</span>
+</li>
+<li id="bib.bibx15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">Özgün Yılmaz
+</span>
+<span class="ltx_bibblock">“Infrared Based Monocular Relative Navigation for Active Debris Removal”, 2018
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2105.13788" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2105.13789" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2105.13789">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2105.13789" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2105.13790" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Mon Feb 26 22:45:35 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2007.08340] Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images</title><meta property="og:description" content="Human pose estimation (HPE) is a key building block for developing AI-based context-aware systems inside the operating room (OR). The 24/7 use of images coming from cameras mounted on the OR ceiling can however raise c…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2007.08340">
+
+<!--Generated on Thu Mar  7 05:48:06 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="keywords" lang="en" content="Human Pose Estimation Privacy Preservation Depth Images Low-resolution Data Operating Room">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span id="id1" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">institutetext: </span>ICube, University of Strasbourg, CNRS, IHU Strasbourg, France
+<br class="ltx_break"><span class="ltx_ref ltx_nolink ltx_path ltx_font_typewriter ltx_ref_self">{srivastav|padoy}@unistra.fr</span></span></span></span><span id="id2" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_note_type">institutetext: </span>Radiology Department, University Hospital of Strasbourg, France</span></span></span>
+<h1 class="ltx_title ltx_title_document">Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images</h1>
+<div class="ltx_subtitle"> *** Supplementary Material ***
+</div>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Vinkle Srivastav
+</span><span class="ltx_author_notes">11</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Afshin Gangi
+</span><span class="ltx_author_notes">1122</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Nicolas Padoy
+</span><span class="ltx_author_notes">11</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">Human pose estimation (HPE) is a key building block for developing AI-based context-aware systems inside the operating room (OR). The 24/7 use of images coming from cameras mounted on the OR ceiling can however raise concerns for privacy, even in the case of depth images captured by RGB-D sensors. Being able to solely use low-resolution privacy-preserving images would address these concerns and help scale up the computer-assisted approaches that rely on such data to a larger number of ORs. In this paper, we introduce the problem of HPE on low-resolution depth images and propose an end-to-end solution that integrates a multi-scale super-resolution network with a 2D human pose estimation network. By exploiting intermediate feature-maps generated at different super-resolution, our approach achieves body pose results on low-resolution images (of size 64x48) that are on par with those of an approach trained and tested on full resolution images (of size 640x480).</p>
+</div>
+<div class="ltx_keywords">
+<h6 class="ltx_title ltx_title_keywords">Keywords: </h6>Human Pose Estimation Privacy Preservation Depth Images Low-resolution Data Operating Room
+</div>
+<span id="footnotex1" class="ltx_note ltx_role_footnotetext"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type">footnotetext: </span>Published at International Conference on Medical Image Computing and Computer-Assisted Intervention - MICCAI 2019.</span></span></span>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<figure id="S1.F1" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S1.F1.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/merged_img_res_640x480.png" id="S1.F1.sf1.g1" class="ltx_graphics ltx_img_portrait" width="150" height="225" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S1.F1.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="S1.F1.sf1.3.2" class="ltx_text" style="font-size:90%;">640x480 (1x)</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S1.F1.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/merged_img_res_80x60.png" id="S1.F1.sf2.g1" class="ltx_graphics ltx_img_portrait" width="150" height="225" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S1.F1.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="S1.F1.sf2.3.2" class="ltx_text" style="font-size:90%;">80x60 (8x)</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S1.F1.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/merged_img_res_64x48.png" id="S1.F1.sf3.g1" class="ltx_graphics ltx_img_portrait" width="150" height="225" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S1.F1.sf3.2.1.1" class="ltx_text" style="font-size:90%;">(c)</span> </span><span id="S1.F1.sf3.3.2" class="ltx_text" style="font-size:90%;">64x48 (10x)</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S1.F1.2.1.1" class="ltx_text" style="font-size:90%;">Figure 1</span>: </span><span id="S1.F1.3.2" class="ltx_text" style="font-size:90%;">Depth and color images from MVOR dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> down-sampled at different resolutions using bicubic interpolation (resized for better visualization). Low-resolution depth images contain little information for the identification of patient and health professionals. Corresponding color images in the second row are shown for better appreciation of the downsampling process.</span></figcaption>
+</figure>
+<div id="S1.p1" class="ltx_para ltx_noindent">
+<p id="S1.p1.1" class="ltx_p">Modern hospitals could highly benefit from the use of smart assistance systems that are able to support the workflow by exploiting digital data from equipment and sensors through artificial intelligence and surgical data science <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>. This is illustrated by the recent development of new applications, such as patient activity monitoring inside intensive care units (ICU) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, staff hand-hygiene recognition <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, radiation exposure monitoring during hybrid surgery <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> and workflow steps recognition in the operating room (OR) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">These systems, which have a huge potential to improve safety and care, all rely on machine intelligence using computer vision models to extract semantic information from visual data. In particular, human detection and pose estimation in the operating room <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> is one of the key components to develop such applications.
+Constant monitoring by the use of cameras raises however potential concerns for the privacy of patients and health professionals.
+Cameras usually capture the color, depth or both types of images for visual processing. Color images appear to be the most privacy-intrusive, but even textureless depth images can also intrude the privacy when used at sufficiently high-resolution <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. This is particularly relevant in environments where the number of persons is limited and where the persons could potentially be more easily identified. Figure <a href="#S3.F3" title="Figure 3 ‣ 3.1.1 Comparative study without SR feature maps: ‣ 3.1 Results ‣ 3 Experiments and Results ‣ Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> shows depth images at different resolutions. It suggests that low-resolution images could be used for more privacy-compliant computer-vision applications and that their recording could be better accepted by clinical institutions. In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, it has been shown that activity recognition can be performed on low-resolution depth images captured for the tasks of hand-hygiene classification and ICU activity logging. In this work, we investigate whether low-resolution depth images contain sufficient information for accurate human pose estimation (HPE).</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">HPE consists of localizing human keypoints in images. Methods for human pose estimation are different for color and depth images both in terms of model architectures and complexity of training datasets. In the case of color images, deep learning models have recently shown remarkable progress with the help of large scale <span id="S1.p3.1.1" class="ltx_text ltx_font_italic">in the wild</span> annotated datasets, such as COCO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>.
+Deep learning models for HPE can generally be grouped into bottom-up and top-down approaches. Bottom-up approaches first detect the keypoints and then group them to form skeletons <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, whereas top-down approaches first detect the person using person detectors and then use single person pose estimator to estimate body joints in each detected box <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>. Top-down approaches are often more accurate due to their two-stage design but slower in comparison to bottom-up approaches. For depth images, Shotton et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> use high-resolution synthetic depth dataset to train the models, while Haque et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> focus on single person pose estimation using datasets recording actors performing simulated actions. Recently, Srivastav et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> have introduced the MVOR dataset, which contains color and depth images captured in the OR along with ground truth human poses. They have also evaluated recent HPE methods. This is therefore an interesting testbed for multi-person pose estimation on depth data captured during real surgical activities, which we will use in this work.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Current methods for HPE inside the OR have been developed using standard resolution images <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>. We have found that state-of-the-art models, which are trained on the high-resolution images, perform poorly on the corresponding low-resolution images. In this paper, we therefore propose an approach for the human pose estimation problem on low-resolution depth images. To the best of our knowledge, this is the first work that attempts to solve this task.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">To train our system, we use a non-annotated dataset of synchronized RGB-D images captured in the OR environment. Unlike conventional approaches, which use either manual or synthetically rendered annotations challenging to generate, we propose to use the detections from a state-of-the-art method applied to the color images as pseudo ground truth for the corresponding depth images. This simple idea turns out to be very effective. Indeed, as our approach only requires a set of RGB-D images at train time, it can be easily retrained in any facility since no annotation process is needed. Then, it can run round the clock on low-resolution depth images from the same facility.
+Our HPE approach is a network which integrates super-resolution modules with a 2D multi-person body keypoint estimator based on RTPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. It utilizes intermediate super-resolution feature maps to better learn the high-frequency features. With the proposed architecture, we achieve the same results as a network trained on the standard resolution images and improve by <math id="S1.p5.1.m1.1" class="ltx_Math" alttext="6.5" display="inline"><semantics id="S1.p5.1.m1.1a"><mn id="S1.p5.1.m1.1.1" xref="S1.p5.1.m1.1.1.cmml">6.5</mn><annotation-xml encoding="MathML-Content" id="S1.p5.1.m1.1b"><cn type="float" id="S1.p5.1.m1.1.1.cmml" xref="S1.p5.1.m1.1.1">6.5</cn></annotation-xml><annotation encoding="application/x-tex" id="S1.p5.1.m1.1c">6.5</annotation></semantics></math>% the results of a baseline method which up-samples the low-resolution images with bicubic interpolation before feeding them to the pose estimation network.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Methodology</h2>
+
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2007.08340/assets/x1.png" id="S2.F2.g1" class="ltx_graphics ltx_img_landscape" width="461" height="280" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="S2.F2.2.1.1" class="ltx_text" style="font-size:90%;">Figure 2</span>: </span><span id="S2.F2.3.2" class="ltx_text" style="font-size:90%;">Proposed architecture. The super-resolution block increases the spatial resolution by a factor of 8x and generates intermediate SR feature maps (S1, S2) used by the pose estimation block to learn high-frequency features. All losses are mean square error losses. C1 to C16 are convolution layers grouped together for better visualization and described below the figure, where c1(n1,n2), c3(n1,n2), c7(n1,n2) each represent a convolution layer with kernel size 1x1, 3x3, 7x7 and padding 0, 1, 3, respectively. Parameters n1 and n2 are the numbers of input and output channels and all convolution layers are followed by RELU non-linearity.</span></figcaption>
+</figure>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Architecture</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Our approach is inspired by the recent developments in the area of super-resolution and multi-person human pose estimation. We propose to integrate a super-resolution image estimator and a 2D multi-person pose estimator in a joint architecture, illustrated in Figure <a href="#S2.F2" title="Figure 2 ‣ 2 Methodology ‣ Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+This architecture is based on modification from the RTPose network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. Besides yielding competitive results on COCO and MVOR, RTPose has the advantage to perform multi-person pose estimation in a single step, thereby simplifying the integration and training of the super-resolution modules. It is composed of a <span id="S2.SS1.p1.1.1" class="ltx_text ltx_font_typewriter">feature extraction block</span> and a <span id="S2.SS1.p1.1.2" class="ltx_text ltx_font_typewriter">pose estimation block</span> shown in Figure <a href="#S2.F2" title="Figure 2 ‣ 2 Methodology ‣ Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+We introduce a <span id="S2.SS1.p1.1.3" class="ltx_text ltx_font_typewriter">super-resolution block</span>, which does not only increase the spatial resolution but also generates super-resolution (SR) feature maps (S1, S2). These intermediate feature-maps contain high-frequency details, which are lost during the low-resolution (LR) image generation process and used in the <span id="S2.SS1.p1.1.4" class="ltx_text ltx_font_typewriter">pose estimation block</span> for better localization.
+The <span id="S2.SS1.p1.1.5" class="ltx_text ltx_font_typewriter">super-resolution block</span> uses a multi-stage design, where each stage increases the spatial resolution of the features maps by a factor of two using the pixel-shuffle algorithm <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> (while reducing the number of channels by four). During training, a complete SR image is generated to compute the auxiliary loss <span id="S2.SS1.p1.1.6" class="ltx_text ltx_font_bold">L_HR</span>, which compares the SR image to the ground truth high-resolution (HR) depth image using the L2 norm. This helps to train the <span id="S2.SS1.p1.1.7" class="ltx_text ltx_font_typewriter">super-resolution block</span> and refines the input to the <span id="S2.SS1.p1.1.8" class="ltx_text ltx_font_typewriter">SR features block</span>. Note that during training, errors from the pose estimation are also back-propagated to these blocks. Furthermore, at test time only LR images are used and no SR images need to be generated by the network since only the SR feature maps are used.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.9" class="ltx_p">RTPose was originally developed for color images. Since depth images contain fewer texture details, we have made the architecture more computationally efficient by reducing the number of iterative refinement stages from five to three. The network uses two separate branches, one for keypoint localization and another to compute part affinity maps <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. In our architecture, these two branches consume the 3 types of features (F, S1, S2), where F are the features extracted from the high-resolution feature maps provided by the super-resolution block. The final skeleton is generated from the part affinity and keypoint localization heatmaps using the bipartite graph matching algorithm presented in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.
+Losses in the pose estimation network are used as in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, but now take the input from the SR feature maps (S1, S2). At each stage <math id="S2.SS1.p2.1.m1.1" class="ltx_Math" alttext="t" display="inline"><semantics id="S2.SS1.p2.1.m1.1a"><mi id="S2.SS1.p2.1.m1.1.1" xref="S2.SS1.p2.1.m1.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.1.m1.1b"><ci id="S2.SS1.p2.1.m1.1.1.cmml" xref="S2.SS1.p2.1.m1.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.1.m1.1c">t</annotation></semantics></math>, two L2 losses <math id="S2.SS1.p2.2.m2.1" class="ltx_Math" alttext="L\_B^{t}" display="inline"><semantics id="S2.SS1.p2.2.m2.1a"><mrow id="S2.SS1.p2.2.m2.1.1" xref="S2.SS1.p2.2.m2.1.1.cmml"><mi id="S2.SS1.p2.2.m2.1.1.2" xref="S2.SS1.p2.2.m2.1.1.2.cmml">L</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.2.m2.1.1.1" xref="S2.SS1.p2.2.m2.1.1.1.cmml">​</mo><mi mathvariant="normal" id="S2.SS1.p2.2.m2.1.1.3" xref="S2.SS1.p2.2.m2.1.1.3.cmml">_</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.2.m2.1.1.1a" xref="S2.SS1.p2.2.m2.1.1.1.cmml">​</mo><msup id="S2.SS1.p2.2.m2.1.1.4" xref="S2.SS1.p2.2.m2.1.1.4.cmml"><mi id="S2.SS1.p2.2.m2.1.1.4.2" xref="S2.SS1.p2.2.m2.1.1.4.2.cmml">B</mi><mi id="S2.SS1.p2.2.m2.1.1.4.3" xref="S2.SS1.p2.2.m2.1.1.4.3.cmml">t</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.2.m2.1b"><apply id="S2.SS1.p2.2.m2.1.1.cmml" xref="S2.SS1.p2.2.m2.1.1"><times id="S2.SS1.p2.2.m2.1.1.1.cmml" xref="S2.SS1.p2.2.m2.1.1.1"></times><ci id="S2.SS1.p2.2.m2.1.1.2.cmml" xref="S2.SS1.p2.2.m2.1.1.2">𝐿</ci><ci id="S2.SS1.p2.2.m2.1.1.3.cmml" xref="S2.SS1.p2.2.m2.1.1.3">_</ci><apply id="S2.SS1.p2.2.m2.1.1.4.cmml" xref="S2.SS1.p2.2.m2.1.1.4"><csymbol cd="ambiguous" id="S2.SS1.p2.2.m2.1.1.4.1.cmml" xref="S2.SS1.p2.2.m2.1.1.4">superscript</csymbol><ci id="S2.SS1.p2.2.m2.1.1.4.2.cmml" xref="S2.SS1.p2.2.m2.1.1.4.2">𝐵</ci><ci id="S2.SS1.p2.2.m2.1.1.4.3.cmml" xref="S2.SS1.p2.2.m2.1.1.4.3">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.2.m2.1c">L\_B^{t}</annotation></semantics></math> and <math id="S2.SS1.p2.3.m3.1" class="ltx_Math" alttext="L\_C^{t}" display="inline"><semantics id="S2.SS1.p2.3.m3.1a"><mrow id="S2.SS1.p2.3.m3.1.1" xref="S2.SS1.p2.3.m3.1.1.cmml"><mi id="S2.SS1.p2.3.m3.1.1.2" xref="S2.SS1.p2.3.m3.1.1.2.cmml">L</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.3.m3.1.1.1" xref="S2.SS1.p2.3.m3.1.1.1.cmml">​</mo><mi mathvariant="normal" id="S2.SS1.p2.3.m3.1.1.3" xref="S2.SS1.p2.3.m3.1.1.3.cmml">_</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.3.m3.1.1.1a" xref="S2.SS1.p2.3.m3.1.1.1.cmml">​</mo><msup id="S2.SS1.p2.3.m3.1.1.4" xref="S2.SS1.p2.3.m3.1.1.4.cmml"><mi id="S2.SS1.p2.3.m3.1.1.4.2" xref="S2.SS1.p2.3.m3.1.1.4.2.cmml">C</mi><mi id="S2.SS1.p2.3.m3.1.1.4.3" xref="S2.SS1.p2.3.m3.1.1.4.3.cmml">t</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.3.m3.1b"><apply id="S2.SS1.p2.3.m3.1.1.cmml" xref="S2.SS1.p2.3.m3.1.1"><times id="S2.SS1.p2.3.m3.1.1.1.cmml" xref="S2.SS1.p2.3.m3.1.1.1"></times><ci id="S2.SS1.p2.3.m3.1.1.2.cmml" xref="S2.SS1.p2.3.m3.1.1.2">𝐿</ci><ci id="S2.SS1.p2.3.m3.1.1.3.cmml" xref="S2.SS1.p2.3.m3.1.1.3">_</ci><apply id="S2.SS1.p2.3.m3.1.1.4.cmml" xref="S2.SS1.p2.3.m3.1.1.4"><csymbol cd="ambiguous" id="S2.SS1.p2.3.m3.1.1.4.1.cmml" xref="S2.SS1.p2.3.m3.1.1.4">superscript</csymbol><ci id="S2.SS1.p2.3.m3.1.1.4.2.cmml" xref="S2.SS1.p2.3.m3.1.1.4.2">𝐶</ci><ci id="S2.SS1.p2.3.m3.1.1.4.3.cmml" xref="S2.SS1.p2.3.m3.1.1.4.3">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.3.m3.1c">L\_C^{t}</annotation></semantics></math> are computed from the predicted part affinity/keypoint localization heatmaps (<math id="S2.SS1.p2.4.m4.1" class="ltx_Math" alttext="B^{t}" display="inline"><semantics id="S2.SS1.p2.4.m4.1a"><msup id="S2.SS1.p2.4.m4.1.1" xref="S2.SS1.p2.4.m4.1.1.cmml"><mi id="S2.SS1.p2.4.m4.1.1.2" xref="S2.SS1.p2.4.m4.1.1.2.cmml">B</mi><mi id="S2.SS1.p2.4.m4.1.1.3" xref="S2.SS1.p2.4.m4.1.1.3.cmml">t</mi></msup><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.4.m4.1b"><apply id="S2.SS1.p2.4.m4.1.1.cmml" xref="S2.SS1.p2.4.m4.1.1"><csymbol cd="ambiguous" id="S2.SS1.p2.4.m4.1.1.1.cmml" xref="S2.SS1.p2.4.m4.1.1">superscript</csymbol><ci id="S2.SS1.p2.4.m4.1.1.2.cmml" xref="S2.SS1.p2.4.m4.1.1.2">𝐵</ci><ci id="S2.SS1.p2.4.m4.1.1.3.cmml" xref="S2.SS1.p2.4.m4.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.4.m4.1c">B^{t}</annotation></semantics></math>/<math id="S2.SS1.p2.5.m5.1" class="ltx_Math" alttext="C^{t}" display="inline"><semantics id="S2.SS1.p2.5.m5.1a"><msup id="S2.SS1.p2.5.m5.1.1" xref="S2.SS1.p2.5.m5.1.1.cmml"><mi id="S2.SS1.p2.5.m5.1.1.2" xref="S2.SS1.p2.5.m5.1.1.2.cmml">C</mi><mi id="S2.SS1.p2.5.m5.1.1.3" xref="S2.SS1.p2.5.m5.1.1.3.cmml">t</mi></msup><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.5.m5.1b"><apply id="S2.SS1.p2.5.m5.1.1.cmml" xref="S2.SS1.p2.5.m5.1.1"><csymbol cd="ambiguous" id="S2.SS1.p2.5.m5.1.1.1.cmml" xref="S2.SS1.p2.5.m5.1.1">superscript</csymbol><ci id="S2.SS1.p2.5.m5.1.1.2.cmml" xref="S2.SS1.p2.5.m5.1.1.2">𝐶</ci><ci id="S2.SS1.p2.5.m5.1.1.3.cmml" xref="S2.SS1.p2.5.m5.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.5.m5.1c">C^{t}</annotation></semantics></math>) and the ground truth heatmaps (<math id="S2.SS1.p2.6.m6.1" class="ltx_Math" alttext="B^{*}" display="inline"><semantics id="S2.SS1.p2.6.m6.1a"><msup id="S2.SS1.p2.6.m6.1.1" xref="S2.SS1.p2.6.m6.1.1.cmml"><mi id="S2.SS1.p2.6.m6.1.1.2" xref="S2.SS1.p2.6.m6.1.1.2.cmml">B</mi><mo id="S2.SS1.p2.6.m6.1.1.3" xref="S2.SS1.p2.6.m6.1.1.3.cmml">∗</mo></msup><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.6.m6.1b"><apply id="S2.SS1.p2.6.m6.1.1.cmml" xref="S2.SS1.p2.6.m6.1.1"><csymbol cd="ambiguous" id="S2.SS1.p2.6.m6.1.1.1.cmml" xref="S2.SS1.p2.6.m6.1.1">superscript</csymbol><ci id="S2.SS1.p2.6.m6.1.1.2.cmml" xref="S2.SS1.p2.6.m6.1.1.2">𝐵</ci><times id="S2.SS1.p2.6.m6.1.1.3.cmml" xref="S2.SS1.p2.6.m6.1.1.3"></times></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.6.m6.1c">B^{*}</annotation></semantics></math>/<math id="S2.SS1.p2.7.m7.1" class="ltx_Math" alttext="C^{*}" display="inline"><semantics id="S2.SS1.p2.7.m7.1a"><msup id="S2.SS1.p2.7.m7.1.1" xref="S2.SS1.p2.7.m7.1.1.cmml"><mi id="S2.SS1.p2.7.m7.1.1.2" xref="S2.SS1.p2.7.m7.1.1.2.cmml">C</mi><mo id="S2.SS1.p2.7.m7.1.1.3" xref="S2.SS1.p2.7.m7.1.1.3.cmml">∗</mo></msup><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.7.m7.1b"><apply id="S2.SS1.p2.7.m7.1.1.cmml" xref="S2.SS1.p2.7.m7.1.1"><csymbol cd="ambiguous" id="S2.SS1.p2.7.m7.1.1.1.cmml" xref="S2.SS1.p2.7.m7.1.1">superscript</csymbol><ci id="S2.SS1.p2.7.m7.1.1.2.cmml" xref="S2.SS1.p2.7.m7.1.1.2">𝐶</ci><times id="S2.SS1.p2.7.m7.1.1.3.cmml" xref="S2.SS1.p2.7.m7.1.1.3"></times></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.7.m7.1c">C^{*}</annotation></semantics></math>). All the <math id="S2.SS1.p2.8.m8.1" class="ltx_Math" alttext="L\_B^{t}" display="inline"><semantics id="S2.SS1.p2.8.m8.1a"><mrow id="S2.SS1.p2.8.m8.1.1" xref="S2.SS1.p2.8.m8.1.1.cmml"><mi id="S2.SS1.p2.8.m8.1.1.2" xref="S2.SS1.p2.8.m8.1.1.2.cmml">L</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.8.m8.1.1.1" xref="S2.SS1.p2.8.m8.1.1.1.cmml">​</mo><mi mathvariant="normal" id="S2.SS1.p2.8.m8.1.1.3" xref="S2.SS1.p2.8.m8.1.1.3.cmml">_</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.8.m8.1.1.1a" xref="S2.SS1.p2.8.m8.1.1.1.cmml">​</mo><msup id="S2.SS1.p2.8.m8.1.1.4" xref="S2.SS1.p2.8.m8.1.1.4.cmml"><mi id="S2.SS1.p2.8.m8.1.1.4.2" xref="S2.SS1.p2.8.m8.1.1.4.2.cmml">B</mi><mi id="S2.SS1.p2.8.m8.1.1.4.3" xref="S2.SS1.p2.8.m8.1.1.4.3.cmml">t</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.8.m8.1b"><apply id="S2.SS1.p2.8.m8.1.1.cmml" xref="S2.SS1.p2.8.m8.1.1"><times id="S2.SS1.p2.8.m8.1.1.1.cmml" xref="S2.SS1.p2.8.m8.1.1.1"></times><ci id="S2.SS1.p2.8.m8.1.1.2.cmml" xref="S2.SS1.p2.8.m8.1.1.2">𝐿</ci><ci id="S2.SS1.p2.8.m8.1.1.3.cmml" xref="S2.SS1.p2.8.m8.1.1.3">_</ci><apply id="S2.SS1.p2.8.m8.1.1.4.cmml" xref="S2.SS1.p2.8.m8.1.1.4"><csymbol cd="ambiguous" id="S2.SS1.p2.8.m8.1.1.4.1.cmml" xref="S2.SS1.p2.8.m8.1.1.4">superscript</csymbol><ci id="S2.SS1.p2.8.m8.1.1.4.2.cmml" xref="S2.SS1.p2.8.m8.1.1.4.2">𝐵</ci><ci id="S2.SS1.p2.8.m8.1.1.4.3.cmml" xref="S2.SS1.p2.8.m8.1.1.4.3">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.8.m8.1c">L\_B^{t}</annotation></semantics></math> and <math id="S2.SS1.p2.9.m9.1" class="ltx_Math" alttext="L\_C^{t}" display="inline"><semantics id="S2.SS1.p2.9.m9.1a"><mrow id="S2.SS1.p2.9.m9.1.1" xref="S2.SS1.p2.9.m9.1.1.cmml"><mi id="S2.SS1.p2.9.m9.1.1.2" xref="S2.SS1.p2.9.m9.1.1.2.cmml">L</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.9.m9.1.1.1" xref="S2.SS1.p2.9.m9.1.1.1.cmml">​</mo><mi mathvariant="normal" id="S2.SS1.p2.9.m9.1.1.3" xref="S2.SS1.p2.9.m9.1.1.3.cmml">_</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p2.9.m9.1.1.1a" xref="S2.SS1.p2.9.m9.1.1.1.cmml">​</mo><msup id="S2.SS1.p2.9.m9.1.1.4" xref="S2.SS1.p2.9.m9.1.1.4.cmml"><mi id="S2.SS1.p2.9.m9.1.1.4.2" xref="S2.SS1.p2.9.m9.1.1.4.2.cmml">C</mi><mi id="S2.SS1.p2.9.m9.1.1.4.3" xref="S2.SS1.p2.9.m9.1.1.4.3.cmml">t</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.9.m9.1b"><apply id="S2.SS1.p2.9.m9.1.1.cmml" xref="S2.SS1.p2.9.m9.1.1"><times id="S2.SS1.p2.9.m9.1.1.1.cmml" xref="S2.SS1.p2.9.m9.1.1.1"></times><ci id="S2.SS1.p2.9.m9.1.1.2.cmml" xref="S2.SS1.p2.9.m9.1.1.2">𝐿</ci><ci id="S2.SS1.p2.9.m9.1.1.3.cmml" xref="S2.SS1.p2.9.m9.1.1.3">_</ci><apply id="S2.SS1.p2.9.m9.1.1.4.cmml" xref="S2.SS1.p2.9.m9.1.1.4"><csymbol cd="ambiguous" id="S2.SS1.p2.9.m9.1.1.4.1.cmml" xref="S2.SS1.p2.9.m9.1.1.4">superscript</csymbol><ci id="S2.SS1.p2.9.m9.1.1.4.2.cmml" xref="S2.SS1.p2.9.m9.1.1.4.2">𝐶</ci><ci id="S2.SS1.p2.9.m9.1.1.4.3.cmml" xref="S2.SS1.p2.9.m9.1.1.4.3">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.9.m9.1c">L\_C^{t}</annotation></semantics></math> losses are summed together to form the pose estimation loss <span id="S2.SS1.p2.9.1" class="ltx_text ltx_font_bold">L_P</span>.
+Finally, the total loss is the sum of <span id="S2.SS1.p2.9.2" class="ltx_text ltx_font_bold">L_HR</span> and <span id="S2.SS1.p2.9.3" class="ltx_text ltx_font_bold">L_P</span>. We have chosen to weigh both terms equally as we observe that their magnitudes are similar. The complete network is trained end-to-end jointly for both super-resolution and pose estimation.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Ground-truth generation</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">In the literature, authors have either used manually annotated or synthetically generated datasets to train for HPE on depth images. Manual annotations can be expensive and time-consuming, and synthetic annotations are difficult to generate due to the constraint of realistic rendering and do not always generalize well to real scenarios. Therefore, we use an alternate approach to generate annotations. This approach is based on the observation that the RGBD cameras capture synchronized color and depth streams, and recent HPE methods trained on the COCO dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> work remarkably well on the color images. Therefore, we use detections from the color images to train the model for the depth images. To facilitate this approach, we collected an unlabeled RGBD dataset containing synchronized 80k color and depth images captured in the OR during real surgical procedures. Then, we used the state-of-art person detector Mask-RCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> and a single person pose estimator MSRA <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> on color images to generate detections.
+We filter out the false positives and retain high-quality detections in both the stages using thresholds selected from the qualitative results on a small set of images.
+This approach generates pseudo ground truth automatically without using any human annotation efforts. It is therefore scalable and can be deployed to any facility. For human pose estimation, we choose here a two steps method based on Mask-RCNN and MSRA for their state-of-the-art performance on the public COCO dataset. Note that such a two-step method would be less convenient to use in our approach, due to the large architectures involved and the fact that super-resolution would need to be integrated into both.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Experiments and Results</h2>
+
+<section id="S3.SS0.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.0.1 </span>Training setup:</h4>
+
+<div id="S3.SS0.SSS1.p1" class="ltx_para">
+<p id="S3.SS0.SSS1.p1.1" class="ltx_p">We use the dataset of 80k images and the pseudo ground truth described in Section <a href="#S2.SS2" title="2.2 Ground-truth generation ‣ 2 Methodology ‣ Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2.2</span></a> for training. It contains 20k images from four categories, where each category includes images with one, two, three and four or more persons. We split the dataset into 77k training and 3k validation images. When downsampling the images to sizes 80x60 and 64x48, we use bicubic interpolation. To generate pseudo ground truth, we use a threshold of 0.7 in the person-detector stage and then select the skeleton if at least 4 keypoints are detected with a score greater than 0.35.
+We use PyTorch deep learning framework in our experiments. The depth images are normalized in the range [0, 255] and we train our networks using the stochastic gradient descent optimizer with a momentum of 0.9. The initial learning rate is set to 0.001 with a step decay of 0.1 after 12k iterations and each model is trained for 32k iterations with a batch size of 12. We use the pre-trained weights from the authors of RTPose to initialize the pose-estimator networks. Note that these weights were originally obtained using the color images from the COCO dataset. For the layers that have been modified in the pose-estimation network and contain a larger number of channels (e.g. to accommodate S1 and S2), we repeated the same weights and perturbed them by a small random number. The weights of the super-resolution network are initialized using orthogonal initialization <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>.</p>
+</div>
+</section>
+<section id="S3.SS0.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.0.2 </span>Testing setup:</h4>
+
+<div id="S3.SS0.SSS2.p1" class="ltx_para">
+<p id="S3.SS0.SSS2.p1.1" class="ltx_p">We evaluate our method on the publicly available depth images of the MVOR dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, which contains images of size 640x480 captured in an OR from 3 different viewpoints during actual clinical interventions. The training dataset comes from the same environment and camera setup but contains data captured on different days. During testing, we use the flip-test, namely average the original heatmaps with the heatmaps obtained after flipping the images horizontally to refine the predictions. We use the percentage of correct keypoints (PCK) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> as an evaluation metric, which is widely used to measure the localization accuracy of the detected skeletons in multi-person scenarios.</p>
+</div>
+</section>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Results</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">We show our results in Table <a href="#S3.T1" title="Table 1 ‣ 3.1 Results ‣ 3 Experiments and Results ‣ Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. RTPose_640x480, RTPose_80x60, and RTPose_64x48 are baseline RTPose models that do not use any super-resolution and are trained on 640x480 (full-size), 80x60, and 64x48 size depth images, respectively. These RTPose variants are the original models modified to take a 1-channel input.
+The degraded 80x60 and 64x48 images are resampled to the original size using bicubic interpolation to match the input size of the network.
+DepthPose_80x60 and DepthPose_64x48 are our proposed networks directly trained on 80x60 and 64x48 low-resolution images.
+Results show that the DepthPose_64x48 network, which uses 10x downsampled images, performs on par with the baseline trained on full-size image. Accuracy is improved by over 6.5% compared to the baseline RTPose_64x48. DepthPose_80x60 performs even better than RTPose_640x480 (an interesting fact also observed in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> in the context of activity classification) and is 3.6% better than RTPose_80x60.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">We have also evaluated the quality of the pseudo ground truth by running the Mask-RCNN and MSRA models on the color images from MVOR. The resulting PCK value is 76.2, showing that there still exists a gap of around 9% to be filled between the depth and color images. This may also explain the improved results of DepthPose_80x60 model, which takes advantage of an improved architecture compared to the full-size RTPose_640x480 model.
+Figure <a href="#S3.F3" title="Figure 3 ‣ 3.1.1 Comparative study without SR feature maps: ‣ 3.1 Results ‣ 3 Experiments and Results ‣ Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> shows some qualitative results of the DepthPose_64x48 model. Additional qualitative comparisons are available in the supplementary material.</p>
+</div>
+<figure id="S3.T1" class="ltx_table">
+<table id="S3.T1.2" class="ltx_tabular ltx_centering ltx_align_middle">
+<tr id="S3.T1.2.1" class="ltx_tr">
+<td id="S3.T1.2.1.1" class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t">
+<span id="S3.T1.2.1.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.1.1.1.1" class="ltx_p" style="width:79.7pt;"></span>
+</span>
+</td>
+<td id="S3.T1.2.1.2" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.1.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.1.2.1.1" class="ltx_p" style="width:37.0pt;">Head</span>
+</span>
+</td>
+<td id="S3.T1.2.1.3" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.1.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.1.3.1.1" class="ltx_p" style="width:37.0pt;">Shoulder</span>
+</span>
+</td>
+<td id="S3.T1.2.1.4" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.1.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.1.4.1.1" class="ltx_p" style="width:37.0pt;">Hip</span>
+</span>
+</td>
+<td id="S3.T1.2.1.5" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.1.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.1.5.1.1" class="ltx_p" style="width:37.0pt;">Elbow</span>
+</span>
+</td>
+<td id="S3.T1.2.1.6" class="ltx_td ltx_align_justify ltx_align_top ltx_border_rr ltx_border_t">
+<span id="S3.T1.2.1.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.1.6.1.1" class="ltx_p" style="width:37.0pt;">Wrist</span>
+</span>
+</td>
+<td id="S3.T1.2.1.7" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.1.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.1.7.1.1" class="ltx_p" style="width:37.0pt;">Average</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.2.2" class="ltx_tr">
+<td id="S3.T1.2.2.1" class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t">
+<span id="S3.T1.2.2.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.2.1.1.1" class="ltx_p" style="width:79.7pt;">RTPose_640x480</span>
+</span>
+</td>
+<td id="S3.T1.2.2.2" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.2.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.2.2.1.1" class="ltx_p" style="width:37.0pt;">82.9</span>
+</span>
+</td>
+<td id="S3.T1.2.2.3" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.2.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.2.3.1.1" class="ltx_p" style="width:37.0pt;">82.2</span>
+</span>
+</td>
+<td id="S3.T1.2.2.4" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.2.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.2.4.1.1" class="ltx_p" style="width:37.0pt;">57.0</span>
+</span>
+</td>
+<td id="S3.T1.2.2.5" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.2.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.2.5.1.1" class="ltx_p" style="width:37.0pt;">68.5</span>
+</span>
+</td>
+<td id="S3.T1.2.2.6" class="ltx_td ltx_align_justify ltx_align_top ltx_border_rr ltx_border_t">
+<span id="S3.T1.2.2.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.2.6.1.1" class="ltx_p" style="width:37.0pt;">42.8</span>
+</span>
+</td>
+<td id="S3.T1.2.2.7" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.2.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.2.7.1.1" class="ltx_p" style="width:37.0pt;">66.7</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.2.3" class="ltx_tr">
+<td id="S3.T1.2.3.1" class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r">
+<span id="S3.T1.2.3.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.3.1.1.1" class="ltx_p" style="width:79.7pt;"><span class="ltx_rule" style="width:100%;height:1.6pt;background:black;display:inline-block;"> </span></span>
+<span id="S3.T1.2.3.1.1.2" class="ltx_p">RTPose_80x60</span>
+</span>
+</td>
+<td id="S3.T1.2.3.2" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.3.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.3.2.1.1" class="ltx_p" style="width:37.0pt;">81.1</span>
+</span>
+</td>
+<td id="S3.T1.2.3.3" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.3.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.3.3.1.1" class="ltx_p" style="width:37.0pt;">80.0</span>
+</span>
+</td>
+<td id="S3.T1.2.3.4" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.3.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.3.4.1.1" class="ltx_p" style="width:37.0pt;">54.7</span>
+</span>
+</td>
+<td id="S3.T1.2.3.5" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.3.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.3.5.1.1" class="ltx_p" style="width:37.0pt;">65.3</span>
+</span>
+</td>
+<td id="S3.T1.2.3.6" class="ltx_td ltx_align_justify ltx_align_top ltx_border_rr">
+<span id="S3.T1.2.3.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.3.6.1.1" class="ltx_p" style="width:37.0pt;">37.3</span>
+</span>
+</td>
+<td id="S3.T1.2.3.7" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.3.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.3.7.1.1" class="ltx_p" style="width:37.0pt;">63.7</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.2.4" class="ltx_tr">
+<td id="S3.T1.2.4.1" class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t">
+<span id="S3.T1.2.4.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.4.1.1.1" class="ltx_p" style="width:79.7pt;">RTPose_64x48</span>
+</span>
+</td>
+<td id="S3.T1.2.4.2" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.4.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.4.2.1.1" class="ltx_p" style="width:37.0pt;">77.8</span>
+</span>
+</td>
+<td id="S3.T1.2.4.3" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.4.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.4.3.1.1" class="ltx_p" style="width:37.0pt;">76.4</span>
+</span>
+</td>
+<td id="S3.T1.2.4.4" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.4.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.4.4.1.1" class="ltx_p" style="width:37.0pt;">52.9</span>
+</span>
+</td>
+<td id="S3.T1.2.4.5" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.4.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.4.5.1.1" class="ltx_p" style="width:37.0pt;">60.7</span>
+</span>
+</td>
+<td id="S3.T1.2.4.6" class="ltx_td ltx_align_justify ltx_align_top ltx_border_rr ltx_border_t">
+<span id="S3.T1.2.4.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.4.6.1.1" class="ltx_p" style="width:37.0pt;">32.0</span>
+</span>
+</td>
+<td id="S3.T1.2.4.7" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.4.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.4.7.1.1" class="ltx_p" style="width:37.0pt;">60.0</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.2.5" class="ltx_tr">
+<td id="S3.T1.2.5.1" class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r">
+<span id="S3.T1.2.5.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.5.1.1.1" class="ltx_p" style="width:79.7pt;"><span class="ltx_rule" style="width:100%;height:1.6pt;background:black;display:inline-block;"> </span></span>
+<span id="S3.T1.2.5.1.1.2" class="ltx_p">DepthPose_80x60</span>
+</span>
+</td>
+<td id="S3.T1.2.5.2" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.5.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.5.2.1.1" class="ltx_p" style="width:37.0pt;">84.3</span>
+</span>
+</td>
+<td id="S3.T1.2.5.3" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.5.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.5.3.1.1" class="ltx_p" style="width:37.0pt;">83.8</span>
+</span>
+</td>
+<td id="S3.T1.2.5.4" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.5.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.5.4.1.1" class="ltx_p" style="width:37.0pt;">55.3</span>
+</span>
+</td>
+<td id="S3.T1.2.5.5" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.5.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.5.5.1.1" class="ltx_p" style="width:37.0pt;">69.9</span>
+</span>
+</td>
+<td id="S3.T1.2.5.6" class="ltx_td ltx_align_justify ltx_align_top ltx_border_rr">
+<span id="S3.T1.2.5.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.5.6.1.1" class="ltx_p" style="width:37.0pt;">43.3</span>
+</span>
+</td>
+<td id="S3.T1.2.5.7" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.5.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.5.7.1.1" class="ltx_p" style="width:37.0pt;">67.3</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.2.6" class="ltx_tr">
+<td id="S3.T1.2.6.1" class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t">
+<span id="S3.T1.2.6.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.6.1.1.1" class="ltx_p" style="width:79.7pt;">DepthPose_64x48</span>
+</span>
+</td>
+<td id="S3.T1.2.6.2" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.6.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.6.2.1.1" class="ltx_p" style="width:37.0pt;">84.1</span>
+</span>
+</td>
+<td id="S3.T1.2.6.3" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.6.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.6.3.1.1" class="ltx_p" style="width:37.0pt;">83.4</span>
+</span>
+</td>
+<td id="S3.T1.2.6.4" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.6.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.6.4.1.1" class="ltx_p" style="width:37.0pt;">54.3</span>
+</span>
+</td>
+<td id="S3.T1.2.6.5" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.6.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.6.5.1.1" class="ltx_p" style="width:37.0pt;">69.0</span>
+</span>
+</td>
+<td id="S3.T1.2.6.6" class="ltx_td ltx_align_justify ltx_align_top ltx_border_rr ltx_border_t">
+<span id="S3.T1.2.6.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.6.6.1.1" class="ltx_p" style="width:37.0pt;">41.4</span>
+</span>
+</td>
+<td id="S3.T1.2.6.7" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t">
+<span id="S3.T1.2.6.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.6.7.1.1" class="ltx_p" style="width:37.0pt;">66.5</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.2.7" class="ltx_tr">
+<td id="S3.T1.2.7.1" class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r">
+<span id="S3.T1.2.7.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.7.1.1.1" class="ltx_p" style="width:79.7pt;"><span class="ltx_rule" style="width:100%;height:1.6pt;background:black;display:inline-block;"> </span></span>
+<span id="S3.T1.2.7.1.1.2" class="ltx_p">SR+RTPose_80x60</span>
+</span>
+</td>
+<td id="S3.T1.2.7.2" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.7.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.7.2.1.1" class="ltx_p" style="width:37.0pt;">83.5</span>
+</span>
+</td>
+<td id="S3.T1.2.7.3" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.7.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.7.3.1.1" class="ltx_p" style="width:37.0pt;">82.7</span>
+</span>
+</td>
+<td id="S3.T1.2.7.4" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.7.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.7.4.1.1" class="ltx_p" style="width:37.0pt;">54.1</span>
+</span>
+</td>
+<td id="S3.T1.2.7.5" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.7.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.7.5.1.1" class="ltx_p" style="width:37.0pt;">68.1</span>
+</span>
+</td>
+<td id="S3.T1.2.7.6" class="ltx_td ltx_align_justify ltx_align_top ltx_border_rr">
+<span id="S3.T1.2.7.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.7.6.1.1" class="ltx_p" style="width:37.0pt;">40.5</span>
+</span>
+</td>
+<td id="S3.T1.2.7.7" class="ltx_td ltx_align_justify ltx_align_top ltx_border_r">
+<span id="S3.T1.2.7.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.7.7.1.1" class="ltx_p" style="width:37.0pt;">65.8</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.2.8" class="ltx_tr">
+<td id="S3.T1.2.8.1" class="ltx_td ltx_align_justify ltx_align_top ltx_border_b ltx_border_l ltx_border_r ltx_border_t">
+<span id="S3.T1.2.8.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.8.1.1.1" class="ltx_p" style="width:79.7pt;">SR+RTPose_64x48</span>
+</span>
+</td>
+<td id="S3.T1.2.8.2" class="ltx_td ltx_align_justify ltx_align_top ltx_border_b ltx_border_r ltx_border_t">
+<span id="S3.T1.2.8.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.8.2.1.1" class="ltx_p" style="width:37.0pt;">82.5</span>
+</span>
+</td>
+<td id="S3.T1.2.8.3" class="ltx_td ltx_align_justify ltx_align_top ltx_border_b ltx_border_r ltx_border_t">
+<span id="S3.T1.2.8.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.8.3.1.1" class="ltx_p" style="width:37.0pt;">81.3</span>
+</span>
+</td>
+<td id="S3.T1.2.8.4" class="ltx_td ltx_align_justify ltx_align_top ltx_border_b ltx_border_r ltx_border_t">
+<span id="S3.T1.2.8.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.8.4.1.1" class="ltx_p" style="width:37.0pt;">51.0</span>
+</span>
+</td>
+<td id="S3.T1.2.8.5" class="ltx_td ltx_align_justify ltx_align_top ltx_border_b ltx_border_r ltx_border_t">
+<span id="S3.T1.2.8.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.8.5.1.1" class="ltx_p" style="width:37.0pt;">66.3</span>
+</span>
+</td>
+<td id="S3.T1.2.8.6" class="ltx_td ltx_align_justify ltx_align_top ltx_border_b ltx_border_rr ltx_border_t">
+<span id="S3.T1.2.8.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.8.6.1.1" class="ltx_p" style="width:37.0pt;">37.8</span>
+</span>
+</td>
+<td id="S3.T1.2.8.7" class="ltx_td ltx_align_justify ltx_align_top ltx_border_b ltx_border_r ltx_border_t">
+<span id="S3.T1.2.8.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.8.7.1.1" class="ltx_p" style="width:37.0pt;">63.8</span>
+</span>
+</td>
+</tr>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span id="S3.T1.3.1.1" class="ltx_text" style="font-size:90%;">Table 1</span>: </span><span id="S3.T1.4.2" class="ltx_text" style="font-size:90%;">Results of our proposed method (DepthPose) compared to the baselines (RTPose and SR+RTPose) for different image resolutions.</span></figcaption>
+</figure>
+<section id="S3.SS1.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.1.1 </span>Comparative study without SR feature maps:</h4>
+
+<div id="S3.SS1.SSS1.p1" class="ltx_para">
+<p id="S3.SS1.SSS1.p1.1" class="ltx_p">We also experiment to better understand the effect of using super-resolution. Instead of giving to the baselines RTPose_80x60 and RTPose_64x48 images that are up-sampled with bicubic interpolation, we feed and train these networks with images up-sampled separately using a super-resolution network. The super-resolution network corresponds to the super-resolution block trained independently using loss L_HR. We observe in Table <a href="#S3.T1" title="Table 1 ‣ 3.1 Results ‣ 3 Experiments and Results ‣ Human Pose Estimation on Privacy-Preserving Low-Resolution Depth Images" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> that this procedure (SR+RTPose) improves the overall accuracy, but yields result inferior to DepthPose by 1.5% and 2.7% for 80x60 and 64x48 images, respectively. This shows that the use of intermediate SR feature maps in the pose estimation network helps to better localize keypoints. Also, SR+RTPose has the disadvantage to explicitly generate super-resolution images, the privacy compliance of which would need to be considered.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F3.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/day2_cam2_000052_dt.png" id="S3.F3.1.g1" class="ltx_graphics ltx_img_landscape" width="200" height="150" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S3.F3.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/day2_cam2_000052_gt.png" id="S3.F3.2.g1" class="ltx_graphics ltx_img_landscape" width="200" height="150" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F3.4.1.1" class="ltx_text" style="font-size:90%;">Figure 3</span>: </span><span id="S3.F3.5.2" class="ltx_text" style="font-size:90%;">Qualitative results of the DepthPose_64x48 model on a 64x48 LR depth image with 3 persons. Ground truth is overlaid on the color images for better visualization.</span></figcaption>
+</figure>
+</section>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Conclusion</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">In this paper, we present an approach for high-resolution multi-person 2D pose estimation from low-resolution depth images. Our evaluation on the public MVOR dataset shows that even with a 10x subsampling of the depth images, our method achieves results equivalent to a pose estimator trained and tested on the original-size images. Furthermore, we show that by exploiting high-quality pose detections on the color images of a non-annotated RGB-D dataset, we can generate pseudo ground truth for the depth images and train a decent OR pose estimator. These results suggest the high potential of low-resolution images for scaling up and deploying privacy-preserving AI assistance in hospital environments.</p>
+</div>
+<section id="S4.SS0.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.0.1 </span>Acknowledgements</h4>
+
+<div id="S4.SS0.SSS1.p1" class="ltx_para">
+<p id="S4.SS0.SSS1.p1.1" class="ltx_p">This work was supported by French state funds managed by the ANR within the Investissements d’Avenir program under references ANR-16-CE33-0009 (DeepSurg), ANR-11-LABX-0004 (Labex CAMI) and ANR-10-IDEX-0002-02 (IdEx Unistra). The authors would also like to thank the members of the Interventional Radiology Department at University Hospital of Strasbourg for their help in generating the dataset.</p>
+</div>
+</section>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Belagiannis, V., Wang, X., Shitrit, H.B.B., Hashimoto, K., Stauder, R., Aoki,
+Y., Kranzfelder, M., Schneider, A., Fua, P., Ilic, S., et al.: Parsing human
+skeletons in an operating room. Machine Vision and Applications
+<span id="bib.bib1.1.1" class="ltx_text ltx_font_bold">27</span>(7), 1035–1046 (2016)
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Cao, Z., Simon, T., Wei, S.E., Sheikh, Y.: Realtime multi-person 2d pose
+estimation using part affinity fields. In: CVPR. pp. 7291–7299 (2017)
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Cheng, Z., Shi, T., Cui, W., Dong, Y., Fang, X.: 3d face recognition based on
+kinect depth data. In: 4th International Conference on Systems and
+Informatics (ICSAI). pp. 555–559 (2017)
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Chou, E., Tan, M., Zou, C., Guo, M., Haque, A., Milstein, A., Fei-Fei, L.:
+Privacy-preserving action recognition for smart hospitals using
+low-resolution depth images. NeurIPS-MLH (2018)
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Haque, A., Guo, M., Alahi, A., Yeung, S., Luo, Z., Rege, A., Jopling, J.,
+Downing, L., Beninati, W., Singh, A., et al.: Towards vision-based smart
+hospitals: A system for tracking and monitoring hand hygiene compliance. In:
+Proceedings of Machine Learning for Healthcare. vol. 68 (2017)
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Haque, A., Peng, B., Luo, Z., Alahi, A., Yeung, S., Fei-Fei, L.: Towards
+viewpoint invariant 3d human pose estimation. In: ECCV. pp. 160–177.
+Springer (2016)
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+He, K., Gkioxari, G., Dollár, P., Girshick, R.: Mask r-cnn. In: ICCV. pp.
+2961–2969 (2017)
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Kadkhodamohammadi, A., Gangi, A., de Mathelin, M., Padoy, N.: Articulated
+clinician detection using 3d pictorial structures on rgb-d data. Medical
+image analysis <span id="bib.bib8.1.1" class="ltx_text ltx_font_bold">35</span>, 215–224 (2017)
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Lin, T.Y., Maire, M., Belongie, S., Hays, J., Perona, P., Ramanan, D.,
+Dollár, P., Zitnick, C.L.: Microsoft coco: Common objects in context. In:
+ECCV. pp. 740–755. Springer (2014)
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Ma, A.J., Rawat, N., Reiter, A., Shrock, C., Zhan, A., Stone, A., Rabiee, A.,
+Griffin, S., Needham, D.M., Saria, S.: Measuring patient mobility in the icu
+using a novel noninvasive sensor. Critical care medicine <span id="bib.bib10.1.1" class="ltx_text ltx_font_bold">45</span>(4),
+ 630 (2017)
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Maier-Hein, L., Vedula, S., Speidel, S., Navab, N., Kikinis, R., Park, A.,
+Eisenmann, M., Feussner, H., Forestier, G., Giannarou, S., et al.: Surgical
+data science: enabling next-generation surgery. Nature Biomedical Engineering
+<span id="bib.bib11.1.1" class="ltx_text ltx_font_bold">1</span>, 691–696 (2017)
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Padoy, N.: Machine and deep learning for workflow recognition during surgery.
+Minimally Invasive Therapy &amp; Allied Technologies <span id="bib.bib12.1.1" class="ltx_text ltx_font_bold">28</span>(2), 82–90
+(2019)
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Rodas, N.L., Barrera, F., Padoy, N.: See it with your own eyes: markerless
+mobile augmented reality for radiation awareness in the hybrid room. IEEE
+Transactions on Biomedical Engineering <span id="bib.bib13.1.1" class="ltx_text ltx_font_bold">64</span>(2), 429–440 (2017)
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Saxe, A.M., McClelland, J.L., Ganguli, S.: Exact solutions to the nonlinear
+dynamics of learning in deep linear neural networks. arXiv:1312.6120 (2013)
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Shi, W., Caballero, J., Huszár, F., Totz, J., Aitken, A.P., Bishop, R.,
+Rueckert, D., Wang, Z.: Real-time single image and video super-resolution
+using an efficient sub-pixel convolutional neural network. In: CVPR. pp.
+1874–1883 (2016)
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Shotton, J., Sharp, T., Kipman, A., Fitzgibbon, A., Finocchio, M., Blake, A.,
+Cook, M., Moore, R.: Real-time human pose recognition in parts from single
+depth images. Communications of the ACM <span id="bib.bib16.1.1" class="ltx_text ltx_font_bold">56</span>(1), 116–124 (2013)
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Srivastav, V., Issenhuth, T., Abdolrahim, K., de Mathelin, M., Gangi, A.,
+Padoy, N.: Mvor: A multi-view rgb-d operating room dataset for 2d and 3d
+human pose estimation. In: MICCAI-LABELS workshop (2018)
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Twinanda, A.P., Shehata, S., Mutter, D., Marescaux, J., de Mathelin, M., Padoy,
+N.: Multi-stream deep architecture for surgical phase recognition on
+multi-view rgbd videos. In: M2CAI—MICCAI workshop (2016)
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Xiao, B., Wu, H., Wei, Y.: Simple baselines for human pose estimation and
+tracking. In: ECCV. pp. 466–481 (2018)
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Yang, Y., Ramanan, D.: Articulated human detection with flexible mixtures of
+parts. IEEE transactions on pattern analysis and machine intelligence
+<span id="bib.bib20.1.1" class="ltx_text ltx_font_bold">35</span>(12), 2878–2890 (2012)
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">*** Supplementary Material ***</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">The pictures below show additional qualitative results of our proposed models, namely DepthPose_80x60 and DepthPose_64x48, w.r.t the baseline models RTPose_640x480, RTPose_80x60, and RTPose_64x48. We also show the ground truth (GT) on color images for better appreciation of the qualitative results. These results show that DepthPose_80x60 and DepthPose_64x48 perform better for removing false positives and spurious detections and improve the part localization (see red and green arrows in the figures).
+<br class="ltx_break"><span id="Sx1.p1.1.1" class="ltx_ERROR undefined">\foreach</span><span id="Sx1.p1.1.2" class="ltx_ERROR undefined">\n</span>in 71,72,176,161,151,143,131,48,18</p>
+</div>
+<figure id="Sx1.F4" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="Sx1.F4.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/suppl/base_full_res/depth_full/%5Cn.png" id="Sx1.F4.sf1.g1" class="ltx_graphics" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx1.F4.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span><span id="Sx1.F4.sf1.3.2" class="ltx_text" style="font-size:90%;">RTPose_640x480</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="Sx1.F4.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/suppl/base_80x60/depth_80x60/%5Cn.png" id="Sx1.F4.sf2.g1" class="ltx_graphics" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx1.F4.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span><span id="Sx1.F4.sf2.3.2" class="ltx_text" style="font-size:90%;">RTPose_80x60</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="Sx1.F4.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/suppl/base_64x48/depth_64x48/%5Cn.png" id="Sx1.F4.sf3.g1" class="ltx_graphics" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx1.F4.sf3.2.1.1" class="ltx_text" style="font-size:90%;">(c)</span> </span><span id="Sx1.F4.sf3.3.2" class="ltx_text" style="font-size:90%;">RTPose_64x48</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="Sx1.F4.sf4" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/suppl/gt/color/%5Cn.png" id="Sx1.F4.sf4.g1" class="ltx_graphics" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx1.F4.sf4.2.1.1" class="ltx_text" style="font-size:90%;">(d)</span> </span><span id="Sx1.F4.sf4.3.2" class="ltx_text" style="font-size:90%;">GT</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="Sx1.F4.sf5" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/suppl/sr02_80x60/depth_80x60/%5Cn.png" id="Sx1.F4.sf5.g1" class="ltx_graphics" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx1.F4.sf5.2.1.1" class="ltx_text" style="font-size:90%;">(e)</span> </span><span id="Sx1.F4.sf5.3.2" class="ltx_text" style="font-size:90%;">DepthPose_80x60</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="Sx1.F4.sf6" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2007.08340/assets/figures/suppl/sr02_64x48/depth_64x48/%5Cn.png" id="Sx1.F4.sf6.g1" class="ltx_graphics" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span id="Sx1.F4.sf6.2.1.1" class="ltx_text" style="font-size:90%;">(f)</span> </span><span id="Sx1.F4.sf6.3.2" class="ltx_text" style="font-size:90%;">DepthPose_64x48</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="Sx1.F4.2.1.1" class="ltx_text" style="font-size:90%;">Figure 4</span>: </span></figcaption>
+</figure>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2007.08338" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2007.08340" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2007.08340">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2007.08340" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2007.08342" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Thu Mar  7 05:48:06 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,978 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2012.11938] 3D Point-to-Keypoint Voting Network for 6D Pose Estimation</title><meta property="og:description" content="Object 6D pose estimation is an important research topic in the field of computer vision due to its wide application requirements and the challenges brought by complexity and changes in the real-world. We think fully e…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="3D Point-to-Keypoint Voting Network for 6D Pose Estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="3D Point-to-Keypoint Voting Network for 6D Pose Estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2012.11938">
+
+<!--Generated on Sat Mar  2 21:05:23 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document" style="font-size:173%;">3D Point-to-Keypoint Voting Network for 6D Pose Estimation
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Weitong Hua, Jiaxin Guo, Yue Wang and Rong Xiong
+</span><span class="ltx_author_notes">Weitong Hua, Jiaxin Guo, Yue Wang and Rong Xiong are with the State key Laboratory of Industrial Control and Technology, Zhejiang University, Hangzhou, P.R. China. Rong Xiong is the corresponding author <span id="id1.1.id1" class="ltx_text ltx_font_typewriter" style="font-size:90%;">rxiong@iipc.zju.edu.cn</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id2.id1" class="ltx_p">Object 6D pose estimation is an important research topic in the field of computer vision due to its wide application requirements and the challenges brought by complexity and changes in the real-world. We think fully exploring the characteristics of spatial relationship between points will help to improve the pose estimation performance, especially in the scenes of background clutter and partial occlusion. But this information was usually ignored in previous work using RGB image or RGB-D data. In this paper, we propose a framework for 6D pose estimation from RGB-D data based on spatial structure characteristics of 3D keypoints. We adopt point-wise dense feature embedding to vote for 3D keypoints, which makes full use of the structure information of the rigid body. After the direction vectors pointing to the keypoints are predicted by CNN, we use RANSAC voting to calculate the coordinate of the 3D keypoints, then the pose transformation can be easily obtained by the least square method. In addition, a spatial dimension sampling strategy for points is employed, which makes the method achieve excellent performance on small training sets. The proposed method is verified on two benchmark datasets, LINEMOD and OCCLUSION LINEMOD. The experimental results show that our method outperforms the state-of-the-art approaches, achieves ADD(-S) accuracy of 98.7% on LINEMOD dataset and 52.6% on OCCLUSION LINEMOD dataset in real-time.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">INTRODUCTION</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Object 6D pose estimation is a task to calculate the rotation and translation of an object relative to the world coordinate system, with six degrees of freedom. It is an important topic for many applications, such as augmented reality <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, automatic driving <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> and robot grasping <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. The challenges of this task come from the complexity in the real-world, such as background clutter, partial occlusion and illumination change.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">With the rapid development of deep learning on image, a lot of methods for pose estimation using RGB image have been proposed <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>. Existing methods can be categorized as extended 2D object detection method <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, predicting pose directly by CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>, predicting 2D projection points <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> and template matching <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>. But RGB image cannot provide rich feature information for industrial parts lacking texture information, and is vulnerable to illumination and other environmental changes. Some methods use only point cloud data to estimate object pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, which is more robust to light changes and texture-less object, but a large number of feature calculation and matching processes make the prediction very slow. In addition, it is not enough to use only geometric information of point cloud, while color and texture information are also important for pose estimation.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Some recent methods employ RGB-D data and focus on how to integrate the two kinds of data better to improve the accuracy of pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>. For example, MCN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> considered the depth image as an additional channel of RGB image, then extracted the feature of this four-channel vector for pose prediction. PointFusion <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> extracted the features of RGB image and point cloud respectively, and then directly concatenated them in the channel dimension. DenseFusion <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> proposed a novel point-wise way to fuse the features of RGB image and point cloud, which can better represent the object structure. But they all regress object translation and rotation directly, ignoring the spatial relationship information between points. Besides, the discontinuity of rotation makes the network difficult to learn.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2012.11938/assets/pic/method.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_square" width="598" height="642" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Several key intermediate results in our method are listed. In (a), we show the input RGB-D data. In (b), red lines denote direction vectors pointing to the yellow keypoint via network prediction. In (c), nine keypoints calculated by RANSAC voting is marked with yellow dots. In (d), the object model rendered according to the predicted pose is drawn on RGB image.</figcaption>
+</figure>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">To overcome these problems, we consider how to make full use of the spatial relationship between points, which is crucial for representation of object space state and is easy for CNN to optimize. However, using the spatial relationship of all points will involve a lot of work, resulting in low efficiency of calculation. So 3D keypoints are selected in order to extract the spatial relationship information, as shown in Fig. <a href="#S1.F1" title="Figure 1 ‣ I INTRODUCTION ‣ 3D Point-to-Keypoint Voting Network for 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. This paper proposes a 6D pose estimation framework based on 3D keypoints, in which dense fusion feature is employed to vote for the keypoints. First, we extract features from RGB-D data individually and fuse them in the form of point-wise. Then the dense feature embedding is employed to predict direction vectors from sample points to 3D keypoints and the position of keypoints is inferred by RANSAC voting. Finally, pose can be calculated by the least square optimization algorithm. Our method can effectively learn the spatial structure information of the rigid body.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">During implementation, there is an important problem that it is time-consuming to label the groundtruth of pose in the practical application. So some datasets have very limited training data, such as LINEMOD dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, which may lead to overfitting problem. To avoid this problem, our network input is sampled in spatial dimension. During iterative training, partial point-wise embeddings are selected randomly to make the prediction instead of using all of them. In this way, the network input is different each time, which is equivalent to data augmentation, so our network can achieve good results even on small sample datasets.</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p">In summary, this work has the following contributions:</p>
+</div>
+<div id="S1.p7" class="ltx_para">
+<ol id="S1.I1" class="ltx_enumerate">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">An object 6D pose estimation framework is proposed based on 3D point-to-keypoint voting. Point-to-point prediction enables our method to thoroughly learn the spatial structure characteristics of the rigid body, which can improve accuracy and efficiency.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">During iterative training, the network input is sampled in spatial dimension to solve the overfitting problem under the small sample dataset, which can improve the generalization ability of the model.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">The performance on benchmark dataset outperforms the state-of-the-art method. The ADD(-s) accuracy is 98.7% on LINEMOD dataset, and 52.6% on OCCLUSION LINEMOD dataset. In addition, the time of pose estimation module is only 0.02s on a GTX 1060 GPU.</p>
+</div>
+</li>
+</ol>
+</div>
+<div id="S1.p8" class="ltx_para">
+<p id="S1.p8.1" class="ltx_p">The remainder of the paper is organized as follows: In Section II we briefly review related work on pose estimation. The proposed dense voting framework is introduced in Section III in detail. In Section IV we show the experimental results of our method on two benchmark datasets. Finally, a conclusion is given in Section V.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">RELATED WORK</span>
+</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p"><span id="S2.p1.1.1" class="ltx_text ltx_font_bold">Template matching methods.</span> Given CAD model of an object, some traditional methods extract different kinds of feature to match scene data and CAD model, in order to find the correct transformation. PPF <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> proposes orientation point pair feature which is efficient and robust, then extracts it from model point cloud and scene point cloud respectively to match. Hinterstoisser <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> extracts contour gradient information and object surface normal vector from color image and depth image respectively as multimodal features for template matching. AAE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> collects RGB images of model from different perspectives and obtains many codebooks via autoencoder, then calculates the similarity with RGB images in the actual scene. Thanks to the CAD model of the object, these methods can easily acquire approximate results. But template matching always need to discretize the pose for comparing, which makes results inaccurate.</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p"><span id="S2.p2.1.1" class="ltx_text ltx_font_bold">2D-3D correspondence methods.</span> Inspired by object detection, some recent methods first find the 2D projection coordinates of keypoints on RGB image, and then employ 2D-3D correspondence to calculate pose by PnP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>. BB8 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> regards pose estimation as a 3D detection task and employs CNN to regress eight corners of 3D bounding box. YOLO-6D <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> extends 2D detection framework YOLO to 3D and also adopts 3D bounding box corners as keypoints. However, these bounding box corners are far away from the object pixels in the image, resulting in larger localization errors. To overcome this problem, PVNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> selects kepoints using the farthest point sampling (FPS) algorithm. Besides, instead of directly regressing the coordinate of the projection points, PVNet predicts the direction vector of each pixel pointing to the projection point, and then uses RANSAC based voting to get the position of the projection points. Pix2Pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> predicts the 3D coordinates of every pixel in RGB image and regards the output 3D coordinates as color image, thus transforms this problem into image generation problem based on GAN training. DPOP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> applies two-channel UV texture map and employs sphere projection or cylinder projection to add texture to the model, then predicts the dense 2D-3D mapping between RGB image and 3D model. These methods only use RGB image, which is convenient to collect, but all of them make no use of the important spatial relationship between points.</p>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.1" class="ltx_p"><span id="S2.p3.1.1" class="ltx_text ltx_font_bold">Regress pose methods.</span> With the development of deep learning in the field of computer vision, there are also some methods which employ CNN to extract features from RGB or RGB-D data and directly regress pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>. PoseCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> estimates translation and rotation respectively from RGB image via CNN. MCN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> further fuses the depth input as an additional channel of RGB image to a CNN architecture. PointFusion <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> fuses them by directly concatenating the color feature with the geometry feature. These methods ignore the point cloud arrangement, which make the results ordinary. DenseFusion <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> presents a point-wise way to combine color and depth information from RGB-D input, which achieves good results. But these methods all regree pose directly, the nonlinearity of rotation space makes it difficult for CNN to optimize, limiting the learning ability of the model.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2012.11938/assets/pic/pipeline.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="320" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Overview of our 6D pose estimtion method: Given RGB image segmented from mask and point cloud transformed from depth image, the point-wise embedding is extracted to predict for direction vectors from sample points to 3D keypoints. The 3D corordinates of keypoints can be inferred by RANSAC based voting, and the final 6D pose can be obtained by the weighted least square optimization.</figcaption>
+</figure>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">METHOD</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">Fig. <a href="#S2.F2" title="Figure 2 ‣ II RELATED WORK ‣ 3D Point-to-Keypoint Voting Network for 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> shows the inference pipeline of our
+proposing method which estimates the 6D object pose based on 3D keypoints. First, the features of RGB image and point cloud are extracted respectively via CNN, then dense fusion feature is obtained by point-wise way <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>. The following fully-connected layers are used to predict the direction vectors, which point to the 3D keypoints from spatial sampling points. Unlike regressing pose directly, the direction vector predicted by our network is easy to be optimized linearly. Besides, the point-to-point vector reflects the spatial relationship between points, which is important for accurate prediction of pose. Given a lot of vectors to each 3D keypoint, the coordinate of the 3D keypoints can be calculated based on RANSAC voting <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>. The final pose transformation is obtained by the weighted least square method, which aims to find the transformation matrix that makes the two sets of keypoints closest to each other.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS1.4.1.1" class="ltx_text">III-A</span> </span><span id="S3.SS1.5.2" class="ltx_text ltx_font_italic">Point-wise Feature</span>
+</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">The feature fusion method in DenseFusion <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> is employed to obtain dense feature embedding. We need to segment the objects of interest in the
+image before pose estimation. Then we employ network based on PSPNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> for RGB image to extract color embedding, and employ network based on PointNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> for point cloud to extract geometry embedding. In order to obtain point-wise embedding, dense fusion procedure first concatenates the geometric embedding of each point and its corresponding color embedding. Then an average pooling layer is employed to generate a global feature vector, which is further concatenated to each
+dense point-wise feature. In this way, the dense point-wise feature embedding we extracted contains both local and global information, which is more robust.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS2.4.1.1" class="ltx_text">III-B</span> </span><span id="S3.SS2.5.2" class="ltx_text ltx_font_italic">Director Vector Prediction</span>
+</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">DenseFusion employs point-wise feature to regress translation and rotation directly. This framework has two shortcomings. On the one hand, rotation in 3D space is discontinuous, CNN can’t learn the nonlinear value perfectly. On the other hand, this prediction way does not make full use of the spatial relationship among points.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">Inspired by recent 2D methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, we estimate pose by 3D keypoints instead of regression directly. Before training, FPS algorithm is employed to sample K 3D keypoints on CAD model surface like PVNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.2" class="ltx_p">In order to let the network learn the spatial structure characteristics of point cloud, instead of regressing location of 3D keypoints directly, we predict the direction vector of each space point to the keypoints. Using many points to make predictions and then voting will be more stable than only making one prediction. For the space point <math id="S3.SS2.p3.1.m1.1" class="ltx_Math" alttext="p" display="inline"><semantics id="S3.SS2.p3.1.m1.1a"><mi id="S3.SS2.p3.1.m1.1.1" xref="S3.SS2.p3.1.m1.1.1.cmml">p</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p3.1.m1.1b"><ci id="S3.SS2.p3.1.m1.1.1.cmml" xref="S3.SS2.p3.1.m1.1.1">𝑝</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p3.1.m1.1c">p</annotation></semantics></math>, the unit direction vector pointing to the keypoint <math id="S3.SS2.p3.2.m2.1" class="ltx_Math" alttext="x_{k}" display="inline"><semantics id="S3.SS2.p3.2.m2.1a"><msub id="S3.SS2.p3.2.m2.1.1" xref="S3.SS2.p3.2.m2.1.1.cmml"><mi id="S3.SS2.p3.2.m2.1.1.2" xref="S3.SS2.p3.2.m2.1.1.2.cmml">x</mi><mi id="S3.SS2.p3.2.m2.1.1.3" xref="S3.SS2.p3.2.m2.1.1.3.cmml">k</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.p3.2.m2.1b"><apply id="S3.SS2.p3.2.m2.1.1.cmml" xref="S3.SS2.p3.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS2.p3.2.m2.1.1.1.cmml" xref="S3.SS2.p3.2.m2.1.1">subscript</csymbol><ci id="S3.SS2.p3.2.m2.1.1.2.cmml" xref="S3.SS2.p3.2.m2.1.1.2">𝑥</ci><ci id="S3.SS2.p3.2.m2.1.1.3.cmml" xref="S3.SS2.p3.2.m2.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p3.2.m2.1c">x_{k}</annotation></semantics></math> is:</p>
+</div>
+<div id="S3.SS2.p4" class="ltx_para">
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1.1" class="ltx_Math" alttext="v_{k}=\frac{p-x_{k}}{||p-x_{k}||_{2}}" display="block"><semantics id="S3.E1.m1.1a"><mrow id="S3.E1.m1.1.2" xref="S3.E1.m1.1.2.cmml"><msub id="S3.E1.m1.1.2.2" xref="S3.E1.m1.1.2.2.cmml"><mi id="S3.E1.m1.1.2.2.2" xref="S3.E1.m1.1.2.2.2.cmml">v</mi><mi id="S3.E1.m1.1.2.2.3" xref="S3.E1.m1.1.2.2.3.cmml">k</mi></msub><mo id="S3.E1.m1.1.2.1" xref="S3.E1.m1.1.2.1.cmml">=</mo><mfrac id="S3.E1.m1.1.1" xref="S3.E1.m1.1.1.cmml"><mrow id="S3.E1.m1.1.1.3" xref="S3.E1.m1.1.1.3.cmml"><mi id="S3.E1.m1.1.1.3.2" xref="S3.E1.m1.1.1.3.2.cmml">p</mi><mo id="S3.E1.m1.1.1.3.1" xref="S3.E1.m1.1.1.3.1.cmml">−</mo><msub id="S3.E1.m1.1.1.3.3" xref="S3.E1.m1.1.1.3.3.cmml"><mi id="S3.E1.m1.1.1.3.3.2" xref="S3.E1.m1.1.1.3.3.2.cmml">x</mi><mi id="S3.E1.m1.1.1.3.3.3" xref="S3.E1.m1.1.1.3.3.3.cmml">k</mi></msub></mrow><msub id="S3.E1.m1.1.1.1" xref="S3.E1.m1.1.1.1.cmml"><mrow id="S3.E1.m1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.2.cmml"><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S3.E1.m1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.1.2.cmml">p</mi><mo id="S3.E1.m1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S3.E1.m1.1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.3.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.3.2" xref="S3.E1.m1.1.1.1.1.1.1.3.2.cmml">x</mi><mi id="S3.E1.m1.1.1.1.1.1.1.3.3" xref="S3.E1.m1.1.1.1.1.1.1.3.3.cmml">k</mi></msub></mrow><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.2.1.cmml">‖</mo></mrow><mn id="S3.E1.m1.1.1.1.3" xref="S3.E1.m1.1.1.1.3.cmml">2</mn></msub></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.1b"><apply id="S3.E1.m1.1.2.cmml" xref="S3.E1.m1.1.2"><eq id="S3.E1.m1.1.2.1.cmml" xref="S3.E1.m1.1.2.1"></eq><apply id="S3.E1.m1.1.2.2.cmml" xref="S3.E1.m1.1.2.2"><csymbol cd="ambiguous" id="S3.E1.m1.1.2.2.1.cmml" xref="S3.E1.m1.1.2.2">subscript</csymbol><ci id="S3.E1.m1.1.2.2.2.cmml" xref="S3.E1.m1.1.2.2.2">𝑣</ci><ci id="S3.E1.m1.1.2.2.3.cmml" xref="S3.E1.m1.1.2.2.3">𝑘</ci></apply><apply id="S3.E1.m1.1.1.cmml" xref="S3.E1.m1.1.1"><divide id="S3.E1.m1.1.1.2.cmml" xref="S3.E1.m1.1.1"></divide><apply id="S3.E1.m1.1.1.3.cmml" xref="S3.E1.m1.1.1.3"><minus id="S3.E1.m1.1.1.3.1.cmml" xref="S3.E1.m1.1.1.3.1"></minus><ci id="S3.E1.m1.1.1.3.2.cmml" xref="S3.E1.m1.1.1.3.2">𝑝</ci><apply id="S3.E1.m1.1.1.3.3.cmml" xref="S3.E1.m1.1.1.3.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.3.1.cmml" xref="S3.E1.m1.1.1.3.3">subscript</csymbol><ci id="S3.E1.m1.1.1.3.3.2.cmml" xref="S3.E1.m1.1.1.3.3.2">𝑥</ci><ci id="S3.E1.m1.1.1.3.3.3.cmml" xref="S3.E1.m1.1.1.3.3.3">𝑘</ci></apply></apply><apply id="S3.E1.m1.1.1.1.cmml" xref="S3.E1.m1.1.1.1"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1">subscript</csymbol><apply id="S3.E1.m1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.1"><csymbol cd="latexml" id="S3.E1.m1.1.1.1.1.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.2">norm</csymbol><apply id="S3.E1.m1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1"><minus id="S3.E1.m1.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1"></minus><ci id="S3.E1.m1.1.1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.2">𝑝</ci><apply id="S3.E1.m1.1.1.1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.1.1.3.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E1.m1.1.1.1.1.1.1.3.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3.2">𝑥</ci><ci id="S3.E1.m1.1.1.1.1.1.1.3.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3.3">𝑘</ci></apply></apply></apply><cn type="integer" id="S3.E1.m1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.3">2</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.1c">v_{k}=\frac{p-x_{k}}{||p-x_{k}||_{2}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS2.p5" class="ltx_para">
+<p id="S3.SS2.p5.1" class="ltx_p">It should be noted that N scene points in spatial dimension are sampled during iterative training, so network will not overfit even training on small sample dataset, which can improve generalization ability.</p>
+</div>
+<div id="S3.SS2.p6" class="ltx_para">
+<p id="S3.SS2.p6.1" class="ltx_p">The feature extraction network and direction vector prediction network are trained jointly, and the loss function is defined as the following equations.</p>
+</div>
+<div id="S3.SS2.p7" class="ltx_para">
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E2.m1.7" class="ltx_Math" alttext="Loss=\sum_{k=1}^{K}\sum_{p\in O}L(\Delta v_{k}(p)|_{x})+L(\Delta v_{k}(p)|_{y})+L(\Delta v_{k}(p)|_{z})," display="block"><semantics id="S3.E2.m1.7a"><mrow id="S3.E2.m1.7.7.1" xref="S3.E2.m1.7.7.1.1.cmml"><mrow id="S3.E2.m1.7.7.1.1" xref="S3.E2.m1.7.7.1.1.cmml"><mrow id="S3.E2.m1.7.7.1.1.5" xref="S3.E2.m1.7.7.1.1.5.cmml"><mi id="S3.E2.m1.7.7.1.1.5.2" xref="S3.E2.m1.7.7.1.1.5.2.cmml">L</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.5.1" xref="S3.E2.m1.7.7.1.1.5.1.cmml">​</mo><mi id="S3.E2.m1.7.7.1.1.5.3" xref="S3.E2.m1.7.7.1.1.5.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.5.1a" xref="S3.E2.m1.7.7.1.1.5.1.cmml">​</mo><mi id="S3.E2.m1.7.7.1.1.5.4" xref="S3.E2.m1.7.7.1.1.5.4.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.5.1b" xref="S3.E2.m1.7.7.1.1.5.1.cmml">​</mo><mi id="S3.E2.m1.7.7.1.1.5.5" xref="S3.E2.m1.7.7.1.1.5.5.cmml">s</mi></mrow><mo rspace="0.111em" id="S3.E2.m1.7.7.1.1.4" xref="S3.E2.m1.7.7.1.1.4.cmml">=</mo><mrow id="S3.E2.m1.7.7.1.1.3" xref="S3.E2.m1.7.7.1.1.3.cmml"><mrow id="S3.E2.m1.7.7.1.1.1.1" xref="S3.E2.m1.7.7.1.1.1.1.cmml"><munderover id="S3.E2.m1.7.7.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S3.E2.m1.7.7.1.1.1.1.2.2.2" xref="S3.E2.m1.7.7.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S3.E2.m1.7.7.1.1.1.1.2.2.3" xref="S3.E2.m1.7.7.1.1.1.1.2.2.3.cmml"><mi id="S3.E2.m1.7.7.1.1.1.1.2.2.3.2" xref="S3.E2.m1.7.7.1.1.1.1.2.2.3.2.cmml">k</mi><mo id="S3.E2.m1.7.7.1.1.1.1.2.2.3.1" xref="S3.E2.m1.7.7.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S3.E2.m1.7.7.1.1.1.1.2.2.3.3" xref="S3.E2.m1.7.7.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S3.E2.m1.7.7.1.1.1.1.2.3" xref="S3.E2.m1.7.7.1.1.1.1.2.3.cmml">K</mi></munderover><mrow id="S3.E2.m1.7.7.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.1.1.1.cmml"><munder id="S3.E2.m1.7.7.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.1.1.1.2.cmml"><mo movablelimits="false" id="S3.E2.m1.7.7.1.1.1.1.1.2.2" xref="S3.E2.m1.7.7.1.1.1.1.1.2.2.cmml">∑</mo><mrow id="S3.E2.m1.7.7.1.1.1.1.1.2.3" xref="S3.E2.m1.7.7.1.1.1.1.1.2.3.cmml"><mi id="S3.E2.m1.7.7.1.1.1.1.1.2.3.2" xref="S3.E2.m1.7.7.1.1.1.1.1.2.3.2.cmml">p</mi><mo id="S3.E2.m1.7.7.1.1.1.1.1.2.3.1" xref="S3.E2.m1.7.7.1.1.1.1.1.2.3.1.cmml">∈</mo><mi id="S3.E2.m1.7.7.1.1.1.1.1.2.3.3" xref="S3.E2.m1.7.7.1.1.1.1.1.2.3.3.cmml">O</mi></mrow></munder><mrow id="S3.E2.m1.7.7.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.1.1.1.1.cmml"><mi id="S3.E2.m1.7.7.1.1.1.1.1.1.3" xref="S3.E2.m1.7.7.1.1.1.1.1.1.3.cmml">L</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.1.1.1.1.2.cmml">​</mo><mrow id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.1.1.1.1.cmml">(</mo><msub id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.2.cmml"><mrow id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.2.cmml"><mrow id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mi mathvariant="normal" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml">Δ</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">​</mo><msub id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml"><mi id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.2" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.2.cmml">v</mi><mi id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.3" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.1a" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">​</mo><mrow id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.4.2" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.4.2.1" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mi id="S3.E2.m1.1.1" xref="S3.E2.m1.1.1.cmml">p</mi><mo stretchy="false" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.4.2.2" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow><mo stretchy="false" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.2.1.cmml">|</mo></mrow><mi id="S3.E2.m1.2.2.1" xref="S3.E2.m1.2.2.1.cmml">x</mi></msub><mo stretchy="false" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.3" xref="S3.E2.m1.7.7.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow></mrow><mo id="S3.E2.m1.7.7.1.1.3.4" xref="S3.E2.m1.7.7.1.1.3.4.cmml">+</mo><mrow id="S3.E2.m1.7.7.1.1.2.2" xref="S3.E2.m1.7.7.1.1.2.2.cmml"><mi id="S3.E2.m1.7.7.1.1.2.2.3" xref="S3.E2.m1.7.7.1.1.2.2.3.cmml">L</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.2.2.2" xref="S3.E2.m1.7.7.1.1.2.2.2.cmml">​</mo><mrow id="S3.E2.m1.7.7.1.1.2.2.1.1" xref="S3.E2.m1.7.7.1.1.2.2.cmml"><mo stretchy="false" id="S3.E2.m1.7.7.1.1.2.2.1.1.2" xref="S3.E2.m1.7.7.1.1.2.2.cmml">(</mo><msub id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.2.cmml"><mrow id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.2.cmml"><mrow id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.cmml"><mi mathvariant="normal" id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.2.cmml">Δ</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.1.cmml">​</mo><msub id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.cmml"><mi id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.2" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.2.cmml">v</mi><mi id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.3" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.1a" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.1.cmml">​</mo><mrow id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.4.2" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.4.2.1" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.cmml">(</mo><mi id="S3.E2.m1.3.3" xref="S3.E2.m1.3.3.cmml">p</mi><mo stretchy="false" id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.4.2.2" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.cmml">)</mo></mrow></mrow><mo stretchy="false" id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.2.1.cmml">|</mo></mrow><mi id="S3.E2.m1.4.4.1" xref="S3.E2.m1.4.4.1.cmml">y</mi></msub><mo stretchy="false" id="S3.E2.m1.7.7.1.1.2.2.1.1.3" xref="S3.E2.m1.7.7.1.1.2.2.cmml">)</mo></mrow></mrow><mo id="S3.E2.m1.7.7.1.1.3.4a" xref="S3.E2.m1.7.7.1.1.3.4.cmml">+</mo><mrow id="S3.E2.m1.7.7.1.1.3.3" xref="S3.E2.m1.7.7.1.1.3.3.cmml"><mi id="S3.E2.m1.7.7.1.1.3.3.3" xref="S3.E2.m1.7.7.1.1.3.3.3.cmml">L</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.3.3.2" xref="S3.E2.m1.7.7.1.1.3.3.2.cmml">​</mo><mrow id="S3.E2.m1.7.7.1.1.3.3.1.1" xref="S3.E2.m1.7.7.1.1.3.3.cmml"><mo stretchy="false" id="S3.E2.m1.7.7.1.1.3.3.1.1.2" xref="S3.E2.m1.7.7.1.1.3.3.cmml">(</mo><msub id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.2.cmml"><mrow id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.2.cmml"><mrow id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.cmml"><mi mathvariant="normal" id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.2.cmml">Δ</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.1" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.1.cmml">​</mo><msub id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.cmml"><mi id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.2" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.2.cmml">v</mi><mi id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.3" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.1a" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.1.cmml">​</mo><mrow id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.4.2" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.4.2.1" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.cmml">(</mo><mi id="S3.E2.m1.5.5" xref="S3.E2.m1.5.5.cmml">p</mi><mo stretchy="false" id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.4.2.2" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.cmml">)</mo></mrow></mrow><mo stretchy="false" id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.2" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.2.1.cmml">|</mo></mrow><mi id="S3.E2.m1.6.6.1" xref="S3.E2.m1.6.6.1.cmml">z</mi></msub><mo stretchy="false" id="S3.E2.m1.7.7.1.1.3.3.1.1.3" xref="S3.E2.m1.7.7.1.1.3.3.cmml">)</mo></mrow></mrow></mrow></mrow><mo id="S3.E2.m1.7.7.1.2" xref="S3.E2.m1.7.7.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E2.m1.7b"><apply id="S3.E2.m1.7.7.1.1.cmml" xref="S3.E2.m1.7.7.1"><eq id="S3.E2.m1.7.7.1.1.4.cmml" xref="S3.E2.m1.7.7.1.1.4"></eq><apply id="S3.E2.m1.7.7.1.1.5.cmml" xref="S3.E2.m1.7.7.1.1.5"><times id="S3.E2.m1.7.7.1.1.5.1.cmml" xref="S3.E2.m1.7.7.1.1.5.1"></times><ci id="S3.E2.m1.7.7.1.1.5.2.cmml" xref="S3.E2.m1.7.7.1.1.5.2">𝐿</ci><ci id="S3.E2.m1.7.7.1.1.5.3.cmml" xref="S3.E2.m1.7.7.1.1.5.3">𝑜</ci><ci id="S3.E2.m1.7.7.1.1.5.4.cmml" xref="S3.E2.m1.7.7.1.1.5.4">𝑠</ci><ci id="S3.E2.m1.7.7.1.1.5.5.cmml" xref="S3.E2.m1.7.7.1.1.5.5">𝑠</ci></apply><apply id="S3.E2.m1.7.7.1.1.3.cmml" xref="S3.E2.m1.7.7.1.1.3"><plus id="S3.E2.m1.7.7.1.1.3.4.cmml" xref="S3.E2.m1.7.7.1.1.3.4"></plus><apply id="S3.E2.m1.7.7.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1"><apply id="S3.E2.m1.7.7.1.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.7.7.1.1.1.1.2.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2">superscript</csymbol><apply id="S3.E2.m1.7.7.1.1.1.1.2.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.7.7.1.1.1.1.2.2.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2">subscript</csymbol><sum id="S3.E2.m1.7.7.1.1.1.1.2.2.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2.2.2"></sum><apply id="S3.E2.m1.7.7.1.1.1.1.2.2.3.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2.2.3"><eq id="S3.E2.m1.7.7.1.1.1.1.2.2.3.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2.2.3.1"></eq><ci id="S3.E2.m1.7.7.1.1.1.1.2.2.3.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2.2.3.2">𝑘</ci><cn type="integer" id="S3.E2.m1.7.7.1.1.1.1.2.2.3.3.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S3.E2.m1.7.7.1.1.1.1.2.3.cmml" xref="S3.E2.m1.7.7.1.1.1.1.2.3">𝐾</ci></apply><apply id="S3.E2.m1.7.7.1.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1"><apply id="S3.E2.m1.7.7.1.1.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.7.7.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.2">subscript</csymbol><sum id="S3.E2.m1.7.7.1.1.1.1.1.2.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.2.2"></sum><apply id="S3.E2.m1.7.7.1.1.1.1.1.2.3.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.2.3"><in id="S3.E2.m1.7.7.1.1.1.1.1.2.3.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.2.3.1"></in><ci id="S3.E2.m1.7.7.1.1.1.1.1.2.3.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.2.3.2">𝑝</ci><ci id="S3.E2.m1.7.7.1.1.1.1.1.2.3.3.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.2.3.3">𝑂</ci></apply></apply><apply id="S3.E2.m1.7.7.1.1.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1"><times id="S3.E2.m1.7.7.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.2"></times><ci id="S3.E2.m1.7.7.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.3">𝐿</ci><apply id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.2">evaluated-at</csymbol><apply id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1"><times id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.1"></times><ci id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.2">Δ</ci><apply id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.2">𝑣</ci><ci id="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.7.7.1.1.1.1.1.1.1.1.1.1.1.1.3.3">𝑘</ci></apply><ci id="S3.E2.m1.1.1.cmml" xref="S3.E2.m1.1.1">𝑝</ci></apply><ci id="S3.E2.m1.2.2.1.cmml" xref="S3.E2.m1.2.2.1">𝑥</ci></apply></apply></apply></apply><apply id="S3.E2.m1.7.7.1.1.2.2.cmml" xref="S3.E2.m1.7.7.1.1.2.2"><times id="S3.E2.m1.7.7.1.1.2.2.2.cmml" xref="S3.E2.m1.7.7.1.1.2.2.2"></times><ci id="S3.E2.m1.7.7.1.1.2.2.3.cmml" xref="S3.E2.m1.7.7.1.1.2.2.3">𝐿</ci><apply id="S3.E2.m1.7.7.1.1.2.2.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1"><csymbol cd="latexml" id="S3.E2.m1.7.7.1.1.2.2.1.1.1.2.1.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.2">evaluated-at</csymbol><apply id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1"><times id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.1"></times><ci id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.2">Δ</ci><apply id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.2">𝑣</ci><ci id="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.7.7.1.1.2.2.1.1.1.1.1.1.3.3">𝑘</ci></apply><ci id="S3.E2.m1.3.3.cmml" xref="S3.E2.m1.3.3">𝑝</ci></apply><ci id="S3.E2.m1.4.4.1.cmml" xref="S3.E2.m1.4.4.1">𝑦</ci></apply></apply><apply id="S3.E2.m1.7.7.1.1.3.3.cmml" xref="S3.E2.m1.7.7.1.1.3.3"><times id="S3.E2.m1.7.7.1.1.3.3.2.cmml" xref="S3.E2.m1.7.7.1.1.3.3.2"></times><ci id="S3.E2.m1.7.7.1.1.3.3.3.cmml" xref="S3.E2.m1.7.7.1.1.3.3.3">𝐿</ci><apply id="S3.E2.m1.7.7.1.1.3.3.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1"><csymbol cd="latexml" id="S3.E2.m1.7.7.1.1.3.3.1.1.1.2.1.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.2">evaluated-at</csymbol><apply id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1"><times id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.1"></times><ci id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.2">Δ</ci><apply id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.2">𝑣</ci><ci id="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.7.7.1.1.3.3.1.1.1.1.1.1.3.3">𝑘</ci></apply><ci id="S3.E2.m1.5.5.cmml" xref="S3.E2.m1.5.5">𝑝</ci></apply><ci id="S3.E2.m1.6.6.1.cmml" xref="S3.E2.m1.6.6.1">𝑧</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m1.7c">Loss=\sum_{k=1}^{K}\sum_{p\in O}L(\Delta v_{k}(p)|_{x})+L(\Delta v_{k}(p)|_{y})+L(\Delta v_{k}(p)|_{z}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<table id="S3.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E3.m1.4" class="ltx_Math" alttext="\Delta v_{k}(p)=\widetilde{v}_{k}(p)-v_{k}(p)," display="block"><semantics id="S3.E3.m1.4a"><mrow id="S3.E3.m1.4.4.1" xref="S3.E3.m1.4.4.1.1.cmml"><mrow id="S3.E3.m1.4.4.1.1" xref="S3.E3.m1.4.4.1.1.cmml"><mrow id="S3.E3.m1.4.4.1.1.2" xref="S3.E3.m1.4.4.1.1.2.cmml"><mi mathvariant="normal" id="S3.E3.m1.4.4.1.1.2.2" xref="S3.E3.m1.4.4.1.1.2.2.cmml">Δ</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.1.1.2.1" xref="S3.E3.m1.4.4.1.1.2.1.cmml">​</mo><msub id="S3.E3.m1.4.4.1.1.2.3" xref="S3.E3.m1.4.4.1.1.2.3.cmml"><mi id="S3.E3.m1.4.4.1.1.2.3.2" xref="S3.E3.m1.4.4.1.1.2.3.2.cmml">v</mi><mi id="S3.E3.m1.4.4.1.1.2.3.3" xref="S3.E3.m1.4.4.1.1.2.3.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.1.1.2.1a" xref="S3.E3.m1.4.4.1.1.2.1.cmml">​</mo><mrow id="S3.E3.m1.4.4.1.1.2.4.2" xref="S3.E3.m1.4.4.1.1.2.cmml"><mo stretchy="false" id="S3.E3.m1.4.4.1.1.2.4.2.1" xref="S3.E3.m1.4.4.1.1.2.cmml">(</mo><mi id="S3.E3.m1.1.1" xref="S3.E3.m1.1.1.cmml">p</mi><mo stretchy="false" id="S3.E3.m1.4.4.1.1.2.4.2.2" xref="S3.E3.m1.4.4.1.1.2.cmml">)</mo></mrow></mrow><mo id="S3.E3.m1.4.4.1.1.1" xref="S3.E3.m1.4.4.1.1.1.cmml">=</mo><mrow id="S3.E3.m1.4.4.1.1.3" xref="S3.E3.m1.4.4.1.1.3.cmml"><mrow id="S3.E3.m1.4.4.1.1.3.2" xref="S3.E3.m1.4.4.1.1.3.2.cmml"><msub id="S3.E3.m1.4.4.1.1.3.2.2" xref="S3.E3.m1.4.4.1.1.3.2.2.cmml"><mover accent="true" id="S3.E3.m1.4.4.1.1.3.2.2.2" xref="S3.E3.m1.4.4.1.1.3.2.2.2.cmml"><mi id="S3.E3.m1.4.4.1.1.3.2.2.2.2" xref="S3.E3.m1.4.4.1.1.3.2.2.2.2.cmml">v</mi><mo id="S3.E3.m1.4.4.1.1.3.2.2.2.1" xref="S3.E3.m1.4.4.1.1.3.2.2.2.1.cmml">~</mo></mover><mi id="S3.E3.m1.4.4.1.1.3.2.2.3" xref="S3.E3.m1.4.4.1.1.3.2.2.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.1.1.3.2.1" xref="S3.E3.m1.4.4.1.1.3.2.1.cmml">​</mo><mrow id="S3.E3.m1.4.4.1.1.3.2.3.2" xref="S3.E3.m1.4.4.1.1.3.2.cmml"><mo stretchy="false" id="S3.E3.m1.4.4.1.1.3.2.3.2.1" xref="S3.E3.m1.4.4.1.1.3.2.cmml">(</mo><mi id="S3.E3.m1.2.2" xref="S3.E3.m1.2.2.cmml">p</mi><mo stretchy="false" id="S3.E3.m1.4.4.1.1.3.2.3.2.2" xref="S3.E3.m1.4.4.1.1.3.2.cmml">)</mo></mrow></mrow><mo id="S3.E3.m1.4.4.1.1.3.1" xref="S3.E3.m1.4.4.1.1.3.1.cmml">−</mo><mrow id="S3.E3.m1.4.4.1.1.3.3" xref="S3.E3.m1.4.4.1.1.3.3.cmml"><msub id="S3.E3.m1.4.4.1.1.3.3.2" xref="S3.E3.m1.4.4.1.1.3.3.2.cmml"><mi id="S3.E3.m1.4.4.1.1.3.3.2.2" xref="S3.E3.m1.4.4.1.1.3.3.2.2.cmml">v</mi><mi id="S3.E3.m1.4.4.1.1.3.3.2.3" xref="S3.E3.m1.4.4.1.1.3.3.2.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.1.1.3.3.1" xref="S3.E3.m1.4.4.1.1.3.3.1.cmml">​</mo><mrow id="S3.E3.m1.4.4.1.1.3.3.3.2" xref="S3.E3.m1.4.4.1.1.3.3.cmml"><mo stretchy="false" id="S3.E3.m1.4.4.1.1.3.3.3.2.1" xref="S3.E3.m1.4.4.1.1.3.3.cmml">(</mo><mi id="S3.E3.m1.3.3" xref="S3.E3.m1.3.3.cmml">p</mi><mo stretchy="false" id="S3.E3.m1.4.4.1.1.3.3.3.2.2" xref="S3.E3.m1.4.4.1.1.3.3.cmml">)</mo></mrow></mrow></mrow></mrow><mo id="S3.E3.m1.4.4.1.2" xref="S3.E3.m1.4.4.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E3.m1.4b"><apply id="S3.E3.m1.4.4.1.1.cmml" xref="S3.E3.m1.4.4.1"><eq id="S3.E3.m1.4.4.1.1.1.cmml" xref="S3.E3.m1.4.4.1.1.1"></eq><apply id="S3.E3.m1.4.4.1.1.2.cmml" xref="S3.E3.m1.4.4.1.1.2"><times id="S3.E3.m1.4.4.1.1.2.1.cmml" xref="S3.E3.m1.4.4.1.1.2.1"></times><ci id="S3.E3.m1.4.4.1.1.2.2.cmml" xref="S3.E3.m1.4.4.1.1.2.2">Δ</ci><apply id="S3.E3.m1.4.4.1.1.2.3.cmml" xref="S3.E3.m1.4.4.1.1.2.3"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.1.1.2.3.1.cmml" xref="S3.E3.m1.4.4.1.1.2.3">subscript</csymbol><ci id="S3.E3.m1.4.4.1.1.2.3.2.cmml" xref="S3.E3.m1.4.4.1.1.2.3.2">𝑣</ci><ci id="S3.E3.m1.4.4.1.1.2.3.3.cmml" xref="S3.E3.m1.4.4.1.1.2.3.3">𝑘</ci></apply><ci id="S3.E3.m1.1.1.cmml" xref="S3.E3.m1.1.1">𝑝</ci></apply><apply id="S3.E3.m1.4.4.1.1.3.cmml" xref="S3.E3.m1.4.4.1.1.3"><minus id="S3.E3.m1.4.4.1.1.3.1.cmml" xref="S3.E3.m1.4.4.1.1.3.1"></minus><apply id="S3.E3.m1.4.4.1.1.3.2.cmml" xref="S3.E3.m1.4.4.1.1.3.2"><times id="S3.E3.m1.4.4.1.1.3.2.1.cmml" xref="S3.E3.m1.4.4.1.1.3.2.1"></times><apply id="S3.E3.m1.4.4.1.1.3.2.2.cmml" xref="S3.E3.m1.4.4.1.1.3.2.2"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.1.1.3.2.2.1.cmml" xref="S3.E3.m1.4.4.1.1.3.2.2">subscript</csymbol><apply id="S3.E3.m1.4.4.1.1.3.2.2.2.cmml" xref="S3.E3.m1.4.4.1.1.3.2.2.2"><ci id="S3.E3.m1.4.4.1.1.3.2.2.2.1.cmml" xref="S3.E3.m1.4.4.1.1.3.2.2.2.1">~</ci><ci id="S3.E3.m1.4.4.1.1.3.2.2.2.2.cmml" xref="S3.E3.m1.4.4.1.1.3.2.2.2.2">𝑣</ci></apply><ci id="S3.E3.m1.4.4.1.1.3.2.2.3.cmml" xref="S3.E3.m1.4.4.1.1.3.2.2.3">𝑘</ci></apply><ci id="S3.E3.m1.2.2.cmml" xref="S3.E3.m1.2.2">𝑝</ci></apply><apply id="S3.E3.m1.4.4.1.1.3.3.cmml" xref="S3.E3.m1.4.4.1.1.3.3"><times id="S3.E3.m1.4.4.1.1.3.3.1.cmml" xref="S3.E3.m1.4.4.1.1.3.3.1"></times><apply id="S3.E3.m1.4.4.1.1.3.3.2.cmml" xref="S3.E3.m1.4.4.1.1.3.3.2"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.1.1.3.3.2.1.cmml" xref="S3.E3.m1.4.4.1.1.3.3.2">subscript</csymbol><ci id="S3.E3.m1.4.4.1.1.3.3.2.2.cmml" xref="S3.E3.m1.4.4.1.1.3.3.2.2">𝑣</ci><ci id="S3.E3.m1.4.4.1.1.3.3.2.3.cmml" xref="S3.E3.m1.4.4.1.1.3.3.2.3">𝑘</ci></apply><ci id="S3.E3.m1.3.3.cmml" xref="S3.E3.m1.3.3">𝑝</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E3.m1.4c">\Delta v_{k}(p)=\widetilde{v}_{k}(p)-v_{k}(p),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS2.p7.2" class="ltx_p">where O is the set of N sampling points, <math id="S3.SS2.p7.1.m1.1" class="ltx_Math" alttext="\widetilde{v}_{k}(p)" display="inline"><semantics id="S3.SS2.p7.1.m1.1a"><mrow id="S3.SS2.p7.1.m1.1.2" xref="S3.SS2.p7.1.m1.1.2.cmml"><msub id="S3.SS2.p7.1.m1.1.2.2" xref="S3.SS2.p7.1.m1.1.2.2.cmml"><mover accent="true" id="S3.SS2.p7.1.m1.1.2.2.2" xref="S3.SS2.p7.1.m1.1.2.2.2.cmml"><mi id="S3.SS2.p7.1.m1.1.2.2.2.2" xref="S3.SS2.p7.1.m1.1.2.2.2.2.cmml">v</mi><mo id="S3.SS2.p7.1.m1.1.2.2.2.1" xref="S3.SS2.p7.1.m1.1.2.2.2.1.cmml">~</mo></mover><mi id="S3.SS2.p7.1.m1.1.2.2.3" xref="S3.SS2.p7.1.m1.1.2.2.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.SS2.p7.1.m1.1.2.1" xref="S3.SS2.p7.1.m1.1.2.1.cmml">​</mo><mrow id="S3.SS2.p7.1.m1.1.2.3.2" xref="S3.SS2.p7.1.m1.1.2.cmml"><mo stretchy="false" id="S3.SS2.p7.1.m1.1.2.3.2.1" xref="S3.SS2.p7.1.m1.1.2.cmml">(</mo><mi id="S3.SS2.p7.1.m1.1.1" xref="S3.SS2.p7.1.m1.1.1.cmml">p</mi><mo stretchy="false" id="S3.SS2.p7.1.m1.1.2.3.2.2" xref="S3.SS2.p7.1.m1.1.2.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p7.1.m1.1b"><apply id="S3.SS2.p7.1.m1.1.2.cmml" xref="S3.SS2.p7.1.m1.1.2"><times id="S3.SS2.p7.1.m1.1.2.1.cmml" xref="S3.SS2.p7.1.m1.1.2.1"></times><apply id="S3.SS2.p7.1.m1.1.2.2.cmml" xref="S3.SS2.p7.1.m1.1.2.2"><csymbol cd="ambiguous" id="S3.SS2.p7.1.m1.1.2.2.1.cmml" xref="S3.SS2.p7.1.m1.1.2.2">subscript</csymbol><apply id="S3.SS2.p7.1.m1.1.2.2.2.cmml" xref="S3.SS2.p7.1.m1.1.2.2.2"><ci id="S3.SS2.p7.1.m1.1.2.2.2.1.cmml" xref="S3.SS2.p7.1.m1.1.2.2.2.1">~</ci><ci id="S3.SS2.p7.1.m1.1.2.2.2.2.cmml" xref="S3.SS2.p7.1.m1.1.2.2.2.2">𝑣</ci></apply><ci id="S3.SS2.p7.1.m1.1.2.2.3.cmml" xref="S3.SS2.p7.1.m1.1.2.2.3">𝑘</ci></apply><ci id="S3.SS2.p7.1.m1.1.1.cmml" xref="S3.SS2.p7.1.m1.1.1">𝑝</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p7.1.m1.1c">\widetilde{v}_{k}(p)</annotation></semantics></math> is the predicted unit direction vector, <math id="S3.SS2.p7.2.m2.1" class="ltx_Math" alttext="v_{k}(p)" display="inline"><semantics id="S3.SS2.p7.2.m2.1a"><mrow id="S3.SS2.p7.2.m2.1.2" xref="S3.SS2.p7.2.m2.1.2.cmml"><msub id="S3.SS2.p7.2.m2.1.2.2" xref="S3.SS2.p7.2.m2.1.2.2.cmml"><mi id="S3.SS2.p7.2.m2.1.2.2.2" xref="S3.SS2.p7.2.m2.1.2.2.2.cmml">v</mi><mi id="S3.SS2.p7.2.m2.1.2.2.3" xref="S3.SS2.p7.2.m2.1.2.2.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.SS2.p7.2.m2.1.2.1" xref="S3.SS2.p7.2.m2.1.2.1.cmml">​</mo><mrow id="S3.SS2.p7.2.m2.1.2.3.2" xref="S3.SS2.p7.2.m2.1.2.cmml"><mo stretchy="false" id="S3.SS2.p7.2.m2.1.2.3.2.1" xref="S3.SS2.p7.2.m2.1.2.cmml">(</mo><mi id="S3.SS2.p7.2.m2.1.1" xref="S3.SS2.p7.2.m2.1.1.cmml">p</mi><mo stretchy="false" id="S3.SS2.p7.2.m2.1.2.3.2.2" xref="S3.SS2.p7.2.m2.1.2.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p7.2.m2.1b"><apply id="S3.SS2.p7.2.m2.1.2.cmml" xref="S3.SS2.p7.2.m2.1.2"><times id="S3.SS2.p7.2.m2.1.2.1.cmml" xref="S3.SS2.p7.2.m2.1.2.1"></times><apply id="S3.SS2.p7.2.m2.1.2.2.cmml" xref="S3.SS2.p7.2.m2.1.2.2"><csymbol cd="ambiguous" id="S3.SS2.p7.2.m2.1.2.2.1.cmml" xref="S3.SS2.p7.2.m2.1.2.2">subscript</csymbol><ci id="S3.SS2.p7.2.m2.1.2.2.2.cmml" xref="S3.SS2.p7.2.m2.1.2.2.2">𝑣</ci><ci id="S3.SS2.p7.2.m2.1.2.2.3.cmml" xref="S3.SS2.p7.2.m2.1.2.2.3">𝑘</ci></apply><ci id="S3.SS2.p7.2.m2.1.1.cmml" xref="S3.SS2.p7.2.m2.1.1">𝑝</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p7.2.m2.1c">v_{k}(p)</annotation></semantics></math> is the groundtruth value of unit direction vector. We decompose and calculate the smooth L1 loss in x, y and z directions:</p>
+</div>
+<div id="S3.SS2.p8" class="ltx_para">
+<table id="S3.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E4.m1.6" class="ltx_Math" alttext="L=smooth_{L1}(x)=\left\{\begin{array}[]{lr}0.5x^{2},&amp;if(|x|&lt;1)\\
+|x|-0.5,&amp;otherwise\end{array}\right." display="block"><semantics id="S3.E4.m1.6a"><mrow id="S3.E4.m1.6.7" xref="S3.E4.m1.6.7.cmml"><mi id="S3.E4.m1.6.7.2" xref="S3.E4.m1.6.7.2.cmml">L</mi><mo id="S3.E4.m1.6.7.3" xref="S3.E4.m1.6.7.3.cmml">=</mo><mrow id="S3.E4.m1.6.7.4" xref="S3.E4.m1.6.7.4.cmml"><mi id="S3.E4.m1.6.7.4.2" xref="S3.E4.m1.6.7.4.2.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.6.7.4.1" xref="S3.E4.m1.6.7.4.1.cmml">​</mo><mi id="S3.E4.m1.6.7.4.3" xref="S3.E4.m1.6.7.4.3.cmml">m</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.6.7.4.1a" xref="S3.E4.m1.6.7.4.1.cmml">​</mo><mi id="S3.E4.m1.6.7.4.4" xref="S3.E4.m1.6.7.4.4.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.6.7.4.1b" xref="S3.E4.m1.6.7.4.1.cmml">​</mo><mi id="S3.E4.m1.6.7.4.5" xref="S3.E4.m1.6.7.4.5.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.6.7.4.1c" xref="S3.E4.m1.6.7.4.1.cmml">​</mo><mi id="S3.E4.m1.6.7.4.6" xref="S3.E4.m1.6.7.4.6.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.6.7.4.1d" xref="S3.E4.m1.6.7.4.1.cmml">​</mo><msub id="S3.E4.m1.6.7.4.7" xref="S3.E4.m1.6.7.4.7.cmml"><mi id="S3.E4.m1.6.7.4.7.2" xref="S3.E4.m1.6.7.4.7.2.cmml">h</mi><mrow id="S3.E4.m1.6.7.4.7.3" xref="S3.E4.m1.6.7.4.7.3.cmml"><mi id="S3.E4.m1.6.7.4.7.3.2" xref="S3.E4.m1.6.7.4.7.3.2.cmml">L</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.6.7.4.7.3.1" xref="S3.E4.m1.6.7.4.7.3.1.cmml">​</mo><mn id="S3.E4.m1.6.7.4.7.3.3" xref="S3.E4.m1.6.7.4.7.3.3.cmml">1</mn></mrow></msub><mo lspace="0em" rspace="0em" id="S3.E4.m1.6.7.4.1e" xref="S3.E4.m1.6.7.4.1.cmml">​</mo><mrow id="S3.E4.m1.6.7.4.8.2" xref="S3.E4.m1.6.7.4.cmml"><mo stretchy="false" id="S3.E4.m1.6.7.4.8.2.1" xref="S3.E4.m1.6.7.4.cmml">(</mo><mi id="S3.E4.m1.6.6" xref="S3.E4.m1.6.6.cmml">x</mi><mo stretchy="false" id="S3.E4.m1.6.7.4.8.2.2" xref="S3.E4.m1.6.7.4.cmml">)</mo></mrow></mrow><mo id="S3.E4.m1.6.7.5" xref="S3.E4.m1.6.7.5.cmml">=</mo><mrow id="S3.E4.m1.6.7.6.2" xref="S3.E4.m1.6.7.6.1.cmml"><mo id="S3.E4.m1.6.7.6.2.1" xref="S3.E4.m1.6.7.6.1.1.cmml">{</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt" id="S3.E4.m1.5.5" xref="S3.E4.m1.5.5.cmml"><mtr id="S3.E4.m1.5.5a" xref="S3.E4.m1.5.5.cmml"><mtd class="ltx_align_left" columnalign="left" id="S3.E4.m1.5.5b" xref="S3.E4.m1.5.5.cmml"><mrow id="S3.E4.m1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E4.m1.1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.1.cmml"><mn id="S3.E4.m1.1.1.1.1.1.1.1.2" xref="S3.E4.m1.1.1.1.1.1.1.1.2.cmml">0.5</mn><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.1.1.cmml">​</mo><msup id="S3.E4.m1.1.1.1.1.1.1.1.3" xref="S3.E4.m1.1.1.1.1.1.1.1.3.cmml"><mi id="S3.E4.m1.1.1.1.1.1.1.1.3.2" xref="S3.E4.m1.1.1.1.1.1.1.1.3.2.cmml">x</mi><mn id="S3.E4.m1.1.1.1.1.1.1.1.3.3" xref="S3.E4.m1.1.1.1.1.1.1.1.3.3.cmml">2</mn></msup></mrow><mo id="S3.E4.m1.1.1.1.1.1.1.2" xref="S3.E4.m1.1.1.1.1.1.1.1.cmml">,</mo></mrow></mtd><mtd class="ltx_align_right" columnalign="right" id="S3.E4.m1.5.5c" xref="S3.E4.m1.5.5.cmml"><mrow id="S3.E4.m1.3.3.3.3.2" xref="S3.E4.m1.3.3.3.3.2.cmml"><mi id="S3.E4.m1.3.3.3.3.2.4" xref="S3.E4.m1.3.3.3.3.2.4.cmml">i</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.3.3.3.3.2.3" xref="S3.E4.m1.3.3.3.3.2.3.cmml">​</mo><mi id="S3.E4.m1.3.3.3.3.2.5" xref="S3.E4.m1.3.3.3.3.2.5.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.3.3.3.3.2.3a" xref="S3.E4.m1.3.3.3.3.2.3.cmml">​</mo><mrow id="S3.E4.m1.3.3.3.3.2.2.1" xref="S3.E4.m1.3.3.3.3.2.2.1.1.cmml"><mo stretchy="false" id="S3.E4.m1.3.3.3.3.2.2.1.2" xref="S3.E4.m1.3.3.3.3.2.2.1.1.cmml">(</mo><mrow id="S3.E4.m1.3.3.3.3.2.2.1.1" xref="S3.E4.m1.3.3.3.3.2.2.1.1.cmml"><mrow id="S3.E4.m1.3.3.3.3.2.2.1.1.2.2" xref="S3.E4.m1.3.3.3.3.2.2.1.1.2.1.cmml"><mo stretchy="false" id="S3.E4.m1.3.3.3.3.2.2.1.1.2.2.1" xref="S3.E4.m1.3.3.3.3.2.2.1.1.2.1.1.cmml">|</mo><mi id="S3.E4.m1.2.2.2.2.1.1" xref="S3.E4.m1.2.2.2.2.1.1.cmml">x</mi><mo stretchy="false" id="S3.E4.m1.3.3.3.3.2.2.1.1.2.2.2" xref="S3.E4.m1.3.3.3.3.2.2.1.1.2.1.1.cmml">|</mo></mrow><mo id="S3.E4.m1.3.3.3.3.2.2.1.1.1" xref="S3.E4.m1.3.3.3.3.2.2.1.1.1.cmml">&lt;</mo><mn id="S3.E4.m1.3.3.3.3.2.2.1.1.3" xref="S3.E4.m1.3.3.3.3.2.2.1.1.3.cmml">1</mn></mrow><mo stretchy="false" id="S3.E4.m1.3.3.3.3.2.2.1.3" xref="S3.E4.m1.3.3.3.3.2.2.1.1.cmml">)</mo></mrow></mrow></mtd></mtr><mtr id="S3.E4.m1.5.5d" xref="S3.E4.m1.5.5.cmml"><mtd class="ltx_align_left" columnalign="left" id="S3.E4.m1.5.5e" xref="S3.E4.m1.5.5.cmml"><mrow id="S3.E4.m1.5.5.5.2.2.2" xref="S3.E4.m1.5.5.5.2.2.2.1.cmml"><mrow id="S3.E4.m1.5.5.5.2.2.2.1" xref="S3.E4.m1.5.5.5.2.2.2.1.cmml"><mrow id="S3.E4.m1.5.5.5.2.2.2.1.2.2" xref="S3.E4.m1.5.5.5.2.2.2.1.2.1.cmml"><mo stretchy="false" id="S3.E4.m1.5.5.5.2.2.2.1.2.2.1" xref="S3.E4.m1.5.5.5.2.2.2.1.2.1.1.cmml">|</mo><mi id="S3.E4.m1.4.4.4.1.1.1" xref="S3.E4.m1.4.4.4.1.1.1.cmml">x</mi><mo stretchy="false" id="S3.E4.m1.5.5.5.2.2.2.1.2.2.2" xref="S3.E4.m1.5.5.5.2.2.2.1.2.1.1.cmml">|</mo></mrow><mo id="S3.E4.m1.5.5.5.2.2.2.1.1" xref="S3.E4.m1.5.5.5.2.2.2.1.1.cmml">−</mo><mn id="S3.E4.m1.5.5.5.2.2.2.1.3" xref="S3.E4.m1.5.5.5.2.2.2.1.3.cmml">0.5</mn></mrow><mo id="S3.E4.m1.5.5.5.2.2.2.2" xref="S3.E4.m1.5.5.5.2.2.2.1.cmml">,</mo></mrow></mtd><mtd class="ltx_align_right" columnalign="right" id="S3.E4.m1.5.5f" xref="S3.E4.m1.5.5.cmml"><mrow id="S3.E4.m1.5.5.5.3.1" xref="S3.E4.m1.5.5.5.3.1.cmml"><mi id="S3.E4.m1.5.5.5.3.1.2" xref="S3.E4.m1.5.5.5.3.1.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.5.5.5.3.1.1" xref="S3.E4.m1.5.5.5.3.1.1.cmml">​</mo><mi id="S3.E4.m1.5.5.5.3.1.3" xref="S3.E4.m1.5.5.5.3.1.3.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.5.5.5.3.1.1a" xref="S3.E4.m1.5.5.5.3.1.1.cmml">​</mo><mi id="S3.E4.m1.5.5.5.3.1.4" xref="S3.E4.m1.5.5.5.3.1.4.cmml">h</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.5.5.5.3.1.1b" xref="S3.E4.m1.5.5.5.3.1.1.cmml">​</mo><mi id="S3.E4.m1.5.5.5.3.1.5" xref="S3.E4.m1.5.5.5.3.1.5.cmml">e</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.5.5.5.3.1.1c" xref="S3.E4.m1.5.5.5.3.1.1.cmml">​</mo><mi id="S3.E4.m1.5.5.5.3.1.6" xref="S3.E4.m1.5.5.5.3.1.6.cmml">r</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.5.5.5.3.1.1d" xref="S3.E4.m1.5.5.5.3.1.1.cmml">​</mo><mi id="S3.E4.m1.5.5.5.3.1.7" xref="S3.E4.m1.5.5.5.3.1.7.cmml">w</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.5.5.5.3.1.1e" xref="S3.E4.m1.5.5.5.3.1.1.cmml">​</mo><mi id="S3.E4.m1.5.5.5.3.1.8" xref="S3.E4.m1.5.5.5.3.1.8.cmml">i</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.5.5.5.3.1.1f" xref="S3.E4.m1.5.5.5.3.1.1.cmml">​</mo><mi id="S3.E4.m1.5.5.5.3.1.9" xref="S3.E4.m1.5.5.5.3.1.9.cmml">s</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.5.5.5.3.1.1g" xref="S3.E4.m1.5.5.5.3.1.1.cmml">​</mo><mi id="S3.E4.m1.5.5.5.3.1.10" xref="S3.E4.m1.5.5.5.3.1.10.cmml">e</mi></mrow></mtd></mtr></mtable><mi id="S3.E4.m1.6.7.6.2.2" xref="S3.E4.m1.6.7.6.1.1.cmml"></mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E4.m1.6b"><apply id="S3.E4.m1.6.7.cmml" xref="S3.E4.m1.6.7"><and id="S3.E4.m1.6.7a.cmml" xref="S3.E4.m1.6.7"></and><apply id="S3.E4.m1.6.7b.cmml" xref="S3.E4.m1.6.7"><eq id="S3.E4.m1.6.7.3.cmml" xref="S3.E4.m1.6.7.3"></eq><ci id="S3.E4.m1.6.7.2.cmml" xref="S3.E4.m1.6.7.2">𝐿</ci><apply id="S3.E4.m1.6.7.4.cmml" xref="S3.E4.m1.6.7.4"><times id="S3.E4.m1.6.7.4.1.cmml" xref="S3.E4.m1.6.7.4.1"></times><ci id="S3.E4.m1.6.7.4.2.cmml" xref="S3.E4.m1.6.7.4.2">𝑠</ci><ci id="S3.E4.m1.6.7.4.3.cmml" xref="S3.E4.m1.6.7.4.3">𝑚</ci><ci id="S3.E4.m1.6.7.4.4.cmml" xref="S3.E4.m1.6.7.4.4">𝑜</ci><ci id="S3.E4.m1.6.7.4.5.cmml" xref="S3.E4.m1.6.7.4.5">𝑜</ci><ci id="S3.E4.m1.6.7.4.6.cmml" xref="S3.E4.m1.6.7.4.6">𝑡</ci><apply id="S3.E4.m1.6.7.4.7.cmml" xref="S3.E4.m1.6.7.4.7"><csymbol cd="ambiguous" id="S3.E4.m1.6.7.4.7.1.cmml" xref="S3.E4.m1.6.7.4.7">subscript</csymbol><ci id="S3.E4.m1.6.7.4.7.2.cmml" xref="S3.E4.m1.6.7.4.7.2">ℎ</ci><apply id="S3.E4.m1.6.7.4.7.3.cmml" xref="S3.E4.m1.6.7.4.7.3"><times id="S3.E4.m1.6.7.4.7.3.1.cmml" xref="S3.E4.m1.6.7.4.7.3.1"></times><ci id="S3.E4.m1.6.7.4.7.3.2.cmml" xref="S3.E4.m1.6.7.4.7.3.2">𝐿</ci><cn type="integer" id="S3.E4.m1.6.7.4.7.3.3.cmml" xref="S3.E4.m1.6.7.4.7.3.3">1</cn></apply></apply><ci id="S3.E4.m1.6.6.cmml" xref="S3.E4.m1.6.6">𝑥</ci></apply></apply><apply id="S3.E4.m1.6.7c.cmml" xref="S3.E4.m1.6.7"><eq id="S3.E4.m1.6.7.5.cmml" xref="S3.E4.m1.6.7.5"></eq><share href="#S3.E4.m1.6.7.4.cmml" id="S3.E4.m1.6.7d.cmml" xref="S3.E4.m1.6.7"></share><apply id="S3.E4.m1.6.7.6.1.cmml" xref="S3.E4.m1.6.7.6.2"><csymbol cd="latexml" id="S3.E4.m1.6.7.6.1.1.cmml" xref="S3.E4.m1.6.7.6.2.1">cases</csymbol><matrix id="S3.E4.m1.5.5.cmml" xref="S3.E4.m1.5.5"><matrixrow id="S3.E4.m1.5.5a.cmml" xref="S3.E4.m1.5.5"><apply id="S3.E4.m1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1"><times id="S3.E4.m1.1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.1"></times><cn type="float" id="S3.E4.m1.1.1.1.1.1.1.1.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.2">0.5</cn><apply id="S3.E4.m1.1.1.1.1.1.1.1.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.3">superscript</csymbol><ci id="S3.E4.m1.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.3.2">𝑥</ci><cn type="integer" id="S3.E4.m1.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.1.3.3">2</cn></apply></apply><apply id="S3.E4.m1.3.3.3.3.2.cmml" xref="S3.E4.m1.3.3.3.3.2"><times id="S3.E4.m1.3.3.3.3.2.3.cmml" xref="S3.E4.m1.3.3.3.3.2.3"></times><ci id="S3.E4.m1.3.3.3.3.2.4.cmml" xref="S3.E4.m1.3.3.3.3.2.4">𝑖</ci><ci id="S3.E4.m1.3.3.3.3.2.5.cmml" xref="S3.E4.m1.3.3.3.3.2.5">𝑓</ci><apply id="S3.E4.m1.3.3.3.3.2.2.1.1.cmml" xref="S3.E4.m1.3.3.3.3.2.2.1"><lt id="S3.E4.m1.3.3.3.3.2.2.1.1.1.cmml" xref="S3.E4.m1.3.3.3.3.2.2.1.1.1"></lt><apply id="S3.E4.m1.3.3.3.3.2.2.1.1.2.1.cmml" xref="S3.E4.m1.3.3.3.3.2.2.1.1.2.2"><abs id="S3.E4.m1.3.3.3.3.2.2.1.1.2.1.1.cmml" xref="S3.E4.m1.3.3.3.3.2.2.1.1.2.2.1"></abs><ci id="S3.E4.m1.2.2.2.2.1.1.cmml" xref="S3.E4.m1.2.2.2.2.1.1">𝑥</ci></apply><cn type="integer" id="S3.E4.m1.3.3.3.3.2.2.1.1.3.cmml" xref="S3.E4.m1.3.3.3.3.2.2.1.1.3">1</cn></apply></apply></matrixrow><matrixrow id="S3.E4.m1.5.5b.cmml" xref="S3.E4.m1.5.5"><apply id="S3.E4.m1.5.5.5.2.2.2.1.cmml" xref="S3.E4.m1.5.5.5.2.2.2"><minus id="S3.E4.m1.5.5.5.2.2.2.1.1.cmml" xref="S3.E4.m1.5.5.5.2.2.2.1.1"></minus><apply id="S3.E4.m1.5.5.5.2.2.2.1.2.1.cmml" xref="S3.E4.m1.5.5.5.2.2.2.1.2.2"><abs id="S3.E4.m1.5.5.5.2.2.2.1.2.1.1.cmml" xref="S3.E4.m1.5.5.5.2.2.2.1.2.2.1"></abs><ci id="S3.E4.m1.4.4.4.1.1.1.cmml" xref="S3.E4.m1.4.4.4.1.1.1">𝑥</ci></apply><cn type="float" id="S3.E4.m1.5.5.5.2.2.2.1.3.cmml" xref="S3.E4.m1.5.5.5.2.2.2.1.3">0.5</cn></apply><apply id="S3.E4.m1.5.5.5.3.1.cmml" xref="S3.E4.m1.5.5.5.3.1"><times id="S3.E4.m1.5.5.5.3.1.1.cmml" xref="S3.E4.m1.5.5.5.3.1.1"></times><ci id="S3.E4.m1.5.5.5.3.1.2.cmml" xref="S3.E4.m1.5.5.5.3.1.2">𝑜</ci><ci id="S3.E4.m1.5.5.5.3.1.3.cmml" xref="S3.E4.m1.5.5.5.3.1.3">𝑡</ci><ci id="S3.E4.m1.5.5.5.3.1.4.cmml" xref="S3.E4.m1.5.5.5.3.1.4">ℎ</ci><ci id="S3.E4.m1.5.5.5.3.1.5.cmml" xref="S3.E4.m1.5.5.5.3.1.5">𝑒</ci><ci id="S3.E4.m1.5.5.5.3.1.6.cmml" xref="S3.E4.m1.5.5.5.3.1.6">𝑟</ci><ci id="S3.E4.m1.5.5.5.3.1.7.cmml" xref="S3.E4.m1.5.5.5.3.1.7">𝑤</ci><ci id="S3.E4.m1.5.5.5.3.1.8.cmml" xref="S3.E4.m1.5.5.5.3.1.8">𝑖</ci><ci id="S3.E4.m1.5.5.5.3.1.9.cmml" xref="S3.E4.m1.5.5.5.3.1.9">𝑠</ci><ci id="S3.E4.m1.5.5.5.3.1.10.cmml" xref="S3.E4.m1.5.5.5.3.1.10">𝑒</ci></apply></matrixrow></matrix></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E4.m1.6c">L=smooth_{L1}(x)=\left\{\begin{array}[]{lr}0.5x^{2},&amp;if(|x|&lt;1)\\
+|x|-0.5,&amp;otherwise\end{array}\right.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS3.4.1.1" class="ltx_text">III-C</span> </span><span id="S3.SS3.5.2" class="ltx_text ltx_font_italic">3D Keypoints Voting</span>
+</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.2" class="ltx_p">After predicting a lot of direction vectors pointing to the keypoints by CNN, voting mechanism based on RANSAC <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> is employed to infer the coordinate of the 3D keypoints. Unlike 2D lines, two 3D lines may not be coplanar and there will be no intersection point for them. So we randomly select three points with their vectors each time, and employ the least square method to find the closest point to the group of vectors as one of the inferred positions <math id="S3.SS3.p1.1.m1.2" class="ltx_Math" alttext="h_{k,i}" display="inline"><semantics id="S3.SS3.p1.1.m1.2a"><msub id="S3.SS3.p1.1.m1.2.3" xref="S3.SS3.p1.1.m1.2.3.cmml"><mi id="S3.SS3.p1.1.m1.2.3.2" xref="S3.SS3.p1.1.m1.2.3.2.cmml">h</mi><mrow id="S3.SS3.p1.1.m1.2.2.2.4" xref="S3.SS3.p1.1.m1.2.2.2.3.cmml"><mi id="S3.SS3.p1.1.m1.1.1.1.1" xref="S3.SS3.p1.1.m1.1.1.1.1.cmml">k</mi><mo id="S3.SS3.p1.1.m1.2.2.2.4.1" xref="S3.SS3.p1.1.m1.2.2.2.3.cmml">,</mo><mi id="S3.SS3.p1.1.m1.2.2.2.2" xref="S3.SS3.p1.1.m1.2.2.2.2.cmml">i</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.1.m1.2b"><apply id="S3.SS3.p1.1.m1.2.3.cmml" xref="S3.SS3.p1.1.m1.2.3"><csymbol cd="ambiguous" id="S3.SS3.p1.1.m1.2.3.1.cmml" xref="S3.SS3.p1.1.m1.2.3">subscript</csymbol><ci id="S3.SS3.p1.1.m1.2.3.2.cmml" xref="S3.SS3.p1.1.m1.2.3.2">ℎ</ci><list id="S3.SS3.p1.1.m1.2.2.2.3.cmml" xref="S3.SS3.p1.1.m1.2.2.2.4"><ci id="S3.SS3.p1.1.m1.1.1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1.1.1">𝑘</ci><ci id="S3.SS3.p1.1.m1.2.2.2.2.cmml" xref="S3.SS3.p1.1.m1.2.2.2.2">𝑖</ci></list></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.1.m1.2c">h_{k,i}</annotation></semantics></math> of the keypoint <math id="S3.SS3.p1.2.m2.1" class="ltx_Math" alttext="x_{k}" display="inline"><semantics id="S3.SS3.p1.2.m2.1a"><msub id="S3.SS3.p1.2.m2.1.1" xref="S3.SS3.p1.2.m2.1.1.cmml"><mi id="S3.SS3.p1.2.m2.1.1.2" xref="S3.SS3.p1.2.m2.1.1.2.cmml">x</mi><mi id="S3.SS3.p1.2.m2.1.1.3" xref="S3.SS3.p1.2.m2.1.1.3.cmml">k</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.2.m2.1b"><apply id="S3.SS3.p1.2.m2.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.2.m2.1.1.1.cmml" xref="S3.SS3.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.p1.2.m2.1.1.2.cmml" xref="S3.SS3.p1.2.m2.1.1.2">𝑥</ci><ci id="S3.SS3.p1.2.m2.1.1.3.cmml" xref="S3.SS3.p1.2.m2.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.2.m2.1c">x_{k}</annotation></semantics></math>. The inferred position is computed as (5).</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<table id="S3.E5" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E5.m1.3" class="ltx_Math" alttext="h_{k,i}=(\sum_{i}I-\hat{v}_{i}\hat{v}_{i}^{T})^{-1}(\sum_{i}(I-\hat{v}_{i}\hat{v}_{i}^{T})p_{i})," display="block"><semantics id="S3.E5.m1.3a"><mrow id="S3.E5.m1.3.3.1" xref="S3.E5.m1.3.3.1.1.cmml"><mrow id="S3.E5.m1.3.3.1.1" xref="S3.E5.m1.3.3.1.1.cmml"><msub id="S3.E5.m1.3.3.1.1.4" xref="S3.E5.m1.3.3.1.1.4.cmml"><mi id="S3.E5.m1.3.3.1.1.4.2" xref="S3.E5.m1.3.3.1.1.4.2.cmml">h</mi><mrow id="S3.E5.m1.2.2.2.4" xref="S3.E5.m1.2.2.2.3.cmml"><mi id="S3.E5.m1.1.1.1.1" xref="S3.E5.m1.1.1.1.1.cmml">k</mi><mo id="S3.E5.m1.2.2.2.4.1" xref="S3.E5.m1.2.2.2.3.cmml">,</mo><mi id="S3.E5.m1.2.2.2.2" xref="S3.E5.m1.2.2.2.2.cmml">i</mi></mrow></msub><mo id="S3.E5.m1.3.3.1.1.3" xref="S3.E5.m1.3.3.1.1.3.cmml">=</mo><mrow id="S3.E5.m1.3.3.1.1.2" xref="S3.E5.m1.3.3.1.1.2.cmml"><msup id="S3.E5.m1.3.3.1.1.1.1" xref="S3.E5.m1.3.3.1.1.1.1.cmml"><mrow id="S3.E5.m1.3.3.1.1.1.1.1.1" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E5.m1.3.3.1.1.1.1.1.1.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E5.m1.3.3.1.1.1.1.1.1.1" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.cmml"><mrow id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.cmml"><munder id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.cmml"><mo lspace="0em" movablelimits="false" id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.2.cmml">∑</mo><mi id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.3" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.3.cmml">i</mi></munder><mi id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.2.cmml">I</mi></mrow><mo id="S3.E5.m1.3.3.1.1.1.1.1.1.1.1" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.1.cmml">−</mo><mrow id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.cmml"><msub id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.cmml"><mover accent="true" id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.cmml"><mi id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.2.cmml">v</mi><mo id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.1" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.1.cmml">^</mo></mover><mi id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.3" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.3.cmml">i</mi></msub><mo lspace="0em" rspace="0em" id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.1" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.1.cmml">​</mo><msubsup id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.cmml"><mover accent="true" id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.cmml"><mi id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.2" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.2.cmml">v</mi><mo id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.1" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.1.cmml">^</mo></mover><mi id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.3" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.3.cmml">i</mi><mi id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.3" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.3.cmml">T</mi></msubsup></mrow></mrow><mo stretchy="false" id="S3.E5.m1.3.3.1.1.1.1.1.1.3" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.cmml">)</mo></mrow><mrow id="S3.E5.m1.3.3.1.1.1.1.3" xref="S3.E5.m1.3.3.1.1.1.1.3.cmml"><mo id="S3.E5.m1.3.3.1.1.1.1.3a" xref="S3.E5.m1.3.3.1.1.1.1.3.cmml">−</mo><mn id="S3.E5.m1.3.3.1.1.1.1.3.2" xref="S3.E5.m1.3.3.1.1.1.1.3.2.cmml">1</mn></mrow></msup><mo lspace="0em" rspace="0em" id="S3.E5.m1.3.3.1.1.2.3" xref="S3.E5.m1.3.3.1.1.2.3.cmml">​</mo><mrow id="S3.E5.m1.3.3.1.1.2.2.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.cmml"><mo stretchy="false" id="S3.E5.m1.3.3.1.1.2.2.1.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.cmml">(</mo><mrow id="S3.E5.m1.3.3.1.1.2.2.1.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.cmml"><munder id="S3.E5.m1.3.3.1.1.2.2.1.1.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.2.cmml"><mo lspace="0em" movablelimits="false" rspace="0em" id="S3.E5.m1.3.3.1.1.2.2.1.1.2.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.2.2.cmml">∑</mo><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.2.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.2.3.cmml">i</mi></munder><mrow id="S3.E5.m1.3.3.1.1.2.2.1.1.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.cmml"><mrow id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.cmml"><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.2.cmml">I</mi><mo id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.1.cmml">−</mo><mrow id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.cmml"><msub id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.cmml"><mover accent="true" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.cmml"><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.2.cmml">v</mi><mo id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.1.cmml">^</mo></mover><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.3.cmml">i</mi></msub><mo lspace="0em" rspace="0em" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.1.cmml">​</mo><msubsup id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.cmml"><mover accent="true" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.cmml"><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.2.cmml">v</mi><mo id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.1" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.1.cmml">^</mo></mover><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.3.cmml">i</mi><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.3.cmml">T</mi></msubsup></mrow></mrow><mo stretchy="false" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.cmml">)</mo></mrow><mo lspace="0em" rspace="0em" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.2.cmml">​</mo><msub id="S3.E5.m1.3.3.1.1.2.2.1.1.1.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.cmml"><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.2" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.2.cmml">p</mi><mi id="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.3.cmml">i</mi></msub></mrow></mrow><mo stretchy="false" id="S3.E5.m1.3.3.1.1.2.2.1.3" xref="S3.E5.m1.3.3.1.1.2.2.1.1.cmml">)</mo></mrow></mrow></mrow><mo id="S3.E5.m1.3.3.1.2" xref="S3.E5.m1.3.3.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E5.m1.3b"><apply id="S3.E5.m1.3.3.1.1.cmml" xref="S3.E5.m1.3.3.1"><eq id="S3.E5.m1.3.3.1.1.3.cmml" xref="S3.E5.m1.3.3.1.1.3"></eq><apply id="S3.E5.m1.3.3.1.1.4.cmml" xref="S3.E5.m1.3.3.1.1.4"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.4.1.cmml" xref="S3.E5.m1.3.3.1.1.4">subscript</csymbol><ci id="S3.E5.m1.3.3.1.1.4.2.cmml" xref="S3.E5.m1.3.3.1.1.4.2">ℎ</ci><list id="S3.E5.m1.2.2.2.3.cmml" xref="S3.E5.m1.2.2.2.4"><ci id="S3.E5.m1.1.1.1.1.cmml" xref="S3.E5.m1.1.1.1.1">𝑘</ci><ci id="S3.E5.m1.2.2.2.2.cmml" xref="S3.E5.m1.2.2.2.2">𝑖</ci></list></apply><apply id="S3.E5.m1.3.3.1.1.2.cmml" xref="S3.E5.m1.3.3.1.1.2"><times id="S3.E5.m1.3.3.1.1.2.3.cmml" xref="S3.E5.m1.3.3.1.1.2.3"></times><apply id="S3.E5.m1.3.3.1.1.1.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.1.1.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1">superscript</csymbol><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1"><minus id="S3.E5.m1.3.3.1.1.1.1.1.1.1.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.1"></minus><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2"><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1">subscript</csymbol><sum id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.2"></sum><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.3.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.1.3">𝑖</ci></apply><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.2.2">𝐼</ci></apply><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3"><times id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.1"></times><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2">subscript</csymbol><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2"><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.1">^</ci><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.2.2">𝑣</ci></apply><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.3.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.2.3">𝑖</ci></apply><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3">superscript</csymbol><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3">subscript</csymbol><apply id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2"><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.1">^</ci><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.2.2">𝑣</ci></apply><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.3.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.2.3">𝑖</ci></apply><ci id="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.3.cmml" xref="S3.E5.m1.3.3.1.1.1.1.1.1.1.3.3.3">𝑇</ci></apply></apply></apply><apply id="S3.E5.m1.3.3.1.1.1.1.3.cmml" xref="S3.E5.m1.3.3.1.1.1.1.3"><minus id="S3.E5.m1.3.3.1.1.1.1.3.1.cmml" xref="S3.E5.m1.3.3.1.1.1.1.3"></minus><cn type="integer" id="S3.E5.m1.3.3.1.1.1.1.3.2.cmml" xref="S3.E5.m1.3.3.1.1.1.1.3.2">1</cn></apply></apply><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1"><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.2"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.2.2.1.1.2.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.2">subscript</csymbol><sum id="S3.E5.m1.3.3.1.1.2.2.1.1.2.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.2.2"></sum><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.2.3.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.2.3">𝑖</ci></apply><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1"><times id="S3.E5.m1.3.3.1.1.2.2.1.1.1.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.2"></times><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1"><minus id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.1"></minus><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.2">𝐼</ci><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3"><times id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.1"></times><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2">subscript</csymbol><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2"><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.1">^</ci><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.2.2">𝑣</ci></apply><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.3.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.2.3">𝑖</ci></apply><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3">superscript</csymbol><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3">subscript</csymbol><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2"><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.1">^</ci><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.2.2">𝑣</ci></apply><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.3.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.2.3">𝑖</ci></apply><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.3.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.1.1.1.3.3.3">𝑇</ci></apply></apply></apply><apply id="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.3"><csymbol cd="ambiguous" id="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.1.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.3">subscript</csymbol><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.2.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.2">𝑝</ci><ci id="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.3.cmml" xref="S3.E5.m1.3.3.1.1.2.2.1.1.1.3.3">𝑖</ci></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E5.m1.3c">h_{k,i}=(\sum_{i}I-\hat{v}_{i}\hat{v}_{i}^{T})^{-1}(\sum_{i}(I-\hat{v}_{i}\hat{v}_{i}^{T})p_{i}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.p2.2" class="ltx_p">where <math id="S3.SS3.p2.1.m1.1" class="ltx_Math" alttext="p_{i}" display="inline"><semantics id="S3.SS3.p2.1.m1.1a"><msub id="S3.SS3.p2.1.m1.1.1" xref="S3.SS3.p2.1.m1.1.1.cmml"><mi id="S3.SS3.p2.1.m1.1.1.2" xref="S3.SS3.p2.1.m1.1.1.2.cmml">p</mi><mi id="S3.SS3.p2.1.m1.1.1.3" xref="S3.SS3.p2.1.m1.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.1.m1.1b"><apply id="S3.SS3.p2.1.m1.1.1.cmml" xref="S3.SS3.p2.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p2.1.m1.1.1.1.cmml" xref="S3.SS3.p2.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.p2.1.m1.1.1.2.cmml" xref="S3.SS3.p2.1.m1.1.1.2">𝑝</ci><ci id="S3.SS3.p2.1.m1.1.1.3.cmml" xref="S3.SS3.p2.1.m1.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.1.m1.1c">p_{i}</annotation></semantics></math> is the matrix of the selected three points, and <math id="S3.SS3.p2.2.m2.1" class="ltx_Math" alttext="v_{i}" display="inline"><semantics id="S3.SS3.p2.2.m2.1a"><msub id="S3.SS3.p2.2.m2.1.1" xref="S3.SS3.p2.2.m2.1.1.cmml"><mi id="S3.SS3.p2.2.m2.1.1.2" xref="S3.SS3.p2.2.m2.1.1.2.cmml">v</mi><mi id="S3.SS3.p2.2.m2.1.1.3" xref="S3.SS3.p2.2.m2.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.2.m2.1b"><apply id="S3.SS3.p2.2.m2.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.p2.2.m2.1.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.p2.2.m2.1.1.2.cmml" xref="S3.SS3.p2.2.m2.1.1.2">𝑣</ci><ci id="S3.SS3.p2.2.m2.1.1.3.cmml" xref="S3.SS3.p2.2.m2.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.2.m2.1c">v_{i}</annotation></semantics></math> is the corresponding direction vector matrix.</p>
+</div>
+<div id="S3.SS3.p3" class="ltx_para">
+<p id="S3.SS3.p3.1" class="ltx_p">The above process is repeated for M times to get the inferred location set, and then all the sample space points will vote for every inferred location by distance calculation. The number of vote <math id="S3.SS3.p3.1.m1.2" class="ltx_Math" alttext="w_{k,i}" display="inline"><semantics id="S3.SS3.p3.1.m1.2a"><msub id="S3.SS3.p3.1.m1.2.3" xref="S3.SS3.p3.1.m1.2.3.cmml"><mi id="S3.SS3.p3.1.m1.2.3.2" xref="S3.SS3.p3.1.m1.2.3.2.cmml">w</mi><mrow id="S3.SS3.p3.1.m1.2.2.2.4" xref="S3.SS3.p3.1.m1.2.2.2.3.cmml"><mi id="S3.SS3.p3.1.m1.1.1.1.1" xref="S3.SS3.p3.1.m1.1.1.1.1.cmml">k</mi><mo id="S3.SS3.p3.1.m1.2.2.2.4.1" xref="S3.SS3.p3.1.m1.2.2.2.3.cmml">,</mo><mi id="S3.SS3.p3.1.m1.2.2.2.2" xref="S3.SS3.p3.1.m1.2.2.2.2.cmml">i</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p3.1.m1.2b"><apply id="S3.SS3.p3.1.m1.2.3.cmml" xref="S3.SS3.p3.1.m1.2.3"><csymbol cd="ambiguous" id="S3.SS3.p3.1.m1.2.3.1.cmml" xref="S3.SS3.p3.1.m1.2.3">subscript</csymbol><ci id="S3.SS3.p3.1.m1.2.3.2.cmml" xref="S3.SS3.p3.1.m1.2.3.2">𝑤</ci><list id="S3.SS3.p3.1.m1.2.2.2.3.cmml" xref="S3.SS3.p3.1.m1.2.2.2.4"><ci id="S3.SS3.p3.1.m1.1.1.1.1.cmml" xref="S3.SS3.p3.1.m1.1.1.1.1">𝑘</ci><ci id="S3.SS3.p3.1.m1.2.2.2.2.cmml" xref="S3.SS3.p3.1.m1.2.2.2.2">𝑖</ci></list></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p3.1.m1.2c">w_{k,i}</annotation></semantics></math> can be seen as the confidence of each keypoint, which is computed in (6).</p>
+</div>
+<div id="S3.SS3.p4" class="ltx_para">
+<table id="S3.E6" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E6.m1.10" class="ltx_Math" alttext="w_{k,i}=\sum_{p\in O}\mathbb{I}(\frac{(h_{k,i}-p)^{T}}{||h_{k,i}-p||_{2}}v_{k}(p)\geq\theta)," display="block"><semantics id="S3.E6.m1.10a"><mrow id="S3.E6.m1.10.10.1" xref="S3.E6.m1.10.10.1.1.cmml"><mrow id="S3.E6.m1.10.10.1.1" xref="S3.E6.m1.10.10.1.1.cmml"><msub id="S3.E6.m1.10.10.1.1.3" xref="S3.E6.m1.10.10.1.1.3.cmml"><mi id="S3.E6.m1.10.10.1.1.3.2" xref="S3.E6.m1.10.10.1.1.3.2.cmml">w</mi><mrow id="S3.E6.m1.2.2.2.4" xref="S3.E6.m1.2.2.2.3.cmml"><mi id="S3.E6.m1.1.1.1.1" xref="S3.E6.m1.1.1.1.1.cmml">k</mi><mo id="S3.E6.m1.2.2.2.4.1" xref="S3.E6.m1.2.2.2.3.cmml">,</mo><mi id="S3.E6.m1.2.2.2.2" xref="S3.E6.m1.2.2.2.2.cmml">i</mi></mrow></msub><mo rspace="0.111em" id="S3.E6.m1.10.10.1.1.2" xref="S3.E6.m1.10.10.1.1.2.cmml">=</mo><mrow id="S3.E6.m1.10.10.1.1.1" xref="S3.E6.m1.10.10.1.1.1.cmml"><munder id="S3.E6.m1.10.10.1.1.1.2" xref="S3.E6.m1.10.10.1.1.1.2.cmml"><mo movablelimits="false" id="S3.E6.m1.10.10.1.1.1.2.2" xref="S3.E6.m1.10.10.1.1.1.2.2.cmml">∑</mo><mrow id="S3.E6.m1.10.10.1.1.1.2.3" xref="S3.E6.m1.10.10.1.1.1.2.3.cmml"><mi id="S3.E6.m1.10.10.1.1.1.2.3.2" xref="S3.E6.m1.10.10.1.1.1.2.3.2.cmml">p</mi><mo id="S3.E6.m1.10.10.1.1.1.2.3.1" xref="S3.E6.m1.10.10.1.1.1.2.3.1.cmml">∈</mo><mi id="S3.E6.m1.10.10.1.1.1.2.3.3" xref="S3.E6.m1.10.10.1.1.1.2.3.3.cmml">O</mi></mrow></munder><mrow id="S3.E6.m1.10.10.1.1.1.1" xref="S3.E6.m1.10.10.1.1.1.1.cmml"><mi id="S3.E6.m1.10.10.1.1.1.1.3" xref="S3.E6.m1.10.10.1.1.1.1.3.cmml">𝕀</mi><mo lspace="0em" rspace="0em" id="S3.E6.m1.10.10.1.1.1.1.2" xref="S3.E6.m1.10.10.1.1.1.1.2.cmml">​</mo><mrow id="S3.E6.m1.10.10.1.1.1.1.1.1" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E6.m1.10.10.1.1.1.1.1.1.2" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E6.m1.10.10.1.1.1.1.1.1.1" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.cmml"><mrow id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.cmml"><mfrac id="S3.E6.m1.8.8" xref="S3.E6.m1.8.8.cmml"><msup id="S3.E6.m1.5.5.3" xref="S3.E6.m1.5.5.3.cmml"><mrow id="S3.E6.m1.5.5.3.3.1" xref="S3.E6.m1.5.5.3.3.1.1.cmml"><mo stretchy="false" id="S3.E6.m1.5.5.3.3.1.2" xref="S3.E6.m1.5.5.3.3.1.1.cmml">(</mo><mrow id="S3.E6.m1.5.5.3.3.1.1" xref="S3.E6.m1.5.5.3.3.1.1.cmml"><msub id="S3.E6.m1.5.5.3.3.1.1.2" xref="S3.E6.m1.5.5.3.3.1.1.2.cmml"><mi id="S3.E6.m1.5.5.3.3.1.1.2.2" xref="S3.E6.m1.5.5.3.3.1.1.2.2.cmml">h</mi><mrow id="S3.E6.m1.4.4.2.2.2.4" xref="S3.E6.m1.4.4.2.2.2.3.cmml"><mi id="S3.E6.m1.3.3.1.1.1.1" xref="S3.E6.m1.3.3.1.1.1.1.cmml">k</mi><mo id="S3.E6.m1.4.4.2.2.2.4.1" xref="S3.E6.m1.4.4.2.2.2.3.cmml">,</mo><mi id="S3.E6.m1.4.4.2.2.2.2" xref="S3.E6.m1.4.4.2.2.2.2.cmml">i</mi></mrow></msub><mo id="S3.E6.m1.5.5.3.3.1.1.1" xref="S3.E6.m1.5.5.3.3.1.1.1.cmml">−</mo><mi id="S3.E6.m1.5.5.3.3.1.1.3" xref="S3.E6.m1.5.5.3.3.1.1.3.cmml">p</mi></mrow><mo stretchy="false" id="S3.E6.m1.5.5.3.3.1.3" xref="S3.E6.m1.5.5.3.3.1.1.cmml">)</mo></mrow><mi id="S3.E6.m1.5.5.3.5" xref="S3.E6.m1.5.5.3.5.cmml">T</mi></msup><msub id="S3.E6.m1.8.8.6" xref="S3.E6.m1.8.8.6.cmml"><mrow id="S3.E6.m1.8.8.6.3.1" xref="S3.E6.m1.8.8.6.3.2.cmml"><mo stretchy="false" id="S3.E6.m1.8.8.6.3.1.2" xref="S3.E6.m1.8.8.6.3.2.1.cmml">‖</mo><mrow id="S3.E6.m1.8.8.6.3.1.1" xref="S3.E6.m1.8.8.6.3.1.1.cmml"><msub id="S3.E6.m1.8.8.6.3.1.1.2" xref="S3.E6.m1.8.8.6.3.1.1.2.cmml"><mi id="S3.E6.m1.8.8.6.3.1.1.2.2" xref="S3.E6.m1.8.8.6.3.1.1.2.2.cmml">h</mi><mrow id="S3.E6.m1.7.7.5.2.2.4" xref="S3.E6.m1.7.7.5.2.2.3.cmml"><mi id="S3.E6.m1.6.6.4.1.1.1" xref="S3.E6.m1.6.6.4.1.1.1.cmml">k</mi><mo id="S3.E6.m1.7.7.5.2.2.4.1" xref="S3.E6.m1.7.7.5.2.2.3.cmml">,</mo><mi id="S3.E6.m1.7.7.5.2.2.2" xref="S3.E6.m1.7.7.5.2.2.2.cmml">i</mi></mrow></msub><mo id="S3.E6.m1.8.8.6.3.1.1.1" xref="S3.E6.m1.8.8.6.3.1.1.1.cmml">−</mo><mi id="S3.E6.m1.8.8.6.3.1.1.3" xref="S3.E6.m1.8.8.6.3.1.1.3.cmml">p</mi></mrow><mo stretchy="false" id="S3.E6.m1.8.8.6.3.1.3" xref="S3.E6.m1.8.8.6.3.2.1.cmml">‖</mo></mrow><mn id="S3.E6.m1.8.8.6.5" xref="S3.E6.m1.8.8.6.5.cmml">2</mn></msub></mfrac><mo lspace="0em" rspace="0em" id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.1" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.1.cmml">​</mo><msub id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.cmml"><mi id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.2" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.2.cmml">v</mi><mi id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.3" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.1a" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.1.cmml">​</mo><mrow id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.3.2" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.cmml"><mo stretchy="false" id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.3.2.1" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.cmml">(</mo><mi id="S3.E6.m1.9.9" xref="S3.E6.m1.9.9.cmml">p</mi><mo stretchy="false" id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.3.2.2" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.cmml">)</mo></mrow></mrow><mo id="S3.E6.m1.10.10.1.1.1.1.1.1.1.1" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.1.cmml">≥</mo><mi id="S3.E6.m1.10.10.1.1.1.1.1.1.1.3" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.3.cmml">θ</mi></mrow><mo stretchy="false" id="S3.E6.m1.10.10.1.1.1.1.1.1.3" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow></mrow><mo id="S3.E6.m1.10.10.1.2" xref="S3.E6.m1.10.10.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E6.m1.10b"><apply id="S3.E6.m1.10.10.1.1.cmml" xref="S3.E6.m1.10.10.1"><eq id="S3.E6.m1.10.10.1.1.2.cmml" xref="S3.E6.m1.10.10.1.1.2"></eq><apply id="S3.E6.m1.10.10.1.1.3.cmml" xref="S3.E6.m1.10.10.1.1.3"><csymbol cd="ambiguous" id="S3.E6.m1.10.10.1.1.3.1.cmml" xref="S3.E6.m1.10.10.1.1.3">subscript</csymbol><ci id="S3.E6.m1.10.10.1.1.3.2.cmml" xref="S3.E6.m1.10.10.1.1.3.2">𝑤</ci><list id="S3.E6.m1.2.2.2.3.cmml" xref="S3.E6.m1.2.2.2.4"><ci id="S3.E6.m1.1.1.1.1.cmml" xref="S3.E6.m1.1.1.1.1">𝑘</ci><ci id="S3.E6.m1.2.2.2.2.cmml" xref="S3.E6.m1.2.2.2.2">𝑖</ci></list></apply><apply id="S3.E6.m1.10.10.1.1.1.cmml" xref="S3.E6.m1.10.10.1.1.1"><apply id="S3.E6.m1.10.10.1.1.1.2.cmml" xref="S3.E6.m1.10.10.1.1.1.2"><csymbol cd="ambiguous" id="S3.E6.m1.10.10.1.1.1.2.1.cmml" xref="S3.E6.m1.10.10.1.1.1.2">subscript</csymbol><sum id="S3.E6.m1.10.10.1.1.1.2.2.cmml" xref="S3.E6.m1.10.10.1.1.1.2.2"></sum><apply id="S3.E6.m1.10.10.1.1.1.2.3.cmml" xref="S3.E6.m1.10.10.1.1.1.2.3"><in id="S3.E6.m1.10.10.1.1.1.2.3.1.cmml" xref="S3.E6.m1.10.10.1.1.1.2.3.1"></in><ci id="S3.E6.m1.10.10.1.1.1.2.3.2.cmml" xref="S3.E6.m1.10.10.1.1.1.2.3.2">𝑝</ci><ci id="S3.E6.m1.10.10.1.1.1.2.3.3.cmml" xref="S3.E6.m1.10.10.1.1.1.2.3.3">𝑂</ci></apply></apply><apply id="S3.E6.m1.10.10.1.1.1.1.cmml" xref="S3.E6.m1.10.10.1.1.1.1"><times id="S3.E6.m1.10.10.1.1.1.1.2.cmml" xref="S3.E6.m1.10.10.1.1.1.1.2"></times><ci id="S3.E6.m1.10.10.1.1.1.1.3.cmml" xref="S3.E6.m1.10.10.1.1.1.1.3">𝕀</ci><apply id="S3.E6.m1.10.10.1.1.1.1.1.1.1.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1"><geq id="S3.E6.m1.10.10.1.1.1.1.1.1.1.1.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.1"></geq><apply id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2"><times id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.1"></times><apply id="S3.E6.m1.8.8.cmml" xref="S3.E6.m1.8.8"><divide id="S3.E6.m1.8.8.7.cmml" xref="S3.E6.m1.8.8"></divide><apply id="S3.E6.m1.5.5.3.cmml" xref="S3.E6.m1.5.5.3"><csymbol cd="ambiguous" id="S3.E6.m1.5.5.3.4.cmml" xref="S3.E6.m1.5.5.3">superscript</csymbol><apply id="S3.E6.m1.5.5.3.3.1.1.cmml" xref="S3.E6.m1.5.5.3.3.1"><minus id="S3.E6.m1.5.5.3.3.1.1.1.cmml" xref="S3.E6.m1.5.5.3.3.1.1.1"></minus><apply id="S3.E6.m1.5.5.3.3.1.1.2.cmml" xref="S3.E6.m1.5.5.3.3.1.1.2"><csymbol cd="ambiguous" id="S3.E6.m1.5.5.3.3.1.1.2.1.cmml" xref="S3.E6.m1.5.5.3.3.1.1.2">subscript</csymbol><ci id="S3.E6.m1.5.5.3.3.1.1.2.2.cmml" xref="S3.E6.m1.5.5.3.3.1.1.2.2">ℎ</ci><list id="S3.E6.m1.4.4.2.2.2.3.cmml" xref="S3.E6.m1.4.4.2.2.2.4"><ci id="S3.E6.m1.3.3.1.1.1.1.cmml" xref="S3.E6.m1.3.3.1.1.1.1">𝑘</ci><ci id="S3.E6.m1.4.4.2.2.2.2.cmml" xref="S3.E6.m1.4.4.2.2.2.2">𝑖</ci></list></apply><ci id="S3.E6.m1.5.5.3.3.1.1.3.cmml" xref="S3.E6.m1.5.5.3.3.1.1.3">𝑝</ci></apply><ci id="S3.E6.m1.5.5.3.5.cmml" xref="S3.E6.m1.5.5.3.5">𝑇</ci></apply><apply id="S3.E6.m1.8.8.6.cmml" xref="S3.E6.m1.8.8.6"><csymbol cd="ambiguous" id="S3.E6.m1.8.8.6.4.cmml" xref="S3.E6.m1.8.8.6">subscript</csymbol><apply id="S3.E6.m1.8.8.6.3.2.cmml" xref="S3.E6.m1.8.8.6.3.1"><csymbol cd="latexml" id="S3.E6.m1.8.8.6.3.2.1.cmml" xref="S3.E6.m1.8.8.6.3.1.2">norm</csymbol><apply id="S3.E6.m1.8.8.6.3.1.1.cmml" xref="S3.E6.m1.8.8.6.3.1.1"><minus id="S3.E6.m1.8.8.6.3.1.1.1.cmml" xref="S3.E6.m1.8.8.6.3.1.1.1"></minus><apply id="S3.E6.m1.8.8.6.3.1.1.2.cmml" xref="S3.E6.m1.8.8.6.3.1.1.2"><csymbol cd="ambiguous" id="S3.E6.m1.8.8.6.3.1.1.2.1.cmml" xref="S3.E6.m1.8.8.6.3.1.1.2">subscript</csymbol><ci id="S3.E6.m1.8.8.6.3.1.1.2.2.cmml" xref="S3.E6.m1.8.8.6.3.1.1.2.2">ℎ</ci><list id="S3.E6.m1.7.7.5.2.2.3.cmml" xref="S3.E6.m1.7.7.5.2.2.4"><ci id="S3.E6.m1.6.6.4.1.1.1.cmml" xref="S3.E6.m1.6.6.4.1.1.1">𝑘</ci><ci id="S3.E6.m1.7.7.5.2.2.2.cmml" xref="S3.E6.m1.7.7.5.2.2.2">𝑖</ci></list></apply><ci id="S3.E6.m1.8.8.6.3.1.1.3.cmml" xref="S3.E6.m1.8.8.6.3.1.1.3">𝑝</ci></apply></apply><cn type="integer" id="S3.E6.m1.8.8.6.5.cmml" xref="S3.E6.m1.8.8.6.5">2</cn></apply></apply><apply id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2"><csymbol cd="ambiguous" id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.1.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2">subscript</csymbol><ci id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.2.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.2">𝑣</ci><ci id="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.3.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.2.2.3">𝑘</ci></apply><ci id="S3.E6.m1.9.9.cmml" xref="S3.E6.m1.9.9">𝑝</ci></apply><ci id="S3.E6.m1.10.10.1.1.1.1.1.1.1.3.cmml" xref="S3.E6.m1.10.10.1.1.1.1.1.1.1.3">𝜃</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E6.m1.10c">w_{k,i}=\sum_{p\in O}\mathbb{I}(\frac{(h_{k,i}-p)^{T}}{||h_{k,i}-p||_{2}}v_{k}(p)\geq\theta),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.p4.3" class="ltx_p">where <math id="S3.SS3.p4.1.m1.1" class="ltx_Math" alttext="O" display="inline"><semantics id="S3.SS3.p4.1.m1.1a"><mi id="S3.SS3.p4.1.m1.1.1" xref="S3.SS3.p4.1.m1.1.1.cmml">O</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.1.m1.1b"><ci id="S3.SS3.p4.1.m1.1.1.cmml" xref="S3.SS3.p4.1.m1.1.1">𝑂</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.1.m1.1c">O</annotation></semantics></math> is the set of sample points, <math id="S3.SS3.p4.2.m2.1" class="ltx_Math" alttext="\mathbb{I}" display="inline"><semantics id="S3.SS3.p4.2.m2.1a"><mi id="S3.SS3.p4.2.m2.1.1" xref="S3.SS3.p4.2.m2.1.1.cmml">𝕀</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.2.m2.1b"><ci id="S3.SS3.p4.2.m2.1.1.cmml" xref="S3.SS3.p4.2.m2.1.1">𝕀</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.2.m2.1c">\mathbb{I}</annotation></semantics></math> denotes the indicator function, <math id="S3.SS3.p4.3.m3.1" class="ltx_Math" alttext="\theta" display="inline"><semantics id="S3.SS3.p4.3.m3.1a"><mi id="S3.SS3.p4.3.m3.1.1" xref="S3.SS3.p4.3.m3.1.1.cmml">θ</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.3.m3.1b"><ci id="S3.SS3.p4.3.m3.1.1.cmml" xref="S3.SS3.p4.3.m3.1.1">𝜃</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.3.m3.1c">\theta</annotation></semantics></math> is a threshold which is assigned to 0.999 here.</p>
+</div>
+<div id="S3.SS3.p5" class="ltx_para">
+<p id="S3.SS3.p5.2" class="ltx_p">The inferred position with the highest confidence is taken as the final position <math id="S3.SS3.p5.1.m1.1" class="ltx_Math" alttext="s_{k}" display="inline"><semantics id="S3.SS3.p5.1.m1.1a"><msub id="S3.SS3.p5.1.m1.1.1" xref="S3.SS3.p5.1.m1.1.1.cmml"><mi id="S3.SS3.p5.1.m1.1.1.2" xref="S3.SS3.p5.1.m1.1.1.2.cmml">s</mi><mi id="S3.SS3.p5.1.m1.1.1.3" xref="S3.SS3.p5.1.m1.1.1.3.cmml">k</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p5.1.m1.1b"><apply id="S3.SS3.p5.1.m1.1.1.cmml" xref="S3.SS3.p5.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p5.1.m1.1.1.1.cmml" xref="S3.SS3.p5.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.p5.1.m1.1.1.2.cmml" xref="S3.SS3.p5.1.m1.1.1.2">𝑠</ci><ci id="S3.SS3.p5.1.m1.1.1.3.cmml" xref="S3.SS3.p5.1.m1.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p5.1.m1.1c">s_{k}</annotation></semantics></math> of the keypoint, and the corresponding confidence is <math id="S3.SS3.p5.2.m2.1" class="ltx_Math" alttext="w_{k}" display="inline"><semantics id="S3.SS3.p5.2.m2.1a"><msub id="S3.SS3.p5.2.m2.1.1" xref="S3.SS3.p5.2.m2.1.1.cmml"><mi id="S3.SS3.p5.2.m2.1.1.2" xref="S3.SS3.p5.2.m2.1.1.2.cmml">w</mi><mi id="S3.SS3.p5.2.m2.1.1.3" xref="S3.SS3.p5.2.m2.1.1.3.cmml">k</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p5.2.m2.1b"><apply id="S3.SS3.p5.2.m2.1.1.cmml" xref="S3.SS3.p5.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.p5.2.m2.1.1.1.cmml" xref="S3.SS3.p5.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.p5.2.m2.1.1.2.cmml" xref="S3.SS3.p5.2.m2.1.1.2">𝑤</ci><ci id="S3.SS3.p5.2.m2.1.1.3.cmml" xref="S3.SS3.p5.2.m2.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p5.2.m2.1c">w_{k}</annotation></semantics></math>, see (7).</p>
+</div>
+<div id="S3.SS3.p6" class="ltx_para">
+<table id="S3.E7" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E7.m1.7" class="ltx_Math" alttext="s_{k}=\arg\max_{h_{k,i}}w_{k,i},\quad w_{k}=\max w_{k,i}," display="block"><semantics id="S3.E7.m1.7a"><mrow id="S3.E7.m1.7.7.1"><mrow id="S3.E7.m1.7.7.1.1.2" xref="S3.E7.m1.7.7.1.1.3.cmml"><mrow id="S3.E7.m1.7.7.1.1.1.1" xref="S3.E7.m1.7.7.1.1.1.1.cmml"><msub id="S3.E7.m1.7.7.1.1.1.1.2" xref="S3.E7.m1.7.7.1.1.1.1.2.cmml"><mi id="S3.E7.m1.7.7.1.1.1.1.2.2" xref="S3.E7.m1.7.7.1.1.1.1.2.2.cmml">s</mi><mi id="S3.E7.m1.7.7.1.1.1.1.2.3" xref="S3.E7.m1.7.7.1.1.1.1.2.3.cmml">k</mi></msub><mo id="S3.E7.m1.7.7.1.1.1.1.1" xref="S3.E7.m1.7.7.1.1.1.1.1.cmml">=</mo><mrow id="S3.E7.m1.7.7.1.1.1.1.3" xref="S3.E7.m1.7.7.1.1.1.1.3.cmml"><mi id="S3.E7.m1.7.7.1.1.1.1.3.1" xref="S3.E7.m1.7.7.1.1.1.1.3.1.cmml">arg</mi><mo lspace="0.167em" id="S3.E7.m1.7.7.1.1.1.1.3a" xref="S3.E7.m1.7.7.1.1.1.1.3.cmml">⁡</mo><mrow id="S3.E7.m1.7.7.1.1.1.1.3.2" xref="S3.E7.m1.7.7.1.1.1.1.3.2.cmml"><munder id="S3.E7.m1.7.7.1.1.1.1.3.2.1" xref="S3.E7.m1.7.7.1.1.1.1.3.2.1.cmml"><mi id="S3.E7.m1.7.7.1.1.1.1.3.2.1.2" xref="S3.E7.m1.7.7.1.1.1.1.3.2.1.2.cmml">max</mi><msub id="S3.E7.m1.2.2.2" xref="S3.E7.m1.2.2.2.cmml"><mi id="S3.E7.m1.2.2.2.4" xref="S3.E7.m1.2.2.2.4.cmml">h</mi><mrow id="S3.E7.m1.2.2.2.2.2.4" xref="S3.E7.m1.2.2.2.2.2.3.cmml"><mi id="S3.E7.m1.1.1.1.1.1.1" xref="S3.E7.m1.1.1.1.1.1.1.cmml">k</mi><mo id="S3.E7.m1.2.2.2.2.2.4.1" xref="S3.E7.m1.2.2.2.2.2.3.cmml">,</mo><mi id="S3.E7.m1.2.2.2.2.2.2" xref="S3.E7.m1.2.2.2.2.2.2.cmml">i</mi></mrow></msub></munder><mo lspace="0.167em" id="S3.E7.m1.7.7.1.1.1.1.3.2a" xref="S3.E7.m1.7.7.1.1.1.1.3.2.cmml">⁡</mo><msub id="S3.E7.m1.7.7.1.1.1.1.3.2.2" xref="S3.E7.m1.7.7.1.1.1.1.3.2.2.cmml"><mi id="S3.E7.m1.7.7.1.1.1.1.3.2.2.2" xref="S3.E7.m1.7.7.1.1.1.1.3.2.2.2.cmml">w</mi><mrow id="S3.E7.m1.4.4.2.4" xref="S3.E7.m1.4.4.2.3.cmml"><mi id="S3.E7.m1.3.3.1.1" xref="S3.E7.m1.3.3.1.1.cmml">k</mi><mo id="S3.E7.m1.4.4.2.4.1" xref="S3.E7.m1.4.4.2.3.cmml">,</mo><mi id="S3.E7.m1.4.4.2.2" xref="S3.E7.m1.4.4.2.2.cmml">i</mi></mrow></msub></mrow></mrow></mrow><mo rspace="1.167em" id="S3.E7.m1.7.7.1.1.2.3" xref="S3.E7.m1.7.7.1.1.3a.cmml">,</mo><mrow id="S3.E7.m1.7.7.1.1.2.2" xref="S3.E7.m1.7.7.1.1.2.2.cmml"><msub id="S3.E7.m1.7.7.1.1.2.2.2" xref="S3.E7.m1.7.7.1.1.2.2.2.cmml"><mi id="S3.E7.m1.7.7.1.1.2.2.2.2" xref="S3.E7.m1.7.7.1.1.2.2.2.2.cmml">w</mi><mi id="S3.E7.m1.7.7.1.1.2.2.2.3" xref="S3.E7.m1.7.7.1.1.2.2.2.3.cmml">k</mi></msub><mo id="S3.E7.m1.7.7.1.1.2.2.1" xref="S3.E7.m1.7.7.1.1.2.2.1.cmml">=</mo><mrow id="S3.E7.m1.7.7.1.1.2.2.3" xref="S3.E7.m1.7.7.1.1.2.2.3.cmml"><mi id="S3.E7.m1.7.7.1.1.2.2.3.1" xref="S3.E7.m1.7.7.1.1.2.2.3.1.cmml">max</mi><mo lspace="0.167em" id="S3.E7.m1.7.7.1.1.2.2.3a" xref="S3.E7.m1.7.7.1.1.2.2.3.cmml">⁡</mo><msub id="S3.E7.m1.7.7.1.1.2.2.3.2" xref="S3.E7.m1.7.7.1.1.2.2.3.2.cmml"><mi id="S3.E7.m1.7.7.1.1.2.2.3.2.2" xref="S3.E7.m1.7.7.1.1.2.2.3.2.2.cmml">w</mi><mrow id="S3.E7.m1.6.6.2.4" xref="S3.E7.m1.6.6.2.3.cmml"><mi id="S3.E7.m1.5.5.1.1" xref="S3.E7.m1.5.5.1.1.cmml">k</mi><mo id="S3.E7.m1.6.6.2.4.1" xref="S3.E7.m1.6.6.2.3.cmml">,</mo><mi id="S3.E7.m1.6.6.2.2" xref="S3.E7.m1.6.6.2.2.cmml">i</mi></mrow></msub></mrow></mrow></mrow><mo id="S3.E7.m1.7.7.1.2">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E7.m1.7b"><apply id="S3.E7.m1.7.7.1.1.3.cmml" xref="S3.E7.m1.7.7.1.1.2"><csymbol cd="ambiguous" id="S3.E7.m1.7.7.1.1.3a.cmml" xref="S3.E7.m1.7.7.1.1.2.3">formulae-sequence</csymbol><apply id="S3.E7.m1.7.7.1.1.1.1.cmml" xref="S3.E7.m1.7.7.1.1.1.1"><eq id="S3.E7.m1.7.7.1.1.1.1.1.cmml" xref="S3.E7.m1.7.7.1.1.1.1.1"></eq><apply id="S3.E7.m1.7.7.1.1.1.1.2.cmml" xref="S3.E7.m1.7.7.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E7.m1.7.7.1.1.1.1.2.1.cmml" xref="S3.E7.m1.7.7.1.1.1.1.2">subscript</csymbol><ci id="S3.E7.m1.7.7.1.1.1.1.2.2.cmml" xref="S3.E7.m1.7.7.1.1.1.1.2.2">𝑠</ci><ci id="S3.E7.m1.7.7.1.1.1.1.2.3.cmml" xref="S3.E7.m1.7.7.1.1.1.1.2.3">𝑘</ci></apply><apply id="S3.E7.m1.7.7.1.1.1.1.3.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3"><arg id="S3.E7.m1.7.7.1.1.1.1.3.1.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3.1"></arg><apply id="S3.E7.m1.7.7.1.1.1.1.3.2.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3.2"><apply id="S3.E7.m1.7.7.1.1.1.1.3.2.1.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3.2.1"><csymbol cd="ambiguous" id="S3.E7.m1.7.7.1.1.1.1.3.2.1.1.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3.2.1">subscript</csymbol><max id="S3.E7.m1.7.7.1.1.1.1.3.2.1.2.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3.2.1.2"></max><apply id="S3.E7.m1.2.2.2.cmml" xref="S3.E7.m1.2.2.2"><csymbol cd="ambiguous" id="S3.E7.m1.2.2.2.3.cmml" xref="S3.E7.m1.2.2.2">subscript</csymbol><ci id="S3.E7.m1.2.2.2.4.cmml" xref="S3.E7.m1.2.2.2.4">ℎ</ci><list id="S3.E7.m1.2.2.2.2.2.3.cmml" xref="S3.E7.m1.2.2.2.2.2.4"><ci id="S3.E7.m1.1.1.1.1.1.1.cmml" xref="S3.E7.m1.1.1.1.1.1.1">𝑘</ci><ci id="S3.E7.m1.2.2.2.2.2.2.cmml" xref="S3.E7.m1.2.2.2.2.2.2">𝑖</ci></list></apply></apply><apply id="S3.E7.m1.7.7.1.1.1.1.3.2.2.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3.2.2"><csymbol cd="ambiguous" id="S3.E7.m1.7.7.1.1.1.1.3.2.2.1.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3.2.2">subscript</csymbol><ci id="S3.E7.m1.7.7.1.1.1.1.3.2.2.2.cmml" xref="S3.E7.m1.7.7.1.1.1.1.3.2.2.2">𝑤</ci><list id="S3.E7.m1.4.4.2.3.cmml" xref="S3.E7.m1.4.4.2.4"><ci id="S3.E7.m1.3.3.1.1.cmml" xref="S3.E7.m1.3.3.1.1">𝑘</ci><ci id="S3.E7.m1.4.4.2.2.cmml" xref="S3.E7.m1.4.4.2.2">𝑖</ci></list></apply></apply></apply></apply><apply id="S3.E7.m1.7.7.1.1.2.2.cmml" xref="S3.E7.m1.7.7.1.1.2.2"><eq id="S3.E7.m1.7.7.1.1.2.2.1.cmml" xref="S3.E7.m1.7.7.1.1.2.2.1"></eq><apply id="S3.E7.m1.7.7.1.1.2.2.2.cmml" xref="S3.E7.m1.7.7.1.1.2.2.2"><csymbol cd="ambiguous" id="S3.E7.m1.7.7.1.1.2.2.2.1.cmml" xref="S3.E7.m1.7.7.1.1.2.2.2">subscript</csymbol><ci id="S3.E7.m1.7.7.1.1.2.2.2.2.cmml" xref="S3.E7.m1.7.7.1.1.2.2.2.2">𝑤</ci><ci id="S3.E7.m1.7.7.1.1.2.2.2.3.cmml" xref="S3.E7.m1.7.7.1.1.2.2.2.3">𝑘</ci></apply><apply id="S3.E7.m1.7.7.1.1.2.2.3.cmml" xref="S3.E7.m1.7.7.1.1.2.2.3"><max id="S3.E7.m1.7.7.1.1.2.2.3.1.cmml" xref="S3.E7.m1.7.7.1.1.2.2.3.1"></max><apply id="S3.E7.m1.7.7.1.1.2.2.3.2.cmml" xref="S3.E7.m1.7.7.1.1.2.2.3.2"><csymbol cd="ambiguous" id="S3.E7.m1.7.7.1.1.2.2.3.2.1.cmml" xref="S3.E7.m1.7.7.1.1.2.2.3.2">subscript</csymbol><ci id="S3.E7.m1.7.7.1.1.2.2.3.2.2.cmml" xref="S3.E7.m1.7.7.1.1.2.2.3.2.2">𝑤</ci><list id="S3.E7.m1.6.6.2.3.cmml" xref="S3.E7.m1.6.6.2.4"><ci id="S3.E7.m1.5.5.1.1.cmml" xref="S3.E7.m1.5.5.1.1">𝑘</ci><ci id="S3.E7.m1.6.6.2.2.cmml" xref="S3.E7.m1.6.6.2.2">𝑖</ci></list></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E7.m1.7c">s_{k}=\arg\max_{h_{k,i}}w_{k,i},\quad w_{k}=\max w_{k,i},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS4.4.1.1" class="ltx_text">III-D</span> </span><span id="S3.SS4.5.2" class="ltx_text ltx_font_italic">Pose Calculate and Refine</span>
+</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.2" class="ltx_p">For K key points <math id="S3.SS4.p1.1.m1.1" class="ltx_Math" alttext="s_{k}" display="inline"><semantics id="S3.SS4.p1.1.m1.1a"><msub id="S3.SS4.p1.1.m1.1.1" xref="S3.SS4.p1.1.m1.1.1.cmml"><mi id="S3.SS4.p1.1.m1.1.1.2" xref="S3.SS4.p1.1.m1.1.1.2.cmml">s</mi><mi id="S3.SS4.p1.1.m1.1.1.3" xref="S3.SS4.p1.1.m1.1.1.3.cmml">k</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.1.m1.1b"><apply id="S3.SS4.p1.1.m1.1.1.cmml" xref="S3.SS4.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS4.p1.1.m1.1.1.1.cmml" xref="S3.SS4.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS4.p1.1.m1.1.1.2.cmml" xref="S3.SS4.p1.1.m1.1.1.2">𝑠</ci><ci id="S3.SS4.p1.1.m1.1.1.3.cmml" xref="S3.SS4.p1.1.m1.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.1.m1.1c">s_{k}</annotation></semantics></math> of the scene point cloud and K key points <math id="S3.SS4.p1.2.m2.1" class="ltx_Math" alttext="m_{k}" display="inline"><semantics id="S3.SS4.p1.2.m2.1a"><msub id="S3.SS4.p1.2.m2.1.1" xref="S3.SS4.p1.2.m2.1.1.cmml"><mi id="S3.SS4.p1.2.m2.1.1.2" xref="S3.SS4.p1.2.m2.1.1.2.cmml">m</mi><mi id="S3.SS4.p1.2.m2.1.1.3" xref="S3.SS4.p1.2.m2.1.1.3.cmml">k</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.2.m2.1b"><apply id="S3.SS4.p1.2.m2.1.1.cmml" xref="S3.SS4.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS4.p1.2.m2.1.1.1.cmml" xref="S3.SS4.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS4.p1.2.m2.1.1.2.cmml" xref="S3.SS4.p1.2.m2.1.1.2">𝑚</ci><ci id="S3.SS4.p1.2.m2.1.1.3.cmml" xref="S3.SS4.p1.2.m2.1.1.3">𝑘</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.2.m2.1c">m_{k}</annotation></semantics></math> of the model point cloud, the weighted least square method is used to calculate the pose transformation, in which the weight is the confidence of each keypoint. The goal is to find the transformation matrix that makes these two keypoint sets closest to each other. The pose transformation matrix can be calculated as follows in (8).</p>
+</div>
+<div id="S3.SS4.p2" class="ltx_para">
+<table id="S3.E8" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E8.m1.5" class="ltx_Math" alttext="R,t=\arg\min_{R,t}{\sum_{k=1}^{K}w_{k}||(Rm_{k}+t)-s_{k}||^{2}}," display="block"><semantics id="S3.E8.m1.5a"><mrow id="S3.E8.m1.5.5.1" xref="S3.E8.m1.5.5.1.1.cmml"><mrow id="S3.E8.m1.5.5.1.1" xref="S3.E8.m1.5.5.1.1.cmml"><mrow id="S3.E8.m1.5.5.1.1.3.2" xref="S3.E8.m1.5.5.1.1.3.1.cmml"><mi id="S3.E8.m1.3.3" xref="S3.E8.m1.3.3.cmml">R</mi><mo id="S3.E8.m1.5.5.1.1.3.2.1" xref="S3.E8.m1.5.5.1.1.3.1.cmml">,</mo><mi id="S3.E8.m1.4.4" xref="S3.E8.m1.4.4.cmml">t</mi></mrow><mo id="S3.E8.m1.5.5.1.1.2" xref="S3.E8.m1.5.5.1.1.2.cmml">=</mo><mrow id="S3.E8.m1.5.5.1.1.1" xref="S3.E8.m1.5.5.1.1.1.cmml"><mrow id="S3.E8.m1.5.5.1.1.1.3" xref="S3.E8.m1.5.5.1.1.1.3.cmml"><mi id="S3.E8.m1.5.5.1.1.1.3.1" xref="S3.E8.m1.5.5.1.1.1.3.1.cmml">arg</mi><mo lspace="0.167em" id="S3.E8.m1.5.5.1.1.1.3a" xref="S3.E8.m1.5.5.1.1.1.3.cmml">⁡</mo><munder id="S3.E8.m1.5.5.1.1.1.3.2" xref="S3.E8.m1.5.5.1.1.1.3.2.cmml"><mi id="S3.E8.m1.5.5.1.1.1.3.2.2" xref="S3.E8.m1.5.5.1.1.1.3.2.2.cmml">min</mi><mrow id="S3.E8.m1.2.2.2.4" xref="S3.E8.m1.2.2.2.3.cmml"><mi id="S3.E8.m1.1.1.1.1" xref="S3.E8.m1.1.1.1.1.cmml">R</mi><mo id="S3.E8.m1.2.2.2.4.1" xref="S3.E8.m1.2.2.2.3.cmml">,</mo><mi id="S3.E8.m1.2.2.2.2" xref="S3.E8.m1.2.2.2.2.cmml">t</mi></mrow></munder></mrow><mo lspace="0em" rspace="0em" id="S3.E8.m1.5.5.1.1.1.2" xref="S3.E8.m1.5.5.1.1.1.2.cmml">​</mo><mrow id="S3.E8.m1.5.5.1.1.1.1" xref="S3.E8.m1.5.5.1.1.1.1.cmml"><munderover id="S3.E8.m1.5.5.1.1.1.1.2" xref="S3.E8.m1.5.5.1.1.1.1.2.cmml"><mo movablelimits="false" id="S3.E8.m1.5.5.1.1.1.1.2.2.2" xref="S3.E8.m1.5.5.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S3.E8.m1.5.5.1.1.1.1.2.2.3" xref="S3.E8.m1.5.5.1.1.1.1.2.2.3.cmml"><mi id="S3.E8.m1.5.5.1.1.1.1.2.2.3.2" xref="S3.E8.m1.5.5.1.1.1.1.2.2.3.2.cmml">k</mi><mo id="S3.E8.m1.5.5.1.1.1.1.2.2.3.1" xref="S3.E8.m1.5.5.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S3.E8.m1.5.5.1.1.1.1.2.2.3.3" xref="S3.E8.m1.5.5.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S3.E8.m1.5.5.1.1.1.1.2.3" xref="S3.E8.m1.5.5.1.1.1.1.2.3.cmml">K</mi></munderover><mrow id="S3.E8.m1.5.5.1.1.1.1.1" xref="S3.E8.m1.5.5.1.1.1.1.1.cmml"><msub id="S3.E8.m1.5.5.1.1.1.1.1.3" xref="S3.E8.m1.5.5.1.1.1.1.1.3.cmml"><mi id="S3.E8.m1.5.5.1.1.1.1.1.3.2" xref="S3.E8.m1.5.5.1.1.1.1.1.3.2.cmml">w</mi><mi id="S3.E8.m1.5.5.1.1.1.1.1.3.3" xref="S3.E8.m1.5.5.1.1.1.1.1.3.3.cmml">k</mi></msub><mo lspace="0em" rspace="0em" id="S3.E8.m1.5.5.1.1.1.1.1.2" xref="S3.E8.m1.5.5.1.1.1.1.1.2.cmml">​</mo><msup id="S3.E8.m1.5.5.1.1.1.1.1.1" xref="S3.E8.m1.5.5.1.1.1.1.1.1.cmml"><mrow id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.2.cmml"><mo stretchy="false" id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.2" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.2" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><msub id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml"><mi id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml">m</mi><mi id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml">k</mi></msub></mrow><mo id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">+</mo><mi id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml">t</mi></mrow><mo stretchy="false" id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.3" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.2" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.2.cmml">−</mo><msub id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.cmml"><mi id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.2" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.2.cmml">s</mi><mi id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.3" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.3.cmml">k</mi></msub></mrow><mo stretchy="false" id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.3" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.2.1.cmml">‖</mo></mrow><mn id="S3.E8.m1.5.5.1.1.1.1.1.1.3" xref="S3.E8.m1.5.5.1.1.1.1.1.1.3.cmml">2</mn></msup></mrow></mrow></mrow></mrow><mo id="S3.E8.m1.5.5.1.2" xref="S3.E8.m1.5.5.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E8.m1.5b"><apply id="S3.E8.m1.5.5.1.1.cmml" xref="S3.E8.m1.5.5.1"><eq id="S3.E8.m1.5.5.1.1.2.cmml" xref="S3.E8.m1.5.5.1.1.2"></eq><list id="S3.E8.m1.5.5.1.1.3.1.cmml" xref="S3.E8.m1.5.5.1.1.3.2"><ci id="S3.E8.m1.3.3.cmml" xref="S3.E8.m1.3.3">𝑅</ci><ci id="S3.E8.m1.4.4.cmml" xref="S3.E8.m1.4.4">𝑡</ci></list><apply id="S3.E8.m1.5.5.1.1.1.cmml" xref="S3.E8.m1.5.5.1.1.1"><times id="S3.E8.m1.5.5.1.1.1.2.cmml" xref="S3.E8.m1.5.5.1.1.1.2"></times><apply id="S3.E8.m1.5.5.1.1.1.3.cmml" xref="S3.E8.m1.5.5.1.1.1.3"><arg id="S3.E8.m1.5.5.1.1.1.3.1.cmml" xref="S3.E8.m1.5.5.1.1.1.3.1"></arg><apply id="S3.E8.m1.5.5.1.1.1.3.2.cmml" xref="S3.E8.m1.5.5.1.1.1.3.2"><csymbol cd="ambiguous" id="S3.E8.m1.5.5.1.1.1.3.2.1.cmml" xref="S3.E8.m1.5.5.1.1.1.3.2">subscript</csymbol><min id="S3.E8.m1.5.5.1.1.1.3.2.2.cmml" xref="S3.E8.m1.5.5.1.1.1.3.2.2"></min><list id="S3.E8.m1.2.2.2.3.cmml" xref="S3.E8.m1.2.2.2.4"><ci id="S3.E8.m1.1.1.1.1.cmml" xref="S3.E8.m1.1.1.1.1">𝑅</ci><ci id="S3.E8.m1.2.2.2.2.cmml" xref="S3.E8.m1.2.2.2.2">𝑡</ci></list></apply></apply><apply id="S3.E8.m1.5.5.1.1.1.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1"><apply id="S3.E8.m1.5.5.1.1.1.1.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E8.m1.5.5.1.1.1.1.2.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2">superscript</csymbol><apply id="S3.E8.m1.5.5.1.1.1.1.2.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E8.m1.5.5.1.1.1.1.2.2.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2">subscript</csymbol><sum id="S3.E8.m1.5.5.1.1.1.1.2.2.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2.2.2"></sum><apply id="S3.E8.m1.5.5.1.1.1.1.2.2.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2.2.3"><eq id="S3.E8.m1.5.5.1.1.1.1.2.2.3.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2.2.3.1"></eq><ci id="S3.E8.m1.5.5.1.1.1.1.2.2.3.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2.2.3.2">𝑘</ci><cn type="integer" id="S3.E8.m1.5.5.1.1.1.1.2.2.3.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S3.E8.m1.5.5.1.1.1.1.2.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.2.3">𝐾</ci></apply><apply id="S3.E8.m1.5.5.1.1.1.1.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1"><times id="S3.E8.m1.5.5.1.1.1.1.1.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.2"></times><apply id="S3.E8.m1.5.5.1.1.1.1.1.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E8.m1.5.5.1.1.1.1.1.3.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E8.m1.5.5.1.1.1.1.1.3.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.3.2">𝑤</ci><ci id="S3.E8.m1.5.5.1.1.1.1.1.3.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.3.3">𝑘</ci></apply><apply id="S3.E8.m1.5.5.1.1.1.1.1.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E8.m1.5.5.1.1.1.1.1.1.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1">superscript</csymbol><apply id="S3.E8.m1.5.5.1.1.1.1.1.1.1.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S3.E8.m1.5.5.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.2">norm</csymbol><apply id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1"><minus id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.2"></minus><apply id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1"><plus id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.1"></plus><apply id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2"><times id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.1"></times><ci id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.2">𝑅</ci><apply id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3"><csymbol cd="ambiguous" id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3">subscript</csymbol><ci id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2">𝑚</ci><ci id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3">𝑘</ci></apply></apply><ci id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.1.1.1.3">𝑡</ci></apply><apply id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.2">𝑠</ci><ci id="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.1.1.1.3.3">𝑘</ci></apply></apply></apply><cn type="integer" id="S3.E8.m1.5.5.1.1.1.1.1.1.3.cmml" xref="S3.E8.m1.5.5.1.1.1.1.1.1.3">2</cn></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E8.m1.5c">R,t=\arg\min_{R,t}{\sum_{k=1}^{K}w_{k}||(Rm_{k}+t)-s_{k}||^{2}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(8)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S3.SS4.p3" class="ltx_para">
+<p id="S3.SS4.p3.1" class="ltx_p">Finally, we employ the refine network proposed in DenseFusion <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> to iteratively optimize the pose: the scene point cloud is transformed according to the predicted pose and fed into the refine network to predict the pose residual. The final pose is determined by the predicted initial pose and residual, which is more accurate.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">EXPERIMENTS</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">This section describes experimental results of our proposed method. We evaluate the performance and compare to the state-of-the-art methods on two datasets, LINEMOD dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> and OCCLUSION LINEMOD dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE I: </span>ADD(-S) Accuracy on LINEMOD dataset.</figcaption>
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t">object</th>
+<th id="S4.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">BB8</th>
+<th id="S4.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Pix2Pose</th>
+<th id="S4.T1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">PVNet</th>
+<th id="S4.T1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">PoseCNN</th>
+<th id="S4.T1.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">DenseFusion</th>
+<th id="S4.T1.1.1.1.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">DPOP</th>
+<th id="S4.T1.1.1.1.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Ours</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.2.1" class="ltx_tr">
+<th id="S4.T1.1.2.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">ape</th>
+<td id="S4.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">40.4</td>
+<td id="S4.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">58.1</td>
+<td id="S4.T1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">43.6</td>
+<td id="S4.T1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_t">77.0</td>
+<td id="S4.T1.1.2.1.6" class="ltx_td ltx_align_center ltx_border_t">92.3</td>
+<td id="S4.T1.1.2.1.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">87.7</td>
+<td id="S4.T1.1.2.1.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T1.1.2.1.8.1" class="ltx_text ltx_font_bold">95.5</span></td>
+</tr>
+<tr id="S4.T1.1.3.2" class="ltx_tr">
+<th id="S4.T1.1.3.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">benchvise</th>
+<td id="S4.T1.1.3.2.2" class="ltx_td ltx_align_center">91.8</td>
+<td id="S4.T1.1.3.2.3" class="ltx_td ltx_align_center">91.0</td>
+<td id="S4.T1.1.3.2.4" class="ltx_td ltx_align_center"><span id="S4.T1.1.3.2.4.1" class="ltx_text ltx_font_bold">99.9</span></td>
+<td id="S4.T1.1.3.2.5" class="ltx_td ltx_align_center">97.5</td>
+<td id="S4.T1.1.3.2.6" class="ltx_td ltx_align_center">93.2</td>
+<td id="S4.T1.1.3.2.7" class="ltx_td ltx_align_center ltx_border_r">98.5</td>
+<td id="S4.T1.1.3.2.8" class="ltx_td ltx_align_center">98.6</td>
+</tr>
+<tr id="S4.T1.1.4.3" class="ltx_tr">
+<th id="S4.T1.1.4.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">cam</th>
+<td id="S4.T1.1.4.3.2" class="ltx_td ltx_align_center">55.7</td>
+<td id="S4.T1.1.4.3.3" class="ltx_td ltx_align_center">60.9</td>
+<td id="S4.T1.1.4.3.4" class="ltx_td ltx_align_center">86.9</td>
+<td id="S4.T1.1.4.3.5" class="ltx_td ltx_align_center">93.5</td>
+<td id="S4.T1.1.4.3.6" class="ltx_td ltx_align_center">94.4</td>
+<td id="S4.T1.1.4.3.7" class="ltx_td ltx_align_center ltx_border_r">96.1</td>
+<td id="S4.T1.1.4.3.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.4.3.8.1" class="ltx_text ltx_font_bold">99.3</span></td>
+</tr>
+<tr id="S4.T1.1.5.4" class="ltx_tr">
+<th id="S4.T1.1.5.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">can</th>
+<td id="S4.T1.1.5.4.2" class="ltx_td ltx_align_center">64.1</td>
+<td id="S4.T1.1.5.4.3" class="ltx_td ltx_align_center">84.4</td>
+<td id="S4.T1.1.5.4.4" class="ltx_td ltx_align_center">95.5</td>
+<td id="S4.T1.1.5.4.5" class="ltx_td ltx_align_center">96.5</td>
+<td id="S4.T1.1.5.4.6" class="ltx_td ltx_align_center">93.1</td>
+<td id="S4.T1.1.5.4.7" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T1.1.5.4.7.1" class="ltx_text ltx_font_bold">99.7</span></td>
+<td id="S4.T1.1.5.4.8" class="ltx_td ltx_align_center">99.6</td>
+</tr>
+<tr id="S4.T1.1.6.5" class="ltx_tr">
+<th id="S4.T1.1.6.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">cat</th>
+<td id="S4.T1.1.6.5.2" class="ltx_td ltx_align_center">62.6</td>
+<td id="S4.T1.1.6.5.3" class="ltx_td ltx_align_center">65.0</td>
+<td id="S4.T1.1.6.5.4" class="ltx_td ltx_align_center">79.3</td>
+<td id="S4.T1.1.6.5.5" class="ltx_td ltx_align_center">82.1</td>
+<td id="S4.T1.1.6.5.6" class="ltx_td ltx_align_center">96.5</td>
+<td id="S4.T1.1.6.5.7" class="ltx_td ltx_align_center ltx_border_r">94.7</td>
+<td id="S4.T1.1.6.5.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.6.5.8.1" class="ltx_text ltx_font_bold">99.4</span></td>
+</tr>
+<tr id="S4.T1.1.7.6" class="ltx_tr">
+<th id="S4.T1.1.7.6.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">driller</th>
+<td id="S4.T1.1.7.6.2" class="ltx_td ltx_align_center">74.4</td>
+<td id="S4.T1.1.7.6.3" class="ltx_td ltx_align_center">76.3</td>
+<td id="S4.T1.1.7.6.4" class="ltx_td ltx_align_center">96.4</td>
+<td id="S4.T1.1.7.6.5" class="ltx_td ltx_align_center">95.0</td>
+<td id="S4.T1.1.7.6.6" class="ltx_td ltx_align_center">87.0</td>
+<td id="S4.T1.1.7.6.7" class="ltx_td ltx_align_center ltx_border_r">98.8</td>
+<td id="S4.T1.1.7.6.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.7.6.8.1" class="ltx_text ltx_font_bold">99.1</span></td>
+</tr>
+<tr id="S4.T1.1.8.7" class="ltx_tr">
+<th id="S4.T1.1.8.7.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">duck</th>
+<td id="S4.T1.1.8.7.2" class="ltx_td ltx_align_center">44.3</td>
+<td id="S4.T1.1.8.7.3" class="ltx_td ltx_align_center">43.8</td>
+<td id="S4.T1.1.8.7.4" class="ltx_td ltx_align_center">52.6</td>
+<td id="S4.T1.1.8.7.5" class="ltx_td ltx_align_center">77.7</td>
+<td id="S4.T1.1.8.7.6" class="ltx_td ltx_align_center">92.3</td>
+<td id="S4.T1.1.8.7.7" class="ltx_td ltx_align_center ltx_border_r">86.3</td>
+<td id="S4.T1.1.8.7.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.8.7.8.1" class="ltx_text ltx_font_bold">95.3</span></td>
+</tr>
+<tr id="S4.T1.1.9.8" class="ltx_tr">
+<th id="S4.T1.1.9.8.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">eggbox</th>
+<td id="S4.T1.1.9.8.2" class="ltx_td ltx_align_center">57.8</td>
+<td id="S4.T1.1.9.8.3" class="ltx_td ltx_align_center">96.8</td>
+<td id="S4.T1.1.9.8.4" class="ltx_td ltx_align_center">99.2</td>
+<td id="S4.T1.1.9.8.5" class="ltx_td ltx_align_center">97.1</td>
+<td id="S4.T1.1.9.8.6" class="ltx_td ltx_align_center">99.8</td>
+<td id="S4.T1.1.9.8.7" class="ltx_td ltx_align_center ltx_border_r">99.9</td>
+<td id="S4.T1.1.9.8.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.9.8.8.1" class="ltx_text ltx_font_bold">100.0</span></td>
+</tr>
+<tr id="S4.T1.1.10.9" class="ltx_tr">
+<th id="S4.T1.1.10.9.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">glue</th>
+<td id="S4.T1.1.10.9.2" class="ltx_td ltx_align_center">41.2</td>
+<td id="S4.T1.1.10.9.3" class="ltx_td ltx_align_center">79.4</td>
+<td id="S4.T1.1.10.9.4" class="ltx_td ltx_align_center">95.7</td>
+<td id="S4.T1.1.10.9.5" class="ltx_td ltx_align_center">99.4</td>
+<td id="S4.T1.1.10.9.6" class="ltx_td ltx_align_center"><span id="S4.T1.1.10.9.6.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S4.T1.1.10.9.7" class="ltx_td ltx_align_center ltx_border_r">96.8</td>
+<td id="S4.T1.1.10.9.8" class="ltx_td ltx_align_center">99.8</td>
+</tr>
+<tr id="S4.T1.1.11.10" class="ltx_tr">
+<th id="S4.T1.1.11.10.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">holepuncher</th>
+<td id="S4.T1.1.11.10.2" class="ltx_td ltx_align_center">67.2</td>
+<td id="S4.T1.1.11.10.3" class="ltx_td ltx_align_center">74.8</td>
+<td id="S4.T1.1.11.10.4" class="ltx_td ltx_align_center">81.9</td>
+<td id="S4.T1.1.11.10.5" class="ltx_td ltx_align_center">52.8</td>
+<td id="S4.T1.1.11.10.6" class="ltx_td ltx_align_center">86.9</td>
+<td id="S4.T1.1.11.10.7" class="ltx_td ltx_align_center ltx_border_r">87.7</td>
+<td id="S4.T1.1.11.10.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.11.10.8.1" class="ltx_text ltx_font_bold">98.6</span></td>
+</tr>
+<tr id="S4.T1.1.12.11" class="ltx_tr">
+<th id="S4.T1.1.12.11.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">iron</th>
+<td id="S4.T1.1.12.11.2" class="ltx_td ltx_align_center">84.7</td>
+<td id="S4.T1.1.12.11.3" class="ltx_td ltx_align_center">83.4</td>
+<td id="S4.T1.1.12.11.4" class="ltx_td ltx_align_center">98.9</td>
+<td id="S4.T1.1.12.11.5" class="ltx_td ltx_align_center">98.3</td>
+<td id="S4.T1.1.12.11.6" class="ltx_td ltx_align_center">97.0</td>
+<td id="S4.T1.1.12.11.7" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T1.1.12.11.7.1" class="ltx_text ltx_font_bold">100.0</span></td>
+<td id="S4.T1.1.12.11.8" class="ltx_td ltx_align_center">99.8</td>
+</tr>
+<tr id="S4.T1.1.13.12" class="ltx_tr">
+<th id="S4.T1.1.13.12.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">lamp</th>
+<td id="S4.T1.1.13.12.2" class="ltx_td ltx_align_center">76.5</td>
+<td id="S4.T1.1.13.12.3" class="ltx_td ltx_align_center">82.0</td>
+<td id="S4.T1.1.13.12.4" class="ltx_td ltx_align_center">99.3</td>
+<td id="S4.T1.1.13.12.5" class="ltx_td ltx_align_center">97.5</td>
+<td id="S4.T1.1.13.12.6" class="ltx_td ltx_align_center">95.3</td>
+<td id="S4.T1.1.13.12.7" class="ltx_td ltx_align_center ltx_border_r">96.8</td>
+<td id="S4.T1.1.13.12.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.13.12.8.1" class="ltx_text ltx_font_bold">99.3</span></td>
+</tr>
+<tr id="S4.T1.1.14.13" class="ltx_tr">
+<th id="S4.T1.1.14.13.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">phone</th>
+<td id="S4.T1.1.14.13.2" class="ltx_td ltx_align_center">54.0</td>
+<td id="S4.T1.1.14.13.3" class="ltx_td ltx_align_center">45.0</td>
+<td id="S4.T1.1.14.13.4" class="ltx_td ltx_align_center">92.4</td>
+<td id="S4.T1.1.14.13.5" class="ltx_td ltx_align_center">87.7</td>
+<td id="S4.T1.1.14.13.6" class="ltx_td ltx_align_center">92.8</td>
+<td id="S4.T1.1.14.13.7" class="ltx_td ltx_align_center ltx_border_r">94.7</td>
+<td id="S4.T1.1.14.13.8" class="ltx_td ltx_align_center"><span id="S4.T1.1.14.13.8.1" class="ltx_text ltx_font_bold">98.8</span></td>
+</tr>
+<tr id="S4.T1.1.15.14" class="ltx_tr">
+<th id="S4.T1.1.15.14.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r ltx_border_t">average</th>
+<td id="S4.T1.1.15.14.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">62.7</td>
+<td id="S4.T1.1.15.14.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">72.4</td>
+<td id="S4.T1.1.15.14.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">86.3</td>
+<td id="S4.T1.1.15.14.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">88.6</td>
+<td id="S4.T1.1.15.14.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">94.3</td>
+<td id="S4.T1.1.15.14.7" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">95.2</td>
+<td id="S4.T1.1.15.14.8" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S4.T1.1.15.14.8.1" class="ltx_text ltx_font_bold">98.7</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S4.F3" class="ltx_figure"><img src="/html/2012.11938/assets/pic/linemod_vis_new.png" id="S4.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="147" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Some visualization results on LINEMOD dataset. In the pictures, the pose result is shown by projecting the model using the estimated pose. For the convenience of viewing, we also show the contour of the model projection.
+</figcaption>
+</figure>
+<figure id="S4.F4" class="ltx_figure"><img src="/html/2012.11938/assets/pic/occ_vis_new.png" id="S4.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="148" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Some visualization results on OCCLUSION LINEMOD dataset. Pictures of the first line are some accurate results when the object is partially occluded, and pictures of the second line are some inaccurate results under heavy occlusion.
+</figcaption>
+</figure>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE II: </span>ADD(-S) Accuracy on LINEMOD dataset without tricks.</figcaption>
+<table id="S4.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">tricks</th>
+<td id="S4.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_border_t">w/o refine</td>
+<td id="S4.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_border_t">w/o fuse data</td>
+<td id="S4.T2.1.1.1.4" class="ltx_td ltx_align_center ltx_border_t">with both</td>
+</tr>
+<tr id="S4.T2.1.2.2" class="ltx_tr">
+<th id="S4.T2.1.2.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r ltx_border_t">accuracy</th>
+<td id="S4.T2.1.2.2.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">94.8</td>
+<td id="S4.T2.1.2.2.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">96.6</td>
+<td id="S4.T2.1.2.2.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">98.7</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.4.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.5.2" class="ltx_text ltx_font_italic">Datasets</span>
+</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">LINEMOD is a standard benchmark which is widely applied for 6D object pose estimation, so it is convenient to compare with other methods. This dataset contains 13 objects from different kinds. There are many challenges for pose estimation on LINEMOD dataset, such as low resolution, texture-less objects, cluttered scenes and lighting condition variations.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.1" class="ltx_p">OCCLUSION LINEMOD is a subset of the LINEMOD dataset by further annotation. It is only used for evaluation by model trained on LINEMOD dataset. Objects in this dataset have heavily occlusion, some of them even have a few pixels left to be seen. So it is a great challenge for pose estimation.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.4.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.5.2" class="ltx_text ltx_font_italic">Metrics</span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">We use ADD(-S) metric for the two datasets following prior works <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>. For non-symmetric objects, ADD metric is employed which is defined as average Euclidean distance between model points transformed with the predicted and the groundtruth pose respectively. The formula is as follows:</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<table id="S4.E9" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E9.m1.1" class="ltx_Math" alttext="ADD=\frac{1}{N}\sum_{x\in O}||(Rx+t)-(\hat{R}x+\hat{t})||_{2}," display="block"><semantics id="S4.E9.m1.1a"><mrow id="S4.E9.m1.1.1.1" xref="S4.E9.m1.1.1.1.1.cmml"><mrow id="S4.E9.m1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.cmml"><mrow id="S4.E9.m1.1.1.1.1.3" xref="S4.E9.m1.1.1.1.1.3.cmml"><mi id="S4.E9.m1.1.1.1.1.3.2" xref="S4.E9.m1.1.1.1.1.3.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.E9.m1.1.1.1.1.3.1" xref="S4.E9.m1.1.1.1.1.3.1.cmml">​</mo><mi id="S4.E9.m1.1.1.1.1.3.3" xref="S4.E9.m1.1.1.1.1.3.3.cmml">D</mi><mo lspace="0em" rspace="0em" id="S4.E9.m1.1.1.1.1.3.1a" xref="S4.E9.m1.1.1.1.1.3.1.cmml">​</mo><mi id="S4.E9.m1.1.1.1.1.3.4" xref="S4.E9.m1.1.1.1.1.3.4.cmml">D</mi></mrow><mo id="S4.E9.m1.1.1.1.1.2" xref="S4.E9.m1.1.1.1.1.2.cmml">=</mo><mrow id="S4.E9.m1.1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.1.cmml"><mfrac id="S4.E9.m1.1.1.1.1.1.3" xref="S4.E9.m1.1.1.1.1.1.3.cmml"><mn id="S4.E9.m1.1.1.1.1.1.3.2" xref="S4.E9.m1.1.1.1.1.1.3.2.cmml">1</mn><mi id="S4.E9.m1.1.1.1.1.1.3.3" xref="S4.E9.m1.1.1.1.1.1.3.3.cmml">N</mi></mfrac><mo lspace="0em" rspace="0em" id="S4.E9.m1.1.1.1.1.1.2" xref="S4.E9.m1.1.1.1.1.1.2.cmml">​</mo><mrow id="S4.E9.m1.1.1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.1.1.cmml"><munder id="S4.E9.m1.1.1.1.1.1.1.2" xref="S4.E9.m1.1.1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S4.E9.m1.1.1.1.1.1.1.2.2" xref="S4.E9.m1.1.1.1.1.1.1.2.2.cmml">∑</mo><mrow id="S4.E9.m1.1.1.1.1.1.1.2.3" xref="S4.E9.m1.1.1.1.1.1.1.2.3.cmml"><mi id="S4.E9.m1.1.1.1.1.1.1.2.3.2" xref="S4.E9.m1.1.1.1.1.1.1.2.3.2.cmml">x</mi><mo id="S4.E9.m1.1.1.1.1.1.1.2.3.1" xref="S4.E9.m1.1.1.1.1.1.1.2.3.1.cmml">∈</mo><mi id="S4.E9.m1.1.1.1.1.1.1.2.3.3" xref="S4.E9.m1.1.1.1.1.1.1.2.3.3.cmml">O</mi></mrow></munder><msub id="S4.E9.m1.1.1.1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E9.m1.1.1.1.1.1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.2.cmml"><mo stretchy="false" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><mi id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml">x</mi></mrow><mo id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">+</mo><mi id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml">t</mi></mrow><mo stretchy="false" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.3.cmml">−</mo><mrow id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml"><mo stretchy="false" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml">(</mo><mrow id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml"><mrow id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.cmml"><mover accent="true" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.cmml"><mi id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml">R</mi><mo id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml">^</mo></mover><mo lspace="0em" rspace="0em" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.1.cmml">​</mo><mi id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.3" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.3.cmml">x</mi></mrow><mo id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.1.cmml">+</mo><mover accent="true" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.cmml"><mi id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.2" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.2.cmml">t</mi><mo id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.1" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.1.cmml">^</mo></mover></mrow><mo stretchy="false" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.3" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml">)</mo></mrow></mrow><mo stretchy="false" id="S4.E9.m1.1.1.1.1.1.1.1.1.1.3" xref="S4.E9.m1.1.1.1.1.1.1.1.1.2.1.cmml">‖</mo></mrow><mn id="S4.E9.m1.1.1.1.1.1.1.1.3" xref="S4.E9.m1.1.1.1.1.1.1.1.3.cmml">2</mn></msub></mrow></mrow></mrow><mo id="S4.E9.m1.1.1.1.2" xref="S4.E9.m1.1.1.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.E9.m1.1b"><apply id="S4.E9.m1.1.1.1.1.cmml" xref="S4.E9.m1.1.1.1"><eq id="S4.E9.m1.1.1.1.1.2.cmml" xref="S4.E9.m1.1.1.1.1.2"></eq><apply id="S4.E9.m1.1.1.1.1.3.cmml" xref="S4.E9.m1.1.1.1.1.3"><times id="S4.E9.m1.1.1.1.1.3.1.cmml" xref="S4.E9.m1.1.1.1.1.3.1"></times><ci id="S4.E9.m1.1.1.1.1.3.2.cmml" xref="S4.E9.m1.1.1.1.1.3.2">𝐴</ci><ci id="S4.E9.m1.1.1.1.1.3.3.cmml" xref="S4.E9.m1.1.1.1.1.3.3">𝐷</ci><ci id="S4.E9.m1.1.1.1.1.3.4.cmml" xref="S4.E9.m1.1.1.1.1.3.4">𝐷</ci></apply><apply id="S4.E9.m1.1.1.1.1.1.cmml" xref="S4.E9.m1.1.1.1.1.1"><times id="S4.E9.m1.1.1.1.1.1.2.cmml" xref="S4.E9.m1.1.1.1.1.1.2"></times><apply id="S4.E9.m1.1.1.1.1.1.3.cmml" xref="S4.E9.m1.1.1.1.1.1.3"><divide id="S4.E9.m1.1.1.1.1.1.3.1.cmml" xref="S4.E9.m1.1.1.1.1.1.3"></divide><cn type="integer" id="S4.E9.m1.1.1.1.1.1.3.2.cmml" xref="S4.E9.m1.1.1.1.1.1.3.2">1</cn><ci id="S4.E9.m1.1.1.1.1.1.3.3.cmml" xref="S4.E9.m1.1.1.1.1.1.3.3">𝑁</ci></apply><apply id="S4.E9.m1.1.1.1.1.1.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1"><apply id="S4.E9.m1.1.1.1.1.1.1.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E9.m1.1.1.1.1.1.1.2.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.2">subscript</csymbol><sum id="S4.E9.m1.1.1.1.1.1.1.2.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.2.2"></sum><apply id="S4.E9.m1.1.1.1.1.1.1.2.3.cmml" xref="S4.E9.m1.1.1.1.1.1.1.2.3"><in id="S4.E9.m1.1.1.1.1.1.1.2.3.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.2.3.1"></in><ci id="S4.E9.m1.1.1.1.1.1.1.2.3.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.2.3.2">𝑥</ci><ci id="S4.E9.m1.1.1.1.1.1.1.2.3.3.cmml" xref="S4.E9.m1.1.1.1.1.1.1.2.3.3">𝑂</ci></apply></apply><apply id="S4.E9.m1.1.1.1.1.1.1.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S4.E9.m1.1.1.1.1.1.1.1.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1">subscript</csymbol><apply id="S4.E9.m1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S4.E9.m1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.2">norm</csymbol><apply id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1"><minus id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.3"></minus><apply id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1"><plus id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1"></plus><apply id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2"><times id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1"></times><ci id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.2">𝑅</ci><ci id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3">𝑥</ci></apply><ci id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.3">𝑡</ci></apply><apply id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1"><plus id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.1"></plus><apply id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2"><times id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.1"></times><apply id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2"><ci id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.1">^</ci><ci id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.2">𝑅</ci></apply><ci id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.3.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.3">𝑥</ci></apply><apply id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3"><ci id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.1.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.1">^</ci><ci id="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.2.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.2">𝑡</ci></apply></apply></apply></apply><cn type="integer" id="S4.E9.m1.1.1.1.1.1.1.1.3.cmml" xref="S4.E9.m1.1.1.1.1.1.1.1.3">2</cn></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E9.m1.1c">ADD=\frac{1}{N}\sum_{x\in O}||(Rx+t)-(\hat{R}x+\hat{t})||_{2},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(9)</span></td>
+</tr></tbody>
+</table>
+<p id="S4.SS2.p2.6" class="ltx_p">where <math id="S4.SS2.p2.1.m1.1" class="ltx_Math" alttext="O" display="inline"><semantics id="S4.SS2.p2.1.m1.1a"><mi id="S4.SS2.p2.1.m1.1.1" xref="S4.SS2.p2.1.m1.1.1.cmml">O</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.1.m1.1b"><ci id="S4.SS2.p2.1.m1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1">𝑂</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.1.m1.1c">O</annotation></semantics></math> is the set of model points, <math id="S4.SS2.p2.2.m2.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S4.SS2.p2.2.m2.1a"><mi id="S4.SS2.p2.2.m2.1.1" xref="S4.SS2.p2.2.m2.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.2.m2.1b"><ci id="S4.SS2.p2.2.m2.1.1.cmml" xref="S4.SS2.p2.2.m2.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.2.m2.1c">N</annotation></semantics></math> is the number of model points, <math id="S4.SS2.p2.3.m3.1" class="ltx_Math" alttext="R" display="inline"><semantics id="S4.SS2.p2.3.m3.1a"><mi id="S4.SS2.p2.3.m3.1.1" xref="S4.SS2.p2.3.m3.1.1.cmml">R</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.3.m3.1b"><ci id="S4.SS2.p2.3.m3.1.1.cmml" xref="S4.SS2.p2.3.m3.1.1">𝑅</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.3.m3.1c">R</annotation></semantics></math> and <math id="S4.SS2.p2.4.m4.1" class="ltx_Math" alttext="t" display="inline"><semantics id="S4.SS2.p2.4.m4.1a"><mi id="S4.SS2.p2.4.m4.1.1" xref="S4.SS2.p2.4.m4.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.4.m4.1b"><ci id="S4.SS2.p2.4.m4.1.1.cmml" xref="S4.SS2.p2.4.m4.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.4.m4.1c">t</annotation></semantics></math>
+are the rotation and translation of groundtruth pose, <math id="S4.SS2.p2.5.m5.1" class="ltx_Math" alttext="\hat{R}" display="inline"><semantics id="S4.SS2.p2.5.m5.1a"><mover accent="true" id="S4.SS2.p2.5.m5.1.1" xref="S4.SS2.p2.5.m5.1.1.cmml"><mi id="S4.SS2.p2.5.m5.1.1.2" xref="S4.SS2.p2.5.m5.1.1.2.cmml">R</mi><mo id="S4.SS2.p2.5.m5.1.1.1" xref="S4.SS2.p2.5.m5.1.1.1.cmml">^</mo></mover><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.5.m5.1b"><apply id="S4.SS2.p2.5.m5.1.1.cmml" xref="S4.SS2.p2.5.m5.1.1"><ci id="S4.SS2.p2.5.m5.1.1.1.cmml" xref="S4.SS2.p2.5.m5.1.1.1">^</ci><ci id="S4.SS2.p2.5.m5.1.1.2.cmml" xref="S4.SS2.p2.5.m5.1.1.2">𝑅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.5.m5.1c">\hat{R}</annotation></semantics></math> and <math id="S4.SS2.p2.6.m6.1" class="ltx_Math" alttext="\hat{t}" display="inline"><semantics id="S4.SS2.p2.6.m6.1a"><mover accent="true" id="S4.SS2.p2.6.m6.1.1" xref="S4.SS2.p2.6.m6.1.1.cmml"><mi id="S4.SS2.p2.6.m6.1.1.2" xref="S4.SS2.p2.6.m6.1.1.2.cmml">t</mi><mo id="S4.SS2.p2.6.m6.1.1.1" xref="S4.SS2.p2.6.m6.1.1.1.cmml">^</mo></mover><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.6.m6.1b"><apply id="S4.SS2.p2.6.m6.1.1.cmml" xref="S4.SS2.p2.6.m6.1.1"><ci id="S4.SS2.p2.6.m6.1.1.1.cmml" xref="S4.SS2.p2.6.m6.1.1.1">^</ci><ci id="S4.SS2.p2.6.m6.1.1.2.cmml" xref="S4.SS2.p2.6.m6.1.1.2">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.6.m6.1c">\hat{t}</annotation></semantics></math> are the rotation and translation of predicted pose.</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para">
+<p id="S4.SS2.p3.1" class="ltx_p">For symmetric objects (eggbox and glue in two datasets), due to the ambiguity of pose, ADD-S metric is employed which computes distance with the closest point. The formula is as follows:</p>
+</div>
+<div id="S4.SS2.p4" class="ltx_para">
+<table id="S4.E10" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S4.E10.m1.1" class="ltx_Math" alttext="ADD\text{-}S=\frac{1}{N}\sum_{x\in O}\min_{x_{0}\in O}||(Rx_{0}+t)-(\hat{R}x+\hat{t})||_{2}," display="block"><semantics id="S4.E10.m1.1a"><mrow id="S4.E10.m1.1.1.1" xref="S4.E10.m1.1.1.1.1.cmml"><mrow id="S4.E10.m1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.cmml"><mrow id="S4.E10.m1.1.1.1.1.3" xref="S4.E10.m1.1.1.1.1.3.cmml"><mi id="S4.E10.m1.1.1.1.1.3.2" xref="S4.E10.m1.1.1.1.1.3.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.E10.m1.1.1.1.1.3.1" xref="S4.E10.m1.1.1.1.1.3.1.cmml">​</mo><mi id="S4.E10.m1.1.1.1.1.3.3" xref="S4.E10.m1.1.1.1.1.3.3.cmml">D</mi><mo lspace="0em" rspace="0em" id="S4.E10.m1.1.1.1.1.3.1a" xref="S4.E10.m1.1.1.1.1.3.1.cmml">​</mo><mi id="S4.E10.m1.1.1.1.1.3.4" xref="S4.E10.m1.1.1.1.1.3.4.cmml">D</mi><mo lspace="0em" rspace="0em" id="S4.E10.m1.1.1.1.1.3.1b" xref="S4.E10.m1.1.1.1.1.3.1.cmml">​</mo><mtext id="S4.E10.m1.1.1.1.1.3.5" xref="S4.E10.m1.1.1.1.1.3.5a.cmml">-</mtext><mo lspace="0em" rspace="0em" id="S4.E10.m1.1.1.1.1.3.1c" xref="S4.E10.m1.1.1.1.1.3.1.cmml">​</mo><mi id="S4.E10.m1.1.1.1.1.3.6" xref="S4.E10.m1.1.1.1.1.3.6.cmml">S</mi></mrow><mo id="S4.E10.m1.1.1.1.1.2" xref="S4.E10.m1.1.1.1.1.2.cmml">=</mo><mrow id="S4.E10.m1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.cmml"><mfrac id="S4.E10.m1.1.1.1.1.1.3" xref="S4.E10.m1.1.1.1.1.1.3.cmml"><mn id="S4.E10.m1.1.1.1.1.1.3.2" xref="S4.E10.m1.1.1.1.1.1.3.2.cmml">1</mn><mi id="S4.E10.m1.1.1.1.1.1.3.3" xref="S4.E10.m1.1.1.1.1.1.3.3.cmml">N</mi></mfrac><mo lspace="0em" rspace="0em" id="S4.E10.m1.1.1.1.1.1.2" xref="S4.E10.m1.1.1.1.1.1.2.cmml">​</mo><mrow id="S4.E10.m1.1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.cmml"><munder id="S4.E10.m1.1.1.1.1.1.1.2" xref="S4.E10.m1.1.1.1.1.1.1.2.cmml"><mo movablelimits="false" id="S4.E10.m1.1.1.1.1.1.1.2.2" xref="S4.E10.m1.1.1.1.1.1.1.2.2.cmml">∑</mo><mrow id="S4.E10.m1.1.1.1.1.1.1.2.3" xref="S4.E10.m1.1.1.1.1.1.1.2.3.cmml"><mi id="S4.E10.m1.1.1.1.1.1.1.2.3.2" xref="S4.E10.m1.1.1.1.1.1.1.2.3.2.cmml">x</mi><mo id="S4.E10.m1.1.1.1.1.1.1.2.3.1" xref="S4.E10.m1.1.1.1.1.1.1.2.3.1.cmml">∈</mo><mi id="S4.E10.m1.1.1.1.1.1.1.2.3.3" xref="S4.E10.m1.1.1.1.1.1.1.2.3.3.cmml">O</mi></mrow></munder><mrow id="S4.E10.m1.1.1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.cmml"><munder id="S4.E10.m1.1.1.1.1.1.1.1.3" xref="S4.E10.m1.1.1.1.1.1.1.1.3.cmml"><mi id="S4.E10.m1.1.1.1.1.1.1.1.3.2" xref="S4.E10.m1.1.1.1.1.1.1.1.3.2.cmml">min</mi><mrow id="S4.E10.m1.1.1.1.1.1.1.1.3.3" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.cmml"><msub id="S4.E10.m1.1.1.1.1.1.1.1.3.3.2" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.cmml"><mi id="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.2" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.2.cmml">x</mi><mn id="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.3" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.3.cmml">0</mn></msub><mo id="S4.E10.m1.1.1.1.1.1.1.1.3.3.1" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.1.cmml">∈</mo><mi id="S4.E10.m1.1.1.1.1.1.1.1.3.3.3" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.3.cmml">O</mi></mrow></munder><mo lspace="0em" rspace="0em" id="S4.E10.m1.1.1.1.1.1.1.1.2" xref="S4.E10.m1.1.1.1.1.1.1.1.2.cmml">​</mo><msub id="S4.E10.m1.1.1.1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.2.cmml"><mo stretchy="false" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml"><mrow id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml">​</mo><msub id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml"><mi id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml">x</mi><mn id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml">0</mn></msub></mrow><mo id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">+</mo><mi id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml">t</mi></mrow><mo stretchy="false" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.3.cmml">−</mo><mrow id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml"><mo stretchy="false" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml">(</mo><mrow id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml"><mrow id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.cmml"><mover accent="true" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.cmml"><mi id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml">R</mi><mo id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml">^</mo></mover><mo lspace="0em" rspace="0em" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.1.cmml">​</mo><mi id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.3.cmml">x</mi></mrow><mo id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.1.cmml">+</mo><mover accent="true" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.cmml"><mi id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.2" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.2.cmml">t</mi><mo id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.1" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.1.cmml">^</mo></mover></mrow><mo stretchy="false" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml">)</mo></mrow></mrow><mo stretchy="false" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.2.1.cmml">‖</mo></mrow><mn id="S4.E10.m1.1.1.1.1.1.1.1.1.3" xref="S4.E10.m1.1.1.1.1.1.1.1.1.3.cmml">2</mn></msub></mrow></mrow></mrow></mrow><mo id="S4.E10.m1.1.1.1.2" xref="S4.E10.m1.1.1.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.E10.m1.1b"><apply id="S4.E10.m1.1.1.1.1.cmml" xref="S4.E10.m1.1.1.1"><eq id="S4.E10.m1.1.1.1.1.2.cmml" xref="S4.E10.m1.1.1.1.1.2"></eq><apply id="S4.E10.m1.1.1.1.1.3.cmml" xref="S4.E10.m1.1.1.1.1.3"><times id="S4.E10.m1.1.1.1.1.3.1.cmml" xref="S4.E10.m1.1.1.1.1.3.1"></times><ci id="S4.E10.m1.1.1.1.1.3.2.cmml" xref="S4.E10.m1.1.1.1.1.3.2">𝐴</ci><ci id="S4.E10.m1.1.1.1.1.3.3.cmml" xref="S4.E10.m1.1.1.1.1.3.3">𝐷</ci><ci id="S4.E10.m1.1.1.1.1.3.4.cmml" xref="S4.E10.m1.1.1.1.1.3.4">𝐷</ci><ci id="S4.E10.m1.1.1.1.1.3.5a.cmml" xref="S4.E10.m1.1.1.1.1.3.5"><mtext id="S4.E10.m1.1.1.1.1.3.5.cmml" xref="S4.E10.m1.1.1.1.1.3.5">-</mtext></ci><ci id="S4.E10.m1.1.1.1.1.3.6.cmml" xref="S4.E10.m1.1.1.1.1.3.6">𝑆</ci></apply><apply id="S4.E10.m1.1.1.1.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1"><times id="S4.E10.m1.1.1.1.1.1.2.cmml" xref="S4.E10.m1.1.1.1.1.1.2"></times><apply id="S4.E10.m1.1.1.1.1.1.3.cmml" xref="S4.E10.m1.1.1.1.1.1.3"><divide id="S4.E10.m1.1.1.1.1.1.3.1.cmml" xref="S4.E10.m1.1.1.1.1.1.3"></divide><cn type="integer" id="S4.E10.m1.1.1.1.1.1.3.2.cmml" xref="S4.E10.m1.1.1.1.1.1.3.2">1</cn><ci id="S4.E10.m1.1.1.1.1.1.3.3.cmml" xref="S4.E10.m1.1.1.1.1.1.3.3">𝑁</ci></apply><apply id="S4.E10.m1.1.1.1.1.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1"><apply id="S4.E10.m1.1.1.1.1.1.1.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S4.E10.m1.1.1.1.1.1.1.2.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.2">subscript</csymbol><sum id="S4.E10.m1.1.1.1.1.1.1.2.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.2.2"></sum><apply id="S4.E10.m1.1.1.1.1.1.1.2.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.2.3"><in id="S4.E10.m1.1.1.1.1.1.1.2.3.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.2.3.1"></in><ci id="S4.E10.m1.1.1.1.1.1.1.2.3.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.2.3.2">𝑥</ci><ci id="S4.E10.m1.1.1.1.1.1.1.2.3.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.2.3.3">𝑂</ci></apply></apply><apply id="S4.E10.m1.1.1.1.1.1.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1"><times id="S4.E10.m1.1.1.1.1.1.1.1.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.2"></times><apply id="S4.E10.m1.1.1.1.1.1.1.1.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S4.E10.m1.1.1.1.1.1.1.1.3.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3">subscript</csymbol><min id="S4.E10.m1.1.1.1.1.1.1.1.3.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3.2"></min><apply id="S4.E10.m1.1.1.1.1.1.1.1.3.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3"><in id="S4.E10.m1.1.1.1.1.1.1.1.3.3.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.1"></in><apply id="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.2"><csymbol cd="ambiguous" id="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.2">subscript</csymbol><ci id="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.2">𝑥</ci><cn type="integer" id="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.2.3">0</cn></apply><ci id="S4.E10.m1.1.1.1.1.1.1.1.3.3.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.3.3.3">𝑂</ci></apply></apply><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S4.E10.m1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1">subscript</csymbol><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.2">norm</csymbol><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1"><minus id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.3"></minus><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1"><plus id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1"></plus><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2"><times id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1"></times><ci id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.2">𝑅</ci><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3"><csymbol cd="ambiguous" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3">subscript</csymbol><ci id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.2">𝑥</ci><cn type="integer" id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.3.3">0</cn></apply></apply><ci id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.3">𝑡</ci></apply><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1"><plus id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.1"></plus><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2"><times id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.1"></times><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2"><ci id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.1">^</ci><ci id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.2.2">𝑅</ci></apply><ci id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.2.3">𝑥</ci></apply><apply id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3"><ci id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.1.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.1">^</ci><ci id="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.2.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.1.3.2">𝑡</ci></apply></apply></apply></apply><cn type="integer" id="S4.E10.m1.1.1.1.1.1.1.1.1.3.cmml" xref="S4.E10.m1.1.1.1.1.1.1.1.1.3">2</cn></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.E10.m1.1c">ADD\text{-}S=\frac{1}{N}\sum_{x\in O}\min_{x_{0}\in O}||(Rx_{0}+t)-(\hat{R}x+\hat{t})||_{2},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(10)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S4.SS2.p5" class="ltx_para">
+<p id="S4.SS2.p5.1" class="ltx_p">The evaluation result is deemed accurate when the average distance is less than 10% of the object model’s diameter.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS3.4.1.1" class="ltx_text">IV-C</span> </span><span id="S4.SS3.5.2" class="ltx_text ltx_font_italic">Implementation Details</span>
+</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">During implementation, 8 keypoints and 1 center point are selected for network to predict following PVNet. And during both training and testing, 500 scene points are randomly sampled as input. In order to enhance the robustness of illumination, online data augmentation such as light condition change is applied. In order to make the network insensitive to the background, we synthesize another 10000 images which randomly sample background from SUN397 dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite> using the “Cut and Paste” strategy. These tricks are aim to avoid overfitting. The learning rate is setted as 0.0001 at first, and refine network is beginning to train with learning rate of 0.00003 when average distance error is less than 0.01.</p>
+</div>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS4.4.1.1" class="ltx_text">IV-D</span> </span><span id="S4.SS4.5.2" class="ltx_text ltx_font_italic">Results on benchmark dataset</span>
+</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.1" class="ltx_p">We report our quantitative evaluation results of the pose estimation experiments on the
+LineMOD dataset (see Table <a href="#S4.T1" title="TABLE I ‣ IV EXPERIMENTS ‣ 3D Point-to-Keypoint Voting Network for 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>). Our ADD(-S) accuracy is 98.7%, which outperforms all other approaches. Ablation studies are also conducted to verify our performance without data augmentation and refine network (see Table <a href="#S4.T2" title="TABLE II ‣ IV EXPERIMENTS ‣ 3D Point-to-Keypoint Voting Network for 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>). Our network can aquire accuracy of 94.8% without refine, while DenseFusion has only accuracy of 86.2%. It confirms that our basic architecture is better than the state-of-the-art methods. Besides, the accuracy of our model which only trains on a small number of real data is 96.6%, thus it can be seen that our spatial dimension sample strategy is helpful for avoiding overfitting. Some visualization results are shown in Fig. <a href="#S4.F3" title="Figure 3 ‣ IV EXPERIMENTS ‣ 3D Point-to-Keypoint Voting Network for 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, in which object CAD model is rendered on RGB image using estimated pose and the contour is also drawn on image.</p>
+</div>
+<div id="S4.SS4.p2" class="ltx_para">
+<p id="S4.SS4.p2.1" class="ltx_p">As for OCCLUSION dataset, which is really difficult to estimate pose, we achieve ADD(-S) accuracy of 52.6% and also outperforms other recent methods (see Table <a href="#S4.T3" title="TABLE III ‣ IV-D Results on benchmark dataset ‣ IV EXPERIMENTS ‣ 3D Point-to-Keypoint Voting Network for 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">III</span></a>). Some visualization results are shown in Fig. <a href="#S4.F4" title="Figure 4 ‣ IV EXPERIMENTS ‣ 3D Point-to-Keypoint Voting Network for 6D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>. Pictures of the first line show that our method can also estimate accurately when the object is partially occluded. But for some seriously occluded objects, our estimation is still biased, which can be seen in pictures of the second line.</p>
+</div>
+<div id="S4.SS4.p3" class="ltx_para">
+<p id="S4.SS4.p3.1" class="ltx_p">Our pose estimation method only costs 0.02s on a GTX 1060 GPU, which is fast for real-time pose estimation.</p>
+</div>
+<figure id="S4.T3" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE III: </span>ADD(-S) Accuracy on OCCLUSION LINEMOD dataset.</figcaption>
+<table id="S4.T3.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T3.1.1.1" class="ltx_tr">
+<th id="S4.T3.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t">object</th>
+<th id="S4.T3.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">PoseCNN</th>
+<th id="S4.T3.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Pix2Pose</th>
+<th id="S4.T3.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">PVNet</th>
+<th id="S4.T3.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">DPOP</th>
+<th id="S4.T3.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Ours</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T3.1.2.1" class="ltx_tr">
+<th id="S4.T3.1.2.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t">ape</th>
+<td id="S4.T3.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">9.6</td>
+<td id="S4.T3.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">22.0</td>
+<td id="S4.T3.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t">15.8</td>
+<td id="S4.T3.1.2.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.2.1.6" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T3.1.2.1.6.1" class="ltx_text ltx_font_bold">51.6</span></td>
+</tr>
+<tr id="S4.T3.1.3.2" class="ltx_tr">
+<th id="S4.T3.1.3.2.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">can</th>
+<td id="S4.T3.1.3.2.2" class="ltx_td ltx_align_center">45.2</td>
+<td id="S4.T3.1.3.2.3" class="ltx_td ltx_align_center">44.7</td>
+<td id="S4.T3.1.3.2.4" class="ltx_td ltx_align_center">63.3</td>
+<td id="S4.T3.1.3.2.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S4.T3.1.3.2.6" class="ltx_td ltx_align_center"><span id="S4.T3.1.3.2.6.1" class="ltx_text ltx_font_bold">75.6</span></td>
+</tr>
+<tr id="S4.T3.1.4.3" class="ltx_tr">
+<th id="S4.T3.1.4.3.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">cat</th>
+<td id="S4.T3.1.4.3.2" class="ltx_td ltx_align_center">0.9</td>
+<td id="S4.T3.1.4.3.3" class="ltx_td ltx_align_center">22.7</td>
+<td id="S4.T3.1.4.3.4" class="ltx_td ltx_align_center">16.7</td>
+<td id="S4.T3.1.4.3.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S4.T3.1.4.3.6" class="ltx_td ltx_align_center"><span id="S4.T3.1.4.3.6.1" class="ltx_text ltx_font_bold">28.7</span></td>
+</tr>
+<tr id="S4.T3.1.5.4" class="ltx_tr">
+<th id="S4.T3.1.5.4.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">driller</th>
+<td id="S4.T3.1.5.4.2" class="ltx_td ltx_align_center">41.4</td>
+<td id="S4.T3.1.5.4.3" class="ltx_td ltx_align_center">44.7</td>
+<td id="S4.T3.1.5.4.4" class="ltx_td ltx_align_center">65.7</td>
+<td id="S4.T3.1.5.4.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S4.T3.1.5.4.6" class="ltx_td ltx_align_center"><span id="S4.T3.1.5.4.6.1" class="ltx_text ltx_font_bold">66.9</span></td>
+</tr>
+<tr id="S4.T3.1.6.5" class="ltx_tr">
+<th id="S4.T3.1.6.5.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">duck</th>
+<td id="S4.T3.1.6.5.2" class="ltx_td ltx_align_center">19.6</td>
+<td id="S4.T3.1.6.5.3" class="ltx_td ltx_align_center">15.0</td>
+<td id="S4.T3.1.6.5.4" class="ltx_td ltx_align_center">25.2</td>
+<td id="S4.T3.1.6.5.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S4.T3.1.6.5.6" class="ltx_td ltx_align_center"><span id="S4.T3.1.6.5.6.1" class="ltx_text ltx_font_bold">36.7</span></td>
+</tr>
+<tr id="S4.T3.1.7.6" class="ltx_tr">
+<th id="S4.T3.1.7.6.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">eggbox</th>
+<td id="S4.T3.1.7.6.2" class="ltx_td ltx_align_center">22.0</td>
+<td id="S4.T3.1.7.6.3" class="ltx_td ltx_align_center">25.2</td>
+<td id="S4.T3.1.7.6.4" class="ltx_td ltx_align_center"><span id="S4.T3.1.7.6.4.1" class="ltx_text ltx_font_bold">50.2</span></td>
+<td id="S4.T3.1.7.6.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S4.T3.1.7.6.6" class="ltx_td ltx_align_center">47.1</td>
+</tr>
+<tr id="S4.T3.1.8.7" class="ltx_tr">
+<th id="S4.T3.1.8.7.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">glue</th>
+<td id="S4.T3.1.8.7.2" class="ltx_td ltx_align_center">38.5</td>
+<td id="S4.T3.1.8.7.3" class="ltx_td ltx_align_center">32.4</td>
+<td id="S4.T3.1.8.7.4" class="ltx_td ltx_align_center">49.6</td>
+<td id="S4.T3.1.8.7.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S4.T3.1.8.7.6" class="ltx_td ltx_align_center"><span id="S4.T3.1.8.7.6.1" class="ltx_text ltx_font_bold">71.9</span></td>
+</tr>
+<tr id="S4.T3.1.9.8" class="ltx_tr">
+<th id="S4.T3.1.9.8.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r">holepuncher</th>
+<td id="S4.T3.1.9.8.2" class="ltx_td ltx_align_center">22.1</td>
+<td id="S4.T3.1.9.8.3" class="ltx_td ltx_align_center"><span id="S4.T3.1.9.8.3.1" class="ltx_text ltx_font_bold">49.5</span></td>
+<td id="S4.T3.1.9.8.4" class="ltx_td ltx_align_center">39.7</td>
+<td id="S4.T3.1.9.8.5" class="ltx_td ltx_align_center ltx_border_r">-</td>
+<td id="S4.T3.1.9.8.6" class="ltx_td ltx_align_center">45.7</td>
+</tr>
+<tr id="S4.T3.1.10.9" class="ltx_tr">
+<th id="S4.T3.1.10.9.1" class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r ltx_border_t">average</th>
+<td id="S4.T3.1.10.9.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">24.9</td>
+<td id="S4.T3.1.10.9.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">32.0</td>
+<td id="S4.T3.1.10.9.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">40.8</td>
+<td id="S4.T3.1.10.9.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">47.3</td>
+<td id="S4.T3.1.10.9.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S4.T3.1.10.9.6.1" class="ltx_text ltx_font_bold">52.6</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">CONCLUSION</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">An object 6D pose estimation method by 3D point-to-keypoint voting is proposed in this paper. Dense point-wise feature is employed to predict direction vectors, and 3D keypoints coordination is acquired by RANSAC voting. The final pose transformation is obtained by optimizing the distance between the scene keypoints and the model keypoints. During iterative training, a spatial dimension sample strategy is employed to solve the overfitting problem under the small sample dataset. Experimental results show that our method can effectively utilize the spatial structure information of the rigid body, which is better than the state-of-the-art methods in terms of accuracy and efficiency.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">In the future work, we plan to consider an one-stage method. We intend to predict confidence by CNN instead of RANSAC voting, and employ SVD to solve the least square method to make all processes derivable. Thus an end-to-end network can be designed which employs pose to supervise CNN learning to acquire more accurate results.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+E. Marchand, H. Uchiyama, and F. Spindler, “Pose estimation for augmented
+reality: a hands-on survey,” <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">IEEE transactions on visualization and
+computer graphics</em>, vol. 22, no. 12, pp. 2633–2651, 2015.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+D. Xu, D. Anguelov, and A. Jain, “Pointfusion: Deep sensor fusion for 3d
+bounding box estimation,” in <em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE Conference on
+Computer Vision and Pattern Recognition</em>, 2018, pp. 244–253.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+M. Zhu, K. G. Derpanis, Y. Yang, S. Brahmbhatt, M. Zhang, C. Phillips,
+M. Lecce, and K. Daniilidis, “Single image 3d object detection and pose
+estimation for grasping,” in <em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic">2014 IEEE International Conference on
+Robotics and Automation (ICRA)</em>.   IEEE,
+2014, pp. 3936–3943.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+J. Tremblay, T. To, B. Sundaralingam, Y. Xiang, D. Fox, and S. Birchfield,
+“Deep object pose estimation for semantic robotic grasping of household
+objects,” <em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1809.10790</em>, 2018.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+M. Rad and V. Lepetit, “Bb8: A scalable, accurate, robust to partial occlusion
+method for predicting the 3d poses of challenging objects without using
+depth,” in <em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE International Conference on
+Computer Vision</em>, 2017, pp. 3828–3836.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+S. Peng, Y. Liu, Q. Huang, X. Zhou, and H. Bao, “Pvnet: Pixel-wise voting
+network for 6dof pose estimation,” in <em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition</em>, 2019, pp. 4561–4570.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+S. Zakharov, I. Shugurov, and S. Ilic, “Dpod: Dense 6d pose object detector in
+rgb images,” <em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1902.11020</em>, 2019.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+K. Park, T. Patten, and M. Vincze, “Pix2pose: Pixel-wise coordinate regression
+of objects for 6d pose estimation,” in <em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE
+International Conference on Computer Vision</em>, 2019, pp. 7668–7677.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+W. Kehl, F. Manhardt, F. Tombari, S. Ilic, and N. Navab, “Ssd-6d: Making
+rgb-based 3d detection and 6d pose estimation great again,” in
+<em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE International Conference on Computer Vision</em>,
+2017, pp. 1521–1529.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+B. Tekin, S. N. Sinha, and P. Fua, “Real-time seamless single shot 6d object
+pose prediction,” in <em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE Conference on Computer
+Vision and Pattern Recognition</em>, 2018, pp. 292–301.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Y. Xiang, T. Schmidt, V. Narayanan, and D. Fox, “Posecnn: A convolutional
+neural network for 6d object pose estimation in cluttered scenes,”
+<em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1711.00199</em>, 2017.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+T.-T. Do, M. Cai, T. Pham, and I. Reid, “Deep-6dpose: Recovering 6d object
+pose from a single rgb image,” <em id="bib.bib12.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1802.10367</em>, 2018.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+M. Sundermeyer, Z.-C. Marton, M. Durner, M. Brucker, and R. Triebel, “Implicit
+3d orientation learning for 6d object detection from rgb images,” in
+<em id="bib.bib13.1.1" class="ltx_emph ltx_font_italic">Proceedings of the European Conference on Computer Vision (ECCV)</em>,
+2018, pp. 699–715.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+B. Drost, M. Ulrich, N. Navab, and S. Ilic, “Model globally, match locally:
+Efficient and robust 3d object recognition,” in <em id="bib.bib14.1.1" class="ltx_emph ltx_font_italic">2010 IEEE computer
+society conference on computer vision and pattern recognition</em>.   Ieee, 2010, pp. 998–1005.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+C. Li, J. Bai, and G. D. Hager, “A unified framework for multi-view
+multi-class object pose estimation,” in <em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic">Proceedings of the European
+Conference on Computer Vision (ECCV)</em>, 2018, pp. 254–269.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+C. Wang, D. Xu, Y. Zhu, R. Martín-Martín, C. Lu, L. Fei-Fei, and
+S. Savarese, “Densefusion: 6d object pose estimation by iterative dense
+fusion,” in <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition</em>, 2019, pp. 3343–3352.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+S. Hinterstoisser, S. Holzer, C. Cagniart, S. Ilic, K. Konolige, N. Navab, and
+V. Lepetit, “Multimodal templates for real-time detection of texture-less
+objects in heavily cluttered scenes,” in <em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic">2011 international conference
+on computer vision</em>.   IEEE, 2011, pp.
+858–865.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+S. Hinterstoisser, V. Lepetit, S. Ilic, S. Holzer, G. Bradski, K. Konolige, and
+N. Navab, “Model based training, detection and pose estimation of
+texture-less 3d objects in heavily cluttered scenes,” in <em id="bib.bib18.1.1" class="ltx_emph ltx_font_italic">Asian
+conference on computer vision</em>.   Springer, 2012, pp. 548–562.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+M. A. Fischler and R. C. Bolles, “Random sample consensus: a paradigm for
+model fitting with applications to image analysis and automated
+cartography,” <em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic">Communications of the ACM</em>, vol. 24, no. 6, pp.
+381–395, 1981.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+H. Zhao, J. Shi, X. Qi, X. Wang, and J. Jia, “Pyramid scene parsing network,”
+in <em id="bib.bib20.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE conference on computer vision and pattern
+recognition</em>, 2017, pp. 2881–2890.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+C. R. Qi, H. Su, K. Mo, and L. J. Guibas, “Pointnet: Deep learning on point
+sets for 3d classification and segmentation,” in <em id="bib.bib21.1.1" class="ltx_emph ltx_font_italic">Proceedings of the
+IEEE conference on computer vision and pattern recognition</em>, 2017, pp.
+652–660.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+E. Brachmann, A. Krull, F. Michel, S. Gumhold, J. Shotton, and C. Rother,
+“Learning 6d object pose estimation using 3d object coordinates,” in
+<em id="bib.bib22.1.1" class="ltx_emph ltx_font_italic">European conference on computer vision</em>.   Springer, 2014, pp. 536–551.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+J. Xiao, J. Hays, K. A. Ehinger, A. Oliva, and A. Torralba, “Sun database:
+Large-scale scene recognition from abbey to zoo,” in <em id="bib.bib23.1.1" class="ltx_emph ltx_font_italic">2010 IEEE
+Computer Society Conference on Computer Vision and Pattern
+Recognition</em>.   IEEE, 2010, pp.
+3485–3492.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2012.11937" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2012.11938" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2012.11938">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2012.11938" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2012.11939" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Sat Mar  2 21:05:23 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

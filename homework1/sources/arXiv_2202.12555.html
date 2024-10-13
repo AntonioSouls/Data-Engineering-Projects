@@ -1,0 +1,935 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2202.12555] 6D Rotation representation for unconstrained head pose estimation</title><meta property="og:description" content="In this paper, we present a method for unconstrained end-to-end head pose estimation. We address the problem of ambiguous rotation labels by introducing the rotation matrix formalism for our ground truth data and propo…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="6D Rotation representation for unconstrained head pose estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="6D Rotation representation for unconstrained head pose estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2202.12555">
+
+<!--Generated on Thu Mar  7 19:38:57 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">6D Rotation representation for unconstrained head pose estimation</h1>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">In this paper, we present a method for unconstrained end-to-end head pose estimation. We address the problem of ambiguous rotation labels by introducing the rotation matrix formalism for our ground truth data and propose a continuous 6D rotation matrix representation for efficient and robust direct regression. This way, our method can learn the full rotation appearance which exceeds the capabilities of previous approaches that restrict the pose prediction to a narrow-angle for satisfactory results. In addition, we propose a geodesic distance-based loss to penalize our network with respect to the <span id="id1.id1.1" class="ltx_text ltx_font_italic">SO</span>(3) manifold geometry. Experiments on the public AFLW2000 and BIWI datasets demonstrate that our proposed method significantly outperforms other state-of-the-art methods by up to 20%.
+We open-source our training and testing code along with our trained models: <a target="_blank" href="https://github.com/thohemp/6DRepNet" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/thohemp/6DRepNet</a>.</p>
+</div>
+<div id="p1" class="ltx_para">
+<p id="p1.1" class="ltx_p"><span id="p1.1.1" class="ltx_text ltx_font_bold ltx_font_italic">Index Terms<span id="p1.1.1.1" class="ltx_text ltx_font_upright">— </span></span>
+head pose estimation, orientation regression, rotation matrix, geodesic loss</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Head pose estimation from a single image is a key task in facial analysis that is used for a wide range of applications such as driver assistance <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, augmented reality <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, and human-robot interaction <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. Current methods are commonly divided into landmark-based and landmark-free approaches. Landmark-based methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> detect facial landmarks in an initial step and, subsequently, recover the 3D head pose by establishing correspondence between these landmarks and a 3D head model. While this approach can lead to very accurate results, it is highly dependent on the correct prediction of the landmark positions. Hence, inferior landmark localization caused by occlusion and extreme rotation can consequently impair an accurate head pose estimation.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Landmark-free approaches overcome this problem by directly estimating the head pose. These methods commonly facilitate deep neural networks to formulate the orientation prediction as an appearance-based task. HopeNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> presented a multi-loss approach by binning the target angle range to combine a cross-entropy and a mean squared error loss function for Euler angle prediction. Similarly, QuatNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> adapts the cross-entropy paradigm but splits classification and regression into separate network branches. One branch is used for classifying Euler angles and the second one for regressing the pose in quaternion representation. Similarly, HPE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> treats classification and regression separately and then averages the outputs as a pose regression subtask. WHENet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> keeps the single branch strategy but increases the number of bins to extend the predictable yaw range together with an EfficientNet backbone. Whereas, FSA-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> proposes a network with a stage-wise regression and feature aggregation scheme for predicting Euler angles. TriNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> adapts this method, but estimates the three unit vectors of the rotation matrix instead of Euler angles and incorporates an additional orthogonality loss to stabilize the predictions. In another approach, FDN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> proposes a feature decoupling method to explicitly learn discriminative features of different head orientations.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">It has become a common convention to split up the continuous rotation variables into bins for classification to stabilize the predictions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>. However, this is problematic as pruning segments of angles into bins will consequently lead to a loss of information. Additionally, most of the current methods use the Euler angle or quaternion representation to train their networks. However, Zhou et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> demonstrated that any representation of rotation with four or fewer dimensions is discontinuous and therefore not ideal to use in a learning task for neural networks.
+
+<br class="ltx_break">
+<br class="ltx_break"><span id="S1.p3.1.1" class="ltx_text ltx_font_bold">Contributions:</span> We propose a landmark-free head pose estimation method that uses the rotation matrix representation for regressing accurate head orientations. The nine-parameter matrix enables full pose regression without suffering ambiguity problems. Additionally, it allows simplifying the network by detaching unnecessary performance stabilizing measures used by other methods, <span id="S1.p3.1.2" class="ltx_text ltx_font_italic">e.g.</span> discretization of the rotation variables into a classification problem. This simplicity makes our network easily to be transferred into other rotation-related problems. Instead of predicting the entire nine-parameter rotation matrix, we efficiently regress a compressed 6D form that is transformed into the rotation matrix in a subsequent task.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Further, we propose to use the geodesic loss instead of the commonly used mean squared error loss. This way, we can use the distance angle to penalize our network in the training process that encapsulates the Special Orthogonal Group <span id="S1.p4.1.1" class="ltx_text ltx_font_italic">SO</span>(3) manifold geometry. Fig <a href="#S2.F1" title="Figure 1 ‣ 2 Method ‣ 6D Rotation representation for unconstrained head pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> shows an overview of your proposed method. Each component will be explained in detail in the following sections. Inspired by the 6D representation that is used in our approach, we call our network 6DRepNet.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">Our training code, testing code, and trained CNN models are made publicly available to facilitate research experimentation and practical application development.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Method</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.6" class="ltx_p">A key aspect for tackling direct orientation prediction is the use of an appropriate rotation representation. A popular and convenient representation is the Euler angle. However, this representation is not optimal as it suffers from the <span id="S2.p1.6.1" class="ltx_text ltx_font_italic">gimbal lock</span> in which case there are infinitive rotation parameterizations for the same visual head pose appearance. As a consequence, neural networks have difficulties to learn the accurate pose. Whereas, on the contrary, the quaternion representation doesn’t suffer from the gimbal lock, it still has an ambiguity caused by its antipodal symmetry. Especially when learning the full range of head orientations, this can lead to decreased estimation performance. A more favorable rotation representation is the rotation matrix, which is a continuous representation with a distinct parameterization for each rotation. In <span id="S2.p1.6.2" class="ltx_text ltx_font_italic">SO</span>(3) the matrix representation <math id="S2.p1.1.m1.1" class="ltx_Math" alttext="R" display="inline"><semantics id="S2.p1.1.m1.1a"><mi id="S2.p1.1.m1.1.1" xref="S2.p1.1.m1.1.1.cmml">R</mi><annotation-xml encoding="MathML-Content" id="S2.p1.1.m1.1b"><ci id="S2.p1.1.m1.1.1.cmml" xref="S2.p1.1.m1.1.1">𝑅</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.1.m1.1c">R</annotation></semantics></math> is sized <math id="S2.p1.2.m2.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S2.p1.2.m2.1a"><mrow id="S2.p1.2.m2.1.1" xref="S2.p1.2.m2.1.1.cmml"><mn id="S2.p1.2.m2.1.1.2" xref="S2.p1.2.m2.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S2.p1.2.m2.1.1.1" xref="S2.p1.2.m2.1.1.1.cmml">×</mo><mn id="S2.p1.2.m2.1.1.3" xref="S2.p1.2.m2.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.2.m2.1b"><apply id="S2.p1.2.m2.1.1.cmml" xref="S2.p1.2.m2.1.1"><times id="S2.p1.2.m2.1.1.1.cmml" xref="S2.p1.2.m2.1.1.1"></times><cn type="integer" id="S2.p1.2.m2.1.1.2.cmml" xref="S2.p1.2.m2.1.1.2">3</cn><cn type="integer" id="S2.p1.2.m2.1.1.3.cmml" xref="S2.p1.2.m2.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.2.m2.1c">3\times 3</annotation></semantics></math> with orthogonality constraint <math id="S2.p1.3.m3.1" class="ltx_Math" alttext="RR^{T}=I" display="inline"><semantics id="S2.p1.3.m3.1a"><mrow id="S2.p1.3.m3.1.1" xref="S2.p1.3.m3.1.1.cmml"><mrow id="S2.p1.3.m3.1.1.2" xref="S2.p1.3.m3.1.1.2.cmml"><mi id="S2.p1.3.m3.1.1.2.2" xref="S2.p1.3.m3.1.1.2.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S2.p1.3.m3.1.1.2.1" xref="S2.p1.3.m3.1.1.2.1.cmml">​</mo><msup id="S2.p1.3.m3.1.1.2.3" xref="S2.p1.3.m3.1.1.2.3.cmml"><mi id="S2.p1.3.m3.1.1.2.3.2" xref="S2.p1.3.m3.1.1.2.3.2.cmml">R</mi><mi id="S2.p1.3.m3.1.1.2.3.3" xref="S2.p1.3.m3.1.1.2.3.3.cmml">T</mi></msup></mrow><mo id="S2.p1.3.m3.1.1.1" xref="S2.p1.3.m3.1.1.1.cmml">=</mo><mi id="S2.p1.3.m3.1.1.3" xref="S2.p1.3.m3.1.1.3.cmml">I</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.3.m3.1b"><apply id="S2.p1.3.m3.1.1.cmml" xref="S2.p1.3.m3.1.1"><eq id="S2.p1.3.m3.1.1.1.cmml" xref="S2.p1.3.m3.1.1.1"></eq><apply id="S2.p1.3.m3.1.1.2.cmml" xref="S2.p1.3.m3.1.1.2"><times id="S2.p1.3.m3.1.1.2.1.cmml" xref="S2.p1.3.m3.1.1.2.1"></times><ci id="S2.p1.3.m3.1.1.2.2.cmml" xref="S2.p1.3.m3.1.1.2.2">𝑅</ci><apply id="S2.p1.3.m3.1.1.2.3.cmml" xref="S2.p1.3.m3.1.1.2.3"><csymbol cd="ambiguous" id="S2.p1.3.m3.1.1.2.3.1.cmml" xref="S2.p1.3.m3.1.1.2.3">superscript</csymbol><ci id="S2.p1.3.m3.1.1.2.3.2.cmml" xref="S2.p1.3.m3.1.1.2.3.2">𝑅</ci><ci id="S2.p1.3.m3.1.1.2.3.3.cmml" xref="S2.p1.3.m3.1.1.2.3.3">𝑇</ci></apply></apply><ci id="S2.p1.3.m3.1.1.3.cmml" xref="S2.p1.3.m3.1.1.3">𝐼</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.3.m3.1c">RR^{T}=I</annotation></semantics></math>, where <math id="S2.p1.4.m4.1" class="ltx_Math" alttext="R^{T}" display="inline"><semantics id="S2.p1.4.m4.1a"><msup id="S2.p1.4.m4.1.1" xref="S2.p1.4.m4.1.1.cmml"><mi id="S2.p1.4.m4.1.1.2" xref="S2.p1.4.m4.1.1.2.cmml">R</mi><mi id="S2.p1.4.m4.1.1.3" xref="S2.p1.4.m4.1.1.3.cmml">T</mi></msup><annotation-xml encoding="MathML-Content" id="S2.p1.4.m4.1b"><apply id="S2.p1.4.m4.1.1.cmml" xref="S2.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S2.p1.4.m4.1.1.1.cmml" xref="S2.p1.4.m4.1.1">superscript</csymbol><ci id="S2.p1.4.m4.1.1.2.cmml" xref="S2.p1.4.m4.1.1.2">𝑅</ci><ci id="S2.p1.4.m4.1.1.3.cmml" xref="S2.p1.4.m4.1.1.3">𝑇</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.4.m4.1c">R^{T}</annotation></semantics></math> is the transposed matrix and <math id="S2.p1.5.m5.1" class="ltx_Math" alttext="I" display="inline"><semantics id="S2.p1.5.m5.1a"><mi id="S2.p1.5.m5.1.1" xref="S2.p1.5.m5.1.1.cmml">I</mi><annotation-xml encoding="MathML-Content" id="S2.p1.5.m5.1b"><ci id="S2.p1.5.m5.1.1.cmml" xref="S2.p1.5.m5.1.1">𝐼</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.5.m5.1c">I</annotation></semantics></math> the identity matrix. One could now try to regress the rotation matrix directly, but this would require finding all nine parameters and enforcing the orthogonality constraint, either via the Gram-Schmidt process or by finding the nearest optimal solution using SVD. Instead, we follow the approach by Zhou et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> and perform the Gram-Schmidt mapping inside the representation itself by simply dropping the last column vector of the rotation matrix. This reduces the <math id="S2.p1.6.m6.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S2.p1.6.m6.1a"><mrow id="S2.p1.6.m6.1.1" xref="S2.p1.6.m6.1.1.cmml"><mn id="S2.p1.6.m6.1.1.2" xref="S2.p1.6.m6.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S2.p1.6.m6.1.1.1" xref="S2.p1.6.m6.1.1.1.cmml">×</mo><mn id="S2.p1.6.m6.1.1.3" xref="S2.p1.6.m6.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p1.6.m6.1b"><apply id="S2.p1.6.m6.1.1.cmml" xref="S2.p1.6.m6.1.1"><times id="S2.p1.6.m6.1.1.1.cmml" xref="S2.p1.6.m6.1.1.1"></times><cn type="integer" id="S2.p1.6.m6.1.1.2.cmml" xref="S2.p1.6.m6.1.1.2">3</cn><cn type="integer" id="S2.p1.6.m6.1.1.3.cmml" xref="S2.p1.6.m6.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p1.6.m6.1c">3\times 3</annotation></semantics></math> matrix into a six parameter rotation representation that has been reported to introduce smaller errors for direct regression <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>.</p>
+</div>
+<figure id="S2.F1" class="ltx_figure"><img src="/html/2202.12555/assets/method.png" id="S2.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="129" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S2.F1.2.1.1" class="ltx_text ltx_font_bold" style="font-size:90%;">Fig. 1</span>: </span><span id="S2.F1.3.2" class="ltx_text" style="font-size:90%;">Overview of the proposed method.</span></figcaption>
+</figure>
+<div id="S2.p2" class="ltx_para">
+<table id="S2.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E1.m1.3" class="ltx_Math" alttext="g_{GS}=\left(\left[\begin{matrix}|&amp;|&amp;|\\
+a_{1}&amp;a_{2}&amp;a_{3}\\
+|&amp;|&amp;|\\
+\end{matrix}\right]\right)=\left[\begin{matrix}|&amp;|\\
+a_{1}&amp;a_{2}\\
+|&amp;|\end{matrix}\right]" display="block"><semantics id="S2.E1.m1.3a"><mrow id="S2.E1.m1.3.3" xref="S2.E1.m1.3.3.cmml"><msub id="S2.E1.m1.3.3.3" xref="S2.E1.m1.3.3.3.cmml"><mi id="S2.E1.m1.3.3.3.2" xref="S2.E1.m1.3.3.3.2.cmml">g</mi><mrow id="S2.E1.m1.3.3.3.3" xref="S2.E1.m1.3.3.3.3.cmml"><mi id="S2.E1.m1.3.3.3.3.2" xref="S2.E1.m1.3.3.3.3.2.cmml">G</mi><mo lspace="0em" rspace="0em" id="S2.E1.m1.3.3.3.3.1" xref="S2.E1.m1.3.3.3.3.1.cmml">​</mo><mi id="S2.E1.m1.3.3.3.3.3" xref="S2.E1.m1.3.3.3.3.3.cmml">S</mi></mrow></msub><mo id="S2.E1.m1.3.3.4" xref="S2.E1.m1.3.3.4.cmml">=</mo><mrow id="S2.E1.m1.3.3.1.1" xref="S2.E1.m1.3.3.cmml"><mo id="S2.E1.m1.3.3.1.1.2" xref="S2.E1.m1.3.3.cmml">(</mo><mrow id="S2.E1.m1.3.3.1.1.1.2" xref="S2.E1.m1.3.3.1.1.1.1.cmml"><mo id="S2.E1.m1.3.3.1.1.1.2.1" xref="S2.E1.m1.3.3.1.1.1.1.1.cmml">[</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt" id="S2.E1.m1.1.1.1.1" xref="S2.E1.m1.1.1.2.cmml"><mtr id="S2.E1.m1.1.1.1.1a" xref="S2.E1.m1.1.1.2.cmml"><mtd id="S2.E1.m1.1.1.1.1b" xref="S2.E1.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.1.1.1.1.1.1.1" xref="S2.E1.m1.1.1.1.1.1.1.1.cmml">|</mo></mtd><mtd id="S2.E1.m1.1.1.1.1c" xref="S2.E1.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.1.1.1.1.1.2.1" xref="S2.E1.m1.1.1.1.1.1.2.1.cmml">|</mo></mtd><mtd id="S2.E1.m1.1.1.1.1d" xref="S2.E1.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.1.1.1.1.1.3.1" xref="S2.E1.m1.1.1.1.1.1.3.1.cmml">|</mo></mtd></mtr><mtr id="S2.E1.m1.1.1.1.1e" xref="S2.E1.m1.1.1.2.cmml"><mtd id="S2.E1.m1.1.1.1.1f" xref="S2.E1.m1.1.1.2.cmml"><msub id="S2.E1.m1.1.1.1.1.2.1.1" xref="S2.E1.m1.1.1.1.1.2.1.1.cmml"><mi id="S2.E1.m1.1.1.1.1.2.1.1.2" xref="S2.E1.m1.1.1.1.1.2.1.1.2.cmml">a</mi><mn id="S2.E1.m1.1.1.1.1.2.1.1.3" xref="S2.E1.m1.1.1.1.1.2.1.1.3.cmml">1</mn></msub></mtd><mtd id="S2.E1.m1.1.1.1.1g" xref="S2.E1.m1.1.1.2.cmml"><msub id="S2.E1.m1.1.1.1.1.2.2.1" xref="S2.E1.m1.1.1.1.1.2.2.1.cmml"><mi id="S2.E1.m1.1.1.1.1.2.2.1.2" xref="S2.E1.m1.1.1.1.1.2.2.1.2.cmml">a</mi><mn id="S2.E1.m1.1.1.1.1.2.2.1.3" xref="S2.E1.m1.1.1.1.1.2.2.1.3.cmml">2</mn></msub></mtd><mtd id="S2.E1.m1.1.1.1.1h" xref="S2.E1.m1.1.1.2.cmml"><msub id="S2.E1.m1.1.1.1.1.2.3.1" xref="S2.E1.m1.1.1.1.1.2.3.1.cmml"><mi id="S2.E1.m1.1.1.1.1.2.3.1.2" xref="S2.E1.m1.1.1.1.1.2.3.1.2.cmml">a</mi><mn id="S2.E1.m1.1.1.1.1.2.3.1.3" xref="S2.E1.m1.1.1.1.1.2.3.1.3.cmml">3</mn></msub></mtd></mtr><mtr id="S2.E1.m1.1.1.1.1i" xref="S2.E1.m1.1.1.2.cmml"><mtd id="S2.E1.m1.1.1.1.1j" xref="S2.E1.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.1.1.1.1.3.1.1" xref="S2.E1.m1.1.1.1.1.3.1.1.cmml">|</mo></mtd><mtd id="S2.E1.m1.1.1.1.1k" xref="S2.E1.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.1.1.1.1.3.2.1" xref="S2.E1.m1.1.1.1.1.3.2.1.cmml">|</mo></mtd><mtd id="S2.E1.m1.1.1.1.1l" xref="S2.E1.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.1.1.1.1.3.3.1" xref="S2.E1.m1.1.1.1.1.3.3.1.cmml">|</mo></mtd></mtr></mtable><mo id="S2.E1.m1.3.3.1.1.1.2.2" xref="S2.E1.m1.3.3.1.1.1.1.1.cmml">]</mo></mrow><mo id="S2.E1.m1.3.3.1.1.3" xref="S2.E1.m1.3.3.cmml">)</mo></mrow><mo id="S2.E1.m1.3.3.5" xref="S2.E1.m1.3.3.5.cmml">=</mo><mrow id="S2.E1.m1.3.3.6.2" xref="S2.E1.m1.3.3.6.1.cmml"><mo id="S2.E1.m1.3.3.6.2.1" xref="S2.E1.m1.3.3.6.1.1.cmml">[</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt" id="S2.E1.m1.2.2.1.1" xref="S2.E1.m1.2.2.2.cmml"><mtr id="S2.E1.m1.2.2.1.1a" xref="S2.E1.m1.2.2.2.cmml"><mtd id="S2.E1.m1.2.2.1.1b" xref="S2.E1.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.2.2.1.1.1.1.1" xref="S2.E1.m1.2.2.1.1.1.1.1.cmml">|</mo></mtd><mtd id="S2.E1.m1.2.2.1.1c" xref="S2.E1.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.2.2.1.1.1.2.1" xref="S2.E1.m1.2.2.1.1.1.2.1.cmml">|</mo></mtd></mtr><mtr id="S2.E1.m1.2.2.1.1d" xref="S2.E1.m1.2.2.2.cmml"><mtd id="S2.E1.m1.2.2.1.1e" xref="S2.E1.m1.2.2.2.cmml"><msub id="S2.E1.m1.2.2.1.1.2.1.1" xref="S2.E1.m1.2.2.1.1.2.1.1.cmml"><mi id="S2.E1.m1.2.2.1.1.2.1.1.2" xref="S2.E1.m1.2.2.1.1.2.1.1.2.cmml">a</mi><mn id="S2.E1.m1.2.2.1.1.2.1.1.3" xref="S2.E1.m1.2.2.1.1.2.1.1.3.cmml">1</mn></msub></mtd><mtd id="S2.E1.m1.2.2.1.1f" xref="S2.E1.m1.2.2.2.cmml"><msub id="S2.E1.m1.2.2.1.1.2.2.1" xref="S2.E1.m1.2.2.1.1.2.2.1.cmml"><mi id="S2.E1.m1.2.2.1.1.2.2.1.2" xref="S2.E1.m1.2.2.1.1.2.2.1.2.cmml">a</mi><mn id="S2.E1.m1.2.2.1.1.2.2.1.3" xref="S2.E1.m1.2.2.1.1.2.2.1.3.cmml">2</mn></msub></mtd></mtr><mtr id="S2.E1.m1.2.2.1.1g" xref="S2.E1.m1.2.2.2.cmml"><mtd id="S2.E1.m1.2.2.1.1h" xref="S2.E1.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.2.2.1.1.3.1.1" xref="S2.E1.m1.2.2.1.1.3.1.1.cmml">|</mo></mtd><mtd id="S2.E1.m1.2.2.1.1i" xref="S2.E1.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E1.m1.2.2.1.1.3.2.1" xref="S2.E1.m1.2.2.1.1.3.2.1.cmml">|</mo></mtd></mtr></mtable><mo id="S2.E1.m1.3.3.6.2.2" xref="S2.E1.m1.3.3.6.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E1.m1.3b"><apply id="S2.E1.m1.3.3.cmml" xref="S2.E1.m1.3.3"><and id="S2.E1.m1.3.3a.cmml" xref="S2.E1.m1.3.3"></and><apply id="S2.E1.m1.3.3b.cmml" xref="S2.E1.m1.3.3"><eq id="S2.E1.m1.3.3.4.cmml" xref="S2.E1.m1.3.3.4"></eq><apply id="S2.E1.m1.3.3.3.cmml" xref="S2.E1.m1.3.3.3"><csymbol cd="ambiguous" id="S2.E1.m1.3.3.3.1.cmml" xref="S2.E1.m1.3.3.3">subscript</csymbol><ci id="S2.E1.m1.3.3.3.2.cmml" xref="S2.E1.m1.3.3.3.2">𝑔</ci><apply id="S2.E1.m1.3.3.3.3.cmml" xref="S2.E1.m1.3.3.3.3"><times id="S2.E1.m1.3.3.3.3.1.cmml" xref="S2.E1.m1.3.3.3.3.1"></times><ci id="S2.E1.m1.3.3.3.3.2.cmml" xref="S2.E1.m1.3.3.3.3.2">𝐺</ci><ci id="S2.E1.m1.3.3.3.3.3.cmml" xref="S2.E1.m1.3.3.3.3.3">𝑆</ci></apply></apply><apply id="S2.E1.m1.3.3.1.1.1.1.cmml" xref="S2.E1.m1.3.3.1.1.1.2"><csymbol cd="latexml" id="S2.E1.m1.3.3.1.1.1.1.1.cmml" xref="S2.E1.m1.3.3.1.1.1.2.1">delimited-[]</csymbol><apply id="S2.E1.m1.1.1.2.cmml" xref="S2.E1.m1.1.1.1.1"><csymbol cd="latexml" id="S2.E1.m1.1.1.2.1.cmml" xref="S2.E1.m1.1.1.1.1">matrix</csymbol><matrix id="S2.E1.m1.1.1.1.1.cmml" xref="S2.E1.m1.1.1.1.1"><matrixrow id="S2.E1.m1.1.1.1.1a.cmml" xref="S2.E1.m1.1.1.1.1"><ci id="S2.E1.m1.1.1.1.1.1.1.1.cmml" xref="S2.E1.m1.1.1.1.1.1.1.1">|</ci><ci id="S2.E1.m1.1.1.1.1.1.2.1.cmml" xref="S2.E1.m1.1.1.1.1.1.2.1">|</ci><ci id="S2.E1.m1.1.1.1.1.1.3.1.cmml" xref="S2.E1.m1.1.1.1.1.1.3.1">|</ci></matrixrow><matrixrow id="S2.E1.m1.1.1.1.1b.cmml" xref="S2.E1.m1.1.1.1.1"><apply id="S2.E1.m1.1.1.1.1.2.1.1.cmml" xref="S2.E1.m1.1.1.1.1.2.1.1"><csymbol cd="ambiguous" id="S2.E1.m1.1.1.1.1.2.1.1.1.cmml" xref="S2.E1.m1.1.1.1.1.2.1.1">subscript</csymbol><ci id="S2.E1.m1.1.1.1.1.2.1.1.2.cmml" xref="S2.E1.m1.1.1.1.1.2.1.1.2">𝑎</ci><cn type="integer" id="S2.E1.m1.1.1.1.1.2.1.1.3.cmml" xref="S2.E1.m1.1.1.1.1.2.1.1.3">1</cn></apply><apply id="S2.E1.m1.1.1.1.1.2.2.1.cmml" xref="S2.E1.m1.1.1.1.1.2.2.1"><csymbol cd="ambiguous" id="S2.E1.m1.1.1.1.1.2.2.1.1.cmml" xref="S2.E1.m1.1.1.1.1.2.2.1">subscript</csymbol><ci id="S2.E1.m1.1.1.1.1.2.2.1.2.cmml" xref="S2.E1.m1.1.1.1.1.2.2.1.2">𝑎</ci><cn type="integer" id="S2.E1.m1.1.1.1.1.2.2.1.3.cmml" xref="S2.E1.m1.1.1.1.1.2.2.1.3">2</cn></apply><apply id="S2.E1.m1.1.1.1.1.2.3.1.cmml" xref="S2.E1.m1.1.1.1.1.2.3.1"><csymbol cd="ambiguous" id="S2.E1.m1.1.1.1.1.2.3.1.1.cmml" xref="S2.E1.m1.1.1.1.1.2.3.1">subscript</csymbol><ci id="S2.E1.m1.1.1.1.1.2.3.1.2.cmml" xref="S2.E1.m1.1.1.1.1.2.3.1.2">𝑎</ci><cn type="integer" id="S2.E1.m1.1.1.1.1.2.3.1.3.cmml" xref="S2.E1.m1.1.1.1.1.2.3.1.3">3</cn></apply></matrixrow><matrixrow id="S2.E1.m1.1.1.1.1c.cmml" xref="S2.E1.m1.1.1.1.1"><ci id="S2.E1.m1.1.1.1.1.3.1.1.cmml" xref="S2.E1.m1.1.1.1.1.3.1.1">|</ci><ci id="S2.E1.m1.1.1.1.1.3.2.1.cmml" xref="S2.E1.m1.1.1.1.1.3.2.1">|</ci><ci id="S2.E1.m1.1.1.1.1.3.3.1.cmml" xref="S2.E1.m1.1.1.1.1.3.3.1">|</ci></matrixrow></matrix></apply></apply></apply><apply id="S2.E1.m1.3.3c.cmml" xref="S2.E1.m1.3.3"><eq id="S2.E1.m1.3.3.5.cmml" xref="S2.E1.m1.3.3.5"></eq><share href="#S2.E1.m1.3.3.1.cmml" id="S2.E1.m1.3.3d.cmml" xref="S2.E1.m1.3.3"></share><apply id="S2.E1.m1.3.3.6.1.cmml" xref="S2.E1.m1.3.3.6.2"><csymbol cd="latexml" id="S2.E1.m1.3.3.6.1.1.cmml" xref="S2.E1.m1.3.3.6.2.1">delimited-[]</csymbol><apply id="S2.E1.m1.2.2.2.cmml" xref="S2.E1.m1.2.2.1.1"><csymbol cd="latexml" id="S2.E1.m1.2.2.2.1.cmml" xref="S2.E1.m1.2.2.1.1">matrix</csymbol><matrix id="S2.E1.m1.2.2.1.1.cmml" xref="S2.E1.m1.2.2.1.1"><matrixrow id="S2.E1.m1.2.2.1.1a.cmml" xref="S2.E1.m1.2.2.1.1"><ci id="S2.E1.m1.2.2.1.1.1.1.1.cmml" xref="S2.E1.m1.2.2.1.1.1.1.1">|</ci><ci id="S2.E1.m1.2.2.1.1.1.2.1.cmml" xref="S2.E1.m1.2.2.1.1.1.2.1">|</ci></matrixrow><matrixrow id="S2.E1.m1.2.2.1.1b.cmml" xref="S2.E1.m1.2.2.1.1"><apply id="S2.E1.m1.2.2.1.1.2.1.1.cmml" xref="S2.E1.m1.2.2.1.1.2.1.1"><csymbol cd="ambiguous" id="S2.E1.m1.2.2.1.1.2.1.1.1.cmml" xref="S2.E1.m1.2.2.1.1.2.1.1">subscript</csymbol><ci id="S2.E1.m1.2.2.1.1.2.1.1.2.cmml" xref="S2.E1.m1.2.2.1.1.2.1.1.2">𝑎</ci><cn type="integer" id="S2.E1.m1.2.2.1.1.2.1.1.3.cmml" xref="S2.E1.m1.2.2.1.1.2.1.1.3">1</cn></apply><apply id="S2.E1.m1.2.2.1.1.2.2.1.cmml" xref="S2.E1.m1.2.2.1.1.2.2.1"><csymbol cd="ambiguous" id="S2.E1.m1.2.2.1.1.2.2.1.1.cmml" xref="S2.E1.m1.2.2.1.1.2.2.1">subscript</csymbol><ci id="S2.E1.m1.2.2.1.1.2.2.1.2.cmml" xref="S2.E1.m1.2.2.1.1.2.2.1.2">𝑎</ci><cn type="integer" id="S2.E1.m1.2.2.1.1.2.2.1.3.cmml" xref="S2.E1.m1.2.2.1.1.2.2.1.3">2</cn></apply></matrixrow><matrixrow id="S2.E1.m1.2.2.1.1c.cmml" xref="S2.E1.m1.2.2.1.1"><ci id="S2.E1.m1.2.2.1.1.3.1.1.cmml" xref="S2.E1.m1.2.2.1.1.3.1.1">|</ci><ci id="S2.E1.m1.2.2.1.1.3.2.1.cmml" xref="S2.E1.m1.2.2.1.1.3.2.1">|</ci></matrixrow></matrix></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E1.m1.3c">g_{GS}=\left(\left[\begin{matrix}|&amp;|&amp;|\\
+a_{1}&amp;a_{2}&amp;a_{3}\\
+|&amp;|&amp;|\\
+\end{matrix}\right]\right)=\left[\begin{matrix}|&amp;|\\
+a_{1}&amp;a_{2}\\
+|&amp;|\end{matrix}\right]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.1" class="ltx_p">The predicted 6D representation matrix can then mapped back into <span id="S2.p3.1.1" class="ltx_text ltx_font_italic">SO</span>(3).</p>
+</div>
+<div id="S2.p4" class="ltx_para">
+<table id="S2.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E2.m1.3" class="ltx_Math" alttext="f_{GS}=\left(\left[\begin{matrix}|&amp;|\\
+a_{1}&amp;a_{2}\\
+|&amp;|\\
+\end{matrix}\right]\right)=\left[\begin{matrix}|&amp;|&amp;|\\
+b_{1}&amp;b_{2}&amp;b_{3}\\
+|&amp;|&amp;|\\
+\end{matrix}\right]" display="block"><semantics id="S2.E2.m1.3a"><mrow id="S2.E2.m1.3.3" xref="S2.E2.m1.3.3.cmml"><msub id="S2.E2.m1.3.3.3" xref="S2.E2.m1.3.3.3.cmml"><mi id="S2.E2.m1.3.3.3.2" xref="S2.E2.m1.3.3.3.2.cmml">f</mi><mrow id="S2.E2.m1.3.3.3.3" xref="S2.E2.m1.3.3.3.3.cmml"><mi id="S2.E2.m1.3.3.3.3.2" xref="S2.E2.m1.3.3.3.3.2.cmml">G</mi><mo lspace="0em" rspace="0em" id="S2.E2.m1.3.3.3.3.1" xref="S2.E2.m1.3.3.3.3.1.cmml">​</mo><mi id="S2.E2.m1.3.3.3.3.3" xref="S2.E2.m1.3.3.3.3.3.cmml">S</mi></mrow></msub><mo id="S2.E2.m1.3.3.4" xref="S2.E2.m1.3.3.4.cmml">=</mo><mrow id="S2.E2.m1.3.3.1.1" xref="S2.E2.m1.3.3.cmml"><mo id="S2.E2.m1.3.3.1.1.2" xref="S2.E2.m1.3.3.cmml">(</mo><mrow id="S2.E2.m1.3.3.1.1.1.2" xref="S2.E2.m1.3.3.1.1.1.1.cmml"><mo id="S2.E2.m1.3.3.1.1.1.2.1" xref="S2.E2.m1.3.3.1.1.1.1.1.cmml">[</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt" id="S2.E2.m1.1.1.1.1" xref="S2.E2.m1.1.1.2.cmml"><mtr id="S2.E2.m1.1.1.1.1a" xref="S2.E2.m1.1.1.2.cmml"><mtd id="S2.E2.m1.1.1.1.1b" xref="S2.E2.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.1.1.1.1.1.1.1" xref="S2.E2.m1.1.1.1.1.1.1.1.cmml">|</mo></mtd><mtd id="S2.E2.m1.1.1.1.1c" xref="S2.E2.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.1.1.1.1.1.2.1" xref="S2.E2.m1.1.1.1.1.1.2.1.cmml">|</mo></mtd></mtr><mtr id="S2.E2.m1.1.1.1.1d" xref="S2.E2.m1.1.1.2.cmml"><mtd id="S2.E2.m1.1.1.1.1e" xref="S2.E2.m1.1.1.2.cmml"><msub id="S2.E2.m1.1.1.1.1.2.1.1" xref="S2.E2.m1.1.1.1.1.2.1.1.cmml"><mi id="S2.E2.m1.1.1.1.1.2.1.1.2" xref="S2.E2.m1.1.1.1.1.2.1.1.2.cmml">a</mi><mn id="S2.E2.m1.1.1.1.1.2.1.1.3" xref="S2.E2.m1.1.1.1.1.2.1.1.3.cmml">1</mn></msub></mtd><mtd id="S2.E2.m1.1.1.1.1f" xref="S2.E2.m1.1.1.2.cmml"><msub id="S2.E2.m1.1.1.1.1.2.2.1" xref="S2.E2.m1.1.1.1.1.2.2.1.cmml"><mi id="S2.E2.m1.1.1.1.1.2.2.1.2" xref="S2.E2.m1.1.1.1.1.2.2.1.2.cmml">a</mi><mn id="S2.E2.m1.1.1.1.1.2.2.1.3" xref="S2.E2.m1.1.1.1.1.2.2.1.3.cmml">2</mn></msub></mtd></mtr><mtr id="S2.E2.m1.1.1.1.1g" xref="S2.E2.m1.1.1.2.cmml"><mtd id="S2.E2.m1.1.1.1.1h" xref="S2.E2.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.1.1.1.1.3.1.1" xref="S2.E2.m1.1.1.1.1.3.1.1.cmml">|</mo></mtd><mtd id="S2.E2.m1.1.1.1.1i" xref="S2.E2.m1.1.1.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.1.1.1.1.3.2.1" xref="S2.E2.m1.1.1.1.1.3.2.1.cmml">|</mo></mtd></mtr></mtable><mo id="S2.E2.m1.3.3.1.1.1.2.2" xref="S2.E2.m1.3.3.1.1.1.1.1.cmml">]</mo></mrow><mo id="S2.E2.m1.3.3.1.1.3" xref="S2.E2.m1.3.3.cmml">)</mo></mrow><mo id="S2.E2.m1.3.3.5" xref="S2.E2.m1.3.3.5.cmml">=</mo><mrow id="S2.E2.m1.3.3.6.2" xref="S2.E2.m1.3.3.6.1.cmml"><mo id="S2.E2.m1.3.3.6.2.1" xref="S2.E2.m1.3.3.6.1.1.cmml">[</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt" id="S2.E2.m1.2.2.1.1" xref="S2.E2.m1.2.2.2.cmml"><mtr id="S2.E2.m1.2.2.1.1a" xref="S2.E2.m1.2.2.2.cmml"><mtd id="S2.E2.m1.2.2.1.1b" xref="S2.E2.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.2.2.1.1.1.1.1" xref="S2.E2.m1.2.2.1.1.1.1.1.cmml">|</mo></mtd><mtd id="S2.E2.m1.2.2.1.1c" xref="S2.E2.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.2.2.1.1.1.2.1" xref="S2.E2.m1.2.2.1.1.1.2.1.cmml">|</mo></mtd><mtd id="S2.E2.m1.2.2.1.1d" xref="S2.E2.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.2.2.1.1.1.3.1" xref="S2.E2.m1.2.2.1.1.1.3.1.cmml">|</mo></mtd></mtr><mtr id="S2.E2.m1.2.2.1.1e" xref="S2.E2.m1.2.2.2.cmml"><mtd id="S2.E2.m1.2.2.1.1f" xref="S2.E2.m1.2.2.2.cmml"><msub id="S2.E2.m1.2.2.1.1.2.1.1" xref="S2.E2.m1.2.2.1.1.2.1.1.cmml"><mi id="S2.E2.m1.2.2.1.1.2.1.1.2" xref="S2.E2.m1.2.2.1.1.2.1.1.2.cmml">b</mi><mn id="S2.E2.m1.2.2.1.1.2.1.1.3" xref="S2.E2.m1.2.2.1.1.2.1.1.3.cmml">1</mn></msub></mtd><mtd id="S2.E2.m1.2.2.1.1g" xref="S2.E2.m1.2.2.2.cmml"><msub id="S2.E2.m1.2.2.1.1.2.2.1" xref="S2.E2.m1.2.2.1.1.2.2.1.cmml"><mi id="S2.E2.m1.2.2.1.1.2.2.1.2" xref="S2.E2.m1.2.2.1.1.2.2.1.2.cmml">b</mi><mn id="S2.E2.m1.2.2.1.1.2.2.1.3" xref="S2.E2.m1.2.2.1.1.2.2.1.3.cmml">2</mn></msub></mtd><mtd id="S2.E2.m1.2.2.1.1h" xref="S2.E2.m1.2.2.2.cmml"><msub id="S2.E2.m1.2.2.1.1.2.3.1" xref="S2.E2.m1.2.2.1.1.2.3.1.cmml"><mi id="S2.E2.m1.2.2.1.1.2.3.1.2" xref="S2.E2.m1.2.2.1.1.2.3.1.2.cmml">b</mi><mn id="S2.E2.m1.2.2.1.1.2.3.1.3" xref="S2.E2.m1.2.2.1.1.2.3.1.3.cmml">3</mn></msub></mtd></mtr><mtr id="S2.E2.m1.2.2.1.1i" xref="S2.E2.m1.2.2.2.cmml"><mtd id="S2.E2.m1.2.2.1.1j" xref="S2.E2.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.2.2.1.1.3.1.1" xref="S2.E2.m1.2.2.1.1.3.1.1.cmml">|</mo></mtd><mtd id="S2.E2.m1.2.2.1.1k" xref="S2.E2.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.2.2.1.1.3.2.1" xref="S2.E2.m1.2.2.1.1.3.2.1.cmml">|</mo></mtd><mtd id="S2.E2.m1.2.2.1.1l" xref="S2.E2.m1.2.2.2.cmml"><mo fence="false" stretchy="false" id="S2.E2.m1.2.2.1.1.3.3.1" xref="S2.E2.m1.2.2.1.1.3.3.1.cmml">|</mo></mtd></mtr></mtable><mo id="S2.E2.m1.3.3.6.2.2" xref="S2.E2.m1.3.3.6.1.1.cmml">]</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E2.m1.3b"><apply id="S2.E2.m1.3.3.cmml" xref="S2.E2.m1.3.3"><and id="S2.E2.m1.3.3a.cmml" xref="S2.E2.m1.3.3"></and><apply id="S2.E2.m1.3.3b.cmml" xref="S2.E2.m1.3.3"><eq id="S2.E2.m1.3.3.4.cmml" xref="S2.E2.m1.3.3.4"></eq><apply id="S2.E2.m1.3.3.3.cmml" xref="S2.E2.m1.3.3.3"><csymbol cd="ambiguous" id="S2.E2.m1.3.3.3.1.cmml" xref="S2.E2.m1.3.3.3">subscript</csymbol><ci id="S2.E2.m1.3.3.3.2.cmml" xref="S2.E2.m1.3.3.3.2">𝑓</ci><apply id="S2.E2.m1.3.3.3.3.cmml" xref="S2.E2.m1.3.3.3.3"><times id="S2.E2.m1.3.3.3.3.1.cmml" xref="S2.E2.m1.3.3.3.3.1"></times><ci id="S2.E2.m1.3.3.3.3.2.cmml" xref="S2.E2.m1.3.3.3.3.2">𝐺</ci><ci id="S2.E2.m1.3.3.3.3.3.cmml" xref="S2.E2.m1.3.3.3.3.3">𝑆</ci></apply></apply><apply id="S2.E2.m1.3.3.1.1.1.1.cmml" xref="S2.E2.m1.3.3.1.1.1.2"><csymbol cd="latexml" id="S2.E2.m1.3.3.1.1.1.1.1.cmml" xref="S2.E2.m1.3.3.1.1.1.2.1">delimited-[]</csymbol><apply id="S2.E2.m1.1.1.2.cmml" xref="S2.E2.m1.1.1.1.1"><csymbol cd="latexml" id="S2.E2.m1.1.1.2.1.cmml" xref="S2.E2.m1.1.1.1.1">matrix</csymbol><matrix id="S2.E2.m1.1.1.1.1.cmml" xref="S2.E2.m1.1.1.1.1"><matrixrow id="S2.E2.m1.1.1.1.1a.cmml" xref="S2.E2.m1.1.1.1.1"><ci id="S2.E2.m1.1.1.1.1.1.1.1.cmml" xref="S2.E2.m1.1.1.1.1.1.1.1">|</ci><ci id="S2.E2.m1.1.1.1.1.1.2.1.cmml" xref="S2.E2.m1.1.1.1.1.1.2.1">|</ci></matrixrow><matrixrow id="S2.E2.m1.1.1.1.1b.cmml" xref="S2.E2.m1.1.1.1.1"><apply id="S2.E2.m1.1.1.1.1.2.1.1.cmml" xref="S2.E2.m1.1.1.1.1.2.1.1"><csymbol cd="ambiguous" id="S2.E2.m1.1.1.1.1.2.1.1.1.cmml" xref="S2.E2.m1.1.1.1.1.2.1.1">subscript</csymbol><ci id="S2.E2.m1.1.1.1.1.2.1.1.2.cmml" xref="S2.E2.m1.1.1.1.1.2.1.1.2">𝑎</ci><cn type="integer" id="S2.E2.m1.1.1.1.1.2.1.1.3.cmml" xref="S2.E2.m1.1.1.1.1.2.1.1.3">1</cn></apply><apply id="S2.E2.m1.1.1.1.1.2.2.1.cmml" xref="S2.E2.m1.1.1.1.1.2.2.1"><csymbol cd="ambiguous" id="S2.E2.m1.1.1.1.1.2.2.1.1.cmml" xref="S2.E2.m1.1.1.1.1.2.2.1">subscript</csymbol><ci id="S2.E2.m1.1.1.1.1.2.2.1.2.cmml" xref="S2.E2.m1.1.1.1.1.2.2.1.2">𝑎</ci><cn type="integer" id="S2.E2.m1.1.1.1.1.2.2.1.3.cmml" xref="S2.E2.m1.1.1.1.1.2.2.1.3">2</cn></apply></matrixrow><matrixrow id="S2.E2.m1.1.1.1.1c.cmml" xref="S2.E2.m1.1.1.1.1"><ci id="S2.E2.m1.1.1.1.1.3.1.1.cmml" xref="S2.E2.m1.1.1.1.1.3.1.1">|</ci><ci id="S2.E2.m1.1.1.1.1.3.2.1.cmml" xref="S2.E2.m1.1.1.1.1.3.2.1">|</ci></matrixrow></matrix></apply></apply></apply><apply id="S2.E2.m1.3.3c.cmml" xref="S2.E2.m1.3.3"><eq id="S2.E2.m1.3.3.5.cmml" xref="S2.E2.m1.3.3.5"></eq><share href="#S2.E2.m1.3.3.1.cmml" id="S2.E2.m1.3.3d.cmml" xref="S2.E2.m1.3.3"></share><apply id="S2.E2.m1.3.3.6.1.cmml" xref="S2.E2.m1.3.3.6.2"><csymbol cd="latexml" id="S2.E2.m1.3.3.6.1.1.cmml" xref="S2.E2.m1.3.3.6.2.1">delimited-[]</csymbol><apply id="S2.E2.m1.2.2.2.cmml" xref="S2.E2.m1.2.2.1.1"><csymbol cd="latexml" id="S2.E2.m1.2.2.2.1.cmml" xref="S2.E2.m1.2.2.1.1">matrix</csymbol><matrix id="S2.E2.m1.2.2.1.1.cmml" xref="S2.E2.m1.2.2.1.1"><matrixrow id="S2.E2.m1.2.2.1.1a.cmml" xref="S2.E2.m1.2.2.1.1"><ci id="S2.E2.m1.2.2.1.1.1.1.1.cmml" xref="S2.E2.m1.2.2.1.1.1.1.1">|</ci><ci id="S2.E2.m1.2.2.1.1.1.2.1.cmml" xref="S2.E2.m1.2.2.1.1.1.2.1">|</ci><ci id="S2.E2.m1.2.2.1.1.1.3.1.cmml" xref="S2.E2.m1.2.2.1.1.1.3.1">|</ci></matrixrow><matrixrow id="S2.E2.m1.2.2.1.1b.cmml" xref="S2.E2.m1.2.2.1.1"><apply id="S2.E2.m1.2.2.1.1.2.1.1.cmml" xref="S2.E2.m1.2.2.1.1.2.1.1"><csymbol cd="ambiguous" id="S2.E2.m1.2.2.1.1.2.1.1.1.cmml" xref="S2.E2.m1.2.2.1.1.2.1.1">subscript</csymbol><ci id="S2.E2.m1.2.2.1.1.2.1.1.2.cmml" xref="S2.E2.m1.2.2.1.1.2.1.1.2">𝑏</ci><cn type="integer" id="S2.E2.m1.2.2.1.1.2.1.1.3.cmml" xref="S2.E2.m1.2.2.1.1.2.1.1.3">1</cn></apply><apply id="S2.E2.m1.2.2.1.1.2.2.1.cmml" xref="S2.E2.m1.2.2.1.1.2.2.1"><csymbol cd="ambiguous" id="S2.E2.m1.2.2.1.1.2.2.1.1.cmml" xref="S2.E2.m1.2.2.1.1.2.2.1">subscript</csymbol><ci id="S2.E2.m1.2.2.1.1.2.2.1.2.cmml" xref="S2.E2.m1.2.2.1.1.2.2.1.2">𝑏</ci><cn type="integer" id="S2.E2.m1.2.2.1.1.2.2.1.3.cmml" xref="S2.E2.m1.2.2.1.1.2.2.1.3">2</cn></apply><apply id="S2.E2.m1.2.2.1.1.2.3.1.cmml" xref="S2.E2.m1.2.2.1.1.2.3.1"><csymbol cd="ambiguous" id="S2.E2.m1.2.2.1.1.2.3.1.1.cmml" xref="S2.E2.m1.2.2.1.1.2.3.1">subscript</csymbol><ci id="S2.E2.m1.2.2.1.1.2.3.1.2.cmml" xref="S2.E2.m1.2.2.1.1.2.3.1.2">𝑏</ci><cn type="integer" id="S2.E2.m1.2.2.1.1.2.3.1.3.cmml" xref="S2.E2.m1.2.2.1.1.2.3.1.3">3</cn></apply></matrixrow><matrixrow id="S2.E2.m1.2.2.1.1c.cmml" xref="S2.E2.m1.2.2.1.1"><ci id="S2.E2.m1.2.2.1.1.3.1.1.cmml" xref="S2.E2.m1.2.2.1.1.3.1.1">|</ci><ci id="S2.E2.m1.2.2.1.1.3.2.1.cmml" xref="S2.E2.m1.2.2.1.1.3.2.1">|</ci><ci id="S2.E2.m1.2.2.1.1.3.3.1.cmml" xref="S2.E2.m1.2.2.1.1.3.3.1">|</ci></matrixrow></matrix></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E2.m1.3c">f_{GS}=\left(\left[\begin{matrix}|&amp;|\\
+a_{1}&amp;a_{2}\\
+|&amp;|\\
+\end{matrix}\right]\right)=\left[\begin{matrix}|&amp;|&amp;|\\
+b_{1}&amp;b_{2}&amp;b_{3}\\
+|&amp;|&amp;|\\
+\end{matrix}\right]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S2.p5" class="ltx_para">
+<p id="S2.p5.1" class="ltx_p">Hereby, the remaining column vector is simply determined by the cross product that ensures that the orthogonality constraint is satisfied for the resulting <math id="S2.p5.1.m1.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S2.p5.1.m1.1a"><mrow id="S2.p5.1.m1.1.1" xref="S2.p5.1.m1.1.1.cmml"><mn id="S2.p5.1.m1.1.1.2" xref="S2.p5.1.m1.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S2.p5.1.m1.1.1.1" xref="S2.p5.1.m1.1.1.1.cmml">×</mo><mn id="S2.p5.1.m1.1.1.3" xref="S2.p5.1.m1.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p5.1.m1.1b"><apply id="S2.p5.1.m1.1.1.cmml" xref="S2.p5.1.m1.1.1"><times id="S2.p5.1.m1.1.1.1.cmml" xref="S2.p5.1.m1.1.1.1"></times><cn type="integer" id="S2.p5.1.m1.1.1.2.cmml" xref="S2.p5.1.m1.1.1.2">3</cn><cn type="integer" id="S2.p5.1.m1.1.1.3.cmml" xref="S2.p5.1.m1.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p5.1.m1.1c">3\times 3</annotation></semantics></math> matrix.</p>
+<table id="S2.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E3.m1.36" class="ltx_Math" alttext="\begin{split}&amp;b_{1}=\frac{a_{1}}{||a_{1}||}\\
+&amp;b_{2}=\frac{u_{2}}{||u_{2}||},u_{2}=a_{2}-(b_{1}\cdot a_{2})b_{1}\\
+&amp;b_{3}=b_{1}\times b_{2}\\
+\end{split}" display="block"><semantics id="S2.E3.m1.36a"><mtable columnspacing="0pt" displaystyle="true" rowspacing="0pt" id="S2.E3.m1.36.36.4"><mtr id="S2.E3.m1.36.36.4a"><mtd id="S2.E3.m1.36.36.4b" xref="S2.E3.m1.34.34.2.3.cmml"></mtd><mtd class="ltx_align_left" columnalign="left" id="S2.E3.m1.36.36.4c"><mrow id="S2.E3.m1.4.4.4.4.4"><msub id="S2.E3.m1.4.4.4.4.4.5"><mi id="S2.E3.m1.1.1.1.1.1.1" xref="S2.E3.m1.1.1.1.1.1.1.cmml">b</mi><mn id="S2.E3.m1.2.2.2.2.2.2.1" xref="S2.E3.m1.2.2.2.2.2.2.1.cmml">1</mn></msub><mo id="S2.E3.m1.3.3.3.3.3.3" xref="S2.E3.m1.3.3.3.3.3.3.cmml">=</mo><mfrac id="S2.E3.m1.4.4.4.4.4.4" xref="S2.E3.m1.4.4.4.4.4.4.cmml"><msub id="S2.E3.m1.4.4.4.4.4.4.3" xref="S2.E3.m1.4.4.4.4.4.4.3.cmml"><mi id="S2.E3.m1.4.4.4.4.4.4.3.2" xref="S2.E3.m1.4.4.4.4.4.4.3.2.cmml">a</mi><mn id="S2.E3.m1.4.4.4.4.4.4.3.3" xref="S2.E3.m1.4.4.4.4.4.4.3.3.cmml">1</mn></msub><mrow id="S2.E3.m1.4.4.4.4.4.4.1.1" xref="S2.E3.m1.4.4.4.4.4.4.1.2.cmml"><mo stretchy="false" id="S2.E3.m1.4.4.4.4.4.4.1.1.2" xref="S2.E3.m1.4.4.4.4.4.4.1.2.1.cmml">‖</mo><msub id="S2.E3.m1.4.4.4.4.4.4.1.1.1" xref="S2.E3.m1.4.4.4.4.4.4.1.1.1.cmml"><mi id="S2.E3.m1.4.4.4.4.4.4.1.1.1.2" xref="S2.E3.m1.4.4.4.4.4.4.1.1.1.2.cmml">a</mi><mn id="S2.E3.m1.4.4.4.4.4.4.1.1.1.3" xref="S2.E3.m1.4.4.4.4.4.4.1.1.1.3.cmml">1</mn></msub><mo stretchy="false" id="S2.E3.m1.4.4.4.4.4.4.1.1.3" xref="S2.E3.m1.4.4.4.4.4.4.1.2.1.cmml">‖</mo></mrow></mfrac></mrow></mtd></mtr><mtr id="S2.E3.m1.36.36.4d"><mtd id="S2.E3.m1.36.36.4e" xref="S2.E3.m1.34.34.2.3.cmml"></mtd><mtd class="ltx_align_left" columnalign="left" id="S2.E3.m1.36.36.4f"><mrow id="S2.E3.m1.36.36.4.34.22.22.22"><mrow id="S2.E3.m1.35.35.3.33.21.21.21.1"><msub id="S2.E3.m1.35.35.3.33.21.21.21.1.1"><mi id="S2.E3.m1.5.5.5.1.1.1" xref="S2.E3.m1.5.5.5.1.1.1.cmml">b</mi><mn id="S2.E3.m1.6.6.6.2.2.2.1" xref="S2.E3.m1.6.6.6.2.2.2.1.cmml">2</mn></msub><mo id="S2.E3.m1.7.7.7.3.3.3" xref="S2.E3.m1.7.7.7.3.3.3.cmml">=</mo><mfrac id="S2.E3.m1.8.8.8.4.4.4" xref="S2.E3.m1.8.8.8.4.4.4.cmml"><msub id="S2.E3.m1.8.8.8.4.4.4.3" xref="S2.E3.m1.8.8.8.4.4.4.3.cmml"><mi id="S2.E3.m1.8.8.8.4.4.4.3.2" xref="S2.E3.m1.8.8.8.4.4.4.3.2.cmml">u</mi><mn id="S2.E3.m1.8.8.8.4.4.4.3.3" xref="S2.E3.m1.8.8.8.4.4.4.3.3.cmml">2</mn></msub><mrow id="S2.E3.m1.8.8.8.4.4.4.1.1" xref="S2.E3.m1.8.8.8.4.4.4.1.2.cmml"><mo stretchy="false" id="S2.E3.m1.8.8.8.4.4.4.1.1.2" xref="S2.E3.m1.8.8.8.4.4.4.1.2.1.cmml">‖</mo><msub id="S2.E3.m1.8.8.8.4.4.4.1.1.1" xref="S2.E3.m1.8.8.8.4.4.4.1.1.1.cmml"><mi id="S2.E3.m1.8.8.8.4.4.4.1.1.1.2" xref="S2.E3.m1.8.8.8.4.4.4.1.1.1.2.cmml">u</mi><mn id="S2.E3.m1.8.8.8.4.4.4.1.1.1.3" xref="S2.E3.m1.8.8.8.4.4.4.1.1.1.3.cmml">2</mn></msub><mo stretchy="false" id="S2.E3.m1.8.8.8.4.4.4.1.1.3" xref="S2.E3.m1.8.8.8.4.4.4.1.2.1.cmml">‖</mo></mrow></mfrac></mrow><mo id="S2.E3.m1.9.9.9.5.5.5" xref="S2.E3.m1.34.34.2.3.cmml">,</mo><mrow id="S2.E3.m1.36.36.4.34.22.22.22.2"><msub id="S2.E3.m1.36.36.4.34.22.22.22.2.2"><mi id="S2.E3.m1.10.10.10.6.6.6" xref="S2.E3.m1.10.10.10.6.6.6.cmml">u</mi><mn id="S2.E3.m1.11.11.11.7.7.7.1" xref="S2.E3.m1.11.11.11.7.7.7.1.cmml">2</mn></msub><mo id="S2.E3.m1.12.12.12.8.8.8" xref="S2.E3.m1.12.12.12.8.8.8.cmml">=</mo><mrow id="S2.E3.m1.36.36.4.34.22.22.22.2.1"><msub id="S2.E3.m1.36.36.4.34.22.22.22.2.1.2"><mi id="S2.E3.m1.13.13.13.9.9.9" xref="S2.E3.m1.13.13.13.9.9.9.cmml">a</mi><mn id="S2.E3.m1.14.14.14.10.10.10.1" xref="S2.E3.m1.14.14.14.10.10.10.1.cmml">2</mn></msub><mo id="S2.E3.m1.15.15.15.11.11.11" xref="S2.E3.m1.15.15.15.11.11.11.cmml">−</mo><mrow id="S2.E3.m1.36.36.4.34.22.22.22.2.1.1"><mrow id="S2.E3.m1.36.36.4.34.22.22.22.2.1.1.1.1"><mo stretchy="false" id="S2.E3.m1.16.16.16.12.12.12" xref="S2.E3.m1.34.34.2.3.cmml">(</mo><mrow id="S2.E3.m1.36.36.4.34.22.22.22.2.1.1.1.1.1"><msub id="S2.E3.m1.36.36.4.34.22.22.22.2.1.1.1.1.1.1"><mi id="S2.E3.m1.17.17.17.13.13.13" xref="S2.E3.m1.17.17.17.13.13.13.cmml">b</mi><mn id="S2.E3.m1.18.18.18.14.14.14.1" xref="S2.E3.m1.18.18.18.14.14.14.1.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S2.E3.m1.19.19.19.15.15.15" xref="S2.E3.m1.19.19.19.15.15.15.cmml">⋅</mo><msub id="S2.E3.m1.36.36.4.34.22.22.22.2.1.1.1.1.1.2"><mi id="S2.E3.m1.20.20.20.16.16.16" xref="S2.E3.m1.20.20.20.16.16.16.cmml">a</mi><mn id="S2.E3.m1.21.21.21.17.17.17.1" xref="S2.E3.m1.21.21.21.17.17.17.1.cmml">2</mn></msub></mrow><mo stretchy="false" id="S2.E3.m1.22.22.22.18.18.18" xref="S2.E3.m1.34.34.2.3.cmml">)</mo></mrow><mo lspace="0em" rspace="0em" id="S2.E3.m1.36.36.4.34.22.22.22.2.1.1.2" xref="S2.E3.m1.34.34.2.3.cmml">​</mo><msub id="S2.E3.m1.36.36.4.34.22.22.22.2.1.1.3"><mi id="S2.E3.m1.23.23.23.19.19.19" xref="S2.E3.m1.23.23.23.19.19.19.cmml">b</mi><mn id="S2.E3.m1.24.24.24.20.20.20.1" xref="S2.E3.m1.24.24.24.20.20.20.1.cmml">1</mn></msub></mrow></mrow></mrow></mrow></mtd></mtr><mtr id="S2.E3.m1.36.36.4g"><mtd id="S2.E3.m1.36.36.4h" xref="S2.E3.m1.34.34.2.3.cmml"></mtd><mtd class="ltx_align_left" columnalign="left" id="S2.E3.m1.36.36.4i"><mrow id="S2.E3.m1.32.32.32.8.8"><msub id="S2.E3.m1.32.32.32.8.8.9"><mi id="S2.E3.m1.25.25.25.1.1.1" xref="S2.E3.m1.25.25.25.1.1.1.cmml">b</mi><mn id="S2.E3.m1.26.26.26.2.2.2.1" xref="S2.E3.m1.26.26.26.2.2.2.1.cmml">3</mn></msub><mo id="S2.E3.m1.27.27.27.3.3.3" xref="S2.E3.m1.27.27.27.3.3.3.cmml">=</mo><mrow id="S2.E3.m1.32.32.32.8.8.10"><msub id="S2.E3.m1.32.32.32.8.8.10.1"><mi id="S2.E3.m1.28.28.28.4.4.4" xref="S2.E3.m1.28.28.28.4.4.4.cmml">b</mi><mn id="S2.E3.m1.29.29.29.5.5.5.1" xref="S2.E3.m1.29.29.29.5.5.5.1.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S2.E3.m1.30.30.30.6.6.6" xref="S2.E3.m1.30.30.30.6.6.6.cmml">×</mo><msub id="S2.E3.m1.32.32.32.8.8.10.2"><mi id="S2.E3.m1.31.31.31.7.7.7" xref="S2.E3.m1.31.31.31.7.7.7.cmml">b</mi><mn id="S2.E3.m1.32.32.32.8.8.8.1" xref="S2.E3.m1.32.32.32.8.8.8.1.cmml">2</mn></msub></mrow></mrow></mtd></mtr></mtable><annotation-xml encoding="MathML-Content" id="S2.E3.m1.36b"><apply id="S2.E3.m1.34.34.2.3.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.3a.cmml" xref="S2.E3.m1.36.36.4b">formulae-sequence</csymbol><apply id="S2.E3.m1.33.33.1.1.1.cmml" xref="S2.E3.m1.36.36.4b"><and id="S2.E3.m1.33.33.1.1.1a.cmml" xref="S2.E3.m1.36.36.4b"></and><apply id="S2.E3.m1.33.33.1.1.1b.cmml" xref="S2.E3.m1.36.36.4b"><eq id="S2.E3.m1.3.3.3.3.3.3.cmml" xref="S2.E3.m1.3.3.3.3.3.3"></eq><apply id="S2.E3.m1.33.33.1.1.1.2.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.33.33.1.1.1.2.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.1.1.1.1.1.1.cmml" xref="S2.E3.m1.1.1.1.1.1.1">𝑏</ci><cn type="integer" id="S2.E3.m1.2.2.2.2.2.2.1.cmml" xref="S2.E3.m1.2.2.2.2.2.2.1">1</cn></apply><apply id="S2.E3.m1.33.33.1.1.1.4.cmml" xref="S2.E3.m1.36.36.4b"><times id="S2.E3.m1.33.33.1.1.1.4.1.cmml" xref="S2.E3.m1.36.36.4b"></times><apply id="S2.E3.m1.4.4.4.4.4.4.cmml" xref="S2.E3.m1.4.4.4.4.4.4"><divide id="S2.E3.m1.4.4.4.4.4.4.2.cmml" xref="S2.E3.m1.4.4.4.4.4.4"></divide><apply id="S2.E3.m1.4.4.4.4.4.4.3.cmml" xref="S2.E3.m1.4.4.4.4.4.4.3"><csymbol cd="ambiguous" id="S2.E3.m1.4.4.4.4.4.4.3.1.cmml" xref="S2.E3.m1.4.4.4.4.4.4.3">subscript</csymbol><ci id="S2.E3.m1.4.4.4.4.4.4.3.2.cmml" xref="S2.E3.m1.4.4.4.4.4.4.3.2">𝑎</ci><cn type="integer" id="S2.E3.m1.4.4.4.4.4.4.3.3.cmml" xref="S2.E3.m1.4.4.4.4.4.4.3.3">1</cn></apply><apply id="S2.E3.m1.4.4.4.4.4.4.1.2.cmml" xref="S2.E3.m1.4.4.4.4.4.4.1.1"><csymbol cd="latexml" id="S2.E3.m1.4.4.4.4.4.4.1.2.1.cmml" xref="S2.E3.m1.4.4.4.4.4.4.1.1.2">norm</csymbol><apply id="S2.E3.m1.4.4.4.4.4.4.1.1.1.cmml" xref="S2.E3.m1.4.4.4.4.4.4.1.1.1"><csymbol cd="ambiguous" id="S2.E3.m1.4.4.4.4.4.4.1.1.1.1.cmml" xref="S2.E3.m1.4.4.4.4.4.4.1.1.1">subscript</csymbol><ci id="S2.E3.m1.4.4.4.4.4.4.1.1.1.2.cmml" xref="S2.E3.m1.4.4.4.4.4.4.1.1.1.2">𝑎</ci><cn type="integer" id="S2.E3.m1.4.4.4.4.4.4.1.1.1.3.cmml" xref="S2.E3.m1.4.4.4.4.4.4.1.1.1.3">1</cn></apply></apply></apply><apply id="S2.E3.m1.33.33.1.1.1.4.3.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.33.33.1.1.1.4.3.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.5.5.5.1.1.1.cmml" xref="S2.E3.m1.5.5.5.1.1.1">𝑏</ci><cn type="integer" id="S2.E3.m1.6.6.6.2.2.2.1.cmml" xref="S2.E3.m1.6.6.6.2.2.2.1">2</cn></apply></apply></apply><apply id="S2.E3.m1.33.33.1.1.1c.cmml" xref="S2.E3.m1.36.36.4b"><eq id="S2.E3.m1.7.7.7.3.3.3.cmml" xref="S2.E3.m1.7.7.7.3.3.3"></eq><share href="#S2.E3.m1.33.33.1.1.1.4.cmml" id="S2.E3.m1.33.33.1.1.1d.cmml" xref="S2.E3.m1.36.36.4b"></share><apply id="S2.E3.m1.8.8.8.4.4.4.cmml" xref="S2.E3.m1.8.8.8.4.4.4"><divide id="S2.E3.m1.8.8.8.4.4.4.2.cmml" xref="S2.E3.m1.8.8.8.4.4.4"></divide><apply id="S2.E3.m1.8.8.8.4.4.4.3.cmml" xref="S2.E3.m1.8.8.8.4.4.4.3"><csymbol cd="ambiguous" id="S2.E3.m1.8.8.8.4.4.4.3.1.cmml" xref="S2.E3.m1.8.8.8.4.4.4.3">subscript</csymbol><ci id="S2.E3.m1.8.8.8.4.4.4.3.2.cmml" xref="S2.E3.m1.8.8.8.4.4.4.3.2">𝑢</ci><cn type="integer" id="S2.E3.m1.8.8.8.4.4.4.3.3.cmml" xref="S2.E3.m1.8.8.8.4.4.4.3.3">2</cn></apply><apply id="S2.E3.m1.8.8.8.4.4.4.1.2.cmml" xref="S2.E3.m1.8.8.8.4.4.4.1.1"><csymbol cd="latexml" id="S2.E3.m1.8.8.8.4.4.4.1.2.1.cmml" xref="S2.E3.m1.8.8.8.4.4.4.1.1.2">norm</csymbol><apply id="S2.E3.m1.8.8.8.4.4.4.1.1.1.cmml" xref="S2.E3.m1.8.8.8.4.4.4.1.1.1"><csymbol cd="ambiguous" id="S2.E3.m1.8.8.8.4.4.4.1.1.1.1.cmml" xref="S2.E3.m1.8.8.8.4.4.4.1.1.1">subscript</csymbol><ci id="S2.E3.m1.8.8.8.4.4.4.1.1.1.2.cmml" xref="S2.E3.m1.8.8.8.4.4.4.1.1.1.2">𝑢</ci><cn type="integer" id="S2.E3.m1.8.8.8.4.4.4.1.1.1.3.cmml" xref="S2.E3.m1.8.8.8.4.4.4.1.1.1.3">2</cn></apply></apply></apply></apply></apply><apply id="S2.E3.m1.34.34.2.2.2.cmml" xref="S2.E3.m1.36.36.4b"><and id="S2.E3.m1.34.34.2.2.2a.cmml" xref="S2.E3.m1.36.36.4b"></and><apply id="S2.E3.m1.34.34.2.2.2b.cmml" xref="S2.E3.m1.36.36.4b"><eq id="S2.E3.m1.12.12.12.8.8.8.cmml" xref="S2.E3.m1.12.12.12.8.8.8"></eq><apply id="S2.E3.m1.34.34.2.2.2.3.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.2.2.3.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.10.10.10.6.6.6.cmml" xref="S2.E3.m1.10.10.10.6.6.6">𝑢</ci><cn type="integer" id="S2.E3.m1.11.11.11.7.7.7.1.cmml" xref="S2.E3.m1.11.11.11.7.7.7.1">2</cn></apply><apply id="S2.E3.m1.34.34.2.2.2.1.cmml" xref="S2.E3.m1.36.36.4b"><minus id="S2.E3.m1.15.15.15.11.11.11.cmml" xref="S2.E3.m1.15.15.15.11.11.11"></minus><apply id="S2.E3.m1.34.34.2.2.2.1.3.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.2.2.1.3.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.13.13.13.9.9.9.cmml" xref="S2.E3.m1.13.13.13.9.9.9">𝑎</ci><cn type="integer" id="S2.E3.m1.14.14.14.10.10.10.1.cmml" xref="S2.E3.m1.14.14.14.10.10.10.1">2</cn></apply><apply id="S2.E3.m1.34.34.2.2.2.1.1.cmml" xref="S2.E3.m1.36.36.4b"><times id="S2.E3.m1.34.34.2.2.2.1.1.2.cmml" xref="S2.E3.m1.36.36.4b"></times><apply id="S2.E3.m1.34.34.2.2.2.1.1.1.1.1.cmml" xref="S2.E3.m1.36.36.4b"><ci id="S2.E3.m1.19.19.19.15.15.15.cmml" xref="S2.E3.m1.19.19.19.15.15.15">⋅</ci><apply id="S2.E3.m1.34.34.2.2.2.1.1.1.1.1.2.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.2.2.1.1.1.1.1.2.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.17.17.17.13.13.13.cmml" xref="S2.E3.m1.17.17.17.13.13.13">𝑏</ci><cn type="integer" id="S2.E3.m1.18.18.18.14.14.14.1.cmml" xref="S2.E3.m1.18.18.18.14.14.14.1">1</cn></apply><apply id="S2.E3.m1.34.34.2.2.2.1.1.1.1.1.3.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.2.2.1.1.1.1.1.3.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.20.20.20.16.16.16.cmml" xref="S2.E3.m1.20.20.20.16.16.16">𝑎</ci><cn type="integer" id="S2.E3.m1.21.21.21.17.17.17.1.cmml" xref="S2.E3.m1.21.21.21.17.17.17.1">2</cn></apply></apply><apply id="S2.E3.m1.34.34.2.2.2.1.1.3.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.2.2.1.1.3.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.23.23.23.19.19.19.cmml" xref="S2.E3.m1.23.23.23.19.19.19">𝑏</ci><cn type="integer" id="S2.E3.m1.24.24.24.20.20.20.1.cmml" xref="S2.E3.m1.24.24.24.20.20.20.1">1</cn></apply><apply id="S2.E3.m1.34.34.2.2.2.1.1.4.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.2.2.1.1.4.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.25.25.25.1.1.1.cmml" xref="S2.E3.m1.25.25.25.1.1.1">𝑏</ci><cn type="integer" id="S2.E3.m1.26.26.26.2.2.2.1.cmml" xref="S2.E3.m1.26.26.26.2.2.2.1">3</cn></apply></apply></apply></apply><apply id="S2.E3.m1.34.34.2.2.2c.cmml" xref="S2.E3.m1.36.36.4b"><eq id="S2.E3.m1.27.27.27.3.3.3.cmml" xref="S2.E3.m1.27.27.27.3.3.3"></eq><share href="#S2.E3.m1.34.34.2.2.2.1.cmml" id="S2.E3.m1.34.34.2.2.2d.cmml" xref="S2.E3.m1.36.36.4b"></share><apply id="S2.E3.m1.34.34.2.2.2.6.cmml" xref="S2.E3.m1.36.36.4b"><times id="S2.E3.m1.30.30.30.6.6.6.cmml" xref="S2.E3.m1.30.30.30.6.6.6"></times><apply id="S2.E3.m1.34.34.2.2.2.6.2.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.2.2.6.2.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.28.28.28.4.4.4.cmml" xref="S2.E3.m1.28.28.28.4.4.4">𝑏</ci><cn type="integer" id="S2.E3.m1.29.29.29.5.5.5.1.cmml" xref="S2.E3.m1.29.29.29.5.5.5.1">1</cn></apply><apply id="S2.E3.m1.34.34.2.2.2.6.3.cmml" xref="S2.E3.m1.36.36.4b"><csymbol cd="ambiguous" id="S2.E3.m1.34.34.2.2.2.6.3.1.cmml" xref="S2.E3.m1.36.36.4b">subscript</csymbol><ci id="S2.E3.m1.31.31.31.7.7.7.cmml" xref="S2.E3.m1.31.31.31.7.7.7">𝑏</ci><cn type="integer" id="S2.E3.m1.32.32.32.8.8.8.1.cmml" xref="S2.E3.m1.32.32.32.8.8.8.1">2</cn></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E3.m1.36c">\begin{split}&amp;b_{1}=\frac{a_{1}}{||a_{1}||}\\
+&amp;b_{2}=\frac{u_{2}}{||u_{2}||},u_{2}=a_{2}-(b_{1}\cdot a_{2})b_{1}\\
+&amp;b_{3}=b_{1}\times b_{2}\\
+\end{split}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S2.p6" class="ltx_para">
+<p id="S2.p6.1" class="ltx_p">As a result, our network only has to predict 6 parameters that are mapped into a <math id="S2.p6.1.m1.1" class="ltx_Math" alttext="3\times 3" display="inline"><semantics id="S2.p6.1.m1.1a"><mrow id="S2.p6.1.m1.1.1" xref="S2.p6.1.m1.1.1.cmml"><mn id="S2.p6.1.m1.1.1.2" xref="S2.p6.1.m1.1.1.2.cmml">3</mn><mo lspace="0.222em" rspace="0.222em" id="S2.p6.1.m1.1.1.1" xref="S2.p6.1.m1.1.1.1.cmml">×</mo><mn id="S2.p6.1.m1.1.1.3" xref="S2.p6.1.m1.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.p6.1.m1.1b"><apply id="S2.p6.1.m1.1.1.cmml" xref="S2.p6.1.m1.1.1"><times id="S2.p6.1.m1.1.1.1.cmml" xref="S2.p6.1.m1.1.1.1"></times><cn type="integer" id="S2.p6.1.m1.1.1.2.cmml" xref="S2.p6.1.m1.1.1.2">3</cn><cn type="integer" id="S2.p6.1.m1.1.1.3.cmml" xref="S2.p6.1.m1.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p6.1.m1.1c">3\times 3</annotation></semantics></math> rotation matrix in a subsequent transformation which at the same time also satisfies the orthogonality constraint.</p>
+</div>
+<div id="S2.p7" class="ltx_para">
+<p id="S2.p7.3" class="ltx_p">A commonly used loss function for head pose related tasks is the <span id="S2.p7.3.1" class="ltx_text ltx_font_italic">l2</span>-norm. However, using the Frobenius norm for measuring distances between two matrices would break with the <span id="S2.p7.3.2" class="ltx_text ltx_font_italic">SO</span>(3) manifold geometry. Instead, the shortest path between two 3D rotations is geometrically interpreted as the geodesic distance. Let <math id="S2.p7.1.m1.1" class="ltx_Math" alttext="R_{p}" display="inline"><semantics id="S2.p7.1.m1.1a"><msub id="S2.p7.1.m1.1.1" xref="S2.p7.1.m1.1.1.cmml"><mi id="S2.p7.1.m1.1.1.2" xref="S2.p7.1.m1.1.1.2.cmml">R</mi><mi id="S2.p7.1.m1.1.1.3" xref="S2.p7.1.m1.1.1.3.cmml">p</mi></msub><annotation-xml encoding="MathML-Content" id="S2.p7.1.m1.1b"><apply id="S2.p7.1.m1.1.1.cmml" xref="S2.p7.1.m1.1.1"><csymbol cd="ambiguous" id="S2.p7.1.m1.1.1.1.cmml" xref="S2.p7.1.m1.1.1">subscript</csymbol><ci id="S2.p7.1.m1.1.1.2.cmml" xref="S2.p7.1.m1.1.1.2">𝑅</ci><ci id="S2.p7.1.m1.1.1.3.cmml" xref="S2.p7.1.m1.1.1.3">𝑝</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p7.1.m1.1c">R_{p}</annotation></semantics></math> and <math id="S2.p7.2.m2.1" class="ltx_Math" alttext="R_{gt}" display="inline"><semantics id="S2.p7.2.m2.1a"><msub id="S2.p7.2.m2.1.1" xref="S2.p7.2.m2.1.1.cmml"><mi id="S2.p7.2.m2.1.1.2" xref="S2.p7.2.m2.1.1.2.cmml">R</mi><mrow id="S2.p7.2.m2.1.1.3" xref="S2.p7.2.m2.1.1.3.cmml"><mi id="S2.p7.2.m2.1.1.3.2" xref="S2.p7.2.m2.1.1.3.2.cmml">g</mi><mo lspace="0em" rspace="0em" id="S2.p7.2.m2.1.1.3.1" xref="S2.p7.2.m2.1.1.3.1.cmml">​</mo><mi id="S2.p7.2.m2.1.1.3.3" xref="S2.p7.2.m2.1.1.3.3.cmml">t</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S2.p7.2.m2.1b"><apply id="S2.p7.2.m2.1.1.cmml" xref="S2.p7.2.m2.1.1"><csymbol cd="ambiguous" id="S2.p7.2.m2.1.1.1.cmml" xref="S2.p7.2.m2.1.1">subscript</csymbol><ci id="S2.p7.2.m2.1.1.2.cmml" xref="S2.p7.2.m2.1.1.2">𝑅</ci><apply id="S2.p7.2.m2.1.1.3.cmml" xref="S2.p7.2.m2.1.1.3"><times id="S2.p7.2.m2.1.1.3.1.cmml" xref="S2.p7.2.m2.1.1.3.1"></times><ci id="S2.p7.2.m2.1.1.3.2.cmml" xref="S2.p7.2.m2.1.1.3.2">𝑔</ci><ci id="S2.p7.2.m2.1.1.3.3.cmml" xref="S2.p7.2.m2.1.1.3.3">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.p7.2.m2.1c">R_{gt}</annotation></semantics></math> <math id="S2.p7.3.m3.1" class="ltx_Math" alttext="\in" display="inline"><semantics id="S2.p7.3.m3.1a"><mo id="S2.p7.3.m3.1.1" xref="S2.p7.3.m3.1.1.cmml">∈</mo><annotation-xml encoding="MathML-Content" id="S2.p7.3.m3.1b"><in id="S2.p7.3.m3.1.1.cmml" xref="S2.p7.3.m3.1.1"></in></annotation-xml><annotation encoding="application/x-tex" id="S2.p7.3.m3.1c">\in</annotation></semantics></math> <span id="S2.p7.3.3" class="ltx_text ltx_font_italic">SO</span>(3) be the estimated and the ground truth rotation matrices, respectively, then the geodesic distance between both rotation matrices is defined as:</p>
+</div>
+<div id="S2.p8" class="ltx_para">
+<table id="S2.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.E4.m1.1" class="ltx_Math" alttext="L_{g}=cos^{-1}\left(\frac{tr(R_{p}R_{gt}^{T})-1}{2}\right)" display="block"><semantics id="S2.E4.m1.1a"><mrow id="S2.E4.m1.1.2" xref="S2.E4.m1.1.2.cmml"><msub id="S2.E4.m1.1.2.2" xref="S2.E4.m1.1.2.2.cmml"><mi id="S2.E4.m1.1.2.2.2" xref="S2.E4.m1.1.2.2.2.cmml">L</mi><mi id="S2.E4.m1.1.2.2.3" xref="S2.E4.m1.1.2.2.3.cmml">g</mi></msub><mo id="S2.E4.m1.1.2.1" xref="S2.E4.m1.1.2.1.cmml">=</mo><mrow id="S2.E4.m1.1.2.3" xref="S2.E4.m1.1.2.3.cmml"><mi id="S2.E4.m1.1.2.3.2" xref="S2.E4.m1.1.2.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S2.E4.m1.1.2.3.1" xref="S2.E4.m1.1.2.3.1.cmml">​</mo><mi id="S2.E4.m1.1.2.3.3" xref="S2.E4.m1.1.2.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S2.E4.m1.1.2.3.1a" xref="S2.E4.m1.1.2.3.1.cmml">​</mo><msup id="S2.E4.m1.1.2.3.4" xref="S2.E4.m1.1.2.3.4.cmml"><mi id="S2.E4.m1.1.2.3.4.2" xref="S2.E4.m1.1.2.3.4.2.cmml">s</mi><mrow id="S2.E4.m1.1.2.3.4.3" xref="S2.E4.m1.1.2.3.4.3.cmml"><mo id="S2.E4.m1.1.2.3.4.3a" xref="S2.E4.m1.1.2.3.4.3.cmml">−</mo><mn id="S2.E4.m1.1.2.3.4.3.2" xref="S2.E4.m1.1.2.3.4.3.2.cmml">1</mn></mrow></msup><mo lspace="0em" rspace="0em" id="S2.E4.m1.1.2.3.1b" xref="S2.E4.m1.1.2.3.1.cmml">​</mo><mrow id="S2.E4.m1.1.2.3.5.2" xref="S2.E4.m1.1.1.cmml"><mo id="S2.E4.m1.1.2.3.5.2.1" xref="S2.E4.m1.1.1.cmml">(</mo><mfrac id="S2.E4.m1.1.1" xref="S2.E4.m1.1.1.cmml"><mrow id="S2.E4.m1.1.1.1" xref="S2.E4.m1.1.1.1.cmml"><mrow id="S2.E4.m1.1.1.1.1" xref="S2.E4.m1.1.1.1.1.cmml"><mi id="S2.E4.m1.1.1.1.1.3" xref="S2.E4.m1.1.1.1.1.3.cmml">t</mi><mo lspace="0em" rspace="0em" id="S2.E4.m1.1.1.1.1.2" xref="S2.E4.m1.1.1.1.1.2.cmml">​</mo><mi id="S2.E4.m1.1.1.1.1.4" xref="S2.E4.m1.1.1.1.1.4.cmml">r</mi><mo lspace="0em" rspace="0em" id="S2.E4.m1.1.1.1.1.2a" xref="S2.E4.m1.1.1.1.1.2.cmml">​</mo><mrow id="S2.E4.m1.1.1.1.1.1.1" xref="S2.E4.m1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S2.E4.m1.1.1.1.1.1.1.2" xref="S2.E4.m1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S2.E4.m1.1.1.1.1.1.1.1" xref="S2.E4.m1.1.1.1.1.1.1.1.cmml"><msub id="S2.E4.m1.1.1.1.1.1.1.1.2" xref="S2.E4.m1.1.1.1.1.1.1.1.2.cmml"><mi id="S2.E4.m1.1.1.1.1.1.1.1.2.2" xref="S2.E4.m1.1.1.1.1.1.1.1.2.2.cmml">R</mi><mi id="S2.E4.m1.1.1.1.1.1.1.1.2.3" xref="S2.E4.m1.1.1.1.1.1.1.1.2.3.cmml">p</mi></msub><mo lspace="0em" rspace="0em" id="S2.E4.m1.1.1.1.1.1.1.1.1" xref="S2.E4.m1.1.1.1.1.1.1.1.1.cmml">​</mo><msubsup id="S2.E4.m1.1.1.1.1.1.1.1.3" xref="S2.E4.m1.1.1.1.1.1.1.1.3.cmml"><mi id="S2.E4.m1.1.1.1.1.1.1.1.3.2.2" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.2.cmml">R</mi><mrow id="S2.E4.m1.1.1.1.1.1.1.1.3.2.3" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.cmml"><mi id="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.2" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.2.cmml">g</mi><mo lspace="0em" rspace="0em" id="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.1" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.1.cmml">​</mo><mi id="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.3" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.3.cmml">t</mi></mrow><mi id="S2.E4.m1.1.1.1.1.1.1.1.3.3" xref="S2.E4.m1.1.1.1.1.1.1.1.3.3.cmml">T</mi></msubsup></mrow><mo stretchy="false" id="S2.E4.m1.1.1.1.1.1.1.3" xref="S2.E4.m1.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow><mo id="S2.E4.m1.1.1.1.2" xref="S2.E4.m1.1.1.1.2.cmml">−</mo><mn id="S2.E4.m1.1.1.1.3" xref="S2.E4.m1.1.1.1.3.cmml">1</mn></mrow><mn id="S2.E4.m1.1.1.3" xref="S2.E4.m1.1.1.3.cmml">2</mn></mfrac><mo id="S2.E4.m1.1.2.3.5.2.2" xref="S2.E4.m1.1.1.cmml">)</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.E4.m1.1b"><apply id="S2.E4.m1.1.2.cmml" xref="S2.E4.m1.1.2"><eq id="S2.E4.m1.1.2.1.cmml" xref="S2.E4.m1.1.2.1"></eq><apply id="S2.E4.m1.1.2.2.cmml" xref="S2.E4.m1.1.2.2"><csymbol cd="ambiguous" id="S2.E4.m1.1.2.2.1.cmml" xref="S2.E4.m1.1.2.2">subscript</csymbol><ci id="S2.E4.m1.1.2.2.2.cmml" xref="S2.E4.m1.1.2.2.2">𝐿</ci><ci id="S2.E4.m1.1.2.2.3.cmml" xref="S2.E4.m1.1.2.2.3">𝑔</ci></apply><apply id="S2.E4.m1.1.2.3.cmml" xref="S2.E4.m1.1.2.3"><times id="S2.E4.m1.1.2.3.1.cmml" xref="S2.E4.m1.1.2.3.1"></times><ci id="S2.E4.m1.1.2.3.2.cmml" xref="S2.E4.m1.1.2.3.2">𝑐</ci><ci id="S2.E4.m1.1.2.3.3.cmml" xref="S2.E4.m1.1.2.3.3">𝑜</ci><apply id="S2.E4.m1.1.2.3.4.cmml" xref="S2.E4.m1.1.2.3.4"><csymbol cd="ambiguous" id="S2.E4.m1.1.2.3.4.1.cmml" xref="S2.E4.m1.1.2.3.4">superscript</csymbol><ci id="S2.E4.m1.1.2.3.4.2.cmml" xref="S2.E4.m1.1.2.3.4.2">𝑠</ci><apply id="S2.E4.m1.1.2.3.4.3.cmml" xref="S2.E4.m1.1.2.3.4.3"><minus id="S2.E4.m1.1.2.3.4.3.1.cmml" xref="S2.E4.m1.1.2.3.4.3"></minus><cn type="integer" id="S2.E4.m1.1.2.3.4.3.2.cmml" xref="S2.E4.m1.1.2.3.4.3.2">1</cn></apply></apply><apply id="S2.E4.m1.1.1.cmml" xref="S2.E4.m1.1.2.3.5.2"><divide id="S2.E4.m1.1.1.2.cmml" xref="S2.E4.m1.1.2.3.5.2"></divide><apply id="S2.E4.m1.1.1.1.cmml" xref="S2.E4.m1.1.1.1"><minus id="S2.E4.m1.1.1.1.2.cmml" xref="S2.E4.m1.1.1.1.2"></minus><apply id="S2.E4.m1.1.1.1.1.cmml" xref="S2.E4.m1.1.1.1.1"><times id="S2.E4.m1.1.1.1.1.2.cmml" xref="S2.E4.m1.1.1.1.1.2"></times><ci id="S2.E4.m1.1.1.1.1.3.cmml" xref="S2.E4.m1.1.1.1.1.3">𝑡</ci><ci id="S2.E4.m1.1.1.1.1.4.cmml" xref="S2.E4.m1.1.1.1.1.4">𝑟</ci><apply id="S2.E4.m1.1.1.1.1.1.1.1.cmml" xref="S2.E4.m1.1.1.1.1.1.1"><times id="S2.E4.m1.1.1.1.1.1.1.1.1.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.1"></times><apply id="S2.E4.m1.1.1.1.1.1.1.1.2.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S2.E4.m1.1.1.1.1.1.1.1.2.1.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S2.E4.m1.1.1.1.1.1.1.1.2.2.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.2.2">𝑅</ci><ci id="S2.E4.m1.1.1.1.1.1.1.1.2.3.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.2.3">𝑝</ci></apply><apply id="S2.E4.m1.1.1.1.1.1.1.1.3.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S2.E4.m1.1.1.1.1.1.1.1.3.1.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3">superscript</csymbol><apply id="S2.E4.m1.1.1.1.1.1.1.1.3.2.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S2.E4.m1.1.1.1.1.1.1.1.3.2.1.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S2.E4.m1.1.1.1.1.1.1.1.3.2.2.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.2">𝑅</ci><apply id="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.3"><times id="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.1.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.1"></times><ci id="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.2.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.2">𝑔</ci><ci id="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.3.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3.2.3.3">𝑡</ci></apply></apply><ci id="S2.E4.m1.1.1.1.1.1.1.1.3.3.cmml" xref="S2.E4.m1.1.1.1.1.1.1.1.3.3">𝑇</ci></apply></apply></apply><cn type="integer" id="S2.E4.m1.1.1.1.3.cmml" xref="S2.E4.m1.1.1.1.3">1</cn></apply><cn type="integer" id="S2.E4.m1.1.1.3.cmml" xref="S2.E4.m1.1.1.3">2</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.E4.m1.1c">L_{g}=cos^{-1}\left(\frac{tr(R_{p}R_{gt}^{T})-1}{2}\right)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div id="S2.p9" class="ltx_para">
+<p id="S2.p9.1" class="ltx_p">In the following, we will use this metric as the loss function for our neural network to compute accurate distance information between the predicted and the ground truth orientation.</p>
+</div>
+<figure id="S2.T1" class="ltx_table">
+<table id="S2.T1.3" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T1.3.4.1" class="ltx_tr">
+<th id="S2.T1.3.4.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="S2.T1.3.4.1.2" class="ltx_td ltx_th ltx_th_column ltx_border_t"></th>
+<th id="S2.T1.3.4.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" colspan="4">
+<span id="S2.T1.3.4.1.3.1" class="ltx_text ltx_font_bold">AFLW2000</span></th>
+<th id="S2.T1.3.4.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" colspan="4"><span id="S2.T1.3.4.1.4.1" class="ltx_text ltx_font_bold">BIWI</span></th>
+</tr>
+<tr id="S2.T1.1.1" class="ltx_tr">
+<th id="S2.T1.1.1.2" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="S2.T1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Full Range<sup id="S2.T1.1.1.1.1" class="ltx_sup">1</sup></th>
+<th id="S2.T1.1.1.3" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t">Yaw</th>
+<th id="S2.T1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Pitch</th>
+<th id="S2.T1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Roll</th>
+<th id="S2.T1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+<th id="S2.T1.1.1.7" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t">Yaw</th>
+<th id="S2.T1.1.1.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Pitch</th>
+<th id="S2.T1.1.1.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Roll</th>
+<th id="S2.T1.1.1.10" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T1.2.2" class="ltx_tr">
+<th id="S2.T1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">HopeNet (<math id="S2.T1.2.2.1.m1.1" class="ltx_Math" alttext="\alpha=2" display="inline"><semantics id="S2.T1.2.2.1.m1.1a"><mrow id="S2.T1.2.2.1.m1.1.1" xref="S2.T1.2.2.1.m1.1.1.cmml"><mi id="S2.T1.2.2.1.m1.1.1.2" xref="S2.T1.2.2.1.m1.1.1.2.cmml">α</mi><mo id="S2.T1.2.2.1.m1.1.1.1" xref="S2.T1.2.2.1.m1.1.1.1.cmml">=</mo><mn id="S2.T1.2.2.1.m1.1.1.3" xref="S2.T1.2.2.1.m1.1.1.3.cmml">2</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.T1.2.2.1.m1.1b"><apply id="S2.T1.2.2.1.m1.1.1.cmml" xref="S2.T1.2.2.1.m1.1.1"><eq id="S2.T1.2.2.1.m1.1.1.1.cmml" xref="S2.T1.2.2.1.m1.1.1.1"></eq><ci id="S2.T1.2.2.1.m1.1.1.2.cmml" xref="S2.T1.2.2.1.m1.1.1.2">𝛼</ci><cn type="integer" id="S2.T1.2.2.1.m1.1.1.3.cmml" xref="S2.T1.2.2.1.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.2.2.1.m1.1c">\alpha=2</annotation></semantics></math>)  <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>
+</th>
+<td id="S2.T1.2.2.2" class="ltx_td ltx_align_center ltx_border_t">✗</td>
+<td id="S2.T1.2.2.3" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t">6.47</td>
+<td id="S2.T1.2.2.4" class="ltx_td ltx_align_center ltx_border_t">6.56</td>
+<td id="S2.T1.2.2.5" class="ltx_td ltx_align_center ltx_border_t">5.44</td>
+<td id="S2.T1.2.2.6" class="ltx_td ltx_align_center ltx_border_t">6.16</td>
+<td id="S2.T1.2.2.7" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t">5.17</td>
+<td id="S2.T1.2.2.8" class="ltx_td ltx_align_center ltx_border_t">6.98</td>
+<td id="S2.T1.2.2.9" class="ltx_td ltx_align_center ltx_border_t">3.39</td>
+<td id="S2.T1.2.2.10" class="ltx_td ltx_align_center ltx_border_t">5.18</td>
+</tr>
+<tr id="S2.T1.3.3" class="ltx_tr">
+<th id="S2.T1.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">HopeNet (<math id="S2.T1.3.3.1.m1.1" class="ltx_Math" alttext="\alpha=1" display="inline"><semantics id="S2.T1.3.3.1.m1.1a"><mrow id="S2.T1.3.3.1.m1.1.1" xref="S2.T1.3.3.1.m1.1.1.cmml"><mi id="S2.T1.3.3.1.m1.1.1.2" xref="S2.T1.3.3.1.m1.1.1.2.cmml">α</mi><mo id="S2.T1.3.3.1.m1.1.1.1" xref="S2.T1.3.3.1.m1.1.1.1.cmml">=</mo><mn id="S2.T1.3.3.1.m1.1.1.3" xref="S2.T1.3.3.1.m1.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.T1.3.3.1.m1.1b"><apply id="S2.T1.3.3.1.m1.1.1.cmml" xref="S2.T1.3.3.1.m1.1.1"><eq id="S2.T1.3.3.1.m1.1.1.1.cmml" xref="S2.T1.3.3.1.m1.1.1.1"></eq><ci id="S2.T1.3.3.1.m1.1.1.2.cmml" xref="S2.T1.3.3.1.m1.1.1.2">𝛼</ci><cn type="integer" id="S2.T1.3.3.1.m1.1.1.3.cmml" xref="S2.T1.3.3.1.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.T1.3.3.1.m1.1c">\alpha=1</annotation></semantics></math>)  <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>
+</th>
+<td id="S2.T1.3.3.2" class="ltx_td ltx_align_center">✗</td>
+<td id="S2.T1.3.3.3" class="ltx_td ltx_nopad_l ltx_align_center">6.92</td>
+<td id="S2.T1.3.3.4" class="ltx_td ltx_align_center">6.64</td>
+<td id="S2.T1.3.3.5" class="ltx_td ltx_align_center">5.67</td>
+<td id="S2.T1.3.3.6" class="ltx_td ltx_align_center">6.41</td>
+<td id="S2.T1.3.3.7" class="ltx_td ltx_nopad_l ltx_align_center">4.81</td>
+<td id="S2.T1.3.3.8" class="ltx_td ltx_align_center">6.61</td>
+<td id="S2.T1.3.3.9" class="ltx_td ltx_align_center">3.27</td>
+<td id="S2.T1.3.3.10" class="ltx_td ltx_align_center">4.90</td>
+</tr>
+<tr id="S2.T1.3.5.1" class="ltx_tr">
+<th id="S2.T1.3.5.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">FSA-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>
+</th>
+<td id="S2.T1.3.5.1.2" class="ltx_td ltx_align_center">✗</td>
+<td id="S2.T1.3.5.1.3" class="ltx_td ltx_nopad_l ltx_align_center">4.50</td>
+<td id="S2.T1.3.5.1.4" class="ltx_td ltx_align_center">6.08</td>
+<td id="S2.T1.3.5.1.5" class="ltx_td ltx_align_center">4.64</td>
+<td id="S2.T1.3.5.1.6" class="ltx_td ltx_align_center">5.07</td>
+<td id="S2.T1.3.5.1.7" class="ltx_td ltx_nopad_l ltx_align_center">4.27</td>
+<td id="S2.T1.3.5.1.8" class="ltx_td ltx_align_center">4.96</td>
+<td id="S2.T1.3.5.1.9" class="ltx_td ltx_align_center">2.76</td>
+<td id="S2.T1.3.5.1.10" class="ltx_td ltx_align_center">4.00</td>
+</tr>
+<tr id="S2.T1.3.6.2" class="ltx_tr">
+<th id="S2.T1.3.6.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">HPE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>
+</th>
+<td id="S2.T1.3.6.2.2" class="ltx_td ltx_align_center">✗</td>
+<td id="S2.T1.3.6.2.3" class="ltx_td ltx_nopad_l ltx_align_center">4.80</td>
+<td id="S2.T1.3.6.2.4" class="ltx_td ltx_align_center">6.18</td>
+<td id="S2.T1.3.6.2.5" class="ltx_td ltx_align_center">4.87</td>
+<td id="S2.T1.3.6.2.6" class="ltx_td ltx_align_center">5.28</td>
+<td id="S2.T1.3.6.2.7" class="ltx_td ltx_nopad_l ltx_align_center">3.12</td>
+<td id="S2.T1.3.6.2.8" class="ltx_td ltx_align_center">5.18</td>
+<td id="S2.T1.3.6.2.9" class="ltx_td ltx_align_center">4.57</td>
+<td id="S2.T1.3.6.2.10" class="ltx_td ltx_align_center">4.29</td>
+</tr>
+<tr id="S2.T1.3.7.3" class="ltx_tr">
+<th id="S2.T1.3.7.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">QuatNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>
+</th>
+<td id="S2.T1.3.7.3.2" class="ltx_td ltx_align_center">✗</td>
+<td id="S2.T1.3.7.3.3" class="ltx_td ltx_nopad_l ltx_align_center">3.97</td>
+<td id="S2.T1.3.7.3.4" class="ltx_td ltx_align_center">5.62</td>
+<td id="S2.T1.3.7.3.5" class="ltx_td ltx_align_center">3.92</td>
+<td id="S2.T1.3.7.3.6" class="ltx_td ltx_align_center">4.50</td>
+<td id="S2.T1.3.7.3.7" class="ltx_td ltx_nopad_l ltx_align_center"><span id="S2.T1.3.7.3.7.1" class="ltx_text ltx_font_bold">2.94</span></td>
+<td id="S2.T1.3.7.3.8" class="ltx_td ltx_align_center">5.49</td>
+<td id="S2.T1.3.7.3.9" class="ltx_td ltx_align_center">4.01</td>
+<td id="S2.T1.3.7.3.10" class="ltx_td ltx_align_center">4.15</td>
+</tr>
+<tr id="S2.T1.3.8.4" class="ltx_tr">
+<th id="S2.T1.3.8.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">WHENet-V <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>
+</th>
+<td id="S2.T1.3.8.4.2" class="ltx_td ltx_align_center">✗</td>
+<td id="S2.T1.3.8.4.3" class="ltx_td ltx_nopad_l ltx_align_center">4.44</td>
+<td id="S2.T1.3.8.4.4" class="ltx_td ltx_align_center">5.75</td>
+<td id="S2.T1.3.8.4.5" class="ltx_td ltx_align_center">4.31</td>
+<td id="S2.T1.3.8.4.6" class="ltx_td ltx_align_center">4.83</td>
+<td id="S2.T1.3.8.4.7" class="ltx_td ltx_nopad_l ltx_align_center">3.60</td>
+<td id="S2.T1.3.8.4.8" class="ltx_td ltx_align_center"><span id="S2.T1.3.8.4.8.1" class="ltx_text ltx_font_bold">4.10</span></td>
+<td id="S2.T1.3.8.4.9" class="ltx_td ltx_align_center">2.73</td>
+<td id="S2.T1.3.8.4.10" class="ltx_td ltx_align_center">3.48</td>
+</tr>
+<tr id="S2.T1.3.9.5" class="ltx_tr">
+<th id="S2.T1.3.9.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">WHENet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>
+</th>
+<td id="S2.T1.3.9.5.2" class="ltx_td ltx_align_center">✓✗</td>
+<td id="S2.T1.3.9.5.3" class="ltx_td ltx_nopad_l ltx_align_center">5.11</td>
+<td id="S2.T1.3.9.5.4" class="ltx_td ltx_align_center">6.24</td>
+<td id="S2.T1.3.9.5.5" class="ltx_td ltx_align_center">4.92</td>
+<td id="S2.T1.3.9.5.6" class="ltx_td ltx_align_center">5.42</td>
+<td id="S2.T1.3.9.5.7" class="ltx_td ltx_nopad_l ltx_align_center">3.99</td>
+<td id="S2.T1.3.9.5.8" class="ltx_td ltx_align_center">4.39</td>
+<td id="S2.T1.3.9.5.9" class="ltx_td ltx_align_center">3.06</td>
+<td id="S2.T1.3.9.5.10" class="ltx_td ltx_align_center">3.81</td>
+</tr>
+<tr id="S2.T1.3.10.6" class="ltx_tr">
+<th id="S2.T1.3.10.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">TriNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>
+</th>
+<td id="S2.T1.3.10.6.2" class="ltx_td ltx_align_center">✓</td>
+<td id="S2.T1.3.10.6.3" class="ltx_td ltx_nopad_l ltx_align_center">4.04</td>
+<td id="S2.T1.3.10.6.4" class="ltx_td ltx_align_center">5.77</td>
+<td id="S2.T1.3.10.6.5" class="ltx_td ltx_align_center">4.20</td>
+<td id="S2.T1.3.10.6.6" class="ltx_td ltx_align_center">4.67</td>
+<td id="S2.T1.3.10.6.7" class="ltx_td ltx_nopad_l ltx_align_center">4.11</td>
+<td id="S2.T1.3.10.6.8" class="ltx_td ltx_align_center">4.76</td>
+<td id="S2.T1.3.10.6.9" class="ltx_td ltx_align_center">3.05</td>
+<td id="S2.T1.3.10.6.10" class="ltx_td ltx_align_center">3.97</td>
+</tr>
+<tr id="S2.T1.3.11.7" class="ltx_tr">
+<th id="S2.T1.3.11.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">FDN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>
+</th>
+<td id="S2.T1.3.11.7.2" class="ltx_td ltx_align_center">✗</td>
+<td id="S2.T1.3.11.7.3" class="ltx_td ltx_nopad_l ltx_align_center">3.78</td>
+<td id="S2.T1.3.11.7.4" class="ltx_td ltx_align_center">5.61</td>
+<td id="S2.T1.3.11.7.5" class="ltx_td ltx_align_center">3.88</td>
+<td id="S2.T1.3.11.7.6" class="ltx_td ltx_align_center">4.42</td>
+<td id="S2.T1.3.11.7.7" class="ltx_td ltx_nopad_l ltx_align_center">4.52</td>
+<td id="S2.T1.3.11.7.8" class="ltx_td ltx_align_center">4.70</td>
+<td id="S2.T1.3.11.7.9" class="ltx_td ltx_align_center"><span id="S2.T1.3.11.7.9.1" class="ltx_text ltx_font_bold">2.56</span></td>
+<td id="S2.T1.3.11.7.10" class="ltx_td ltx_align_center">3.93</td>
+</tr>
+<tr id="S2.T1.3.12.8" class="ltx_tr">
+<th id="S2.T1.3.12.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_t">6DRepNet</th>
+<td id="S2.T1.3.12.8.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">✓</td>
+<td id="S2.T1.3.12.8.3" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_b ltx_border_t"><span id="S2.T1.3.12.8.3.1" class="ltx_text ltx_font_bold">3.63</span></td>
+<td id="S2.T1.3.12.8.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S2.T1.3.12.8.4.1" class="ltx_text ltx_font_bold">4.91</span></td>
+<td id="S2.T1.3.12.8.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S2.T1.3.12.8.5.1" class="ltx_text ltx_font_bold">3.37</span></td>
+<td id="S2.T1.3.12.8.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">
+<span id="S2.T1.3.12.8.6.1" class="ltx_text ltx_font_bold">3.97</span></td>
+<td id="S2.T1.3.12.8.7" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_b ltx_border_t">3.24</td>
+<td id="S2.T1.3.12.8.8" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">4.48</td>
+<td id="S2.T1.3.12.8.9" class="ltx_td ltx_align_center ltx_border_b ltx_border_t">2.68</td>
+<td id="S2.T1.3.12.8.10" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S2.T1.3.12.8.10.1" class="ltx_text ltx_font_bold">3.47</span></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S2.T1.8.2.1" class="ltx_text ltx_font_bold" style="font-size:90%;">Table 1</span>: </span><span id="S2.T1.5.1" class="ltx_text" style="font-size:90%;">Comparisons with the state-of-the-art methods on the
+AFLW2000 and BIWI dataset. All models are trained on the 300W-LP dataset. <sup id="S2.T1.5.1.1" class="ltx_sup">1</sup> These methods allow full range predictions.</span></figcaption>
+</figure>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Experiments</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.2" class="ltx_p">We implement our proposed network using Pytorch. As backbone, we choose RepVGG <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>. For training, the RepVGG is designed as a multi-branch model just like ResNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> or Inception <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>. For deployment, the model can be converted into a VGG-like architecture using a re-parameterization scheme. The trimmed model yields the same accuracy but with a shorter inference time. This way, RepVGG combines the accuracy of multi-branch models with the efficiency of single branch architectures. RepVGG provides multiple architectures sizes, where we use the RepVGG-B1g2 that acts as the equivalent to the ResNet50. For the final layers, we choose a single fully connected layer with 6 outputs. As groundwork for this choice, we tested multiple configurations for the final layers, including one layer up to three sequential fully connected layers, single final layers with 6 output neurons, and separated branches with one output neuron each. In our experiments, a single final layer with 6 output neurons performed the best. The network is trained for 30 epochs using the Adam optimizer with initial learning of <math id="S3.p1.1.m1.1" class="ltx_Math" alttext="1e^{-5}" display="inline"><semantics id="S3.p1.1.m1.1a"><mrow id="S3.p1.1.m1.1.1" xref="S3.p1.1.m1.1.1.cmml"><mn id="S3.p1.1.m1.1.1.2" xref="S3.p1.1.m1.1.1.2.cmml">1</mn><mo lspace="0em" rspace="0em" id="S3.p1.1.m1.1.1.1" xref="S3.p1.1.m1.1.1.1.cmml">​</mo><msup id="S3.p1.1.m1.1.1.3" xref="S3.p1.1.m1.1.1.3.cmml"><mi id="S3.p1.1.m1.1.1.3.2" xref="S3.p1.1.m1.1.1.3.2.cmml">e</mi><mrow id="S3.p1.1.m1.1.1.3.3" xref="S3.p1.1.m1.1.1.3.3.cmml"><mo id="S3.p1.1.m1.1.1.3.3a" xref="S3.p1.1.m1.1.1.3.3.cmml">−</mo><mn id="S3.p1.1.m1.1.1.3.3.2" xref="S3.p1.1.m1.1.1.3.3.2.cmml">5</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.p1.1.m1.1b"><apply id="S3.p1.1.m1.1.1.cmml" xref="S3.p1.1.m1.1.1"><times id="S3.p1.1.m1.1.1.1.cmml" xref="S3.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.p1.1.m1.1.1.2.cmml" xref="S3.p1.1.m1.1.1.2">1</cn><apply id="S3.p1.1.m1.1.1.3.cmml" xref="S3.p1.1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.p1.1.m1.1.1.3.1.cmml" xref="S3.p1.1.m1.1.1.3">superscript</csymbol><ci id="S3.p1.1.m1.1.1.3.2.cmml" xref="S3.p1.1.m1.1.1.3.2">𝑒</ci><apply id="S3.p1.1.m1.1.1.3.3.cmml" xref="S3.p1.1.m1.1.1.3.3"><minus id="S3.p1.1.m1.1.1.3.3.1.cmml" xref="S3.p1.1.m1.1.1.3.3"></minus><cn type="integer" id="S3.p1.1.m1.1.1.3.3.2.cmml" xref="S3.p1.1.m1.1.1.3.3.2">5</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.1.m1.1c">1e^{-5}</annotation></semantics></math> for the backbone and <math id="S3.p1.2.m2.1" class="ltx_Math" alttext="1e^{-4}" display="inline"><semantics id="S3.p1.2.m2.1a"><mrow id="S3.p1.2.m2.1.1" xref="S3.p1.2.m2.1.1.cmml"><mn id="S3.p1.2.m2.1.1.2" xref="S3.p1.2.m2.1.1.2.cmml">1</mn><mo lspace="0em" rspace="0em" id="S3.p1.2.m2.1.1.1" xref="S3.p1.2.m2.1.1.1.cmml">​</mo><msup id="S3.p1.2.m2.1.1.3" xref="S3.p1.2.m2.1.1.3.cmml"><mi id="S3.p1.2.m2.1.1.3.2" xref="S3.p1.2.m2.1.1.3.2.cmml">e</mi><mrow id="S3.p1.2.m2.1.1.3.3" xref="S3.p1.2.m2.1.1.3.3.cmml"><mo id="S3.p1.2.m2.1.1.3.3a" xref="S3.p1.2.m2.1.1.3.3.cmml">−</mo><mn id="S3.p1.2.m2.1.1.3.3.2" xref="S3.p1.2.m2.1.1.3.3.2.cmml">4</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.p1.2.m2.1b"><apply id="S3.p1.2.m2.1.1.cmml" xref="S3.p1.2.m2.1.1"><times id="S3.p1.2.m2.1.1.1.cmml" xref="S3.p1.2.m2.1.1.1"></times><cn type="integer" id="S3.p1.2.m2.1.1.2.cmml" xref="S3.p1.2.m2.1.1.2">1</cn><apply id="S3.p1.2.m2.1.1.3.cmml" xref="S3.p1.2.m2.1.1.3"><csymbol cd="ambiguous" id="S3.p1.2.m2.1.1.3.1.cmml" xref="S3.p1.2.m2.1.1.3">superscript</csymbol><ci id="S3.p1.2.m2.1.1.3.2.cmml" xref="S3.p1.2.m2.1.1.3.2">𝑒</ci><apply id="S3.p1.2.m2.1.1.3.3.cmml" xref="S3.p1.2.m2.1.1.3.3"><minus id="S3.p1.2.m2.1.1.3.3.1.cmml" xref="S3.p1.2.m2.1.1.3.3"></minus><cn type="integer" id="S3.p1.2.m2.1.1.3.3.2.cmml" xref="S3.p1.2.m2.1.1.3.3.2">4</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.2.m2.1c">1e^{-4}</annotation></semantics></math> for the final fully connected layer. Both learning rates are halved every 10 epochs. We use a batch size of 64.
+
+<br class="ltx_break">
+<br class="ltx_break"></p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p"><span id="S3.p2.1.1" class="ltx_text ltx_font_bold">Datasets:</span>
+In general, our network is able to learn the full range of rotation. Unfortunately, due to the type of annotation technique, the most popular datasets for head pose estimation contain mainly frontal face samples.
+For evaluation, we use three public available datasets: 300W-LP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, ALFW2000 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> and BIWI <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>.
+300W-LP consists of 66,225 face samples collected from multiple databases that are further enhanced to 122,450 samples by image flipping. It is based on around 4000 real images. The ground truth is provided in the Euler angle format. For training, we convert them into the matrix form.</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<p id="S3.p3.1" class="ltx_p">The ALFW2000 dataset contains the first 2,000 images from the ALFW dataset annotated with the ground truth 3D faces and the corresponding 68 landmarks. It contains samples with large variations, different illumination, and occlusion conditions.</p>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.1" class="ltx_p">The BIWI dataset includes 15,678 images that were created in a lab environment with 20 participants. In this dataset, the head takes up only a small area in the images. Hence, we use the MTCNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> face detector to loosely crop the heads from the images.</p>
+</div>
+<div id="S3.p5" class="ltx_para">
+<p id="S3.p5.1" class="ltx_p">For a fair comparison, we follow the preprocessing strategy from the other methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> and only keep samples that have Euler angles between -99° and 99°.
+
+<br class="ltx_break">
+<br class="ltx_break"></p>
+</div>
+<figure id="S3.F2" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S3.F2.1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2202.12555/assets/images/image00329.png" id="S3.F2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S3.F2.2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2202.12555/assets/images/image01603.png" id="S3.F2.2.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S3.F2.3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2202.12555/assets/images/image01783.png" id="S3.F2.3.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S3.F2.4" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2202.12555/assets/images/image00981.png" id="S3.F2.4.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S3.F2.5" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2202.12555/assets/images/image04289.png" id="S3.F2.5.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S3.F2.6" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2202.12555/assets/images/image02236.png" id="S3.F2.6.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F2.8.1.1" class="ltx_text ltx_font_bold" style="font-size:90%;">Fig. 2</span>: </span><span id="S3.F2.9.2" class="ltx_text" style="font-size:90%;">Example images with converted Euler angle visualization from the AFLW2000 dataset.</span></figcaption>
+</figure>
+<div id="S3.p6" class="ltx_para">
+<p id="S3.p6.1" class="ltx_p"><span id="S3.p6.1.1" class="ltx_text ltx_font_bold">Experiment 1:</span> In our first experiment, we follow the convention by using the synthetic 300W-LP dataset for training and the two real-world datasets ALFW2000 and BIWI for testing. The standard evaluation metric is the Mean Absolute Error (MAE) of the Euler angles, so we convert our rotation matrix predictions into Euler angles for better comparison. Table <a href="#S2.T1" title="Table 1 ‣ 2 Method ‣ 6D Rotation representation for unconstrained head pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> shows the results from our first experiment setup. We compare our methods against the results reported by other state-of-the-art landmark-free approaches for head pose estimation. It demonstrates that our method outperforms the current state of the art by almost 20% on the AFLW2000 test dataset and achieves the lowest error rate on all three kinds of rotation angles yaw, pitch, and roll. On the BIWI dataset, our method achieves state-of-the-art results for the MAE. In contrast to other methods that report very diverging results of the single angle errors, or approach reports overall very balanced errors. This indicates that our network is able to learn in a consistent and robust manner.</p>
+</div>
+<div id="S3.p7" class="ltx_para">
+<p id="S3.p7.1" class="ltx_p">For better interpretation, we added an extra column to show which methods are in general able to predict full-range rotations and which restrict their predictions within a certain range of angles. It shows that besides our approach, only two other methods target full range regression. The remaining methods have a special network architecture dedicated to narrow range head pose predictions. Most similar to our method, TriNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> uses the matrix representation and directly predicts the complete matrix. As this prediction cannot be assumed to satisfy the orthogonality constraint, it needs an excessive post-process by finding an appropriate rotation matrix that is close to the prediction and at the same time has orthogonal column norm vectors. The second method marked with wide range prediction probabilities, WHENet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, only allows the full rotation for the yaw (but not for pitch and roll) by adding more classes to their classification problem. It is noticeable that this network performs worse compared to their similar network adaptation WHENet-V that has been restricted to be only capable of predicting angles between -90° and 90°. We argue that this decline in accuracy could be caused by the introduced label ambiguities as they use the Euler representation for training.
+
+<br class="ltx_break">Fig. <a href="#S3.F2" title="Figure 2 ‣ 3 Experiments ‣ 6D Rotation representation for unconstrained head pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> shows qualitative results from the AFLW2000 dataset. We visualized the predicted Euler angles to demonstrate how the head poses are estimated in the image samples.
+
+<br class="ltx_break">
+<br class="ltx_break"><span id="S3.p7.1.1" class="ltx_text ltx_font_bold">Experiment 2</span>: For our second experiment, we follow the convention by FSA-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> and randomly split the BIWI dataset in a ratio of 7:3 for training and testing, respectively. Table <a href="#S3.T2" title="Table 2 ‣ 3 Experiments ‣ 6D Rotation representation for unconstrained head pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> shows our results compared with other state-of-the-art methods that followed the same testing strategy. It demonstrates that our method outperforms all other methods not only in the overall MAE but at the same time also in predicting the yaw, pitch, and roll equally to our experiment on the AFLW2000 dataset. This supports the observed robustness in experiment 1, that achieving stable accurate results for all three angles does not only depend on the trained dataset, but rather on our proposed method itself.
+
+<br class="ltx_break"></p>
+</div>
+<figure id="S3.T2" class="ltx_table">
+<table id="S3.T2.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T2.1.2.1" class="ltx_tr">
+<th id="S3.T2.1.2.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="S3.T2.1.2.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" colspan="4"><span id="S3.T2.1.2.1.2.1" class="ltx_text ltx_font_bold">BIWI</span></th>
+</tr>
+<tr id="S3.T2.1.3.2" class="ltx_tr">
+<th id="S3.T2.1.3.2.1" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="S3.T2.1.3.2.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t">Yaw</th>
+<th id="S3.T2.1.3.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Pitch</th>
+<th id="S3.T2.1.3.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Roll</th>
+<th id="S3.T2.1.3.2.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T2.1.1" class="ltx_tr">
+<th id="S3.T2.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">HopeNet (<math id="S3.T2.1.1.1.m1.1" class="ltx_Math" alttext="\alpha=1" display="inline"><semantics id="S3.T2.1.1.1.m1.1a"><mrow id="S3.T2.1.1.1.m1.1.1" xref="S3.T2.1.1.1.m1.1.1.cmml"><mi id="S3.T2.1.1.1.m1.1.1.2" xref="S3.T2.1.1.1.m1.1.1.2.cmml">α</mi><mo id="S3.T2.1.1.1.m1.1.1.1" xref="S3.T2.1.1.1.m1.1.1.1.cmml">=</mo><mn id="S3.T2.1.1.1.m1.1.1.3" xref="S3.T2.1.1.1.m1.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.T2.1.1.1.m1.1b"><apply id="S3.T2.1.1.1.m1.1.1.cmml" xref="S3.T2.1.1.1.m1.1.1"><eq id="S3.T2.1.1.1.m1.1.1.1.cmml" xref="S3.T2.1.1.1.m1.1.1.1"></eq><ci id="S3.T2.1.1.1.m1.1.1.2.cmml" xref="S3.T2.1.1.1.m1.1.1.2">𝛼</ci><cn type="integer" id="S3.T2.1.1.1.m1.1.1.3.cmml" xref="S3.T2.1.1.1.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.1.1.1.m1.1c">\alpha=1</annotation></semantics></math>) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite></th>
+<td id="S3.T2.1.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t">3.29</td>
+<td id="S3.T2.1.1.3" class="ltx_td ltx_align_center ltx_border_t">3.39</td>
+<td id="S3.T2.1.1.4" class="ltx_td ltx_align_center ltx_border_t">3.00</td>
+<td id="S3.T2.1.1.5" class="ltx_td ltx_align_center ltx_border_t">3.23</td>
+</tr>
+<tr id="S3.T2.1.4.1" class="ltx_tr">
+<th id="S3.T2.1.4.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">FSA-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite></th>
+<td id="S3.T2.1.4.1.2" class="ltx_td ltx_nopad_l ltx_align_center">2.89</td>
+<td id="S3.T2.1.4.1.3" class="ltx_td ltx_align_center">4.29</td>
+<td id="S3.T2.1.4.1.4" class="ltx_td ltx_align_center">3.60</td>
+<td id="S3.T2.1.4.1.5" class="ltx_td ltx_align_center">3.60</td>
+</tr>
+<tr id="S3.T2.1.5.2" class="ltx_tr">
+<th id="S3.T2.1.5.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">TriNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite></th>
+<td id="S3.T2.1.5.2.2" class="ltx_td ltx_nopad_l ltx_align_center">2.93</td>
+<td id="S3.T2.1.5.2.3" class="ltx_td ltx_align_center">3.04</td>
+<td id="S3.T2.1.5.2.4" class="ltx_td ltx_align_center">2.44</td>
+<td id="S3.T2.1.5.2.5" class="ltx_td ltx_align_center">2.80</td>
+</tr>
+<tr id="S3.T2.1.6.3" class="ltx_tr">
+<th id="S3.T2.1.6.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">FDN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite></th>
+<td id="S3.T2.1.6.3.2" class="ltx_td ltx_nopad_l ltx_align_center">3.00</td>
+<td id="S3.T2.1.6.3.3" class="ltx_td ltx_align_center">3.98</td>
+<td id="S3.T2.1.6.3.4" class="ltx_td ltx_align_center">2.88</td>
+<td id="S3.T2.1.6.3.5" class="ltx_td ltx_align_center">3.29</td>
+</tr>
+<tr id="S3.T2.1.7.4" class="ltx_tr">
+<th id="S3.T2.1.7.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_t">6DRepNet</th>
+<td id="S3.T2.1.7.4.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_b ltx_border_t"><span id="S3.T2.1.7.4.2.1" class="ltx_text ltx_font_bold">2.69</span></td>
+<td id="S3.T2.1.7.4.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S3.T2.1.7.4.3.1" class="ltx_text ltx_font_bold">2.92</span></td>
+<td id="S3.T2.1.7.4.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S3.T2.1.7.4.4.1" class="ltx_text ltx_font_bold">2.36</span></td>
+<td id="S3.T2.1.7.4.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_t"><span id="S3.T2.1.7.4.5.1" class="ltx_text ltx_font_bold">2.66</span></td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span id="S3.T2.3.1.1" class="ltx_text ltx_font_bold" style="font-size:90%;">Table 2</span>: </span><span id="S3.T2.4.2" class="ltx_text" style="font-size:90%;">Comparisons with the state-of-the-art methods on the
+BIWI dataset. 70% of the BIWI dataset is used for training and the remaining 30% for testing.</span></figcaption>
+</figure>
+<figure id="S3.T3" class="ltx_table">
+<table id="S3.T3.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T3.1.2.1" class="ltx_tr">
+<th id="S3.T3.1.2.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="S3.T3.1.2.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T3.1.2.1.2.1" class="ltx_text ltx_font_bold">AFLW2000</span></th>
+<th id="S3.T3.1.2.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T3.1.2.1.3.1" class="ltx_text ltx_font_bold">BIWI</span></th>
+<th id="S3.T3.1.2.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T3.1.2.1.4.1" class="ltx_text ltx_font_bold">70/30 BIWI</span></th>
+</tr>
+<tr id="S3.T3.1.3.2" class="ltx_tr">
+<th id="S3.T3.1.3.2.1" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="S3.T3.1.3.2.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+<th id="S3.T3.1.3.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+<th id="S3.T3.1.3.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T3.1.1" class="ltx_tr">
+<th id="S3.T3.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">
+<math id="S3.T3.1.1.1.m1.1" class="ltx_Math" alttext="\ell_{2}" display="inline"><semantics id="S3.T3.1.1.1.m1.1a"><msub id="S3.T3.1.1.1.m1.1.1" xref="S3.T3.1.1.1.m1.1.1.cmml"><mi mathvariant="normal" id="S3.T3.1.1.1.m1.1.1.2" xref="S3.T3.1.1.1.m1.1.1.2.cmml">ℓ</mi><mn id="S3.T3.1.1.1.m1.1.1.3" xref="S3.T3.1.1.1.m1.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S3.T3.1.1.1.m1.1b"><apply id="S3.T3.1.1.1.m1.1.1.cmml" xref="S3.T3.1.1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.T3.1.1.1.m1.1.1.1.cmml" xref="S3.T3.1.1.1.m1.1.1">subscript</csymbol><ci id="S3.T3.1.1.1.m1.1.1.2.cmml" xref="S3.T3.1.1.1.m1.1.1.2">ℓ</ci><cn type="integer" id="S3.T3.1.1.1.m1.1.1.3.cmml" xref="S3.T3.1.1.1.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T3.1.1.1.m1.1c">\ell_{2}</annotation></semantics></math></th>
+<td id="S3.T3.1.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t">4.13</td>
+<td id="S3.T3.1.1.3" class="ltx_td ltx_align_center ltx_border_t">3.70</td>
+<td id="S3.T3.1.1.4" class="ltx_td ltx_align_center ltx_border_t">2.84</td>
+</tr>
+<tr id="S3.T3.1.4.1" class="ltx_tr">
+<th id="S3.T3.1.4.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b">Geodesic</th>
+<td id="S3.T3.1.4.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_b">3.97</td>
+<td id="S3.T3.1.4.1.3" class="ltx_td ltx_align_center ltx_border_b">3.47</td>
+<td id="S3.T3.1.4.1.4" class="ltx_td ltx_align_center ltx_border_b">2.66</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span id="S3.T3.5.2.1" class="ltx_text ltx_font_bold" style="font-size:90%;">Table 3</span>: </span><span id="S3.T3.3.1" class="ltx_text" style="font-size:90%;">Comparison of the MAE between <math id="S3.T3.3.1.m1.1" class="ltx_Math" alttext="\ell_{2}" display="inline"><semantics id="S3.T3.3.1.m1.1b"><msub id="S3.T3.3.1.m1.1.1" xref="S3.T3.3.1.m1.1.1.cmml"><mi mathvariant="normal" id="S3.T3.3.1.m1.1.1.2" xref="S3.T3.3.1.m1.1.1.2.cmml">ℓ</mi><mn id="S3.T3.3.1.m1.1.1.3" xref="S3.T3.3.1.m1.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S3.T3.3.1.m1.1c"><apply id="S3.T3.3.1.m1.1.1.cmml" xref="S3.T3.3.1.m1.1.1"><csymbol cd="ambiguous" id="S3.T3.3.1.m1.1.1.1.cmml" xref="S3.T3.3.1.m1.1.1">subscript</csymbol><ci id="S3.T3.3.1.m1.1.1.2.cmml" xref="S3.T3.3.1.m1.1.1.2">ℓ</ci><cn type="integer" id="S3.T3.3.1.m1.1.1.3.cmml" xref="S3.T3.3.1.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T3.3.1.m1.1d">\ell_{2}</annotation></semantics></math> and geodesic loss.</span></figcaption>
+</figure>
+<div id="S3.p8" class="ltx_para">
+<p id="S3.p8.4" class="ltx_p"><span id="S3.p8.4.1" class="ltx_text ltx_font_bold">Experiment 3:</span> Most current methods use the <math id="S3.p8.1.m1.1" class="ltx_Math" alttext="\ell_{2}" display="inline"><semantics id="S3.p8.1.m1.1a"><msub id="S3.p8.1.m1.1.1" xref="S3.p8.1.m1.1.1.cmml"><mi mathvariant="normal" id="S3.p8.1.m1.1.1.2" xref="S3.p8.1.m1.1.1.2.cmml">ℓ</mi><mn id="S3.p8.1.m1.1.1.3" xref="S3.p8.1.m1.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S3.p8.1.m1.1b"><apply id="S3.p8.1.m1.1.1.cmml" xref="S3.p8.1.m1.1.1"><csymbol cd="ambiguous" id="S3.p8.1.m1.1.1.1.cmml" xref="S3.p8.1.m1.1.1">subscript</csymbol><ci id="S3.p8.1.m1.1.1.2.cmml" xref="S3.p8.1.m1.1.1.2">ℓ</ci><cn type="integer" id="S3.p8.1.m1.1.1.3.cmml" xref="S3.p8.1.m1.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.1.m1.1c">\ell_{2}</annotation></semantics></math>-norm for calculating the loss in the training procedure. We argue that the Geodesic distance is a better distance metric to measure the prediction accuracy for head pose orientation. To prove this, we conduct another experiment where we repeat our previous tests, but this time train our network with the <math id="S3.p8.2.m2.1" class="ltx_Math" alttext="\ell_{2}" display="inline"><semantics id="S3.p8.2.m2.1a"><msub id="S3.p8.2.m2.1.1" xref="S3.p8.2.m2.1.1.cmml"><mi mathvariant="normal" id="S3.p8.2.m2.1.1.2" xref="S3.p8.2.m2.1.1.2.cmml">ℓ</mi><mn id="S3.p8.2.m2.1.1.3" xref="S3.p8.2.m2.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S3.p8.2.m2.1b"><apply id="S3.p8.2.m2.1.1.cmml" xref="S3.p8.2.m2.1.1"><csymbol cd="ambiguous" id="S3.p8.2.m2.1.1.1.cmml" xref="S3.p8.2.m2.1.1">subscript</csymbol><ci id="S3.p8.2.m2.1.1.2.cmml" xref="S3.p8.2.m2.1.1.2">ℓ</ci><cn type="integer" id="S3.p8.2.m2.1.1.3.cmml" xref="S3.p8.2.m2.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.2.m2.1c">\ell_{2}</annotation></semantics></math> distance loss. Table <a href="#S3.T3" title="Table 3 ‣ 3 Experiments ‣ 6D Rotation representation for unconstrained head pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> shows these results compared to our models trained with geodesic distance loss. It states that the networks with geodesic loss penalty performed slightly better than those that were trained with <math id="S3.p8.3.m3.1" class="ltx_Math" alttext="\ell_{2}" display="inline"><semantics id="S3.p8.3.m3.1a"><msub id="S3.p8.3.m3.1.1" xref="S3.p8.3.m3.1.1.cmml"><mi mathvariant="normal" id="S3.p8.3.m3.1.1.2" xref="S3.p8.3.m3.1.1.2.cmml">ℓ</mi><mn id="S3.p8.3.m3.1.1.3" xref="S3.p8.3.m3.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S3.p8.3.m3.1b"><apply id="S3.p8.3.m3.1.1.cmml" xref="S3.p8.3.m3.1.1"><csymbol cd="ambiguous" id="S3.p8.3.m3.1.1.1.cmml" xref="S3.p8.3.m3.1.1">subscript</csymbol><ci id="S3.p8.3.m3.1.1.2.cmml" xref="S3.p8.3.m3.1.1.2">ℓ</ci><cn type="integer" id="S3.p8.3.m3.1.1.3.cmml" xref="S3.p8.3.m3.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.3.m3.1c">\ell_{2}</annotation></semantics></math>-norm.
+
+<br class="ltx_break">
+<br class="ltx_break"><span id="S3.p8.4.2" class="ltx_text ltx_font_bold">Experiment 4:</span> In a final experiment, we analyze the impact of the chosen backbone on the results. ResNet50 is a popular standard network that is also used by HopeNet and TriNet, so we use it as the comparison backbone. Table <a href="#S3.T4" title="Table 4 ‣ 3 Experiments ‣ 6D Rotation representation for unconstrained head pose estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> shows that our method with RepVGG backbone is capable to perform about 7% better on all test scenarios against the <math id="S3.p8.4.m4.1" class="ltx_Math" alttext="\ell_{2}" display="inline"><semantics id="S3.p8.4.m4.1a"><msub id="S3.p8.4.m4.1.1" xref="S3.p8.4.m4.1.1.cmml"><mi mathvariant="normal" id="S3.p8.4.m4.1.1.2" xref="S3.p8.4.m4.1.1.2.cmml">ℓ</mi><mn id="S3.p8.4.m4.1.1.3" xref="S3.p8.4.m4.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S3.p8.4.m4.1b"><apply id="S3.p8.4.m4.1.1.cmml" xref="S3.p8.4.m4.1.1"><csymbol cd="ambiguous" id="S3.p8.4.m4.1.1.1.cmml" xref="S3.p8.4.m4.1.1">subscript</csymbol><ci id="S3.p8.4.m4.1.1.2.cmml" xref="S3.p8.4.m4.1.1.2">ℓ</ci><cn type="integer" id="S3.p8.4.m4.1.1.3.cmml" xref="S3.p8.4.m4.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p8.4.m4.1c">\ell_{2}</annotation></semantics></math> loss. However, with the aid of the ResNet50 backbone, our method would still achieve state-of-the-art results on the AFLW2000 dataset.</p>
+</div>
+<figure id="S3.T4" class="ltx_table">
+<table id="S3.T4.2" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T4.2.1.1" class="ltx_tr">
+<th id="S3.T4.2.1.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="S3.T4.2.1.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T4.2.1.1.2.1" class="ltx_text ltx_font_bold">AFLW2000</span></th>
+<th id="S3.T4.2.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T4.2.1.1.3.1" class="ltx_text ltx_font_bold">BIWI</span></th>
+<th id="S3.T4.2.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t"><span id="S3.T4.2.1.1.4.1" class="ltx_text ltx_font_bold">70/30 BIWI</span></th>
+</tr>
+<tr id="S3.T4.2.2.2" class="ltx_tr">
+<th id="S3.T4.2.2.2.1" class="ltx_td ltx_th ltx_th_row ltx_border_t"></th>
+<th id="S3.T4.2.2.2.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+<th id="S3.T4.2.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+<th id="S3.T4.2.2.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">MAE</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T4.2.3.1" class="ltx_tr">
+<th id="S3.T4.2.3.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">ResNet50</th>
+<td id="S3.T4.2.3.1.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t">4.26</td>
+<td id="S3.T4.2.3.1.3" class="ltx_td ltx_align_center ltx_border_t">3.76</td>
+<td id="S3.T4.2.3.1.4" class="ltx_td ltx_align_center ltx_border_t">3.09</td>
+</tr>
+<tr id="S3.T4.2.4.2" class="ltx_tr">
+<th id="S3.T4.2.4.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b">RepVGG-B1g2</th>
+<td id="S3.T4.2.4.2.2" class="ltx_td ltx_nopad_l ltx_align_center ltx_border_b">3.97</td>
+<td id="S3.T4.2.4.2.3" class="ltx_td ltx_align_center ltx_border_b">3.47</td>
+<td id="S3.T4.2.4.2.4" class="ltx_td ltx_align_center ltx_border_b">2.66</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span id="S3.T4.3.1.1" class="ltx_text ltx_font_bold" style="font-size:90%;">Table 4</span>: </span><span id="S3.T4.4.2" class="ltx_text" style="font-size:90%;">Comparison of the MAE between the different backbones.</span></figcaption>
+</figure>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Conclusion</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">In this paper, we presented a method for unconstrained end-to-end head pose estimation from single images. We follow the argument that the rotation matrix is more suitable for orientation learning tasks and propose a continuous 6D rotation matrix representation for efficient direct regression. Additionally, we introduce the geodesic loss instead of the commonly used MSE for the robust training.
+Also different from previous approaches, our method can regress full rotations and does not utilize an angle restricting binning principle. Nonetheless, our method outperforms other state-of-the-art methods on multiple datasets by up to 20%. In additional experiments, we analyze the impact of the backbone and loss function on our results.
+In the future, we aim to draw on our method’s full potential by training it on a dataset that provides full rotation samples.
+To this end, a potential dataset has been introduced by WHENet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> that presented a method for recovering full head pose annotations for the CMU Panoptic dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Erik Murphy-Chutorian, Anup Doshi, and Mohan Manubhai Trivedi,
+
+</span>
+<span class="ltx_bibblock">“Head pose estimation for driver assistance systems: A robust
+algorithm and experimental evaluation,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib1.1.1" class="ltx_text ltx_font_italic">2007 IEEE Intelligent Transportation Systems Conference</span>,
+2007, pp. 709–714.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Erik Murphy-Chutorian and Mohan Manubhai Trivedi,
+
+</span>
+<span class="ltx_bibblock">“Head pose estimation and augmented reality tracking: An integrated
+system and evaluation for monitoring driver awareness,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text ltx_font_italic">IEEE Transactions on Intelligent Transportation Systems</span>, vol.
+11, no. 2, pp. 300–311, 2010.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Dominykas Strazdas, Jan Hintz, and Ayoub Al-Hamadi,
+
+</span>
+<span class="ltx_bibblock">“Robo-hud: Interaction concept for contactless operation of
+industrial cobotic systems,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text ltx_font_italic">Applied Sciences</span>, vol. 11, no. 12, 2021.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Philipp Werner, Frerk Saxen, and Ayoub Al-Hamadi,
+
+</span>
+<span class="ltx_bibblock">“Landmark based head pose estimation benchmark and method,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib4.1.1" class="ltx_text ltx_font_italic">2017 IEEE International Conference on Image Processing
+(ICIP)</span>, 2017, pp. 3909–3913.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Nataniel Ruiz, Eunji Chong, and James M. Rehg,
+
+</span>
+<span class="ltx_bibblock">“Fine-grained head pose estimation without keypoints,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text ltx_font_italic">2018 IEEE/CVF Conference on Computer Vision and Pattern
+Recognition Workshops (CVPRW)</span>, pp. 2155–215509, 2018.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Heng-Wei Hsu, Tung-Yu Wu, Sheng Wan, Wing Hung Wong, and Chen-Yi Lee,
+
+</span>
+<span class="ltx_bibblock">“Quatnet: Quaternion-based head pose estimation with multiregression
+loss,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text ltx_font_italic">IEEE Transactions on Multimedia</span>, vol. 21, no. 4, pp.
+1035–1046, 2019.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Bin Huang, Renwen Chen, Wang Xu, and Qinbang Zhou,
+
+</span>
+<span class="ltx_bibblock">“Improving head pose estimation using two-stage ensembles with top-k
+regression,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text ltx_font_italic">Image Vis. Comput.</span>, vol. 93, pp. 103827, 2020.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Yijun Zhou and James Gregson,
+
+</span>
+<span class="ltx_bibblock">“Whenet: Real-time fine-grained estimation for wide range head
+pose,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib8.1.1" class="ltx_text ltx_font_italic">31st British Machine Vision Conference 2020, BMVC 2020,
+Virtual Event, UK, September 7-10, 2020</span>. 2020, BMVA Press.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Tsun-Yi Yang, Yi-Ting Chen, Yen-Yu Lin, and Yung-Yu Chuang,
+
+</span>
+<span class="ltx_bibblock">“Fsa-net: Learning fine-grained structure aggregation for head pose
+estimation from a single image,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib9.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition (CVPR)</span>, June 2019.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Zhiwen Cao, Zongcheng Chu, Dongfang Liu, and Yingjie Chen,
+
+</span>
+<span class="ltx_bibblock">“A vector-based representation to enhance head pose estimation,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib10.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE/CVF Winter Conference on Applications
+of Computer Vision (WACV)</span>, January 2021, pp. 1188–1197.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Hao Zhang, Mengmeng Wang, Yong Liu, and Yi Yuan,
+
+</span>
+<span class="ltx_bibblock">“Fdn: Feature decoupling network for head pose estimation,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib11.1.1" class="ltx_text ltx_font_italic">AAAI</span>, 2020.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Yi Zhou, Connelly Barnes, Jingwan Lu, Jimei Yang, and Hao Li,
+
+</span>
+<span class="ltx_bibblock">“On the continuity of rotation representations in neural networks,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.1.1" class="ltx_text ltx_font_italic">2019 IEEE/CVF Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, pp. 5738–5746, 2019.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Xiaohan Ding, X. Zhang, Ningning Ma, Jungong Han, Guiguang Ding, and Jian Sun,
+
+</span>
+<span class="ltx_bibblock">“Repvgg: Making vgg-style convnets great again,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text ltx_font_italic">2021 IEEE/CVF Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, pp. 13728–13737, 2021.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun,
+
+</span>
+<span class="ltx_bibblock">“Deep residual learning for image recognition,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib14.1.1" class="ltx_text ltx_font_italic">2016 IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, 2016, pp. 770–778.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Christian Szegedy, Wei Liu, Yangqing Jia, Pierre Sermanet, Scott Reed, Dragomir
+Anguelov, Dumitru Erhan, Vincent Vanhoucke, and Andrew Rabinovich,
+
+</span>
+<span class="ltx_bibblock">“Going deeper with convolutions,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib15.1.1" class="ltx_text ltx_font_italic">2015 IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, 2015, pp. 1–9.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Xiangyu Zhu, Zhen Lei, Xiaoming Liu, Hailin Shi, and S. Li,
+
+</span>
+<span class="ltx_bibblock">“Face alignment across large poses: A 3d solution,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text ltx_font_italic">2016 IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR)</span>, pp. 146–155, 2016.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Xiangyu Zhu, Zhen Lei, Junjie Yan, Dong Yi, and Stan Z. Li,
+
+</span>
+<span class="ltx_bibblock">“High-fidelity pose and expression normalization for face
+recognition in the wild,”
+
+</span>
+<span class="ltx_bibblock">in <span id="bib.bib17.1.1" class="ltx_text ltx_font_italic">2015 IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, 2015, pp. 787–796.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+G. Fanelli, M. Dantone, J. Gall, A. Fossati, and L. van Gool,
+
+</span>
+<span class="ltx_bibblock">“Random forests for real time 3d face analysis,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.1.1" class="ltx_text ltx_font_italic">International Journal of Computer Vision</span>, vol. 101, no. 3, pp.
+437–458, 2013.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Kaipeng Zhang, Zhanpeng Zhang, Zhifeng Li, and Yu Qiao,
+
+</span>
+<span class="ltx_bibblock">“Joint face detection and alignment using multitask cascaded
+convolutional networks,”
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text ltx_font_italic">IEEE Signal Processing Letters</span>, vol. 23, pp. 1499–1503, 2016.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Hanbyul Joo, Hao Liu, Lei Tan, Lin Gui, Bart Nabbe, Iain Matthews, Takeo
+Kanade, Shohei Nobuhara, , and Yaser Sheikh,
+
+</span>
+<span class="ltx_bibblock">“Panoptic studio: A massively multiview system for social motion
+capture,”
+
+</span>
+<span class="ltx_bibblock">2015.
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2202.12554" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2202.12555" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2202.12555">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2202.12555" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2202.12556" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Thu Mar  7 19:38:57 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,1515 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2011.05010] Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation</title><meta property="og:description" content="We propose to leverage recent advances in reliable 2D pose estimation with
+Convolutional Neural Networks (CNN) to estimate the 3D pose of people
+from depth images in multi-person Human-Robot Interaction (HRI) scenarios…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2011.05010">
+
+<!--Generated on Fri Mar  1 23:48:51 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document" style="font-size:173%;">Residual Pose: A Decoupled Approach for Depth-based 
+<br class="ltx_break">3D Human Pose Estimation
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Angel Martínez-González<sup id="id2.2.id1" class="ltx_sup">*</sup><sup id="id3.3.id2" class="ltx_sup">†</sup>, Michael Villamizar<sup id="id4.4.id3" class="ltx_sup">*</sup>, Olivier Canévet<sup id="id5.5.id4" class="ltx_sup">*</sup> and Jean-Marc Odobez<sup id="id6.6.id5" class="ltx_sup">*</sup><sup id="id7.7.id6" class="ltx_sup">†</sup>
+</span><span class="ltx_author_notes"><sup id="id8.8.id1" class="ltx_sup"><span id="id8.8.id1.1" class="ltx_text ltx_font_italic">∗</span></sup> Idiap Research Institute, Switzerland. {angel.martinez, michael.villamizar, olivier.canevet, odobez}@idiap.ch <sup id="id9.9.id1" class="ltx_sup">†</sup> École Polytechnique Fédérale de Lausanne (EPFL), Switzerland.</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id10.id1" class="ltx_p">We propose to leverage recent advances in reliable 2D pose estimation with
+Convolutional Neural Networks (CNN) to estimate the 3D pose of people
+from depth images in multi-person Human-Robot Interaction (HRI) scenarios.
+Our method is based on the observation that using the depth information
+to obtain 3D lifted points from 2D body landmark detections
+provides a rough estimate of the true 3D human pose,
+thus requiring only a refinement step.
+In that line our contributions are threefold.
+(i) we propose to perform 3D pose estimation from depth images by
+decoupling 2D pose estimation and 3D pose refinement;
+(ii) we propose a deep-learning approach that regresses the residual pose
+between the lifted 3D pose and the true 3D pose;
+(iii) we show that despite its simplicity, our approach achieves very
+competitive results both in accuracy and speed on two public datasets
+and is therefore appealing for multi-person HRI
+compared to recent state-of-the-art methods.
+</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">Introduction</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">3D human pose estimation is an essential part of many applications involving
+human behavior analysis, like 3D scene understanding, social robotics,
+visual surveillance and gaming.
+For instance, in social HRI, the ability to sense the 3D pose
+of humans provides to the robot the means to further recognize their activity
+or evaluate their interaction engagement.
+However, although 3D pose estimation has been a very important topic of research,
+factors like person self occlusions, pose variations, sensing conditions and
+low computational budget
+increase the challenge of deploying accurate, reliable and efficient
+3D pose estimation systems.</p>
+</div>
+<div id="S1.p2" class="ltx_para ltx_noindent">
+<p id="S1.p2.1" class="ltx_p"><span id="S1.p2.1.1" class="ltx_text ltx_font_bold">State-of-the-art.</span>
+Early approaches on 3D human pose estimation
+detect body landmarks in the image that are then coupled with 3D human
+pose priors that account for body kinematics and physical
+constraints <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>.
+Nowadays, Deep Neural Networks (DNN) have become the mainstream approach,
+which lead to the emergence of a large number of methods to address 3D pose estimation from
+color <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>
+and depth images <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">From a methodological perspective, methods can nevertheless be grouped into two main
+threads: fitting and learning methods.
+The former ones extend earlier works, but rather use CNNs to localize 2D body parts,
+and then fit a 3D body pose model along with constraints via an
+optimization objective defined in the image domain <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>
+or in the 2D-to-3D joint space <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>.
+Learning based methods take advantage of the recent DNNs
+to directly predict and regress the 3D locations of the body parts with
+fully connected networks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>.
+Although simple, the 3D coordinate regression has proved to be an effective and
+efficient solution.
+Moreover, information about pose kinematics can been incorporated
+as an additional limb loss <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>,
+using a structured prediction layer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>,
+or via a re-projection regularizer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>.
+However, a drawback of these models is that they predict the 3D coordinates
+with respect to a root joint that is assumed to be known in advance, or which in
+practice needs to be predicted as well.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2011.05010/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_square" width="346" height="344" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Proposed decoupled residual pose approach:
+a) bottom-up multi-person 2D pose detection;
+b) for each detected person, 2D body joints are lifted to the 3D space.
+c) 3D pose estimation using a residual pose regression network.
+</figcaption>
+</figure>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">The depth data modality has also been largely exploited, since compared to
+color images it is texture and color invariant,
+and helps to remove the ambiguities in scale and shape
+by providing direct access to 3D information.
+As with color, some methods tend to rely on fitting approaches,
+for instance by identifying one-to-one relationships between cloud points and a
+3D mesh via Iterative Closest Point (ICP) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>
+or using random forest <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>.
+Other approaches model the 3D location distributions of
+3D points with respect to their parents in a kinematic tree <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>.
+As a typical example, the seminal work of Shotton <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>
+employed random forests to classify depth pixels into different human joints
+and used weighted voting to estimate their 3D locations.
+Deep learning also improved upon these works <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>.
+In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>, multi-view human pose estimation is solved by learning a view invariant feature space
+and iteratively refining the 3D coordinates with a Recurrent Neural Network (RNN).
+In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> depth images are transformed into a voxelized representation
+and 3D Gaussian likelihoods are predicted for each body joint per voxel using a costly 3D-CNN.
+However, these methods usually work on image crops centered around the person.
+As a consequence, to handle the multi-person case,
+a person detector is still needed as a first step,
+followed by multiple forward passes of a relatively heavy image processing network to estimate
+the 3D pose of each detected person, leading to an increased computational cost.
+</p>
+</div>
+<div id="S1.p5" class="ltx_para ltx_noindent">
+<p id="S1.p5.1" class="ltx_p"><span id="S1.p5.1.1" class="ltx_text ltx_font_bold">Approach and contributions.</span>
+An overview of our approach for accurate and fast multi-person 3D pose estimation
+is presented in Fig. <a href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+Our main idea is to better exploit the depth information and decouple the task in
+two main steps:
+2D multi-person pose estimation and 3D pose regression.
+The motivations are that the first step can benefit from
+recent accurate and efficient architectures to achieve this task,
+and that the second one can be done efficiently by directly
+regressing the 3D pose coordinates from the 2D ones in
+two substeps: a simple but effective scheme which lifts the 2D estimates
+to 3D using the depth information and pose priors (to handle partial occlusion);
+and a novel efficient residual pose 3D regression methods that works on this set of points.
+This makes our approach computationally ligher for multi-person HRI settings
+since compared to CNNs applied to image crops for 3D pose prediction,
+the cost of our 3D regression scheme is much smaller, and the cost saving is proportional
+to the number of person in the scene.
+In this context, our contributions can be summarized as:
+</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">we investigate an innovative method decoupling the 3D pose estimation task
+into an accurate and efficient CNN-based 2D bottom-up
+multi-person pose estimation method and 3D pose regression;
+</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">we propose a simple 2D-to-3D lifting scheme which handles 2D body joint miss detections;
+</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">we introduce a novel method for 3D pose regression
+from lifted 2D estimates by relying on a residual-pose
+deep-learning architecture;
+</p>
+</div>
+</li>
+<li id="S1.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i4.p1" class="ltx_para">
+<p id="S1.I1.i4.p1.1" class="ltx_p">we demonstrate that despite its simplicity,
+our approach achieves very competitive results
+on different public datasets and is suitable for multi-party HRI scenarios.</p>
+</div>
+</li>
+</ul>
+<p id="S1.p5.2" class="ltx_p">Models and code will be made publicly
+available<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self" style="color:#FF0000;">https://github.com/idiap/residual_pose</span></span></span></span>.
+The paper is organized as follows: Section <a href="#S2" title="II Efficient 2D Pose Estimation and Lifting ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>
+introduces our strategy for 2D pose estimation and lifting.
+Section <a href="#S3" title="III Human 3D Pose Estimation ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">III</span></a> presents our approach and regressor neural network architecture
+for residual pose learning.
+Experiments are described in Section <a href="#S4" title="IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a>,
+and Section <a href="#S5" title="V Conclusions ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">V</span></a> presents our conclusions.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Efficient 2D Pose Estimation and Lifting</span>
+</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">This section describes the CNN architectures used for accurate bottom-up 2D pose
+estimation and our proposed method for 2D-to-3D body joint lifting and
+for handling miss-detections due to (self-)occlusion or failures.
+</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS1.4.1.1" class="ltx_text">II-A</span> </span><span id="S2.SS1.5.2" class="ltx_text ltx_font_italic">CNN-based 2D Pose Estimation</span>
+</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.2" class="ltx_p">We follow recent breakthroughs in multi-person 2D pose estimation
+that use a CNN to predict confidence maps <math id="S2.SS1.p1.1.m1.1" class="ltx_Math" alttext="\rho(\cdot)" display="inline"><semantics id="S2.SS1.p1.1.m1.1a"><mrow id="S2.SS1.p1.1.m1.1.2" xref="S2.SS1.p1.1.m1.1.2.cmml"><mi id="S2.SS1.p1.1.m1.1.2.2" xref="S2.SS1.p1.1.m1.1.2.2.cmml">ρ</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p1.1.m1.1.2.1" xref="S2.SS1.p1.1.m1.1.2.1.cmml">​</mo><mrow id="S2.SS1.p1.1.m1.1.2.3.2" xref="S2.SS1.p1.1.m1.1.2.cmml"><mo stretchy="false" id="S2.SS1.p1.1.m1.1.2.3.2.1" xref="S2.SS1.p1.1.m1.1.2.cmml">(</mo><mo lspace="0em" rspace="0em" id="S2.SS1.p1.1.m1.1.1" xref="S2.SS1.p1.1.m1.1.1.cmml">⋅</mo><mo stretchy="false" id="S2.SS1.p1.1.m1.1.2.3.2.2" xref="S2.SS1.p1.1.m1.1.2.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.1.m1.1b"><apply id="S2.SS1.p1.1.m1.1.2.cmml" xref="S2.SS1.p1.1.m1.1.2"><times id="S2.SS1.p1.1.m1.1.2.1.cmml" xref="S2.SS1.p1.1.m1.1.2.1"></times><ci id="S2.SS1.p1.1.m1.1.2.2.cmml" xref="S2.SS1.p1.1.m1.1.2.2">𝜌</ci><ci id="S2.SS1.p1.1.m1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1">⋅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.1.m1.1c">\rho(\cdot)</annotation></semantics></math> for the location of the body
+landmarks in the image and part affinity fields <math id="S2.SS1.p1.2.m2.1" class="ltx_Math" alttext="\phi(\cdot)" display="inline"><semantics id="S2.SS1.p1.2.m2.1a"><mrow id="S2.SS1.p1.2.m2.1.2" xref="S2.SS1.p1.2.m2.1.2.cmml"><mi id="S2.SS1.p1.2.m2.1.2.2" xref="S2.SS1.p1.2.m2.1.2.2.cmml">ϕ</mi><mo lspace="0em" rspace="0em" id="S2.SS1.p1.2.m2.1.2.1" xref="S2.SS1.p1.2.m2.1.2.1.cmml">​</mo><mrow id="S2.SS1.p1.2.m2.1.2.3.2" xref="S2.SS1.p1.2.m2.1.2.cmml"><mo stretchy="false" id="S2.SS1.p1.2.m2.1.2.3.2.1" xref="S2.SS1.p1.2.m2.1.2.cmml">(</mo><mo lspace="0em" rspace="0em" id="S2.SS1.p1.2.m2.1.1" xref="S2.SS1.p1.2.m2.1.1.cmml">⋅</mo><mo stretchy="false" id="S2.SS1.p1.2.m2.1.2.3.2.2" xref="S2.SS1.p1.2.m2.1.2.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.2.m2.1b"><apply id="S2.SS1.p1.2.m2.1.2.cmml" xref="S2.SS1.p1.2.m2.1.2"><times id="S2.SS1.p1.2.m2.1.2.1.cmml" xref="S2.SS1.p1.2.m2.1.2.1"></times><ci id="S2.SS1.p1.2.m2.1.2.2.cmml" xref="S2.SS1.p1.2.m2.1.2.2">italic-ϕ</ci><ci id="S2.SS1.p1.2.m2.1.1.cmml" xref="S2.SS1.p1.2.m2.1.1">⋅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.2.m2.1c">\phi(\cdot)</annotation></semantics></math> for the location and orientation of the limbs <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>.
+We analyze different CNN architectures and the impact of their 2D
+estimates on the quality of the 3D pose.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">Three architectures are considered. The two firsts are the efficient pose machines
+based on residual modules (RPM) and the one based on MobileNets (MPM) introduced in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>.
+These are lightweight CNNs that refine predictions with a series
+of prediction stages and are designed for efficient 2D pose estimation
+with real-time performance, see Fig.<a href="#S2.F2" title="Figure 2 ‣ II-A CNN-based 2D Pose Estimation ‣ II Efficient 2D Pose Estimation and Lifting ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> (a).
+Additionally, we consider the Hourglass network architecture <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+which was originally proposed for single person pose estimation.
+It comprises a series of UNet-like networks that process image features at
+different semantic levels.
+We follow the original design but adapt the output
+to predict part affinity fields to match our multi-person scenario
+by branching a duplicate of the confidence maps prediction layers
+(Fig.<a href="#S2.F2" title="Figure 2 ‣ II-A CNN-based 2D Pose Estimation ‣ II Efficient 2D Pose Estimation and Lifting ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> (b)).</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2011.05010/assets/x2.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="248" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>CNN architectures used for 2D pose estimation.
+(a) Pose Machine architecture implemented by RPM and MPM <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>.
+(b) Our extension of the Hourglass network for multi-person 2D pose estimation.
+</figcaption>
+</figure>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS2.4.1.1" class="ltx_text">II-B</span> </span><span id="S2.SS2.5.2" class="ltx_text ltx_font_italic">Pose lifting</span>
+</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.3" class="ltx_p">Given 2D landmark detections, we use their corresponding depth values <math id="S2.SS2.p1.1.m1.1" class="ltx_Math" alttext="Z" display="inline"><semantics id="S2.SS2.p1.1.m1.1a"><mi id="S2.SS2.p1.1.m1.1.1" xref="S2.SS2.p1.1.m1.1.1.cmml">Z</mi><annotation-xml encoding="MathML-Content" id="S2.SS2.p1.1.m1.1b"><ci id="S2.SS2.p1.1.m1.1.1.cmml" xref="S2.SS2.p1.1.m1.1.1">𝑍</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p1.1.m1.1c">Z</annotation></semantics></math>
+to lift them according to <math id="S2.SS2.p1.2.m2.3" class="ltx_Math" alttext="\bar{x}=Z\cdot K\cdot(x_{img},y_{img},1)^{\top}" display="inline"><semantics id="S2.SS2.p1.2.m2.3a"><mrow id="S2.SS2.p1.2.m2.3.3" xref="S2.SS2.p1.2.m2.3.3.cmml"><mover accent="true" id="S2.SS2.p1.2.m2.3.3.4" xref="S2.SS2.p1.2.m2.3.3.4.cmml"><mi id="S2.SS2.p1.2.m2.3.3.4.2" xref="S2.SS2.p1.2.m2.3.3.4.2.cmml">x</mi><mo id="S2.SS2.p1.2.m2.3.3.4.1" xref="S2.SS2.p1.2.m2.3.3.4.1.cmml">¯</mo></mover><mo id="S2.SS2.p1.2.m2.3.3.3" xref="S2.SS2.p1.2.m2.3.3.3.cmml">=</mo><mrow id="S2.SS2.p1.2.m2.3.3.2" xref="S2.SS2.p1.2.m2.3.3.2.cmml"><mi id="S2.SS2.p1.2.m2.3.3.2.4" xref="S2.SS2.p1.2.m2.3.3.2.4.cmml">Z</mi><mo lspace="0.222em" rspace="0.222em" id="S2.SS2.p1.2.m2.3.3.2.3" xref="S2.SS2.p1.2.m2.3.3.2.3.cmml">⋅</mo><mi id="S2.SS2.p1.2.m2.3.3.2.5" xref="S2.SS2.p1.2.m2.3.3.2.5.cmml">K</mi><mo lspace="0.222em" rspace="0.222em" id="S2.SS2.p1.2.m2.3.3.2.3a" xref="S2.SS2.p1.2.m2.3.3.2.3.cmml">⋅</mo><msup id="S2.SS2.p1.2.m2.3.3.2.2" xref="S2.SS2.p1.2.m2.3.3.2.2.cmml"><mrow id="S2.SS2.p1.2.m2.3.3.2.2.2.2" xref="S2.SS2.p1.2.m2.3.3.2.2.2.3.cmml"><mo stretchy="false" id="S2.SS2.p1.2.m2.3.3.2.2.2.2.3" xref="S2.SS2.p1.2.m2.3.3.2.2.2.3.cmml">(</mo><msub id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.cmml"><mi id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.2" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.2.cmml">x</mi><mrow id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.cmml"><mi id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.2" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.2.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.1" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.1.cmml">​</mo><mi id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.3" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.3.cmml">m</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.1a" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.1.cmml">​</mo><mi id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.4" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.4.cmml">g</mi></mrow></msub><mo id="S2.SS2.p1.2.m2.3.3.2.2.2.2.4" xref="S2.SS2.p1.2.m2.3.3.2.2.2.3.cmml">,</mo><msub id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.cmml"><mi id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.2" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.2.cmml">y</mi><mrow id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.cmml"><mi id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.2" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.2.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.1" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.1.cmml">​</mo><mi id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.3" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.3.cmml">m</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.1a" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.1.cmml">​</mo><mi id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.4" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.4.cmml">g</mi></mrow></msub><mo id="S2.SS2.p1.2.m2.3.3.2.2.2.2.5" xref="S2.SS2.p1.2.m2.3.3.2.2.2.3.cmml">,</mo><mn id="S2.SS2.p1.2.m2.1.1" xref="S2.SS2.p1.2.m2.1.1.cmml">1</mn><mo stretchy="false" id="S2.SS2.p1.2.m2.3.3.2.2.2.2.6" xref="S2.SS2.p1.2.m2.3.3.2.2.2.3.cmml">)</mo></mrow><mo id="S2.SS2.p1.2.m2.3.3.2.2.4" xref="S2.SS2.p1.2.m2.3.3.2.2.4.cmml">⊤</mo></msup></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS2.p1.2.m2.3b"><apply id="S2.SS2.p1.2.m2.3.3.cmml" xref="S2.SS2.p1.2.m2.3.3"><eq id="S2.SS2.p1.2.m2.3.3.3.cmml" xref="S2.SS2.p1.2.m2.3.3.3"></eq><apply id="S2.SS2.p1.2.m2.3.3.4.cmml" xref="S2.SS2.p1.2.m2.3.3.4"><ci id="S2.SS2.p1.2.m2.3.3.4.1.cmml" xref="S2.SS2.p1.2.m2.3.3.4.1">¯</ci><ci id="S2.SS2.p1.2.m2.3.3.4.2.cmml" xref="S2.SS2.p1.2.m2.3.3.4.2">𝑥</ci></apply><apply id="S2.SS2.p1.2.m2.3.3.2.cmml" xref="S2.SS2.p1.2.m2.3.3.2"><ci id="S2.SS2.p1.2.m2.3.3.2.3.cmml" xref="S2.SS2.p1.2.m2.3.3.2.3">⋅</ci><ci id="S2.SS2.p1.2.m2.3.3.2.4.cmml" xref="S2.SS2.p1.2.m2.3.3.2.4">𝑍</ci><ci id="S2.SS2.p1.2.m2.3.3.2.5.cmml" xref="S2.SS2.p1.2.m2.3.3.2.5">𝐾</ci><apply id="S2.SS2.p1.2.m2.3.3.2.2.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2"><csymbol cd="ambiguous" id="S2.SS2.p1.2.m2.3.3.2.2.3.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2">superscript</csymbol><vector id="S2.SS2.p1.2.m2.3.3.2.2.2.3.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2"><apply id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.cmml" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1"><csymbol cd="ambiguous" id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.1.cmml" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1">subscript</csymbol><ci id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.2.cmml" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.2">𝑥</ci><apply id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.cmml" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3"><times id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.1.cmml" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.1"></times><ci id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.2.cmml" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.2">𝑖</ci><ci id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.3.cmml" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.3">𝑚</ci><ci id="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.4.cmml" xref="S2.SS2.p1.2.m2.2.2.1.1.1.1.1.3.4">𝑔</ci></apply></apply><apply id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2"><csymbol cd="ambiguous" id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.1.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2">subscript</csymbol><ci id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.2.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.2">𝑦</ci><apply id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3"><times id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.1.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.1"></times><ci id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.2.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.2">𝑖</ci><ci id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.3.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.3">𝑚</ci><ci id="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.4.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.2.2.2.3.4">𝑔</ci></apply></apply><cn type="integer" id="S2.SS2.p1.2.m2.1.1.cmml" xref="S2.SS2.p1.2.m2.1.1">1</cn></vector><csymbol cd="latexml" id="S2.SS2.p1.2.m2.3.3.2.2.4.cmml" xref="S2.SS2.p1.2.m2.3.3.2.2.4">top</csymbol></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p1.2.m2.3c">\bar{x}=Z\cdot K\cdot(x_{img},y_{img},1)^{\top}</annotation></semantics></math>,
+where <math id="S2.SS2.p1.3.m3.3" class="ltx_Math" alttext="K=diag(1/f_{x},1/f_{y},1)" display="inline"><semantics id="S2.SS2.p1.3.m3.3a"><mrow id="S2.SS2.p1.3.m3.3.3" xref="S2.SS2.p1.3.m3.3.3.cmml"><mi id="S2.SS2.p1.3.m3.3.3.4" xref="S2.SS2.p1.3.m3.3.3.4.cmml">K</mi><mo id="S2.SS2.p1.3.m3.3.3.3" xref="S2.SS2.p1.3.m3.3.3.3.cmml">=</mo><mrow id="S2.SS2.p1.3.m3.3.3.2" xref="S2.SS2.p1.3.m3.3.3.2.cmml"><mi id="S2.SS2.p1.3.m3.3.3.2.4" xref="S2.SS2.p1.3.m3.3.3.2.4.cmml">d</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p1.3.m3.3.3.2.3" xref="S2.SS2.p1.3.m3.3.3.2.3.cmml">​</mo><mi id="S2.SS2.p1.3.m3.3.3.2.5" xref="S2.SS2.p1.3.m3.3.3.2.5.cmml">i</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p1.3.m3.3.3.2.3a" xref="S2.SS2.p1.3.m3.3.3.2.3.cmml">​</mo><mi id="S2.SS2.p1.3.m3.3.3.2.6" xref="S2.SS2.p1.3.m3.3.3.2.6.cmml">a</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p1.3.m3.3.3.2.3b" xref="S2.SS2.p1.3.m3.3.3.2.3.cmml">​</mo><mi id="S2.SS2.p1.3.m3.3.3.2.7" xref="S2.SS2.p1.3.m3.3.3.2.7.cmml">g</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p1.3.m3.3.3.2.3c" xref="S2.SS2.p1.3.m3.3.3.2.3.cmml">​</mo><mrow id="S2.SS2.p1.3.m3.3.3.2.2.2" xref="S2.SS2.p1.3.m3.3.3.2.2.3.cmml"><mo stretchy="false" id="S2.SS2.p1.3.m3.3.3.2.2.2.3" xref="S2.SS2.p1.3.m3.3.3.2.2.3.cmml">(</mo><mrow id="S2.SS2.p1.3.m3.2.2.1.1.1.1" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.cmml"><mn id="S2.SS2.p1.3.m3.2.2.1.1.1.1.2" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.2.cmml">1</mn><mo id="S2.SS2.p1.3.m3.2.2.1.1.1.1.1" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.1.cmml">/</mo><msub id="S2.SS2.p1.3.m3.2.2.1.1.1.1.3" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.cmml"><mi id="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.2" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.2.cmml">f</mi><mi id="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.3" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.3.cmml">x</mi></msub></mrow><mo id="S2.SS2.p1.3.m3.3.3.2.2.2.4" xref="S2.SS2.p1.3.m3.3.3.2.2.3.cmml">,</mo><mrow id="S2.SS2.p1.3.m3.3.3.2.2.2.2" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.cmml"><mn id="S2.SS2.p1.3.m3.3.3.2.2.2.2.2" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.2.cmml">1</mn><mo id="S2.SS2.p1.3.m3.3.3.2.2.2.2.1" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.1.cmml">/</mo><msub id="S2.SS2.p1.3.m3.3.3.2.2.2.2.3" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.cmml"><mi id="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.2" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.2.cmml">f</mi><mi id="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.3" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.3.cmml">y</mi></msub></mrow><mo id="S2.SS2.p1.3.m3.3.3.2.2.2.5" xref="S2.SS2.p1.3.m3.3.3.2.2.3.cmml">,</mo><mn id="S2.SS2.p1.3.m3.1.1" xref="S2.SS2.p1.3.m3.1.1.cmml">1</mn><mo stretchy="false" id="S2.SS2.p1.3.m3.3.3.2.2.2.6" xref="S2.SS2.p1.3.m3.3.3.2.2.3.cmml">)</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS2.p1.3.m3.3b"><apply id="S2.SS2.p1.3.m3.3.3.cmml" xref="S2.SS2.p1.3.m3.3.3"><eq id="S2.SS2.p1.3.m3.3.3.3.cmml" xref="S2.SS2.p1.3.m3.3.3.3"></eq><ci id="S2.SS2.p1.3.m3.3.3.4.cmml" xref="S2.SS2.p1.3.m3.3.3.4">𝐾</ci><apply id="S2.SS2.p1.3.m3.3.3.2.cmml" xref="S2.SS2.p1.3.m3.3.3.2"><times id="S2.SS2.p1.3.m3.3.3.2.3.cmml" xref="S2.SS2.p1.3.m3.3.3.2.3"></times><ci id="S2.SS2.p1.3.m3.3.3.2.4.cmml" xref="S2.SS2.p1.3.m3.3.3.2.4">𝑑</ci><ci id="S2.SS2.p1.3.m3.3.3.2.5.cmml" xref="S2.SS2.p1.3.m3.3.3.2.5">𝑖</ci><ci id="S2.SS2.p1.3.m3.3.3.2.6.cmml" xref="S2.SS2.p1.3.m3.3.3.2.6">𝑎</ci><ci id="S2.SS2.p1.3.m3.3.3.2.7.cmml" xref="S2.SS2.p1.3.m3.3.3.2.7">𝑔</ci><vector id="S2.SS2.p1.3.m3.3.3.2.2.3.cmml" xref="S2.SS2.p1.3.m3.3.3.2.2.2"><apply id="S2.SS2.p1.3.m3.2.2.1.1.1.1.cmml" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1"><divide id="S2.SS2.p1.3.m3.2.2.1.1.1.1.1.cmml" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.1"></divide><cn type="integer" id="S2.SS2.p1.3.m3.2.2.1.1.1.1.2.cmml" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.2">1</cn><apply id="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.cmml" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.3"><csymbol cd="ambiguous" id="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.1.cmml" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.3">subscript</csymbol><ci id="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.2.cmml" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.2">𝑓</ci><ci id="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.3.cmml" xref="S2.SS2.p1.3.m3.2.2.1.1.1.1.3.3">𝑥</ci></apply></apply><apply id="S2.SS2.p1.3.m3.3.3.2.2.2.2.cmml" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2"><divide id="S2.SS2.p1.3.m3.3.3.2.2.2.2.1.cmml" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.1"></divide><cn type="integer" id="S2.SS2.p1.3.m3.3.3.2.2.2.2.2.cmml" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.2">1</cn><apply id="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.cmml" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.3"><csymbol cd="ambiguous" id="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.1.cmml" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.3">subscript</csymbol><ci id="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.2.cmml" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.2">𝑓</ci><ci id="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.3.cmml" xref="S2.SS2.p1.3.m3.3.3.2.2.2.2.3.3">𝑦</ci></apply></apply><cn type="integer" id="S2.SS2.p1.3.m3.1.1.cmml" xref="S2.SS2.p1.3.m3.1.1">1</cn></vector></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p1.3.m3.3c">K=diag(1/f_{x},1/f_{y},1)</annotation></semantics></math> is the depth camera matrix.
+However, different errors can arise.
+For example, a 2D detection might have missing depth value due to sensing failures.
+Additionally, as is common in typical HRI scenarios, self and between-person
+occlusions will naturally result in missing body detections.
+</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.7" class="ltx_p">In this paper, in these cases, rather than feeding our regressor with dummy values
+which might bias estimations, we propose a simple recovery method.
+First, in case of missing depth values,
+we use the mean depth of the points with valid depth information
+in the landmark’s vicinity.
+Second, in case of missed landmark detections, we rely on a 3D pose prior to
+infer their expected coordinates.
+However, rather than relying on expensive-to-compute prior <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite>, we follow a
+simpler 3D limb prior based on pairwise relationships between limb vectors.
+Following a tree of limbs from the skeleton and taking the spine limb as root (see Fig. <a href="#S3.F3" title="Figure 3 ‣ III Human 3D Pose Estimation ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>(a)),
+we consider adjacent limbs, encode their 3D direction and length within a joint Gaussian distribution
+<math id="S2.SS2.p2.1.m1.3" class="ltx_Math" alttext="p(l_{i},l_{\mathbf{pa}(l_{i})})" display="inline"><semantics id="S2.SS2.p2.1.m1.3a"><mrow id="S2.SS2.p2.1.m1.3.3" xref="S2.SS2.p2.1.m1.3.3.cmml"><mi id="S2.SS2.p2.1.m1.3.3.4" xref="S2.SS2.p2.1.m1.3.3.4.cmml">p</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p2.1.m1.3.3.3" xref="S2.SS2.p2.1.m1.3.3.3.cmml">​</mo><mrow id="S2.SS2.p2.1.m1.3.3.2.2" xref="S2.SS2.p2.1.m1.3.3.2.3.cmml"><mo stretchy="false" id="S2.SS2.p2.1.m1.3.3.2.2.3" xref="S2.SS2.p2.1.m1.3.3.2.3.cmml">(</mo><msub id="S2.SS2.p2.1.m1.2.2.1.1.1" xref="S2.SS2.p2.1.m1.2.2.1.1.1.cmml"><mi id="S2.SS2.p2.1.m1.2.2.1.1.1.2" xref="S2.SS2.p2.1.m1.2.2.1.1.1.2.cmml">l</mi><mi id="S2.SS2.p2.1.m1.2.2.1.1.1.3" xref="S2.SS2.p2.1.m1.2.2.1.1.1.3.cmml">i</mi></msub><mo id="S2.SS2.p2.1.m1.3.3.2.2.4" xref="S2.SS2.p2.1.m1.3.3.2.3.cmml">,</mo><msub id="S2.SS2.p2.1.m1.3.3.2.2.2" xref="S2.SS2.p2.1.m1.3.3.2.2.2.cmml"><mi id="S2.SS2.p2.1.m1.3.3.2.2.2.2" xref="S2.SS2.p2.1.m1.3.3.2.2.2.2.cmml">l</mi><mrow id="S2.SS2.p2.1.m1.1.1.1" xref="S2.SS2.p2.1.m1.1.1.1.cmml"><mi id="S2.SS2.p2.1.m1.1.1.1.3" xref="S2.SS2.p2.1.m1.1.1.1.3.cmml">𝐩𝐚</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p2.1.m1.1.1.1.2" xref="S2.SS2.p2.1.m1.1.1.1.2.cmml">​</mo><mrow id="S2.SS2.p2.1.m1.1.1.1.1.1" xref="S2.SS2.p2.1.m1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S2.SS2.p2.1.m1.1.1.1.1.1.2" xref="S2.SS2.p2.1.m1.1.1.1.1.1.1.cmml">(</mo><msub id="S2.SS2.p2.1.m1.1.1.1.1.1.1" xref="S2.SS2.p2.1.m1.1.1.1.1.1.1.cmml"><mi id="S2.SS2.p2.1.m1.1.1.1.1.1.1.2" xref="S2.SS2.p2.1.m1.1.1.1.1.1.1.2.cmml">l</mi><mi id="S2.SS2.p2.1.m1.1.1.1.1.1.1.3" xref="S2.SS2.p2.1.m1.1.1.1.1.1.1.3.cmml">i</mi></msub><mo stretchy="false" id="S2.SS2.p2.1.m1.1.1.1.1.1.3" xref="S2.SS2.p2.1.m1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></msub><mo stretchy="false" id="S2.SS2.p2.1.m1.3.3.2.2.5" xref="S2.SS2.p2.1.m1.3.3.2.3.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS2.p2.1.m1.3b"><apply id="S2.SS2.p2.1.m1.3.3.cmml" xref="S2.SS2.p2.1.m1.3.3"><times id="S2.SS2.p2.1.m1.3.3.3.cmml" xref="S2.SS2.p2.1.m1.3.3.3"></times><ci id="S2.SS2.p2.1.m1.3.3.4.cmml" xref="S2.SS2.p2.1.m1.3.3.4">𝑝</ci><interval closure="open" id="S2.SS2.p2.1.m1.3.3.2.3.cmml" xref="S2.SS2.p2.1.m1.3.3.2.2"><apply id="S2.SS2.p2.1.m1.2.2.1.1.1.cmml" xref="S2.SS2.p2.1.m1.2.2.1.1.1"><csymbol cd="ambiguous" id="S2.SS2.p2.1.m1.2.2.1.1.1.1.cmml" xref="S2.SS2.p2.1.m1.2.2.1.1.1">subscript</csymbol><ci id="S2.SS2.p2.1.m1.2.2.1.1.1.2.cmml" xref="S2.SS2.p2.1.m1.2.2.1.1.1.2">𝑙</ci><ci id="S2.SS2.p2.1.m1.2.2.1.1.1.3.cmml" xref="S2.SS2.p2.1.m1.2.2.1.1.1.3">𝑖</ci></apply><apply id="S2.SS2.p2.1.m1.3.3.2.2.2.cmml" xref="S2.SS2.p2.1.m1.3.3.2.2.2"><csymbol cd="ambiguous" id="S2.SS2.p2.1.m1.3.3.2.2.2.1.cmml" xref="S2.SS2.p2.1.m1.3.3.2.2.2">subscript</csymbol><ci id="S2.SS2.p2.1.m1.3.3.2.2.2.2.cmml" xref="S2.SS2.p2.1.m1.3.3.2.2.2.2">𝑙</ci><apply id="S2.SS2.p2.1.m1.1.1.1.cmml" xref="S2.SS2.p2.1.m1.1.1.1"><times id="S2.SS2.p2.1.m1.1.1.1.2.cmml" xref="S2.SS2.p2.1.m1.1.1.1.2"></times><ci id="S2.SS2.p2.1.m1.1.1.1.3.cmml" xref="S2.SS2.p2.1.m1.1.1.1.3">𝐩𝐚</ci><apply id="S2.SS2.p2.1.m1.1.1.1.1.1.1.cmml" xref="S2.SS2.p2.1.m1.1.1.1.1.1"><csymbol cd="ambiguous" id="S2.SS2.p2.1.m1.1.1.1.1.1.1.1.cmml" xref="S2.SS2.p2.1.m1.1.1.1.1.1">subscript</csymbol><ci id="S2.SS2.p2.1.m1.1.1.1.1.1.1.2.cmml" xref="S2.SS2.p2.1.m1.1.1.1.1.1.1.2">𝑙</ci><ci id="S2.SS2.p2.1.m1.1.1.1.1.1.1.3.cmml" xref="S2.SS2.p2.1.m1.1.1.1.1.1.1.3">𝑖</ci></apply></apply></apply></interval></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p2.1.m1.3c">p(l_{i},l_{\mathbf{pa}(l_{i})})</annotation></semantics></math>, and learn the model parameters from training data.
+Then, to predict the lifted coordinates <math id="S2.SS2.p2.2.m2.1" class="ltx_Math" alttext="\bar{x_{i}}" display="inline"><semantics id="S2.SS2.p2.2.m2.1a"><mover accent="true" id="S2.SS2.p2.2.m2.1.1" xref="S2.SS2.p2.2.m2.1.1.cmml"><msub id="S2.SS2.p2.2.m2.1.1.2" xref="S2.SS2.p2.2.m2.1.1.2.cmml"><mi id="S2.SS2.p2.2.m2.1.1.2.2" xref="S2.SS2.p2.2.m2.1.1.2.2.cmml">x</mi><mi id="S2.SS2.p2.2.m2.1.1.2.3" xref="S2.SS2.p2.2.m2.1.1.2.3.cmml">i</mi></msub><mo id="S2.SS2.p2.2.m2.1.1.1" xref="S2.SS2.p2.2.m2.1.1.1.cmml">¯</mo></mover><annotation-xml encoding="MathML-Content" id="S2.SS2.p2.2.m2.1b"><apply id="S2.SS2.p2.2.m2.1.1.cmml" xref="S2.SS2.p2.2.m2.1.1"><ci id="S2.SS2.p2.2.m2.1.1.1.cmml" xref="S2.SS2.p2.2.m2.1.1.1">¯</ci><apply id="S2.SS2.p2.2.m2.1.1.2.cmml" xref="S2.SS2.p2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S2.SS2.p2.2.m2.1.1.2.1.cmml" xref="S2.SS2.p2.2.m2.1.1.2">subscript</csymbol><ci id="S2.SS2.p2.2.m2.1.1.2.2.cmml" xref="S2.SS2.p2.2.m2.1.1.2.2">𝑥</ci><ci id="S2.SS2.p2.2.m2.1.1.2.3.cmml" xref="S2.SS2.p2.2.m2.1.1.2.3">𝑖</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p2.2.m2.1c">\bar{x_{i}}</annotation></semantics></math> of a missed landmark,
+we consider its associated limb <math id="S2.SS2.p2.3.m3.1" class="ltx_Math" alttext="l_{i}" display="inline"><semantics id="S2.SS2.p2.3.m3.1a"><msub id="S2.SS2.p2.3.m3.1.1" xref="S2.SS2.p2.3.m3.1.1.cmml"><mi id="S2.SS2.p2.3.m3.1.1.2" xref="S2.SS2.p2.3.m3.1.1.2.cmml">l</mi><mi id="S2.SS2.p2.3.m3.1.1.3" xref="S2.SS2.p2.3.m3.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S2.SS2.p2.3.m3.1b"><apply id="S2.SS2.p2.3.m3.1.1.cmml" xref="S2.SS2.p2.3.m3.1.1"><csymbol cd="ambiguous" id="S2.SS2.p2.3.m3.1.1.1.cmml" xref="S2.SS2.p2.3.m3.1.1">subscript</csymbol><ci id="S2.SS2.p2.3.m3.1.1.2.cmml" xref="S2.SS2.p2.3.m3.1.1.2">𝑙</ci><ci id="S2.SS2.p2.3.m3.1.1.3.cmml" xref="S2.SS2.p2.3.m3.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p2.3.m3.1c">l_{i}</annotation></semantics></math> in the skeleton whose other landmark
+is already lifted, and compute the mean of the
+conditional Gaussian distribution <math id="S2.SS2.p2.4.m4.2" class="ltx_Math" alttext="p(l_{i}|l_{\mathbf{pa}(l_{i})})" display="inline"><semantics id="S2.SS2.p2.4.m4.2a"><mrow id="S2.SS2.p2.4.m4.2.2" xref="S2.SS2.p2.4.m4.2.2.cmml"><mi id="S2.SS2.p2.4.m4.2.2.3" xref="S2.SS2.p2.4.m4.2.2.3.cmml">p</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p2.4.m4.2.2.2" xref="S2.SS2.p2.4.m4.2.2.2.cmml">​</mo><mrow id="S2.SS2.p2.4.m4.2.2.1.1" xref="S2.SS2.p2.4.m4.2.2.1.1.1.cmml"><mo stretchy="false" id="S2.SS2.p2.4.m4.2.2.1.1.2" xref="S2.SS2.p2.4.m4.2.2.1.1.1.cmml">(</mo><mrow id="S2.SS2.p2.4.m4.2.2.1.1.1" xref="S2.SS2.p2.4.m4.2.2.1.1.1.cmml"><msub id="S2.SS2.p2.4.m4.2.2.1.1.1.2" xref="S2.SS2.p2.4.m4.2.2.1.1.1.2.cmml"><mi id="S2.SS2.p2.4.m4.2.2.1.1.1.2.2" xref="S2.SS2.p2.4.m4.2.2.1.1.1.2.2.cmml">l</mi><mi id="S2.SS2.p2.4.m4.2.2.1.1.1.2.3" xref="S2.SS2.p2.4.m4.2.2.1.1.1.2.3.cmml">i</mi></msub><mo fence="false" id="S2.SS2.p2.4.m4.2.2.1.1.1.1" xref="S2.SS2.p2.4.m4.2.2.1.1.1.1.cmml">|</mo><msub id="S2.SS2.p2.4.m4.2.2.1.1.1.3" xref="S2.SS2.p2.4.m4.2.2.1.1.1.3.cmml"><mi id="S2.SS2.p2.4.m4.2.2.1.1.1.3.2" xref="S2.SS2.p2.4.m4.2.2.1.1.1.3.2.cmml">l</mi><mrow id="S2.SS2.p2.4.m4.1.1.1" xref="S2.SS2.p2.4.m4.1.1.1.cmml"><mi id="S2.SS2.p2.4.m4.1.1.1.3" xref="S2.SS2.p2.4.m4.1.1.1.3.cmml">𝐩𝐚</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p2.4.m4.1.1.1.2" xref="S2.SS2.p2.4.m4.1.1.1.2.cmml">​</mo><mrow id="S2.SS2.p2.4.m4.1.1.1.1.1" xref="S2.SS2.p2.4.m4.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S2.SS2.p2.4.m4.1.1.1.1.1.2" xref="S2.SS2.p2.4.m4.1.1.1.1.1.1.cmml">(</mo><msub id="S2.SS2.p2.4.m4.1.1.1.1.1.1" xref="S2.SS2.p2.4.m4.1.1.1.1.1.1.cmml"><mi id="S2.SS2.p2.4.m4.1.1.1.1.1.1.2" xref="S2.SS2.p2.4.m4.1.1.1.1.1.1.2.cmml">l</mi><mi id="S2.SS2.p2.4.m4.1.1.1.1.1.1.3" xref="S2.SS2.p2.4.m4.1.1.1.1.1.1.3.cmml">i</mi></msub><mo stretchy="false" id="S2.SS2.p2.4.m4.1.1.1.1.1.3" xref="S2.SS2.p2.4.m4.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></msub></mrow><mo stretchy="false" id="S2.SS2.p2.4.m4.2.2.1.1.3" xref="S2.SS2.p2.4.m4.2.2.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS2.p2.4.m4.2b"><apply id="S2.SS2.p2.4.m4.2.2.cmml" xref="S2.SS2.p2.4.m4.2.2"><times id="S2.SS2.p2.4.m4.2.2.2.cmml" xref="S2.SS2.p2.4.m4.2.2.2"></times><ci id="S2.SS2.p2.4.m4.2.2.3.cmml" xref="S2.SS2.p2.4.m4.2.2.3">𝑝</ci><apply id="S2.SS2.p2.4.m4.2.2.1.1.1.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1"><csymbol cd="latexml" id="S2.SS2.p2.4.m4.2.2.1.1.1.1.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1.1.1">conditional</csymbol><apply id="S2.SS2.p2.4.m4.2.2.1.1.1.2.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1.1.2"><csymbol cd="ambiguous" id="S2.SS2.p2.4.m4.2.2.1.1.1.2.1.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1.1.2">subscript</csymbol><ci id="S2.SS2.p2.4.m4.2.2.1.1.1.2.2.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1.1.2.2">𝑙</ci><ci id="S2.SS2.p2.4.m4.2.2.1.1.1.2.3.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1.1.2.3">𝑖</ci></apply><apply id="S2.SS2.p2.4.m4.2.2.1.1.1.3.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1.1.3"><csymbol cd="ambiguous" id="S2.SS2.p2.4.m4.2.2.1.1.1.3.1.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1.1.3">subscript</csymbol><ci id="S2.SS2.p2.4.m4.2.2.1.1.1.3.2.cmml" xref="S2.SS2.p2.4.m4.2.2.1.1.1.3.2">𝑙</ci><apply id="S2.SS2.p2.4.m4.1.1.1.cmml" xref="S2.SS2.p2.4.m4.1.1.1"><times id="S2.SS2.p2.4.m4.1.1.1.2.cmml" xref="S2.SS2.p2.4.m4.1.1.1.2"></times><ci id="S2.SS2.p2.4.m4.1.1.1.3.cmml" xref="S2.SS2.p2.4.m4.1.1.1.3">𝐩𝐚</ci><apply id="S2.SS2.p2.4.m4.1.1.1.1.1.1.cmml" xref="S2.SS2.p2.4.m4.1.1.1.1.1"><csymbol cd="ambiguous" id="S2.SS2.p2.4.m4.1.1.1.1.1.1.1.cmml" xref="S2.SS2.p2.4.m4.1.1.1.1.1">subscript</csymbol><ci id="S2.SS2.p2.4.m4.1.1.1.1.1.1.2.cmml" xref="S2.SS2.p2.4.m4.1.1.1.1.1.1.2">𝑙</ci><ci id="S2.SS2.p2.4.m4.1.1.1.1.1.1.3.cmml" xref="S2.SS2.p2.4.m4.1.1.1.1.1.1.3">𝑖</ci></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p2.4.m4.2c">p(l_{i}|l_{\mathbf{pa}(l_{i})})</annotation></semantics></math> of <math id="S2.SS2.p2.5.m5.1" class="ltx_Math" alttext="l_{i}" display="inline"><semantics id="S2.SS2.p2.5.m5.1a"><msub id="S2.SS2.p2.5.m5.1.1" xref="S2.SS2.p2.5.m5.1.1.cmml"><mi id="S2.SS2.p2.5.m5.1.1.2" xref="S2.SS2.p2.5.m5.1.1.2.cmml">l</mi><mi id="S2.SS2.p2.5.m5.1.1.3" xref="S2.SS2.p2.5.m5.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S2.SS2.p2.5.m5.1b"><apply id="S2.SS2.p2.5.m5.1.1.cmml" xref="S2.SS2.p2.5.m5.1.1"><csymbol cd="ambiguous" id="S2.SS2.p2.5.m5.1.1.1.cmml" xref="S2.SS2.p2.5.m5.1.1">subscript</csymbol><ci id="S2.SS2.p2.5.m5.1.1.2.cmml" xref="S2.SS2.p2.5.m5.1.1.2">𝑙</ci><ci id="S2.SS2.p2.5.m5.1.1.3.cmml" xref="S2.SS2.p2.5.m5.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p2.5.m5.1c">l_{i}</annotation></semantics></math>
+conditioned on its limb parent <math id="S2.SS2.p2.6.m6.1" class="ltx_Math" alttext="\mathbf{pa}(l_{i})" display="inline"><semantics id="S2.SS2.p2.6.m6.1a"><mrow id="S2.SS2.p2.6.m6.1.1" xref="S2.SS2.p2.6.m6.1.1.cmml"><mi id="S2.SS2.p2.6.m6.1.1.3" xref="S2.SS2.p2.6.m6.1.1.3.cmml">𝐩𝐚</mi><mo lspace="0em" rspace="0em" id="S2.SS2.p2.6.m6.1.1.2" xref="S2.SS2.p2.6.m6.1.1.2.cmml">​</mo><mrow id="S2.SS2.p2.6.m6.1.1.1.1" xref="S2.SS2.p2.6.m6.1.1.1.1.1.cmml"><mo stretchy="false" id="S2.SS2.p2.6.m6.1.1.1.1.2" xref="S2.SS2.p2.6.m6.1.1.1.1.1.cmml">(</mo><msub id="S2.SS2.p2.6.m6.1.1.1.1.1" xref="S2.SS2.p2.6.m6.1.1.1.1.1.cmml"><mi id="S2.SS2.p2.6.m6.1.1.1.1.1.2" xref="S2.SS2.p2.6.m6.1.1.1.1.1.2.cmml">l</mi><mi id="S2.SS2.p2.6.m6.1.1.1.1.1.3" xref="S2.SS2.p2.6.m6.1.1.1.1.1.3.cmml">i</mi></msub><mo stretchy="false" id="S2.SS2.p2.6.m6.1.1.1.1.3" xref="S2.SS2.p2.6.m6.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS2.p2.6.m6.1b"><apply id="S2.SS2.p2.6.m6.1.1.cmml" xref="S2.SS2.p2.6.m6.1.1"><times id="S2.SS2.p2.6.m6.1.1.2.cmml" xref="S2.SS2.p2.6.m6.1.1.2"></times><ci id="S2.SS2.p2.6.m6.1.1.3.cmml" xref="S2.SS2.p2.6.m6.1.1.3">𝐩𝐚</ci><apply id="S2.SS2.p2.6.m6.1.1.1.1.1.cmml" xref="S2.SS2.p2.6.m6.1.1.1.1"><csymbol cd="ambiguous" id="S2.SS2.p2.6.m6.1.1.1.1.1.1.cmml" xref="S2.SS2.p2.6.m6.1.1.1.1">subscript</csymbol><ci id="S2.SS2.p2.6.m6.1.1.1.1.1.2.cmml" xref="S2.SS2.p2.6.m6.1.1.1.1.1.2">𝑙</ci><ci id="S2.SS2.p2.6.m6.1.1.1.1.1.3.cmml" xref="S2.SS2.p2.6.m6.1.1.1.1.1.3">𝑖</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p2.6.m6.1c">\mathbf{pa}(l_{i})</annotation></semantics></math> to further compute <math id="S2.SS2.p2.7.m7.1" class="ltx_Math" alttext="\bar{x_{i}}" display="inline"><semantics id="S2.SS2.p2.7.m7.1a"><mover accent="true" id="S2.SS2.p2.7.m7.1.1" xref="S2.SS2.p2.7.m7.1.1.cmml"><msub id="S2.SS2.p2.7.m7.1.1.2" xref="S2.SS2.p2.7.m7.1.1.2.cmml"><mi id="S2.SS2.p2.7.m7.1.1.2.2" xref="S2.SS2.p2.7.m7.1.1.2.2.cmml">x</mi><mi id="S2.SS2.p2.7.m7.1.1.2.3" xref="S2.SS2.p2.7.m7.1.1.2.3.cmml">i</mi></msub><mo id="S2.SS2.p2.7.m7.1.1.1" xref="S2.SS2.p2.7.m7.1.1.1.cmml">¯</mo></mover><annotation-xml encoding="MathML-Content" id="S2.SS2.p2.7.m7.1b"><apply id="S2.SS2.p2.7.m7.1.1.cmml" xref="S2.SS2.p2.7.m7.1.1"><ci id="S2.SS2.p2.7.m7.1.1.1.cmml" xref="S2.SS2.p2.7.m7.1.1.1">¯</ci><apply id="S2.SS2.p2.7.m7.1.1.2.cmml" xref="S2.SS2.p2.7.m7.1.1.2"><csymbol cd="ambiguous" id="S2.SS2.p2.7.m7.1.1.2.1.cmml" xref="S2.SS2.p2.7.m7.1.1.2">subscript</csymbol><ci id="S2.SS2.p2.7.m7.1.1.2.2.cmml" xref="S2.SS2.p2.7.m7.1.1.2.2">𝑥</ci><ci id="S2.SS2.p2.7.m7.1.1.2.3.cmml" xref="S2.SS2.p2.7.m7.1.1.2.3">𝑖</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS2.p2.7.m7.1c">\bar{x_{i}}</annotation></semantics></math>.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">Note that our approach requires some body landmarks to be detected.
+Indeed, as in our opinion it is unrealistically to attempt determining
+the complete 3D pose of the person from a few detected body landmarks, e.g.<span id="S2.SS2.p3.1.1" class="ltx_text"></span> the arm,
+we assume that at least the spine limb and other two
+body landmarks in the trunk (shoulders, heaps) are detected.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Human 3D Pose Estimation</span>
+</h2>
+
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2011.05010/assets/x3.png" id="S3.F3.g1" class="ltx_graphics ltx_img_landscape" width="461" height="132" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>
+(a) Skeleton and limb pairwise relationships;
+(b) illustration of the error introduced by the lifting process of the 2D detected landmarks;
+(c) mean absolute error on each coordinate when using
+the 3D lifted points as the 3D estimation on the ITOP dataset.
+</figcaption>
+</figure>
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">This section presents our residual-pose learning approach to predict (in a camera coordinate frame )
+the 3D coordinates of a human skeleton comprising <math id="S3.p1.1.m1.1" class="ltx_Math" alttext="J" display="inline"><semantics id="S3.p1.1.m1.1a"><mi id="S3.p1.1.m1.1.1" xref="S3.p1.1.m1.1.1.cmml">J</mi><annotation-xml encoding="MathML-Content" id="S3.p1.1.m1.1b"><ci id="S3.p1.1.m1.1.1.cmml" xref="S3.p1.1.m1.1.1">𝐽</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.p1.1.m1.1c">J</annotation></semantics></math> body landmarks.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS1.4.1.1" class="ltx_text">III-A</span> </span><span id="S3.SS1.5.2" class="ltx_text ltx_font_italic">Residual Pose Learning</span>
+</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">Provided the 2D body landmark detections, our lifting step provides
+a <em id="S3.SS1.p1.1.1" class="ltx_emph ltx_font_italic">rough</em> estimate of the 3D pose.
+Yet, lifted values will exhibit 3D pose estimation errors,
+specially since lifted 3D points lie on the depth surface rather
+than represent the inner joint (see Fig. <a href="#S3.F3" title="Figure 3 ‣ III Human 3D Pose Estimation ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>).
+In this regard, in absence of other sources of errors (missed detections,
+occlusion, etc.) we can argue that such estimates differ only
+from the true 3D pose by some coordinate offset.
+This inspired us to follow a simple yet effective approach to obtain
+refined estimates from rough lifted estimates.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.4" class="ltx_p">Our approach can be set as follows: given a <em id="S3.SS1.p2.4.1" class="ltx_emph ltx_font_italic">rough</em> 3D pose
+estimate <math id="S3.SS1.p2.1.m1.1" class="ltx_Math" alttext="\bar{\mathbf{x}}\in\mathbb{R}^{J\times 3}" display="inline"><semantics id="S3.SS1.p2.1.m1.1a"><mrow id="S3.SS1.p2.1.m1.1.1" xref="S3.SS1.p2.1.m1.1.1.cmml"><mover accent="true" id="S3.SS1.p2.1.m1.1.1.2" xref="S3.SS1.p2.1.m1.1.1.2.cmml"><mi id="S3.SS1.p2.1.m1.1.1.2.2" xref="S3.SS1.p2.1.m1.1.1.2.2.cmml">𝐱</mi><mo id="S3.SS1.p2.1.m1.1.1.2.1" xref="S3.SS1.p2.1.m1.1.1.2.1.cmml">¯</mo></mover><mo id="S3.SS1.p2.1.m1.1.1.1" xref="S3.SS1.p2.1.m1.1.1.1.cmml">∈</mo><msup id="S3.SS1.p2.1.m1.1.1.3" xref="S3.SS1.p2.1.m1.1.1.3.cmml"><mi id="S3.SS1.p2.1.m1.1.1.3.2" xref="S3.SS1.p2.1.m1.1.1.3.2.cmml">ℝ</mi><mrow id="S3.SS1.p2.1.m1.1.1.3.3" xref="S3.SS1.p2.1.m1.1.1.3.3.cmml"><mi id="S3.SS1.p2.1.m1.1.1.3.3.2" xref="S3.SS1.p2.1.m1.1.1.3.3.2.cmml">J</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p2.1.m1.1.1.3.3.1" xref="S3.SS1.p2.1.m1.1.1.3.3.1.cmml">×</mo><mn id="S3.SS1.p2.1.m1.1.1.3.3.3" xref="S3.SS1.p2.1.m1.1.1.3.3.3.cmml">3</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.1.m1.1b"><apply id="S3.SS1.p2.1.m1.1.1.cmml" xref="S3.SS1.p2.1.m1.1.1"><in id="S3.SS1.p2.1.m1.1.1.1.cmml" xref="S3.SS1.p2.1.m1.1.1.1"></in><apply id="S3.SS1.p2.1.m1.1.1.2.cmml" xref="S3.SS1.p2.1.m1.1.1.2"><ci id="S3.SS1.p2.1.m1.1.1.2.1.cmml" xref="S3.SS1.p2.1.m1.1.1.2.1">¯</ci><ci id="S3.SS1.p2.1.m1.1.1.2.2.cmml" xref="S3.SS1.p2.1.m1.1.1.2.2">𝐱</ci></apply><apply id="S3.SS1.p2.1.m1.1.1.3.cmml" xref="S3.SS1.p2.1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.SS1.p2.1.m1.1.1.3.1.cmml" xref="S3.SS1.p2.1.m1.1.1.3">superscript</csymbol><ci id="S3.SS1.p2.1.m1.1.1.3.2.cmml" xref="S3.SS1.p2.1.m1.1.1.3.2">ℝ</ci><apply id="S3.SS1.p2.1.m1.1.1.3.3.cmml" xref="S3.SS1.p2.1.m1.1.1.3.3"><times id="S3.SS1.p2.1.m1.1.1.3.3.1.cmml" xref="S3.SS1.p2.1.m1.1.1.3.3.1"></times><ci id="S3.SS1.p2.1.m1.1.1.3.3.2.cmml" xref="S3.SS1.p2.1.m1.1.1.3.3.2">𝐽</ci><cn type="integer" id="S3.SS1.p2.1.m1.1.1.3.3.3.cmml" xref="S3.SS1.p2.1.m1.1.1.3.3.3">3</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.1.m1.1c">\bar{\mathbf{x}}\in\mathbb{R}^{J\times 3}</annotation></semantics></math>
+obtained from the 2D landmark detection lifting step,
+and its <em id="S3.SS1.p2.4.2" class="ltx_emph ltx_font_italic">true</em> corresponding 3D pose <math id="S3.SS1.p2.2.m2.1" class="ltx_Math" alttext="\mathbf{x}^{*}\in\mathbb{R}^{J\times 3}" display="inline"><semantics id="S3.SS1.p2.2.m2.1a"><mrow id="S3.SS1.p2.2.m2.1.1" xref="S3.SS1.p2.2.m2.1.1.cmml"><msup id="S3.SS1.p2.2.m2.1.1.2" xref="S3.SS1.p2.2.m2.1.1.2.cmml"><mi id="S3.SS1.p2.2.m2.1.1.2.2" xref="S3.SS1.p2.2.m2.1.1.2.2.cmml">𝐱</mi><mo id="S3.SS1.p2.2.m2.1.1.2.3" xref="S3.SS1.p2.2.m2.1.1.2.3.cmml">∗</mo></msup><mo id="S3.SS1.p2.2.m2.1.1.1" xref="S3.SS1.p2.2.m2.1.1.1.cmml">∈</mo><msup id="S3.SS1.p2.2.m2.1.1.3" xref="S3.SS1.p2.2.m2.1.1.3.cmml"><mi id="S3.SS1.p2.2.m2.1.1.3.2" xref="S3.SS1.p2.2.m2.1.1.3.2.cmml">ℝ</mi><mrow id="S3.SS1.p2.2.m2.1.1.3.3" xref="S3.SS1.p2.2.m2.1.1.3.3.cmml"><mi id="S3.SS1.p2.2.m2.1.1.3.3.2" xref="S3.SS1.p2.2.m2.1.1.3.3.2.cmml">J</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p2.2.m2.1.1.3.3.1" xref="S3.SS1.p2.2.m2.1.1.3.3.1.cmml">×</mo><mn id="S3.SS1.p2.2.m2.1.1.3.3.3" xref="S3.SS1.p2.2.m2.1.1.3.3.3.cmml">3</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.2.m2.1b"><apply id="S3.SS1.p2.2.m2.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1"><in id="S3.SS1.p2.2.m2.1.1.1.cmml" xref="S3.SS1.p2.2.m2.1.1.1"></in><apply id="S3.SS1.p2.2.m2.1.1.2.cmml" xref="S3.SS1.p2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.SS1.p2.2.m2.1.1.2.1.cmml" xref="S3.SS1.p2.2.m2.1.1.2">superscript</csymbol><ci id="S3.SS1.p2.2.m2.1.1.2.2.cmml" xref="S3.SS1.p2.2.m2.1.1.2.2">𝐱</ci><times id="S3.SS1.p2.2.m2.1.1.2.3.cmml" xref="S3.SS1.p2.2.m2.1.1.2.3"></times></apply><apply id="S3.SS1.p2.2.m2.1.1.3.cmml" xref="S3.SS1.p2.2.m2.1.1.3"><csymbol cd="ambiguous" id="S3.SS1.p2.2.m2.1.1.3.1.cmml" xref="S3.SS1.p2.2.m2.1.1.3">superscript</csymbol><ci id="S3.SS1.p2.2.m2.1.1.3.2.cmml" xref="S3.SS1.p2.2.m2.1.1.3.2">ℝ</ci><apply id="S3.SS1.p2.2.m2.1.1.3.3.cmml" xref="S3.SS1.p2.2.m2.1.1.3.3"><times id="S3.SS1.p2.2.m2.1.1.3.3.1.cmml" xref="S3.SS1.p2.2.m2.1.1.3.3.1"></times><ci id="S3.SS1.p2.2.m2.1.1.3.3.2.cmml" xref="S3.SS1.p2.2.m2.1.1.3.3.2">𝐽</ci><cn type="integer" id="S3.SS1.p2.2.m2.1.1.3.3.3.cmml" xref="S3.SS1.p2.2.m2.1.1.3.3.3">3</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.2.m2.1c">\mathbf{x}^{*}\in\mathbb{R}^{J\times 3}</annotation></semantics></math>,
+the neural regressor <math id="S3.SS1.p2.3.m3.1" class="ltx_Math" alttext="f" display="inline"><semantics id="S3.SS1.p2.3.m3.1a"><mi id="S3.SS1.p2.3.m3.1.1" xref="S3.SS1.p2.3.m3.1.1.cmml">f</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.3.m3.1b"><ci id="S3.SS1.p2.3.m3.1.1.cmml" xref="S3.SS1.p2.3.m3.1.1">𝑓</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.3.m3.1c">f</annotation></semantics></math> can focus on modelling their residual <math id="S3.SS1.p2.4.m4.1" class="ltx_Math" alttext="\mathbf{x}^{*}-\bar{\mathbf{x}}" display="inline"><semantics id="S3.SS1.p2.4.m4.1a"><mrow id="S3.SS1.p2.4.m4.1.1" xref="S3.SS1.p2.4.m4.1.1.cmml"><msup id="S3.SS1.p2.4.m4.1.1.2" xref="S3.SS1.p2.4.m4.1.1.2.cmml"><mi id="S3.SS1.p2.4.m4.1.1.2.2" xref="S3.SS1.p2.4.m4.1.1.2.2.cmml">𝐱</mi><mo id="S3.SS1.p2.4.m4.1.1.2.3" xref="S3.SS1.p2.4.m4.1.1.2.3.cmml">∗</mo></msup><mo id="S3.SS1.p2.4.m4.1.1.1" xref="S3.SS1.p2.4.m4.1.1.1.cmml">−</mo><mover accent="true" id="S3.SS1.p2.4.m4.1.1.3" xref="S3.SS1.p2.4.m4.1.1.3.cmml"><mi id="S3.SS1.p2.4.m4.1.1.3.2" xref="S3.SS1.p2.4.m4.1.1.3.2.cmml">𝐱</mi><mo id="S3.SS1.p2.4.m4.1.1.3.1" xref="S3.SS1.p2.4.m4.1.1.3.1.cmml">¯</mo></mover></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.4.m4.1b"><apply id="S3.SS1.p2.4.m4.1.1.cmml" xref="S3.SS1.p2.4.m4.1.1"><minus id="S3.SS1.p2.4.m4.1.1.1.cmml" xref="S3.SS1.p2.4.m4.1.1.1"></minus><apply id="S3.SS1.p2.4.m4.1.1.2.cmml" xref="S3.SS1.p2.4.m4.1.1.2"><csymbol cd="ambiguous" id="S3.SS1.p2.4.m4.1.1.2.1.cmml" xref="S3.SS1.p2.4.m4.1.1.2">superscript</csymbol><ci id="S3.SS1.p2.4.m4.1.1.2.2.cmml" xref="S3.SS1.p2.4.m4.1.1.2.2">𝐱</ci><times id="S3.SS1.p2.4.m4.1.1.2.3.cmml" xref="S3.SS1.p2.4.m4.1.1.2.3"></times></apply><apply id="S3.SS1.p2.4.m4.1.1.3.cmml" xref="S3.SS1.p2.4.m4.1.1.3"><ci id="S3.SS1.p2.4.m4.1.1.3.1.cmml" xref="S3.SS1.p2.4.m4.1.1.3.1">¯</ci><ci id="S3.SS1.p2.4.m4.1.1.3.2.cmml" xref="S3.SS1.p2.4.m4.1.1.3.2">𝐱</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.4.m4.1c">\mathbf{x}^{*}-\bar{\mathbf{x}}</annotation></semantics></math> as:</p>
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1.2" class="ltx_Math" alttext="f(\bar{\mathbf{x}})+\bar{\mathbf{x}}=\mathbf{x}^{*}." display="block"><semantics id="S3.E1.m1.2a"><mrow id="S3.E1.m1.2.2.1" xref="S3.E1.m1.2.2.1.1.cmml"><mrow id="S3.E1.m1.2.2.1.1" xref="S3.E1.m1.2.2.1.1.cmml"><mrow id="S3.E1.m1.2.2.1.1.2" xref="S3.E1.m1.2.2.1.1.2.cmml"><mrow id="S3.E1.m1.2.2.1.1.2.2" xref="S3.E1.m1.2.2.1.1.2.2.cmml"><mi id="S3.E1.m1.2.2.1.1.2.2.2" xref="S3.E1.m1.2.2.1.1.2.2.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.2.2.1.1.2.2.1" xref="S3.E1.m1.2.2.1.1.2.2.1.cmml">​</mo><mrow id="S3.E1.m1.2.2.1.1.2.2.3.2" xref="S3.E1.m1.1.1.cmml"><mo stretchy="false" id="S3.E1.m1.2.2.1.1.2.2.3.2.1" xref="S3.E1.m1.1.1.cmml">(</mo><mover accent="true" id="S3.E1.m1.1.1" xref="S3.E1.m1.1.1.cmml"><mi id="S3.E1.m1.1.1.2" xref="S3.E1.m1.1.1.2.cmml">𝐱</mi><mo id="S3.E1.m1.1.1.1" xref="S3.E1.m1.1.1.1.cmml">¯</mo></mover><mo stretchy="false" id="S3.E1.m1.2.2.1.1.2.2.3.2.2" xref="S3.E1.m1.1.1.cmml">)</mo></mrow></mrow><mo id="S3.E1.m1.2.2.1.1.2.1" xref="S3.E1.m1.2.2.1.1.2.1.cmml">+</mo><mover accent="true" id="S3.E1.m1.2.2.1.1.2.3" xref="S3.E1.m1.2.2.1.1.2.3.cmml"><mi id="S3.E1.m1.2.2.1.1.2.3.2" xref="S3.E1.m1.2.2.1.1.2.3.2.cmml">𝐱</mi><mo id="S3.E1.m1.2.2.1.1.2.3.1" xref="S3.E1.m1.2.2.1.1.2.3.1.cmml">¯</mo></mover></mrow><mo id="S3.E1.m1.2.2.1.1.1" xref="S3.E1.m1.2.2.1.1.1.cmml">=</mo><msup id="S3.E1.m1.2.2.1.1.3" xref="S3.E1.m1.2.2.1.1.3.cmml"><mi id="S3.E1.m1.2.2.1.1.3.2" xref="S3.E1.m1.2.2.1.1.3.2.cmml">𝐱</mi><mo id="S3.E1.m1.2.2.1.1.3.3" xref="S3.E1.m1.2.2.1.1.3.3.cmml">∗</mo></msup></mrow><mo lspace="0em" id="S3.E1.m1.2.2.1.2" xref="S3.E1.m1.2.2.1.1.cmml">.</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.2b"><apply id="S3.E1.m1.2.2.1.1.cmml" xref="S3.E1.m1.2.2.1"><eq id="S3.E1.m1.2.2.1.1.1.cmml" xref="S3.E1.m1.2.2.1.1.1"></eq><apply id="S3.E1.m1.2.2.1.1.2.cmml" xref="S3.E1.m1.2.2.1.1.2"><plus id="S3.E1.m1.2.2.1.1.2.1.cmml" xref="S3.E1.m1.2.2.1.1.2.1"></plus><apply id="S3.E1.m1.2.2.1.1.2.2.cmml" xref="S3.E1.m1.2.2.1.1.2.2"><times id="S3.E1.m1.2.2.1.1.2.2.1.cmml" xref="S3.E1.m1.2.2.1.1.2.2.1"></times><ci id="S3.E1.m1.2.2.1.1.2.2.2.cmml" xref="S3.E1.m1.2.2.1.1.2.2.2">𝑓</ci><apply id="S3.E1.m1.1.1.cmml" xref="S3.E1.m1.2.2.1.1.2.2.3.2"><ci id="S3.E1.m1.1.1.1.cmml" xref="S3.E1.m1.1.1.1">¯</ci><ci id="S3.E1.m1.1.1.2.cmml" xref="S3.E1.m1.1.1.2">𝐱</ci></apply></apply><apply id="S3.E1.m1.2.2.1.1.2.3.cmml" xref="S3.E1.m1.2.2.1.1.2.3"><ci id="S3.E1.m1.2.2.1.1.2.3.1.cmml" xref="S3.E1.m1.2.2.1.1.2.3.1">¯</ci><ci id="S3.E1.m1.2.2.1.1.2.3.2.cmml" xref="S3.E1.m1.2.2.1.1.2.3.2">𝐱</ci></apply></apply><apply id="S3.E1.m1.2.2.1.1.3.cmml" xref="S3.E1.m1.2.2.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.1.1.3.1.cmml" xref="S3.E1.m1.2.2.1.1.3">superscript</csymbol><ci id="S3.E1.m1.2.2.1.1.3.2.cmml" xref="S3.E1.m1.2.2.1.1.3.2">𝐱</ci><times id="S3.E1.m1.2.2.1.1.3.3.cmml" xref="S3.E1.m1.2.2.1.1.3.3"></times></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.2c">f(\bar{\mathbf{x}})+\bar{\mathbf{x}}=\mathbf{x}^{*}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS1.p2.8" class="ltx_p">The function <math id="S3.SS1.p2.5.m1.1" class="ltx_Math" alttext="f(\bar{\mathbf{x}})" display="inline"><semantics id="S3.SS1.p2.5.m1.1a"><mrow id="S3.SS1.p2.5.m1.1.2" xref="S3.SS1.p2.5.m1.1.2.cmml"><mi id="S3.SS1.p2.5.m1.1.2.2" xref="S3.SS1.p2.5.m1.1.2.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.SS1.p2.5.m1.1.2.1" xref="S3.SS1.p2.5.m1.1.2.1.cmml">​</mo><mrow id="S3.SS1.p2.5.m1.1.2.3.2" xref="S3.SS1.p2.5.m1.1.1.cmml"><mo stretchy="false" id="S3.SS1.p2.5.m1.1.2.3.2.1" xref="S3.SS1.p2.5.m1.1.1.cmml">(</mo><mover accent="true" id="S3.SS1.p2.5.m1.1.1" xref="S3.SS1.p2.5.m1.1.1.cmml"><mi id="S3.SS1.p2.5.m1.1.1.2" xref="S3.SS1.p2.5.m1.1.1.2.cmml">𝐱</mi><mo id="S3.SS1.p2.5.m1.1.1.1" xref="S3.SS1.p2.5.m1.1.1.1.cmml">¯</mo></mover><mo stretchy="false" id="S3.SS1.p2.5.m1.1.2.3.2.2" xref="S3.SS1.p2.5.m1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.5.m1.1b"><apply id="S3.SS1.p2.5.m1.1.2.cmml" xref="S3.SS1.p2.5.m1.1.2"><times id="S3.SS1.p2.5.m1.1.2.1.cmml" xref="S3.SS1.p2.5.m1.1.2.1"></times><ci id="S3.SS1.p2.5.m1.1.2.2.cmml" xref="S3.SS1.p2.5.m1.1.2.2">𝑓</ci><apply id="S3.SS1.p2.5.m1.1.1.cmml" xref="S3.SS1.p2.5.m1.1.2.3.2"><ci id="S3.SS1.p2.5.m1.1.1.1.cmml" xref="S3.SS1.p2.5.m1.1.1.1">¯</ci><ci id="S3.SS1.p2.5.m1.1.1.2.cmml" xref="S3.SS1.p2.5.m1.1.1.2">𝐱</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.5.m1.1c">f(\bar{\mathbf{x}})</annotation></semantics></math> is the residual to be learned.
+Graphically, these residuals represent the vector of coordinate offsets that are necessary
+to predict the true 3D pose <math id="S3.SS1.p2.6.m2.1" class="ltx_Math" alttext="\mathbf{x}^{*}" display="inline"><semantics id="S3.SS1.p2.6.m2.1a"><msup id="S3.SS1.p2.6.m2.1.1" xref="S3.SS1.p2.6.m2.1.1.cmml"><mi id="S3.SS1.p2.6.m2.1.1.2" xref="S3.SS1.p2.6.m2.1.1.2.cmml">𝐱</mi><mo id="S3.SS1.p2.6.m2.1.1.3" xref="S3.SS1.p2.6.m2.1.1.3.cmml">∗</mo></msup><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.6.m2.1b"><apply id="S3.SS1.p2.6.m2.1.1.cmml" xref="S3.SS1.p2.6.m2.1.1"><csymbol cd="ambiguous" id="S3.SS1.p2.6.m2.1.1.1.cmml" xref="S3.SS1.p2.6.m2.1.1">superscript</csymbol><ci id="S3.SS1.p2.6.m2.1.1.2.cmml" xref="S3.SS1.p2.6.m2.1.1.2">𝐱</ci><times id="S3.SS1.p2.6.m2.1.1.3.cmml" xref="S3.SS1.p2.6.m2.1.1.3"></times></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.6.m2.1c">\mathbf{x}^{*}</annotation></semantics></math> (hence a residual pose).
+Architecturally speaking, the operation <math id="S3.SS1.p2.7.m3.1" class="ltx_Math" alttext="f(\bar{\mathbf{x}})+\bar{\mathbf{x}}" display="inline"><semantics id="S3.SS1.p2.7.m3.1a"><mrow id="S3.SS1.p2.7.m3.1.2" xref="S3.SS1.p2.7.m3.1.2.cmml"><mrow id="S3.SS1.p2.7.m3.1.2.2" xref="S3.SS1.p2.7.m3.1.2.2.cmml"><mi id="S3.SS1.p2.7.m3.1.2.2.2" xref="S3.SS1.p2.7.m3.1.2.2.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.SS1.p2.7.m3.1.2.2.1" xref="S3.SS1.p2.7.m3.1.2.2.1.cmml">​</mo><mrow id="S3.SS1.p2.7.m3.1.2.2.3.2" xref="S3.SS1.p2.7.m3.1.1.cmml"><mo stretchy="false" id="S3.SS1.p2.7.m3.1.2.2.3.2.1" xref="S3.SS1.p2.7.m3.1.1.cmml">(</mo><mover accent="true" id="S3.SS1.p2.7.m3.1.1" xref="S3.SS1.p2.7.m3.1.1.cmml"><mi id="S3.SS1.p2.7.m3.1.1.2" xref="S3.SS1.p2.7.m3.1.1.2.cmml">𝐱</mi><mo id="S3.SS1.p2.7.m3.1.1.1" xref="S3.SS1.p2.7.m3.1.1.1.cmml">¯</mo></mover><mo stretchy="false" id="S3.SS1.p2.7.m3.1.2.2.3.2.2" xref="S3.SS1.p2.7.m3.1.1.cmml">)</mo></mrow></mrow><mo id="S3.SS1.p2.7.m3.1.2.1" xref="S3.SS1.p2.7.m3.1.2.1.cmml">+</mo><mover accent="true" id="S3.SS1.p2.7.m3.1.2.3" xref="S3.SS1.p2.7.m3.1.2.3.cmml"><mi id="S3.SS1.p2.7.m3.1.2.3.2" xref="S3.SS1.p2.7.m3.1.2.3.2.cmml">𝐱</mi><mo id="S3.SS1.p2.7.m3.1.2.3.1" xref="S3.SS1.p2.7.m3.1.2.3.1.cmml">¯</mo></mover></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.7.m3.1b"><apply id="S3.SS1.p2.7.m3.1.2.cmml" xref="S3.SS1.p2.7.m3.1.2"><plus id="S3.SS1.p2.7.m3.1.2.1.cmml" xref="S3.SS1.p2.7.m3.1.2.1"></plus><apply id="S3.SS1.p2.7.m3.1.2.2.cmml" xref="S3.SS1.p2.7.m3.1.2.2"><times id="S3.SS1.p2.7.m3.1.2.2.1.cmml" xref="S3.SS1.p2.7.m3.1.2.2.1"></times><ci id="S3.SS1.p2.7.m3.1.2.2.2.cmml" xref="S3.SS1.p2.7.m3.1.2.2.2">𝑓</ci><apply id="S3.SS1.p2.7.m3.1.1.cmml" xref="S3.SS1.p2.7.m3.1.2.2.3.2"><ci id="S3.SS1.p2.7.m3.1.1.1.cmml" xref="S3.SS1.p2.7.m3.1.1.1">¯</ci><ci id="S3.SS1.p2.7.m3.1.1.2.cmml" xref="S3.SS1.p2.7.m3.1.1.2">𝐱</ci></apply></apply><apply id="S3.SS1.p2.7.m3.1.2.3.cmml" xref="S3.SS1.p2.7.m3.1.2.3"><ci id="S3.SS1.p2.7.m3.1.2.3.1.cmml" xref="S3.SS1.p2.7.m3.1.2.3.1">¯</ci><ci id="S3.SS1.p2.7.m3.1.2.3.2.cmml" xref="S3.SS1.p2.7.m3.1.2.3.2">𝐱</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.7.m3.1c">f(\bar{\mathbf{x}})+\bar{\mathbf{x}}</annotation></semantics></math>
+is performed by a shortcut connection with the identity mapping of <math id="S3.SS1.p2.8.m4.1" class="ltx_Math" alttext="\bar{\mathbf{x}}" display="inline"><semantics id="S3.SS1.p2.8.m4.1a"><mover accent="true" id="S3.SS1.p2.8.m4.1.1" xref="S3.SS1.p2.8.m4.1.1.cmml"><mi id="S3.SS1.p2.8.m4.1.1.2" xref="S3.SS1.p2.8.m4.1.1.2.cmml">𝐱</mi><mo id="S3.SS1.p2.8.m4.1.1.1" xref="S3.SS1.p2.8.m4.1.1.1.cmml">¯</mo></mover><annotation-xml encoding="MathML-Content" id="S3.SS1.p2.8.m4.1b"><apply id="S3.SS1.p2.8.m4.1.1.cmml" xref="S3.SS1.p2.8.m4.1.1"><ci id="S3.SS1.p2.8.m4.1.1.1.cmml" xref="S3.SS1.p2.8.m4.1.1.1">¯</ci><ci id="S3.SS1.p2.8.m4.1.1.2.cmml" xref="S3.SS1.p2.8.m4.1.1.2">𝐱</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p2.8.m4.1c">\bar{\mathbf{x}}</annotation></semantics></math>,
+as shown in Fig. <a href="#S3.F4" title="Figure 4 ‣ III-A Residual Pose Learning ‣ III Human 3D Pose Estimation ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.</p>
+</div>
+<div id="S3.SS1.p3" class="ltx_para">
+<p id="S3.SS1.p3.3" class="ltx_p">Additionally, we can augment <math id="S3.SS1.p3.1.m1.1" class="ltx_Math" alttext="\bar{\mathbf{x}}" display="inline"><semantics id="S3.SS1.p3.1.m1.1a"><mover accent="true" id="S3.SS1.p3.1.m1.1.1" xref="S3.SS1.p3.1.m1.1.1.cmml"><mi id="S3.SS1.p3.1.m1.1.1.2" xref="S3.SS1.p3.1.m1.1.1.2.cmml">𝐱</mi><mo id="S3.SS1.p3.1.m1.1.1.1" xref="S3.SS1.p3.1.m1.1.1.1.cmml">¯</mo></mover><annotation-xml encoding="MathML-Content" id="S3.SS1.p3.1.m1.1b"><apply id="S3.SS1.p3.1.m1.1.1.cmml" xref="S3.SS1.p3.1.m1.1.1"><ci id="S3.SS1.p3.1.m1.1.1.1.cmml" xref="S3.SS1.p3.1.m1.1.1.1">¯</ci><ci id="S3.SS1.p3.1.m1.1.1.2.cmml" xref="S3.SS1.p3.1.m1.1.1.2">𝐱</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p3.1.m1.1c">\bar{\mathbf{x}}</annotation></semantics></math> by incorporating the confidence
+of the 2D detections provided by the 2D pose estimation CNN.
+This will add an extra dimension for each detected landmark
+<math id="S3.SS1.p3.2.m2.1" class="ltx_Math" alttext="\bar{\mathbf{x}}\in\mathbb{R}^{J\times 4}" display="inline"><semantics id="S3.SS1.p3.2.m2.1a"><mrow id="S3.SS1.p3.2.m2.1.1" xref="S3.SS1.p3.2.m2.1.1.cmml"><mover accent="true" id="S3.SS1.p3.2.m2.1.1.2" xref="S3.SS1.p3.2.m2.1.1.2.cmml"><mi id="S3.SS1.p3.2.m2.1.1.2.2" xref="S3.SS1.p3.2.m2.1.1.2.2.cmml">𝐱</mi><mo id="S3.SS1.p3.2.m2.1.1.2.1" xref="S3.SS1.p3.2.m2.1.1.2.1.cmml">¯</mo></mover><mo id="S3.SS1.p3.2.m2.1.1.1" xref="S3.SS1.p3.2.m2.1.1.1.cmml">∈</mo><msup id="S3.SS1.p3.2.m2.1.1.3" xref="S3.SS1.p3.2.m2.1.1.3.cmml"><mi id="S3.SS1.p3.2.m2.1.1.3.2" xref="S3.SS1.p3.2.m2.1.1.3.2.cmml">ℝ</mi><mrow id="S3.SS1.p3.2.m2.1.1.3.3" xref="S3.SS1.p3.2.m2.1.1.3.3.cmml"><mi id="S3.SS1.p3.2.m2.1.1.3.3.2" xref="S3.SS1.p3.2.m2.1.1.3.3.2.cmml">J</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p3.2.m2.1.1.3.3.1" xref="S3.SS1.p3.2.m2.1.1.3.3.1.cmml">×</mo><mn id="S3.SS1.p3.2.m2.1.1.3.3.3" xref="S3.SS1.p3.2.m2.1.1.3.3.3.cmml">4</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p3.2.m2.1b"><apply id="S3.SS1.p3.2.m2.1.1.cmml" xref="S3.SS1.p3.2.m2.1.1"><in id="S3.SS1.p3.2.m2.1.1.1.cmml" xref="S3.SS1.p3.2.m2.1.1.1"></in><apply id="S3.SS1.p3.2.m2.1.1.2.cmml" xref="S3.SS1.p3.2.m2.1.1.2"><ci id="S3.SS1.p3.2.m2.1.1.2.1.cmml" xref="S3.SS1.p3.2.m2.1.1.2.1">¯</ci><ci id="S3.SS1.p3.2.m2.1.1.2.2.cmml" xref="S3.SS1.p3.2.m2.1.1.2.2">𝐱</ci></apply><apply id="S3.SS1.p3.2.m2.1.1.3.cmml" xref="S3.SS1.p3.2.m2.1.1.3"><csymbol cd="ambiguous" id="S3.SS1.p3.2.m2.1.1.3.1.cmml" xref="S3.SS1.p3.2.m2.1.1.3">superscript</csymbol><ci id="S3.SS1.p3.2.m2.1.1.3.2.cmml" xref="S3.SS1.p3.2.m2.1.1.3.2">ℝ</ci><apply id="S3.SS1.p3.2.m2.1.1.3.3.cmml" xref="S3.SS1.p3.2.m2.1.1.3.3"><times id="S3.SS1.p3.2.m2.1.1.3.3.1.cmml" xref="S3.SS1.p3.2.m2.1.1.3.3.1"></times><ci id="S3.SS1.p3.2.m2.1.1.3.3.2.cmml" xref="S3.SS1.p3.2.m2.1.1.3.3.2">𝐽</ci><cn type="integer" id="S3.SS1.p3.2.m2.1.1.3.3.3.cmml" xref="S3.SS1.p3.2.m2.1.1.3.3.3">4</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p3.2.m2.1c">\bar{\mathbf{x}}\in\mathbb{R}^{J\times 4}</annotation></semantics></math>.
+In such case the shortcut connection works as a pooling layer that removes the
+extra dimension to match the one of <math id="S3.SS1.p3.3.m3.1" class="ltx_Math" alttext="\mathbf{x}^{*}" display="inline"><semantics id="S3.SS1.p3.3.m3.1a"><msup id="S3.SS1.p3.3.m3.1.1" xref="S3.SS1.p3.3.m3.1.1.cmml"><mi id="S3.SS1.p3.3.m3.1.1.2" xref="S3.SS1.p3.3.m3.1.1.2.cmml">𝐱</mi><mo id="S3.SS1.p3.3.m3.1.1.3" xref="S3.SS1.p3.3.m3.1.1.3.cmml">∗</mo></msup><annotation-xml encoding="MathML-Content" id="S3.SS1.p3.3.m3.1b"><apply id="S3.SS1.p3.3.m3.1.1.cmml" xref="S3.SS1.p3.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS1.p3.3.m3.1.1.1.cmml" xref="S3.SS1.p3.3.m3.1.1">superscript</csymbol><ci id="S3.SS1.p3.3.m3.1.1.2.cmml" xref="S3.SS1.p3.3.m3.1.1.2">𝐱</ci><times id="S3.SS1.p3.3.m3.1.1.3.cmml" xref="S3.SS1.p3.3.m3.1.1.3"></times></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p3.3.m3.1c">\mathbf{x}^{*}</annotation></semantics></math>.
+We analyze this particular case in Section <a href="#S4" title="IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a>.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2011.05010/assets/x4.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="153" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>
+Residual pose learning framework.
+Our neural network regressor receives as input a lifted 3D pose <math id="S3.F4.4.m1.1" class="ltx_Math" alttext="\bar{\mathbf{x}}" display="inline"><semantics id="S3.F4.4.m1.1b"><mover accent="true" id="S3.F4.4.m1.1.1" xref="S3.F4.4.m1.1.1.cmml"><mi id="S3.F4.4.m1.1.1.2" xref="S3.F4.4.m1.1.1.2.cmml">𝐱</mi><mo id="S3.F4.4.m1.1.1.1" xref="S3.F4.4.m1.1.1.1.cmml">¯</mo></mover><annotation-xml encoding="MathML-Content" id="S3.F4.4.m1.1c"><apply id="S3.F4.4.m1.1.1.cmml" xref="S3.F4.4.m1.1.1"><ci id="S3.F4.4.m1.1.1.1.cmml" xref="S3.F4.4.m1.1.1.1">¯</ci><ci id="S3.F4.4.m1.1.1.2.cmml" xref="S3.F4.4.m1.1.1.2">𝐱</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.F4.4.m1.1d">\bar{\mathbf{x}}</annotation></semantics></math>.
+Due to the global skip connection, the regressor has to
+predict the residual pose <math id="S3.F4.5.m2.1" class="ltx_Math" alttext="f(\bar{\mathbf{x}})" display="inline"><semantics id="S3.F4.5.m2.1b"><mrow id="S3.F4.5.m2.1.2" xref="S3.F4.5.m2.1.2.cmml"><mi id="S3.F4.5.m2.1.2.2" xref="S3.F4.5.m2.1.2.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.F4.5.m2.1.2.1" xref="S3.F4.5.m2.1.2.1.cmml">​</mo><mrow id="S3.F4.5.m2.1.2.3.2" xref="S3.F4.5.m2.1.1.cmml"><mo stretchy="false" id="S3.F4.5.m2.1.2.3.2.1" xref="S3.F4.5.m2.1.1.cmml">(</mo><mover accent="true" id="S3.F4.5.m2.1.1" xref="S3.F4.5.m2.1.1.cmml"><mi id="S3.F4.5.m2.1.1.2" xref="S3.F4.5.m2.1.1.2.cmml">𝐱</mi><mo id="S3.F4.5.m2.1.1.1" xref="S3.F4.5.m2.1.1.1.cmml">¯</mo></mover><mo stretchy="false" id="S3.F4.5.m2.1.2.3.2.2" xref="S3.F4.5.m2.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.F4.5.m2.1c"><apply id="S3.F4.5.m2.1.2.cmml" xref="S3.F4.5.m2.1.2"><times id="S3.F4.5.m2.1.2.1.cmml" xref="S3.F4.5.m2.1.2.1"></times><ci id="S3.F4.5.m2.1.2.2.cmml" xref="S3.F4.5.m2.1.2.2">𝑓</ci><apply id="S3.F4.5.m2.1.1.cmml" xref="S3.F4.5.m2.1.2.3.2"><ci id="S3.F4.5.m2.1.1.1.cmml" xref="S3.F4.5.m2.1.1.1">¯</ci><ci id="S3.F4.5.m2.1.1.2.cmml" xref="S3.F4.5.m2.1.1.2">𝐱</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.F4.5.m2.1d">f(\bar{\mathbf{x}})</annotation></semantics></math> to be added to <math id="S3.F4.6.m3.1" class="ltx_Math" alttext="\bar{\mathbf{x}}" display="inline"><semantics id="S3.F4.6.m3.1b"><mover accent="true" id="S3.F4.6.m3.1.1" xref="S3.F4.6.m3.1.1.cmml"><mi id="S3.F4.6.m3.1.1.2" xref="S3.F4.6.m3.1.1.2.cmml">𝐱</mi><mo id="S3.F4.6.m3.1.1.1" xref="S3.F4.6.m3.1.1.1.cmml">¯</mo></mover><annotation-xml encoding="MathML-Content" id="S3.F4.6.m3.1c"><apply id="S3.F4.6.m3.1.1.cmml" xref="S3.F4.6.m3.1.1"><ci id="S3.F4.6.m3.1.1.1.cmml" xref="S3.F4.6.m3.1.1.1">¯</ci><ci id="S3.F4.6.m3.1.1.2.cmml" xref="S3.F4.6.m3.1.1.2">𝐱</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.F4.6.m3.1d">\bar{\mathbf{x}}</annotation></semantics></math>
+to predict the true 3D pose.
+The building block of our neural network regressor is a linear layer
+followed by batch normalization, ReLU activations and dropout, and
+with a skip connection.
+</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS2.4.1.1" class="ltx_text">III-B</span> </span><span id="S3.SS2.5.2" class="ltx_text ltx_font_italic">Neural Network Regressor</span>
+</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.6" class="ltx_p">We aim to find a simple and efficient network architecture <math id="S3.SS2.p1.1.m1.1" class="ltx_Math" alttext="f" display="inline"><semantics id="S3.SS2.p1.1.m1.1a"><mi id="S3.SS2.p1.1.m1.1.1" xref="S3.SS2.p1.1.m1.1.1.cmml">f</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.1.m1.1b"><ci id="S3.SS2.p1.1.m1.1.1.cmml" xref="S3.SS2.p1.1.m1.1.1">𝑓</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.1.m1.1c">f</annotation></semantics></math> that
+performs well enough in the regression task.
+Fig.<a href="#S3.F4" title="Figure 4 ‣ III-A Residual Pose Learning ‣ III Human 3D Pose Estimation ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> shows a diagram with the basic building
+blocks of our architecture.
+It is a multi-layer network consisting on a series of fully-connected
+layers, each followed by batch normalization, ReLU activations and
+dropout layers.
+The first layer receives as input the lifted pose <math id="S3.SS2.p1.2.m2.1" class="ltx_Math" alttext="\bar{\mathbf{x}}" display="inline"><semantics id="S3.SS2.p1.2.m2.1a"><mover accent="true" id="S3.SS2.p1.2.m2.1.1" xref="S3.SS2.p1.2.m2.1.1.cmml"><mi id="S3.SS2.p1.2.m2.1.1.2" xref="S3.SS2.p1.2.m2.1.1.2.cmml">𝐱</mi><mo id="S3.SS2.p1.2.m2.1.1.1" xref="S3.SS2.p1.2.m2.1.1.1.cmml">¯</mo></mover><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.2.m2.1b"><apply id="S3.SS2.p1.2.m2.1.1.cmml" xref="S3.SS2.p1.2.m2.1.1"><ci id="S3.SS2.p1.2.m2.1.1.1.cmml" xref="S3.SS2.p1.2.m2.1.1.1">¯</ci><ci id="S3.SS2.p1.2.m2.1.1.2.cmml" xref="S3.SS2.p1.2.m2.1.1.2">𝐱</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.2.m2.1c">\bar{\mathbf{x}}</annotation></semantics></math>
+and outputs <math id="S3.SS2.p1.3.m3.1" class="ltx_Math" alttext="2048" display="inline"><semantics id="S3.SS2.p1.3.m3.1a"><mn id="S3.SS2.p1.3.m3.1.1" xref="S3.SS2.p1.3.m3.1.1.cmml">2048</mn><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.3.m3.1b"><cn type="integer" id="S3.SS2.p1.3.m3.1.1.cmml" xref="S3.SS2.p1.3.m3.1.1">2048</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.3.m3.1c">2048</annotation></semantics></math> features.
+This number of features are kept fixed until the output layer that
+generates the residual pose vector in <math id="S3.SS2.p1.4.m4.1" class="ltx_Math" alttext="\mathbb{R}^{J\times 3}" display="inline"><semantics id="S3.SS2.p1.4.m4.1a"><msup id="S3.SS2.p1.4.m4.1.1" xref="S3.SS2.p1.4.m4.1.1.cmml"><mi id="S3.SS2.p1.4.m4.1.1.2" xref="S3.SS2.p1.4.m4.1.1.2.cmml">ℝ</mi><mrow id="S3.SS2.p1.4.m4.1.1.3" xref="S3.SS2.p1.4.m4.1.1.3.cmml"><mi id="S3.SS2.p1.4.m4.1.1.3.2" xref="S3.SS2.p1.4.m4.1.1.3.2.cmml">J</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p1.4.m4.1.1.3.1" xref="S3.SS2.p1.4.m4.1.1.3.1.cmml">×</mo><mn id="S3.SS2.p1.4.m4.1.1.3.3" xref="S3.SS2.p1.4.m4.1.1.3.3.cmml">3</mn></mrow></msup><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.4.m4.1b"><apply id="S3.SS2.p1.4.m4.1.1.cmml" xref="S3.SS2.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS2.p1.4.m4.1.1.1.cmml" xref="S3.SS2.p1.4.m4.1.1">superscript</csymbol><ci id="S3.SS2.p1.4.m4.1.1.2.cmml" xref="S3.SS2.p1.4.m4.1.1.2">ℝ</ci><apply id="S3.SS2.p1.4.m4.1.1.3.cmml" xref="S3.SS2.p1.4.m4.1.1.3"><times id="S3.SS2.p1.4.m4.1.1.3.1.cmml" xref="S3.SS2.p1.4.m4.1.1.3.1"></times><ci id="S3.SS2.p1.4.m4.1.1.3.2.cmml" xref="S3.SS2.p1.4.m4.1.1.3.2">𝐽</ci><cn type="integer" id="S3.SS2.p1.4.m4.1.1.3.3.cmml" xref="S3.SS2.p1.4.m4.1.1.3.3">3</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.4.m4.1c">\mathbb{R}^{J\times 3}</annotation></semantics></math>.
+Each of the inner layers have skip connections.
+One can normally squeeze as many inner layers <math id="S3.SS2.p1.5.m5.1" class="ltx_Math" alttext="S" display="inline"><semantics id="S3.SS2.p1.5.m5.1a"><mi id="S3.SS2.p1.5.m5.1.1" xref="S3.SS2.p1.5.m5.1.1.cmml">S</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.5.m5.1b"><ci id="S3.SS2.p1.5.m5.1.1.cmml" xref="S3.SS2.p1.5.m5.1.1">𝑆</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.5.m5.1c">S</annotation></semantics></math> to make the
+regressor deeper.
+However, in this paper we set <math id="S3.SS2.p1.6.m6.1" class="ltx_Math" alttext="S=3" display="inline"><semantics id="S3.SS2.p1.6.m6.1a"><mrow id="S3.SS2.p1.6.m6.1.1" xref="S3.SS2.p1.6.m6.1.1.cmml"><mi id="S3.SS2.p1.6.m6.1.1.2" xref="S3.SS2.p1.6.m6.1.1.2.cmml">S</mi><mo id="S3.SS2.p1.6.m6.1.1.1" xref="S3.SS2.p1.6.m6.1.1.1.cmml">=</mo><mn id="S3.SS2.p1.6.m6.1.1.3" xref="S3.SS2.p1.6.m6.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.6.m6.1b"><apply id="S3.SS2.p1.6.m6.1.1.cmml" xref="S3.SS2.p1.6.m6.1.1"><eq id="S3.SS2.p1.6.m6.1.1.1.cmml" xref="S3.SS2.p1.6.m6.1.1.1"></eq><ci id="S3.SS2.p1.6.m6.1.1.2.cmml" xref="S3.SS2.p1.6.m6.1.1.2">𝑆</ci><cn type="integer" id="S3.SS2.p1.6.m6.1.1.3.cmml" xref="S3.SS2.p1.6.m6.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.6.m6.1c">S=3</annotation></semantics></math>.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS3.4.1.1" class="ltx_text">III-C</span> </span><span id="S3.SS3.5.2" class="ltx_text ltx_font_italic">Pose Learning Loss</span>
+</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">Let <math id="S3.SS3.p1.1.m1.1" class="ltx_Math" alttext="\hat{\mathbf{x}}=f(\bar{\mathbf{x}})+\bar{\mathbf{x}}" display="inline"><semantics id="S3.SS3.p1.1.m1.1a"><mrow id="S3.SS3.p1.1.m1.1.2" xref="S3.SS3.p1.1.m1.1.2.cmml"><mover accent="true" id="S3.SS3.p1.1.m1.1.2.2" xref="S3.SS3.p1.1.m1.1.2.2.cmml"><mi id="S3.SS3.p1.1.m1.1.2.2.2" xref="S3.SS3.p1.1.m1.1.2.2.2.cmml">𝐱</mi><mo id="S3.SS3.p1.1.m1.1.2.2.1" xref="S3.SS3.p1.1.m1.1.2.2.1.cmml">^</mo></mover><mo id="S3.SS3.p1.1.m1.1.2.1" xref="S3.SS3.p1.1.m1.1.2.1.cmml">=</mo><mrow id="S3.SS3.p1.1.m1.1.2.3" xref="S3.SS3.p1.1.m1.1.2.3.cmml"><mrow id="S3.SS3.p1.1.m1.1.2.3.2" xref="S3.SS3.p1.1.m1.1.2.3.2.cmml"><mi id="S3.SS3.p1.1.m1.1.2.3.2.2" xref="S3.SS3.p1.1.m1.1.2.3.2.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.SS3.p1.1.m1.1.2.3.2.1" xref="S3.SS3.p1.1.m1.1.2.3.2.1.cmml">​</mo><mrow id="S3.SS3.p1.1.m1.1.2.3.2.3.2" xref="S3.SS3.p1.1.m1.1.1.cmml"><mo stretchy="false" id="S3.SS3.p1.1.m1.1.2.3.2.3.2.1" xref="S3.SS3.p1.1.m1.1.1.cmml">(</mo><mover accent="true" id="S3.SS3.p1.1.m1.1.1" xref="S3.SS3.p1.1.m1.1.1.cmml"><mi id="S3.SS3.p1.1.m1.1.1.2" xref="S3.SS3.p1.1.m1.1.1.2.cmml">𝐱</mi><mo id="S3.SS3.p1.1.m1.1.1.1" xref="S3.SS3.p1.1.m1.1.1.1.cmml">¯</mo></mover><mo stretchy="false" id="S3.SS3.p1.1.m1.1.2.3.2.3.2.2" xref="S3.SS3.p1.1.m1.1.1.cmml">)</mo></mrow></mrow><mo id="S3.SS3.p1.1.m1.1.2.3.1" xref="S3.SS3.p1.1.m1.1.2.3.1.cmml">+</mo><mover accent="true" id="S3.SS3.p1.1.m1.1.2.3.3" xref="S3.SS3.p1.1.m1.1.2.3.3.cmml"><mi id="S3.SS3.p1.1.m1.1.2.3.3.2" xref="S3.SS3.p1.1.m1.1.2.3.3.2.cmml">𝐱</mi><mo id="S3.SS3.p1.1.m1.1.2.3.3.1" xref="S3.SS3.p1.1.m1.1.2.3.3.1.cmml">¯</mo></mover></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.1.m1.1b"><apply id="S3.SS3.p1.1.m1.1.2.cmml" xref="S3.SS3.p1.1.m1.1.2"><eq id="S3.SS3.p1.1.m1.1.2.1.cmml" xref="S3.SS3.p1.1.m1.1.2.1"></eq><apply id="S3.SS3.p1.1.m1.1.2.2.cmml" xref="S3.SS3.p1.1.m1.1.2.2"><ci id="S3.SS3.p1.1.m1.1.2.2.1.cmml" xref="S3.SS3.p1.1.m1.1.2.2.1">^</ci><ci id="S3.SS3.p1.1.m1.1.2.2.2.cmml" xref="S3.SS3.p1.1.m1.1.2.2.2">𝐱</ci></apply><apply id="S3.SS3.p1.1.m1.1.2.3.cmml" xref="S3.SS3.p1.1.m1.1.2.3"><plus id="S3.SS3.p1.1.m1.1.2.3.1.cmml" xref="S3.SS3.p1.1.m1.1.2.3.1"></plus><apply id="S3.SS3.p1.1.m1.1.2.3.2.cmml" xref="S3.SS3.p1.1.m1.1.2.3.2"><times id="S3.SS3.p1.1.m1.1.2.3.2.1.cmml" xref="S3.SS3.p1.1.m1.1.2.3.2.1"></times><ci id="S3.SS3.p1.1.m1.1.2.3.2.2.cmml" xref="S3.SS3.p1.1.m1.1.2.3.2.2">𝑓</ci><apply id="S3.SS3.p1.1.m1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.2.3.2.3.2"><ci id="S3.SS3.p1.1.m1.1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1.1">¯</ci><ci id="S3.SS3.p1.1.m1.1.1.2.cmml" xref="S3.SS3.p1.1.m1.1.1.2">𝐱</ci></apply></apply><apply id="S3.SS3.p1.1.m1.1.2.3.3.cmml" xref="S3.SS3.p1.1.m1.1.2.3.3"><ci id="S3.SS3.p1.1.m1.1.2.3.3.1.cmml" xref="S3.SS3.p1.1.m1.1.2.3.3.1">¯</ci><ci id="S3.SS3.p1.1.m1.1.2.3.3.2.cmml" xref="S3.SS3.p1.1.m1.1.2.3.3.2">𝐱</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.1.m1.1c">\hat{\mathbf{x}}=f(\bar{\mathbf{x}})+\bar{\mathbf{x}}</annotation></semantics></math> be the 3D pose prediction.
+We use the following loss to train our neural network regressor</p>
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E2.m1.1" class="ltx_Math" alttext="L_{res}=\frac{1}{J}\sum^{J}_{i=1}||\hat{\mathbf{x}}_{i}-\mathbf{x}^{*}_{i}||_{1}," display="block"><semantics id="S3.E2.m1.1a"><mrow id="S3.E2.m1.1.1.1" xref="S3.E2.m1.1.1.1.1.cmml"><mrow id="S3.E2.m1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.cmml"><msub id="S3.E2.m1.1.1.1.1.3" xref="S3.E2.m1.1.1.1.1.3.cmml"><mi id="S3.E2.m1.1.1.1.1.3.2" xref="S3.E2.m1.1.1.1.1.3.2.cmml">L</mi><mrow id="S3.E2.m1.1.1.1.1.3.3" xref="S3.E2.m1.1.1.1.1.3.3.cmml"><mi id="S3.E2.m1.1.1.1.1.3.3.2" xref="S3.E2.m1.1.1.1.1.3.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.1.1.3.3.1" xref="S3.E2.m1.1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E2.m1.1.1.1.1.3.3.3" xref="S3.E2.m1.1.1.1.1.3.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.1.1.3.3.1a" xref="S3.E2.m1.1.1.1.1.3.3.1.cmml">​</mo><mi id="S3.E2.m1.1.1.1.1.3.3.4" xref="S3.E2.m1.1.1.1.1.3.3.4.cmml">s</mi></mrow></msub><mo id="S3.E2.m1.1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.2.cmml">=</mo><mrow id="S3.E2.m1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.cmml"><mfrac id="S3.E2.m1.1.1.1.1.1.3" xref="S3.E2.m1.1.1.1.1.1.3.cmml"><mn id="S3.E2.m1.1.1.1.1.1.3.2" xref="S3.E2.m1.1.1.1.1.1.3.2.cmml">1</mn><mi id="S3.E2.m1.1.1.1.1.1.3.3" xref="S3.E2.m1.1.1.1.1.1.3.3.cmml">J</mi></mfrac><mo lspace="0em" rspace="0em" id="S3.E2.m1.1.1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.1.2.cmml">​</mo><mrow id="S3.E2.m1.1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.cmml"><munderover id="S3.E2.m1.1.1.1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S3.E2.m1.1.1.1.1.1.1.2.2.2" xref="S3.E2.m1.1.1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S3.E2.m1.1.1.1.1.1.1.2.3" xref="S3.E2.m1.1.1.1.1.1.1.2.3.cmml"><mi id="S3.E2.m1.1.1.1.1.1.1.2.3.2" xref="S3.E2.m1.1.1.1.1.1.1.2.3.2.cmml">i</mi><mo id="S3.E2.m1.1.1.1.1.1.1.2.3.1" xref="S3.E2.m1.1.1.1.1.1.1.2.3.1.cmml">=</mo><mn id="S3.E2.m1.1.1.1.1.1.1.2.3.3" xref="S3.E2.m1.1.1.1.1.1.1.2.3.3.cmml">1</mn></mrow><mi id="S3.E2.m1.1.1.1.1.1.1.2.2.3" xref="S3.E2.m1.1.1.1.1.1.1.2.2.3.cmml">J</mi></munderover><msub id="S3.E2.m1.1.1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.1.cmml"><mrow id="S3.E2.m1.1.1.1.1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.1.1.2.cmml"><mo stretchy="false" id="S3.E2.m1.1.1.1.1.1.1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.cmml"><msub id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mover accent="true" id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml"><mi id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.2" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.2.cmml">𝐱</mi><mo id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.1" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.1.cmml">^</mo></mover><mi id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml">i</mi></msub><mo id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.1.cmml">−</mo><msubsup id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.cmml"><mi id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.2" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.cmml">𝐱</mi><mi id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.3" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.3.cmml">i</mi><mo id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.3" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.3.cmml">∗</mo></msubsup></mrow><mo stretchy="false" id="S3.E2.m1.1.1.1.1.1.1.1.1.1.3" xref="S3.E2.m1.1.1.1.1.1.1.1.1.2.1.cmml">‖</mo></mrow><mn id="S3.E2.m1.1.1.1.1.1.1.1.3" xref="S3.E2.m1.1.1.1.1.1.1.1.3.cmml">1</mn></msub></mrow></mrow></mrow><mo id="S3.E2.m1.1.1.1.2" xref="S3.E2.m1.1.1.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E2.m1.1b"><apply id="S3.E2.m1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1"><eq id="S3.E2.m1.1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.1.2"></eq><apply id="S3.E2.m1.1.1.1.1.3.cmml" xref="S3.E2.m1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.1.1.1.1.3">subscript</csymbol><ci id="S3.E2.m1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.1.1.1.1.3.2">𝐿</ci><apply id="S3.E2.m1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.1.1.1.1.3.3"><times id="S3.E2.m1.1.1.1.1.3.3.1.cmml" xref="S3.E2.m1.1.1.1.1.3.3.1"></times><ci id="S3.E2.m1.1.1.1.1.3.3.2.cmml" xref="S3.E2.m1.1.1.1.1.3.3.2">𝑟</ci><ci id="S3.E2.m1.1.1.1.1.3.3.3.cmml" xref="S3.E2.m1.1.1.1.1.3.3.3">𝑒</ci><ci id="S3.E2.m1.1.1.1.1.3.3.4.cmml" xref="S3.E2.m1.1.1.1.1.3.3.4">𝑠</ci></apply></apply><apply id="S3.E2.m1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1"><times id="S3.E2.m1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.1.1.2"></times><apply id="S3.E2.m1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.1.1.1.1.1.3"><divide id="S3.E2.m1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.1.1.1.1.1.3"></divide><cn type="integer" id="S3.E2.m1.1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.1.1.1.1.1.3.2">1</cn><ci id="S3.E2.m1.1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.1.1.1.1.1.3.3">𝐽</ci></apply><apply id="S3.E2.m1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1"><apply id="S3.E2.m1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2">subscript</csymbol><apply id="S3.E2.m1.1.1.1.1.1.1.2.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.2.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2">superscript</csymbol><sum id="S3.E2.m1.1.1.1.1.1.1.2.2.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.2.2"></sum><ci id="S3.E2.m1.1.1.1.1.1.1.2.2.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.2.3">𝐽</ci></apply><apply id="S3.E2.m1.1.1.1.1.1.1.2.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.3"><eq id="S3.E2.m1.1.1.1.1.1.1.2.3.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.3.1"></eq><ci id="S3.E2.m1.1.1.1.1.1.1.2.3.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.3.2">𝑖</ci><cn type="integer" id="S3.E2.m1.1.1.1.1.1.1.2.3.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.2.3.3">1</cn></apply></apply><apply id="S3.E2.m1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1">subscript</csymbol><apply id="S3.E2.m1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S3.E2.m1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.2">norm</csymbol><apply id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1"><minus id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.1"></minus><apply id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2">subscript</csymbol><apply id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2"><ci id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.1">^</ci><ci id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.2.2">𝐱</ci></apply><ci id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.2.3">𝑖</ci></apply><apply id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3">subscript</csymbol><apply id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3">superscript</csymbol><ci id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.2">𝐱</ci><times id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.2.3"></times></apply><ci id="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.1.1.1.3.3">𝑖</ci></apply></apply></apply><cn type="integer" id="S3.E2.m1.1.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.1.1.1.1.1.1.1.3">1</cn></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m1.1c">L_{res}=\frac{1}{J}\sum^{J}_{i=1}||\hat{\mathbf{x}}_{i}-\mathbf{x}^{*}_{i}||_{1},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.p1.4" class="ltx_p">where <math id="S3.SS3.p1.2.m1.1" class="ltx_Math" alttext="\mathbf{x}^{*}_{i}" display="inline"><semantics id="S3.SS3.p1.2.m1.1a"><msubsup id="S3.SS3.p1.2.m1.1.1" xref="S3.SS3.p1.2.m1.1.1.cmml"><mi id="S3.SS3.p1.2.m1.1.1.2.2" xref="S3.SS3.p1.2.m1.1.1.2.2.cmml">𝐱</mi><mi id="S3.SS3.p1.2.m1.1.1.3" xref="S3.SS3.p1.2.m1.1.1.3.cmml">i</mi><mo id="S3.SS3.p1.2.m1.1.1.2.3" xref="S3.SS3.p1.2.m1.1.1.2.3.cmml">∗</mo></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.2.m1.1b"><apply id="S3.SS3.p1.2.m1.1.1.cmml" xref="S3.SS3.p1.2.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.2.m1.1.1.1.cmml" xref="S3.SS3.p1.2.m1.1.1">subscript</csymbol><apply id="S3.SS3.p1.2.m1.1.1.2.cmml" xref="S3.SS3.p1.2.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.2.m1.1.1.2.1.cmml" xref="S3.SS3.p1.2.m1.1.1">superscript</csymbol><ci id="S3.SS3.p1.2.m1.1.1.2.2.cmml" xref="S3.SS3.p1.2.m1.1.1.2.2">𝐱</ci><times id="S3.SS3.p1.2.m1.1.1.2.3.cmml" xref="S3.SS3.p1.2.m1.1.1.2.3"></times></apply><ci id="S3.SS3.p1.2.m1.1.1.3.cmml" xref="S3.SS3.p1.2.m1.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.2.m1.1c">\mathbf{x}^{*}_{i}</annotation></semantics></math> is the ground truth of the body landmark <math id="S3.SS3.p1.3.m2.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S3.SS3.p1.3.m2.1a"><mi id="S3.SS3.p1.3.m2.1.1" xref="S3.SS3.p1.3.m2.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.3.m2.1b"><ci id="S3.SS3.p1.3.m2.1.1.cmml" xref="S3.SS3.p1.3.m2.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.3.m2.1c">i</annotation></semantics></math> and
+<math id="S3.SS3.p1.4.m3.1" class="ltx_Math" alttext="\hat{\mathbf{x}}_{i}" display="inline"><semantics id="S3.SS3.p1.4.m3.1a"><msub id="S3.SS3.p1.4.m3.1.1" xref="S3.SS3.p1.4.m3.1.1.cmml"><mover accent="true" id="S3.SS3.p1.4.m3.1.1.2" xref="S3.SS3.p1.4.m3.1.1.2.cmml"><mi id="S3.SS3.p1.4.m3.1.1.2.2" xref="S3.SS3.p1.4.m3.1.1.2.2.cmml">𝐱</mi><mo id="S3.SS3.p1.4.m3.1.1.2.1" xref="S3.SS3.p1.4.m3.1.1.2.1.cmml">^</mo></mover><mi id="S3.SS3.p1.4.m3.1.1.3" xref="S3.SS3.p1.4.m3.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.4.m3.1b"><apply id="S3.SS3.p1.4.m3.1.1.cmml" xref="S3.SS3.p1.4.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.4.m3.1.1.1.cmml" xref="S3.SS3.p1.4.m3.1.1">subscript</csymbol><apply id="S3.SS3.p1.4.m3.1.1.2.cmml" xref="S3.SS3.p1.4.m3.1.1.2"><ci id="S3.SS3.p1.4.m3.1.1.2.1.cmml" xref="S3.SS3.p1.4.m3.1.1.2.1">^</ci><ci id="S3.SS3.p1.4.m3.1.1.2.2.cmml" xref="S3.SS3.p1.4.m3.1.1.2.2">𝐱</ci></apply><ci id="S3.SS3.p1.4.m3.1.1.3.cmml" xref="S3.SS3.p1.4.m3.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.4.m3.1c">\hat{\mathbf{x}}_{i}</annotation></semantics></math> is the 3D prediction for such landmark.
+In our experiments we use the smooth L1 norm as we found out that it
+works better than the L2 or plain L1 norms.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Experiments</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We conducted several experiments to evaluate our approach effectiveness
+in single and multi-person scenarios.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.4.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.5.2" class="ltx_text ltx_font_italic">Depth-image datasets</span>
+</h3>
+
+<div id="S4.SS1.p1" class="ltx_para ltx_noindent">
+<p id="S4.SS1.p1.1" class="ltx_p"><span id="S4.SS1.p1.1.1" class="ltx_text ltx_font_bold">ITOP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite></span>.
+This dataset consists of images in a single person pose estimation setting.
+It has 18k and 5k depth images for training and testing, respectively, recorded
+with an Asus Xtion camera.
+It was built from 20 subjects performing 15 different actions each.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para ltx_noindent">
+<p id="S4.SS1.p2.1" class="ltx_p"><span id="S4.SS1.p2.1.1" class="ltx_text ltx_font_bold">CMU-Panoptic <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite></span>.
+It comprises multiple recordings acquired with different sensor devices such as
+color and depth cameras (Kinect2).
+We consider a subset of the depth recordings from the <em id="S4.SS1.p2.1.2" class="ltx_emph ltx_font_italic">Haggling</em> category.
+The setup contains several interacting people with diverse body pose configurations
+with respect to the camera and between-person interactions.
+For training we selected 15k 3D person instances from the sequence
+170407<span id="S4.SS1.p2.1.3" class="ltx_text ltx_framed ltx_framed_underline"> </span>haggling<span id="S4.SS1.p2.1.4" class="ltx_text ltx_framed ltx_framed_underline"> </span>a3 for training.
+For testing 1.5k 3D person instances were selected
+from the sequence 170407<span id="S4.SS1.p2.1.5" class="ltx_text ltx_framed ltx_framed_underline"> </span>haggling<span id="S4.SS1.p2.1.6" class="ltx_text ltx_framed ltx_framed_underline"> </span>b3.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.4.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.5.2" class="ltx_text ltx_font_italic">Evaluation metrics</span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para ltx_noindent">
+<p id="S4.SS2.p1.1" class="ltx_p"><span id="S4.SS2.p1.1.1" class="ltx_text ltx_font_bold">Mean average precision (mAP)</span>.
+As standard practice in 3D human pose estimation, we use mean average precision at 10 cm (mAP@10cm) to measure the
+3D detection performance.
+A successful detection is considered when the detected 3D body landmark
+falls within a distance less than 10 cm from the ground truth.
+We report the average precision (AP) for individual body landmarks
+and to measure the overall performance,
+the mean average precision (mAP) defined as the mean of the APs of all body landmarks.
+Larger values are better.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para ltx_noindent">
+<p id="S4.SS2.p2.1" class="ltx_p"><span id="S4.SS2.p2.1.1" class="ltx_text ltx_font_bold">Mean per joint position error (MPJPE)</span>.
+It measures the average error in Euclidean distance between the
+detected 3D body landmarks and the ground truth.
+Lower values are better.
+We report MPJPE in centimeters for each body landmark
+and their mean for the overall performance (mMPJPE).</p>
+</div>
+<div id="S4.SS2.p3" class="ltx_para ltx_noindent">
+<p id="S4.SS2.p3.1" class="ltx_p"><span id="S4.SS2.p3.1.1" class="ltx_text ltx_font_bold">Percentage of correct keypoints (PCK)</span>.
+We use PCK to evaluate the performance of the 2D pose estimation task.
+It relies in the precision and recall that result from the percentage
+of correct detected keypoints (body landmarks).
+We follow the evaluation protocol presented in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>.
+For each joint (e.g.<span id="S4.SS2.p3.1.2" class="ltx_text"></span> knee), true positives, false positives, and false negatives
+are counted using a radius obtained according to the height of the bounding box
+(ground truth) containing the person.
+Then, the precision and recall rates are calculated by averaging the above
+values over a set of varying radius, body landmarks, and dataset samples.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS3.4.1.1" class="ltx_text">IV-C</span> </span><span id="S4.SS3.5.2" class="ltx_text ltx_font_italic">Implementation details</span>
+</h3>
+
+<div id="S4.SS3.p1" class="ltx_para ltx_noindent">
+<p id="S4.SS3.p1.2" class="ltx_p"><span id="S4.SS3.p1.2.1" class="ltx_text ltx_font_bold">Image pre-processing</span>.
+We normalize the depth images by linearly scaling the depth sensor values in
+<math id="S4.SS3.p1.1.m1.2" class="ltx_Math" alttext="[0,8]" display="inline"><semantics id="S4.SS3.p1.1.m1.2a"><mrow id="S4.SS3.p1.1.m1.2.3.2" xref="S4.SS3.p1.1.m1.2.3.1.cmml"><mo stretchy="false" id="S4.SS3.p1.1.m1.2.3.2.1" xref="S4.SS3.p1.1.m1.2.3.1.cmml">[</mo><mn id="S4.SS3.p1.1.m1.1.1" xref="S4.SS3.p1.1.m1.1.1.cmml">0</mn><mo id="S4.SS3.p1.1.m1.2.3.2.2" xref="S4.SS3.p1.1.m1.2.3.1.cmml">,</mo><mn id="S4.SS3.p1.1.m1.2.2" xref="S4.SS3.p1.1.m1.2.2.cmml">8</mn><mo stretchy="false" id="S4.SS3.p1.1.m1.2.3.2.3" xref="S4.SS3.p1.1.m1.2.3.1.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.1.m1.2b"><interval closure="closed" id="S4.SS3.p1.1.m1.2.3.1.cmml" xref="S4.SS3.p1.1.m1.2.3.2"><cn type="integer" id="S4.SS3.p1.1.m1.1.1.cmml" xref="S4.SS3.p1.1.m1.1.1">0</cn><cn type="integer" id="S4.SS3.p1.1.m1.2.2.cmml" xref="S4.SS3.p1.1.m1.2.2">8</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.1.m1.2c">[0,8]</annotation></semantics></math> meter range into the <math id="S4.SS3.p1.2.m2.2" class="ltx_Math" alttext="[-0.5,0.5]" display="inline"><semantics id="S4.SS3.p1.2.m2.2a"><mrow id="S4.SS3.p1.2.m2.2.2.1" xref="S4.SS3.p1.2.m2.2.2.2.cmml"><mo stretchy="false" id="S4.SS3.p1.2.m2.2.2.1.2" xref="S4.SS3.p1.2.m2.2.2.2.cmml">[</mo><mrow id="S4.SS3.p1.2.m2.2.2.1.1" xref="S4.SS3.p1.2.m2.2.2.1.1.cmml"><mo id="S4.SS3.p1.2.m2.2.2.1.1a" xref="S4.SS3.p1.2.m2.2.2.1.1.cmml">−</mo><mn id="S4.SS3.p1.2.m2.2.2.1.1.2" xref="S4.SS3.p1.2.m2.2.2.1.1.2.cmml">0.5</mn></mrow><mo id="S4.SS3.p1.2.m2.2.2.1.3" xref="S4.SS3.p1.2.m2.2.2.2.cmml">,</mo><mn id="S4.SS3.p1.2.m2.1.1" xref="S4.SS3.p1.2.m2.1.1.cmml">0.5</mn><mo stretchy="false" id="S4.SS3.p1.2.m2.2.2.1.4" xref="S4.SS3.p1.2.m2.2.2.2.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.2.m2.2b"><interval closure="closed" id="S4.SS3.p1.2.m2.2.2.2.cmml" xref="S4.SS3.p1.2.m2.2.2.1"><apply id="S4.SS3.p1.2.m2.2.2.1.1.cmml" xref="S4.SS3.p1.2.m2.2.2.1.1"><minus id="S4.SS3.p1.2.m2.2.2.1.1.1.cmml" xref="S4.SS3.p1.2.m2.2.2.1.1"></minus><cn type="float" id="S4.SS3.p1.2.m2.2.2.1.1.2.cmml" xref="S4.SS3.p1.2.m2.2.2.1.1.2">0.5</cn></apply><cn type="float" id="S4.SS3.p1.2.m2.1.1.cmml" xref="S4.SS3.p1.2.m2.1.1">0.5</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.2.m2.2c">[-0.5,0.5]</annotation></semantics></math> range.</p>
+</div>
+<div id="S4.SS3.p2" class="ltx_para ltx_noindent">
+<p id="S4.SS3.p2.1" class="ltx_p"><span id="S4.SS3.p2.1.1" class="ltx_text ltx_font_bold">2D CNN architectures and training</span>.
+We keep the performance-efficiency trade-off reported in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> and
+experiment with RPM with 2 stages and MPM with 4 stages.
+We configure the Hourglass architecture (HG) to 2 stages as it was shown
+that performance saturates at this point <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>.</p>
+</div>
+<div id="S4.SS3.p3" class="ltx_para">
+<p id="S4.SS3.p3.1" class="ltx_p">We train the 2D pose estimation CNNs using Adam.
+To avoid overfiting due to the low number of depth images in the addressed
+datasets, and increase the 2D pose performance, we train the networks for
+13 epochs with the large synthetic people dataset introduced
+in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>.
+Then, the CNNs are finetuned using the real dataset (ITOP or CMU-Panoptic)
+for 100 epochs.
+</p>
+</div>
+<div id="S4.SS3.p4" class="ltx_para ltx_noindent">
+<p id="S4.SS3.p4.1" class="ltx_p"><span id="S4.SS3.p4.1.1" class="ltx_text ltx_font_bold">Residual Pose Regressor</span>.
+We train our neural network regressor for 200 epochs using Adam and
+minibatches of size 128.
+We apply standard normalization to the 3D lifted pose and the 3D ground truth
+pose by substracting the mean and dividing by the standard deviation.
+We select <math id="S4.SS3.p4.1.m1.1" class="ltx_Math" alttext="1e-3" display="inline"><semantics id="S4.SS3.p4.1.m1.1a"><mrow id="S4.SS3.p4.1.m1.1.1" xref="S4.SS3.p4.1.m1.1.1.cmml"><mrow id="S4.SS3.p4.1.m1.1.1.2" xref="S4.SS3.p4.1.m1.1.1.2.cmml"><mn id="S4.SS3.p4.1.m1.1.1.2.2" xref="S4.SS3.p4.1.m1.1.1.2.2.cmml">1</mn><mo lspace="0em" rspace="0em" id="S4.SS3.p4.1.m1.1.1.2.1" xref="S4.SS3.p4.1.m1.1.1.2.1.cmml">​</mo><mi id="S4.SS3.p4.1.m1.1.1.2.3" xref="S4.SS3.p4.1.m1.1.1.2.3.cmml">e</mi></mrow><mo id="S4.SS3.p4.1.m1.1.1.1" xref="S4.SS3.p4.1.m1.1.1.1.cmml">−</mo><mn id="S4.SS3.p4.1.m1.1.1.3" xref="S4.SS3.p4.1.m1.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p4.1.m1.1b"><apply id="S4.SS3.p4.1.m1.1.1.cmml" xref="S4.SS3.p4.1.m1.1.1"><minus id="S4.SS3.p4.1.m1.1.1.1.cmml" xref="S4.SS3.p4.1.m1.1.1.1"></minus><apply id="S4.SS3.p4.1.m1.1.1.2.cmml" xref="S4.SS3.p4.1.m1.1.1.2"><times id="S4.SS3.p4.1.m1.1.1.2.1.cmml" xref="S4.SS3.p4.1.m1.1.1.2.1"></times><cn type="integer" id="S4.SS3.p4.1.m1.1.1.2.2.cmml" xref="S4.SS3.p4.1.m1.1.1.2.2">1</cn><ci id="S4.SS3.p4.1.m1.1.1.2.3.cmml" xref="S4.SS3.p4.1.m1.1.1.2.3">𝑒</ci></apply><cn type="integer" id="S4.SS3.p4.1.m1.1.1.3.cmml" xref="S4.SS3.p4.1.m1.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p4.1.m1.1c">1e-3</annotation></semantics></math> as initial learning rate and decrease it by 2 every 20 epochs.</p>
+</div>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS4.4.1.1" class="ltx_text">IV-D</span> </span><span id="S4.SS4.5.2" class="ltx_text ltx_font_italic">Experimental results</span>
+</h3>
+
+<figure id="S4.F5" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.05010/assets/x5.png" id="S4.F5.g1" class="ltx_graphics ltx_figure_panel ltx_img_square" width="226" height="226" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2011.05010/assets/x6.png" id="S4.F5.g2" class="ltx_graphics ltx_figure_panel ltx_img_square" width="226" height="226" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Performance of the different CNNs for 2D pose estimation.
+Left: 2D pose estimation performance measured with recall and precision curves.
+Right: resulting 3D estimation pose performance in terms of MPJPE for each
+body part. The lower the better.
+</figcaption>
+</figure>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2011.05010/assets/x7.png" id="S4.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="147" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>3D pose estimation examples and their 2D projection
+of our approach on the single person ITOP dataset
+(top row) and the multi-person CMU-Panoptic dataset (bottom row). </figcaption>
+</figure>
+<figure id="S4.T1" class="ltx_table">
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tr id="S4.T1.1.1" class="ltx_tr">
+<td id="S4.T1.1.1.1" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+CNN model</td>
+<td id="S4.T1.1.1.2" class="ltx_td ltx_align_center">MPM</td>
+<td id="S4.T1.1.1.3" class="ltx_td ltx_align_center">RPM</td>
+<td id="S4.T1.1.1.4" class="ltx_td ltx_align_center">HG</td>
+</tr>
+<tr id="S4.T1.1.2" class="ltx_tr">
+<td id="S4.T1.1.2.1" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+FPS</td>
+<td id="S4.T1.1.2.2" class="ltx_td ltx_align_center">84</td>
+<td id="S4.T1.1.2.3" class="ltx_td ltx_align_center">35</td>
+<td id="S4.T1.1.2.4" class="ltx_td ltx_align_center">18</td>
+</tr>
+<tr id="S4.T1.1.3" class="ltx_tr">
+<td id="S4.T1.1.3.1" class="ltx_td ltx_align_left ltx_border_r"># Params</td>
+<td id="S4.T1.1.3.2" class="ltx_td ltx_align_center">304.9K</td>
+<td id="S4.T1.1.3.3" class="ltx_td ltx_align_center">2.84M</td>
+<td id="S4.T1.1.3.4" class="ltx_td ltx_align_center">12.9M</td>
+</tr>
+<tr id="S4.T1.1.4" class="ltx_tr">
+<td id="S4.T1.1.4.1" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+F-Score (2D)</td>
+<td id="S4.T1.1.4.2" class="ltx_td ltx_align_center">0.96</td>
+<td id="S4.T1.1.4.3" class="ltx_td ltx_align_center">0.96</td>
+<td id="S4.T1.1.4.4" class="ltx_td ltx_align_center"><span id="S4.T1.1.4.4.1" class="ltx_text ltx_font_bold">0.97</span></td>
+</tr>
+<tr id="S4.T1.1.5" class="ltx_tr">
+<td id="S4.T1.1.5.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">mAP@10cm</td>
+<td id="S4.T1.1.5.2" class="ltx_td ltx_align_center ltx_border_t">85.61</td>
+<td id="S4.T1.1.5.3" class="ltx_td ltx_align_center ltx_border_t">85.96</td>
+<td id="S4.T1.1.5.4" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T1.1.5.4.1" class="ltx_text ltx_font_bold">85.97</span></td>
+</tr>
+<tr id="S4.T1.1.6" class="ltx_tr">
+<td id="S4.T1.1.6.1" class="ltx_td ltx_align_left ltx_border_r">mMPJPE</td>
+<td id="S4.T1.1.6.2" class="ltx_td ltx_align_center">6.83</td>
+<td id="S4.T1.1.6.3" class="ltx_td ltx_align_center">7.18</td>
+<td id="S4.T1.1.6.4" class="ltx_td ltx_align_center"><span id="S4.T1.1.6.4.1" class="ltx_text ltx_font_bold">6.78</span></td>
+</tr>
+<tr id="S4.T1.1.7" class="ltx_tr">
+<td id="S4.T1.1.7.1" class="ltx_td ltx_align_left ltx_border_r"><span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span></td>
+<td id="S4.T1.1.7.2" class="ltx_td"></td>
+<td id="S4.T1.1.7.3" class="ltx_td"></td>
+<td id="S4.T1.1.7.4" class="ltx_td"></td>
+</tr>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>2D and 3D pose estimation performance obtained
+for the different 2D CNN architectures and their
+computational complexity.
+</figcaption>
+</figure>
+<figure id="S4.T2" class="ltx_table">
+<table id="S4.T2.6" class="ltx_tabular ltx_centering ltx_align_middle">
+<tr id="S4.T2.6.7" class="ltx_tr">
+<td id="S4.T2.6.7.1" class="ltx_td ltx_align_left ltx_border_r"><span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span></td>
+<td id="S4.T2.6.7.2" class="ltx_td ltx_align_center" colspan="8">ITOP (front-view)</td>
+</tr>
+<tr id="S4.T2.6.8" class="ltx_tr">
+<td id="S4.T2.6.8.1" class="ltx_td ltx_align_left ltx_border_r"><span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span></td>
+<td id="S4.T2.6.8.2" class="ltx_td ltx_align_center" colspan="8">AP@10cm</td>
+</tr>
+<tr id="S4.T2.2.2" class="ltx_tr">
+<td id="S4.T2.2.2.3" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+Body part</td>
+<td id="S4.T2.2.2.4" class="ltx_td ltx_align_center"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite></td>
+<td id="S4.T2.2.2.5" class="ltx_td ltx_align_center"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite></td>
+<td id="S4.T2.2.2.6" class="ltx_td ltx_align_center"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite></td>
+<td id="S4.T2.2.2.7" class="ltx_td ltx_align_center"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite></td>
+<td id="S4.T2.2.2.8" class="ltx_td ltx_align_center"><span id="S4.T2.2.2.8.1" class="ltx_text ltx_font_bold">R-Pose</span></td>
+<td id="S4.T2.1.1.1" class="ltx_td ltx_align_center"><span id="S4.T2.1.1.1.1" class="ltx_text ltx_font_bold">R-Pose<sup id="S4.T2.1.1.1.1.1" class="ltx_sup"><span id="S4.T2.1.1.1.1.1.1" class="ltx_text ltx_font_medium ltx_font_italic">∗</span></sup></span></td>
+<td id="S4.T2.2.2.2" class="ltx_td ltx_align_center"><span id="S4.T2.2.2.2.1" class="ltx_text ltx_font_bold">R-Pose<sup id="S4.T2.2.2.2.1.1" class="ltx_sup"><span id="S4.T2.2.2.2.1.1.1" class="ltx_text ltx_font_medium ltx_font_italic">-</span></sup></span></td>
+<td id="S4.T2.2.2.9" class="ltx_td ltx_align_center">C-Reg</td>
+</tr>
+<tr id="S4.T2.6.9" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.9.1" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+<span id="S4.T2.6.9.1.1" class="ltx_text" style="background-color:#E6E6E6;">
+Head</span>
+</td>
+<td id="S4.T2.6.9.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.9.2.1" class="ltx_text" style="background-color:#E6E6E6;">97.8</span></td>
+<td id="S4.T2.6.9.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.9.3.1" class="ltx_text" style="background-color:#E6E6E6;">98.1</span></td>
+<td id="S4.T2.6.9.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.9.4.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">98.7</span></td>
+<td id="S4.T2.6.9.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.9.5.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">98.29</span></td>
+<td id="S4.T2.6.9.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.9.6.1" class="ltx_text" style="background-color:#E6E6E6;">98.27</span></td>
+<td id="S4.T2.6.9.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.9.7.1" class="ltx_text" style="background-color:#E6E6E6;">98.13</span></td>
+<td id="S4.T2.6.9.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.9.8.1" class="ltx_text" style="background-color:#E6E6E6;">98.33</span></td>
+<td id="S4.T2.6.9.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.9.9.1" class="ltx_text" style="background-color:#E6E6E6;">97.8</span></td>
+</tr>
+<tr id="S4.T2.6.10" class="ltx_tr">
+<td id="S4.T2.6.10.1" class="ltx_td ltx_align_left ltx_border_r">Neck</td>
+<td id="S4.T2.6.10.2" class="ltx_td ltx_align_center">95.8</td>
+<td id="S4.T2.6.10.3" class="ltx_td ltx_align_center">97.5</td>
+<td id="S4.T2.6.10.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.10.4.1" class="ltx_text ltx_font_bold">99.4</span></td>
+<td id="S4.T2.6.10.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.10.5.1" class="ltx_text ltx_framed ltx_framed_underline">99.07</span></td>
+<td id="S4.T2.6.10.6" class="ltx_td ltx_align_center">98.6</td>
+<td id="S4.T2.6.10.7" class="ltx_td ltx_align_center">98.56</td>
+<td id="S4.T2.6.10.8" class="ltx_td ltx_align_center">98.5</td>
+<td id="S4.T2.6.10.9" class="ltx_td ltx_align_center">98.66</td>
+</tr>
+<tr id="S4.T2.6.11" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.11.1" class="ltx_td ltx_align_left ltx_border_r"><span id="S4.T2.6.11.1.1" class="ltx_text" style="background-color:#E6E6E6;">Shoulders</span></td>
+<td id="S4.T2.6.11.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.11.2.1" class="ltx_text" style="background-color:#E6E6E6;">94.1</span></td>
+<td id="S4.T2.6.11.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.11.3.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">96.5</span></td>
+<td id="S4.T2.6.11.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.11.4.1" class="ltx_text" style="background-color:#E6E6E6;">96.1</span></td>
+<td id="S4.T2.6.11.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.11.5.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">97.18</span></td>
+<td id="S4.T2.6.11.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.11.6.1" class="ltx_text" style="background-color:#E6E6E6;">95.34</span></td>
+<td id="S4.T2.6.11.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.11.7.1" class="ltx_text" style="background-color:#E6E6E6;">95.2</span></td>
+<td id="S4.T2.6.11.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.11.8.1" class="ltx_text" style="background-color:#E6E6E6;">92.78</span></td>
+<td id="S4.T2.6.11.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.11.9.1" class="ltx_text" style="background-color:#E6E6E6;">95.64</span></td>
+</tr>
+<tr id="S4.T2.6.12" class="ltx_tr">
+<td id="S4.T2.6.12.1" class="ltx_td ltx_align_left ltx_border_r">Elbows</td>
+<td id="S4.T2.6.12.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.12.2.1" class="ltx_text ltx_framed ltx_framed_underline">77.9</span></td>
+<td id="S4.T2.6.12.3" class="ltx_td ltx_align_center">73.3</td>
+<td id="S4.T2.6.12.4" class="ltx_td ltx_align_center">74.7</td>
+<td id="S4.T2.6.12.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.12.5.1" class="ltx_text ltx_font_bold">80.42</span></td>
+<td id="S4.T2.6.12.6" class="ltx_td ltx_align_center">76.52</td>
+<td id="S4.T2.6.12.7" class="ltx_td ltx_align_center">75.89</td>
+<td id="S4.T2.6.12.8" class="ltx_td ltx_align_center">74.38</td>
+<td id="S4.T2.6.12.9" class="ltx_td ltx_align_center">74.24</td>
+</tr>
+<tr id="S4.T2.6.13" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.13.1" class="ltx_td ltx_align_left ltx_border_r"><span id="S4.T2.6.13.1.1" class="ltx_text" style="background-color:#E6E6E6;">Hands</span></td>
+<td id="S4.T2.6.13.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.13.2.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">70.5</span></td>
+<td id="S4.T2.6.13.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.13.3.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">68.7</span></td>
+<td id="S4.T2.6.13.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.13.4.1" class="ltx_text" style="background-color:#E6E6E6;">55.2</span></td>
+<td id="S4.T2.6.13.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.13.5.1" class="ltx_text" style="background-color:#E6E6E6;">67.26</span></td>
+<td id="S4.T2.6.13.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.13.6.1" class="ltx_text" style="background-color:#E6E6E6;">61.69</span></td>
+<td id="S4.T2.6.13.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.13.7.1" class="ltx_text" style="background-color:#E6E6E6;">61.28</span></td>
+<td id="S4.T2.6.13.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.13.8.1" class="ltx_text" style="background-color:#E6E6E6;">59.98</span></td>
+<td id="S4.T2.6.13.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.13.9.1" class="ltx_text" style="background-color:#E6E6E6;">55.01</span></td>
+</tr>
+<tr id="S4.T2.6.14" class="ltx_tr">
+<td id="S4.T2.6.14.1" class="ltx_td ltx_align_left ltx_border_r">Torso</td>
+<td id="S4.T2.6.14.2" class="ltx_td ltx_align_center">93.8</td>
+<td id="S4.T2.6.14.3" class="ltx_td ltx_align_center">85.6</td>
+<td id="S4.T2.6.14.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.14.4.1" class="ltx_text ltx_framed ltx_framed_underline">98.7</span></td>
+<td id="S4.T2.6.14.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.14.5.1" class="ltx_text ltx_font_bold">98.73</span></td>
+<td id="S4.T2.6.14.6" class="ltx_td ltx_align_center">98.56</td>
+<td id="S4.T2.6.14.7" class="ltx_td ltx_align_center">98.64</td>
+<td id="S4.T2.6.14.8" class="ltx_td ltx_align_center">98.62</td>
+<td id="S4.T2.6.14.9" class="ltx_td ltx_align_center">97.57</td>
+</tr>
+<tr id="S4.T2.6.15" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.15.1" class="ltx_td ltx_align_left ltx_border_r"><span id="S4.T2.6.15.1.1" class="ltx_text" style="background-color:#E6E6E6;">Hips</span></td>
+<td id="S4.T2.6.15.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.15.2.1" class="ltx_text" style="background-color:#E6E6E6;">80.3</span></td>
+<td id="S4.T2.6.15.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.15.3.1" class="ltx_text" style="background-color:#E6E6E6;">72</span></td>
+<td id="S4.T2.6.15.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.15.4.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">91.8</span></td>
+<td id="S4.T2.6.15.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.15.5.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">93.23</span></td>
+<td id="S4.T2.6.15.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.15.6.1" class="ltx_text" style="background-color:#E6E6E6;">90.07</span></td>
+<td id="S4.T2.6.15.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.15.7.1" class="ltx_text" style="background-color:#E6E6E6;">90.31</span></td>
+<td id="S4.T2.6.15.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.15.8.1" class="ltx_text" style="background-color:#E6E6E6;">89.4</span></td>
+<td id="S4.T2.6.15.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.15.9.1" class="ltx_text" style="background-color:#E6E6E6;">87.09</span></td>
+</tr>
+<tr id="S4.T2.6.16" class="ltx_tr">
+<td id="S4.T2.6.16.1" class="ltx_td ltx_align_left ltx_border_r">Knees</td>
+<td id="S4.T2.6.16.2" class="ltx_td ltx_align_center">68.8</td>
+<td id="S4.T2.6.16.3" class="ltx_td ltx_align_center">69</td>
+<td id="S4.T2.6.16.4" class="ltx_td ltx_align_center">89</td>
+<td id="S4.T2.6.16.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.16.5.1" class="ltx_text ltx_font_bold">91.80</span></td>
+<td id="S4.T2.6.16.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.16.6.1" class="ltx_text ltx_framed ltx_framed_underline">89.13</span></td>
+<td id="S4.T2.6.16.7" class="ltx_td ltx_align_center">88.93</td>
+<td id="S4.T2.6.16.8" class="ltx_td ltx_align_center">88.82</td>
+<td id="S4.T2.6.16.9" class="ltx_td ltx_align_center">88.29</td>
+</tr>
+<tr id="S4.T2.6.17" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.17.1" class="ltx_td ltx_align_left ltx_border_r"><span id="S4.T2.6.17.1.1" class="ltx_text" style="background-color:#E6E6E6;">Feet</span></td>
+<td id="S4.T2.6.17.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.17.2.1" class="ltx_text" style="background-color:#E6E6E6;">68.4</span></td>
+<td id="S4.T2.6.17.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.17.3.1" class="ltx_text" style="background-color:#E6E6E6;">60.8</span></td>
+<td id="S4.T2.6.17.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.17.4.1" class="ltx_text" style="background-color:#E6E6E6;">81.1</span></td>
+<td id="S4.T2.6.17.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.17.5.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">87.6</span></td>
+<td id="S4.T2.6.17.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.17.6.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">84.28</span></td>
+<td id="S4.T2.6.17.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.17.7.1" class="ltx_text" style="background-color:#E6E6E6;">83.52</span></td>
+<td id="S4.T2.6.17.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.17.8.1" class="ltx_text" style="background-color:#E6E6E6;">83.66</span></td>
+<td id="S4.T2.6.17.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.17.9.1" class="ltx_text" style="background-color:#E6E6E6;">83.99</span></td>
+</tr>
+<tr id="S4.T2.6.18" class="ltx_tr">
+<td id="S4.T2.6.18.1" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+Mean (mAP)</td>
+<td id="S4.T2.6.18.2" class="ltx_td ltx_align_center">80.5</td>
+<td id="S4.T2.6.18.3" class="ltx_td ltx_align_center">77.4</td>
+<td id="S4.T2.6.18.4" class="ltx_td ltx_align_center">84.9</td>
+<td id="S4.T2.6.18.5" class="ltx_td ltx_align_center"><span id="S4.T2.6.18.5.1" class="ltx_text ltx_font_bold">88.74</span></td>
+<td id="S4.T2.6.18.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.18.6.1" class="ltx_text ltx_framed ltx_framed_underline">85.97</span></td>
+<td id="S4.T2.6.18.7" class="ltx_td ltx_align_center">85.71</td>
+<td id="S4.T2.6.18.8" class="ltx_td ltx_align_center">84.9</td>
+<td id="S4.T2.6.18.9" class="ltx_td ltx_align_center">84.17</td>
+</tr>
+<tr id="S4.T2.6.19" class="ltx_tr">
+<td id="S4.T2.6.19.1" class="ltx_td ltx_align_left ltx_border_r"><span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span></td>
+<td id="S4.T2.6.19.2" class="ltx_td ltx_align_center" colspan="8">CMU-Panoptic</td>
+</tr>
+<tr id="S4.T2.6.20" class="ltx_tr">
+<td id="S4.T2.6.20.1" class="ltx_td ltx_align_left ltx_border_r"><span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span></td>
+<td id="S4.T2.6.20.2" class="ltx_td ltx_align_center ltx_border_r" colspan="4">MPJPE (cm)</td>
+<td id="S4.T2.6.20.3" class="ltx_td ltx_align_center" colspan="4">AP@10cm</td>
+</tr>
+<tr id="S4.T2.6.6" class="ltx_tr">
+<td id="S4.T2.6.6.5" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+Body part</td>
+<td id="S4.T2.6.6.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.6.6.1" class="ltx_text ltx_font_bold">R-Pose</span></td>
+<td id="S4.T2.3.3.1" class="ltx_td ltx_align_center"><span id="S4.T2.3.3.1.1" class="ltx_text ltx_font_bold">R-Pose<sup id="S4.T2.3.3.1.1.1" class="ltx_sup"><span id="S4.T2.3.3.1.1.1.1" class="ltx_text ltx_font_medium ltx_font_italic">∗</span></sup></span></td>
+<td id="S4.T2.4.4.2" class="ltx_td ltx_align_center"><span id="S4.T2.4.4.2.1" class="ltx_text ltx_font_bold">R-Pose<sup id="S4.T2.4.4.2.1.1" class="ltx_sup"><span id="S4.T2.4.4.2.1.1.1" class="ltx_text ltx_font_medium ltx_font_italic">-</span></sup></span></td>
+<td id="S4.T2.6.6.7" class="ltx_td ltx_align_center ltx_border_r">C-Reg</td>
+<td id="S4.T2.6.6.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.6.8.1" class="ltx_text ltx_font_bold">R-Pose</span></td>
+<td id="S4.T2.5.5.3" class="ltx_td ltx_align_center"><span id="S4.T2.5.5.3.1" class="ltx_text ltx_font_bold">R-Pose<sup id="S4.T2.5.5.3.1.1" class="ltx_sup"><span id="S4.T2.5.5.3.1.1.1" class="ltx_text ltx_font_medium ltx_font_italic">∗</span></sup></span></td>
+<td id="S4.T2.6.6.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.6.4.1" class="ltx_text ltx_font_bold">R-Pose<sup id="S4.T2.6.6.4.1.1" class="ltx_sup"><span id="S4.T2.6.6.4.1.1.1" class="ltx_text ltx_font_medium ltx_font_italic">-</span></sup></span></td>
+<td id="S4.T2.6.6.9" class="ltx_td ltx_align_center">C-Reg</td>
+</tr>
+<tr id="S4.T2.6.21" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.21.1" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+<span id="S4.T2.6.21.1.1" class="ltx_text" style="background-color:#E6E6E6;">
+Head</span>
+</td>
+<td id="S4.T2.6.21.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.21.2.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">6.59</span></td>
+<td id="S4.T2.6.21.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.21.3.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">6.78</span></td>
+<td id="S4.T2.6.21.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.21.4.1" class="ltx_text" style="background-color:#E6E6E6;">10.17</span></td>
+<td id="S4.T2.6.21.5" class="ltx_td ltx_align_center ltx_border_r">11.17</td>
+<td id="S4.T2.6.21.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.21.6.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">96.4</span></td>
+<td id="S4.T2.6.21.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.21.7.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">96.67</span></td>
+<td id="S4.T2.6.21.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.21.8.1" class="ltx_text" style="background-color:#E6E6E6;">79.47</span></td>
+<td id="S4.T2.6.21.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.21.9.1" class="ltx_text" style="background-color:#E6E6E6;">72.33</span></td>
+</tr>
+<tr id="S4.T2.6.22" class="ltx_tr">
+<td id="S4.T2.6.22.1" class="ltx_td ltx_align_left ltx_border_r">Neck</td>
+<td id="S4.T2.6.22.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.22.2.1" class="ltx_text ltx_font_bold">7.29</span></td>
+<td id="S4.T2.6.22.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.22.3.1" class="ltx_text ltx_framed ltx_framed_underline">7.45</span></td>
+<td id="S4.T2.6.22.4" class="ltx_td ltx_align_center">8.5</td>
+<td id="S4.T2.6.22.5" class="ltx_td ltx_align_center ltx_border_r">11.68</td>
+<td id="S4.T2.6.22.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.22.6.1" class="ltx_text ltx_font_bold">96.53</span></td>
+<td id="S4.T2.6.22.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.22.7.1" class="ltx_text ltx_framed ltx_framed_underline">96.2</span></td>
+<td id="S4.T2.6.22.8" class="ltx_td ltx_align_center">92.13</td>
+<td id="S4.T2.6.22.9" class="ltx_td ltx_align_center">74.07</td>
+</tr>
+<tr id="S4.T2.6.23" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.23.1" class="ltx_td ltx_align_left ltx_border_r"><span id="S4.T2.6.23.1.1" class="ltx_text" style="background-color:#E6E6E6;">Shoulders</span></td>
+<td id="S4.T2.6.23.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.23.2.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">8.55</span></td>
+<td id="S4.T2.6.23.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.23.3.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">8.66</span></td>
+<td id="S4.T2.6.23.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.23.4.1" class="ltx_text" style="background-color:#E6E6E6;">10.96</span></td>
+<td id="S4.T2.6.23.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T2.6.23.5.1" class="ltx_text" style="background-color:#E6E6E6;">14.38</span></td>
+<td id="S4.T2.6.23.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.23.6.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">87.17</span></td>
+<td id="S4.T2.6.23.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.23.7.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">85.6</span></td>
+<td id="S4.T2.6.23.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.23.8.1" class="ltx_text" style="background-color:#E6E6E6;">77.17</span></td>
+<td id="S4.T2.6.23.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.23.9.1" class="ltx_text" style="background-color:#E6E6E6;">54.33</span></td>
+</tr>
+<tr id="S4.T2.6.24" class="ltx_tr">
+<td id="S4.T2.6.24.1" class="ltx_td ltx_align_left ltx_border_r">Elbows</td>
+<td id="S4.T2.6.24.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.24.2.1" class="ltx_text ltx_framed ltx_framed_underline">14.52</span></td>
+<td id="S4.T2.6.24.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.24.3.1" class="ltx_text ltx_font_bold">14.19</span></td>
+<td id="S4.T2.6.24.4" class="ltx_td ltx_align_center">23.86</td>
+<td id="S4.T2.6.24.5" class="ltx_td ltx_align_center ltx_border_r">20.2</td>
+<td id="S4.T2.6.24.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.24.6.1" class="ltx_text ltx_framed ltx_framed_underline">59.17</span></td>
+<td id="S4.T2.6.24.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.24.7.1" class="ltx_text ltx_font_bold">61.97</span></td>
+<td id="S4.T2.6.24.8" class="ltx_td ltx_align_center">38.3</td>
+<td id="S4.T2.6.24.9" class="ltx_td ltx_align_center">28.93</td>
+</tr>
+<tr id="S4.T2.6.25" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.25.1" class="ltx_td ltx_align_left ltx_border_r"><span id="S4.T2.6.25.1.1" class="ltx_text" style="background-color:#E6E6E6;">Hands</span></td>
+<td id="S4.T2.6.25.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.25.2.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">27.85</span></td>
+<td id="S4.T2.6.25.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.25.3.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">27.96</span></td>
+<td id="S4.T2.6.25.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.25.4.1" class="ltx_text" style="background-color:#E6E6E6;">31.16</span></td>
+<td id="S4.T2.6.25.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T2.6.25.5.1" class="ltx_text" style="background-color:#E6E6E6;">26.37</span></td>
+<td id="S4.T2.6.25.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.25.6.1" class="ltx_text" style="background-color:#E6E6E6;">16.63</span></td>
+<td id="S4.T2.6.25.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.25.7.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">17.47</span></td>
+<td id="S4.T2.6.25.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.25.8.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">17.77</span></td>
+<td id="S4.T2.6.25.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.25.9.1" class="ltx_text" style="background-color:#E6E6E6;">6.37</span></td>
+</tr>
+<tr id="S4.T2.6.26" class="ltx_tr">
+<td id="S4.T2.6.26.1" class="ltx_td ltx_align_left ltx_border_r">Torso</td>
+<td id="S4.T2.6.26.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.26.2.1" class="ltx_text ltx_framed ltx_framed_underline">9.06</span></td>
+<td id="S4.T2.6.26.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.26.3.1" class="ltx_text ltx_font_bold">8.51</span></td>
+<td id="S4.T2.6.26.4" class="ltx_td ltx_align_center">9.92</td>
+<td id="S4.T2.6.26.5" class="ltx_td ltx_align_center ltx_border_r">11.93</td>
+<td id="S4.T2.6.26.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.26.6.1" class="ltx_text ltx_font_bold">93.27</span></td>
+<td id="S4.T2.6.26.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.26.7.1" class="ltx_text ltx_framed ltx_framed_underline">92.67</span></td>
+<td id="S4.T2.6.26.8" class="ltx_td ltx_align_center">87.6</td>
+<td id="S4.T2.6.26.9" class="ltx_td ltx_align_center">67.53</td>
+</tr>
+<tr id="S4.T2.6.27" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.27.1" class="ltx_td ltx_align_left ltx_border_r"><span id="S4.T2.6.27.1.1" class="ltx_text" style="background-color:#E6E6E6;">Hips</span></td>
+<td id="S4.T2.6.27.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.27.2.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">8.57</span></td>
+<td id="S4.T2.6.27.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.27.3.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">8.67</span></td>
+<td id="S4.T2.6.27.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.27.4.1" class="ltx_text" style="background-color:#E6E6E6;">12.16</span></td>
+<td id="S4.T2.6.27.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T2.6.27.5.1" class="ltx_text" style="background-color:#E6E6E6;">12.99</span></td>
+<td id="S4.T2.6.27.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.27.6.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">91.97</span></td>
+<td id="S4.T2.6.27.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.27.7.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">90.27</span></td>
+<td id="S4.T2.6.27.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.27.8.1" class="ltx_text" style="background-color:#E6E6E6;">70.1</span></td>
+<td id="S4.T2.6.27.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.27.9.1" class="ltx_text" style="background-color:#E6E6E6;">66.1</span></td>
+</tr>
+<tr id="S4.T2.6.28" class="ltx_tr">
+<td id="S4.T2.6.28.1" class="ltx_td ltx_align_left ltx_border_r">Knees</td>
+<td id="S4.T2.6.28.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.28.2.1" class="ltx_text ltx_font_bold">9.24</span></td>
+<td id="S4.T2.6.28.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.28.3.1" class="ltx_text ltx_framed ltx_framed_underline">9.43</span></td>
+<td id="S4.T2.6.28.4" class="ltx_td ltx_align_center">14.72</td>
+<td id="S4.T2.6.28.5" class="ltx_td ltx_align_center ltx_border_r">13.96</td>
+<td id="S4.T2.6.28.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.28.6.1" class="ltx_text ltx_font_bold">81.8</span></td>
+<td id="S4.T2.6.28.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.28.7.1" class="ltx_text ltx_framed ltx_framed_underline">80.6</span></td>
+<td id="S4.T2.6.28.8" class="ltx_td ltx_align_center">58.67</td>
+<td id="S4.T2.6.28.9" class="ltx_td ltx_align_center">52.33</td>
+</tr>
+<tr id="S4.T2.6.29" class="ltx_tr" style="background-color:#E6E6E6;">
+<td id="S4.T2.6.29.1" class="ltx_td ltx_align_left ltx_border_r"><span id="S4.T2.6.29.1.1" class="ltx_text" style="background-color:#E6E6E6;">Feet</span></td>
+<td id="S4.T2.6.29.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.29.2.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">11.26</span></td>
+<td id="S4.T2.6.29.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.29.3.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">11.19</span></td>
+<td id="S4.T2.6.29.4" class="ltx_td ltx_align_center"><span id="S4.T2.6.29.4.1" class="ltx_text" style="background-color:#E6E6E6;">18.8</span></td>
+<td id="S4.T2.6.29.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T2.6.29.5.1" class="ltx_text" style="background-color:#E6E6E6;">15.54</span></td>
+<td id="S4.T2.6.29.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.29.6.1" class="ltx_text ltx_font_bold" style="background-color:#E6E6E6;">70.77</span></td>
+<td id="S4.T2.6.29.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.29.7.1" class="ltx_text ltx_framed ltx_framed_underline" style="background-color:#E6E6E6;">70.5</span></td>
+<td id="S4.T2.6.29.8" class="ltx_td ltx_align_center"><span id="S4.T2.6.29.8.1" class="ltx_text" style="background-color:#E6E6E6;">52.17</span></td>
+<td id="S4.T2.6.29.9" class="ltx_td ltx_align_center"><span id="S4.T2.6.29.9.1" class="ltx_text" style="background-color:#E6E6E6;">48.27</span></td>
+</tr>
+<tr id="S4.T2.6.30" class="ltx_tr">
+<td id="S4.T2.6.30.1" class="ltx_td ltx_align_left ltx_border_r">
+<span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span>
+Mean</td>
+<td id="S4.T2.6.30.2" class="ltx_td ltx_align_center"><span id="S4.T2.6.30.2.1" class="ltx_text ltx_font_bold">12.2</span></td>
+<td id="S4.T2.6.30.3" class="ltx_td ltx_align_center"><span id="S4.T2.6.30.3.1" class="ltx_text ltx_font_bold">12.2</span></td>
+<td id="S4.T2.6.30.4" class="ltx_td ltx_align_center">16.79</td>
+<td id="S4.T2.6.30.5" class="ltx_td ltx_align_center ltx_border_r">16.11</td>
+<td id="S4.T2.6.30.6" class="ltx_td ltx_align_center"><span id="S4.T2.6.30.6.1" class="ltx_text ltx_font_bold">73.41</span></td>
+<td id="S4.T2.6.30.7" class="ltx_td ltx_align_center"><span id="S4.T2.6.30.7.1" class="ltx_text ltx_framed ltx_framed_underline">73.22</span></td>
+<td id="S4.T2.6.30.8" class="ltx_td ltx_align_center">59.17</td>
+<td id="S4.T2.6.30.9" class="ltx_td ltx_align_center">48.44</td>
+</tr>
+<tr id="S4.T2.6.31" class="ltx_tr">
+<td id="S4.T2.6.31.1" class="ltx_td ltx_align_left ltx_border_r"><span class="ltx_rule" style="width:100%;height:0.8pt;background:black;display:inline-block;"> </span></td>
+<td id="S4.T2.6.31.2" class="ltx_td"></td>
+<td id="S4.T2.6.31.3" class="ltx_td"></td>
+<td id="S4.T2.6.31.4" class="ltx_td"></td>
+<td id="S4.T2.6.31.5" class="ltx_td"></td>
+<td id="S4.T2.6.31.6" class="ltx_td"></td>
+<td id="S4.T2.6.31.7" class="ltx_td"></td>
+<td id="S4.T2.6.31.8" class="ltx_td"></td>
+<td id="S4.T2.6.31.9" class="ltx_td"></td>
+</tr>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE II: </span>3D pose estimation performance.
+Top: mAP of the state-of-the-art on single person pose estimation setting in the
+ITOP dataset,
+Bottom: mAP and mMPJPE for the multi-person pose estimation setting in the
+CMU-Panoptic dataset.
+</figcaption>
+</figure>
+<div id="S4.SS4.p1" class="ltx_para ltx_noindent">
+<p id="S4.SS4.p1.1" class="ltx_p"><span id="S4.SS4.p1.1.1" class="ltx_text ltx_font_bold">2D Pose Network Architectures</span>.
+We evaluate the quality of the 2D pose predictions for the 3D pose estimation
+task in the ITOP dataset.
+Fig. <a href="#S4.F5" title="Figure 5 ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> shows the 2D pose estimation performance curves and the
+3D pose error in terms of MPJPE for the different CNNs.
+Table <a href="#S4.T1" title="TABLE I ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a> summarizes these results with the maximum F-Score
+obtained for 2D pose estimation, and the mAP and mMPJPE for
+3D pose prediction.
+Indeed, providing better 2D pose estimates reflects directly in the 3D
+performance.
+Overall the HG 2D detections provide the best 3D estimates
+achieving the lowest mMPJPE and better mAP.
+We select the HG network for the rest of the analysis.
+</p>
+</div>
+<div id="S4.SS4.p2" class="ltx_para ltx_noindent">
+<p id="S4.SS4.p2.1" class="ltx_p"><span id="S4.SS4.p2.1.1" class="ltx_text ltx_font_bold">Computational Requirements</span>.
+Table <a href="#S4.T1" title="TABLE I ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a> reports the number of parameters of each CNN
+and the frames per second (FPS) required for the forward pass
+in a single Nvidia card GTX 1050.
+Note that the FPS is also valid for the multi-person case since the CNNs
+predict the pose for each individual in the image in a single forward pass.
+Additionally, the neural network regressor requires 12.7M parameters but runs
+at 1700 FPS, so its cost, even when applied for multiple person, is negligible
+compared to that of a 2D pose CNN.
+Hence our proposed approach can run very
+efficiently in real-time in a single GPU.</p>
+</div>
+<div id="S4.SS4.p3" class="ltx_para ltx_noindent">
+<p id="S4.SS4.p3.1" class="ltx_p"><span id="S4.SS4.p3.1.1" class="ltx_text ltx_font_bold">Comparison with the state of the art</span>.
+Table <a href="#S4.T2" title="TABLE II ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a> compares the detailed AP scores for each body landmark
+of our proposed approach (<span id="S4.SS4.p3.1.2" class="ltx_text ltx_font_bold">R-Pose</span>) with the state of the art in
+the ITOP dataset.
+Overall our residual pose learning approach shows very competitive results
+obtaining the second best performance.
+The best performing work is <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> that processes
+voxelized representations of the 3D space processed with a 3D CNN,
+and uses an ensemble of 10 models for the final prediction.
+Contrary, our residual pose approach is simpler and efficient.
+Example results are shown in Fig. <a href="#S4.F6" title="Figure 6 ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> (top row).</p>
+</div>
+<div id="S4.SS4.p4" class="ltx_para ltx_noindent">
+<p id="S4.SS4.p4.1" class="ltx_p"><span id="S4.SS4.p4.1.1" class="ltx_text ltx_font_bold">Multi-person 3D pose estimation</span>.
+Table <a href="#S4.T2" title="TABLE II ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a> reports AP and MPJPE for the
+multi-person setting in the CMU-Panoptic dataset.
+Naturally the ranges of pose profile, multiple scales, and the quality of sensing
+make this setup more challenging than the single person pose setting.
+The more affected body landmarks are the hands and elbows with lower AP and
+larger MPJPE.
+Note these are the elements that are in constant motion and are more affected
+by self occlusions,
+compared to other elements like the torso and head.
+Fig. <a href="#S4.F6" title="Figure 6 ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> shows prediction examples.</p>
+</div>
+<div id="S4.SS4.p5" class="ltx_para ltx_noindent">
+<p id="S4.SS4.p5.1" class="ltx_p"><span id="S4.SS4.p5.1.2" class="ltx_text ltx_font_bold">Recovery from 2D Failures</span>.
+We report the results of removing the prior recovery component introduced
+in Section <a href="#S2.SS2" title="II-B Pose lifting ‣ II Efficient 2D Pose Estimation and Lifting ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">II-B</span></span></a>.
+Table <a href="#S4.T2" title="TABLE II ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a> shows the performance for the single and multi-person
+settings (<span id="S4.SS4.p5.1.1" class="ltx_text ltx_font_bold">R-Pose<sup id="S4.SS4.p5.1.1.1" class="ltx_sup"><span id="S4.SS4.p5.1.1.1.1" class="ltx_text ltx_font_medium ltx_font_italic">-</span></sup></span>).
+The performance drops specially for the multi-person scenario.</p>
+</div>
+<div id="S4.SS4.p6" class="ltx_para ltx_noindent">
+<p id="S4.SS4.p6.3" class="ltx_p"><span id="S4.SS4.p6.3.2" class="ltx_text ltx_font_bold">2D Landmark Detection Confidence</span>.
+We incorporated the confidence of the 2D detections provided by the CNN
+that range in <math id="S4.SS4.p6.1.m1.2" class="ltx_Math" alttext="[0,1]" display="inline"><semantics id="S4.SS4.p6.1.m1.2a"><mrow id="S4.SS4.p6.1.m1.2.3.2" xref="S4.SS4.p6.1.m1.2.3.1.cmml"><mo stretchy="false" id="S4.SS4.p6.1.m1.2.3.2.1" xref="S4.SS4.p6.1.m1.2.3.1.cmml">[</mo><mn id="S4.SS4.p6.1.m1.1.1" xref="S4.SS4.p6.1.m1.1.1.cmml">0</mn><mo id="S4.SS4.p6.1.m1.2.3.2.2" xref="S4.SS4.p6.1.m1.2.3.1.cmml">,</mo><mn id="S4.SS4.p6.1.m1.2.2" xref="S4.SS4.p6.1.m1.2.2.cmml">1</mn><mo stretchy="false" id="S4.SS4.p6.1.m1.2.3.2.3" xref="S4.SS4.p6.1.m1.2.3.1.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p6.1.m1.2b"><interval closure="closed" id="S4.SS4.p6.1.m1.2.3.1.cmml" xref="S4.SS4.p6.1.m1.2.3.2"><cn type="integer" id="S4.SS4.p6.1.m1.1.1.cmml" xref="S4.SS4.p6.1.m1.1.1">0</cn><cn type="integer" id="S4.SS4.p6.1.m1.2.2.cmml" xref="S4.SS4.p6.1.m1.2.2">1</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p6.1.m1.2c">[0,1]</annotation></semantics></math> in our residual pose learning setting.
+When a landmark was recovered by the process of Section <a href="#S2.SS2" title="II-B Pose lifting ‣ II Efficient 2D Pose Estimation and Lifting ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">II-B</span></span></a>,
+we set a low confidence value of <math id="S4.SS4.p6.2.m2.1" class="ltx_Math" alttext="\sigma=0.1" display="inline"><semantics id="S4.SS4.p6.2.m2.1a"><mrow id="S4.SS4.p6.2.m2.1.1" xref="S4.SS4.p6.2.m2.1.1.cmml"><mi id="S4.SS4.p6.2.m2.1.1.2" xref="S4.SS4.p6.2.m2.1.1.2.cmml">σ</mi><mo id="S4.SS4.p6.2.m2.1.1.1" xref="S4.SS4.p6.2.m2.1.1.1.cmml">=</mo><mn id="S4.SS4.p6.2.m2.1.1.3" xref="S4.SS4.p6.2.m2.1.1.3.cmml">0.1</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p6.2.m2.1b"><apply id="S4.SS4.p6.2.m2.1.1.cmml" xref="S4.SS4.p6.2.m2.1.1"><eq id="S4.SS4.p6.2.m2.1.1.1.cmml" xref="S4.SS4.p6.2.m2.1.1.1"></eq><ci id="S4.SS4.p6.2.m2.1.1.2.cmml" xref="S4.SS4.p6.2.m2.1.1.2">𝜎</ci><cn type="float" id="S4.SS4.p6.2.m2.1.1.3.cmml" xref="S4.SS4.p6.2.m2.1.1.3">0.1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p6.2.m2.1c">\sigma=0.1</annotation></semantics></math> to identify them from the rest.
+The results are reported in Table <a href="#S4.T2" title="TABLE II ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a> (<span id="S4.SS4.p6.3.1" class="ltx_text ltx_font_bold">R-Pose<sup id="S4.SS4.p6.3.1.1" class="ltx_sup"><span id="S4.SS4.p6.3.1.1.1" class="ltx_text ltx_font_medium ltx_font_italic">∗</span></sup></span>).
+The mAP slightly decreases in this case.
+However, in the multi-person setting some especific elements
+(head, elbows, hands) have slightly better detection rate.</p>
+</div>
+<div id="S4.SS4.p7" class="ltx_para ltx_noindent">
+<p id="S4.SS4.p7.1" class="ltx_p"><span id="S4.SS4.p7.1.1" class="ltx_text ltx_font_bold">Coordinate Regression</span>.
+We experimented with 3D coordinate regression using the neural
+network architecture introduced in Section <a href="#S3.SS2" title="III-B Neural Network Regressor ‣ III Human 3D Pose Estimation ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">III-B</span></span></a> and
+predict <math id="S4.SS4.p7.1.m1.3" class="ltx_Math" alttext="X,Y,Z" display="inline"><semantics id="S4.SS4.p7.1.m1.3a"><mrow id="S4.SS4.p7.1.m1.3.4.2" xref="S4.SS4.p7.1.m1.3.4.1.cmml"><mi id="S4.SS4.p7.1.m1.1.1" xref="S4.SS4.p7.1.m1.1.1.cmml">X</mi><mo id="S4.SS4.p7.1.m1.3.4.2.1" xref="S4.SS4.p7.1.m1.3.4.1.cmml">,</mo><mi id="S4.SS4.p7.1.m1.2.2" xref="S4.SS4.p7.1.m1.2.2.cmml">Y</mi><mo id="S4.SS4.p7.1.m1.3.4.2.2" xref="S4.SS4.p7.1.m1.3.4.1.cmml">,</mo><mi id="S4.SS4.p7.1.m1.3.3" xref="S4.SS4.p7.1.m1.3.3.cmml">Z</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p7.1.m1.3b"><list id="S4.SS4.p7.1.m1.3.4.1.cmml" xref="S4.SS4.p7.1.m1.3.4.2"><ci id="S4.SS4.p7.1.m1.1.1.cmml" xref="S4.SS4.p7.1.m1.1.1">𝑋</ci><ci id="S4.SS4.p7.1.m1.2.2.cmml" xref="S4.SS4.p7.1.m1.2.2">𝑌</ci><ci id="S4.SS4.p7.1.m1.3.3.cmml" xref="S4.SS4.p7.1.m1.3.3">𝑍</ci></list></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p7.1.m1.3c">X,Y,Z</annotation></semantics></math> coordinates of the body landmarks from
+lifted 2D detections, dropping the residual pose connection.
+Table <a href="#S4.T2" title="TABLE II ‣ IV-D Experimental results ‣ IV Experiments ‣ Residual Pose: A Decoupled Approach for Depth-based 3D Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a> compare these results (C-Reg) with our residual
+pose approach.
+The performance drops for both single and multi-person settings.
+Certainly when people appear roughly in the same position, as
+the case in ITOP dataset, 3D coordinate regression presents
+a good alternative.
+However, our residual pose approach outperforms 3D coordinate
+regression in both, single and multi-person settings.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Conclusions</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this paper we addressed the problem of 3D pose estimation from depth images.
+We decoupled 2D and 3D pose estimation and predict the 3D pose from lifted
+2D detections.
+We proposed a residual-pose regression learning to predict the 3D pose
+by refining lifted detections.
+We introduced a pairwise 3D limb prior to recover from 2D detection failures
+and analyse the incorporation of 2D detection confidence in our pipeline.
+Despite the simplicity of our approach we achieve competitive results in two
+public datasets for single and multi-person pose estimation.
+Our method propose
+a more efficient alternative for multi-party HRI settings.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">Our study opens the way for new research.
+One limitation of our model is that it does not consider the skeleton
+kinematics in the learning process.
+Additionally, body motion modelling can be introduced to introduce
+temporal consistency in our 3D predictions.</p>
+</div>
+<div id="S5.p3" class="ltx_para ltx_noindent">
+<p id="S5.p3.1" class="ltx_p"><span id="S5.p3.1.1" class="ltx_text ltx_font_bold">Acknowledgments</span>:
+This work was supported by the European Union under the EU Horizon 2020 Research
+and Innovation Action MuMMER (MultiModal Mall Entertainment Robot), project ID
+688146, as well as the Mexican National Council for Science and Technology (CONACYT)
+under the PhD scholarships program.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Emre Aksan, Manuel Kaufmann, and Otmar Hilliges.
+
+</span>
+<span class="ltx_bibblock">Structured prediction helps 3d human motion modelling.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib1.1.1" class="ltx_text ltx_font_italic">The IEEE International Conference on Computer Vision (ICCV)</span>,
+Oct 2019.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Federica Bogo, Angjoo Kanazawa, Christoph Lassner, Peter Gehler, Javier Romero,
+and Michael J. Black.
+
+</span>
+<span class="ltx_bibblock">Keep it smpl: Automatic estimation of 3d human pose and shape from a
+single image.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib2.1.1" class="ltx_text ltx_font_italic">Computer Vision – ECCV 2016</span>, pages 561–578, 2016.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Zhe Cao, Tomas Simon, Shih-En Wei, and Yaser Sheikh.
+
+</span>
+<span class="ltx_bibblock">Realtime multi-person 2d pose estimation using part affinity fields.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib3.1.1" class="ltx_text ltx_font_italic">CVPR</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+C. Chen and D. Ramanan.
+
+</span>
+<span class="ltx_bibblock">3d human pose estimation = 2d pose estimation + matching.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib4.1.1" class="ltx_text ltx_font_italic">2017 IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, pages 5759–5767, July 2017.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Hengkai Guo, Guijin Wang, Xinghao Chen, and Cairong Zhang.
+
+</span>
+<span class="ltx_bibblock">Towards good practices for deep 3d hand pose estimation.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text ltx_font_italic">arXiv preprint arXiv:1707.07248</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Ikhsanul Habibie, Weipeng Xu, Dushyant Mehta, Gerard Pons-Moll, and Christian
+Theobalt.
+
+</span>
+<span class="ltx_bibblock">In the wild human pose estimation using explicit 2d features and
+intermediate 3d representations.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib6.1.1" class="ltx_text ltx_font_italic">IEEE Conf. on Computer Vision and Pattern Recognition
+(CVPR)</span>, 2019.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Albert Haque, Boya Peng, Zelun Luo, Alexandre Alahi, Serena Yeung, and
+Li Fei-Fei.
+
+</span>
+<span class="ltx_bibblock">Towards viewpoint invariant 3d human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib7.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision (ECCV)</span>, 2016.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Hanbyul Joo, Tomas Simon, Xulong Li, Hao Liu, Lei Tan, Lin Gui, Sean Banerjee,
+Timothy Scott Godisart, Bart Nabbe, Iain Matthews, Takeo Kanade, Shohei
+Nobuhara, and Yaser Sheikh.
+
+</span>
+<span class="ltx_bibblock">Panoptic studio: A massively multiview system for social interaction
+capture.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text ltx_font_italic">IEEE Transactions on Pattern Analysis and Machine Intelligence</span>,
+2017.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Ho Yub Jung, Soochahn Lee, Yong Seok Heo, and Il Dong Yun.
+
+</span>
+<span class="ltx_bibblock">Random tree walk toward instantaneous 3d human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib9.1.1" class="ltx_text ltx_font_italic">CVPR</span>, pages 2467–2474. IEEE Computer Society, 2015.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Angjoo Kanazawa, Michael J. Black, David W. Jacobs, and Jitendra Malik.
+
+</span>
+<span class="ltx_bibblock">End-to-end recovery of human shape and pose.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib10.1.1" class="ltx_text ltx_font_italic">Computer Vision and Pattern Regognition (CVPR)</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Sijin Li, Weichen Zhang, and Antoni B. Chan.
+
+</span>
+<span class="ltx_bibblock">Maximum-margin structured learning with deep networks for 3d human
+pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib11.1.1" class="ltx_text ltx_font_italic">IEEE International Conference on Computer Vision (ICCV)</span>,
+2015.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Julieta Martinez, Rayat Hossain, Javier Romero, and James J. Little.
+
+</span>
+<span class="ltx_bibblock">A simple yet effective baseline for 3d human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib12.1.1" class="ltx_text ltx_font_italic">ICCV</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Angel Martínez-González, Michael Villamizar, Olivier Canévet, and
+Jean-Marc Odobez.
+
+</span>
+<span class="ltx_bibblock">Real-time convolutional networks for depth-based human pose
+estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib13.1.1" class="ltx_text ltx_font_italic">2018 IEEE/RSJ International Conference on Intelligent
+Robots and Systems, IROS</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Angel Martínez-González, Michael Villamizar, Olivier Canévet, and
+Jean-Marc Odobez.
+
+</span>
+<span class="ltx_bibblock">Efficient convolutional neural networks for depth-based multi-person
+pose estimation.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text ltx_font_italic">IEEE Transactions on Circuits and Systems for Video Technology</span>,
+2019.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Gyeongsik Moon, Juyong Chang, and Kyoung Mu Lee.
+
+</span>
+<span class="ltx_bibblock">V2v-posenet: Voxel-to-voxel prediction network for accurate 3d hand
+and human pose estimation from a single depth map.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib15.1.1" class="ltx_text ltx_font_italic">The IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Alejandro Newell, Kaiyu Yang, and Jia Deng.
+
+</span>
+<span class="ltx_bibblock">Stacked hourglass networks for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib16.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision</span>, 2016.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Georgios Pavlakos, Xiaowei Zhou, Konstantinos G Derpanis, and Kostas
+Daniilidis.
+
+</span>
+<span class="ltx_bibblock">Coarse-to-fine volumetric prediction for single-image 3D human
+pose.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib17.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Varun Ramakrishna, Takeo Kanade, and Yaser Sheikh.
+
+</span>
+<span class="ltx_bibblock">Reconstructing 3d human pose from 2d image landmarks.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib18.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision</span>, 2012.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Jamie Shotton, Ross Girshick, Andrew Fitzgibbon, Toby Sharp, Mat Cook, Mark
+Finocchio, Richard Moore, Pushmeet Kohli, Antonio Criminisi, Alex Kipman, and
+Andrew Blake.
+
+</span>
+<span class="ltx_bibblock">Efficient human pose estimation from single depth images.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text ltx_font_italic">Trans. PAMI</span>, January 2012.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+L. Sigal, M. Isard, H. Haussecker, and M. J. Black.
+
+</span>
+<span class="ltx_bibblock">Loose-limbed people: Estimating 3D human pose and motion using
+non-parametric belief propagation.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text ltx_font_italic">International Journal of Computer Vision</span>, 98(1):15–48, May
+2011.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Xiao Wei Sun, Jiaxiang Shang, Shuang Liang, and Yichen Wei.
+
+</span>
+<span class="ltx_bibblock">Compositional human pose regression.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib21.1.1" class="ltx_text ltx_font_italic">IEEE International Conference on Computer Vision (ICCV)</span>,
+2017.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Jonathan Taylor, Jamie Shotton, Toby Sharp, and Andrew W. Fitzgibbon.
+
+</span>
+<span class="ltx_bibblock">The vitruvian manifold: Inferring dense correspondences for one-shot
+human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib22.1.1" class="ltx_text ltx_font_italic">CVPR</span>, 2012.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+D. Tome, C. Russell, and L. Agapito.
+
+</span>
+<span class="ltx_bibblock">Lifting from the deep: Convolutional 3d pose estimation from a single
+image.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib23.1.1" class="ltx_text ltx_font_italic">IEEE Conf. on Computer Vision and Pattern Recognition
+(CVPR)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Bastian Wandt and Bodo Rosenhahn.
+
+</span>
+<span class="ltx_bibblock">Repnet: Weakly supervised training of an adversarial reprojection
+network for 3d human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib24.1.1" class="ltx_text ltx_font_italic">CVPR</span>, 2019.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+Keze Wang, Shengfu Zhai, Hui Cheng, Xiaodan Liang, and Liang Lin.
+
+</span>
+<span class="ltx_bibblock">Human pose estimation from depth images via inference embedded
+multi-task learning.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib25.1.1" class="ltx_text ltx_font_italic">Proceedings of ACM on Multimedia</span>, 2016.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+M. Ye, Xianwang Wang, R. Yang, Liu Ren, and M. Pollefeys.
+
+</span>
+<span class="ltx_bibblock">Accurate 3d pose estimation from a single depth image.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib26.1.1" class="ltx_text ltx_font_italic">2011 International Conference on Computer Vision</span>, pages
+731–738, Nov 2011.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2011.05009" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2011.05010" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2011.05010">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2011.05010" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2011.05011" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Fri Mar  1 23:48:51 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,959 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2204.02371] Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation</title><meta property="og:description" content="During in-hand manipulation, robots must be able to continuously estimate the pose of the object in order to generate appropriate control actions. The performance of algorithms for pose estimation hinges on the robot’s…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2204.02371">
+
+<!--Generated on Mon Feb 26 23:54:18 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document" style="font-size:173%;">Optical Proximity Sensing for Pose Estimation
+<br class="ltx_break">During In-Hand Manipulation
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Patrick Lancaster<sup id="id11.9.id1" class="ltx_sup"><span id="id11.9.id1.1" class="ltx_text ltx_font_italic">1</span></sup>, Pratik Gyawali<sup id="id12.10.id2" class="ltx_sup"><span id="id12.10.id2.1" class="ltx_text ltx_font_italic">2</span></sup>, Christoforos Mavrogiannis<sup id="id13.11.id3" class="ltx_sup"><span id="id13.11.id3.1" class="ltx_text ltx_font_italic">1</span></sup>, Siddhartha S. Srinivasa<sup id="id14.12.id4" class="ltx_sup"><span id="id14.12.id4.1" class="ltx_text ltx_font_italic">1</span></sup>, Joshua R. Smith<sup id="id15.13.id5" class="ltx_sup"><span id="id15.13.id5.1" class="ltx_text ltx_font_italic">1,3</span></sup>
+</span><span class="ltx_author_notes"><sup id="id16.14.id1" class="ltx_sup"><span id="id16.14.id1.1" class="ltx_text ltx_font_italic">1</span></sup> Patrick Lancaster, Christoforos Mavrogiannis, Siddhartha S. Srinivasa, and Joshua R. Smith are with the Paul G. Allen School of Computer Science and Engineering,
+University of Washington, Seattle, WA 98195, USA
+<span id="id17.15.id2" class="ltx_text ltx_font_typewriter" style="font-size:90%;">planc509@cs.uw.edu,
+cmavro@cs.uw.edu,
+siddh@cs.uw.edu,
+jrs@cs.uw.edu</span><sup id="id18.16.id1" class="ltx_sup"><span id="id18.16.id1.1" class="ltx_text ltx_font_italic">2</span></sup> Pratik Gyawali is with the the Department of Mechanical Engineering, University of Washington, Seattle, WA 98195, USA <span id="id19.17.id2" class="ltx_text ltx_font_typewriter" style="font-size:90%;">gyawali@uw.edu</span><sup id="id20.18.id1" class="ltx_sup"><span id="id20.18.id1.1" class="ltx_text ltx_font_italic">3</span></sup> Joshua R. Smith is with the Department of Electrical and Computer Engineering, University of Washington,
+Seattle, WA 98195, USA</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id10.2" class="ltx_p">During in-hand manipulation, robots must be able to continuously estimate the pose of the object in order to generate appropriate control actions. The performance of algorithms for pose estimation hinges on the robot’s sensors being able to detect discriminative geometric object features, but previous sensing modalities are unable to make such measurements robustly. The robot’s fingers can occlude the view of environment- or robot-mounted image sensors, and tactile sensors can only measure at the local areas of contact. Motivated by fingertip-embedded proximity sensors’ robustness to occlusion and ability to measure beyond the local areas of contact, we present the first evaluation of proximity sensor based pose estimation for in-hand manipulation. We develop a novel two-fingered hand with fingertip-embedded optical time-of-flight proximity sensors as a testbed for pose estimation during planar in-hand manipulation. Here, the in-hand manipulation task consists of the robot moving a cylindrical object from one end of its workspace to the other. We demonstrate, with statistical significance, that proximity-sensor based pose estimation via particle filtering during in-hand manipulation: a) exhibits <math id="id9.1.m1.1" class="ltx_Math" alttext="50\%" display="inline"><semantics id="id9.1.m1.1a"><mrow id="id9.1.m1.1.1" xref="id9.1.m1.1.1.cmml"><mn id="id9.1.m1.1.1.2" xref="id9.1.m1.1.1.2.cmml">50</mn><mo id="id9.1.m1.1.1.1" xref="id9.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="id9.1.m1.1b"><apply id="id9.1.m1.1.1.cmml" xref="id9.1.m1.1.1"><csymbol cd="latexml" id="id9.1.m1.1.1.1.cmml" xref="id9.1.m1.1.1.1">percent</csymbol><cn type="integer" id="id9.1.m1.1.1.2.cmml" xref="id9.1.m1.1.1.2">50</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="id9.1.m1.1c">50\%</annotation></semantics></math> lower average pose error than a tactile-sensor based baseline; b) empowers a model predictive controller to achieve <math id="id10.2.m2.1" class="ltx_Math" alttext="30\%" display="inline"><semantics id="id10.2.m2.1a"><mrow id="id10.2.m2.1.1" xref="id10.2.m2.1.1.cmml"><mn id="id10.2.m2.1.1.2" xref="id10.2.m2.1.1.2.cmml">30</mn><mo id="id10.2.m2.1.1.1" xref="id10.2.m2.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="id10.2.m2.1b"><apply id="id10.2.m2.1.1.cmml" xref="id10.2.m2.1.1"><csymbol cd="latexml" id="id10.2.m2.1.1.1.cmml" xref="id10.2.m2.1.1.1">percent</csymbol><cn type="integer" id="id10.2.m2.1.1.2.cmml" xref="id10.2.m2.1.1.2">30</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="id10.2.m2.1c">30\%</annotation></semantics></math> lower final positioning error compared to when using tactile-sensor based pose estimates.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">INTRODUCTION</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">In-hand manipulation is a prerequisite for many of the tasks that are desirable for robots to perform. Tool use, object articulation, and pick and place tasks will significantly benefit from the ability to reposition, reorient, and exert force on the object of interest within the robot’s hand. As the robot attempts to execute a particular in-hand manipulation skill, the appropriate control action at any point in time will depend heavily on the pose of the object. Pose estimation algorithms fuse the robot’s control actions and sensor observations across time in order to continuously track the pose of the object. These algorithms must be provided with sensor measurements that disambiguate the pose of the object in order to perform well, but sensing modalities currently used for in-hand manipulation struggle to continuously provide such measurements. Here, we analyze the application of a previously unused sensing modality - fingertip embedded proximity sensors - for <span id="S1.p1.1.1" class="ltx_text ltx_font_italic">pose estimation during in-hand manipulation</span> (Fig. <a href="#S1.F1" title="Figure 1 ‣ I INTRODUCTION ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>).</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">The effectiveness of a sensor used for object localization is determined by its ability to measure discriminative features of the object during manipulation. For RGB(D) image sensors, these features are image pixels that correspond to keypoints of the object or a fiducial attached to the object. When these features are occluded from view, pose estimation performance suffers. This is particularly an issue for in-hand manipulation as the fingers will often block environment- or robot-mounted image sensors’ view of the object.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2204.02371/assets/figs/system_no_fid_vert.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="287" height="165" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S1.F1.2.1.1" class="ltx_text" style="font-size:90%;">Figure 1</span>: </span><span id="S1.F1.3.2" class="ltx_text" style="font-size:90%;">Our two fingered hand uses optical proximity sensors to estimate the pose of a cylindrical object during a planar in-hand manipulation task in which the robot must move the object to a specific goal position. Each fingertip is equipped with four optical distance sensing modules that have been covered by a transparent elastomer. Left: A visualization (in RViz) of the robot and object. Red lines emanating from the cyan fingertips illustrate optical distance measurements. A particle filter (particles shown in orange) uses these measurements to estimate the pose of the cylinder shown in blue. Right: The real robot manipulating the object. </span></figcaption>
+</figure>
+<figure id="S1.F2" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S1.F2.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2204.02371/assets/figs/overall.png" id="S1.F2.sf1.g1" class="ltx_graphics ltx_centering ltx_img_square" width="598" height="723" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S1.F2.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S1.F2.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2204.02371/assets/figs/tactile.png" id="S1.F2.sf2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="329" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S1.F2.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S1.F2.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2204.02371/assets/figs/optical.png" id="S1.F2.sf3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="329" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S1.F2.sf3.2.1.1" class="ltx_text" style="font-size:90%;">(c)</span> </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S1.F2.2.1.1" class="ltx_text" style="font-size:90%;">Figure 2</span>: </span><span id="S1.F2.3.2" class="ltx_text" style="font-size:90%;">Optical proximity sensors provide measurements beyond the local areas of contact that reduce uncertainty in pose estimation. <a href="#S1.F2.sf1" title="In Figure 2 ‣ I INTRODUCTION ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2(a)</span></a>) Top down view of a two fingered hand with blue fingertips manipulating a green object. <a href="#S1.F2.sf2" title="In Figure 2 ‣ I INTRODUCTION ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2(b)</span></a>) Zoomed in view in which the red regions indicate object-fingertip contacts that would be detected by tactile sensors. While detection of these contacts results in the object being well localized in the horizontal direction, the translucent green area illustrates the large pose uncertainty in the vertical direction (assuming the geometry of the object is known apriori). <a href="#S1.F2.sf3" title="In Figure 2 ‣ I INTRODUCTION ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2(c)</span></a>) Optical distance measurements illustrated by red rays emanating from the fingertips detect a greater portion of the object and thereby significantly reduce pose uncertainty in the vertical direction.</span></figcaption>
+</figure>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Tactile sensing is the other most commonly used sensing modality applied to in-hand manipulation. Its features consist of contact measurements that are the result of an object’s surface exerting force on the sensorized portion of the finger. Tactile sensors can be made robust to the occlusion that image sensors experience by being embedded into the contact surface of the fingers. On the other hand, the ability of tactile sensors to detect discriminative features is limited by the fact that they require contact with the object in order to make measurements. Even if the sensor has a high spatial resolution <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>, objects that do not conform to the sensor’s surface (e.g. objects with high amounts of curvature) may be difficult to localize. A sensing modality that improves upon the two described here would be robust to finger occlusions and also be able to measure object geometry beyond the local areas of contact.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Proximity sensors successfully capture discriminative geometric features for pose estimation where previous sensing modalities fail. The robot’s fingers can heavily occlude the object from view of image sensors mounted to the environment or the robot itself, but proximity sensors are robust to such occlusion by virtue of being embedded in the fingers themselves. Tactile sensors embedded in the fingers are also robust to occlusion, but require contact in order to detect the object. Therefore, it can be difficult for tactile sensors to localize objects that do not conform to the sensorized portion of the finger surface. Consider a scenario in which a two fingered hand with slightly rounded fingertips attempts to manipulate an object with flat sides, such as in Fig. <a href="#S1.F2" title="Figure 2 ‣ I INTRODUCTION ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. In such a scenario, contact detection indicates that the object is within the robot’s grasp, but does not elucidate whether the contacts are towards the top corners of the object, bottom corners of the object, or somewhere in between. Proximity sensors can resolve this ambiguity by sensing beyond the local areas of contact, resulting in improved pose estimation.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">In this paper, we evaluate the performance of proximity sensor based pose estimation in the context of in-hand manipulation. Specifically, we measure the pose estimation accuracy throughout in-hand manipulation trajectories, and quantify how well a control policy informed by these pose estimates can move the object to a specified goal pose. The insight that proximity sensors are particularly well-suited to pose estimation for in-hand manipulation is rooted in their ability to avoid occlusion by being embedded in robot fingertips while also being able to detect portions of the object that do not necessarily make contact with the fingertip surface. These properties increase the likelihood that the sensing modality will consistently observe discriminative object features throughout the manipulation, facilitating improved pose estimation.
+<br class="ltx_break">
+<br class="ltx_break">
+<br class="ltx_break">We make the following contributions:</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">Describe a novel two-fingered robot hand for planar object manipulation with optical proximity sensors embedded in its fingertips.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">Present the first demonstration (to the best of the authors’ knowledge) of fingertip embedded proximity sensors being used for pose estimation during an in-hand manipulation task.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">Compare the accuracy of proximity sensing based pose estimation versus that of tactile based pose estimation.</p>
+</div>
+</li>
+</ul>
+<p id="S1.p5.2" class="ltx_p">Supplementary video of this work is available here: <a target="_blank" href="https://www.youtube.com/watch?v=9iaLuM-N2VE" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://www.youtube.com/watch?v=9iaLuM-N2VE</a></p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Related Work</span>
+</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">This section provides context for our work on proximity sensor based pose estimation for in-hand manipulation. We examine previous works on in-hand manipulation, focusing on the sensing modalities that were used for object pose estimation. We then discuss previous proximity sensors that have been designed for robotic fingertips and their applications.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS1.5.1.1" class="ltx_text">II-A</span> </span><span id="S2.SS1.6.2" class="ltx_text ltx_font_italic">Pose Estimation for In-Hand Manipulation</span>
+</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Manipulation of an object inherently constrains its pose to some degree. Even without exteroceptive sensing, a robot can reason about how the configuration of its hand constrains the object in order to estimate its pose with some amount of uncertainty. Sequences of uncertainty-aware motion primitives allow robots to perform in-hand manipulation without any exteroceptive sensory feedback <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. Such information can be combined with constraints imposed by the motions of the arm, gravity, and external contacts to estimate object pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>. While this approach reduces hardware requirements, relying on the executed actions themselves to maintain small pose uncertainty can make it difficult to achieve arbitrary manipulations. Leveraging the constraints on the object’s pose imposed by the robot’s hand is a useful principle, but the use of exteroceptive sensing helps decouple accurate pose estimation from the particular actions executed by the robot.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">The use of image sensors for pose estimation have facilitated the execution of dexterous in-hand manipulations <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>. This approach generally requires object mounted visual fiducials and/or a spatially distributed array of cameras. Other environments may not be able to fulfill such requirements, resulting in occlusion and degraded performance.</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.1" class="ltx_p">On the other hand, fingertip embedded tactile sensors are robust to occlusion. Maekawa et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> demonstrated one of the earliest works in manipulating objects with rolling contacts along a desired trajectory using tactile feedback at the fingertips. More recent works have used tactile sensors to learn model-free control policies for in-hand manipulation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>, <a href="#bib.bib14" title="" class="ltx_ref">14</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>. Others have focused on using tactile measurements for explicit pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>. However, tactile based pose estimation may struggle to localize objects that do not conform to the surface of the fingertip.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS2.5.1.1" class="ltx_text">II-B</span> </span><span id="S2.SS2.6.2" class="ltx_text ltx_font_italic">Proximity Sensing</span>
+</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Proximity sensors provide a sense of “pretouch,” with a range intermediate to that of image and tactile sensors. We classify prior work on the proximity sensing modality for robot hands based on the underlying sensing mechanism: either acoustic, capacitive, or optical. While we describe many works here, please see Navarro et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> for a more comprehensive survey of proximity sensing in robotics.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Jiang and Smith <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> develop acoustic pretouch sensors embedded in the fingertips of a PR2 robot. They measure proximity to objects by detecting changes in the ambient noise spectrum inside of the sensor’s acoustic cavity. One disadvantage is that the sensor fails to detect extermely soft and light materials. Fang et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> propose a bi-modal acoustic-optical sensor using the optoacoustic effect.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">Capacitive sensors extract information from the environment by measuring changes in capacitance between two or more sensor electrodes. Such sensors can operate in both tactile and proximity modes <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>. Wistort et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite> use electric field pretouch as the feedback signal for closed loop control in robotic manipulation tasks. Mayton et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite> extend this principle for co-manipulation of objects between humans and robots. Faller et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite> retrofit an industrial gripper system with capacitive sensors for automated grasping of logs in a forestry robot. Muhlbacher-Karre <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite> integrate capacitive sensing for active object categorization in robot manipulation tasks. However, the performance of capacitive sensors degrades when sensing objects with a low dielectric constant such as fabrics, foam, and plastics.</p>
+</div>
+<div id="S2.SS2.p4" class="ltx_para">
+<p id="S2.SS2.p4.1" class="ltx_p">Optical pretouch sensing methods are attractive because of their precision and ability to detect a wide range of materials. Guo et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite> proposed to perceive objects using a transmissive optical proximity sensor composed of an emitter and a receiver in a parallel gripper. Hsiao et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite> use optical sensors for pose estimation using a probabilistic model. Maldonado et al.<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite> augment long-range vision with optical sensors to obtain measurements of areas that are occluded from the image sensor.</p>
+</div>
+<div id="S2.SS2.p5" class="ltx_para">
+<p id="S2.SS2.p5.1" class="ltx_p">Yang et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite> demonstrate continuous manipulation tasks using a time-of-flight (ToF) proximity sensor mounted on a parallel gripper.
+Other works have developed either camera or optical sensors encased in transparent, compliant materials that facilitate both proximity and tactile sensing during manipulation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>, <a href="#bib.bib33" title="" class="ltx_ref">33</a>, <a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>. Sasaki et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite> exploit ToF sensors to more robustly grasp objects. Optical sensors may fail to detect objects that are transparent or highly specular. Methods that have been proposed to compensate for variations in reflectance include color calibration information obtained by a vision sensor <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite> and using a light-emitting diode with emission phase that is robust to varying reflectance <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite>.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Proximity Sensing for In-Hand Manipulation</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">To investigate the value of proximity sensing for in-hand manipulation, we deploy a complete system for object manipulation under pose uncertainty on our custom two-fingered robot hand. We first present the overall robot hardware architecture, and then focus on our design of compliant fingertips with embedded optical time-of-flight proximity sensors. We then describe our implementation of a particle filter that uses measurements from these sensors to estimate the object’s pose, and conclude by detailing the model predictive control policy that our robot used to perform in-hand manipulation.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS1.5.1.1" class="ltx_text">III-A</span> </span><span id="S3.SS1.6.2" class="ltx_text ltx_font_italic">Two-Fingered Robot for In-Hand Manipulation</span>
+</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">We developed a two-fingered robot hand capable of in-hand manipulation in order to explore the use of proximity sensors for pose estimation (Fig. <a href="#S1.F1" title="Figure 1 ‣ I INTRODUCTION ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>). For each finger, a tendon (consisting of 65 lb. max tension fishing line) is anchored to the fingertip and then routed through the links of the finger in order to be attached to a XM430-W350-R Dynamixel servo motor. Flexion of a finger occurs when its corresponding motor pulls on the tendon, and springs embedded in each joint extend the finger as the motor releases the tendon. Each finger contains three revolute joints.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">Although the fingers are underactuated, a unique feature of the robot hand is that the rotation of each individual joint can be blocked by a corresponding electrostatic brake, allowing the motion of the joint to be decoupled from the motor as desired. Electrostatic brakes leverage the electrostatic attraction that occurs between two conductors at differing voltage potentials. This attraction induces a perpendicular frictional force that resists motion between the conductors. Our electrostatic brake equipped joint uses a rack and pinion to transform rotational motion of the joint into linear sliding between the conductors, which optimizes conductor conformance in order to achieve significant braking capability. More details of this joint design are available in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite>; for this work, one only needs to note that the robot can engage any combination of joints’ brakes in order to block the motion of those joints. These brakes enable the robot to control the motion of individual joints, allowing the hand to reach any arbitrary joint configuration within the joint limits.</p>
+</div>
+<div id="S3.SS1.p3" class="ltx_para">
+<p id="S3.SS1.p3.1" class="ltx_p">Each joint contains an AEAT-8800 magnetic encoder. The encoders measure the angular position of each joint at a rate of 30 Hz. The limits for each joint are from 0 to 90 degrees.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS2.5.1.1" class="ltx_text">III-B</span> </span><span id="S3.SS2.6.2" class="ltx_text ltx_font_italic">Compliant Fingertips with Embedded Proximity Sensors</span>
+</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">Optical time-of-flight sensors possess a number of qualities that facilitate the practical implementation of proximity sensor based pose estimation. This type of sensor makes easily interpretable (i.e. distance) measurements that are insensitive to most object compositions and surface properties. The ability to compactly manufacture such sensors allows them to be embedded in compliant regions of the finger, and this compliance aids the robot hand in maintaining a grasp on the object. This subsection describes the design and construction of our robot hand’s sensorized fingertips.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">Four STMicrolelectronics VL6180x optical time-of-flight modules are embedded into each of the robot’s fingertips as shown in Fig. <a href="#S3.F3" title="Figure 3 ‣ III-B Compliant Fingertips with Embedded Proximity Sensors ‣ III Proximity Sensing for In-Hand Manipulation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>. The sensor modules of each fingertip are positioned along a circular arc of radius 15mm at intervals of 25 degrees, and oriented such that their optical transmitters point perpendicular to the arc’s tangent. Each sensing module produces distance measurements at a rate of 30 Hz, which are sent to a fingertip embedded microcontroller that provides the measurements to the robot’s main computer via the same communication protocol used to query the encoders.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.1" class="ltx_p">After the fingertip’s embedded electronics are mounted to a 3D printed substrate, this rigid skeleton is covered by transparent, compliant polydimethylsiloxane (PDMS). We design a mold for the fingertip that fulfills two critera:</p>
+<ul id="S3.I1" class="ltx_itemize">
+<li id="S3.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i1.p1" class="ltx_para">
+<p id="S3.I1.i1.p1.1" class="ltx_p">For each sensor module, the contact surface above the module’s optical transmitter and receiver should be shaped as a circular arc centered around the transmitter in order to focus infrared light reflecting off of the inner contact surface back towards the transmitter (as opposed to towards the receiver). This results in better contrast-to-noise ratio performance of the sensor.</p>
+</div>
+</li>
+<li id="S3.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i2.p1" class="ltx_para">
+<p id="S3.I1.i2.p1.1" class="ltx_p">The contact surface should be at a distance above the 10mm minimum sensing range of the module (here, we use a distance of 15mm).</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S3.SS2.p4" class="ltx_para">
+<p id="S3.SS2.p4.1" class="ltx_p">Once a satisfactory mold has been 3D printed, the surface is covered with two coats of Smooth-On XTC3D Epoxy. This epoxy fills in the gaps between the individual 3D printed layers and is necessary to produce a contact surface that is optically transparent. The mold is then filled with a 10:1 silicone-catalyst PDMS mix, thoroughly degassed using a vaccum chamber and pump, and cured for 24 hours. For more details on this process, please see our previous work on the construction of optical proximity-contact-force sensors <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite>.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2204.02371/assets/figs/fingertip.png" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="269" height="132" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F3.2.1.1" class="ltx_text" style="font-size:90%;">Figure 3</span>: </span><span id="S3.F3.3.2" class="ltx_text" style="font-size:90%;">A compliant fingertip with four embedded optical time-of-flight proximity sensors. Left: A visualization of the fingertip design. PDMS (colored in translucent blue) forms a compliant contact surface. Right: The constructed fingertip.</span></figcaption>
+</figure>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS3.5.1.1" class="ltx_text">III-C</span> </span><span id="S3.SS3.6.2" class="ltx_text ltx_font_italic">Proximity Sensor Based Pose Estimation</span>
+</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">By virtue of using similar measurement mechanisms, many of the standard techniques applied to LIDAR based localization in the context of mobile robots can be adapted for proximity sensor based object pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>. In particular, we implement a particle filter for estimating the pose of the manipulated object. Our encoder measurements themselves provide a sufficiently accurate estimate of the robot’s internal state, therefore our particle filter’s estimated state <math id="S3.SS3.p1.1.m1.1" class="ltx_Math" alttext="x_{t}" display="inline"><semantics id="S3.SS3.p1.1.m1.1a"><msub id="S3.SS3.p1.1.m1.1.1" xref="S3.SS3.p1.1.m1.1.1.cmml"><mi id="S3.SS3.p1.1.m1.1.1.2" xref="S3.SS3.p1.1.m1.1.1.2.cmml">x</mi><mi id="S3.SS3.p1.1.m1.1.1.3" xref="S3.SS3.p1.1.m1.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p1.1.m1.1b"><apply id="S3.SS3.p1.1.m1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.p1.1.m1.1.1.1.cmml" xref="S3.SS3.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.p1.1.m1.1.1.2.cmml" xref="S3.SS3.p1.1.m1.1.1.2">𝑥</ci><ci id="S3.SS3.p1.1.m1.1.1.3.cmml" xref="S3.SS3.p1.1.m1.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p1.1.m1.1c">x_{t}</annotation></semantics></math> only consists of the cylindrical object’s xy position.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.5" class="ltx_p">Given <math id="S3.SS3.p2.1.m1.1" class="ltx_Math" alttext="N" display="inline"><semantics id="S3.SS3.p2.1.m1.1a"><mi id="S3.SS3.p2.1.m1.1.1" xref="S3.SS3.p2.1.m1.1.1.cmml">N</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.1.m1.1b"><ci id="S3.SS3.p2.1.m1.1.1.cmml" xref="S3.SS3.p2.1.m1.1.1">𝑁</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.1.m1.1c">N</annotation></semantics></math> particles, our particle filter’s sensor model generates particle weights <math id="S3.SS3.p2.2.m2.1" class="ltx_Math" alttext="p(z_{t}|x^{i}_{t})" display="inline"><semantics id="S3.SS3.p2.2.m2.1a"><mrow id="S3.SS3.p2.2.m2.1.1" xref="S3.SS3.p2.2.m2.1.1.cmml"><mi id="S3.SS3.p2.2.m2.1.1.3" xref="S3.SS3.p2.2.m2.1.1.3.cmml">p</mi><mo lspace="0em" rspace="0em" id="S3.SS3.p2.2.m2.1.1.2" xref="S3.SS3.p2.2.m2.1.1.2.cmml">​</mo><mrow id="S3.SS3.p2.2.m2.1.1.1.1" xref="S3.SS3.p2.2.m2.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.SS3.p2.2.m2.1.1.1.1.2" xref="S3.SS3.p2.2.m2.1.1.1.1.1.cmml">(</mo><mrow id="S3.SS3.p2.2.m2.1.1.1.1.1" xref="S3.SS3.p2.2.m2.1.1.1.1.1.cmml"><msub id="S3.SS3.p2.2.m2.1.1.1.1.1.2" xref="S3.SS3.p2.2.m2.1.1.1.1.1.2.cmml"><mi id="S3.SS3.p2.2.m2.1.1.1.1.1.2.2" xref="S3.SS3.p2.2.m2.1.1.1.1.1.2.2.cmml">z</mi><mi id="S3.SS3.p2.2.m2.1.1.1.1.1.2.3" xref="S3.SS3.p2.2.m2.1.1.1.1.1.2.3.cmml">t</mi></msub><mo fence="false" id="S3.SS3.p2.2.m2.1.1.1.1.1.1" xref="S3.SS3.p2.2.m2.1.1.1.1.1.1.cmml">|</mo><msubsup id="S3.SS3.p2.2.m2.1.1.1.1.1.3" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3.cmml"><mi id="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.2" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.2.cmml">x</mi><mi id="S3.SS3.p2.2.m2.1.1.1.1.1.3.3" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3.3.cmml">t</mi><mi id="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.3" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.3.cmml">i</mi></msubsup></mrow><mo stretchy="false" id="S3.SS3.p2.2.m2.1.1.1.1.3" xref="S3.SS3.p2.2.m2.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.2.m2.1b"><apply id="S3.SS3.p2.2.m2.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1"><times id="S3.SS3.p2.2.m2.1.1.2.cmml" xref="S3.SS3.p2.2.m2.1.1.2"></times><ci id="S3.SS3.p2.2.m2.1.1.3.cmml" xref="S3.SS3.p2.2.m2.1.1.3">𝑝</ci><apply id="S3.SS3.p2.2.m2.1.1.1.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1"><csymbol cd="latexml" id="S3.SS3.p2.2.m2.1.1.1.1.1.1.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.1">conditional</csymbol><apply id="S3.SS3.p2.2.m2.1.1.1.1.1.2.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.p2.2.m2.1.1.1.1.1.2.1.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.2">subscript</csymbol><ci id="S3.SS3.p2.2.m2.1.1.1.1.1.2.2.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.2.2">𝑧</ci><ci id="S3.SS3.p2.2.m2.1.1.1.1.1.2.3.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.2.3">𝑡</ci></apply><apply id="S3.SS3.p2.2.m2.1.1.1.1.1.3.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.SS3.p2.2.m2.1.1.1.1.1.3.1.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3">subscript</csymbol><apply id="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.1.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3">superscript</csymbol><ci id="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.2.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.2">𝑥</ci><ci id="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.3.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3.2.3">𝑖</ci></apply><ci id="S3.SS3.p2.2.m2.1.1.1.1.1.3.3.cmml" xref="S3.SS3.p2.2.m2.1.1.1.1.1.3.3">𝑡</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.2.m2.1c">p(z_{t}|x^{i}_{t})</annotation></semantics></math> that represent the likelihood of sensor measurements <math id="S3.SS3.p2.3.m3.1" class="ltx_Math" alttext="z_{t}" display="inline"><semantics id="S3.SS3.p2.3.m3.1a"><msub id="S3.SS3.p2.3.m3.1.1" xref="S3.SS3.p2.3.m3.1.1.cmml"><mi id="S3.SS3.p2.3.m3.1.1.2" xref="S3.SS3.p2.3.m3.1.1.2.cmml">z</mi><mi id="S3.SS3.p2.3.m3.1.1.3" xref="S3.SS3.p2.3.m3.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.3.m3.1b"><apply id="S3.SS3.p2.3.m3.1.1.cmml" xref="S3.SS3.p2.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.p2.3.m3.1.1.1.cmml" xref="S3.SS3.p2.3.m3.1.1">subscript</csymbol><ci id="S3.SS3.p2.3.m3.1.1.2.cmml" xref="S3.SS3.p2.3.m3.1.1.2">𝑧</ci><ci id="S3.SS3.p2.3.m3.1.1.3.cmml" xref="S3.SS3.p2.3.m3.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.3.m3.1c">z_{t}</annotation></semantics></math> occurring given each particle hypothesis <math id="S3.SS3.p2.4.m4.1" class="ltx_Math" alttext="x^{i}_{t}" display="inline"><semantics id="S3.SS3.p2.4.m4.1a"><msubsup id="S3.SS3.p2.4.m4.1.1" xref="S3.SS3.p2.4.m4.1.1.cmml"><mi id="S3.SS3.p2.4.m4.1.1.2.2" xref="S3.SS3.p2.4.m4.1.1.2.2.cmml">x</mi><mi id="S3.SS3.p2.4.m4.1.1.3" xref="S3.SS3.p2.4.m4.1.1.3.cmml">t</mi><mi id="S3.SS3.p2.4.m4.1.1.2.3" xref="S3.SS3.p2.4.m4.1.1.2.3.cmml">i</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.4.m4.1b"><apply id="S3.SS3.p2.4.m4.1.1.cmml" xref="S3.SS3.p2.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.p2.4.m4.1.1.1.cmml" xref="S3.SS3.p2.4.m4.1.1">subscript</csymbol><apply id="S3.SS3.p2.4.m4.1.1.2.cmml" xref="S3.SS3.p2.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.p2.4.m4.1.1.2.1.cmml" xref="S3.SS3.p2.4.m4.1.1">superscript</csymbol><ci id="S3.SS3.p2.4.m4.1.1.2.2.cmml" xref="S3.SS3.p2.4.m4.1.1.2.2">𝑥</ci><ci id="S3.SS3.p2.4.m4.1.1.2.3.cmml" xref="S3.SS3.p2.4.m4.1.1.2.3">𝑖</ci></apply><ci id="S3.SS3.p2.4.m4.1.1.3.cmml" xref="S3.SS3.p2.4.m4.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.4.m4.1c">x^{i}_{t}</annotation></semantics></math>, where <math id="S3.SS3.p2.5.m5.3" class="ltx_Math" alttext="i\in\{1,\dots,N\}" display="inline"><semantics id="S3.SS3.p2.5.m5.3a"><mrow id="S3.SS3.p2.5.m5.3.4" xref="S3.SS3.p2.5.m5.3.4.cmml"><mi id="S3.SS3.p2.5.m5.3.4.2" xref="S3.SS3.p2.5.m5.3.4.2.cmml">i</mi><mo id="S3.SS3.p2.5.m5.3.4.1" xref="S3.SS3.p2.5.m5.3.4.1.cmml">∈</mo><mrow id="S3.SS3.p2.5.m5.3.4.3.2" xref="S3.SS3.p2.5.m5.3.4.3.1.cmml"><mo stretchy="false" id="S3.SS3.p2.5.m5.3.4.3.2.1" xref="S3.SS3.p2.5.m5.3.4.3.1.cmml">{</mo><mn id="S3.SS3.p2.5.m5.1.1" xref="S3.SS3.p2.5.m5.1.1.cmml">1</mn><mo id="S3.SS3.p2.5.m5.3.4.3.2.2" xref="S3.SS3.p2.5.m5.3.4.3.1.cmml">,</mo><mi mathvariant="normal" id="S3.SS3.p2.5.m5.2.2" xref="S3.SS3.p2.5.m5.2.2.cmml">…</mi><mo id="S3.SS3.p2.5.m5.3.4.3.2.3" xref="S3.SS3.p2.5.m5.3.4.3.1.cmml">,</mo><mi id="S3.SS3.p2.5.m5.3.3" xref="S3.SS3.p2.5.m5.3.3.cmml">N</mi><mo stretchy="false" id="S3.SS3.p2.5.m5.3.4.3.2.4" xref="S3.SS3.p2.5.m5.3.4.3.1.cmml">}</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p2.5.m5.3b"><apply id="S3.SS3.p2.5.m5.3.4.cmml" xref="S3.SS3.p2.5.m5.3.4"><in id="S3.SS3.p2.5.m5.3.4.1.cmml" xref="S3.SS3.p2.5.m5.3.4.1"></in><ci id="S3.SS3.p2.5.m5.3.4.2.cmml" xref="S3.SS3.p2.5.m5.3.4.2">𝑖</ci><set id="S3.SS3.p2.5.m5.3.4.3.1.cmml" xref="S3.SS3.p2.5.m5.3.4.3.2"><cn type="integer" id="S3.SS3.p2.5.m5.1.1.cmml" xref="S3.SS3.p2.5.m5.1.1">1</cn><ci id="S3.SS3.p2.5.m5.2.2.cmml" xref="S3.SS3.p2.5.m5.2.2">…</ci><ci id="S3.SS3.p2.5.m5.3.3.cmml" xref="S3.SS3.p2.5.m5.3.3">𝑁</ci></set></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p2.5.m5.3c">i\in\{1,\dots,N\}</annotation></semantics></math>. Like other beam-based sensor models, we assume that each individual sensor beam measurement is conditionally independent of all of the others given the underlying state:</p>
+</div>
+<div id="S3.SS3.p3" class="ltx_para">
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1.2" class="ltx_Math" alttext="p(z_{t}|x^{i}_{t})=\prod^{M}_{j=1}p(z^{j}_{t}|x^{i}_{t})" display="block"><semantics id="S3.E1.m1.2a"><mrow id="S3.E1.m1.2.2" xref="S3.E1.m1.2.2.cmml"><mrow id="S3.E1.m1.1.1.1" xref="S3.E1.m1.1.1.1.cmml"><mi id="S3.E1.m1.1.1.1.3" xref="S3.E1.m1.1.1.1.3.cmml">p</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.1.2" xref="S3.E1.m1.1.1.1.2.cmml">​</mo><mrow id="S3.E1.m1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.E1.m1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.cmml"><msub id="S3.E1.m1.1.1.1.1.1.1.2" xref="S3.E1.m1.1.1.1.1.1.1.2.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.2.2" xref="S3.E1.m1.1.1.1.1.1.1.2.2.cmml">z</mi><mi id="S3.E1.m1.1.1.1.1.1.1.2.3" xref="S3.E1.m1.1.1.1.1.1.1.2.3.cmml">t</mi></msub><mo fence="false" id="S3.E1.m1.1.1.1.1.1.1.1" xref="S3.E1.m1.1.1.1.1.1.1.1.cmml">|</mo><msubsup id="S3.E1.m1.1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.3.cmml"><mi id="S3.E1.m1.1.1.1.1.1.1.3.2.2" xref="S3.E1.m1.1.1.1.1.1.1.3.2.2.cmml">x</mi><mi id="S3.E1.m1.1.1.1.1.1.1.3.3" xref="S3.E1.m1.1.1.1.1.1.1.3.3.cmml">t</mi><mi id="S3.E1.m1.1.1.1.1.1.1.3.2.3" xref="S3.E1.m1.1.1.1.1.1.1.3.2.3.cmml">i</mi></msubsup></mrow><mo stretchy="false" id="S3.E1.m1.1.1.1.1.1.3" xref="S3.E1.m1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow><mo rspace="0.111em" id="S3.E1.m1.2.2.3" xref="S3.E1.m1.2.2.3.cmml">=</mo><mrow id="S3.E1.m1.2.2.2" xref="S3.E1.m1.2.2.2.cmml"><munderover id="S3.E1.m1.2.2.2.2" xref="S3.E1.m1.2.2.2.2.cmml"><mo movablelimits="false" id="S3.E1.m1.2.2.2.2.2.2" xref="S3.E1.m1.2.2.2.2.2.2.cmml">∏</mo><mrow id="S3.E1.m1.2.2.2.2.3" xref="S3.E1.m1.2.2.2.2.3.cmml"><mi id="S3.E1.m1.2.2.2.2.3.2" xref="S3.E1.m1.2.2.2.2.3.2.cmml">j</mi><mo id="S3.E1.m1.2.2.2.2.3.1" xref="S3.E1.m1.2.2.2.2.3.1.cmml">=</mo><mn id="S3.E1.m1.2.2.2.2.3.3" xref="S3.E1.m1.2.2.2.2.3.3.cmml">1</mn></mrow><mi id="S3.E1.m1.2.2.2.2.2.3" xref="S3.E1.m1.2.2.2.2.2.3.cmml">M</mi></munderover><mrow id="S3.E1.m1.2.2.2.1" xref="S3.E1.m1.2.2.2.1.cmml"><mi id="S3.E1.m1.2.2.2.1.3" xref="S3.E1.m1.2.2.2.1.3.cmml">p</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.2.2.2.1.2" xref="S3.E1.m1.2.2.2.1.2.cmml">​</mo><mrow id="S3.E1.m1.2.2.2.1.1.1" xref="S3.E1.m1.2.2.2.1.1.1.1.cmml"><mo stretchy="false" id="S3.E1.m1.2.2.2.1.1.1.2" xref="S3.E1.m1.2.2.2.1.1.1.1.cmml">(</mo><mrow id="S3.E1.m1.2.2.2.1.1.1.1" xref="S3.E1.m1.2.2.2.1.1.1.1.cmml"><msubsup id="S3.E1.m1.2.2.2.1.1.1.1.2" xref="S3.E1.m1.2.2.2.1.1.1.1.2.cmml"><mi id="S3.E1.m1.2.2.2.1.1.1.1.2.2.2" xref="S3.E1.m1.2.2.2.1.1.1.1.2.2.2.cmml">z</mi><mi id="S3.E1.m1.2.2.2.1.1.1.1.2.3" xref="S3.E1.m1.2.2.2.1.1.1.1.2.3.cmml">t</mi><mi id="S3.E1.m1.2.2.2.1.1.1.1.2.2.3" xref="S3.E1.m1.2.2.2.1.1.1.1.2.2.3.cmml">j</mi></msubsup><mo fence="false" id="S3.E1.m1.2.2.2.1.1.1.1.1" xref="S3.E1.m1.2.2.2.1.1.1.1.1.cmml">|</mo><msubsup id="S3.E1.m1.2.2.2.1.1.1.1.3" xref="S3.E1.m1.2.2.2.1.1.1.1.3.cmml"><mi id="S3.E1.m1.2.2.2.1.1.1.1.3.2.2" xref="S3.E1.m1.2.2.2.1.1.1.1.3.2.2.cmml">x</mi><mi id="S3.E1.m1.2.2.2.1.1.1.1.3.3" xref="S3.E1.m1.2.2.2.1.1.1.1.3.3.cmml">t</mi><mi id="S3.E1.m1.2.2.2.1.1.1.1.3.2.3" xref="S3.E1.m1.2.2.2.1.1.1.1.3.2.3.cmml">i</mi></msubsup></mrow><mo stretchy="false" id="S3.E1.m1.2.2.2.1.1.1.3" xref="S3.E1.m1.2.2.2.1.1.1.1.cmml">)</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.2b"><apply id="S3.E1.m1.2.2.cmml" xref="S3.E1.m1.2.2"><eq id="S3.E1.m1.2.2.3.cmml" xref="S3.E1.m1.2.2.3"></eq><apply id="S3.E1.m1.1.1.1.cmml" xref="S3.E1.m1.1.1.1"><times id="S3.E1.m1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.2"></times><ci id="S3.E1.m1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.3">𝑝</ci><apply id="S3.E1.m1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1"><csymbol cd="latexml" id="S3.E1.m1.1.1.1.1.1.1.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.1">conditional</csymbol><apply id="S3.E1.m1.1.1.1.1.1.1.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.1.1.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S3.E1.m1.1.1.1.1.1.1.2.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.2.2">𝑧</ci><ci id="S3.E1.m1.1.1.1.1.1.1.2.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.2.3">𝑡</ci></apply><apply id="S3.E1.m1.1.1.1.1.1.1.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.1.1.3.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3">subscript</csymbol><apply id="S3.E1.m1.1.1.1.1.1.1.3.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.1.1.1.1.3.2.1.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3">superscript</csymbol><ci id="S3.E1.m1.1.1.1.1.1.1.3.2.2.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3.2.2">𝑥</ci><ci id="S3.E1.m1.1.1.1.1.1.1.3.2.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3.2.3">𝑖</ci></apply><ci id="S3.E1.m1.1.1.1.1.1.1.3.3.cmml" xref="S3.E1.m1.1.1.1.1.1.1.3.3">𝑡</ci></apply></apply></apply><apply id="S3.E1.m1.2.2.2.cmml" xref="S3.E1.m1.2.2.2"><apply id="S3.E1.m1.2.2.2.2.cmml" xref="S3.E1.m1.2.2.2.2"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.2.2.1.cmml" xref="S3.E1.m1.2.2.2.2">subscript</csymbol><apply id="S3.E1.m1.2.2.2.2.2.cmml" xref="S3.E1.m1.2.2.2.2"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.2.2.2.1.cmml" xref="S3.E1.m1.2.2.2.2">superscript</csymbol><csymbol cd="latexml" id="S3.E1.m1.2.2.2.2.2.2.cmml" xref="S3.E1.m1.2.2.2.2.2.2">product</csymbol><ci id="S3.E1.m1.2.2.2.2.2.3.cmml" xref="S3.E1.m1.2.2.2.2.2.3">𝑀</ci></apply><apply id="S3.E1.m1.2.2.2.2.3.cmml" xref="S3.E1.m1.2.2.2.2.3"><eq id="S3.E1.m1.2.2.2.2.3.1.cmml" xref="S3.E1.m1.2.2.2.2.3.1"></eq><ci id="S3.E1.m1.2.2.2.2.3.2.cmml" xref="S3.E1.m1.2.2.2.2.3.2">𝑗</ci><cn type="integer" id="S3.E1.m1.2.2.2.2.3.3.cmml" xref="S3.E1.m1.2.2.2.2.3.3">1</cn></apply></apply><apply id="S3.E1.m1.2.2.2.1.cmml" xref="S3.E1.m1.2.2.2.1"><times id="S3.E1.m1.2.2.2.1.2.cmml" xref="S3.E1.m1.2.2.2.1.2"></times><ci id="S3.E1.m1.2.2.2.1.3.cmml" xref="S3.E1.m1.2.2.2.1.3">𝑝</ci><apply id="S3.E1.m1.2.2.2.1.1.1.1.cmml" xref="S3.E1.m1.2.2.2.1.1.1"><csymbol cd="latexml" id="S3.E1.m1.2.2.2.1.1.1.1.1.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.1">conditional</csymbol><apply id="S3.E1.m1.2.2.2.1.1.1.1.2.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.2.1.1.1.1.2.1.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.2">subscript</csymbol><apply id="S3.E1.m1.2.2.2.1.1.1.1.2.2.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.2.1.1.1.1.2.2.1.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.2">superscript</csymbol><ci id="S3.E1.m1.2.2.2.1.1.1.1.2.2.2.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.2.2.2">𝑧</ci><ci id="S3.E1.m1.2.2.2.1.1.1.1.2.2.3.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.2.2.3">𝑗</ci></apply><ci id="S3.E1.m1.2.2.2.1.1.1.1.2.3.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.2.3">𝑡</ci></apply><apply id="S3.E1.m1.2.2.2.1.1.1.1.3.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.2.1.1.1.1.3.1.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.3">subscript</csymbol><apply id="S3.E1.m1.2.2.2.1.1.1.1.3.2.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E1.m1.2.2.2.1.1.1.1.3.2.1.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.3">superscript</csymbol><ci id="S3.E1.m1.2.2.2.1.1.1.1.3.2.2.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.3.2.2">𝑥</ci><ci id="S3.E1.m1.2.2.2.1.1.1.1.3.2.3.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.3.2.3">𝑖</ci></apply><ci id="S3.E1.m1.2.2.2.1.1.1.1.3.3.cmml" xref="S3.E1.m1.2.2.2.1.1.1.1.3.3">𝑡</ci></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.2c">p(z_{t}|x^{i}_{t})=\prod^{M}_{j=1}p(z^{j}_{t}|x^{i}_{t})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.p3.1" class="ltx_p">with <math id="S3.SS3.p3.1.m1.1" class="ltx_Math" alttext="M=8" display="inline"><semantics id="S3.SS3.p3.1.m1.1a"><mrow id="S3.SS3.p3.1.m1.1.1" xref="S3.SS3.p3.1.m1.1.1.cmml"><mi id="S3.SS3.p3.1.m1.1.1.2" xref="S3.SS3.p3.1.m1.1.1.2.cmml">M</mi><mo id="S3.SS3.p3.1.m1.1.1.1" xref="S3.SS3.p3.1.m1.1.1.1.cmml">=</mo><mn id="S3.SS3.p3.1.m1.1.1.3" xref="S3.SS3.p3.1.m1.1.1.3.cmml">8</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p3.1.m1.1b"><apply id="S3.SS3.p3.1.m1.1.1.cmml" xref="S3.SS3.p3.1.m1.1.1"><eq id="S3.SS3.p3.1.m1.1.1.1.cmml" xref="S3.SS3.p3.1.m1.1.1.1"></eq><ci id="S3.SS3.p3.1.m1.1.1.2.cmml" xref="S3.SS3.p3.1.m1.1.1.2">𝑀</ci><cn type="integer" id="S3.SS3.p3.1.m1.1.1.3.cmml" xref="S3.SS3.p3.1.m1.1.1.3">8</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p3.1.m1.1c">M=8</annotation></semantics></math> due to the robot having two fingers, each with four sensing modules (see Fig. <a href="#S3.F3" title="Figure 3 ‣ III-B Compliant Fingertips with Embedded Proximity Sensors ‣ III Proximity Sensing for In-Hand Manipulation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>). The individual observation probabilities are a weighted mixture of a Gaussian distribution representing the expected distance measurement with noise and a uniform distribution representing the possibility of a sensor glitch, communication error, unexpected detection, or other random effects:</p>
+</div>
+<div id="S3.SS3.p4" class="ltx_para">
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E2.m1.5" class="ltx_Math" alttext="p(z^{j}_{t}|x^{i}_{t})=\eta\cdot\left(w_{1}\cdot\mathcal{N}(z^{j*}_{t},\,\sigma^{2})+w_{2}\cdot\mathcal{U}(0,z_{max})\right)" display="block"><semantics id="S3.E2.m1.5a"><mrow id="S3.E2.m1.5.5" xref="S3.E2.m1.5.5.cmml"><mrow id="S3.E2.m1.4.4.1" xref="S3.E2.m1.4.4.1.cmml"><mi id="S3.E2.m1.4.4.1.3" xref="S3.E2.m1.4.4.1.3.cmml">p</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.4.4.1.2" xref="S3.E2.m1.4.4.1.2.cmml">​</mo><mrow id="S3.E2.m1.4.4.1.1.1" xref="S3.E2.m1.4.4.1.1.1.1.cmml"><mo stretchy="false" id="S3.E2.m1.4.4.1.1.1.2" xref="S3.E2.m1.4.4.1.1.1.1.cmml">(</mo><mrow id="S3.E2.m1.4.4.1.1.1.1" xref="S3.E2.m1.4.4.1.1.1.1.cmml"><msubsup id="S3.E2.m1.4.4.1.1.1.1.2" xref="S3.E2.m1.4.4.1.1.1.1.2.cmml"><mi id="S3.E2.m1.4.4.1.1.1.1.2.2.2" xref="S3.E2.m1.4.4.1.1.1.1.2.2.2.cmml">z</mi><mi id="S3.E2.m1.4.4.1.1.1.1.2.3" xref="S3.E2.m1.4.4.1.1.1.1.2.3.cmml">t</mi><mi id="S3.E2.m1.4.4.1.1.1.1.2.2.3" xref="S3.E2.m1.4.4.1.1.1.1.2.2.3.cmml">j</mi></msubsup><mo fence="false" id="S3.E2.m1.4.4.1.1.1.1.1" xref="S3.E2.m1.4.4.1.1.1.1.1.cmml">|</mo><msubsup id="S3.E2.m1.4.4.1.1.1.1.3" xref="S3.E2.m1.4.4.1.1.1.1.3.cmml"><mi id="S3.E2.m1.4.4.1.1.1.1.3.2.2" xref="S3.E2.m1.4.4.1.1.1.1.3.2.2.cmml">x</mi><mi id="S3.E2.m1.4.4.1.1.1.1.3.3" xref="S3.E2.m1.4.4.1.1.1.1.3.3.cmml">t</mi><mi id="S3.E2.m1.4.4.1.1.1.1.3.2.3" xref="S3.E2.m1.4.4.1.1.1.1.3.2.3.cmml">i</mi></msubsup></mrow><mo stretchy="false" id="S3.E2.m1.4.4.1.1.1.3" xref="S3.E2.m1.4.4.1.1.1.1.cmml">)</mo></mrow></mrow><mo id="S3.E2.m1.5.5.3" xref="S3.E2.m1.5.5.3.cmml">=</mo><mrow id="S3.E2.m1.5.5.2" xref="S3.E2.m1.5.5.2.cmml"><mi id="S3.E2.m1.5.5.2.3" xref="S3.E2.m1.5.5.2.3.cmml">η</mi><mo lspace="0.222em" rspace="0.222em" id="S3.E2.m1.5.5.2.2" xref="S3.E2.m1.5.5.2.2.cmml">⋅</mo><mrow id="S3.E2.m1.5.5.2.1.1" xref="S3.E2.m1.5.5.2.1.1.1.cmml"><mo id="S3.E2.m1.5.5.2.1.1.2" xref="S3.E2.m1.5.5.2.1.1.1.cmml">(</mo><mrow id="S3.E2.m1.5.5.2.1.1.1" xref="S3.E2.m1.5.5.2.1.1.1.cmml"><mrow id="S3.E2.m1.5.5.2.1.1.1.2" xref="S3.E2.m1.5.5.2.1.1.1.2.cmml"><mrow id="S3.E2.m1.5.5.2.1.1.1.2.4" xref="S3.E2.m1.5.5.2.1.1.1.2.4.cmml"><msub id="S3.E2.m1.5.5.2.1.1.1.2.4.2" xref="S3.E2.m1.5.5.2.1.1.1.2.4.2.cmml"><mi id="S3.E2.m1.5.5.2.1.1.1.2.4.2.2" xref="S3.E2.m1.5.5.2.1.1.1.2.4.2.2.cmml">w</mi><mn id="S3.E2.m1.5.5.2.1.1.1.2.4.2.3" xref="S3.E2.m1.5.5.2.1.1.1.2.4.2.3.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E2.m1.5.5.2.1.1.1.2.4.1" xref="S3.E2.m1.5.5.2.1.1.1.2.4.1.cmml">⋅</mo><mi class="ltx_font_mathcaligraphic" id="S3.E2.m1.5.5.2.1.1.1.2.4.3" xref="S3.E2.m1.5.5.2.1.1.1.2.4.3.cmml">𝒩</mi></mrow><mo lspace="0em" rspace="0em" id="S3.E2.m1.5.5.2.1.1.1.2.3" xref="S3.E2.m1.5.5.2.1.1.1.2.3.cmml">​</mo><mrow id="S3.E2.m1.5.5.2.1.1.1.2.2.2" xref="S3.E2.m1.5.5.2.1.1.1.2.2.3.cmml"><mo stretchy="false" id="S3.E2.m1.5.5.2.1.1.1.2.2.2.3" xref="S3.E2.m1.5.5.2.1.1.1.2.2.3.cmml">(</mo><msubsup id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.cmml"><mi id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.2.2" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.2.2.cmml">z</mi><mi id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.3" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.3.cmml">t</mi><mrow id="S3.E2.m1.2.2.2.4" xref="S3.E2.m1.2.2.2.3.cmml"><mi id="S3.E2.m1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.cmml">j</mi><mo lspace="0.222em" id="S3.E2.m1.2.2.2.4.1" xref="S3.E2.m1.2.2.2.3.cmml">⁣</mo><mo id="S3.E2.m1.2.2.2.2" xref="S3.E2.m1.2.2.2.2.cmml">∗</mo></mrow></msubsup><mo rspace="0.337em" id="S3.E2.m1.5.5.2.1.1.1.2.2.2.4" xref="S3.E2.m1.5.5.2.1.1.1.2.2.3.cmml">,</mo><msup id="S3.E2.m1.5.5.2.1.1.1.2.2.2.2" xref="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.cmml"><mi id="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.2" xref="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.2.cmml">σ</mi><mn id="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.3" xref="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.3.cmml">2</mn></msup><mo stretchy="false" id="S3.E2.m1.5.5.2.1.1.1.2.2.2.5" xref="S3.E2.m1.5.5.2.1.1.1.2.2.3.cmml">)</mo></mrow></mrow><mo id="S3.E2.m1.5.5.2.1.1.1.4" xref="S3.E2.m1.5.5.2.1.1.1.4.cmml">+</mo><mrow id="S3.E2.m1.5.5.2.1.1.1.3" xref="S3.E2.m1.5.5.2.1.1.1.3.cmml"><mrow id="S3.E2.m1.5.5.2.1.1.1.3.3" xref="S3.E2.m1.5.5.2.1.1.1.3.3.cmml"><msub id="S3.E2.m1.5.5.2.1.1.1.3.3.2" xref="S3.E2.m1.5.5.2.1.1.1.3.3.2.cmml"><mi id="S3.E2.m1.5.5.2.1.1.1.3.3.2.2" xref="S3.E2.m1.5.5.2.1.1.1.3.3.2.2.cmml">w</mi><mn id="S3.E2.m1.5.5.2.1.1.1.3.3.2.3" xref="S3.E2.m1.5.5.2.1.1.1.3.3.2.3.cmml">2</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E2.m1.5.5.2.1.1.1.3.3.1" xref="S3.E2.m1.5.5.2.1.1.1.3.3.1.cmml">⋅</mo><mi class="ltx_font_mathcaligraphic" id="S3.E2.m1.5.5.2.1.1.1.3.3.3" xref="S3.E2.m1.5.5.2.1.1.1.3.3.3.cmml">𝒰</mi></mrow><mo lspace="0em" rspace="0em" id="S3.E2.m1.5.5.2.1.1.1.3.2" xref="S3.E2.m1.5.5.2.1.1.1.3.2.cmml">​</mo><mrow id="S3.E2.m1.5.5.2.1.1.1.3.1.1" xref="S3.E2.m1.5.5.2.1.1.1.3.1.2.cmml"><mo stretchy="false" id="S3.E2.m1.5.5.2.1.1.1.3.1.1.2" xref="S3.E2.m1.5.5.2.1.1.1.3.1.2.cmml">(</mo><mn id="S3.E2.m1.3.3" xref="S3.E2.m1.3.3.cmml">0</mn><mo id="S3.E2.m1.5.5.2.1.1.1.3.1.1.3" xref="S3.E2.m1.5.5.2.1.1.1.3.1.2.cmml">,</mo><msub id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.cmml"><mi id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.2" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.2.cmml">z</mi><mrow id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.cmml"><mi id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.2" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.2.cmml">m</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.1" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.1.cmml">​</mo><mi id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.3" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.1a" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.1.cmml">​</mo><mi id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.4" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.4.cmml">x</mi></mrow></msub><mo stretchy="false" id="S3.E2.m1.5.5.2.1.1.1.3.1.1.4" xref="S3.E2.m1.5.5.2.1.1.1.3.1.2.cmml">)</mo></mrow></mrow></mrow><mo id="S3.E2.m1.5.5.2.1.1.3" xref="S3.E2.m1.5.5.2.1.1.1.cmml">)</mo></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E2.m1.5b"><apply id="S3.E2.m1.5.5.cmml" xref="S3.E2.m1.5.5"><eq id="S3.E2.m1.5.5.3.cmml" xref="S3.E2.m1.5.5.3"></eq><apply id="S3.E2.m1.4.4.1.cmml" xref="S3.E2.m1.4.4.1"><times id="S3.E2.m1.4.4.1.2.cmml" xref="S3.E2.m1.4.4.1.2"></times><ci id="S3.E2.m1.4.4.1.3.cmml" xref="S3.E2.m1.4.4.1.3">𝑝</ci><apply id="S3.E2.m1.4.4.1.1.1.1.cmml" xref="S3.E2.m1.4.4.1.1.1"><csymbol cd="latexml" id="S3.E2.m1.4.4.1.1.1.1.1.cmml" xref="S3.E2.m1.4.4.1.1.1.1.1">conditional</csymbol><apply id="S3.E2.m1.4.4.1.1.1.1.2.cmml" xref="S3.E2.m1.4.4.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.4.4.1.1.1.1.2.1.cmml" xref="S3.E2.m1.4.4.1.1.1.1.2">subscript</csymbol><apply id="S3.E2.m1.4.4.1.1.1.1.2.2.cmml" xref="S3.E2.m1.4.4.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.4.4.1.1.1.1.2.2.1.cmml" xref="S3.E2.m1.4.4.1.1.1.1.2">superscript</csymbol><ci id="S3.E2.m1.4.4.1.1.1.1.2.2.2.cmml" xref="S3.E2.m1.4.4.1.1.1.1.2.2.2">𝑧</ci><ci id="S3.E2.m1.4.4.1.1.1.1.2.2.3.cmml" xref="S3.E2.m1.4.4.1.1.1.1.2.2.3">𝑗</ci></apply><ci id="S3.E2.m1.4.4.1.1.1.1.2.3.cmml" xref="S3.E2.m1.4.4.1.1.1.1.2.3">𝑡</ci></apply><apply id="S3.E2.m1.4.4.1.1.1.1.3.cmml" xref="S3.E2.m1.4.4.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.4.4.1.1.1.1.3.1.cmml" xref="S3.E2.m1.4.4.1.1.1.1.3">subscript</csymbol><apply id="S3.E2.m1.4.4.1.1.1.1.3.2.cmml" xref="S3.E2.m1.4.4.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.4.4.1.1.1.1.3.2.1.cmml" xref="S3.E2.m1.4.4.1.1.1.1.3">superscript</csymbol><ci id="S3.E2.m1.4.4.1.1.1.1.3.2.2.cmml" xref="S3.E2.m1.4.4.1.1.1.1.3.2.2">𝑥</ci><ci id="S3.E2.m1.4.4.1.1.1.1.3.2.3.cmml" xref="S3.E2.m1.4.4.1.1.1.1.3.2.3">𝑖</ci></apply><ci id="S3.E2.m1.4.4.1.1.1.1.3.3.cmml" xref="S3.E2.m1.4.4.1.1.1.1.3.3">𝑡</ci></apply></apply></apply><apply id="S3.E2.m1.5.5.2.cmml" xref="S3.E2.m1.5.5.2"><ci id="S3.E2.m1.5.5.2.2.cmml" xref="S3.E2.m1.5.5.2.2">⋅</ci><ci id="S3.E2.m1.5.5.2.3.cmml" xref="S3.E2.m1.5.5.2.3">𝜂</ci><apply id="S3.E2.m1.5.5.2.1.1.1.cmml" xref="S3.E2.m1.5.5.2.1.1"><plus id="S3.E2.m1.5.5.2.1.1.1.4.cmml" xref="S3.E2.m1.5.5.2.1.1.1.4"></plus><apply id="S3.E2.m1.5.5.2.1.1.1.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2"><times id="S3.E2.m1.5.5.2.1.1.1.2.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.3"></times><apply id="S3.E2.m1.5.5.2.1.1.1.2.4.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.4"><ci id="S3.E2.m1.5.5.2.1.1.1.2.4.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.4.1">⋅</ci><apply id="S3.E2.m1.5.5.2.1.1.1.2.4.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.4.2"><csymbol cd="ambiguous" id="S3.E2.m1.5.5.2.1.1.1.2.4.2.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.4.2">subscript</csymbol><ci id="S3.E2.m1.5.5.2.1.1.1.2.4.2.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.4.2.2">𝑤</ci><cn type="integer" id="S3.E2.m1.5.5.2.1.1.1.2.4.2.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.4.2.3">1</cn></apply><ci id="S3.E2.m1.5.5.2.1.1.1.2.4.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.4.3">𝒩</ci></apply><interval closure="open" id="S3.E2.m1.5.5.2.1.1.1.2.2.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.2.2"><apply id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1">subscript</csymbol><apply id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1">superscript</csymbol><ci id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.2.2">𝑧</ci><list id="S3.E2.m1.2.2.2.3.cmml" xref="S3.E2.m1.2.2.2.4"><ci id="S3.E2.m1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1">𝑗</ci><times id="S3.E2.m1.2.2.2.2.cmml" xref="S3.E2.m1.2.2.2.2"></times></list></apply><ci id="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.1.1.1.1.3">𝑡</ci></apply><apply id="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.2.2.2"><csymbol cd="ambiguous" id="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.2.2.2">superscript</csymbol><ci id="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.2">𝜎</ci><cn type="integer" id="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.2.2.2.2.3">2</cn></apply></interval></apply><apply id="S3.E2.m1.5.5.2.1.1.1.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3"><times id="S3.E2.m1.5.5.2.1.1.1.3.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.2"></times><apply id="S3.E2.m1.5.5.2.1.1.1.3.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.3"><ci id="S3.E2.m1.5.5.2.1.1.1.3.3.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.3.1">⋅</ci><apply id="S3.E2.m1.5.5.2.1.1.1.3.3.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.3.2"><csymbol cd="ambiguous" id="S3.E2.m1.5.5.2.1.1.1.3.3.2.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.3.2">subscript</csymbol><ci id="S3.E2.m1.5.5.2.1.1.1.3.3.2.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.3.2.2">𝑤</ci><cn type="integer" id="S3.E2.m1.5.5.2.1.1.1.3.3.2.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.3.2.3">2</cn></apply><ci id="S3.E2.m1.5.5.2.1.1.1.3.3.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.3.3">𝒰</ci></apply><interval closure="open" id="S3.E2.m1.5.5.2.1.1.1.3.1.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1"><cn type="integer" id="S3.E2.m1.3.3.cmml" xref="S3.E2.m1.3.3">0</cn><apply id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1"><csymbol cd="ambiguous" id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1">subscript</csymbol><ci id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.2">𝑧</ci><apply id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3"><times id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.1.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.1"></times><ci id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.2.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.2">𝑚</ci><ci id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.3.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.3">𝑎</ci><ci id="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.4.cmml" xref="S3.E2.m1.5.5.2.1.1.1.3.1.1.1.3.4">𝑥</ci></apply></apply></interval></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m1.5c">p(z^{j}_{t}|x^{i}_{t})=\eta\cdot\left(w_{1}\cdot\mathcal{N}(z^{j*}_{t},\,\sigma^{2})+w_{2}\cdot\mathcal{U}(0,z_{max})\right)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.p4.6" class="ltx_p">where <math id="S3.SS3.p4.1.m1.2" class="ltx_Math" alttext="z^{j*}_{t}" display="inline"><semantics id="S3.SS3.p4.1.m1.2a"><msubsup id="S3.SS3.p4.1.m1.2.3" xref="S3.SS3.p4.1.m1.2.3.cmml"><mi id="S3.SS3.p4.1.m1.2.3.2.2" xref="S3.SS3.p4.1.m1.2.3.2.2.cmml">z</mi><mi id="S3.SS3.p4.1.m1.2.3.3" xref="S3.SS3.p4.1.m1.2.3.3.cmml">t</mi><mrow id="S3.SS3.p4.1.m1.2.2.2.4" xref="S3.SS3.p4.1.m1.2.2.2.3.cmml"><mi id="S3.SS3.p4.1.m1.1.1.1.1" xref="S3.SS3.p4.1.m1.1.1.1.1.cmml">j</mi><mo lspace="0.222em" id="S3.SS3.p4.1.m1.2.2.2.4.1" xref="S3.SS3.p4.1.m1.2.2.2.3.cmml">⁣</mo><mo id="S3.SS3.p4.1.m1.2.2.2.2" xref="S3.SS3.p4.1.m1.2.2.2.2.cmml">∗</mo></mrow></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.1.m1.2b"><apply id="S3.SS3.p4.1.m1.2.3.cmml" xref="S3.SS3.p4.1.m1.2.3"><csymbol cd="ambiguous" id="S3.SS3.p4.1.m1.2.3.1.cmml" xref="S3.SS3.p4.1.m1.2.3">subscript</csymbol><apply id="S3.SS3.p4.1.m1.2.3.2.cmml" xref="S3.SS3.p4.1.m1.2.3"><csymbol cd="ambiguous" id="S3.SS3.p4.1.m1.2.3.2.1.cmml" xref="S3.SS3.p4.1.m1.2.3">superscript</csymbol><ci id="S3.SS3.p4.1.m1.2.3.2.2.cmml" xref="S3.SS3.p4.1.m1.2.3.2.2">𝑧</ci><list id="S3.SS3.p4.1.m1.2.2.2.3.cmml" xref="S3.SS3.p4.1.m1.2.2.2.4"><ci id="S3.SS3.p4.1.m1.1.1.1.1.cmml" xref="S3.SS3.p4.1.m1.1.1.1.1">𝑗</ci><times id="S3.SS3.p4.1.m1.2.2.2.2.cmml" xref="S3.SS3.p4.1.m1.2.2.2.2"></times></list></apply><ci id="S3.SS3.p4.1.m1.2.3.3.cmml" xref="S3.SS3.p4.1.m1.2.3.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.1.m1.2c">z^{j*}_{t}</annotation></semantics></math> is the expected measurement of sensor <math id="S3.SS3.p4.2.m2.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S3.SS3.p4.2.m2.1a"><mi id="S3.SS3.p4.2.m2.1.1" xref="S3.SS3.p4.2.m2.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.2.m2.1b"><ci id="S3.SS3.p4.2.m2.1.1.cmml" xref="S3.SS3.p4.2.m2.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.2.m2.1c">j</annotation></semantics></math> given the current encoder values, robot forward kinematics, and particle hypothesis <math id="S3.SS3.p4.3.m3.1" class="ltx_Math" alttext="x^{i}_{t}" display="inline"><semantics id="S3.SS3.p4.3.m3.1a"><msubsup id="S3.SS3.p4.3.m3.1.1" xref="S3.SS3.p4.3.m3.1.1.cmml"><mi id="S3.SS3.p4.3.m3.1.1.2.2" xref="S3.SS3.p4.3.m3.1.1.2.2.cmml">x</mi><mi id="S3.SS3.p4.3.m3.1.1.3" xref="S3.SS3.p4.3.m3.1.1.3.cmml">t</mi><mi id="S3.SS3.p4.3.m3.1.1.2.3" xref="S3.SS3.p4.3.m3.1.1.2.3.cmml">i</mi></msubsup><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.3.m3.1b"><apply id="S3.SS3.p4.3.m3.1.1.cmml" xref="S3.SS3.p4.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.p4.3.m3.1.1.1.cmml" xref="S3.SS3.p4.3.m3.1.1">subscript</csymbol><apply id="S3.SS3.p4.3.m3.1.1.2.cmml" xref="S3.SS3.p4.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.p4.3.m3.1.1.2.1.cmml" xref="S3.SS3.p4.3.m3.1.1">superscript</csymbol><ci id="S3.SS3.p4.3.m3.1.1.2.2.cmml" xref="S3.SS3.p4.3.m3.1.1.2.2">𝑥</ci><ci id="S3.SS3.p4.3.m3.1.1.2.3.cmml" xref="S3.SS3.p4.3.m3.1.1.2.3">𝑖</ci></apply><ci id="S3.SS3.p4.3.m3.1.1.3.cmml" xref="S3.SS3.p4.3.m3.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.3.m3.1c">x^{i}_{t}</annotation></semantics></math>. Here, <math id="S3.SS3.p4.4.m4.1" class="ltx_Math" alttext="w_{1}" display="inline"><semantics id="S3.SS3.p4.4.m4.1a"><msub id="S3.SS3.p4.4.m4.1.1" xref="S3.SS3.p4.4.m4.1.1.cmml"><mi id="S3.SS3.p4.4.m4.1.1.2" xref="S3.SS3.p4.4.m4.1.1.2.cmml">w</mi><mn id="S3.SS3.p4.4.m4.1.1.3" xref="S3.SS3.p4.4.m4.1.1.3.cmml">1</mn></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.4.m4.1b"><apply id="S3.SS3.p4.4.m4.1.1.cmml" xref="S3.SS3.p4.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.p4.4.m4.1.1.1.cmml" xref="S3.SS3.p4.4.m4.1.1">subscript</csymbol><ci id="S3.SS3.p4.4.m4.1.1.2.cmml" xref="S3.SS3.p4.4.m4.1.1.2">𝑤</ci><cn type="integer" id="S3.SS3.p4.4.m4.1.1.3.cmml" xref="S3.SS3.p4.4.m4.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.4.m4.1c">w_{1}</annotation></semantics></math> and <math id="S3.SS3.p4.5.m5.1" class="ltx_Math" alttext="w_{2}" display="inline"><semantics id="S3.SS3.p4.5.m5.1a"><msub id="S3.SS3.p4.5.m5.1.1" xref="S3.SS3.p4.5.m5.1.1.cmml"><mi id="S3.SS3.p4.5.m5.1.1.2" xref="S3.SS3.p4.5.m5.1.1.2.cmml">w</mi><mn id="S3.SS3.p4.5.m5.1.1.3" xref="S3.SS3.p4.5.m5.1.1.3.cmml">2</mn></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.5.m5.1b"><apply id="S3.SS3.p4.5.m5.1.1.cmml" xref="S3.SS3.p4.5.m5.1.1"><csymbol cd="ambiguous" id="S3.SS3.p4.5.m5.1.1.1.cmml" xref="S3.SS3.p4.5.m5.1.1">subscript</csymbol><ci id="S3.SS3.p4.5.m5.1.1.2.cmml" xref="S3.SS3.p4.5.m5.1.1.2">𝑤</ci><cn type="integer" id="S3.SS3.p4.5.m5.1.1.3.cmml" xref="S3.SS3.p4.5.m5.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.5.m5.1c">w_{2}</annotation></semantics></math> are mixing weights chosen according to the importance of the corresponding term, and <math id="S3.SS3.p4.6.m6.1" class="ltx_Math" alttext="\eta" display="inline"><semantics id="S3.SS3.p4.6.m6.1a"><mi id="S3.SS3.p4.6.m6.1.1" xref="S3.SS3.p4.6.m6.1.1.cmml">η</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.6.m6.1b"><ci id="S3.SS3.p4.6.m6.1.1.cmml" xref="S3.SS3.p4.6.m6.1.1">𝜂</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.6.m6.1c">\eta</annotation></semantics></math> serves as a normalizer to ensure that the sum over the distribution is one.</p>
+</div>
+<div id="S3.SS3.p5" class="ltx_para">
+<p id="S3.SS3.p5.1" class="ltx_p">Each time the robot executes an action, our particle filter’s motion model propagates its particles according to the expected change in position plus zero-mean gaussian noise. The expected change in position is computed by executing the action in a physics simulator for robotics. This simulator is a key component of our model predictive control policy, and is discussed in further detail in the following subsection.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2204.02371/assets/figs/both_traj.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="284" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S3.F4.2.1.1" class="ltx_text" style="font-size:90%;">Figure 4</span>: </span><span id="S3.F4.3.2" class="ltx_text" style="font-size:90%;"> Representative in-hand manipulation trials using tactile sensor and proximity sensor based pose estimation. The blue cylinder represents the object pose estimated by the particle filter (particles shown in orange). The green cylinder (heavily overlapped by the blue cylinder, and most visible in images to the upper right) represents the ground-truth pose. The red cylinder represents the desired goal pose of the object. Note that the visual fiducials are only used to estimate the ground-truth pose; they do not affect the sensor based pose estimation nor the executed control policy. The left-most snapshots show the initial pose for both trials, and the snapshots second from the left show when the cyan fingertips initially make contact with the object. Subsequent snapshots show the progression of the manipulations. Top: A tactile sensor manipulation trial. In the upper images, black spheres along the fingertip surface illustrate detected contacts. Here, pose estimation error pushes the system into an area of the state space in which the controller can no longer make progress towards the goal. Bottom: A proximity sensor manipulation trial. Red lines emanating from the fingertips illustrate proximity sensor measurements.
+</span></figcaption>
+</figure>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS4.5.1.1" class="ltx_text">III-D</span> </span><span id="S3.SS4.6.2" class="ltx_text ltx_font_italic">Model Predictive Control for In-Hand Manipulation</span>
+</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.1" class="ltx_p">We use model predictive control (MPC) to generate actions for in-hand manipulation. Starting with the current system state, MPC simulates a large number of action sequences in order to find trajectories that will move the system towards the goal state over the trajectories’ time horizon. By repeating this process at each timestep, MPC provides adaptive control that is robust to unmodeled dynamics.</p>
+</div>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.6" class="ltx_p">Given the current state <math id="S3.SS4.p2.1.m1.1" class="ltx_Math" alttext="s_{t}" display="inline"><semantics id="S3.SS4.p2.1.m1.1a"><msub id="S3.SS4.p2.1.m1.1.1" xref="S3.SS4.p2.1.m1.1.1.cmml"><mi id="S3.SS4.p2.1.m1.1.1.2" xref="S3.SS4.p2.1.m1.1.1.2.cmml">s</mi><mi id="S3.SS4.p2.1.m1.1.1.3" xref="S3.SS4.p2.1.m1.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.1.m1.1b"><apply id="S3.SS4.p2.1.m1.1.1.cmml" xref="S3.SS4.p2.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.1.m1.1.1.1.cmml" xref="S3.SS4.p2.1.m1.1.1">subscript</csymbol><ci id="S3.SS4.p2.1.m1.1.1.2.cmml" xref="S3.SS4.p2.1.m1.1.1.2">𝑠</ci><ci id="S3.SS4.p2.1.m1.1.1.3.cmml" xref="S3.SS4.p2.1.m1.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.1.m1.1c">s_{t}</annotation></semantics></math> of the robot-object system and the action <math id="S3.SS4.p2.2.m2.1" class="ltx_Math" alttext="a_{t}" display="inline"><semantics id="S3.SS4.p2.2.m2.1a"><msub id="S3.SS4.p2.2.m2.1.1" xref="S3.SS4.p2.2.m2.1.1.cmml"><mi id="S3.SS4.p2.2.m2.1.1.2" xref="S3.SS4.p2.2.m2.1.1.2.cmml">a</mi><mi id="S3.SS4.p2.2.m2.1.1.3" xref="S3.SS4.p2.2.m2.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.2.m2.1b"><apply id="S3.SS4.p2.2.m2.1.1.cmml" xref="S3.SS4.p2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.2.m2.1.1.1.cmml" xref="S3.SS4.p2.2.m2.1.1">subscript</csymbol><ci id="S3.SS4.p2.2.m2.1.1.2.cmml" xref="S3.SS4.p2.2.m2.1.1.2">𝑎</ci><ci id="S3.SS4.p2.2.m2.1.1.3.cmml" xref="S3.SS4.p2.2.m2.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.2.m2.1c">a_{t}</annotation></semantics></math> that the robot executes, our dynamics model predicts the resulting next state <math id="S3.SS4.p2.3.m3.1" class="ltx_Math" alttext="s_{t+1}" display="inline"><semantics id="S3.SS4.p2.3.m3.1a"><msub id="S3.SS4.p2.3.m3.1.1" xref="S3.SS4.p2.3.m3.1.1.cmml"><mi id="S3.SS4.p2.3.m3.1.1.2" xref="S3.SS4.p2.3.m3.1.1.2.cmml">s</mi><mrow id="S3.SS4.p2.3.m3.1.1.3" xref="S3.SS4.p2.3.m3.1.1.3.cmml"><mi id="S3.SS4.p2.3.m3.1.1.3.2" xref="S3.SS4.p2.3.m3.1.1.3.2.cmml">t</mi><mo id="S3.SS4.p2.3.m3.1.1.3.1" xref="S3.SS4.p2.3.m3.1.1.3.1.cmml">+</mo><mn id="S3.SS4.p2.3.m3.1.1.3.3" xref="S3.SS4.p2.3.m3.1.1.3.3.cmml">1</mn></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.3.m3.1b"><apply id="S3.SS4.p2.3.m3.1.1.cmml" xref="S3.SS4.p2.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.3.m3.1.1.1.cmml" xref="S3.SS4.p2.3.m3.1.1">subscript</csymbol><ci id="S3.SS4.p2.3.m3.1.1.2.cmml" xref="S3.SS4.p2.3.m3.1.1.2">𝑠</ci><apply id="S3.SS4.p2.3.m3.1.1.3.cmml" xref="S3.SS4.p2.3.m3.1.1.3"><plus id="S3.SS4.p2.3.m3.1.1.3.1.cmml" xref="S3.SS4.p2.3.m3.1.1.3.1"></plus><ci id="S3.SS4.p2.3.m3.1.1.3.2.cmml" xref="S3.SS4.p2.3.m3.1.1.3.2">𝑡</ci><cn type="integer" id="S3.SS4.p2.3.m3.1.1.3.3.cmml" xref="S3.SS4.p2.3.m3.1.1.3.3">1</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.3.m3.1c">s_{t+1}</annotation></semantics></math>. The state <math id="S3.SS4.p2.4.m4.1" class="ltx_Math" alttext="s_{t}" display="inline"><semantics id="S3.SS4.p2.4.m4.1a"><msub id="S3.SS4.p2.4.m4.1.1" xref="S3.SS4.p2.4.m4.1.1.cmml"><mi id="S3.SS4.p2.4.m4.1.1.2" xref="S3.SS4.p2.4.m4.1.1.2.cmml">s</mi><mi id="S3.SS4.p2.4.m4.1.1.3" xref="S3.SS4.p2.4.m4.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.4.m4.1b"><apply id="S3.SS4.p2.4.m4.1.1.cmml" xref="S3.SS4.p2.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.4.m4.1.1.1.cmml" xref="S3.SS4.p2.4.m4.1.1">subscript</csymbol><ci id="S3.SS4.p2.4.m4.1.1.2.cmml" xref="S3.SS4.p2.4.m4.1.1.2">𝑠</ci><ci id="S3.SS4.p2.4.m4.1.1.3.cmml" xref="S3.SS4.p2.4.m4.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.4.m4.1c">s_{t}</annotation></semantics></math> consists of the six joint positions and velocities, as well as the <math id="S3.SS4.p2.5.m5.1" class="ltx_Math" alttext="xy" display="inline"><semantics id="S3.SS4.p2.5.m5.1a"><mrow id="S3.SS4.p2.5.m5.1.1" xref="S3.SS4.p2.5.m5.1.1.cmml"><mi id="S3.SS4.p2.5.m5.1.1.2" xref="S3.SS4.p2.5.m5.1.1.2.cmml">x</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p2.5.m5.1.1.1" xref="S3.SS4.p2.5.m5.1.1.1.cmml">​</mo><mi id="S3.SS4.p2.5.m5.1.1.3" xref="S3.SS4.p2.5.m5.1.1.3.cmml">y</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.5.m5.1b"><apply id="S3.SS4.p2.5.m5.1.1.cmml" xref="S3.SS4.p2.5.m5.1.1"><times id="S3.SS4.p2.5.m5.1.1.1.cmml" xref="S3.SS4.p2.5.m5.1.1.1"></times><ci id="S3.SS4.p2.5.m5.1.1.2.cmml" xref="S3.SS4.p2.5.m5.1.1.2">𝑥</ci><ci id="S3.SS4.p2.5.m5.1.1.3.cmml" xref="S3.SS4.p2.5.m5.1.1.3">𝑦</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.5.m5.1c">xy</annotation></semantics></math> position and velocity of the manipulation object. The action <math id="S3.SS4.p2.6.m6.1" class="ltx_Math" alttext="a_{t}" display="inline"><semantics id="S3.SS4.p2.6.m6.1a"><msub id="S3.SS4.p2.6.m6.1.1" xref="S3.SS4.p2.6.m6.1.1.cmml"><mi id="S3.SS4.p2.6.m6.1.1.2" xref="S3.SS4.p2.6.m6.1.1.2.cmml">a</mi><mi id="S3.SS4.p2.6.m6.1.1.3" xref="S3.SS4.p2.6.m6.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.6.m6.1b"><apply id="S3.SS4.p2.6.m6.1.1.cmml" xref="S3.SS4.p2.6.m6.1.1"><csymbol cd="ambiguous" id="S3.SS4.p2.6.m6.1.1.1.cmml" xref="S3.SS4.p2.6.m6.1.1">subscript</csymbol><ci id="S3.SS4.p2.6.m6.1.1.2.cmml" xref="S3.SS4.p2.6.m6.1.1.2">𝑎</ci><ci id="S3.SS4.p2.6.m6.1.1.3.cmml" xref="S3.SS4.p2.6.m6.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.6.m6.1c">a_{t}</annotation></semantics></math> is composed of the commanded positions of the robot’s two motors, and the states of each of the six brakes (on or off). While in general any combination of brakes can be turned on, for this work we limit executed braking configurations to be those in which exactly one of the brakes in each finger is off. By reducing the number of possible braking configurations from 64 to 9, it is more tractable for the model predictive controller to explore the action space. We use NVIDIA’s Isaac Gym <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite>, a GPU based physics simulator, as a highly parallelizable dynamics model.</p>
+</div>
+<div id="S3.SS4.p3" class="ltx_para">
+<p id="S3.SS4.p3.1" class="ltx_p">Our in-hand manipulation controller is an adapted version of the model predictive path integral (MPPI) framework <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib41" title="" class="ltx_ref">41</a>, <a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite>. The standard MPPI controller generates a large number of action sequences, simulates those sequences to obtain corresponding trajectories and costs, and then outputs a cost-weighted average of those action sequences for execution on the real robot. However, this averaging does not make sense for a hybrid action space for which the discrete variables lack a Euclidean distance measure. Instead, we require each action sequence to maintain a consistent brake configuration throughout the corresponding simulated trajectory, and then compute cost-weighted averaged action sequences for each possible brake configuration. Initially, of the 9 outputted action sequences, we execute the first action of whichever sequence has the lowest cost. For subsequent time steps, we only choose an action sequence corresponding to a different brake configuration if it has a significantly lower cost (we use a constant threshold percentage <math id="S3.SS4.p3.1.m1.1" class="ltx_Math" alttext="\phi" display="inline"><semantics id="S3.SS4.p3.1.m1.1a"><mi id="S3.SS4.p3.1.m1.1.1" xref="S3.SS4.p3.1.m1.1.1.cmml">ϕ</mi><annotation-xml encoding="MathML-Content" id="S3.SS4.p3.1.m1.1b"><ci id="S3.SS4.p3.1.m1.1.1.cmml" xref="S3.SS4.p3.1.m1.1.1">italic-ϕ</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p3.1.m1.1c">\phi</annotation></semantics></math>) than the cost of the action sequence corresponding to the previous brake configuration. Otherwise, we execute the first action of the action sequence corresponding to the previous brake configuration.</p>
+</div>
+<div id="S3.SS4.p4" class="ltx_para">
+<p id="S3.SS4.p4.1" class="ltx_p">At each time step, our MPPI controller simulates many trajectories over a time horizon <math id="S3.SS4.p4.1.m1.1" class="ltx_Math" alttext="T" display="inline"><semantics id="S3.SS4.p4.1.m1.1a"><mi id="S3.SS4.p4.1.m1.1.1" xref="S3.SS4.p4.1.m1.1.1.cmml">T</mi><annotation-xml encoding="MathML-Content" id="S3.SS4.p4.1.m1.1b"><ci id="S3.SS4.p4.1.m1.1.1.cmml" xref="S3.SS4.p4.1.m1.1.1">𝑇</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p4.1.m1.1c">T</annotation></semantics></math>. It computes a cost for each trajectory that penalizes the fingers not making contact with the object and object distance from the goal:</p>
+</div>
+<div id="S3.SS4.p5" class="ltx_para">
+<table id="S3.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E3.m1.5" class="ltx_Math" alttext="J(s_{t},\dots,s_{t+\tau})=c_{1}\cdot\displaystyle\sum_{\tau^{\prime}=t}^{t+\tau}\mathcal{I}(s_{\tau^{\prime}})+c_{2}\cdot\lvert x_{goal}-x_{t+\tau}\rvert" display="block"><semantics id="S3.E3.m1.5a"><mrow id="S3.E3.m1.5.5" xref="S3.E3.m1.5.5.cmml"><mrow id="S3.E3.m1.3.3.2" xref="S3.E3.m1.3.3.2.cmml"><mi id="S3.E3.m1.3.3.2.4" xref="S3.E3.m1.3.3.2.4.cmml">J</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.3.3.2.3" xref="S3.E3.m1.3.3.2.3.cmml">​</mo><mrow id="S3.E3.m1.3.3.2.2.2" xref="S3.E3.m1.3.3.2.2.3.cmml"><mo stretchy="false" id="S3.E3.m1.3.3.2.2.2.3" xref="S3.E3.m1.3.3.2.2.3.cmml">(</mo><msub id="S3.E3.m1.2.2.1.1.1.1" xref="S3.E3.m1.2.2.1.1.1.1.cmml"><mi id="S3.E3.m1.2.2.1.1.1.1.2" xref="S3.E3.m1.2.2.1.1.1.1.2.cmml">s</mi><mi id="S3.E3.m1.2.2.1.1.1.1.3" xref="S3.E3.m1.2.2.1.1.1.1.3.cmml">t</mi></msub><mo id="S3.E3.m1.3.3.2.2.2.4" xref="S3.E3.m1.3.3.2.2.3.cmml">,</mo><mi mathvariant="normal" id="S3.E3.m1.1.1" xref="S3.E3.m1.1.1.cmml">…</mi><mo id="S3.E3.m1.3.3.2.2.2.5" xref="S3.E3.m1.3.3.2.2.3.cmml">,</mo><msub id="S3.E3.m1.3.3.2.2.2.2" xref="S3.E3.m1.3.3.2.2.2.2.cmml"><mi id="S3.E3.m1.3.3.2.2.2.2.2" xref="S3.E3.m1.3.3.2.2.2.2.2.cmml">s</mi><mrow id="S3.E3.m1.3.3.2.2.2.2.3" xref="S3.E3.m1.3.3.2.2.2.2.3.cmml"><mi id="S3.E3.m1.3.3.2.2.2.2.3.2" xref="S3.E3.m1.3.3.2.2.2.2.3.2.cmml">t</mi><mo id="S3.E3.m1.3.3.2.2.2.2.3.1" xref="S3.E3.m1.3.3.2.2.2.2.3.1.cmml">+</mo><mi id="S3.E3.m1.3.3.2.2.2.2.3.3" xref="S3.E3.m1.3.3.2.2.2.2.3.3.cmml">τ</mi></mrow></msub><mo stretchy="false" id="S3.E3.m1.3.3.2.2.2.6" xref="S3.E3.m1.3.3.2.2.3.cmml">)</mo></mrow></mrow><mo id="S3.E3.m1.5.5.5" xref="S3.E3.m1.5.5.5.cmml">=</mo><mrow id="S3.E3.m1.5.5.4" xref="S3.E3.m1.5.5.4.cmml"><mrow id="S3.E3.m1.4.4.3.1" xref="S3.E3.m1.4.4.3.1.cmml"><msub id="S3.E3.m1.4.4.3.1.3" xref="S3.E3.m1.4.4.3.1.3.cmml"><mi id="S3.E3.m1.4.4.3.1.3.2" xref="S3.E3.m1.4.4.3.1.3.2.cmml">c</mi><mn id="S3.E3.m1.4.4.3.1.3.3" xref="S3.E3.m1.4.4.3.1.3.3.cmml">1</mn></msub><mo lspace="0.222em" rspace="0.055em" id="S3.E3.m1.4.4.3.1.2" xref="S3.E3.m1.4.4.3.1.2.cmml">⋅</mo><mrow id="S3.E3.m1.4.4.3.1.1" xref="S3.E3.m1.4.4.3.1.1.cmml"><munderover id="S3.E3.m1.4.4.3.1.1.2" xref="S3.E3.m1.4.4.3.1.1.2.cmml"><mo movablelimits="false" id="S3.E3.m1.4.4.3.1.1.2.2.2" xref="S3.E3.m1.4.4.3.1.1.2.2.2.cmml">∑</mo><mrow id="S3.E3.m1.4.4.3.1.1.2.2.3" xref="S3.E3.m1.4.4.3.1.1.2.2.3.cmml"><msup id="S3.E3.m1.4.4.3.1.1.2.2.3.2" xref="S3.E3.m1.4.4.3.1.1.2.2.3.2.cmml"><mi id="S3.E3.m1.4.4.3.1.1.2.2.3.2.2" xref="S3.E3.m1.4.4.3.1.1.2.2.3.2.2.cmml">τ</mi><mo id="S3.E3.m1.4.4.3.1.1.2.2.3.2.3" xref="S3.E3.m1.4.4.3.1.1.2.2.3.2.3.cmml">′</mo></msup><mo id="S3.E3.m1.4.4.3.1.1.2.2.3.1" xref="S3.E3.m1.4.4.3.1.1.2.2.3.1.cmml">=</mo><mi id="S3.E3.m1.4.4.3.1.1.2.2.3.3" xref="S3.E3.m1.4.4.3.1.1.2.2.3.3.cmml">t</mi></mrow><mrow id="S3.E3.m1.4.4.3.1.1.2.3" xref="S3.E3.m1.4.4.3.1.1.2.3.cmml"><mi id="S3.E3.m1.4.4.3.1.1.2.3.2" xref="S3.E3.m1.4.4.3.1.1.2.3.2.cmml">t</mi><mo id="S3.E3.m1.4.4.3.1.1.2.3.1" xref="S3.E3.m1.4.4.3.1.1.2.3.1.cmml">+</mo><mi id="S3.E3.m1.4.4.3.1.1.2.3.3" xref="S3.E3.m1.4.4.3.1.1.2.3.3.cmml">τ</mi></mrow></munderover><mrow id="S3.E3.m1.4.4.3.1.1.1" xref="S3.E3.m1.4.4.3.1.1.1.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.E3.m1.4.4.3.1.1.1.3" xref="S3.E3.m1.4.4.3.1.1.1.3.cmml">ℐ</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.3.1.1.1.2" xref="S3.E3.m1.4.4.3.1.1.1.2.cmml">​</mo><mrow id="S3.E3.m1.4.4.3.1.1.1.1.1" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E3.m1.4.4.3.1.1.1.1.1.2" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.cmml">(</mo><msub id="S3.E3.m1.4.4.3.1.1.1.1.1.1" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.cmml"><mi id="S3.E3.m1.4.4.3.1.1.1.1.1.1.2" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.2.cmml">s</mi><msup id="S3.E3.m1.4.4.3.1.1.1.1.1.1.3" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.cmml"><mi id="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.2" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.2.cmml">τ</mi><mo id="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.3" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.3.cmml">′</mo></msup></msub><mo stretchy="false" id="S3.E3.m1.4.4.3.1.1.1.1.1.3" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow></mrow><mo id="S3.E3.m1.5.5.4.3" xref="S3.E3.m1.5.5.4.3.cmml">+</mo><mrow id="S3.E3.m1.5.5.4.2" xref="S3.E3.m1.5.5.4.2.cmml"><msub id="S3.E3.m1.5.5.4.2.3" xref="S3.E3.m1.5.5.4.2.3.cmml"><mi id="S3.E3.m1.5.5.4.2.3.2" xref="S3.E3.m1.5.5.4.2.3.2.cmml">c</mi><mn id="S3.E3.m1.5.5.4.2.3.3" xref="S3.E3.m1.5.5.4.2.3.3.cmml">2</mn></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E3.m1.5.5.4.2.2" xref="S3.E3.m1.5.5.4.2.2.cmml">⋅</mo><mrow id="S3.E3.m1.5.5.4.2.1.1" xref="S3.E3.m1.5.5.4.2.1.2.cmml"><mo stretchy="false" id="S3.E3.m1.5.5.4.2.1.1.2" xref="S3.E3.m1.5.5.4.2.1.2.1.cmml">|</mo><mrow id="S3.E3.m1.5.5.4.2.1.1.1" xref="S3.E3.m1.5.5.4.2.1.1.1.cmml"><msub id="S3.E3.m1.5.5.4.2.1.1.1.2" xref="S3.E3.m1.5.5.4.2.1.1.1.2.cmml"><mi id="S3.E3.m1.5.5.4.2.1.1.1.2.2" xref="S3.E3.m1.5.5.4.2.1.1.1.2.2.cmml">x</mi><mrow id="S3.E3.m1.5.5.4.2.1.1.1.2.3" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.cmml"><mi id="S3.E3.m1.5.5.4.2.1.1.1.2.3.2" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.2.cmml">g</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.5.5.4.2.1.1.1.2.3.1" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.1.cmml">​</mo><mi id="S3.E3.m1.5.5.4.2.1.1.1.2.3.3" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.5.5.4.2.1.1.1.2.3.1a" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.1.cmml">​</mo><mi id="S3.E3.m1.5.5.4.2.1.1.1.2.3.4" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.5.5.4.2.1.1.1.2.3.1b" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.1.cmml">​</mo><mi id="S3.E3.m1.5.5.4.2.1.1.1.2.3.5" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.5.cmml">l</mi></mrow></msub><mo id="S3.E3.m1.5.5.4.2.1.1.1.1" xref="S3.E3.m1.5.5.4.2.1.1.1.1.cmml">−</mo><msub id="S3.E3.m1.5.5.4.2.1.1.1.3" xref="S3.E3.m1.5.5.4.2.1.1.1.3.cmml"><mi id="S3.E3.m1.5.5.4.2.1.1.1.3.2" xref="S3.E3.m1.5.5.4.2.1.1.1.3.2.cmml">x</mi><mrow id="S3.E3.m1.5.5.4.2.1.1.1.3.3" xref="S3.E3.m1.5.5.4.2.1.1.1.3.3.cmml"><mi id="S3.E3.m1.5.5.4.2.1.1.1.3.3.2" xref="S3.E3.m1.5.5.4.2.1.1.1.3.3.2.cmml">t</mi><mo id="S3.E3.m1.5.5.4.2.1.1.1.3.3.1" xref="S3.E3.m1.5.5.4.2.1.1.1.3.3.1.cmml">+</mo><mi id="S3.E3.m1.5.5.4.2.1.1.1.3.3.3" xref="S3.E3.m1.5.5.4.2.1.1.1.3.3.3.cmml">τ</mi></mrow></msub></mrow><mo stretchy="false" id="S3.E3.m1.5.5.4.2.1.1.3" xref="S3.E3.m1.5.5.4.2.1.2.1.cmml">|</mo></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E3.m1.5b"><apply id="S3.E3.m1.5.5.cmml" xref="S3.E3.m1.5.5"><eq id="S3.E3.m1.5.5.5.cmml" xref="S3.E3.m1.5.5.5"></eq><apply id="S3.E3.m1.3.3.2.cmml" xref="S3.E3.m1.3.3.2"><times id="S3.E3.m1.3.3.2.3.cmml" xref="S3.E3.m1.3.3.2.3"></times><ci id="S3.E3.m1.3.3.2.4.cmml" xref="S3.E3.m1.3.3.2.4">𝐽</ci><vector id="S3.E3.m1.3.3.2.2.3.cmml" xref="S3.E3.m1.3.3.2.2.2"><apply id="S3.E3.m1.2.2.1.1.1.1.cmml" xref="S3.E3.m1.2.2.1.1.1.1"><csymbol cd="ambiguous" id="S3.E3.m1.2.2.1.1.1.1.1.cmml" xref="S3.E3.m1.2.2.1.1.1.1">subscript</csymbol><ci id="S3.E3.m1.2.2.1.1.1.1.2.cmml" xref="S3.E3.m1.2.2.1.1.1.1.2">𝑠</ci><ci id="S3.E3.m1.2.2.1.1.1.1.3.cmml" xref="S3.E3.m1.2.2.1.1.1.1.3">𝑡</ci></apply><ci id="S3.E3.m1.1.1.cmml" xref="S3.E3.m1.1.1">…</ci><apply id="S3.E3.m1.3.3.2.2.2.2.cmml" xref="S3.E3.m1.3.3.2.2.2.2"><csymbol cd="ambiguous" id="S3.E3.m1.3.3.2.2.2.2.1.cmml" xref="S3.E3.m1.3.3.2.2.2.2">subscript</csymbol><ci id="S3.E3.m1.3.3.2.2.2.2.2.cmml" xref="S3.E3.m1.3.3.2.2.2.2.2">𝑠</ci><apply id="S3.E3.m1.3.3.2.2.2.2.3.cmml" xref="S3.E3.m1.3.3.2.2.2.2.3"><plus id="S3.E3.m1.3.3.2.2.2.2.3.1.cmml" xref="S3.E3.m1.3.3.2.2.2.2.3.1"></plus><ci id="S3.E3.m1.3.3.2.2.2.2.3.2.cmml" xref="S3.E3.m1.3.3.2.2.2.2.3.2">𝑡</ci><ci id="S3.E3.m1.3.3.2.2.2.2.3.3.cmml" xref="S3.E3.m1.3.3.2.2.2.2.3.3">𝜏</ci></apply></apply></vector></apply><apply id="S3.E3.m1.5.5.4.cmml" xref="S3.E3.m1.5.5.4"><plus id="S3.E3.m1.5.5.4.3.cmml" xref="S3.E3.m1.5.5.4.3"></plus><apply id="S3.E3.m1.4.4.3.1.cmml" xref="S3.E3.m1.4.4.3.1"><ci id="S3.E3.m1.4.4.3.1.2.cmml" xref="S3.E3.m1.4.4.3.1.2">⋅</ci><apply id="S3.E3.m1.4.4.3.1.3.cmml" xref="S3.E3.m1.4.4.3.1.3"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.3.1.3.1.cmml" xref="S3.E3.m1.4.4.3.1.3">subscript</csymbol><ci id="S3.E3.m1.4.4.3.1.3.2.cmml" xref="S3.E3.m1.4.4.3.1.3.2">𝑐</ci><cn type="integer" id="S3.E3.m1.4.4.3.1.3.3.cmml" xref="S3.E3.m1.4.4.3.1.3.3">1</cn></apply><apply id="S3.E3.m1.4.4.3.1.1.cmml" xref="S3.E3.m1.4.4.3.1.1"><apply id="S3.E3.m1.4.4.3.1.1.2.cmml" xref="S3.E3.m1.4.4.3.1.1.2"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.3.1.1.2.1.cmml" xref="S3.E3.m1.4.4.3.1.1.2">superscript</csymbol><apply id="S3.E3.m1.4.4.3.1.1.2.2.cmml" xref="S3.E3.m1.4.4.3.1.1.2"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.3.1.1.2.2.1.cmml" xref="S3.E3.m1.4.4.3.1.1.2">subscript</csymbol><sum id="S3.E3.m1.4.4.3.1.1.2.2.2.cmml" xref="S3.E3.m1.4.4.3.1.1.2.2.2"></sum><apply id="S3.E3.m1.4.4.3.1.1.2.2.3.cmml" xref="S3.E3.m1.4.4.3.1.1.2.2.3"><eq id="S3.E3.m1.4.4.3.1.1.2.2.3.1.cmml" xref="S3.E3.m1.4.4.3.1.1.2.2.3.1"></eq><apply id="S3.E3.m1.4.4.3.1.1.2.2.3.2.cmml" xref="S3.E3.m1.4.4.3.1.1.2.2.3.2"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.3.1.1.2.2.3.2.1.cmml" xref="S3.E3.m1.4.4.3.1.1.2.2.3.2">superscript</csymbol><ci id="S3.E3.m1.4.4.3.1.1.2.2.3.2.2.cmml" xref="S3.E3.m1.4.4.3.1.1.2.2.3.2.2">𝜏</ci><ci id="S3.E3.m1.4.4.3.1.1.2.2.3.2.3.cmml" xref="S3.E3.m1.4.4.3.1.1.2.2.3.2.3">′</ci></apply><ci id="S3.E3.m1.4.4.3.1.1.2.2.3.3.cmml" xref="S3.E3.m1.4.4.3.1.1.2.2.3.3">𝑡</ci></apply></apply><apply id="S3.E3.m1.4.4.3.1.1.2.3.cmml" xref="S3.E3.m1.4.4.3.1.1.2.3"><plus id="S3.E3.m1.4.4.3.1.1.2.3.1.cmml" xref="S3.E3.m1.4.4.3.1.1.2.3.1"></plus><ci id="S3.E3.m1.4.4.3.1.1.2.3.2.cmml" xref="S3.E3.m1.4.4.3.1.1.2.3.2">𝑡</ci><ci id="S3.E3.m1.4.4.3.1.1.2.3.3.cmml" xref="S3.E3.m1.4.4.3.1.1.2.3.3">𝜏</ci></apply></apply><apply id="S3.E3.m1.4.4.3.1.1.1.cmml" xref="S3.E3.m1.4.4.3.1.1.1"><times id="S3.E3.m1.4.4.3.1.1.1.2.cmml" xref="S3.E3.m1.4.4.3.1.1.1.2"></times><ci id="S3.E3.m1.4.4.3.1.1.1.3.cmml" xref="S3.E3.m1.4.4.3.1.1.1.3">ℐ</ci><apply id="S3.E3.m1.4.4.3.1.1.1.1.1.1.cmml" xref="S3.E3.m1.4.4.3.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.3.1.1.1.1.1.1.1.cmml" xref="S3.E3.m1.4.4.3.1.1.1.1.1">subscript</csymbol><ci id="S3.E3.m1.4.4.3.1.1.1.1.1.1.2.cmml" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.2">𝑠</ci><apply id="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.cmml" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.1.cmml" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.3">superscript</csymbol><ci id="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.2.cmml" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.2">𝜏</ci><ci id="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.3.cmml" xref="S3.E3.m1.4.4.3.1.1.1.1.1.1.3.3">′</ci></apply></apply></apply></apply></apply><apply id="S3.E3.m1.5.5.4.2.cmml" xref="S3.E3.m1.5.5.4.2"><ci id="S3.E3.m1.5.5.4.2.2.cmml" xref="S3.E3.m1.5.5.4.2.2">⋅</ci><apply id="S3.E3.m1.5.5.4.2.3.cmml" xref="S3.E3.m1.5.5.4.2.3"><csymbol cd="ambiguous" id="S3.E3.m1.5.5.4.2.3.1.cmml" xref="S3.E3.m1.5.5.4.2.3">subscript</csymbol><ci id="S3.E3.m1.5.5.4.2.3.2.cmml" xref="S3.E3.m1.5.5.4.2.3.2">𝑐</ci><cn type="integer" id="S3.E3.m1.5.5.4.2.3.3.cmml" xref="S3.E3.m1.5.5.4.2.3.3">2</cn></apply><apply id="S3.E3.m1.5.5.4.2.1.2.cmml" xref="S3.E3.m1.5.5.4.2.1.1"><abs id="S3.E3.m1.5.5.4.2.1.2.1.cmml" xref="S3.E3.m1.5.5.4.2.1.1.2"></abs><apply id="S3.E3.m1.5.5.4.2.1.1.1.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1"><minus id="S3.E3.m1.5.5.4.2.1.1.1.1.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.1"></minus><apply id="S3.E3.m1.5.5.4.2.1.1.1.2.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2"><csymbol cd="ambiguous" id="S3.E3.m1.5.5.4.2.1.1.1.2.1.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2">subscript</csymbol><ci id="S3.E3.m1.5.5.4.2.1.1.1.2.2.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2.2">𝑥</ci><apply id="S3.E3.m1.5.5.4.2.1.1.1.2.3.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3"><times id="S3.E3.m1.5.5.4.2.1.1.1.2.3.1.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.1"></times><ci id="S3.E3.m1.5.5.4.2.1.1.1.2.3.2.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.2">𝑔</ci><ci id="S3.E3.m1.5.5.4.2.1.1.1.2.3.3.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.3">𝑜</ci><ci id="S3.E3.m1.5.5.4.2.1.1.1.2.3.4.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.4">𝑎</ci><ci id="S3.E3.m1.5.5.4.2.1.1.1.2.3.5.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.2.3.5">𝑙</ci></apply></apply><apply id="S3.E3.m1.5.5.4.2.1.1.1.3.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.3"><csymbol cd="ambiguous" id="S3.E3.m1.5.5.4.2.1.1.1.3.1.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.3">subscript</csymbol><ci id="S3.E3.m1.5.5.4.2.1.1.1.3.2.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.3.2">𝑥</ci><apply id="S3.E3.m1.5.5.4.2.1.1.1.3.3.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.3.3"><plus id="S3.E3.m1.5.5.4.2.1.1.1.3.3.1.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.3.3.1"></plus><ci id="S3.E3.m1.5.5.4.2.1.1.1.3.3.2.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.3.3.2">𝑡</ci><ci id="S3.E3.m1.5.5.4.2.1.1.1.3.3.3.cmml" xref="S3.E3.m1.5.5.4.2.1.1.1.3.3.3">𝜏</ci></apply></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E3.m1.5c">J(s_{t},\dots,s_{t+\tau})=c_{1}\cdot\displaystyle\sum_{\tau^{\prime}=t}^{t+\tau}\mathcal{I}(s_{\tau^{\prime}})+c_{2}\cdot\lvert x_{goal}-x_{t+\tau}\rvert</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS4.p5.2" class="ltx_p">where <math id="S3.SS4.p5.1.m1.1" class="ltx_Math" alttext="\mathcal{I}(s_{\tau^{\prime}})" display="inline"><semantics id="S3.SS4.p5.1.m1.1a"><mrow id="S3.SS4.p5.1.m1.1.1" xref="S3.SS4.p5.1.m1.1.1.cmml"><mi class="ltx_font_mathcaligraphic" id="S3.SS4.p5.1.m1.1.1.3" xref="S3.SS4.p5.1.m1.1.1.3.cmml">ℐ</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p5.1.m1.1.1.2" xref="S3.SS4.p5.1.m1.1.1.2.cmml">​</mo><mrow id="S3.SS4.p5.1.m1.1.1.1.1" xref="S3.SS4.p5.1.m1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.SS4.p5.1.m1.1.1.1.1.2" xref="S3.SS4.p5.1.m1.1.1.1.1.1.cmml">(</mo><msub id="S3.SS4.p5.1.m1.1.1.1.1.1" xref="S3.SS4.p5.1.m1.1.1.1.1.1.cmml"><mi id="S3.SS4.p5.1.m1.1.1.1.1.1.2" xref="S3.SS4.p5.1.m1.1.1.1.1.1.2.cmml">s</mi><msup id="S3.SS4.p5.1.m1.1.1.1.1.1.3" xref="S3.SS4.p5.1.m1.1.1.1.1.1.3.cmml"><mi id="S3.SS4.p5.1.m1.1.1.1.1.1.3.2" xref="S3.SS4.p5.1.m1.1.1.1.1.1.3.2.cmml">τ</mi><mo id="S3.SS4.p5.1.m1.1.1.1.1.1.3.3" xref="S3.SS4.p5.1.m1.1.1.1.1.1.3.3.cmml">′</mo></msup></msub><mo stretchy="false" id="S3.SS4.p5.1.m1.1.1.1.1.3" xref="S3.SS4.p5.1.m1.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p5.1.m1.1b"><apply id="S3.SS4.p5.1.m1.1.1.cmml" xref="S3.SS4.p5.1.m1.1.1"><times id="S3.SS4.p5.1.m1.1.1.2.cmml" xref="S3.SS4.p5.1.m1.1.1.2"></times><ci id="S3.SS4.p5.1.m1.1.1.3.cmml" xref="S3.SS4.p5.1.m1.1.1.3">ℐ</ci><apply id="S3.SS4.p5.1.m1.1.1.1.1.1.cmml" xref="S3.SS4.p5.1.m1.1.1.1.1"><csymbol cd="ambiguous" id="S3.SS4.p5.1.m1.1.1.1.1.1.1.cmml" xref="S3.SS4.p5.1.m1.1.1.1.1">subscript</csymbol><ci id="S3.SS4.p5.1.m1.1.1.1.1.1.2.cmml" xref="S3.SS4.p5.1.m1.1.1.1.1.1.2">𝑠</ci><apply id="S3.SS4.p5.1.m1.1.1.1.1.1.3.cmml" xref="S3.SS4.p5.1.m1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.SS4.p5.1.m1.1.1.1.1.1.3.1.cmml" xref="S3.SS4.p5.1.m1.1.1.1.1.1.3">superscript</csymbol><ci id="S3.SS4.p5.1.m1.1.1.1.1.1.3.2.cmml" xref="S3.SS4.p5.1.m1.1.1.1.1.1.3.2">𝜏</ci><ci id="S3.SS4.p5.1.m1.1.1.1.1.1.3.3.cmml" xref="S3.SS4.p5.1.m1.1.1.1.1.1.3.3">′</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p5.1.m1.1c">\mathcal{I}(s_{\tau^{\prime}})</annotation></semantics></math> is an indicator function that returns the number of fingertips <span id="S3.SS4.p5.2.1" class="ltx_text ltx_font_italic">not</span> in contact with the object, and <math id="S3.SS4.p5.2.m2.1" class="ltx_Math" alttext="x_{goal}" display="inline"><semantics id="S3.SS4.p5.2.m2.1a"><msub id="S3.SS4.p5.2.m2.1.1" xref="S3.SS4.p5.2.m2.1.1.cmml"><mi id="S3.SS4.p5.2.m2.1.1.2" xref="S3.SS4.p5.2.m2.1.1.2.cmml">x</mi><mrow id="S3.SS4.p5.2.m2.1.1.3" xref="S3.SS4.p5.2.m2.1.1.3.cmml"><mi id="S3.SS4.p5.2.m2.1.1.3.2" xref="S3.SS4.p5.2.m2.1.1.3.2.cmml">g</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p5.2.m2.1.1.3.1" xref="S3.SS4.p5.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p5.2.m2.1.1.3.3" xref="S3.SS4.p5.2.m2.1.1.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p5.2.m2.1.1.3.1a" xref="S3.SS4.p5.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p5.2.m2.1.1.3.4" xref="S3.SS4.p5.2.m2.1.1.3.4.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p5.2.m2.1.1.3.1b" xref="S3.SS4.p5.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS4.p5.2.m2.1.1.3.5" xref="S3.SS4.p5.2.m2.1.1.3.5.cmml">l</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS4.p5.2.m2.1b"><apply id="S3.SS4.p5.2.m2.1.1.cmml" xref="S3.SS4.p5.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS4.p5.2.m2.1.1.1.cmml" xref="S3.SS4.p5.2.m2.1.1">subscript</csymbol><ci id="S3.SS4.p5.2.m2.1.1.2.cmml" xref="S3.SS4.p5.2.m2.1.1.2">𝑥</ci><apply id="S3.SS4.p5.2.m2.1.1.3.cmml" xref="S3.SS4.p5.2.m2.1.1.3"><times id="S3.SS4.p5.2.m2.1.1.3.1.cmml" xref="S3.SS4.p5.2.m2.1.1.3.1"></times><ci id="S3.SS4.p5.2.m2.1.1.3.2.cmml" xref="S3.SS4.p5.2.m2.1.1.3.2">𝑔</ci><ci id="S3.SS4.p5.2.m2.1.1.3.3.cmml" xref="S3.SS4.p5.2.m2.1.1.3.3">𝑜</ci><ci id="S3.SS4.p5.2.m2.1.1.3.4.cmml" xref="S3.SS4.p5.2.m2.1.1.3.4">𝑎</ci><ci id="S3.SS4.p5.2.m2.1.1.3.5.cmml" xref="S3.SS4.p5.2.m2.1.1.3.5">𝑙</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p5.2.m2.1c">x_{goal}</annotation></semantics></math> is the desired position of the object.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Evaluation</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We measure the performance of pose estimation for in-hand manipulation with different sensing modalities. This section discusses our experiment’s specifications and results.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.5.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.6.2" class="ltx_text ltx_font_italic">Experiment Setup</span>
+</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">We consider a planar in-hand manipulation task in which the robot must translate an object from a known initial location to a goal location. These locations are chosen to be on the boundary of the robot’s manipulation workspace. The object’s initial pose is 4.5cm to the left of the geometric plane that symmetrically bisects the hand (see Fig. <a href="#S3.F4" title="Figure 4 ‣ III-C Proximity Sensor Based Pose Estimation ‣ III Proximity Sensing for In-Hand Manipulation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>), and 4.5cm above the base of the fingers. The goal pose is the reflection of the initial pose across the bisecting plane. The object is a 3D printed cylinder of radius 4cm and a height of 14cm.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.1" class="ltx_p">When attempting the in-hand manipulation task, the robot begins at a position in which all joints have a value of zero (Fig. <a href="#S3.F4" title="Figure 4 ‣ III-C Proximity Sensor Based Pose Estimation ‣ III Proximity Sensing for In-Hand Manipulation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> on the left). It then uses a joint position controller to move to a preset pose that corresponds to the robot making initial contact with the object at the known initial pose. Once contact has been made, the MPPI controller attempts to move the object to the goal pose. A successful manipulation trial ends when the horizontal distance from the object’s ground-truth location (provided by visual fiducial localization) to the goal location is less than 1mm. A trial ends and is considered to have failed if the previous condition is not fulfilled within 60 seconds after first making contact with the object.</p>
+</div>
+<div id="S4.SS1.p3" class="ltx_para">
+<p id="S4.SS1.p3.1" class="ltx_p">We measure the robot’s in-hand manipulation performance when using pose estimation based on three different sensing modalities. These three modalities are tactile sensing, proximity sensing, and visual fiducial localization. For each of the sensing modalities, we measure the distance between the goal pose and the object’s pose at the end of the manipulation. Fiducial localization also serves as a ground-truth pose estimate during the tactile and proximity sensor trials in order to estimate pose estimation accuracy throughout the manipulation. Ten manipulation trials are undertaken for each of the three sensing modalities.</p>
+</div>
+<div id="S4.SS1.p4" class="ltx_para">
+<p id="S4.SS1.p4.5" class="ltx_p">We implement tactile sensing by artificially limiting the range of the embedded proximity sensors to be just beyond the contact surface of the fingertip. Although the sensors can detect objects up to 255mm away, a tactile sensor would only be able to detect objects at a distance less than or equal to the distance from the sensor to the finger surface <math id="S4.SS1.p4.1.m1.1" class="ltx_Math" alttext="d_{tact\_max}" display="inline"><semantics id="S4.SS1.p4.1.m1.1a"><msub id="S4.SS1.p4.1.m1.1.1" xref="S4.SS1.p4.1.m1.1.1.cmml"><mi id="S4.SS1.p4.1.m1.1.1.2" xref="S4.SS1.p4.1.m1.1.1.2.cmml">d</mi><mrow id="S4.SS1.p4.1.m1.1.1.3" xref="S4.SS1.p4.1.m1.1.1.3.cmml"><mi id="S4.SS1.p4.1.m1.1.1.3.2" xref="S4.SS1.p4.1.m1.1.1.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.1.m1.1.1.3.1" xref="S4.SS1.p4.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.1.m1.1.1.3.3" xref="S4.SS1.p4.1.m1.1.1.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.1.m1.1.1.3.1a" xref="S4.SS1.p4.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.1.m1.1.1.3.4" xref="S4.SS1.p4.1.m1.1.1.3.4.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.1.m1.1.1.3.1b" xref="S4.SS1.p4.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.1.m1.1.1.3.5" xref="S4.SS1.p4.1.m1.1.1.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.1.m1.1.1.3.1c" xref="S4.SS1.p4.1.m1.1.1.3.1.cmml">​</mo><mi mathvariant="normal" id="S4.SS1.p4.1.m1.1.1.3.6" xref="S4.SS1.p4.1.m1.1.1.3.6.cmml">_</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.1.m1.1.1.3.1d" xref="S4.SS1.p4.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.1.m1.1.1.3.7" xref="S4.SS1.p4.1.m1.1.1.3.7.cmml">m</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.1.m1.1.1.3.1e" xref="S4.SS1.p4.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.1.m1.1.1.3.8" xref="S4.SS1.p4.1.m1.1.1.3.8.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.1.m1.1.1.3.1f" xref="S4.SS1.p4.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.1.m1.1.1.3.9" xref="S4.SS1.p4.1.m1.1.1.3.9.cmml">x</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.1.m1.1b"><apply id="S4.SS1.p4.1.m1.1.1.cmml" xref="S4.SS1.p4.1.m1.1.1"><csymbol cd="ambiguous" id="S4.SS1.p4.1.m1.1.1.1.cmml" xref="S4.SS1.p4.1.m1.1.1">subscript</csymbol><ci id="S4.SS1.p4.1.m1.1.1.2.cmml" xref="S4.SS1.p4.1.m1.1.1.2">𝑑</ci><apply id="S4.SS1.p4.1.m1.1.1.3.cmml" xref="S4.SS1.p4.1.m1.1.1.3"><times id="S4.SS1.p4.1.m1.1.1.3.1.cmml" xref="S4.SS1.p4.1.m1.1.1.3.1"></times><ci id="S4.SS1.p4.1.m1.1.1.3.2.cmml" xref="S4.SS1.p4.1.m1.1.1.3.2">𝑡</ci><ci id="S4.SS1.p4.1.m1.1.1.3.3.cmml" xref="S4.SS1.p4.1.m1.1.1.3.3">𝑎</ci><ci id="S4.SS1.p4.1.m1.1.1.3.4.cmml" xref="S4.SS1.p4.1.m1.1.1.3.4">𝑐</ci><ci id="S4.SS1.p4.1.m1.1.1.3.5.cmml" xref="S4.SS1.p4.1.m1.1.1.3.5">𝑡</ci><ci id="S4.SS1.p4.1.m1.1.1.3.6.cmml" xref="S4.SS1.p4.1.m1.1.1.3.6">_</ci><ci id="S4.SS1.p4.1.m1.1.1.3.7.cmml" xref="S4.SS1.p4.1.m1.1.1.3.7">𝑚</ci><ci id="S4.SS1.p4.1.m1.1.1.3.8.cmml" xref="S4.SS1.p4.1.m1.1.1.3.8">𝑎</ci><ci id="S4.SS1.p4.1.m1.1.1.3.9.cmml" xref="S4.SS1.p4.1.m1.1.1.3.9">𝑥</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.1.m1.1c">d_{tact\_max}</annotation></semantics></math>. Therefore, all measurements greater than <math id="S4.SS1.p4.2.m2.1" class="ltx_Math" alttext="d_{tact\_max}" display="inline"><semantics id="S4.SS1.p4.2.m2.1a"><msub id="S4.SS1.p4.2.m2.1.1" xref="S4.SS1.p4.2.m2.1.1.cmml"><mi id="S4.SS1.p4.2.m2.1.1.2" xref="S4.SS1.p4.2.m2.1.1.2.cmml">d</mi><mrow id="S4.SS1.p4.2.m2.1.1.3" xref="S4.SS1.p4.2.m2.1.1.3.cmml"><mi id="S4.SS1.p4.2.m2.1.1.3.2" xref="S4.SS1.p4.2.m2.1.1.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.2.m2.1.1.3.1" xref="S4.SS1.p4.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.2.m2.1.1.3.3" xref="S4.SS1.p4.2.m2.1.1.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.2.m2.1.1.3.1a" xref="S4.SS1.p4.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.2.m2.1.1.3.4" xref="S4.SS1.p4.2.m2.1.1.3.4.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.2.m2.1.1.3.1b" xref="S4.SS1.p4.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.2.m2.1.1.3.5" xref="S4.SS1.p4.2.m2.1.1.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.2.m2.1.1.3.1c" xref="S4.SS1.p4.2.m2.1.1.3.1.cmml">​</mo><mi mathvariant="normal" id="S4.SS1.p4.2.m2.1.1.3.6" xref="S4.SS1.p4.2.m2.1.1.3.6.cmml">_</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.2.m2.1.1.3.1d" xref="S4.SS1.p4.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.2.m2.1.1.3.7" xref="S4.SS1.p4.2.m2.1.1.3.7.cmml">m</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.2.m2.1.1.3.1e" xref="S4.SS1.p4.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.2.m2.1.1.3.8" xref="S4.SS1.p4.2.m2.1.1.3.8.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.2.m2.1.1.3.1f" xref="S4.SS1.p4.2.m2.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.2.m2.1.1.3.9" xref="S4.SS1.p4.2.m2.1.1.3.9.cmml">x</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.2.m2.1b"><apply id="S4.SS1.p4.2.m2.1.1.cmml" xref="S4.SS1.p4.2.m2.1.1"><csymbol cd="ambiguous" id="S4.SS1.p4.2.m2.1.1.1.cmml" xref="S4.SS1.p4.2.m2.1.1">subscript</csymbol><ci id="S4.SS1.p4.2.m2.1.1.2.cmml" xref="S4.SS1.p4.2.m2.1.1.2">𝑑</ci><apply id="S4.SS1.p4.2.m2.1.1.3.cmml" xref="S4.SS1.p4.2.m2.1.1.3"><times id="S4.SS1.p4.2.m2.1.1.3.1.cmml" xref="S4.SS1.p4.2.m2.1.1.3.1"></times><ci id="S4.SS1.p4.2.m2.1.1.3.2.cmml" xref="S4.SS1.p4.2.m2.1.1.3.2">𝑡</ci><ci id="S4.SS1.p4.2.m2.1.1.3.3.cmml" xref="S4.SS1.p4.2.m2.1.1.3.3">𝑎</ci><ci id="S4.SS1.p4.2.m2.1.1.3.4.cmml" xref="S4.SS1.p4.2.m2.1.1.3.4">𝑐</ci><ci id="S4.SS1.p4.2.m2.1.1.3.5.cmml" xref="S4.SS1.p4.2.m2.1.1.3.5">𝑡</ci><ci id="S4.SS1.p4.2.m2.1.1.3.6.cmml" xref="S4.SS1.p4.2.m2.1.1.3.6">_</ci><ci id="S4.SS1.p4.2.m2.1.1.3.7.cmml" xref="S4.SS1.p4.2.m2.1.1.3.7">𝑚</ci><ci id="S4.SS1.p4.2.m2.1.1.3.8.cmml" xref="S4.SS1.p4.2.m2.1.1.3.8">𝑎</ci><ci id="S4.SS1.p4.2.m2.1.1.3.9.cmml" xref="S4.SS1.p4.2.m2.1.1.3.9">𝑥</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.2.m2.1c">d_{tact\_max}</annotation></semantics></math> are truncated to <math id="S4.SS1.p4.3.m3.1" class="ltx_Math" alttext="d_{tact\_max}" display="inline"><semantics id="S4.SS1.p4.3.m3.1a"><msub id="S4.SS1.p4.3.m3.1.1" xref="S4.SS1.p4.3.m3.1.1.cmml"><mi id="S4.SS1.p4.3.m3.1.1.2" xref="S4.SS1.p4.3.m3.1.1.2.cmml">d</mi><mrow id="S4.SS1.p4.3.m3.1.1.3" xref="S4.SS1.p4.3.m3.1.1.3.cmml"><mi id="S4.SS1.p4.3.m3.1.1.3.2" xref="S4.SS1.p4.3.m3.1.1.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.3.m3.1.1.3.1" xref="S4.SS1.p4.3.m3.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.3.m3.1.1.3.3" xref="S4.SS1.p4.3.m3.1.1.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.3.m3.1.1.3.1a" xref="S4.SS1.p4.3.m3.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.3.m3.1.1.3.4" xref="S4.SS1.p4.3.m3.1.1.3.4.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.3.m3.1.1.3.1b" xref="S4.SS1.p4.3.m3.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.3.m3.1.1.3.5" xref="S4.SS1.p4.3.m3.1.1.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.3.m3.1.1.3.1c" xref="S4.SS1.p4.3.m3.1.1.3.1.cmml">​</mo><mi mathvariant="normal" id="S4.SS1.p4.3.m3.1.1.3.6" xref="S4.SS1.p4.3.m3.1.1.3.6.cmml">_</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.3.m3.1.1.3.1d" xref="S4.SS1.p4.3.m3.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.3.m3.1.1.3.7" xref="S4.SS1.p4.3.m3.1.1.3.7.cmml">m</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.3.m3.1.1.3.1e" xref="S4.SS1.p4.3.m3.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.3.m3.1.1.3.8" xref="S4.SS1.p4.3.m3.1.1.3.8.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS1.p4.3.m3.1.1.3.1f" xref="S4.SS1.p4.3.m3.1.1.3.1.cmml">​</mo><mi id="S4.SS1.p4.3.m3.1.1.3.9" xref="S4.SS1.p4.3.m3.1.1.3.9.cmml">x</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.3.m3.1b"><apply id="S4.SS1.p4.3.m3.1.1.cmml" xref="S4.SS1.p4.3.m3.1.1"><csymbol cd="ambiguous" id="S4.SS1.p4.3.m3.1.1.1.cmml" xref="S4.SS1.p4.3.m3.1.1">subscript</csymbol><ci id="S4.SS1.p4.3.m3.1.1.2.cmml" xref="S4.SS1.p4.3.m3.1.1.2">𝑑</ci><apply id="S4.SS1.p4.3.m3.1.1.3.cmml" xref="S4.SS1.p4.3.m3.1.1.3"><times id="S4.SS1.p4.3.m3.1.1.3.1.cmml" xref="S4.SS1.p4.3.m3.1.1.3.1"></times><ci id="S4.SS1.p4.3.m3.1.1.3.2.cmml" xref="S4.SS1.p4.3.m3.1.1.3.2">𝑡</ci><ci id="S4.SS1.p4.3.m3.1.1.3.3.cmml" xref="S4.SS1.p4.3.m3.1.1.3.3">𝑎</ci><ci id="S4.SS1.p4.3.m3.1.1.3.4.cmml" xref="S4.SS1.p4.3.m3.1.1.3.4">𝑐</ci><ci id="S4.SS1.p4.3.m3.1.1.3.5.cmml" xref="S4.SS1.p4.3.m3.1.1.3.5">𝑡</ci><ci id="S4.SS1.p4.3.m3.1.1.3.6.cmml" xref="S4.SS1.p4.3.m3.1.1.3.6">_</ci><ci id="S4.SS1.p4.3.m3.1.1.3.7.cmml" xref="S4.SS1.p4.3.m3.1.1.3.7">𝑚</ci><ci id="S4.SS1.p4.3.m3.1.1.3.8.cmml" xref="S4.SS1.p4.3.m3.1.1.3.8">𝑎</ci><ci id="S4.SS1.p4.3.m3.1.1.3.9.cmml" xref="S4.SS1.p4.3.m3.1.1.3.9">𝑥</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.3.m3.1c">d_{tact\_max}</annotation></semantics></math> when in tactile sensing mode. We perform this truncation for both the real observations <math id="S4.SS1.p4.4.m4.1" class="ltx_Math" alttext="z^{j}_{t}" display="inline"><semantics id="S4.SS1.p4.4.m4.1a"><msubsup id="S4.SS1.p4.4.m4.1.1" xref="S4.SS1.p4.4.m4.1.1.cmml"><mi id="S4.SS1.p4.4.m4.1.1.2.2" xref="S4.SS1.p4.4.m4.1.1.2.2.cmml">z</mi><mi id="S4.SS1.p4.4.m4.1.1.3" xref="S4.SS1.p4.4.m4.1.1.3.cmml">t</mi><mi id="S4.SS1.p4.4.m4.1.1.2.3" xref="S4.SS1.p4.4.m4.1.1.2.3.cmml">j</mi></msubsup><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.4.m4.1b"><apply id="S4.SS1.p4.4.m4.1.1.cmml" xref="S4.SS1.p4.4.m4.1.1"><csymbol cd="ambiguous" id="S4.SS1.p4.4.m4.1.1.1.cmml" xref="S4.SS1.p4.4.m4.1.1">subscript</csymbol><apply id="S4.SS1.p4.4.m4.1.1.2.cmml" xref="S4.SS1.p4.4.m4.1.1"><csymbol cd="ambiguous" id="S4.SS1.p4.4.m4.1.1.2.1.cmml" xref="S4.SS1.p4.4.m4.1.1">superscript</csymbol><ci id="S4.SS1.p4.4.m4.1.1.2.2.cmml" xref="S4.SS1.p4.4.m4.1.1.2.2">𝑧</ci><ci id="S4.SS1.p4.4.m4.1.1.2.3.cmml" xref="S4.SS1.p4.4.m4.1.1.2.3">𝑗</ci></apply><ci id="S4.SS1.p4.4.m4.1.1.3.cmml" xref="S4.SS1.p4.4.m4.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.4.m4.1c">z^{j}_{t}</annotation></semantics></math> and expected observations <math id="S4.SS1.p4.5.m5.2" class="ltx_Math" alttext="z^{j*}_{t}" display="inline"><semantics id="S4.SS1.p4.5.m5.2a"><msubsup id="S4.SS1.p4.5.m5.2.3" xref="S4.SS1.p4.5.m5.2.3.cmml"><mi id="S4.SS1.p4.5.m5.2.3.2.2" xref="S4.SS1.p4.5.m5.2.3.2.2.cmml">z</mi><mi id="S4.SS1.p4.5.m5.2.3.3" xref="S4.SS1.p4.5.m5.2.3.3.cmml">t</mi><mrow id="S4.SS1.p4.5.m5.2.2.2.4" xref="S4.SS1.p4.5.m5.2.2.2.3.cmml"><mi id="S4.SS1.p4.5.m5.1.1.1.1" xref="S4.SS1.p4.5.m5.1.1.1.1.cmml">j</mi><mo lspace="0.222em" id="S4.SS1.p4.5.m5.2.2.2.4.1" xref="S4.SS1.p4.5.m5.2.2.2.3.cmml">⁣</mo><mo id="S4.SS1.p4.5.m5.2.2.2.2" xref="S4.SS1.p4.5.m5.2.2.2.2.cmml">∗</mo></mrow></msubsup><annotation-xml encoding="MathML-Content" id="S4.SS1.p4.5.m5.2b"><apply id="S4.SS1.p4.5.m5.2.3.cmml" xref="S4.SS1.p4.5.m5.2.3"><csymbol cd="ambiguous" id="S4.SS1.p4.5.m5.2.3.1.cmml" xref="S4.SS1.p4.5.m5.2.3">subscript</csymbol><apply id="S4.SS1.p4.5.m5.2.3.2.cmml" xref="S4.SS1.p4.5.m5.2.3"><csymbol cd="ambiguous" id="S4.SS1.p4.5.m5.2.3.2.1.cmml" xref="S4.SS1.p4.5.m5.2.3">superscript</csymbol><ci id="S4.SS1.p4.5.m5.2.3.2.2.cmml" xref="S4.SS1.p4.5.m5.2.3.2.2">𝑧</ci><list id="S4.SS1.p4.5.m5.2.2.2.3.cmml" xref="S4.SS1.p4.5.m5.2.2.2.4"><ci id="S4.SS1.p4.5.m5.1.1.1.1.cmml" xref="S4.SS1.p4.5.m5.1.1.1.1">𝑗</ci><times id="S4.SS1.p4.5.m5.2.2.2.2.cmml" xref="S4.SS1.p4.5.m5.2.2.2.2"></times></list></apply><ci id="S4.SS1.p4.5.m5.2.3.3.cmml" xref="S4.SS1.p4.5.m5.2.3.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p4.5.m5.2c">z^{j*}_{t}</annotation></semantics></math> of the particle filter.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.5.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.6.2" class="ltx_text ltx_font_italic">Implementation Details</span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.9" class="ltx_p">The algorithms described in Sections <a href="#S3.SS3" title="III-C Proximity Sensor Based Pose Estimation ‣ III Proximity Sensing for In-Hand Manipulation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">III-C</span></span></a> &amp; <a href="#S3.SS4" title="III-D Model Predictive Control for In-Hand Manipulation ‣ III Proximity Sensing for In-Hand Manipulation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">III-D</span></span></a> are simultaneously executed on a single desktop PC with an Intel i7 Quad-Core CPU, 64 GB of RAM, and a NVIDIA Titan XP GPU. Initial values for all of the following parameters were chosen based on our intuition and then hand-tuned until reasonable performance was achieved. Our particle filter used 1000 particles and produced pose estimates at a rate of 18 Hz. Its sensor model used parameter values <math id="S4.SS2.p1.1.m1.1" class="ltx_Math" alttext="\sigma=5mm" display="inline"><semantics id="S4.SS2.p1.1.m1.1a"><mrow id="S4.SS2.p1.1.m1.1.1" xref="S4.SS2.p1.1.m1.1.1.cmml"><mi id="S4.SS2.p1.1.m1.1.1.2" xref="S4.SS2.p1.1.m1.1.1.2.cmml">σ</mi><mo id="S4.SS2.p1.1.m1.1.1.1" xref="S4.SS2.p1.1.m1.1.1.1.cmml">=</mo><mrow id="S4.SS2.p1.1.m1.1.1.3" xref="S4.SS2.p1.1.m1.1.1.3.cmml"><mn id="S4.SS2.p1.1.m1.1.1.3.2" xref="S4.SS2.p1.1.m1.1.1.3.2.cmml">5</mn><mo lspace="0em" rspace="0em" id="S4.SS2.p1.1.m1.1.1.3.1" xref="S4.SS2.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS2.p1.1.m1.1.1.3.3" xref="S4.SS2.p1.1.m1.1.1.3.3.cmml">m</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.1.m1.1.1.3.1a" xref="S4.SS2.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S4.SS2.p1.1.m1.1.1.3.4" xref="S4.SS2.p1.1.m1.1.1.3.4.cmml">m</mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.1.m1.1b"><apply id="S4.SS2.p1.1.m1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1"><eq id="S4.SS2.p1.1.m1.1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1.1"></eq><ci id="S4.SS2.p1.1.m1.1.1.2.cmml" xref="S4.SS2.p1.1.m1.1.1.2">𝜎</ci><apply id="S4.SS2.p1.1.m1.1.1.3.cmml" xref="S4.SS2.p1.1.m1.1.1.3"><times id="S4.SS2.p1.1.m1.1.1.3.1.cmml" xref="S4.SS2.p1.1.m1.1.1.3.1"></times><cn type="integer" id="S4.SS2.p1.1.m1.1.1.3.2.cmml" xref="S4.SS2.p1.1.m1.1.1.3.2">5</cn><ci id="S4.SS2.p1.1.m1.1.1.3.3.cmml" xref="S4.SS2.p1.1.m1.1.1.3.3">𝑚</ci><ci id="S4.SS2.p1.1.m1.1.1.3.4.cmml" xref="S4.SS2.p1.1.m1.1.1.3.4">𝑚</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.1.m1.1c">\sigma=5mm</annotation></semantics></math>, <math id="S4.SS2.p1.2.m2.1" class="ltx_Math" alttext="w1=0.95" display="inline"><semantics id="S4.SS2.p1.2.m2.1a"><mrow id="S4.SS2.p1.2.m2.1.1" xref="S4.SS2.p1.2.m2.1.1.cmml"><mrow id="S4.SS2.p1.2.m2.1.1.2" xref="S4.SS2.p1.2.m2.1.1.2.cmml"><mi id="S4.SS2.p1.2.m2.1.1.2.2" xref="S4.SS2.p1.2.m2.1.1.2.2.cmml">w</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.2.m2.1.1.2.1" xref="S4.SS2.p1.2.m2.1.1.2.1.cmml">​</mo><mn id="S4.SS2.p1.2.m2.1.1.2.3" xref="S4.SS2.p1.2.m2.1.1.2.3.cmml">1</mn></mrow><mo id="S4.SS2.p1.2.m2.1.1.1" xref="S4.SS2.p1.2.m2.1.1.1.cmml">=</mo><mn id="S4.SS2.p1.2.m2.1.1.3" xref="S4.SS2.p1.2.m2.1.1.3.cmml">0.95</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.2.m2.1b"><apply id="S4.SS2.p1.2.m2.1.1.cmml" xref="S4.SS2.p1.2.m2.1.1"><eq id="S4.SS2.p1.2.m2.1.1.1.cmml" xref="S4.SS2.p1.2.m2.1.1.1"></eq><apply id="S4.SS2.p1.2.m2.1.1.2.cmml" xref="S4.SS2.p1.2.m2.1.1.2"><times id="S4.SS2.p1.2.m2.1.1.2.1.cmml" xref="S4.SS2.p1.2.m2.1.1.2.1"></times><ci id="S4.SS2.p1.2.m2.1.1.2.2.cmml" xref="S4.SS2.p1.2.m2.1.1.2.2">𝑤</ci><cn type="integer" id="S4.SS2.p1.2.m2.1.1.2.3.cmml" xref="S4.SS2.p1.2.m2.1.1.2.3">1</cn></apply><cn type="float" id="S4.SS2.p1.2.m2.1.1.3.cmml" xref="S4.SS2.p1.2.m2.1.1.3">0.95</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.2.m2.1c">w1=0.95</annotation></semantics></math>, <math id="S4.SS2.p1.3.m3.1" class="ltx_Math" alttext="w2=0.05" display="inline"><semantics id="S4.SS2.p1.3.m3.1a"><mrow id="S4.SS2.p1.3.m3.1.1" xref="S4.SS2.p1.3.m3.1.1.cmml"><mrow id="S4.SS2.p1.3.m3.1.1.2" xref="S4.SS2.p1.3.m3.1.1.2.cmml"><mi id="S4.SS2.p1.3.m3.1.1.2.2" xref="S4.SS2.p1.3.m3.1.1.2.2.cmml">w</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.3.m3.1.1.2.1" xref="S4.SS2.p1.3.m3.1.1.2.1.cmml">​</mo><mn id="S4.SS2.p1.3.m3.1.1.2.3" xref="S4.SS2.p1.3.m3.1.1.2.3.cmml">2</mn></mrow><mo id="S4.SS2.p1.3.m3.1.1.1" xref="S4.SS2.p1.3.m3.1.1.1.cmml">=</mo><mn id="S4.SS2.p1.3.m3.1.1.3" xref="S4.SS2.p1.3.m3.1.1.3.cmml">0.05</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.3.m3.1b"><apply id="S4.SS2.p1.3.m3.1.1.cmml" xref="S4.SS2.p1.3.m3.1.1"><eq id="S4.SS2.p1.3.m3.1.1.1.cmml" xref="S4.SS2.p1.3.m3.1.1.1"></eq><apply id="S4.SS2.p1.3.m3.1.1.2.cmml" xref="S4.SS2.p1.3.m3.1.1.2"><times id="S4.SS2.p1.3.m3.1.1.2.1.cmml" xref="S4.SS2.p1.3.m3.1.1.2.1"></times><ci id="S4.SS2.p1.3.m3.1.1.2.2.cmml" xref="S4.SS2.p1.3.m3.1.1.2.2">𝑤</ci><cn type="integer" id="S4.SS2.p1.3.m3.1.1.2.3.cmml" xref="S4.SS2.p1.3.m3.1.1.2.3">2</cn></apply><cn type="float" id="S4.SS2.p1.3.m3.1.1.3.cmml" xref="S4.SS2.p1.3.m3.1.1.3">0.05</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.3.m3.1c">w2=0.05</annotation></semantics></math>. Although the distance from any sensor to the fingertip surface is 15mm, we set <math id="S4.SS2.p1.4.m4.1" class="ltx_Math" alttext="d_{tact\_max}" display="inline"><semantics id="S4.SS2.p1.4.m4.1a"><msub id="S4.SS2.p1.4.m4.1.1" xref="S4.SS2.p1.4.m4.1.1.cmml"><mi id="S4.SS2.p1.4.m4.1.1.2" xref="S4.SS2.p1.4.m4.1.1.2.cmml">d</mi><mrow id="S4.SS2.p1.4.m4.1.1.3" xref="S4.SS2.p1.4.m4.1.1.3.cmml"><mi id="S4.SS2.p1.4.m4.1.1.3.2" xref="S4.SS2.p1.4.m4.1.1.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.4.m4.1.1.3.1" xref="S4.SS2.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S4.SS2.p1.4.m4.1.1.3.3" xref="S4.SS2.p1.4.m4.1.1.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.4.m4.1.1.3.1a" xref="S4.SS2.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S4.SS2.p1.4.m4.1.1.3.4" xref="S4.SS2.p1.4.m4.1.1.3.4.cmml">c</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.4.m4.1.1.3.1b" xref="S4.SS2.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S4.SS2.p1.4.m4.1.1.3.5" xref="S4.SS2.p1.4.m4.1.1.3.5.cmml">t</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.4.m4.1.1.3.1c" xref="S4.SS2.p1.4.m4.1.1.3.1.cmml">​</mo><mi mathvariant="normal" id="S4.SS2.p1.4.m4.1.1.3.6" xref="S4.SS2.p1.4.m4.1.1.3.6.cmml">_</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.4.m4.1.1.3.1d" xref="S4.SS2.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S4.SS2.p1.4.m4.1.1.3.7" xref="S4.SS2.p1.4.m4.1.1.3.7.cmml">m</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.4.m4.1.1.3.1e" xref="S4.SS2.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S4.SS2.p1.4.m4.1.1.3.8" xref="S4.SS2.p1.4.m4.1.1.3.8.cmml">a</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.4.m4.1.1.3.1f" xref="S4.SS2.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S4.SS2.p1.4.m4.1.1.3.9" xref="S4.SS2.p1.4.m4.1.1.3.9.cmml">x</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.4.m4.1b"><apply id="S4.SS2.p1.4.m4.1.1.cmml" xref="S4.SS2.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S4.SS2.p1.4.m4.1.1.1.cmml" xref="S4.SS2.p1.4.m4.1.1">subscript</csymbol><ci id="S4.SS2.p1.4.m4.1.1.2.cmml" xref="S4.SS2.p1.4.m4.1.1.2">𝑑</ci><apply id="S4.SS2.p1.4.m4.1.1.3.cmml" xref="S4.SS2.p1.4.m4.1.1.3"><times id="S4.SS2.p1.4.m4.1.1.3.1.cmml" xref="S4.SS2.p1.4.m4.1.1.3.1"></times><ci id="S4.SS2.p1.4.m4.1.1.3.2.cmml" xref="S4.SS2.p1.4.m4.1.1.3.2">𝑡</ci><ci id="S4.SS2.p1.4.m4.1.1.3.3.cmml" xref="S4.SS2.p1.4.m4.1.1.3.3">𝑎</ci><ci id="S4.SS2.p1.4.m4.1.1.3.4.cmml" xref="S4.SS2.p1.4.m4.1.1.3.4">𝑐</ci><ci id="S4.SS2.p1.4.m4.1.1.3.5.cmml" xref="S4.SS2.p1.4.m4.1.1.3.5">𝑡</ci><ci id="S4.SS2.p1.4.m4.1.1.3.6.cmml" xref="S4.SS2.p1.4.m4.1.1.3.6">_</ci><ci id="S4.SS2.p1.4.m4.1.1.3.7.cmml" xref="S4.SS2.p1.4.m4.1.1.3.7">𝑚</ci><ci id="S4.SS2.p1.4.m4.1.1.3.8.cmml" xref="S4.SS2.p1.4.m4.1.1.3.8">𝑎</ci><ci id="S4.SS2.p1.4.m4.1.1.3.9.cmml" xref="S4.SS2.p1.4.m4.1.1.3.9">𝑥</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.4.m4.1c">d_{tact\_max}</annotation></semantics></math> to a slightly larger 18mm to ensure that sensor noise does not result in false negatives. Our MPPI controller simulates 297 trajectories over a time-horizon <math id="S4.SS2.p1.5.m5.1" class="ltx_Math" alttext="T=10" display="inline"><semantics id="S4.SS2.p1.5.m5.1a"><mrow id="S4.SS2.p1.5.m5.1.1" xref="S4.SS2.p1.5.m5.1.1.cmml"><mi id="S4.SS2.p1.5.m5.1.1.2" xref="S4.SS2.p1.5.m5.1.1.2.cmml">T</mi><mo id="S4.SS2.p1.5.m5.1.1.1" xref="S4.SS2.p1.5.m5.1.1.1.cmml">=</mo><mn id="S4.SS2.p1.5.m5.1.1.3" xref="S4.SS2.p1.5.m5.1.1.3.cmml">10</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.5.m5.1b"><apply id="S4.SS2.p1.5.m5.1.1.cmml" xref="S4.SS2.p1.5.m5.1.1"><eq id="S4.SS2.p1.5.m5.1.1.1.cmml" xref="S4.SS2.p1.5.m5.1.1.1"></eq><ci id="S4.SS2.p1.5.m5.1.1.2.cmml" xref="S4.SS2.p1.5.m5.1.1.2">𝑇</ci><cn type="integer" id="S4.SS2.p1.5.m5.1.1.3.cmml" xref="S4.SS2.p1.5.m5.1.1.3">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.5.m5.1c">T=10</annotation></semantics></math> at each time step. Its cost function uses parameter values <math id="S4.SS2.p1.6.m6.1" class="ltx_Math" alttext="c_{1}=0.1" display="inline"><semantics id="S4.SS2.p1.6.m6.1a"><mrow id="S4.SS2.p1.6.m6.1.1" xref="S4.SS2.p1.6.m6.1.1.cmml"><msub id="S4.SS2.p1.6.m6.1.1.2" xref="S4.SS2.p1.6.m6.1.1.2.cmml"><mi id="S4.SS2.p1.6.m6.1.1.2.2" xref="S4.SS2.p1.6.m6.1.1.2.2.cmml">c</mi><mn id="S4.SS2.p1.6.m6.1.1.2.3" xref="S4.SS2.p1.6.m6.1.1.2.3.cmml">1</mn></msub><mo id="S4.SS2.p1.6.m6.1.1.1" xref="S4.SS2.p1.6.m6.1.1.1.cmml">=</mo><mn id="S4.SS2.p1.6.m6.1.1.3" xref="S4.SS2.p1.6.m6.1.1.3.cmml">0.1</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.6.m6.1b"><apply id="S4.SS2.p1.6.m6.1.1.cmml" xref="S4.SS2.p1.6.m6.1.1"><eq id="S4.SS2.p1.6.m6.1.1.1.cmml" xref="S4.SS2.p1.6.m6.1.1.1"></eq><apply id="S4.SS2.p1.6.m6.1.1.2.cmml" xref="S4.SS2.p1.6.m6.1.1.2"><csymbol cd="ambiguous" id="S4.SS2.p1.6.m6.1.1.2.1.cmml" xref="S4.SS2.p1.6.m6.1.1.2">subscript</csymbol><ci id="S4.SS2.p1.6.m6.1.1.2.2.cmml" xref="S4.SS2.p1.6.m6.1.1.2.2">𝑐</ci><cn type="integer" id="S4.SS2.p1.6.m6.1.1.2.3.cmml" xref="S4.SS2.p1.6.m6.1.1.2.3">1</cn></apply><cn type="float" id="S4.SS2.p1.6.m6.1.1.3.cmml" xref="S4.SS2.p1.6.m6.1.1.3">0.1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.6.m6.1c">c_{1}=0.1</annotation></semantics></math>, <math id="S4.SS2.p1.7.m7.1" class="ltx_Math" alttext="c_{2}=200" display="inline"><semantics id="S4.SS2.p1.7.m7.1a"><mrow id="S4.SS2.p1.7.m7.1.1" xref="S4.SS2.p1.7.m7.1.1.cmml"><msub id="S4.SS2.p1.7.m7.1.1.2" xref="S4.SS2.p1.7.m7.1.1.2.cmml"><mi id="S4.SS2.p1.7.m7.1.1.2.2" xref="S4.SS2.p1.7.m7.1.1.2.2.cmml">c</mi><mn id="S4.SS2.p1.7.m7.1.1.2.3" xref="S4.SS2.p1.7.m7.1.1.2.3.cmml">2</mn></msub><mo id="S4.SS2.p1.7.m7.1.1.1" xref="S4.SS2.p1.7.m7.1.1.1.cmml">=</mo><mn id="S4.SS2.p1.7.m7.1.1.3" xref="S4.SS2.p1.7.m7.1.1.3.cmml">200</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.7.m7.1b"><apply id="S4.SS2.p1.7.m7.1.1.cmml" xref="S4.SS2.p1.7.m7.1.1"><eq id="S4.SS2.p1.7.m7.1.1.1.cmml" xref="S4.SS2.p1.7.m7.1.1.1"></eq><apply id="S4.SS2.p1.7.m7.1.1.2.cmml" xref="S4.SS2.p1.7.m7.1.1.2"><csymbol cd="ambiguous" id="S4.SS2.p1.7.m7.1.1.2.1.cmml" xref="S4.SS2.p1.7.m7.1.1.2">subscript</csymbol><ci id="S4.SS2.p1.7.m7.1.1.2.2.cmml" xref="S4.SS2.p1.7.m7.1.1.2.2">𝑐</ci><cn type="integer" id="S4.SS2.p1.7.m7.1.1.2.3.cmml" xref="S4.SS2.p1.7.m7.1.1.2.3">2</cn></apply><cn type="integer" id="S4.SS2.p1.7.m7.1.1.3.cmml" xref="S4.SS2.p1.7.m7.1.1.3">200</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.7.m7.1c">c_{2}=200</annotation></semantics></math>, and the MPPI hyperparameter <math id="S4.SS2.p1.8.m8.1" class="ltx_Math" alttext="\lambda" display="inline"><semantics id="S4.SS2.p1.8.m8.1a"><mi id="S4.SS2.p1.8.m8.1.1" xref="S4.SS2.p1.8.m8.1.1.cmml">λ</mi><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.8.m8.1b"><ci id="S4.SS2.p1.8.m8.1.1.cmml" xref="S4.SS2.p1.8.m8.1.1">𝜆</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.8.m8.1c">\lambda</annotation></semantics></math> is set to 0.1. Switching between braking configurations is thresholded on a value of <math id="S4.SS2.p1.9.m9.1" class="ltx_Math" alttext="\phi=25\%" display="inline"><semantics id="S4.SS2.p1.9.m9.1a"><mrow id="S4.SS2.p1.9.m9.1.1" xref="S4.SS2.p1.9.m9.1.1.cmml"><mi id="S4.SS2.p1.9.m9.1.1.2" xref="S4.SS2.p1.9.m9.1.1.2.cmml">ϕ</mi><mo id="S4.SS2.p1.9.m9.1.1.1" xref="S4.SS2.p1.9.m9.1.1.1.cmml">=</mo><mrow id="S4.SS2.p1.9.m9.1.1.3" xref="S4.SS2.p1.9.m9.1.1.3.cmml"><mn id="S4.SS2.p1.9.m9.1.1.3.2" xref="S4.SS2.p1.9.m9.1.1.3.2.cmml">25</mn><mo id="S4.SS2.p1.9.m9.1.1.3.1" xref="S4.SS2.p1.9.m9.1.1.3.1.cmml">%</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.9.m9.1b"><apply id="S4.SS2.p1.9.m9.1.1.cmml" xref="S4.SS2.p1.9.m9.1.1"><eq id="S4.SS2.p1.9.m9.1.1.1.cmml" xref="S4.SS2.p1.9.m9.1.1.1"></eq><ci id="S4.SS2.p1.9.m9.1.1.2.cmml" xref="S4.SS2.p1.9.m9.1.1.2">italic-ϕ</ci><apply id="S4.SS2.p1.9.m9.1.1.3.cmml" xref="S4.SS2.p1.9.m9.1.1.3"><csymbol cd="latexml" id="S4.SS2.p1.9.m9.1.1.3.1.cmml" xref="S4.SS2.p1.9.m9.1.1.3.1">percent</csymbol><cn type="integer" id="S4.SS2.p1.9.m9.1.1.3.2.cmml" xref="S4.SS2.p1.9.m9.1.1.3.2">25</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.9.m9.1c">\phi=25\%</annotation></semantics></math>. Controls are generated at a rate of 5 Hz.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS3.5.1.1" class="ltx_text">IV-C</span> </span><span id="S4.SS3.6.2" class="ltx_text ltx_font_italic">In-Hand Manipulation Performance</span>
+</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">Relative to tactile sensor based pose estimation, we found that proximity sensor based pose estimation is more accurate throughout the trajectory and results in more precise positioning of the object. We observed that the spread of the particle distribution in the vertical direction is larger for tactile sensor based pose estimation (Fig. <a href="#S3.F4" title="Figure 4 ‣ III-C Proximity Sensor Based Pose Estimation ‣ III Proximity Sensing for In-Hand Manipulation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>). This is exemplified by the second-to-last snapshot of the tactile sensing sequence in which the distribution has bifurcated around two distinct hypotheses. This may be due to the sensor data not being sufficiently discriminative to determine whether the robot is grasping above or below the diameter of the cylinder.</p>
+</div>
+<div id="S4.SS3.p2" class="ltx_para">
+<p id="S4.SS3.p2.2" class="ltx_p">Across our experiments, we found that proximity sensing enables better performance than tactile sensing. Proximity-sensor based pose estimation achieves significantly lower average pose error than tactile-sensor based pose estimation (<math id="S4.SS3.p2.1.m1.1" class="ltx_Math" alttext="p&lt;0.001" display="inline"><semantics id="S4.SS3.p2.1.m1.1a"><mrow id="S4.SS3.p2.1.m1.1.1" xref="S4.SS3.p2.1.m1.1.1.cmml"><mi id="S4.SS3.p2.1.m1.1.1.2" xref="S4.SS3.p2.1.m1.1.1.2.cmml">p</mi><mo id="S4.SS3.p2.1.m1.1.1.1" xref="S4.SS3.p2.1.m1.1.1.1.cmml">&lt;</mo><mn id="S4.SS3.p2.1.m1.1.1.3" xref="S4.SS3.p2.1.m1.1.1.3.cmml">0.001</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p2.1.m1.1b"><apply id="S4.SS3.p2.1.m1.1.1.cmml" xref="S4.SS3.p2.1.m1.1.1"><lt id="S4.SS3.p2.1.m1.1.1.1.cmml" xref="S4.SS3.p2.1.m1.1.1.1"></lt><ci id="S4.SS3.p2.1.m1.1.1.2.cmml" xref="S4.SS3.p2.1.m1.1.1.2">𝑝</ci><cn type="float" id="S4.SS3.p2.1.m1.1.1.3.cmml" xref="S4.SS3.p2.1.m1.1.1.3">0.001</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p2.1.m1.1c">p&lt;0.001</annotation></semantics></math>, Mann-Whitney U test). The average pose error throughout the manipulation for proximity sensing was 2.7mm, less than half of the 5.5mm error observed for tactile sensing (Fig. <a href="#S4.F5" title="Figure 5 ‣ IV-C In-Hand Manipulation Performance ‣ IV Evaluation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>). The quality of pose estimation is also reflected in the overall task performance. When using visual fiducial or proximity sensor based pose estimation, the robot was able to successfully complete all ten trials. However, only five out of ten trials were successful when using tactile-based pose estimation. For the five trials that succeeded, tactile sensing based pose estimation trials resulted in 11.2mm average final position error. In contrast, proximity-sensor based pose estimation trials resulted in an average final positioning error of 7.8mm across all trials, 30% lower than that of tactile sensing, enabling also significantly lower final positioning error compared to tactile sensing (<math id="S4.SS3.p2.2.m2.1" class="ltx_Math" alttext="p&lt;0.05" display="inline"><semantics id="S4.SS3.p2.2.m2.1a"><mrow id="S4.SS3.p2.2.m2.1.1" xref="S4.SS3.p2.2.m2.1.1.cmml"><mi id="S4.SS3.p2.2.m2.1.1.2" xref="S4.SS3.p2.2.m2.1.1.2.cmml">p</mi><mo id="S4.SS3.p2.2.m2.1.1.1" xref="S4.SS3.p2.2.m2.1.1.1.cmml">&lt;</mo><mn id="S4.SS3.p2.2.m2.1.1.3" xref="S4.SS3.p2.2.m2.1.1.3.cmml">0.05</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p2.2.m2.1b"><apply id="S4.SS3.p2.2.m2.1.1.cmml" xref="S4.SS3.p2.2.m2.1.1"><lt id="S4.SS3.p2.2.m2.1.1.1.cmml" xref="S4.SS3.p2.2.m2.1.1.1"></lt><ci id="S4.SS3.p2.2.m2.1.1.2.cmml" xref="S4.SS3.p2.2.m2.1.1.2">𝑝</ci><cn type="float" id="S4.SS3.p2.2.m2.1.1.3.cmml" xref="S4.SS3.p2.2.m2.1.1.3">0.05</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p2.2.m2.1c">p&lt;0.05</annotation></semantics></math>, U test). Furthermore, proximity-sensor based pose estimation resulted in an average task completion time of 40.0 seconds, 18% faster than the 48.6 second average completion time of (successful) tactile sensing trials. The complete statistics for all experiments are listed in Table <a href="#S4.T1" title="TABLE I ‣ IV-C In-Hand Manipulation Performance ‣ IV Evaluation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>.</p>
+</div>
+<div id="S4.SS3.p3" class="ltx_para">
+<p id="S4.SS3.p3.1" class="ltx_p">It is also informative to examine how the pose error evolves throughout the in-hand manipulation task. With the exception of the very beginning of the task, proximity-sensor based pose estimation has lower error than tactile based pose estimation as shown in Fig. <a href="#S4.F6" title="Figure 6 ‣ IV-C In-Hand Manipulation Performance ‣ IV Evaluation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>. We hypothesize that the tactile modality does better at the beginning due to a mismatch between the particle filter’s sensor model and the actual sensor. The optical beams of the sensor model are represented by beams with an infinitesimally small width, but the real sensor’s detection zone takes the shape of a cone. For the particular configuration in which the robot initially makes contact with the object, the cylinder is just barely within the conic field-of-view of one of the sensors. This causes the sensor to return a measurement significantly less than its max range, but the corresponding sensor model expected measurement is at max range (because the beam has no width). Tactile-based pose estimation is better able to filter this out because its (truncated) max range is much closer to the measurement returned by the actual sensor. However, because the true sensor’s detection cone is quite thin (with a radius on the scale of millimeters depending on the distance from the sensor), this configuration in which the object barely grazes one of the sensing cones does not occur often throughout the overall manipulation. Once the particle filter has coalesced around the true state by observing measurements outside of this configuration (i.e. the manipulation proceeds), it naturally blunts the effect of this type of rare configuration by conditioning upon the previous state distribution.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F5.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2204.02371/assets/figs/avg_pose_error.png" id="S4.F5.sf1.g1" class="ltx_graphics ltx_centering ltx_img_portrait" width="598" height="1237" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F5.sf1.2.1.1" class="ltx_text" style="font-size:90%;">(a)</span> </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F5.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2204.02371/assets/figs/goal_dist.png" id="S4.F5.sf2.g1" class="ltx_graphics ltx_centering ltx_img_portrait" width="598" height="893" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F5.sf2.2.1.1" class="ltx_text" style="font-size:90%;">(b)</span> </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_3">
+<figure id="S4.F5.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2204.02371/assets/figs/exec_time.png" id="S4.F5.sf3.g1" class="ltx_graphics ltx_centering ltx_img_portrait" width="598" height="893" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F5.sf3.2.1.1" class="ltx_text" style="font-size:90%;">(c)</span> </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F5.8.4.1" class="ltx_text" style="font-size:90%;">Figure 5</span>: </span><span id="S4.F5.6.3" class="ltx_text" style="font-size:90%;">Comparison between pose estimation sensing modalities. Error bars correspond to one standard deviation. Increasing number of stars indicates higher significance levels (<math id="S4.F5.4.1.m1.1" class="ltx_Math" alttext="p&lt;0.05" display="inline"><semantics id="S4.F5.4.1.m1.1b"><mrow id="S4.F5.4.1.m1.1.1" xref="S4.F5.4.1.m1.1.1.cmml"><mi id="S4.F5.4.1.m1.1.1.2" xref="S4.F5.4.1.m1.1.1.2.cmml">p</mi><mo id="S4.F5.4.1.m1.1.1.1" xref="S4.F5.4.1.m1.1.1.1.cmml">&lt;</mo><mn id="S4.F5.4.1.m1.1.1.3" xref="S4.F5.4.1.m1.1.1.3.cmml">0.05</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.F5.4.1.m1.1c"><apply id="S4.F5.4.1.m1.1.1.cmml" xref="S4.F5.4.1.m1.1.1"><lt id="S4.F5.4.1.m1.1.1.1.cmml" xref="S4.F5.4.1.m1.1.1.1"></lt><ci id="S4.F5.4.1.m1.1.1.2.cmml" xref="S4.F5.4.1.m1.1.1.2">𝑝</ci><cn type="float" id="S4.F5.4.1.m1.1.1.3.cmml" xref="S4.F5.4.1.m1.1.1.3">0.05</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F5.4.1.m1.1d">p&lt;0.05</annotation></semantics></math>, <math id="S4.F5.5.2.m2.1" class="ltx_Math" alttext="p&lt;0.01" display="inline"><semantics id="S4.F5.5.2.m2.1b"><mrow id="S4.F5.5.2.m2.1.1" xref="S4.F5.5.2.m2.1.1.cmml"><mi id="S4.F5.5.2.m2.1.1.2" xref="S4.F5.5.2.m2.1.1.2.cmml">p</mi><mo id="S4.F5.5.2.m2.1.1.1" xref="S4.F5.5.2.m2.1.1.1.cmml">&lt;</mo><mn id="S4.F5.5.2.m2.1.1.3" xref="S4.F5.5.2.m2.1.1.3.cmml">0.01</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.F5.5.2.m2.1c"><apply id="S4.F5.5.2.m2.1.1.cmml" xref="S4.F5.5.2.m2.1.1"><lt id="S4.F5.5.2.m2.1.1.1.cmml" xref="S4.F5.5.2.m2.1.1.1"></lt><ci id="S4.F5.5.2.m2.1.1.2.cmml" xref="S4.F5.5.2.m2.1.1.2">𝑝</ci><cn type="float" id="S4.F5.5.2.m2.1.1.3.cmml" xref="S4.F5.5.2.m2.1.1.3">0.01</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F5.5.2.m2.1d">p&lt;0.01</annotation></semantics></math>, <math id="S4.F5.6.3.m3.1" class="ltx_Math" alttext="p&lt;0.001" display="inline"><semantics id="S4.F5.6.3.m3.1b"><mrow id="S4.F5.6.3.m3.1.1" xref="S4.F5.6.3.m3.1.1.cmml"><mi id="S4.F5.6.3.m3.1.1.2" xref="S4.F5.6.3.m3.1.1.2.cmml">p</mi><mo id="S4.F5.6.3.m3.1.1.1" xref="S4.F5.6.3.m3.1.1.1.cmml">&lt;</mo><mn id="S4.F5.6.3.m3.1.1.3" xref="S4.F5.6.3.m3.1.1.3.cmml">0.001</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.F5.6.3.m3.1c"><apply id="S4.F5.6.3.m3.1.1.cmml" xref="S4.F5.6.3.m3.1.1"><lt id="S4.F5.6.3.m3.1.1.1.cmml" xref="S4.F5.6.3.m3.1.1.1"></lt><ci id="S4.F5.6.3.m3.1.1.2.cmml" xref="S4.F5.6.3.m3.1.1.2">𝑝</ci><cn type="float" id="S4.F5.6.3.m3.1.1.3.cmml" xref="S4.F5.6.3.m3.1.1.3">0.001</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.F5.6.3.m3.1d">p&lt;0.001</annotation></semantics></math>) according to a paired U test. <a href="#S4.F5.sf1" title="In Figure 5 ‣ IV-C In-Hand Manipulation Performance ‣ IV Evaluation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5(a)</span></a>) The average pose error. <a href="#S4.F5.sf2" title="In Figure 5 ‣ IV-C In-Hand Manipulation Performance ‣ IV Evaluation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5(b)</span></a>) The object’s final distance from the goal. <a href="#S4.F5.sf3" title="In Figure 5 ‣ IV-C In-Hand Manipulation Performance ‣ IV Evaluation ‣ Optical Proximity Sensing for Pose Estimation During In-Hand Manipulation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5(c)</span></a>) Time between initial contact and task completion.</span></figcaption>
+</figure>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2204.02371/assets/figs/traj_error.png" id="S4.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="269" height="202" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span id="S4.F6.2.1.1" class="ltx_text" style="font-size:90%;">Figure 6</span>: </span><span id="S4.F6.3.2" class="ltx_text" style="font-size:90%;">The error in pose estimation for both tactile and proximity sensing. Each series is averaged over ten trials, and the shaded errors represent one standard deviation.</span></figcaption>
+</figure>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span id="S4.T1.10.1.1" class="ltx_text" style="font-size:90%;">TABLE I</span>: </span><span id="S4.T1.11.2" class="ltx_text" style="font-size:90%;">The results of ten in-hand manipulation trials.</span></figcaption>
+<div id="S4.T1.8" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:85.2pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(33.6pt,-6.6pt) scale(1.18344991166932,1.18344991166932) ;">
+<table id="S4.T1.8.8" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.8.8.9.1" class="ltx_tr">
+<th id="S4.T1.8.8.9.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_tt"></th>
+<th id="S4.T1.8.8.9.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Avg. Pose Err. (mm)</th>
+<th id="S4.T1.8.8.9.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Success</th>
+<th id="S4.T1.8.8.9.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Goal Dist (mm)</th>
+<th id="S4.T1.8.8.9.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">Exec. Time (s)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.2.2.2" class="ltx_tr">
+<th id="S4.T1.2.2.2.3" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">Fiducial</th>
+<td id="S4.T1.2.2.2.4" class="ltx_td ltx_align_center ltx_border_t">-</td>
+<td id="S4.T1.2.2.2.5" class="ltx_td ltx_align_center ltx_border_t">10/10</td>
+<td id="S4.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_border_t">7.3 <math id="S4.T1.1.1.1.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.1.1.1.1.m1.1a"><mo id="S4.T1.1.1.1.1.m1.1.1" xref="S4.T1.1.1.1.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.1.1.1.1.m1.1b"><csymbol cd="latexml" id="S4.T1.1.1.1.1.m1.1.1.cmml" xref="S4.T1.1.1.1.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.1.1.1.1.m1.1c">\pm</annotation></semantics></math> 3.6</td>
+<td id="S4.T1.2.2.2.2" class="ltx_td ltx_align_center ltx_border_t">36.9 <math id="S4.T1.2.2.2.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.2.2.2.2.m1.1a"><mo id="S4.T1.2.2.2.2.m1.1.1" xref="S4.T1.2.2.2.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.2.2.2.2.m1.1b"><csymbol cd="latexml" id="S4.T1.2.2.2.2.m1.1.1.cmml" xref="S4.T1.2.2.2.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.2.2.2.2.m1.1c">\pm</annotation></semantics></math> 9.1</td>
+</tr>
+<tr id="S4.T1.5.5.5" class="ltx_tr">
+<th id="S4.T1.5.5.5.4" class="ltx_td ltx_align_left ltx_th ltx_th_row">Proximity</th>
+<td id="S4.T1.3.3.3.1" class="ltx_td ltx_align_center">2.7 <math id="S4.T1.3.3.3.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.3.3.3.1.m1.1a"><mo id="S4.T1.3.3.3.1.m1.1.1" xref="S4.T1.3.3.3.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.3.3.3.1.m1.1b"><csymbol cd="latexml" id="S4.T1.3.3.3.1.m1.1.1.cmml" xref="S4.T1.3.3.3.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.3.3.3.1.m1.1c">\pm</annotation></semantics></math> 0.4</td>
+<td id="S4.T1.5.5.5.5" class="ltx_td ltx_align_center">10/10</td>
+<td id="S4.T1.4.4.4.2" class="ltx_td ltx_align_center">7.8 <math id="S4.T1.4.4.4.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.4.4.4.2.m1.1a"><mo id="S4.T1.4.4.4.2.m1.1.1" xref="S4.T1.4.4.4.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.4.4.4.2.m1.1b"><csymbol cd="latexml" id="S4.T1.4.4.4.2.m1.1.1.cmml" xref="S4.T1.4.4.4.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.4.4.4.2.m1.1c">\pm</annotation></semantics></math> 1.3</td>
+<td id="S4.T1.5.5.5.3" class="ltx_td ltx_align_center">40.0 <math id="S4.T1.5.5.5.3.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.5.5.5.3.m1.1a"><mo id="S4.T1.5.5.5.3.m1.1.1" xref="S4.T1.5.5.5.3.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.5.5.5.3.m1.1b"><csymbol cd="latexml" id="S4.T1.5.5.5.3.m1.1.1.cmml" xref="S4.T1.5.5.5.3.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.5.5.5.3.m1.1c">\pm</annotation></semantics></math> 10.0</td>
+</tr>
+<tr id="S4.T1.8.8.8" class="ltx_tr">
+<th id="S4.T1.8.8.8.4" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb">Tactile</th>
+<td id="S4.T1.6.6.6.1" class="ltx_td ltx_align_center ltx_border_bb">5.5 <math id="S4.T1.6.6.6.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.6.6.6.1.m1.1a"><mo id="S4.T1.6.6.6.1.m1.1.1" xref="S4.T1.6.6.6.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.6.6.6.1.m1.1b"><csymbol cd="latexml" id="S4.T1.6.6.6.1.m1.1.1.cmml" xref="S4.T1.6.6.6.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.6.6.6.1.m1.1c">\pm</annotation></semantics></math> 1.6</td>
+<td id="S4.T1.8.8.8.5" class="ltx_td ltx_align_center ltx_border_bb">5/10</td>
+<td id="S4.T1.7.7.7.2" class="ltx_td ltx_align_center ltx_border_bb">11.2 <math id="S4.T1.7.7.7.2.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.7.7.7.2.m1.1a"><mo id="S4.T1.7.7.7.2.m1.1.1" xref="S4.T1.7.7.7.2.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.7.7.7.2.m1.1b"><csymbol cd="latexml" id="S4.T1.7.7.7.2.m1.1.1.cmml" xref="S4.T1.7.7.7.2.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.7.7.7.2.m1.1c">\pm</annotation></semantics></math> 3.6</td>
+<td id="S4.T1.8.8.8.3" class="ltx_td ltx_align_center ltx_border_bb">48.6 <math id="S4.T1.8.8.8.3.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S4.T1.8.8.8.3.m1.1a"><mo id="S4.T1.8.8.8.3.m1.1.1" xref="S4.T1.8.8.8.3.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S4.T1.8.8.8.3.m1.1b"><csymbol cd="latexml" id="S4.T1.8.8.8.3.m1.1.1.cmml" xref="S4.T1.8.8.8.3.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S4.T1.8.8.8.3.m1.1c">\pm</annotation></semantics></math> 10.0</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Conclusion</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this paper, we measured the accuracy of tactile sensor and proximity sensor based pose estimation and its effect on in-hand manipulation performance. The novel application of proximity sensing to in-hand manipulation is motivated by the fact that fingertip-embedded proximity sensors are robust to occlusion (unlike environment- or robot-mounted image sensors) and able to sense beyond the local areas of contact (unlike tactile sensors). We considered an in-hand manipulation task that involved moving an object from one side of its workspace to the other. Our experiments demonstrate that proximity sensor based pose estimation has an average error of only 2.7 millimeters, which is less than half of that of tactile sensor based pose estimation. In terms of task performance, proximity sensing resulted in significantly more robust task completion and final object positioning accuracy relative to tactile sensing.</p>
+</div>
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS1.5.1.1" class="ltx_text">V-A</span> </span><span id="S5.SS1.6.2" class="ltx_text ltx_font_italic">Limitations</span>
+</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.1" class="ltx_p">One direction for future work is to perform similar experiments for a wider range of in-hand manipulation tasks. In particular, these experiments could be expanded by using manipulation objects of different size, weight, and geometric shape. The task could be further generalized by using arbitrary initial and goal poses within the robot’s workspace.</p>
+</div>
+<div id="S5.SS1.p2" class="ltx_para">
+<p id="S5.SS1.p2.1" class="ltx_p">A limitation of our work is the way in which we implemented tactile sensing. Particularly, higher resolution tactile sensors will likely perform better than our spatially sparse tactile sensor baseline. Although we directly compare tactile sensing against proximity sensing for pose estimation in our experiments, there are other aspects of manipulation that require some form of tactile sensing. Specifically, tactile sensors can detect applied forces, object slippage, vibrations, etc. that can be useful for manipulation but would be difficult or impossible to measure with purely proximity sensors. Ultimately, we believe that future work should focus on developing fingertip sensors that use either new sensing technologies or a mix of existing mechanisms to achieve high resolution proximity <span id="S5.SS1.p2.1.1" class="ltx_text ltx_font_bold">and</span> tactile sensing.</p>
+</div>
+</section>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_font_smallcaps ltx_title_section">ACKNOWLEDGMENTS</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">This work was funded by the National Science Foundation EFRI (#1832795), National Science Foundation IIS (#2007011), National Science Foundation DMS (#1839371), the Office of Naval Research, US Army Research Laboratory CCDC, Amazon, and Honda Research Institute USA.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+W. Yuan, S. Dong, and E. H. Adelson, “Gelsight: High-resolution robot tactile
+sensors for estimating geometry and force,” <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">Sensors</em>, vol. 17, no. 12,
+p. 2762, 2017.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+E. Donlon, S. Dong, M. Liu, J. Li, E. Adelson, and A. Rodriguez, “Gelslim: A
+high-resolution, compact, robust, and calibrated tactile-sensing finger,” in
+<em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">2018 IEEE/RSJ International Conference on Intelligent Robots and
+Systems (IROS)</em>.   IEEE, 2018, pp.
+1927–1934.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+M. Lambeta, P.-W. Chou, S. Tian, B. Yang, B. Maloon, V. R. Most, D. Stroud,
+R. Santos, A. Byagowi, G. Kammerer <em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Digit: A novel design for
+a low-cost compact high-resolution tactile sensor with application to in-hand
+manipulation,” <em id="bib.bib3.2.2" class="ltx_emph ltx_font_italic">IEEE Robotics and Automation Letters</em>, vol. 5, no. 3,
+pp. 3838–3845, 2020.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+A. Bhatt, A. Sieler, S. Puhlmann, and O. Brock, “Surprisingly robust in-hand
+manipulation: An empirical study,” <em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2201.11503</em>,
+2022.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+N. C. Dafle, A. Rodriguez, R. Paolini, B. Tang, S. S. Srinivasa, M. Erdmann,
+M. T. Mason, I. Lundberg, H. Staab, and T. Fuhlbrigge, “Extrinsic dexterity:
+In-hand manipulation with external forces,” in <em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">2014 IEEE International
+Conference on Robotics and Automation (ICRA)</em>.   IEEE, 2014, pp. 1578–1585.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+N. Chavan-Dafle and A. Rodriguez, “Prehensile pushing: In-hand manipulation
+with push-primitives,” in <em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">2015 IEEE/RSJ International Conference on
+Intelligent Robots and Systems (IROS)</em>.   IEEE, 2015.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+O. M. Andrychowicz, B. Baker, M. Chociej, R. Jozefowicz, B. McGrew,
+J. Pachocki, A. Petron, M. Plappert, G. Powell, A. Ray <em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">et al.</em>,
+“Learning dexterous in-hand manipulation,” <em id="bib.bib7.2.2" class="ltx_emph ltx_font_italic">The International Journal
+of Robotics Research</em>, vol. 39, no. 1, pp. 3–20, 2020.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+W. G. Bircher, A. S. Morgan, and A. M. Dollar, “Complex manipulation with a
+simple robotic hand through contact breaking and caging,” <em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">Science
+Robotics</em>, vol. 6, no. 54, p. eabd2666, 2021.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+K. Hang, W. G. Bircher, A. S. Morgan, and A. M. Dollar, “Manipulation for
+self-identification, and self-identification for better manipulation,”
+<em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">Science Robotics</em>, vol. 6, no. 54, p. eabe1321, 2021.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+A. Morgan, K. Hang, B. Wen, K. E. Bekris, and A. Dollar, “Complex in-hand
+manipulation via compliance-enabled finger gaiting and multi-modal
+planning,” <em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">IEEE Robotics and Automation Letters</em>, 2022.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+R. Higo, Y. Yamakawa, T. Senoo, and M. Ishikawa, “Rubik’s cube handling using
+a high-speed multi-fingered hand and a high-speed vision system,” in
+<em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic">2018 IEEE/RSJ International Conference on Intelligent Robots and
+Systems (IROS)</em>.   IEEE, 2018, pp.
+6609–6614.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+H. Maekawa, K. Tanie, and K. Komoriya, “Tactile sensor based manipulation of
+an unknown object by a multifingered hand with rolling contact,” in
+<em id="bib.bib12.1.1" class="ltx_emph ltx_font_italic">Proceedings of 1995 IEEE International Conference on Robotics and
+Automation</em>, vol. 1.   IEEE, 1995, pp.
+743–750.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+V. Kumar, A. Gupta, E. Todorov, and S. Levine, “Learning dexterous
+manipulation policies from experience and imitation,” <em id="bib.bib13.1.1" class="ltx_emph ltx_font_italic">arXiv preprint
+arXiv:1611.05095</em>, 2016.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+H. Van Hoof, T. Hermans, G. Neumann, and J. Peters, “Learning robot in-hand
+manipulation with tactile features,” in <em id="bib.bib14.1.1" class="ltx_emph ltx_font_italic">2015 IEEE-RAS 15th
+International Conference on Humanoid Robots (Humanoids)</em>.   IEEE, 2015, pp. 121–127.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+P. Falco, A. Attawia, M. Saveriano, and D. Lee, “On policy learning robust to
+irreversible events: An application to robotic in-hand manipulation,”
+<em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic">IEEE Robotics and Automation Letters</em>, vol. 3, no. 3, pp. 1482–1489,
+2018.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+J. Liang, A. Handa, K. Van Wyk, V. Makoviychuk, O. Kroemer, and D. Fox,
+“In-hand object pose tracking via contact feedback and gpu-accelerated
+robotic simulation,” in <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">2020 IEEE International Conference on Robotics
+and Automation (ICRA)</em>.   IEEE, 2020.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+M. Koval, N. Pollard, and S. Srinivasa, “Pose estimation for planar contact
+manipulation with manifold particle filters,” <em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic">The International
+Journal of Robotics Research</em>, vol. 34, no. 7, pp. 922–945, 2015.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+L. Zhang and J. C. Trinkle, “The application of particle filtering to grasping
+acquisition with visual occlusion and tactile sensing,” in <em id="bib.bib18.1.1" class="ltx_emph ltx_font_italic">2012
+International Conference on Robotics and Automation</em>.   IEEE, 2012.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+M. Bauza, E. Valls, B. Lim, T. Sechopoulos, and A. Rodriguez, “Tactile object
+pose estimation from the first touch with geometric contact rendering,”
+<em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:2012.05205</em>, 2020.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+S. E. Navarro, S. Mühlbacher-Karrer, H. Alagi, H. Zangl, K. Koyama,
+B. Hein, C. Duriez, and J. R. Smith, “Proximity perception in human-centered
+robotics: A survey on sensing systems and applications,” <em id="bib.bib20.1.1" class="ltx_emph ltx_font_italic">IEEE
+Transactions on Robotics</em>, 2021.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+L.-T. Jiang and J. R. Smith, “Seashell effect pretouch sensing for robotic
+grasping,” in <em id="bib.bib21.1.1" class="ltx_emph ltx_font_italic">2012 IEEE International Conference on Robotics and
+Automation</em>.   IEEE, 2012, pp.
+2851–2858.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+C. Fang, D. Wang, D. Song, and J. Zou, “Toward fingertip non-contact material
+recognition and near-distance ranging for robotic grasping,” in <em id="bib.bib22.1.1" class="ltx_emph ltx_font_italic">2019
+International Conference on Robotics and Automation (ICRA)</em>.   IEEE, 2019, pp. 4967–4974.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+D. Göger, H. Alagi, and H. Wörn, “Tactile proximity sensors for
+robotic applications,” in <em id="bib.bib23.1.1" class="ltx_emph ltx_font_italic">2013 IEEE International Conference on
+Industrial Technology (ICIT)</em>.   IEEE,
+2013, pp. 978–983.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+R. Wistort and J. R. Smith, “Electric field servoing for robotic
+manipulation,” in <em id="bib.bib24.1.1" class="ltx_emph ltx_font_italic">2008 IEEE/RSJ International Conference on
+Intelligent Robots and Systems</em>.   IEEE,
+2008, pp. 494–499.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+B. Mayton, L. LeGrand, and J. R. Smith, “An electric field pretouch system for
+grasping and co-manipulation,” in <em id="bib.bib25.1.1" class="ltx_emph ltx_font_italic">2010 IEEE International Conference
+on Robotics and Automation</em>.   IEEE,
+2010, pp. 831–838.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+L.-M. Faller, C. Stetco, and H. Zangl, “Design of a novel gripper system with
+3d-and inkjet-printed multimodal sensors for automated grasping of a forestry
+robot,” in <em id="bib.bib26.1.1" class="ltx_emph ltx_font_italic">2019 IEEE/RSJ International Conference on Intelligent
+Robots and Systems (IROS)</em>.   IEEE,
+2019, pp. 5620–5627.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+S. Mühlbacher-Karrer, A. Gaschler, and H. Zangl, “Responsive
+fingers—capacitive sensing during object manipulation,” in <em id="bib.bib27.1.1" class="ltx_emph ltx_font_italic">2015
+IEEE/RSJ International Conference on Intelligent Robots and Systems
+(IROS)</em>.   IEEE, 2015, pp. 4394–4401.
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+D. Guo, P. Lancaster, L.-T. Jiang, F. Sun, and J. R. Smith, “Transmissive
+optical pretouch sensing for robotic grasping,” in <em id="bib.bib28.1.1" class="ltx_emph ltx_font_italic">2015 IEEE/RSJ
+International Conference on Intelligent Robots and Systems (IROS)</em>.   IEEE, 2015, pp. 5891–5897.
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+K. Hsiao, P. Nangeroni, M. Huber, A. Saxena, and A. Y. Ng, “Reactive grasping
+using optical proximity sensors,” in <em id="bib.bib29.1.1" class="ltx_emph ltx_font_italic">2009 IEEE International
+Conference on Robotics and Automation</em>.   IEEE, 2009, pp. 2098–2105.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+A. Maldonado, H. Alvarez, and M. Beetz, “Improving robot manipulation through
+fingertip perception,” in <em id="bib.bib30.1.1" class="ltx_emph ltx_font_italic">2012 IEEE/RSJ International Conference on
+Intelligent Robots and Systems</em>.   IEEE,
+2012, pp. 2947–2954.
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+B. Yang, P. Lancaster, and J. R. Smith, “Pre-touch sensing for sequential
+manipulation,” in <em id="bib.bib31.1.1" class="ltx_emph ltx_font_italic">2017 IEEE International Conference on Robotics and
+Automation (ICRA)</em>.   IEEE, 2017, pp.
+5088–5095.
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+R. Patel and N. Correll, “Integrated force and distance sensing using
+elastomer-embedded commodity proximity sensors.” in <em id="bib.bib32.1.1" class="ltx_emph ltx_font_italic">Robotics: Science
+and systems</em>, 2016.
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+P. E. Lancaster, J. R. Smith, and S. S. Srinivasa, “Improved proximity,
+contact, and force sensing via optimization of elastomer-air interface
+geometry,” in <em id="bib.bib33.1.1" class="ltx_emph ltx_font_italic">2019 International Conference on Robotics and Automation
+(ICRA)</em>.   IEEE, 2019, pp. 3797–3803.
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+A. Yamaguchi and C. G. Atkeson, “Implementing tactile behaviors using
+fingervision,” in <em id="bib.bib34.1.1" class="ltx_emph ltx_font_italic">2017 IEEE-RAS 17th International Conference on
+Humanoid Robotics (Humanoids)</em>.   IEEE,
+2017, pp. 241–248.
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+K. Sasaki, K. Koyama, A. Ming, M. Shimojo, R. Plateaux, and J.-Y. Choley,
+“Robotic grasping using proximity sensors for detecting both target object
+and support surface,” in <em id="bib.bib35.1.1" class="ltx_emph ltx_font_italic">2018 IEEE/RSJ International Conference on
+Intelligent Robots and Systems (IROS)</em>.   IEEE, 2018, pp. 2925–2932.
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+J. Konstantinova, A. Stilli, A. Faragasso, and K. Althoefer, “Fingertip
+proximity sensor with realtime visual-based calibration,” in <em id="bib.bib36.1.1" class="ltx_emph ltx_font_italic">2016
+IEEE/RSJ International Conference on Intelligent Robots and Systems
+(IROS)</em>.   IEEE, 2016, pp. 170–175.
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+K. Koyama, K. Murakami, T. Senoo, M. Shimojo, and M. Ishikawa, “High-speed,
+small-deformation catching of soft objects based on active vision and
+proximity sensing,” <em id="bib.bib37.1.1" class="ltx_emph ltx_font_italic">IEEE Robotics and Automation letters</em>, vol. 4,
+no. 2, pp. 578–585, 2019.
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+P. Lancaster, C. Mavrogiannis, S. S. Srinivasa, and J. R. Smith,
+“Electrostatic brakes enable individual joint control of underactuated,
+highly articulated robots,” <em id="bib.bib38.1.1" class="ltx_emph ltx_font_italic">In Submission</em>.
+
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock">
+S. Thrun, D. Fox, W. Burgard, and F. Dellaert, “Robust monte carlo
+localization for mobile robots,” <em id="bib.bib39.1.1" class="ltx_emph ltx_font_italic">Artificial intelligence</em>, vol. 128,
+no. 1-2, pp. 99–141, 2001.
+
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock">
+V. Makoviychuk, L. Wawrzyniak, Y. Guo, M. Lu, K. Storey, M. Macklin,
+D. Hoeller, N. Rudin, A. Allshire, A. Handa <em id="bib.bib40.1.1" class="ltx_emph ltx_font_italic">et al.</em>, “Isaac gym: High
+performance gpu-based physics simulation for robot learning,” <em id="bib.bib40.2.2" class="ltx_emph ltx_font_italic">arXiv
+preprint arXiv:2108.10470</em>, 2021.
+
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock">
+G. Williams, N. Wagener, B. Goldfain, P. Drews, J. M. Rehg, B. Boots, and E. A.
+Theodorou, “Information theoretic mpc for model-based reinforcement
+learning,” in <em id="bib.bib41.1.1" class="ltx_emph ltx_font_italic">2017 IEEE International Conference on Robotics and
+Automation (ICRA)</em>.   IEEE, 2017, pp.
+1714–1721.
+
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock">
+J. Zhong, M. Oller, T. Power, and K. Taekyung, “PyTorch MPPI.” [Online].
+Available: <a target="_blank" href="https://github.com/UM-ARM-Lab/pytorch_mppi" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/UM-ARM-Lab/pytorch_mppi</a>
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2204.02370" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2204.02371" class="ar5iv-text-button ar5iv-severity-ok">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2204.02371">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2204.02371" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2204.02372" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Mon Feb 26 23:54:18 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

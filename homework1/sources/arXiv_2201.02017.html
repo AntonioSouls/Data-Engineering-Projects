@@ -1,0 +1,1545 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2201.02017] Enhancing Egocentric 3D Pose Estimation with Third Person Views</title><meta property="og:description" content="In this paper, we propose a novel approach to enhance the 3D body pose estimation of a person computed from videos captured from a single wearable camera.
+The key idea is to leverage high-level features linking first- …">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Enhancing Egocentric 3D Pose Estimation with Third Person Views">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Enhancing Egocentric 3D Pose Estimation with Third Person Views">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2201.02017">
+
+<!--Generated on Wed Mar  6 11:30:44 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_fleqn">
+<h1 class="ltx_title ltx_title_document">Enhancing Egocentric 3D Pose Estimation 
+<br class="ltx_break">with Third Person Views</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ameya Dhamanaskar, Mariella Dimiccoli, Enric Corona, Albert Pumarola, Francesc Moreno-Noguer
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_address">Institut de Robòtica i Informàtica Industrial, CSIC-UPC 
+<br class="ltx_break">Carrer Llorens i Artigas 4-6, 08028, Barcelona, Spain
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">In this paper, we propose a novel approach to enhance the 3D body pose estimation of a person computed from videos captured from a single wearable camera.
+The key idea is to leverage high-level features linking first- and third-views in a joint embedding space. To learn such embedding space we introduce <span id="id1.id1.1" class="ltx_text ltx_font_italic">First2Third-Pose</span>, a new paired synchronized dataset of nearly 2,000 videos depicting human activities captured from both first- and third-view perspectives. We explicitly consider spatial- and motion-domain features, combined using a semi-Siamese architecture trained in a self-supervised fashion.
+Experimental results demonstrate that the joint multi-view embedded space learned with our dataset is useful to extract discriminatory features from arbitrary single-view egocentric videos, without needing domain adaptation nor knowledge of camera parameters. We achieve significant improvement of egocentric 3D body pose estimation performance on two unconstrained datasets, over three supervised state-of-the-art approaches.
+Our dataset and code will be available for research purposes <span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><a target="_blank" href="https://github.com/nudlesoup/First2Third-Pose" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/nudlesoup/First2Third-Pose</a></span></span></span>.</p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification">keywords: </h6>
+3D pose estimation, self-supervised learning, egocentric vision.
+
+</div>
+<span id="id1" class="ltx_note ltx_note_frontmatter ltx_role_journal"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type">journal: </span>Journal of <span id="id1.1" class="ltx_text ltx_LaTeX_logo" style="letter-spacing:-0.2em; margin-right:0.1em;">L<span id="id1.1.1" class="ltx_text" style="position:relative; bottom:0.4ex;font-variant:small-caps;;">a</span>T<span id="id1.1.2" class="ltx_text" style="position:relative; bottom:-0.2ex;font-variant:small-caps;font-size:120%;">e</span>X</span> Templates</span></span></span>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Egocentric vision is raising increasing attention in recent years, since it may enable several important applications in the fields of healthcare, robotics or augmented reality <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. For many of these applications, estimating the 3D full body pose of the person wearing the camera is of special interest since it conveys rich information about his/her activities, interactions and behaviour. However, inferring the first-person’s 3D body pose from a given egocentric video sequence is a challenging problem in computer vision since wearable cameras are typically worn on the chest or on the head, and have almost no view of the camera wearer’s body. As a consequence, state-of-the-art approaches for third-person body pose estimation are not suited to the egocentric domain, and dedicated methods need to be developed.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Despite the relevance of the problem,
+egocentric body pose estimation has received little attention in the literature so far <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>.
+Prior work has shown the importance of leveraging egomotion and the coarse scene structure to predict the body pose behind the camera <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. More recently, second person body poses, as observed in a first-person video stream, have been used to enhance egocentric pose estimation during dyadic interactions <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>. While these methods rely only on the egocentric video data itself to estimate the egopose, another line of work uses simulated data to learn a control policy that is ultimately transferred to egocentric videos.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> used simulated data to learn a control policy accounting for the physics that underlies the kinematics of the motion and hence able to generate physically plausible first-person body poses. In the same spirit, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> learns a control policy from unsegmented MoCap data without the need of domain adaptation to transfer them to real egocentric data.
+Lately, fostered by potential applications in the field of augmented and virtual reality, egocentric 3D pose has been estimated from wearable cameras with eye-fish lens, which ensures a larger body part view <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> by incorporating motion priors learned from mocap data. All these methods, however, either rely solely on information available in first-person videos or leverage simulated data for egopose from existing mocap data or humanoid simulator.</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2201.02017/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_img_landscape" width="664" height="66" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>First-person (left) and third-person (right) perspectives represent the two sides of a same coin. Our work considers how a joint embedding space between these two worlds can facilitate egocentric 3D body pose estimation. The skeleton in the center has been estimated from an egocentric video by relying on our joint embedding space.</figcaption>
+</figure>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">In this paper, we explore whether visual cues on third-person videos can help to improve the robustness of 3D pose detectors on first-person views. For this purpose, we rely on a new, real dataset of synchronized paired first- and third-person videos to learn a joint embedded space that we leverage to enhance 3D egopose estimation (see Figure <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>).
+To learn the embedding space, we train in a self-supervised fashion a two streams, semi-Siamese convolutional neural network for the task of discriminating if two views (first- and third-views) correspond to the same 3D skeleton. At inference time, the embedded space is used to extract image features allowing to discriminate different 3D human poses from new, unpaired egocentric videos. Our approach does not require domain adaptation to transfer to new unpaired egocentric datasets, and can be applied to egocentric videos captured in the wild, for which the camera parameters are typically unknown. Experimental results on two real datasets show that the use of joint first- and third- embedded features has a significant benefit for 3D egopose estimation. Specifically, we reduce the error of 12.71% and 7.51% on average respectively on two datasets over three state-of-the-art approaches.
+</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Our key contributions can be summarized as follows:
+</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">We demonstrate for the first time the benefit of linking first- and third-person views for the task of 3D egocentric body pose estimation.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">We collect and make publicly available <span id="S1.I1.i2.p1.1.1" class="ltx_text ltx_font_italic">First2Third-Pose</span>, a large dataset consisting of nearly 2,000 synchronized first- and third-views videos, capturing 14 people performing 40 different activities in 4 different scenarios.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">We show that our dataset is useful to extract discriminative features for estimating 3D egopose from arbitrary egocentric videos, without any knowledge of the camera parameters.</p>
+</div>
+</li>
+<li id="S1.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span> 
+<div id="S1.I1.i4.p1" class="ltx_para">
+<p id="S1.I1.i4.p1.1" class="ltx_p">We achieve consistent and significant performance improvement on two real datasets, <span id="S1.I1.i4.p1.1.1" class="ltx_text ltx_font_italic">First2Third-Pose</span> and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, over three existing baseline methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<div id="S2.p1" class="ltx_para ltx_noindent">
+<p id="S2.p1.1" class="ltx_p"><span id="S2.p1.1.1" class="ltx_text ltx_font_bold">3D pose estimation from third-view.</span>
+Learning to estimate 3D body pose from a single RGB image from third-view (assuming the person is seen in the image) is a long-standing problem in computer vision. Most approaches in this area follow a fully-supervised pipeline, and use images annotated with 3D poses to train a deep neural network that regresses the 3D pose directly from images <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> or via an intermediate step that estimates the 2D pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>, <a href="#bib.bib15" title="" class="ltx_ref">15</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> The architectures explored so far for this task range from Euclidean CNN to more recent nonEuclidean Graph-Convolutional Network (GCN). Some representative examples are as follows. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> proposed deep neural network approach for maximum-margin structured learning that learns jointly the feature representations for image and pose as well as the score function.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> proposes the first
+CNN architecture for jointly estimate 2D landmark and 3D human pose.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> models spatial-temporal dependencies between different joints of temporal consecutive skeletons through a GCN approach and consolidate features across scales via a hierarchical “local-to-global” architecture.</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.1" class="ltx_p">However, since all these approaches require large amount of annotated data for training, they are typically trained on datasets acquired in controlled indoor environments, for which it is easy to use motion capture systems <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>.</p>
+</div>
+<div id="S2.p3" class="ltx_para">
+<p id="S2.p3.1" class="ltx_p">Along another body of work devoted to 3D mesh reconstruction, the 3D skeleton is often explicitly taken into account.
+Sun et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> proposed a module for disentangling the skeleton from the rest part of the human 3D mesh, hence building a bridge between 2D/3D pose estimation and 3D mesh recovery. Wang et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> directly infer sequential 3D body models by extracting local features of a sequence of point clouds and regress 3D coordinates of mesh vertices at different resolutions from the latent features of point
+clouds. In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> expressive body motion capture including 3d hands, face, and body are estimated from a single image as a form of shape and pose parameters of the SMPL-X 3D model of the human body. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> proposed a resolution-aware network for 3D human pose and shape estimation that can handle arbitrary-resolution input with one single model.</p>
+</div>
+<div id="S2.p4" class="ltx_para">
+<p id="S2.p4.1" class="ltx_p">Interestingly, to enable training on 3D body pose datasets acquired in-the-wild, a number of approaches only use 2D weak annotations <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>, <a href="#bib.bib24" title="" class="ltx_ref">24</a>, <a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite> or used weak <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite> and self-supervised based methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>
+proposed using unlabeled multi-view data for training in end-to-end manner by enforcing the 3D poses estimated from different views to be consistent. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite> proposed to use depth images captured by commodity RGB-D cameras at training time to alleviate the burden of costly 3D annotations in large-scale real datasets.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite> proposed a self-supervised approach to learn features representations suitable for 3D pose estimation, that uses as pretext task the detection of synchronized views (which are always related by a rigid transformation).</p>
+</div>
+<div id="S2.p5" class="ltx_para">
+<p id="S2.p5.1" class="ltx_p">Another self-supervised method for 3D pose estimation was proposed in Rodhin et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>, where the latent 3D representation is learned by reconstructing one view from another. However, differently from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite> their approach strictly relies on the knowledge of the camera extrinsic parameters and background images, and therefore is not suited to datasets captured in the wild.</p>
+</div>
+<div id="S2.p6" class="ltx_para">
+<p id="S2.p6.1" class="ltx_p">In this paper, we use first- and third-person paired data not only to get weak annotations for training, but also to learn a multi-view embedding space in a self-supervised fashion, that we further exploit to enhance 3D pose estimations. Differently from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>, where the pretext task translates into a classification of rigid versus non-rigid motion, in our case there is no direct link between the image information of the two types of images (first and third view). In addition, in contrast to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>, our approach does not require knowledge of the camera parameters nor of background images.</p>
+</div>
+<div id="S2.p7" class="ltx_para ltx_noindent">
+<p id="S2.p7.1" class="ltx_p"><span id="S2.p7.1.1" class="ltx_text ltx_font_bold">3D pose estimation from first-view.</span>
+Inferring human poses from egocentric images or videos is a problem that has been looked into only recently. Early works focused on estimating gestures and hand poses assuming that arms were partially visible <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>, <a href="#bib.bib31" title="" class="ltx_ref">31</a>, <a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>. In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite> several body-mounted cameras on person’s joints were used to infer body joint locations via a structure-from-motion approach. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> has been pioneering in showing that it is possible to estimate the invisible full body pose of the camera wearer directly from egocentric videos. This work considered dynamic motion signatures and static scene structure cues to build a motion graph from the training data and recovered the pose sequence by solving for the optimal pose path.
+More recently, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> leveraged the visible body pose of a person interacting with the camera wearer to improve the wearer’s pose estimation.</p>
+</div>
+<div id="S2.p8" class="ltx_para">
+<p id="S2.p8.1" class="ltx_p">Other methods use a humanoid simulator in a
+control-based approach <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> to estimate the 3D body pose of a camera wearer. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> learns a control policy on simulated data in a two-stage imitation learning process that yields physically valid 3D pose sequences. This is evaluated quantitatively only on synthetic sequences.
+On the same line, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> proposed an approach that can learn a Proportional Derivative control-based policy and a reward function from unsegmented MoCap data and estimate various complex human motions in real-time without the need to perform domain adaptation.</p>
+</div>
+<div id="S2.p9" class="ltx_para">
+<p id="S2.p9.1" class="ltx_p">More recent approaches estimate egopose from video captured by a head-mounted and front facing fisheye camera
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib34" title="" class="ltx_ref">34</a>, <a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite>, which better simulates augmented and virtual devices. Mo2Cap2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite> and xR-egopose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite> estimate the local 3D body pose in egocentric camera space, whereas <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> proposes a method to estimate it in the world coordinate system.
+This is achieved by leveraging the 2D and 3D
+keypoints from CNN detection as well as VAE-based motion priors learned from a large mocap dataset.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> leverages on both the dynamic motion information obtained from camera SLAM, and the occasionally visible body parts to predict jointly head and body pose.
+Unlike any of the existing methods, our approach exploits the underlying connection between first- and third-views for 3D egopose estimation.</p>
+</div>
+<div id="S2.p10" class="ltx_para ltx_noindent">
+<p id="S2.p10.1" class="ltx_p"><span id="S2.p10.1.1" class="ltx_text ltx_font_bold">Linking first-person and third-person perspectives.</span>
+Previous work has demonstrated the benefits of linking first-person and third-person perspectives for different tasks.
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite> showed the potential of combining a single wearable camera and multiple static cameras to better understand action recognition.
+More recently, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite> introduced a large-scale dataset of paired first- and third-person
+videos and used it to learn a joint multi-view representation and transfer knowledge from
+the third-person to the first-person domain for the task of zero-shot action recognition. A combination of first-person views from two social partners has been explored for recognizing micro-actions and reactions during social interactions
+<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite> as well as to improve activity recognition of two partners engaged in the same activity <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>.
+In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite>, an embedding space shared by first- and third-person videos is learned with the goal of matching camera wearers between third and first-person.
+Ego-exo <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib41" title="" class="ltx_ref">41</a>]</cite> is a framework to create
+strong video representations for downstream egocentric understanding tasks by leveraging traditional third-view large scale datasets.</p>
+</div>
+<div id="S2.p11" class="ltx_para">
+<p id="S2.p11.1" class="ltx_p">In any event, and to the best of our knowledge, the potential of linking the first-person and third-person perspective for 3D egocentric body pose estimation we propose in this paper has never been explored so far.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2201.02017/assets/x2.png" id="S2.F2.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="531" height="118" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Capture setup used for our <span id="S2.F2.3.1" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset. In addition to a head-mounted wearable camera, two static cameras are used to capture side and front views.</figcaption>
+</figure>
+<figure id="S2.F3" class="ltx_figure"><img src="/html/2201.02017/assets/x3.png" id="S2.F3.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="597" height="328" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Example of synchronized viewpoints in our dataset for different activities.</figcaption>
+</figure>
+<figure id="S2.T1" class="ltx_table">
+<div id="S2.T1.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:52pt;vertical-align:-0.6pt;"><span class="ltx_transformed_inner" style="transform:translate(-162.9pt,19.3pt) scale(0.570937423673435,0.570937423673435) ;">
+<table id="S2.T1.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T1.1.1.1.1" class="ltx_tr">
+<th id="S2.T1.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">Dataset</th>
+<th id="S2.T1.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#activities</th>
+<th id="S2.T1.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#videos</th>
+<th id="S2.T1.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#people</th>
+<th id="S2.T1.1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#view</th>
+<th id="S2.T1.1.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#body joints</th>
+<th id="S2.T1.1.1.1.1.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#scenes</th>
+<th id="S2.T1.1.1.1.1.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#fps</th>
+<th id="S2.T1.1.1.1.1.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#camera loc.</th>
+<th id="S2.T1.1.1.1.1.10" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#duration</th>
+<th id="S2.T1.1.1.1.1.11" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#GT</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T1.1.1.2.1" class="ltx_tr">
+<td id="S2.T1.1.1.2.1.1" class="ltx_td ltx_align_left ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">MotionGraph <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>
+</td>
+<td id="S2.T1.1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">19</td>
+<td id="S2.T1.1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">18</td>
+<td id="S2.T1.1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">10</td>
+<td id="S2.T1.1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">1</td>
+<td id="S2.T1.1.1.2.1.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">25</td>
+<td id="S2.T1.1.1.2.1.7" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">4 indoor</td>
+<td id="S2.T1.1.1.2.1.8" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">30</td>
+<td id="S2.T1.1.1.2.1.9" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">chest</td>
+<td id="S2.T1.1.1.2.1.10" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">1-3m</td>
+<td id="S2.T1.1.1.2.1.11" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">KineticsV2</td>
+</tr>
+<tr id="S2.T1.1.1.3.2" class="ltx_tr">
+<td id="S2.T1.1.1.3.2.1" class="ltx_td ltx_align_left" style="padding-left:4.0pt;padding-right:4.0pt;">You2me <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>
+</td>
+<td id="S2.T1.1.1.3.2.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">4</td>
+<td id="S2.T1.1.1.3.2.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">42</td>
+<td id="S2.T1.1.1.3.2.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">10</td>
+<td id="S2.T1.1.1.3.2.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">1</td>
+<td id="S2.T1.1.1.3.2.6" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">25</td>
+<td id="S2.T1.1.1.3.2.7" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">indoor</td>
+<td id="S2.T1.1.1.3.2.8" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">30</td>
+<td id="S2.T1.1.1.3.2.9" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">chest</td>
+<td id="S2.T1.1.1.3.2.10" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">2m</td>
+<td id="S2.T1.1.1.3.2.11" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">Kinect&amp;Panoptic</td>
+</tr>
+<tr id="S2.T1.1.1.4.3" class="ltx_tr">
+<td id="S2.T1.1.1.4.3.1" class="ltx_td ltx_align_left" style="padding-left:4.0pt;padding-right:4.0pt;"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite></td>
+<td id="S2.T1.1.1.4.3.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">8</td>
+<td id="S2.T1.1.1.4.3.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">24</td>
+<td id="S2.T1.1.1.4.3.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">5</td>
+<td id="S2.T1.1.1.4.3.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">2</td>
+<td id="S2.T1.1.1.4.3.6" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">22</td>
+<td id="S2.T1.1.1.4.3.7" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">2(indoor/outdoor)</td>
+<td id="S2.T1.1.1.4.3.8" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">30</td>
+<td id="S2.T1.1.1.4.3.9" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">head</td>
+<td id="S2.T1.1.1.4.3.10" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">20s</td>
+<td id="S2.T1.1.1.4.3.11" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">3rd-view(2D)</td>
+</tr>
+<tr id="S2.T1.1.1.5.4" class="ltx_tr">
+<td id="S2.T1.1.1.5.4.1" class="ltx_td ltx_align_left ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.1.1" class="ltx_text ltx_font_bold">Our</span></td>
+<td id="S2.T1.1.1.5.4.2" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.2.1" class="ltx_text ltx_font_bold">40</span></td>
+<td id="S2.T1.1.1.5.4.3" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.3.1" class="ltx_text ltx_font_bold">1950</span></td>
+<td id="S2.T1.1.1.5.4.4" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.4.1" class="ltx_text ltx_font_bold">14</span></td>
+<td id="S2.T1.1.1.5.4.5" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.5.1" class="ltx_text ltx_font_bold">4</span></td>
+<td id="S2.T1.1.1.5.4.6" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.6.1" class="ltx_text ltx_font_bold">17</span></td>
+<td id="S2.T1.1.1.5.4.7" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.7.1" class="ltx_text ltx_font_bold">4(indoor/outdoor)</span></td>
+<td id="S2.T1.1.1.5.4.8" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.8.1" class="ltx_text ltx_font_bold">25</span></td>
+<td id="S2.T1.1.1.5.4.9" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.9.1" class="ltx_text ltx_font_bold">head</span></td>
+<td id="S2.T1.1.1.5.4.10" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.10.1" class="ltx_text ltx_font_bold">8-25s</span></td>
+<td id="S2.T1.1.1.5.4.11" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T1.1.1.5.4.11.1" class="ltx_text ltx_font_bold">3rd-view(3D)</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Comparison of publicly available datasets for 3D egocentric pose estimation.</figcaption>
+</figure>
+<figure id="S2.T2" class="ltx_table">
+<div id="S2.T2.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:103.1pt;vertical-align:-0.6pt;"><span class="ltx_transformed_inner" style="transform:translate(-125.8pt,29.7pt) scale(0.63284094268709,0.63284094268709) ;">
+<table id="S2.T2.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T2.1.1.1.1" class="ltx_tr">
+<th id="S2.T2.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">Dataset</th>
+<th id="S2.T2.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#activities</th>
+<th id="S2.T2.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#videos</th>
+<th id="S2.T2.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#people</th>
+<th id="S2.T2.1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#view</th>
+<th id="S2.T2.1.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#scenes</th>
+<th id="S2.T2.1.1.1.1.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#fps</th>
+<th id="S2.T2.1.1.1.1.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#add.camera</th>
+<th id="S2.T2.1.1.1.1.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">#duration</th>
+<th id="S2.T2.1.1.1.1.10" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">full pose visible</th>
+<th id="S2.T2.1.1.1.1.11" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">Task</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T2.1.1.2.1" class="ltx_tr">
+<td id="S2.T2.1.1.2.1.1" class="ltx_td" style="padding-left:4.0pt;padding-right:4.0pt;"></td>
+<th id="S2.T2.1.1.2.1.2" class="ltx_td ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;"></th>
+<th id="S2.T2.1.1.2.1.3" class="ltx_td ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;"></th>
+<th id="S2.T2.1.1.2.1.4" class="ltx_td ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;"></th>
+<th id="S2.T2.1.1.2.1.5" class="ltx_td ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;"></th>
+<th id="S2.T2.1.1.2.1.6" class="ltx_td ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;"></th>
+<th id="S2.T2.1.1.2.1.7" class="ltx_td ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;"></th>
+<th id="S2.T2.1.1.2.1.8" class="ltx_td ltx_align_center ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;">location</th>
+<th id="S2.T2.1.1.2.1.9" class="ltx_td ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;"></th>
+<th id="S2.T2.1.1.2.1.10" class="ltx_td ltx_align_center ltx_th ltx_th_column" style="padding-left:4.0pt;padding-right:4.0pt;">on add. camera</th>
+<td id="S2.T2.1.1.2.1.11" class="ltx_td" style="padding-left:4.0pt;padding-right:4.0pt;"></td>
+</tr>
+<tr id="S2.T2.1.1.3.2" class="ltx_tr">
+<td id="S2.T2.1.1.3.2.1" class="ltx_td ltx_align_left ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite></td>
+<td id="S2.T2.1.1.3.2.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">12</td>
+<td id="S2.T2.1.1.3.2.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">20</td>
+<td id="S2.T2.1.1.3.2.4" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">11</td>
+<td id="S2.T2.1.1.3.2.5" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">3</td>
+<td id="S2.T2.1.1.3.2.6" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">3</td>
+<td id="S2.T2.1.1.3.2.7" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">60</td>
+<td id="S2.T2.1.1.3.2.8" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">hands</td>
+<td id="S2.T2.1.1.3.2.9" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">30s</td>
+<td id="S2.T2.1.1.3.2.10" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">-</td>
+<td id="S2.T2.1.1.3.2.11" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">gesture rec.</td>
+</tr>
+<tr id="S2.T2.1.1.4.3" class="ltx_tr">
+<td id="S2.T2.1.1.4.3.1" class="ltx_td ltx_align_left" style="padding-left:4.0pt;padding-right:4.0pt;"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite></td>
+<td id="S2.T2.1.1.4.3.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">28</td>
+<td id="S2.T2.1.1.4.3.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">140</td>
+<td id="S2.T2.1.1.4.3.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">5</td>
+<td id="S2.T2.1.1.4.3.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">4</td>
+<td id="S2.T2.1.1.4.3.6" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">1(Lab)</td>
+<td id="S2.T2.1.1.4.3.7" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">30fps</td>
+<td id="S2.T2.1.1.4.3.8" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">side,back,top</td>
+<td id="S2.T2.1.1.4.3.9" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">1-2s</td>
+<td id="S2.T2.1.1.4.3.10" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">-</td>
+<td id="S2.T2.1.1.4.3.11" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">action rec.</td>
+</tr>
+<tr id="S2.T2.1.1.5.4" class="ltx_tr">
+<td id="S2.T2.1.1.5.4.1" class="ltx_td ltx_align_left" style="padding-left:4.0pt;padding-right:4.0pt;"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite></td>
+<td id="S2.T2.1.1.5.4.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">uncons.</td>
+<td id="S2.T2.1.1.5.4.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">7</td>
+<td id="S2.T2.1.1.5.4.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">4</td>
+<td id="S2.T2.1.1.5.4.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">3</td>
+<td id="S2.T2.1.1.5.4.6" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">2</td>
+<td id="S2.T2.1.1.5.4.7" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">30</td>
+<td id="S2.T2.1.1.5.4.8" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">side</td>
+<td id="S2.T2.1.1.5.4.9" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">5-10m</td>
+<td id="S2.T2.1.1.5.4.10" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">-</td>
+<td id="S2.T2.1.1.5.4.11" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">pers. disam.</td>
+</tr>
+<tr id="S2.T2.1.1.6.5" class="ltx_tr">
+<td id="S2.T2.1.1.6.5.1" class="ltx_td ltx_align_left" style="padding-left:4.0pt;padding-right:4.0pt;"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite></td>
+<td id="S2.T2.1.1.6.5.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">uncons.</td>
+<td id="S2.T2.1.1.6.5.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">7</td>
+<td id="S2.T2.1.1.6.5.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">4</td>
+<td id="S2.T2.1.1.6.5.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">3</td>
+<td id="S2.T2.1.1.6.5.6" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">2</td>
+<td id="S2.T2.1.1.6.5.7" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">30</td>
+<td id="S2.T2.1.1.6.5.8" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">side</td>
+<td id="S2.T2.1.1.6.5.9" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">5-10m</td>
+<td id="S2.T2.1.1.6.5.10" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">-</td>
+<td id="S2.T2.1.1.6.5.11" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">pers. disam.</td>
+</tr>
+<tr id="S2.T2.1.1.7.6" class="ltx_tr">
+<td id="S2.T2.1.1.7.6.1" class="ltx_td ltx_align_left" style="padding-left:4.0pt;padding-right:4.0pt;"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite></td>
+<td id="S2.T2.1.1.7.6.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">7</td>
+<td id="S2.T2.1.1.7.6.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">1226</td>
+<td id="S2.T2.1.1.7.6.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">6</td>
+<td id="S2.T2.1.1.7.6.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">2</td>
+<td id="S2.T2.1.1.7.6.6" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">6</td>
+<td id="S2.T2.1.1.7.6.7" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">60</td>
+<td id="S2.T2.1.1.7.6.8" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">head</td>
+<td id="S2.T2.1.1.7.6.9" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">1.5s</td>
+<td id="S2.T2.1.1.7.6.10" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">-</td>
+<td id="S2.T2.1.1.7.6.11" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">act./react.</td>
+</tr>
+<tr id="S2.T2.1.1.8.7" class="ltx_tr">
+<td id="S2.T2.1.1.8.7.1" class="ltx_td ltx_align_left" style="padding-left:4.0pt;padding-right:4.0pt;"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite></td>
+<td id="S2.T2.1.1.8.7.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">4</td>
+<td id="S2.T2.1.1.8.7.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">24</td>
+<td id="S2.T2.1.1.8.7.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">4</td>
+<td id="S2.T2.1.1.8.7.5" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">2</td>
+<td id="S2.T2.1.1.8.7.6" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">3</td>
+<td id="S2.T2.1.1.8.7.7" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">30</td>
+<td id="S2.T2.1.1.8.7.8" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">head</td>
+<td id="S2.T2.1.1.8.7.9" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">90s</td>
+<td id="S2.T2.1.1.8.7.10" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">-</td>
+<td id="S2.T2.1.1.8.7.11" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">act.rec.</td>
+</tr>
+<tr id="S2.T2.1.1.9.8" class="ltx_tr">
+<td id="S2.T2.1.1.9.8.1" class="ltx_td ltx_align_left ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.1.1" class="ltx_text ltx_font_bold">Our</span></td>
+<td id="S2.T2.1.1.9.8.2" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.2.1" class="ltx_text ltx_font_bold">40</span></td>
+<td id="S2.T2.1.1.9.8.3" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.3.1" class="ltx_text ltx_font_bold">1950</span></td>
+<td id="S2.T2.1.1.9.8.4" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.4.1" class="ltx_text ltx_font_bold">14</span></td>
+<td id="S2.T2.1.1.9.8.5" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.5.1" class="ltx_text ltx_font_bold">4</span></td>
+<td id="S2.T2.1.1.9.8.6" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.6.1" class="ltx_text ltx_font_bold">4(in/out)</span></td>
+<td id="S2.T2.1.1.9.8.7" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.7.1" class="ltx_text ltx_font_bold">25</span></td>
+<td id="S2.T2.1.1.9.8.8" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.8.1" class="ltx_text ltx_font_bold">side,front,top</span></td>
+<td id="S2.T2.1.1.9.8.9" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.9.1" class="ltx_text ltx_font_bold">8-25s</span></td>
+<td id="S2.T2.1.1.9.8.10" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.10.1" class="ltx_text ltx_font_bold">yes</span></td>
+<td id="S2.T2.1.1.9.8.11" class="ltx_td ltx_align_center ltx_border_bb" style="padding-left:4.0pt;padding-right:4.0pt;"><span id="S2.T2.1.1.9.8.11.1" class="ltx_text ltx_font_bold">3d pose est.</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Comparison of datasets combining first-person videos with other’s viewpoint synchronized videos.</figcaption>
+</figure>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>First2Third-Pose Dataset</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">We next introduce <span id="S3.p1.1.1" class="ltx_text ltx_font_italic">First2Third-Pose</span>, a large dataset of short videos covering a variety of human pose types and including multi-third-person-views in addition to first-person view.</p>
+</div>
+<div id="S3.p2" class="ltx_para ltx_noindent">
+<p id="S3.p2.4" class="ltx_p"><span id="S3.p2.4.1" class="ltx_text ltx_font_bold">Dataset collection.</span>
+We built a multi-view synchronized dataset wherein we capture 14 people (in turns) of varying height, weight and genders while performing 40 different activities in both indoors and outdoors environments (lab, streets, parks, corridors, basketball courts, and parking). Every individual is asked to wear the head mounted camera which captures his/her egocentric view. We use the Go Pro Hero 4 in normal view setting which records in <math id="S3.p2.1.m1.1" class="ltx_Math" alttext="1920\times 1080" display="inline"><semantics id="S3.p2.1.m1.1a"><mrow id="S3.p2.1.m1.1.1" xref="S3.p2.1.m1.1.1.cmml"><mn id="S3.p2.1.m1.1.1.2" xref="S3.p2.1.m1.1.1.2.cmml">1920</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p2.1.m1.1.1.1" xref="S3.p2.1.m1.1.1.1.cmml">×</mo><mn id="S3.p2.1.m1.1.1.3" xref="S3.p2.1.m1.1.1.3.cmml">1080</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.1.m1.1b"><apply id="S3.p2.1.m1.1.1.cmml" xref="S3.p2.1.m1.1.1"><times id="S3.p2.1.m1.1.1.1.cmml" xref="S3.p2.1.m1.1.1.1"></times><cn type="integer" id="S3.p2.1.m1.1.1.2.cmml" xref="S3.p2.1.m1.1.1.2">1920</cn><cn type="integer" id="S3.p2.1.m1.1.1.3.cmml" xref="S3.p2.1.m1.1.1.3">1080</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.1.m1.1c">1920\times 1080</annotation></semantics></math> resolution at 25 fps. All indoor and outdoor environments are equipped with two static cameras that capture the side and front view. We use the Go Pro Hero 3 in <math id="S3.p2.2.m2.1" class="ltx_Math" alttext="1920\times 1080" display="inline"><semantics id="S3.p2.2.m2.1a"><mrow id="S3.p2.2.m2.1.1" xref="S3.p2.2.m2.1.1.cmml"><mn id="S3.p2.2.m2.1.1.2" xref="S3.p2.2.m2.1.1.2.cmml">1920</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p2.2.m2.1.1.1" xref="S3.p2.2.m2.1.1.1.cmml">×</mo><mn id="S3.p2.2.m2.1.1.3" xref="S3.p2.2.m2.1.1.3.cmml">1080</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.2.m2.1b"><apply id="S3.p2.2.m2.1.1.cmml" xref="S3.p2.2.m2.1.1"><times id="S3.p2.2.m2.1.1.1.cmml" xref="S3.p2.2.m2.1.1.1"></times><cn type="integer" id="S3.p2.2.m2.1.1.2.cmml" xref="S3.p2.2.m2.1.1.2">1920</cn><cn type="integer" id="S3.p2.2.m2.1.1.3.cmml" xref="S3.p2.2.m2.1.1.3">1080</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.2.m2.1c">1920\times 1080</annotation></semantics></math> resolution at 25 fps to record the side view and the Sony DSLR in <math id="S3.p2.3.m3.1" class="ltx_Math" alttext="1920\times 1080" display="inline"><semantics id="S3.p2.3.m3.1a"><mrow id="S3.p2.3.m3.1.1" xref="S3.p2.3.m3.1.1.cmml"><mn id="S3.p2.3.m3.1.1.2" xref="S3.p2.3.m3.1.1.2.cmml">1920</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p2.3.m3.1.1.1" xref="S3.p2.3.m3.1.1.1.cmml">×</mo><mn id="S3.p2.3.m3.1.1.3" xref="S3.p2.3.m3.1.1.3.cmml">1080</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.3.m3.1b"><apply id="S3.p2.3.m3.1.1.cmml" xref="S3.p2.3.m3.1.1"><times id="S3.p2.3.m3.1.1.1.cmml" xref="S3.p2.3.m3.1.1.1"></times><cn type="integer" id="S3.p2.3.m3.1.1.2.cmml" xref="S3.p2.3.m3.1.1.2">1920</cn><cn type="integer" id="S3.p2.3.m3.1.1.3.cmml" xref="S3.p2.3.m3.1.1.3">1080</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.3.m3.1c">1920\times 1080</annotation></semantics></math> resolution at 25 fps to record the front view. An example of outdoor capture setup is shown Figure <a href="#S2.F2" title="Figure 2 ‣ 2 Related Work ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. The ‘Lab’ scene is equipped with an additional Amcrest camera that we use under the wide setting with a frame rate of 20 fps and <math id="S3.p2.4.m4.1" class="ltx_Math" alttext="2304\times 1296" display="inline"><semantics id="S3.p2.4.m4.1a"><mrow id="S3.p2.4.m4.1.1" xref="S3.p2.4.m4.1.1.cmml"><mn id="S3.p2.4.m4.1.1.2" xref="S3.p2.4.m4.1.1.2.cmml">2304</mn><mo lspace="0.222em" rspace="0.222em" id="S3.p2.4.m4.1.1.1" xref="S3.p2.4.m4.1.1.1.cmml">×</mo><mn id="S3.p2.4.m4.1.1.3" xref="S3.p2.4.m4.1.1.3.cmml">1296</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p2.4.m4.1b"><apply id="S3.p2.4.m4.1.1.cmml" xref="S3.p2.4.m4.1.1"><times id="S3.p2.4.m4.1.1.1.cmml" xref="S3.p2.4.m4.1.1.1"></times><cn type="integer" id="S3.p2.4.m4.1.1.2.cmml" xref="S3.p2.4.m4.1.1.2">2304</cn><cn type="integer" id="S3.p2.4.m4.1.1.3.cmml" xref="S3.p2.4.m4.1.1.3">1296</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p2.4.m4.1c">2304\times 1296</annotation></semantics></math> resolution. The top view captures a perspective from above the individual; the side view captures the 3rd person perspective from either left/right side recorded parallel to the individual; the front view captures the 3rd person view of the individual from the front; and the egocentric view captures the 1st person perspective of the individual. Each person performs about 40 activities in two indoor and two outdoor locations.
+We record a total of 1950 activity sequences lasting between 8 to 25 seconds, with a total duration of 2.5 hours. The activities include sports actions as boxing, basketball, soccer and day-to-day tasks like reading, typing or sitting on couch/chair/ground. Examples of synchronized viewpoints for different activities in our dataset are shown in Figure <a href="#S2.F3" title="Figure 3 ‣ 2 Related Work ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+<div id="S3.p3" class="ltx_para ltx_noindent">
+<p id="S3.p3.1" class="ltx_p"><span id="S3.p3.1.1" class="ltx_text ltx_font_bold">Post-processing.</span>
+To enable the synchronization across multiple views, we recorded one video for each view in a location (ego, top, front, side). Before starting to enact each activity, the participants are asked to clap. This clap is visually captured in egocentric camera and heard across all the multiple views. The sound of the clap is used to determine the staring point of each activity. We use the front views to check how long the activity has been performed. This time duration is noted and the video is manually scanned to find starting points of the activity. The activity is then clipped out from the main video and annotated using the name, activity class performed, location and the view that videos presents. Each video clip has one activity class. This is done for all the front, ego, top and side views.</p>
+</div>
+<div id="S3.p4" class="ltx_para ltx_noindent">
+<p id="S3.p4.1" class="ltx_p"><span id="S3.p4.1.1" class="ltx_text ltx_font_bold">Dataset annotation.</span>
+The body pose is represented by <math id="S3.p4.1.m1.1" class="ltx_Math" alttext="J=17" display="inline"><semantics id="S3.p4.1.m1.1a"><mrow id="S3.p4.1.m1.1.1" xref="S3.p4.1.m1.1.1.cmml"><mi id="S3.p4.1.m1.1.1.2" xref="S3.p4.1.m1.1.1.2.cmml">J</mi><mo id="S3.p4.1.m1.1.1.1" xref="S3.p4.1.m1.1.1.1.cmml">=</mo><mn id="S3.p4.1.m1.1.1.3" xref="S3.p4.1.m1.1.1.3.cmml">17</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.p4.1.m1.1b"><apply id="S3.p4.1.m1.1.1.cmml" xref="S3.p4.1.m1.1.1"><eq id="S3.p4.1.m1.1.1.1.cmml" xref="S3.p4.1.m1.1.1.1"></eq><ci id="S3.p4.1.m1.1.1.2.cmml" xref="S3.p4.1.m1.1.1.2">𝐽</ci><cn type="integer" id="S3.p4.1.m1.1.1.3.cmml" xref="S3.p4.1.m1.1.1.3">17</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.p4.1.m1.1c">J=17</annotation></semantics></math> 3D joint positions.
+Similarly to previous work on egocentric pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, our ground truth is estimated from front views. However, instead of using only 2D joints as in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, we first estimated 2D body poses by using Detectron2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite>, and then we obtained 3D body estimations via a pre-trained lifting model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib44" title="" class="ltx_ref">44</a>]</cite>. As the latter method reports an average error of 4-5 cm on large-scale datasets, we can assume that at most the same holds in our case. Visual inspection of 3D pose predictions on the test set corroborated the plausibility of such assumption.
+It is worth to remark that as our dataset was captured in multiple scenarios, the camera extrinsic parameters are not available. Therefore, the computation of the ground truth could not benefit from triangulation methods by using multiple views. However, the ground truth annotations are not required to compute the joint embedded space we exploit in the proposed approach.</p>
+</div>
+<div id="S3.p5" class="ltx_para ltx_noindent">
+<p id="S3.p5.1" class="ltx_p"><span id="S3.p5.1.1" class="ltx_text ltx_font_bold">Dataset comparisons.</span>
+In Table <a href="#S2.T1" title="Table 1 ‣ 2 Related Work ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> we summarize the characteristics of our proposed dataset with respect to other available benchmarks for 3D egopose estimation. It can be observed that our dataset scales existing ones in terms of number of videos and presents more variability in terms of background scenes, number of participants and activities. Furthermore, it provides multiple views of the same scene (egocentric, top, side, front). Therefore, it is currently the largest and comprehensive dataset for 3D egopose estimation from videos.</p>
+</div>
+<div id="S3.p6" class="ltx_para">
+<p id="S3.p6.1" class="ltx_p">In Table <a href="#S2.T2" title="Table 2 ‣ 2 Related Work ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> we compare qualitatively existing datasets with syncronized videos including at least one first-person viewpoint, and we show that our dataset is the only one suited for the task of 3D egopose estimation.
+We stress that while other paired datasets with first- and third-person views currently exists, e.g. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib45" title="" class="ltx_ref">45</a>]</cite>, we did not include them in Table <a href="#S2.T2" title="Table 2 ‣ 2 Related Work ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> since they are not synchronized and therefore not suitable for our task. All our data will be made publicly available upon acceptance.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2201.02017/assets/img/SelfSupervisedModel1.1.png" id="S3.F4.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="453" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Our model uses a semi-Siamese architecture to learn to detect if a pair of first- and third-view videos of the <span id="S3.F4.6.1" class="ltx_text ltx_font_italic">First2Third-Pose</span> paired source dataset are syncronized or not, by minimizing a contrastive loss (green arrows). This pretext task leads to learn a joint embedding space, where the gap between the first-view and third-view worlds is minimized. The so learned joint embedding space can in principle be leveraged by any supervised method for 3D egopose estimation on a target dataset, without a need for domain adaptation. At both train time (brown arrows)) and test time (<span id="S3.F4.7.2" class="ltx_text" style="color:#0000FF;">blue</span> arrows), the semi-Siamese network is used for feature projection onto the learned joint embedded space. <math id="S3.F4.3.m1.1" class="ltx_Math" alttext="z" display="inline"><semantics id="S3.F4.3.m1.1b"><mi id="S3.F4.3.m1.1.1" xref="S3.F4.3.m1.1.1.cmml">z</mi><annotation-xml encoding="MathML-Content" id="S3.F4.3.m1.1c"><ci id="S3.F4.3.m1.1.1.cmml" xref="S3.F4.3.m1.1.1">𝑧</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.F4.3.m1.1d">z</annotation></semantics></math> is 64-
+dimensional vector, obtained once removed the softmax layer of the Siamese network pre-trained with our dataset.</figcaption>
+</figure>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Approach</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.4" class="ltx_p">Given an egocentric video sequence as input, our goal is to estimate the 3D body joints of the camera wearer as output. More formally, for each egocentric video frame at time <math id="S4.p1.1.m1.1" class="ltx_Math" alttext="t" display="inline"><semantics id="S4.p1.1.m1.1a"><mi id="S4.p1.1.m1.1.1" xref="S4.p1.1.m1.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="S4.p1.1.m1.1b"><ci id="S4.p1.1.m1.1.1.cmml" xref="S4.p1.1.m1.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.p1.1.m1.1c">t</annotation></semantics></math>, the output is a set of <math id="S4.p1.2.m2.1" class="ltx_Math" alttext="J" display="inline"><semantics id="S4.p1.2.m2.1a"><mi id="S4.p1.2.m2.1.1" xref="S4.p1.2.m2.1.1.cmml">J</mi><annotation-xml encoding="MathML-Content" id="S4.p1.2.m2.1b"><ci id="S4.p1.2.m2.1.1.cmml" xref="S4.p1.2.m2.1.1">𝐽</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.p1.2.m2.1c">J</annotation></semantics></math> joint 3D coordinates corresponding to the skeleton of camera wearer at frame <math id="S4.p1.3.m3.1" class="ltx_Math" alttext="t" display="inline"><semantics id="S4.p1.3.m3.1a"><mi id="S4.p1.3.m3.1.1" xref="S4.p1.3.m3.1.1.cmml">t</mi><annotation-xml encoding="MathML-Content" id="S4.p1.3.m3.1b"><ci id="S4.p1.3.m3.1.1.cmml" xref="S4.p1.3.m3.1.1">𝑡</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.p1.3.m3.1c">t</annotation></semantics></math>, say <math id="S4.p1.4.m4.1" class="ltx_Math" alttext="p_{t}\in{R}^{3J}" display="inline"><semantics id="S4.p1.4.m4.1a"><mrow id="S4.p1.4.m4.1.1" xref="S4.p1.4.m4.1.1.cmml"><msub id="S4.p1.4.m4.1.1.2" xref="S4.p1.4.m4.1.1.2.cmml"><mi id="S4.p1.4.m4.1.1.2.2" xref="S4.p1.4.m4.1.1.2.2.cmml">p</mi><mi id="S4.p1.4.m4.1.1.2.3" xref="S4.p1.4.m4.1.1.2.3.cmml">t</mi></msub><mo id="S4.p1.4.m4.1.1.1" xref="S4.p1.4.m4.1.1.1.cmml">∈</mo><msup id="S4.p1.4.m4.1.1.3" xref="S4.p1.4.m4.1.1.3.cmml"><mi id="S4.p1.4.m4.1.1.3.2" xref="S4.p1.4.m4.1.1.3.2.cmml">R</mi><mrow id="S4.p1.4.m4.1.1.3.3" xref="S4.p1.4.m4.1.1.3.3.cmml"><mn id="S4.p1.4.m4.1.1.3.3.2" xref="S4.p1.4.m4.1.1.3.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S4.p1.4.m4.1.1.3.3.1" xref="S4.p1.4.m4.1.1.3.3.1.cmml">​</mo><mi id="S4.p1.4.m4.1.1.3.3.3" xref="S4.p1.4.m4.1.1.3.3.3.cmml">J</mi></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S4.p1.4.m4.1b"><apply id="S4.p1.4.m4.1.1.cmml" xref="S4.p1.4.m4.1.1"><in id="S4.p1.4.m4.1.1.1.cmml" xref="S4.p1.4.m4.1.1.1"></in><apply id="S4.p1.4.m4.1.1.2.cmml" xref="S4.p1.4.m4.1.1.2"><csymbol cd="ambiguous" id="S4.p1.4.m4.1.1.2.1.cmml" xref="S4.p1.4.m4.1.1.2">subscript</csymbol><ci id="S4.p1.4.m4.1.1.2.2.cmml" xref="S4.p1.4.m4.1.1.2.2">𝑝</ci><ci id="S4.p1.4.m4.1.1.2.3.cmml" xref="S4.p1.4.m4.1.1.2.3">𝑡</ci></apply><apply id="S4.p1.4.m4.1.1.3.cmml" xref="S4.p1.4.m4.1.1.3"><csymbol cd="ambiguous" id="S4.p1.4.m4.1.1.3.1.cmml" xref="S4.p1.4.m4.1.1.3">superscript</csymbol><ci id="S4.p1.4.m4.1.1.3.2.cmml" xref="S4.p1.4.m4.1.1.3.2">𝑅</ci><apply id="S4.p1.4.m4.1.1.3.3.cmml" xref="S4.p1.4.m4.1.1.3.3"><times id="S4.p1.4.m4.1.1.3.3.1.cmml" xref="S4.p1.4.m4.1.1.3.3.1"></times><cn type="integer" id="S4.p1.4.m4.1.1.3.3.2.cmml" xref="S4.p1.4.m4.1.1.3.3.2">3</cn><ci id="S4.p1.4.m4.1.1.3.3.3.cmml" xref="S4.p1.4.m4.1.1.3.3.3">𝐽</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.p1.4.m4.1c">p_{t}\in{R}^{3J}</annotation></semantics></math>.</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.2" class="ltx_p">Our key insight is to build image features allowing to discriminate different 3D human poses by projecting and aligning data from the first and third-view onto a shared representation space.
+Formally, our objective is to learn functions <math id="S4.p2.1.m1.1" class="ltx_Math" alttext="f_{1}:\mathcal{R}^{F}\rightarrow\mathcal{R}^{J}" display="inline"><semantics id="S4.p2.1.m1.1a"><mrow id="S4.p2.1.m1.1.1" xref="S4.p2.1.m1.1.1.cmml"><msub id="S4.p2.1.m1.1.1.2" xref="S4.p2.1.m1.1.1.2.cmml"><mi id="S4.p2.1.m1.1.1.2.2" xref="S4.p2.1.m1.1.1.2.2.cmml">f</mi><mn id="S4.p2.1.m1.1.1.2.3" xref="S4.p2.1.m1.1.1.2.3.cmml">1</mn></msub><mo lspace="0.278em" rspace="0.278em" id="S4.p2.1.m1.1.1.1" xref="S4.p2.1.m1.1.1.1.cmml">:</mo><mrow id="S4.p2.1.m1.1.1.3" xref="S4.p2.1.m1.1.1.3.cmml"><msup id="S4.p2.1.m1.1.1.3.2" xref="S4.p2.1.m1.1.1.3.2.cmml"><mi class="ltx_font_mathcaligraphic" id="S4.p2.1.m1.1.1.3.2.2" xref="S4.p2.1.m1.1.1.3.2.2.cmml">ℛ</mi><mi id="S4.p2.1.m1.1.1.3.2.3" xref="S4.p2.1.m1.1.1.3.2.3.cmml">F</mi></msup><mo stretchy="false" id="S4.p2.1.m1.1.1.3.1" xref="S4.p2.1.m1.1.1.3.1.cmml">→</mo><msup id="S4.p2.1.m1.1.1.3.3" xref="S4.p2.1.m1.1.1.3.3.cmml"><mi class="ltx_font_mathcaligraphic" id="S4.p2.1.m1.1.1.3.3.2" xref="S4.p2.1.m1.1.1.3.3.2.cmml">ℛ</mi><mi id="S4.p2.1.m1.1.1.3.3.3" xref="S4.p2.1.m1.1.1.3.3.3.cmml">J</mi></msup></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.p2.1.m1.1b"><apply id="S4.p2.1.m1.1.1.cmml" xref="S4.p2.1.m1.1.1"><ci id="S4.p2.1.m1.1.1.1.cmml" xref="S4.p2.1.m1.1.1.1">:</ci><apply id="S4.p2.1.m1.1.1.2.cmml" xref="S4.p2.1.m1.1.1.2"><csymbol cd="ambiguous" id="S4.p2.1.m1.1.1.2.1.cmml" xref="S4.p2.1.m1.1.1.2">subscript</csymbol><ci id="S4.p2.1.m1.1.1.2.2.cmml" xref="S4.p2.1.m1.1.1.2.2">𝑓</ci><cn type="integer" id="S4.p2.1.m1.1.1.2.3.cmml" xref="S4.p2.1.m1.1.1.2.3">1</cn></apply><apply id="S4.p2.1.m1.1.1.3.cmml" xref="S4.p2.1.m1.1.1.3"><ci id="S4.p2.1.m1.1.1.3.1.cmml" xref="S4.p2.1.m1.1.1.3.1">→</ci><apply id="S4.p2.1.m1.1.1.3.2.cmml" xref="S4.p2.1.m1.1.1.3.2"><csymbol cd="ambiguous" id="S4.p2.1.m1.1.1.3.2.1.cmml" xref="S4.p2.1.m1.1.1.3.2">superscript</csymbol><ci id="S4.p2.1.m1.1.1.3.2.2.cmml" xref="S4.p2.1.m1.1.1.3.2.2">ℛ</ci><ci id="S4.p2.1.m1.1.1.3.2.3.cmml" xref="S4.p2.1.m1.1.1.3.2.3">𝐹</ci></apply><apply id="S4.p2.1.m1.1.1.3.3.cmml" xref="S4.p2.1.m1.1.1.3.3"><csymbol cd="ambiguous" id="S4.p2.1.m1.1.1.3.3.1.cmml" xref="S4.p2.1.m1.1.1.3.3">superscript</csymbol><ci id="S4.p2.1.m1.1.1.3.3.2.cmml" xref="S4.p2.1.m1.1.1.3.3.2">ℛ</ci><ci id="S4.p2.1.m1.1.1.3.3.3.cmml" xref="S4.p2.1.m1.1.1.3.3.3">𝐽</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.p2.1.m1.1c">f_{1}:\mathcal{R}^{F}\rightarrow\mathcal{R}^{J}</annotation></semantics></math> and <math id="S4.p2.2.m2.1" class="ltx_Math" alttext="f_{2}:\mathcal{R}^{T}\rightarrow\mathcal{R}^{J}" display="inline"><semantics id="S4.p2.2.m2.1a"><mrow id="S4.p2.2.m2.1.1" xref="S4.p2.2.m2.1.1.cmml"><msub id="S4.p2.2.m2.1.1.2" xref="S4.p2.2.m2.1.1.2.cmml"><mi id="S4.p2.2.m2.1.1.2.2" xref="S4.p2.2.m2.1.1.2.2.cmml">f</mi><mn id="S4.p2.2.m2.1.1.2.3" xref="S4.p2.2.m2.1.1.2.3.cmml">2</mn></msub><mo lspace="0.278em" rspace="0.278em" id="S4.p2.2.m2.1.1.1" xref="S4.p2.2.m2.1.1.1.cmml">:</mo><mrow id="S4.p2.2.m2.1.1.3" xref="S4.p2.2.m2.1.1.3.cmml"><msup id="S4.p2.2.m2.1.1.3.2" xref="S4.p2.2.m2.1.1.3.2.cmml"><mi class="ltx_font_mathcaligraphic" id="S4.p2.2.m2.1.1.3.2.2" xref="S4.p2.2.m2.1.1.3.2.2.cmml">ℛ</mi><mi id="S4.p2.2.m2.1.1.3.2.3" xref="S4.p2.2.m2.1.1.3.2.3.cmml">T</mi></msup><mo stretchy="false" id="S4.p2.2.m2.1.1.3.1" xref="S4.p2.2.m2.1.1.3.1.cmml">→</mo><msup id="S4.p2.2.m2.1.1.3.3" xref="S4.p2.2.m2.1.1.3.3.cmml"><mi class="ltx_font_mathcaligraphic" id="S4.p2.2.m2.1.1.3.3.2" xref="S4.p2.2.m2.1.1.3.3.2.cmml">ℛ</mi><mi id="S4.p2.2.m2.1.1.3.3.3" xref="S4.p2.2.m2.1.1.3.3.3.cmml">J</mi></msup></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.p2.2.m2.1b"><apply id="S4.p2.2.m2.1.1.cmml" xref="S4.p2.2.m2.1.1"><ci id="S4.p2.2.m2.1.1.1.cmml" xref="S4.p2.2.m2.1.1.1">:</ci><apply id="S4.p2.2.m2.1.1.2.cmml" xref="S4.p2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S4.p2.2.m2.1.1.2.1.cmml" xref="S4.p2.2.m2.1.1.2">subscript</csymbol><ci id="S4.p2.2.m2.1.1.2.2.cmml" xref="S4.p2.2.m2.1.1.2.2">𝑓</ci><cn type="integer" id="S4.p2.2.m2.1.1.2.3.cmml" xref="S4.p2.2.m2.1.1.2.3">2</cn></apply><apply id="S4.p2.2.m2.1.1.3.cmml" xref="S4.p2.2.m2.1.1.3"><ci id="S4.p2.2.m2.1.1.3.1.cmml" xref="S4.p2.2.m2.1.1.3.1">→</ci><apply id="S4.p2.2.m2.1.1.3.2.cmml" xref="S4.p2.2.m2.1.1.3.2"><csymbol cd="ambiguous" id="S4.p2.2.m2.1.1.3.2.1.cmml" xref="S4.p2.2.m2.1.1.3.2">superscript</csymbol><ci id="S4.p2.2.m2.1.1.3.2.2.cmml" xref="S4.p2.2.m2.1.1.3.2.2">ℛ</ci><ci id="S4.p2.2.m2.1.1.3.2.3.cmml" xref="S4.p2.2.m2.1.1.3.2.3">𝑇</ci></apply><apply id="S4.p2.2.m2.1.1.3.3.cmml" xref="S4.p2.2.m2.1.1.3.3"><csymbol cd="ambiguous" id="S4.p2.2.m2.1.1.3.3.1.cmml" xref="S4.p2.2.m2.1.1.3.3">superscript</csymbol><ci id="S4.p2.2.m2.1.1.3.3.2.cmml" xref="S4.p2.2.m2.1.1.3.3.2">ℛ</ci><ci id="S4.p2.2.m2.1.1.3.3.3.cmml" xref="S4.p2.2.m2.1.1.3.3.3">𝐽</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.p2.2.m2.1c">f_{2}:\mathcal{R}^{T}\rightarrow\mathcal{R}^{J}</annotation></semantics></math> which map first and third views corresponding to the same 3D pose respectively onto nearby points in a joint embedded space.
+Positive first-third pairs are extracted from synchronized videos and fed into a two-stream Siamese architecture with a first view subnetwork and a third-view subnetwork, each producing 64-D embeddings. A curriculum-based mining schedule is used to select appropriate negative pairs which are then trained using a contrastive loss, as detailed below. Our contrastive loss evaluates if pairs of first- and third- person views are syncronized. To solve such syncronization task, the network must learns what these extremely different views have in common when they are syncronized: the 3D human body pose of the person visible in the third-view but invisible in the first-view.
+Consequently, the proposed syncronization pretext task translates well to the downstream task of 3D egopose estimation.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Learning a joint first/third view embedding</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">First and third-person perspectives are very different in appearance (see Figure <a href="#S2.F3" title="Figure 3 ‣ 2 Related Work ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>). However, previous work <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>, <a href="#bib.bib45" title="" class="ltx_ref">45</a>]</cite> has shown that it is possible to find spatial and motion domain feature correspondences between video types in a self-supervised fashion. While this has proved to be useful in the context of activity recognition and second-person disambiguation, its usefulness for 3D body pose estimation has never been investigated before.
+Our goal is therefore to attain a semantically meaningful space where paired first- and third-person video are close to each other while proximity of unpaired videos is avoided.
+The pretext task is to classify paired views into synchronized and unsynchronized, which in turn corresponds to determine if pairs of first-person and a third-person views correspond to the same 3D human pose.
+Similarly to <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite>, this is achieved by training a two-streams semi-Siamese Convolutional Neural Network (CNN) with a ResNet50 backbone <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib46" title="" class="ltx_ref">46</a>]</cite>. Differently from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite>, where self-supervision is performed separately on the the spatial and motion domains, we treat them jointly and we minimize a single contrastive loss.
+Since first- and third- person views are very different in appearance, parameter sharing is allowed only for the last fully connected layer. The semi-Siamese architecture is shown on the upper part of Figure <a href="#S3.F4" title="Figure 4 ‣ 3 First2Third-Pose Dataset ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.8" class="ltx_p">At training time, we feed to the network paired exemplars of first-view and third-view, consisting of stacked RGB and optical flow frames. To estimate optical flow on your dataset, we used the FlowNet2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib47" title="" class="ltx_ref">47</a>]</cite> architecture pre-trained on the FlyingChairs and subsequently fine-tuned on the Things3D datasets. Specifically, for each given video frame, we computed the optical flow field as a forward pass for a window of length 11 centered on it. We corroborated the quality of the estimation by visual inspection of the results.
+We then minimize a contrastive loss measuring the Euclidean distance for
+positive exemplars and a hinge loss for negative ones. Our loss function is as follows:</p>
+<table id="S4.Ex1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math id="S4.Ex1.m1.2" class="ltx_math_unparsed" alttext="L=\sum_{j}^{M}y_{j}||x_{j}^{f}-x_{j}^{t}||^{2}+(1-y_{j})\max(0,m-||x_{j}^{f}-x_{j}^{t}||)^{2}" display="block"><semantics id="S4.Ex1.m1.2a"><mrow id="S4.Ex1.m1.2b"><mi id="S4.Ex1.m1.2.3">L</mi><mo rspace="0.111em" id="S4.Ex1.m1.2.4">=</mo><munderover id="S4.Ex1.m1.2.5"><mo movablelimits="false" id="S4.Ex1.m1.2.5.2.2">∑</mo><mi id="S4.Ex1.m1.2.5.2.3">j</mi><mi id="S4.Ex1.m1.2.5.3">M</mi></munderover><msub id="S4.Ex1.m1.2.6"><mi id="S4.Ex1.m1.2.6.2">y</mi><mi id="S4.Ex1.m1.2.6.3">j</mi></msub><mo fence="false" rspace="0.167em" stretchy="false" id="S4.Ex1.m1.2.7">|</mo><mo fence="false" rspace="0.167em" stretchy="false" id="S4.Ex1.m1.2.8">|</mo><msubsup id="S4.Ex1.m1.2.9"><mi id="S4.Ex1.m1.2.9.2.2">x</mi><mi id="S4.Ex1.m1.2.9.2.3">j</mi><mi id="S4.Ex1.m1.2.9.3">f</mi></msubsup><mo id="S4.Ex1.m1.2.10">−</mo><msubsup id="S4.Ex1.m1.2.11"><mi id="S4.Ex1.m1.2.11.2.2">x</mi><mi id="S4.Ex1.m1.2.11.2.3">j</mi><mi id="S4.Ex1.m1.2.11.3">t</mi></msubsup><mo fence="false" rspace="0.167em" stretchy="false" id="S4.Ex1.m1.2.12">|</mo><msup id="S4.Ex1.m1.2.13"><mo fence="false" stretchy="false" id="S4.Ex1.m1.2.13.2">|</mo><mn id="S4.Ex1.m1.2.13.3">2</mn></msup><mo lspace="0em" id="S4.Ex1.m1.2.14">+</mo><mrow id="S4.Ex1.m1.2.15"><mo stretchy="false" id="S4.Ex1.m1.2.15.1">(</mo><mn id="S4.Ex1.m1.2.15.2">1</mn><mo id="S4.Ex1.m1.2.15.3">−</mo><msub id="S4.Ex1.m1.2.15.4"><mi id="S4.Ex1.m1.2.15.4.2">y</mi><mi id="S4.Ex1.m1.2.15.4.3">j</mi></msub><mo rspace="0.167em" stretchy="false" id="S4.Ex1.m1.2.15.5">)</mo></mrow><mi id="S4.Ex1.m1.1.1">max</mi><msup id="S4.Ex1.m1.2.16"><mrow id="S4.Ex1.m1.2.16.2"><mo stretchy="false" id="S4.Ex1.m1.2.16.2.1">(</mo><mn id="S4.Ex1.m1.2.2">0</mn><mo id="S4.Ex1.m1.2.16.2.2">,</mo><mi id="S4.Ex1.m1.2.16.2.3">m</mi><mo rspace="0em" id="S4.Ex1.m1.2.16.2.4">−</mo><mo fence="false" rspace="0.167em" stretchy="false" id="S4.Ex1.m1.2.16.2.5">|</mo><mo fence="false" rspace="0.167em" stretchy="false" id="S4.Ex1.m1.2.16.2.6">|</mo><msubsup id="S4.Ex1.m1.2.16.2.7"><mi id="S4.Ex1.m1.2.16.2.7.2.2">x</mi><mi id="S4.Ex1.m1.2.16.2.7.2.3">j</mi><mi id="S4.Ex1.m1.2.16.2.7.3">f</mi></msubsup><mo id="S4.Ex1.m1.2.16.2.8">−</mo><msubsup id="S4.Ex1.m1.2.16.2.9"><mi id="S4.Ex1.m1.2.16.2.9.2.2">x</mi><mi id="S4.Ex1.m1.2.16.2.9.2.3">j</mi><mi id="S4.Ex1.m1.2.16.2.9.3">t</mi></msubsup><mo fence="false" rspace="0.167em" stretchy="false" id="S4.Ex1.m1.2.16.2.10">|</mo><mo fence="false" rspace="0.167em" stretchy="false" id="S4.Ex1.m1.2.16.2.11">|</mo><mo stretchy="false" id="S4.Ex1.m1.2.16.2.12">)</mo></mrow><mn id="S4.Ex1.m1.2.16.3">2</mn></msup></mrow><annotation encoding="application/x-tex" id="S4.Ex1.m1.2c">L=\sum_{j}^{M}y_{j}||x_{j}^{f}-x_{j}^{t}||^{2}+(1-y_{j})\max(0,m-||x_{j}^{f}-x_{j}^{t}||)^{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p id="S4.SS1.p2.7" class="ltx_p">where <math id="S4.SS1.p2.1.m1.1" class="ltx_Math" alttext="M" display="inline"><semantics id="S4.SS1.p2.1.m1.1a"><mi id="S4.SS1.p2.1.m1.1.1" xref="S4.SS1.p2.1.m1.1.1.cmml">M</mi><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.1.m1.1b"><ci id="S4.SS1.p2.1.m1.1.1.cmml" xref="S4.SS1.p2.1.m1.1.1">𝑀</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.1.m1.1c">M</annotation></semantics></math> is the number of frames in a batch, <math id="S4.SS1.p2.2.m2.1" class="ltx_Math" alttext="m" display="inline"><semantics id="S4.SS1.p2.2.m2.1a"><mi id="S4.SS1.p2.2.m2.1.1" xref="S4.SS1.p2.2.m2.1.1.cmml">m</mi><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.2.m2.1b"><ci id="S4.SS1.p2.2.m2.1.1.cmml" xref="S4.SS1.p2.2.m2.1.1">𝑚</ci></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.2.m2.1c">m</annotation></semantics></math> is a predefined constant margin, <math id="S4.SS1.p2.3.m3.1" class="ltx_Math" alttext="x^{f}" display="inline"><semantics id="S4.SS1.p2.3.m3.1a"><msup id="S4.SS1.p2.3.m3.1.1" xref="S4.SS1.p2.3.m3.1.1.cmml"><mi id="S4.SS1.p2.3.m3.1.1.2" xref="S4.SS1.p2.3.m3.1.1.2.cmml">x</mi><mi id="S4.SS1.p2.3.m3.1.1.3" xref="S4.SS1.p2.3.m3.1.1.3.cmml">f</mi></msup><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.3.m3.1b"><apply id="S4.SS1.p2.3.m3.1.1.cmml" xref="S4.SS1.p2.3.m3.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.3.m3.1.1.1.cmml" xref="S4.SS1.p2.3.m3.1.1">superscript</csymbol><ci id="S4.SS1.p2.3.m3.1.1.2.cmml" xref="S4.SS1.p2.3.m3.1.1.2">𝑥</ci><ci id="S4.SS1.p2.3.m3.1.1.3.cmml" xref="S4.SS1.p2.3.m3.1.1.3">𝑓</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.3.m3.1c">x^{f}</annotation></semantics></math> and <math id="S4.SS1.p2.4.m4.1" class="ltx_Math" alttext="x^{t}" display="inline"><semantics id="S4.SS1.p2.4.m4.1a"><msup id="S4.SS1.p2.4.m4.1.1" xref="S4.SS1.p2.4.m4.1.1.cmml"><mi id="S4.SS1.p2.4.m4.1.1.2" xref="S4.SS1.p2.4.m4.1.1.2.cmml">x</mi><mi id="S4.SS1.p2.4.m4.1.1.3" xref="S4.SS1.p2.4.m4.1.1.3.cmml">t</mi></msup><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.4.m4.1b"><apply id="S4.SS1.p2.4.m4.1.1.cmml" xref="S4.SS1.p2.4.m4.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.4.m4.1.1.1.cmml" xref="S4.SS1.p2.4.m4.1.1">superscript</csymbol><ci id="S4.SS1.p2.4.m4.1.1.2.cmml" xref="S4.SS1.p2.4.m4.1.1.2">𝑥</ci><ci id="S4.SS1.p2.4.m4.1.1.3.cmml" xref="S4.SS1.p2.4.m4.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.4.m4.1c">x^{t}</annotation></semantics></math> indicate first and third views (stacked RGB and optical flow frames) respectively, <math id="S4.SS1.p2.5.m5.1" class="ltx_Math" alttext="y_{i}" display="inline"><semantics id="S4.SS1.p2.5.m5.1a"><msub id="S4.SS1.p2.5.m5.1.1" xref="S4.SS1.p2.5.m5.1.1.cmml"><mi id="S4.SS1.p2.5.m5.1.1.2" xref="S4.SS1.p2.5.m5.1.1.2.cmml">y</mi><mi id="S4.SS1.p2.5.m5.1.1.3" xref="S4.SS1.p2.5.m5.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.5.m5.1b"><apply id="S4.SS1.p2.5.m5.1.1.cmml" xref="S4.SS1.p2.5.m5.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.5.m5.1.1.1.cmml" xref="S4.SS1.p2.5.m5.1.1">subscript</csymbol><ci id="S4.SS1.p2.5.m5.1.1.2.cmml" xref="S4.SS1.p2.5.m5.1.1.2">𝑦</ci><ci id="S4.SS1.p2.5.m5.1.1.3.cmml" xref="S4.SS1.p2.5.m5.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.5.m5.1c">y_{i}</annotation></semantics></math> is an indicator that takes value 1 if <math id="S4.SS1.p2.6.m6.1" class="ltx_Math" alttext="x^{f}_{j}" display="inline"><semantics id="S4.SS1.p2.6.m6.1a"><msubsup id="S4.SS1.p2.6.m6.1.1" xref="S4.SS1.p2.6.m6.1.1.cmml"><mi id="S4.SS1.p2.6.m6.1.1.2.2" xref="S4.SS1.p2.6.m6.1.1.2.2.cmml">x</mi><mi id="S4.SS1.p2.6.m6.1.1.3" xref="S4.SS1.p2.6.m6.1.1.3.cmml">j</mi><mi id="S4.SS1.p2.6.m6.1.1.2.3" xref="S4.SS1.p2.6.m6.1.1.2.3.cmml">f</mi></msubsup><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.6.m6.1b"><apply id="S4.SS1.p2.6.m6.1.1.cmml" xref="S4.SS1.p2.6.m6.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.6.m6.1.1.1.cmml" xref="S4.SS1.p2.6.m6.1.1">subscript</csymbol><apply id="S4.SS1.p2.6.m6.1.1.2.cmml" xref="S4.SS1.p2.6.m6.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.6.m6.1.1.2.1.cmml" xref="S4.SS1.p2.6.m6.1.1">superscript</csymbol><ci id="S4.SS1.p2.6.m6.1.1.2.2.cmml" xref="S4.SS1.p2.6.m6.1.1.2.2">𝑥</ci><ci id="S4.SS1.p2.6.m6.1.1.2.3.cmml" xref="S4.SS1.p2.6.m6.1.1.2.3">𝑓</ci></apply><ci id="S4.SS1.p2.6.m6.1.1.3.cmml" xref="S4.SS1.p2.6.m6.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.6.m6.1c">x^{f}_{j}</annotation></semantics></math> and <math id="S4.SS1.p2.7.m7.1" class="ltx_Math" alttext="x^{t}_{j}" display="inline"><semantics id="S4.SS1.p2.7.m7.1a"><msubsup id="S4.SS1.p2.7.m7.1.1" xref="S4.SS1.p2.7.m7.1.1.cmml"><mi id="S4.SS1.p2.7.m7.1.1.2.2" xref="S4.SS1.p2.7.m7.1.1.2.2.cmml">x</mi><mi id="S4.SS1.p2.7.m7.1.1.3" xref="S4.SS1.p2.7.m7.1.1.3.cmml">j</mi><mi id="S4.SS1.p2.7.m7.1.1.2.3" xref="S4.SS1.p2.7.m7.1.1.2.3.cmml">t</mi></msubsup><annotation-xml encoding="MathML-Content" id="S4.SS1.p2.7.m7.1b"><apply id="S4.SS1.p2.7.m7.1.1.cmml" xref="S4.SS1.p2.7.m7.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.7.m7.1.1.1.cmml" xref="S4.SS1.p2.7.m7.1.1">subscript</csymbol><apply id="S4.SS1.p2.7.m7.1.1.2.cmml" xref="S4.SS1.p2.7.m7.1.1"><csymbol cd="ambiguous" id="S4.SS1.p2.7.m7.1.1.2.1.cmml" xref="S4.SS1.p2.7.m7.1.1">superscript</csymbol><ci id="S4.SS1.p2.7.m7.1.1.2.2.cmml" xref="S4.SS1.p2.7.m7.1.1.2.2">𝑥</ci><ci id="S4.SS1.p2.7.m7.1.1.2.3.cmml" xref="S4.SS1.p2.7.m7.1.1.2.3">𝑡</ci></apply><ci id="S4.SS1.p2.7.m7.1.1.3.cmml" xref="S4.SS1.p2.7.m7.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p2.7.m7.1c">x^{t}_{j}</annotation></semantics></math> are synchronized exemplars, and 0 otherwise.
+Following its effectiveness in self-supervised learning as alternative to random exploration, we adopted a curriculum learning strategy for training <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib48" title="" class="ltx_ref">48</a>]</cite>. Concretely, we defined as <span id="S4.SS1.p2.7.1" class="ltx_text ltx_font_italic">easy negatives</span> pairs of first- and third video clips corresponding to a same person doing a different activity in the same environment. <span id="S4.SS1.p2.7.2" class="ltx_text ltx_font_italic">hard negatives</span> were defined as pairs of first- and third video clips corresponding to a same person doing the same action in the same environment at different intervals of time.</p>
+</div>
+<div id="S4.SS1.p3" class="ltx_para">
+<p id="S4.SS1.p3.1" class="ltx_p">In the following subsection, we aim at leveraging this joint representation space learned with our source <span id="S4.SS1.p3.1.1" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset to estimate the 3D body pose of the person behind the camera in first-view videos from a target dataset.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Transfer to 3D Egopose estimation</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">As a byproduct of learning to classify paired first- and third-view videos into
+synchronized and unsynchronized, the representation gap between the two perspective
+views is minimized. Therefore, the representation space shared by the first and third-view enables to transfer a first-view projection onto this space, which should be similar to a paired third-view projection, to 3D human pose regression via supervised learning.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">We used the semi-Siamese network pre-trained on the pretext task with the source <span id="S4.SS2.p2.1.1" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset to extract features, which are then useful for 3D pose estimation from egocentric videos. More specifically, stacked RGB and optical flow frames from the unpaired egocentric video are fed into the first-view stream of the network in a forward pass.
+The bottom part of Figure <a href="#S3.F4" title="Figure 4 ‣ 3 First2Third-Pose Dataset ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> shows how target train and test egocentric video datasets can be used as input to our pre-trained semi-Siamese network to extract features that are subsequently used as additional features by a supervised 3D egopose estimation method.
+The network can in principle be used as feature extractor by an arbitrary supervised model for 3D egopose estimation, at both training and test time.
+At training time, the target dataset is used as input for both the supervised method at hand and the pre-trained Siamese network. However, the latter is used only to perform a forward pass allowing to project the input videos into the shared representation space and hence obtain discriminative features used as additional input for the supervised approach.
+Through experiments, we will show that even if the embedding space has been learned relying on the <span id="S4.SS2.p2.1.2" class="ltx_text ltx_font_italic">First2Third-Pose</span> source dataset, it transfers well on a different target egocentric video dataset, without a need for domain adaptation.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Experiments</h2>
+
+<div id="S5.p1" class="ltx_para ltx_noindent">
+<p id="S5.p1.2" class="ltx_p"><span id="S5.p1.2.1" class="ltx_text ltx_font_bold">Implementation details.</span> We train a semi-Siamese network based on the ResNet50 backbone that takes as input on each stream an RGB frame stacked to the optical flow fields for a set of 10 consecutive frames. We used FlowNet2 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib47" title="" class="ltx_ref">47</a>]</cite> to estimate optical flow. The output of the ResNet in each stream is fed to a fully connected layer of dimension <math id="S5.p1.1.m1.1" class="ltx_Math" alttext="100" display="inline"><semantics id="S5.p1.1.m1.1a"><mn id="S5.p1.1.m1.1.1" xref="S5.p1.1.m1.1.1.cmml">100</mn><annotation-xml encoding="MathML-Content" id="S5.p1.1.m1.1b"><cn type="integer" id="S5.p1.1.m1.1.1.cmml" xref="S5.p1.1.m1.1.1">100</cn></annotation-xml><annotation encoding="application/x-tex" id="S5.p1.1.m1.1c">100</annotation></semantics></math>. The last common fully connected layer has dimension <math id="S5.p1.2.m2.1" class="ltx_Math" alttext="64" display="inline"><semantics id="S5.p1.2.m2.1a"><mn id="S5.p1.2.m2.1.1" xref="S5.p1.2.m2.1.1.cmml">64</mn><annotation-xml encoding="MathML-Content" id="S5.p1.2.m2.1b"><cn type="integer" id="S5.p1.2.m2.1.1.cmml" xref="S5.p1.2.m2.1.1">64</cn></annotation-xml><annotation encoding="application/x-tex" id="S5.p1.2.m2.1c">64</annotation></semantics></math>.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">We generate the training data by splitting our Multiview dataset into 150k training frames and 40k testing frames. The train set includes activities performed by 10 people (8 actors, 2 actresses), while the test set includes activities performed by 4 unseen people (2 actors, 2 actresses).
+To train the Siamese Network we generate positive and negative image pairs. The positive pairs are generated taking synchronized first- and third- view (front) video frames. As we adopted a curriculum learning strategy for training, we generated negative pairs in two ways. Easy negative pairs correspond to first- and third-view videos of same person doing different activities in the egocentric and front images, but in the same environment. Hard negative pairs correspond to shifted time intervals in paired first-and ego views. We follow curriculum learning to train the Siamese network for 2 epochs. We train the network using easy negative pairs for first epoch and use the hard negative pairs for the second epoch. We use the contrastive loss with a margin of 0.9 to train the network using these pairs. Training time is 96 hours on a single GPU for 2 epochs. The learning rate is set to 0.0001 with the momentum 0.9 and the weight decay 5e-4. Each predicted 3D body pose has the hip joint positioned at the origin of the coordinates system.
+The first axis is parallel to the ground and points to the wearer’s facing direction. The second axis is parallel to the ground and points to the left hip. The third axis is perpendicular to the ground and points in the direction of the spine. To account for people size variability, we normalize each skeleton for scale based on the individual’s shoulder width.</p>
+</div>
+<figure id="S5.T3" class="ltx_table">
+<div id="S5.T3.1" class="ltx_inline-block ltx_transformed_outer" style="width:433.6pt;height:90.5pt;vertical-align:-0.6pt;"><span class="ltx_transformed_inner" style="transform:translate(-130.4pt,27.0pt) scale(0.62452401496288,0.62452401496288) ;">
+<table id="S5.T3.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T3.1.1.1.1" class="ltx_tr">
+<td id="S5.T3.1.1.1.1.1" class="ltx_td ltx_border_tt"></td>
+<th id="S5.T3.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="12">First2Third Dataset</th>
+</tr>
+<tr id="S5.T3.1.1.2.2" class="ltx_tr">
+<td id="S5.T3.1.1.2.2.1" class="ltx_td"></td>
+<th id="S5.T3.1.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Hip</th>
+<th id="S5.T3.1.1.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Neck</th>
+<th id="S5.T3.1.1.2.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Head</th>
+<th id="S5.T3.1.1.2.2.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Shoulders</th>
+<th id="S5.T3.1.1.2.2.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Elbows</th>
+<th id="S5.T3.1.1.2.2.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Wrists</th>
+<th id="S5.T3.1.1.2.2.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Thorax</th>
+<th id="S5.T3.1.1.2.2.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Knees</th>
+<th id="S5.T3.1.1.2.2.10" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Feet</th>
+<th id="S5.T3.1.1.2.2.11" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt">UppBody</th>
+<th id="S5.T3.1.1.2.2.12" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">LowBody</th>
+<th id="S5.T3.1.1.2.2.13" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Avg</th>
+</tr>
+<tr id="S5.T3.1.1.3.3" class="ltx_tr">
+<td id="S5.T3.1.1.3.3.1" class="ltx_td ltx_align_left ltx_border_t">MotionGraph <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>
+</td>
+<td id="S5.T3.1.1.3.3.2" class="ltx_td ltx_align_center ltx_border_t">3.40</td>
+<td id="S5.T3.1.1.3.3.3" class="ltx_td ltx_align_center ltx_border_t">8.03</td>
+<td id="S5.T3.1.1.3.3.4" class="ltx_td ltx_align_center ltx_border_t">12.40</td>
+<td id="S5.T3.1.1.3.3.5" class="ltx_td ltx_align_center ltx_border_t">7.74</td>
+<td id="S5.T3.1.1.3.3.6" class="ltx_td ltx_align_center ltx_border_t">20.93</td>
+<td id="S5.T3.1.1.3.3.7" class="ltx_td ltx_align_center ltx_border_t">39.13</td>
+<td id="S5.T3.1.1.3.3.8" class="ltx_td ltx_align_center ltx_border_t">10.73</td>
+<td id="S5.T3.1.1.3.3.9" class="ltx_td ltx_align_center ltx_border_t">32.50</td>
+<td id="S5.T3.1.1.3.3.10" class="ltx_td ltx_align_center ltx_border_t">53.81</td>
+<td id="S5.T3.1.1.3.3.11" class="ltx_td ltx_align_center ltx_border_tt">16.98</td>
+<td id="S5.T3.1.1.3.3.12" class="ltx_td ltx_align_center ltx_border_t">25.63</td>
+<td id="S5.T3.1.1.3.3.13" class="ltx_td ltx_align_center ltx_border_t">20.54</td>
+</tr>
+<tr id="S5.T3.1.1.4.4" class="ltx_tr">
+<td id="S5.T3.1.1.4.4.1" class="ltx_td ltx_align_left"><span id="S5.T3.1.1.4.4.1.1" class="ltx_text ltx_font_bold">MotionGraph-SS</span></td>
+<td id="S5.T3.1.1.4.4.2" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.2.1" class="ltx_text ltx_font_bold">3.37</span></td>
+<td id="S5.T3.1.1.4.4.3" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.3.1" class="ltx_text ltx_font_bold">5.96</span></td>
+<td id="S5.T3.1.1.4.4.4" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.4.1" class="ltx_text ltx_font_bold">9.57</span></td>
+<td id="S5.T3.1.1.4.4.5" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.5.1" class="ltx_text ltx_font_bold">6.23</span></td>
+<td id="S5.T3.1.1.4.4.6" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.6.1" class="ltx_text ltx_font_bold">18.86</span></td>
+<td id="S5.T3.1.1.4.4.7" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.7.1" class="ltx_text ltx_font_bold">31.09</span></td>
+<td id="S5.T3.1.1.4.4.8" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.8.1" class="ltx_text ltx_font_bold">8.38</span></td>
+<td id="S5.T3.1.1.4.4.9" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.9.1" class="ltx_text ltx_font_bold">28.66</span></td>
+<td id="S5.T3.1.1.4.4.10" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.10.1" class="ltx_text ltx_font_bold">45.14</span></td>
+<td id="S5.T3.1.1.4.4.11" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.11.1" class="ltx_text ltx_font_bold">13.89</span></td>
+<td id="S5.T3.1.1.4.4.12" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.12.1" class="ltx_text ltx_font_bold">22.04</span></td>
+<td id="S5.T3.1.1.4.4.13" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.4.4.13.1" class="ltx_text ltx_font_bold">17.25</span></td>
+</tr>
+<tr id="S5.T3.1.1.5.5" class="ltx_tr">
+<td id="S5.T3.1.1.5.5.1" class="ltx_td ltx_align_left ltx_border_t">you2me <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>
+</td>
+<td id="S5.T3.1.1.5.5.2" class="ltx_td ltx_align_center ltx_border_t">2.96</td>
+<td id="S5.T3.1.1.5.5.3" class="ltx_td ltx_align_center ltx_border_t">10.45</td>
+<td id="S5.T3.1.1.5.5.4" class="ltx_td ltx_align_center ltx_border_t">15.31</td>
+<td id="S5.T3.1.1.5.5.5" class="ltx_td ltx_align_center ltx_border_t">9.81</td>
+<td id="S5.T3.1.1.5.5.6" class="ltx_td ltx_align_center ltx_border_t">20.15</td>
+<td id="S5.T3.1.1.5.5.7" class="ltx_td ltx_align_center ltx_border_t">34.52</td>
+<td id="S5.T3.1.1.5.5.8" class="ltx_td ltx_align_center ltx_border_t">13.13</td>
+<td id="S5.T3.1.1.5.5.9" class="ltx_td ltx_align_center ltx_border_t">26.31</td>
+<td id="S5.T3.1.1.5.5.10" class="ltx_td ltx_align_center ltx_border_t">48.25</td>
+<td id="S5.T3.1.1.5.5.11" class="ltx_td ltx_align_center ltx_border_tt">17.78</td>
+<td id="S5.T3.1.1.5.5.12" class="ltx_td ltx_align_center ltx_border_t">23.16</td>
+<td id="S5.T3.1.1.5.5.13" class="ltx_td ltx_align_center ltx_border_t">20.00</td>
+</tr>
+<tr id="S5.T3.1.1.6.6" class="ltx_tr">
+<td id="S5.T3.1.1.6.6.1" class="ltx_td ltx_align_left"><span id="S5.T3.1.1.6.6.1.1" class="ltx_text ltx_font_bold">you2me-SS</span></td>
+<td id="S5.T3.1.1.6.6.2" class="ltx_td ltx_align_center">2.99</td>
+<td id="S5.T3.1.1.6.6.3" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.3.1" class="ltx_text ltx_font_bold">8.66</span></td>
+<td id="S5.T3.1.1.6.6.4" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.4.1" class="ltx_text ltx_font_bold">13.26</span></td>
+<td id="S5.T3.1.1.6.6.5" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.5.1" class="ltx_text ltx_font_bold">8.23</span></td>
+<td id="S5.T3.1.1.6.6.6" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.6.1" class="ltx_text ltx_font_bold">18.90</span></td>
+<td id="S5.T3.1.1.6.6.7" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.7.1" class="ltx_text ltx_font_bold">33.61</span></td>
+<td id="S5.T3.1.1.6.6.8" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.8.1" class="ltx_text ltx_font_bold">11.34</span></td>
+<td id="S5.T3.1.1.6.6.9" class="ltx_td ltx_align_center">27.08</td>
+<td id="S5.T3.1.1.6.6.10" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.10.1" class="ltx_text ltx_font_bold">47.74</span></td>
+<td id="S5.T3.1.1.6.6.11" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.11.1" class="ltx_text ltx_font_bold">15.63</span></td>
+<td id="S5.T3.1.1.6.6.12" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.12.1" class="ltx_text ltx_font_bold">21.33</span></td>
+<td id="S5.T3.1.1.6.6.13" class="ltx_td ltx_align_center"><span id="S5.T3.1.1.6.6.13.1" class="ltx_text ltx_font_bold">18.03</span></td>
+</tr>
+<tr id="S5.T3.1.1.7.7" class="ltx_tr">
+<td id="S5.T3.1.1.7.7.1" class="ltx_td ltx_align_left ltx_border_t">Deconvnet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>
+</td>
+<td id="S5.T3.1.1.7.7.2" class="ltx_td ltx_align_center ltx_border_t">3.15</td>
+<td id="S5.T3.1.1.7.7.3" class="ltx_td ltx_align_center ltx_border_t">5.72</td>
+<td id="S5.T3.1.1.7.7.4" class="ltx_td ltx_align_center ltx_border_t">8.96</td>
+<td id="S5.T3.1.1.7.7.5" class="ltx_td ltx_align_center ltx_border_t">5.77</td>
+<td id="S5.T3.1.1.7.7.6" class="ltx_td ltx_align_center ltx_border_t">17.13</td>
+<td id="S5.T3.1.1.7.7.7" class="ltx_td ltx_align_center ltx_border_t">31.26</td>
+<td id="S5.T3.1.1.7.7.8" class="ltx_td ltx_align_center ltx_border_t">7.81</td>
+<td id="S5.T3.1.1.7.7.9" class="ltx_td ltx_align_center ltx_border_t">27.84</td>
+<td id="S5.T3.1.1.7.7.10" class="ltx_td ltx_align_center ltx_border_t">45.48</td>
+<td id="S5.T3.1.1.7.7.11" class="ltx_td ltx_align_center ltx_border_tt">13.35</td>
+<td id="S5.T3.1.1.7.7.12" class="ltx_td ltx_align_center ltx_border_t">21.85</td>
+<td id="S5.T3.1.1.7.7.13" class="ltx_td ltx_align_center ltx_border_t">16.85</td>
+</tr>
+<tr id="S5.T3.1.1.8.8" class="ltx_tr">
+<td id="S5.T3.1.1.8.8.1" class="ltx_td ltx_align_left ltx_border_bb"><span id="S5.T3.1.1.8.8.1.1" class="ltx_text ltx_font_bold">Deconvnet-SS</span></td>
+<td id="S5.T3.1.1.8.8.2" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.2.1" class="ltx_text ltx_font_bold">3.12</span></td>
+<td id="S5.T3.1.1.8.8.3" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.3.1" class="ltx_text ltx_font_bold">5.69</span></td>
+<td id="S5.T3.1.1.8.8.4" class="ltx_td ltx_align_center ltx_border_bb">9.30</td>
+<td id="S5.T3.1.1.8.8.5" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.5.1" class="ltx_text ltx_font_bold">5.71</span></td>
+<td id="S5.T3.1.1.8.8.6" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.6.1" class="ltx_text ltx_font_bold">14.89</span></td>
+<td id="S5.T3.1.1.8.8.7" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.7.1" class="ltx_text ltx_font_bold">27.10</span></td>
+<td id="S5.T3.1.1.8.8.8" class="ltx_td ltx_align_center ltx_border_bb">8.03</td>
+<td id="S5.T3.1.1.8.8.9" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.9.1" class="ltx_text ltx_font_bold">24.00</span></td>
+<td id="S5.T3.1.1.8.8.10" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.10.1" class="ltx_text ltx_font_bold">40.09</span></td>
+<td id="S5.T3.1.1.8.8.11" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.11.1" class="ltx_text ltx_font_bold">12.09</span></td>
+<td id="S5.T3.1.1.8.8.12" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.12.1" class="ltx_text ltx_font_bold">18.64</span></td>
+<td id="S5.T3.1.1.8.8.13" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T3.1.1.8.8.13.1" class="ltx_text ltx_font_bold">14.78</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 3: </span>Average joint error in the <span id="S5.T3.3.1" class="ltx_text ltx_font_italic">First2Third</span> Dataset, in cm. </figcaption>
+</figure>
+<figure id="S5.T4" class="ltx_table">
+<div id="S5.T4.1" class="ltx_inline-block ltx_transformed_outer" style="width:433.6pt;height:84.7pt;vertical-align:-0.6pt;"><span class="ltx_transformed_inner" style="transform:translate(-154.4pt,29.9pt) scale(0.584031667167477,0.584031667167477) ;">
+<table id="S5.T4.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S5.T4.1.1.1.1" class="ltx_tr">
+<th id="S5.T4.1.1.1.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_tt"></th>
+<th id="S5.T4.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="12">Invisible Poses Dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>
+</th>
+<td id="S5.T4.1.1.1.1.3" class="ltx_td ltx_border_tt"></td>
+</tr>
+<tr id="S5.T4.1.1.2.2" class="ltx_tr">
+<th id="S5.T4.1.1.2.2.1" class="ltx_td ltx_th ltx_th_row"></th>
+<th id="S5.T4.1.1.2.2.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Hip</th>
+<th id="S5.T4.1.1.2.2.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Neck</th>
+<th id="S5.T4.1.1.2.2.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Head</th>
+<th id="S5.T4.1.1.2.2.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Shoulders</th>
+<th id="S5.T4.1.1.2.2.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Elbows</th>
+<th id="S5.T4.1.1.2.2.7" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Wrists</th>
+<th id="S5.T4.1.1.2.2.8" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Hands</th>
+<th id="S5.T4.1.1.2.2.9" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Knees</th>
+<th id="S5.T4.1.1.2.2.10" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Ankle</th>
+<th id="S5.T4.1.1.2.2.11" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Feet</th>
+<th id="S5.T4.1.1.2.2.12" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">UppBody</th>
+<th id="S5.T4.1.1.2.2.13" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">LowBody</th>
+<th id="S5.T4.1.1.2.2.14" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Avg</th>
+</tr>
+<tr id="S5.T4.1.1.3.3" class="ltx_tr">
+<th id="S5.T4.1.1.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">MotionGraph <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>
+</th>
+<td id="S5.T4.1.1.3.3.2" class="ltx_td ltx_align_center ltx_border_t">2.24</td>
+<td id="S5.T4.1.1.3.3.3" class="ltx_td ltx_align_center ltx_border_t">19.40</td>
+<td id="S5.T4.1.1.3.3.4" class="ltx_td ltx_align_center ltx_border_t">21.60</td>
+<td id="S5.T4.1.1.3.3.5" class="ltx_td ltx_align_center ltx_border_t">16.23</td>
+<td id="S5.T4.1.1.3.3.6" class="ltx_td ltx_align_center ltx_border_t">17.06</td>
+<td id="S5.T4.1.1.3.3.7" class="ltx_td ltx_align_center ltx_border_t">24.02</td>
+<td id="S5.T4.1.1.3.3.8" class="ltx_td ltx_align_center ltx_border_t">27.27</td>
+<td id="S5.T4.1.1.3.3.9" class="ltx_td ltx_align_center ltx_border_t">24.78</td>
+<td id="S5.T4.1.1.3.3.10" class="ltx_td ltx_align_center ltx_border_t">32.29</td>
+<td id="S5.T4.1.1.3.3.11" class="ltx_td ltx_align_center ltx_border_t">34.13</td>
+<td id="S5.T4.1.1.3.3.12" class="ltx_td ltx_align_center ltx_border_t">22.09</td>
+<td id="S5.T4.1.1.3.3.13" class="ltx_td ltx_align_center ltx_border_t">20.76</td>
+<td id="S5.T4.1.1.3.3.14" class="ltx_td ltx_align_center ltx_border_t">21.61</td>
+</tr>
+<tr id="S5.T4.1.1.4.4" class="ltx_tr">
+<th id="S5.T4.1.1.4.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">
+<span id="S5.T4.1.1.4.4.1.1" class="ltx_text ltx_font_bold">MotionGraph-SS</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>
+</th>
+<td id="S5.T4.1.1.4.4.2" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.2.1" class="ltx_text ltx_font_bold">2.14</span></td>
+<td id="S5.T4.1.1.4.4.3" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.3.1" class="ltx_text ltx_font_bold">17.20</span></td>
+<td id="S5.T4.1.1.4.4.4" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.4.1" class="ltx_text ltx_font_bold">19.50</span></td>
+<td id="S5.T4.1.1.4.4.5" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.5.1" class="ltx_text ltx_font_bold">14.23</span></td>
+<td id="S5.T4.1.1.4.4.6" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.6.1" class="ltx_text ltx_font_bold">14.81</span></td>
+<td id="S5.T4.1.1.4.4.7" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.7.1" class="ltx_text ltx_font_bold">21.29</span></td>
+<td id="S5.T4.1.1.4.4.8" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.8.1" class="ltx_text ltx_font_bold">24.32</span></td>
+<td id="S5.T4.1.1.4.4.9" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.9.1" class="ltx_text ltx_font_bold">23.32</span></td>
+<td id="S5.T4.1.1.4.4.10" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.10.1" class="ltx_text ltx_font_bold">30.43</span></td>
+<td id="S5.T4.1.1.4.4.11" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.11.1" class="ltx_text ltx_font_bold">32.29</span></td>
+<td id="S5.T4.1.1.4.4.12" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.12.1" class="ltx_text ltx_font_bold">19.65</span></td>
+<td id="S5.T4.1.1.4.4.13" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.13.1" class="ltx_text ltx_font_bold">19.60</span></td>
+<td id="S5.T4.1.1.4.4.14" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.4.4.14.1" class="ltx_text ltx_font_bold">19.64</span></td>
+</tr>
+<tr id="S5.T4.1.1.5.5" class="ltx_tr">
+<th id="S5.T4.1.1.5.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">you2me <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>
+</th>
+<td id="S5.T4.1.1.5.5.2" class="ltx_td ltx_align_center ltx_border_t">2.14</td>
+<td id="S5.T4.1.1.5.5.3" class="ltx_td ltx_align_center ltx_border_t">15.50</td>
+<td id="S5.T4.1.1.5.5.4" class="ltx_td ltx_align_center ltx_border_t">17.10</td>
+<td id="S5.T4.1.1.5.5.5" class="ltx_td ltx_align_center ltx_border_t">15.17</td>
+<td id="S5.T4.1.1.5.5.6" class="ltx_td ltx_align_center ltx_border_t">19.34</td>
+<td id="S5.T4.1.1.5.5.7" class="ltx_td ltx_align_center ltx_border_t">28.54</td>
+<td id="S5.T4.1.1.5.5.8" class="ltx_td ltx_align_center ltx_border_t">32.23</td>
+<td id="S5.T4.1.1.5.5.9" class="ltx_td ltx_align_center ltx_border_t">22.48</td>
+<td id="S5.T4.1.1.5.5.10" class="ltx_td ltx_align_center ltx_border_t">33.94</td>
+<td id="S5.T4.1.1.5.5.11" class="ltx_td ltx_align_center ltx_border_t">36.63</td>
+<td id="S5.T4.1.1.5.5.12" class="ltx_td ltx_align_center ltx_border_t">24.53</td>
+<td id="S5.T4.1.1.5.5.13" class="ltx_td ltx_align_center ltx_border_t">21.55</td>
+<td id="S5.T4.1.1.5.5.14" class="ltx_td ltx_align_center ltx_border_t">23.38</td>
+</tr>
+<tr id="S5.T4.1.1.6.6" class="ltx_tr">
+<th id="S5.T4.1.1.6.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row"><span id="S5.T4.1.1.6.6.1.1" class="ltx_text ltx_font_bold">you2me-SS</span></th>
+<td id="S5.T4.1.1.6.6.2" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.2.1" class="ltx_text ltx_font_bold">1.97</span></td>
+<td id="S5.T4.1.1.6.6.3" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.3.1" class="ltx_text ltx_font_bold">15.00</span></td>
+<td id="S5.T4.1.1.6.6.4" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.4.1" class="ltx_text ltx_font_bold">17.00</span></td>
+<td id="S5.T4.1.1.6.6.5" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.5.1" class="ltx_text ltx_font_bold">13.87</span></td>
+<td id="S5.T4.1.1.6.6.6" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.6.1" class="ltx_text ltx_font_bold">16.19</span></td>
+<td id="S5.T4.1.1.6.6.7" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.7.1" class="ltx_text ltx_font_bold">24.04</span></td>
+<td id="S5.T4.1.1.6.6.8" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.8.1" class="ltx_text ltx_font_bold">27.19</span></td>
+<td id="S5.T4.1.1.6.6.9" class="ltx_td ltx_align_center">23.27</td>
+<td id="S5.T4.1.1.6.6.10" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.10.1" class="ltx_text ltx_font_bold">32.80</span></td>
+<td id="S5.T4.1.1.6.6.11" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.11.1" class="ltx_text ltx_font_bold">35.37</span></td>
+<td id="S5.T4.1.1.6.6.12" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.12.1" class="ltx_text ltx_font_bold">20.94</span></td>
+<td id="S5.T4.1.1.6.6.13" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.13.1" class="ltx_text ltx_font_bold">20.75</span></td>
+<td id="S5.T4.1.1.6.6.14" class="ltx_td ltx_align_center"><span id="S5.T4.1.1.6.6.14.1" class="ltx_text ltx_font_bold">20.87</span></td>
+</tr>
+<tr id="S5.T4.1.1.7.7" class="ltx_tr">
+<th id="S5.T4.1.1.7.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">Deconvnet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>
+</th>
+<td id="S5.T4.1.1.7.7.2" class="ltx_td ltx_align_center ltx_border_t"><span id="S5.T4.1.1.7.7.2.1" class="ltx_text ltx_font_bold">2.58</span></td>
+<td id="S5.T4.1.1.7.7.3" class="ltx_td ltx_align_center ltx_border_t">17.70</td>
+<td id="S5.T4.1.1.7.7.4" class="ltx_td ltx_align_center ltx_border_t">21.30</td>
+<td id="S5.T4.1.1.7.7.5" class="ltx_td ltx_align_center ltx_border_t">12.65</td>
+<td id="S5.T4.1.1.7.7.6" class="ltx_td ltx_align_center ltx_border_t">13.81</td>
+<td id="S5.T4.1.1.7.7.7" class="ltx_td ltx_align_center ltx_border_t">20.87</td>
+<td id="S5.T4.1.1.7.7.8" class="ltx_td ltx_align_center ltx_border_t">23.46</td>
+<td id="S5.T4.1.1.7.7.9" class="ltx_td ltx_align_center ltx_border_t">22.00</td>
+<td id="S5.T4.1.1.7.7.10" class="ltx_td ltx_align_center ltx_border_t">27.30</td>
+<td id="S5.T4.1.1.7.7.11" class="ltx_td ltx_align_center ltx_border_t">29.04</td>
+<td id="S5.T4.1.1.7.7.12" class="ltx_td ltx_align_center ltx_border_t">18.46</td>
+<td id="S5.T4.1.1.7.7.13" class="ltx_td ltx_align_center ltx_border_t">17.98</td>
+<td id="S5.T4.1.1.7.7.14" class="ltx_td ltx_align_center ltx_border_t">18.29</td>
+</tr>
+<tr id="S5.T4.1.1.8.8" class="ltx_tr">
+<th id="S5.T4.1.1.8.8.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb"><span id="S5.T4.1.1.8.8.1.1" class="ltx_text ltx_font_bold">Deconvnet-SS</span></th>
+<td id="S5.T4.1.1.8.8.2" class="ltx_td ltx_align_center ltx_border_bb">2.64</td>
+<td id="S5.T4.1.1.8.8.3" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.3.1" class="ltx_text ltx_font_bold">16.00</span></td>
+<td id="S5.T4.1.1.8.8.4" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.4.1" class="ltx_text ltx_font_bold">18.80</span></td>
+<td id="S5.T4.1.1.8.8.5" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.5.1" class="ltx_text ltx_font_bold">12.48</span></td>
+<td id="S5.T4.1.1.8.8.6" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.6.1" class="ltx_text ltx_font_bold">13.59</span></td>
+<td id="S5.T4.1.1.8.8.7" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.7.1" class="ltx_text ltx_font_bold">20.31</span></td>
+<td id="S5.T4.1.1.8.8.8" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.8.1" class="ltx_text ltx_font_bold">22.82</span></td>
+<td id="S5.T4.1.1.8.8.9" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.9.1" class="ltx_text ltx_font_bold">21.49</span></td>
+<td id="S5.T4.1.1.8.8.10" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.10.1" class="ltx_text ltx_font_bold">26.20</span></td>
+<td id="S5.T4.1.1.8.8.11" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.11.1" class="ltx_text ltx_font_bold">27.74</span></td>
+<td id="S5.T4.1.1.8.8.12" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.12.1" class="ltx_text ltx_font_bold">18.07</span></td>
+<td id="S5.T4.1.1.8.8.13" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.13.1" class="ltx_text ltx_font_bold">17.31</span></td>
+<td id="S5.T4.1.1.8.8.14" class="ltx_td ltx_align_center ltx_border_bb"><span id="S5.T4.1.1.8.8.14.1" class="ltx_text ltx_font_bold">17.85</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 4: </span>Average joint error in the Invisible Poses Dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, in cm.</figcaption>
+</figure>
+<figure id="S5.F5" class="ltx_figure"><img src="/html/2201.02017/assets/img/MainSkeletonModel.png" id="S5.F5.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="354" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Visual comparisons of predicted skeletons for three different activities. GT: ground truth. DeconvNet-SS:
+proposed method. MotionGraph: state-of-the-art <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. DeconvNet: end-to-end baseline <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>. you2me: <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> baseline. Test videos are from the <span id="S5.F5.3.1" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset test split. </figcaption>
+</figure>
+<div id="S5.p3" class="ltx_para ltx_noindent">
+<p id="S5.p3.1" class="ltx_p"><span id="S5.p3.1.1" class="ltx_text ltx_font_bold">Datasets.</span> In addition to our <span id="S5.p3.1.2" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset described in Section <a href="#S3" title="3 First2Third-Pose Dataset ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, we use the dataset introduced in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. The first-view for the two datasets has been captured wearing the camera on the head for our dataset and on the chest for the other. More details about the dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> can be found in Table <a href="#S2.T1" title="Table 1 ‣ 2 Related Work ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. Difference in appearance with our source <span id="S5.p3.1.3" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset can be appreciated in Figure <a href="#S3.F4" title="Figure 4 ‣ 3 First2Third-Pose Dataset ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> (see source and target first-view videos).
+Figure <a href="#S5.F6" title="Figure 6 ‣ 5 Experiments ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> illustrates the difference in appearance between two datasets used in the paper for a same activity: our proposed <span id="S5.p3.1.4" class="ltx_text ltx_font_italic">First2Third-Pose</span> captured by a head mounted camera, and the Invisible pose dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> captured by a chest mounted camera.</p>
+</div>
+<figure id="S5.F6" class="ltx_figure"><img src="/html/2201.02017/assets/img/Dataset_fig1.1.png" id="S5.F6.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="231" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Examples of activities captured in the two datasets: <span id="S5.F6.3.1" class="ltx_text ltx_font_italic">First2Third-Pose</span> (top) and Invisible Pose Dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> (bottom).</figcaption>
+</figure>
+<figure id="S5.F7" class="ltx_figure"><img src="/html/2201.02017/assets/img/fiz-viz1.5.png" id="S5.F7.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="538" height="354" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Scatter plots of embedding features for three different 3D body poses. Similar body poses have similar features.</figcaption>
+</figure>
+<div id="S5.p4" class="ltx_para ltx_noindent">
+<p id="S5.p4.1" class="ltx_p"><span id="S5.p4.1.1" class="ltx_text ltx_font_bold">Baselines.</span>
+We considered two state-of-the-art methods for 3D egocentric pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>, and we considered also a baseline method tailored for 3D pose estimation from third-view videos <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> that we adapted to our task. <span id="S5.p4.1.2" class="ltx_text ltx_font_bold">MotionGraph</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> is currently the state-of-the art method for predicting 3D body pose from real egocentric videos without a second interacting person. We used the publicly available author’s code <span id="footnote2" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span>http://www.hao-jiang.net/egopose/index.html</span></span></span> to extract static and motion features from our dataset, and modified the MotionGraph dynamic programming algorithm to account for the features extracted by relying on our joint embedded space. We retrained the model for both datasets, using the 300 quantized poses as used in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>.
+<span id="S5.p4.1.3" class="ltx_text ltx_font_bold">You2me</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> has been recently proposed as a method able to account for the visible second person interacting with the camera wearer, as it leverages his/her 3D pose estimates to improve egopose predictions. Even if there are not second persons in our <span id="S5.p4.1.4" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset, this approach is still a valid alternative to state-of-the-art MotionGraph, since the use of a recurrent long short-term memory (LSTM) network ensures smooth frame to frame 3D body pose transitions.
+We used the authors’s code <span id="footnote3" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">3</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">3</sup><span class="ltx_tag ltx_tag_note">3</span>https://github.com/facebookresearch/you2me</span></span></span>, that takes as input motion and appearance based features, and used additional features vector extracted leveraging our learned joint embedding as input to the LSTM for each frame. We trained this model for both datasets, using 700 quantized poses for upper body and 100 for lower body, as in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>.
+We also adapted and trained from scratch the 3D human pose estimation baseline method proposed in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite><span id="footnote4" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">4</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">4</sup><span class="ltx_tag ltx_tag_note">4</span>https://github.com/una-dinosauria/3d-pose-baseline</span></span></span>, <span id="S5.p4.1.5" class="ltx_text ltx_font_bold">DeconvNet</span>, that adds deconvolutional layers to ResNet. We altered the output space for 3D joints and minimized the mean-squared error on the training set. We found this off-the-shelf deep pose method extremely effective for ego-pose estimation, specially on our <span id="S5.p4.1.6" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset that, being large scale, is well suited for end-to-end learning.</p>
+</div>
+<div id="S5.p5" class="ltx_para ltx_noindent">
+<p id="S5.p5.1" class="ltx_p"><span id="S5.p5.1.1" class="ltx_text ltx_font_bold">Evaluation metric.</span>
+Each skeleton is rotated so the shoulder is parallel to the yz plane and the body center is at the origin.
+The error is then computed as the Euclidean distance between the predicted 3D joints and the ground truth, averaged over the full sequence and scaled to centimeters based on a reference shoulder distance of 30 cm.</p>
+</div>
+<div id="S5.p6" class="ltx_para ltx_noindent">
+<p id="S5.p6.1" class="ltx_p"><span id="S5.p6.1.1" class="ltx_text ltx_font_bold">Results.</span>
+In Table <a href="#S5.T3" title="Table 3 ‣ 5 Experiments ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> and Table <a href="#S5.T4" title="Table 4 ‣ 5 Experiments ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a> we show the average error per joint and for all joints (in cm) obtained on the test set of our dataset and on the dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> respectively. We denote by MotionGraph-SS, you2me-SS and Deconvnet-SS our Self-supervised approach based on the methods MotionGraph <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, you2me <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> and DeconvNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, respectively.
+In addition, following competitive methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, we present results in terms of errors averaged separately for the upper body (Neck, Head, Thorax, Spine, Shoulders, Elbows, Wrists, Hands) and
+lower body joints (Hips, Knees, Ankles, Feet).
+Overall, these tables show that leveraging features extracted from the common representation space learnt with our proposed dataset consistently gives better results over existing supervised methods for 3D egopose estimation. The fact that our approach results effective also on the dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, demonstrates that the features extracted relying on the learned joint embedding space can be efficiently transferred to arbitrary egocentric videos, without the need of domain adaptation.</p>
+</div>
+<div id="S5.p7" class="ltx_para">
+<p id="S5.p7.1" class="ltx_p">Figure <a href="#S5.F5" title="Figure 5 ‣ 5 Experiments ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> shows qualitatively that using features extracted by leveraging the learned joint embedding space indeed gives better results.</p>
+</div>
+<div id="S5.p8" class="ltx_para">
+<p id="S5.p8.1" class="ltx_p">In Table <a href="#S5.T5" title="Table 5 ‣ 5 Experiments ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>, we also considered the time complexity of the proposed approach with respect to the methods we compare to, measured in terms of Floating Point Operations per Second (FLOPS) computed by using a dedicated PyTorch library <span id="footnote5" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">5</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">5</sup><span class="ltx_tag ltx_tag_note">5</span> https://pypi.org/project/ptflops/</span></span></span> for the neural network based models. For Motion graph, whose dynamic programming code released by the authors only includes vector-to-vector operations, we report the FLOPS corresponding to the sum of these operations during the execution of the program. As it is standard when computing FLOPS, we assume that all input features have been pre-computed and loaded. As the size of the
+self-supervised features <span id="S5.p8.1.1" class="ltx_text ltx_markedasmath ltx_font_bold">z</span> is relatively small compared to the rest of input features, its effect on the FLOPS counting is negligible for the considered methods.
+However, given that precisely the same number of FLOPS may have radically different run-times, we also report the run-times for training and inference. We performed all the experiments on a single workstation equipped with an Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz, 128GB RAM 2133 MHz, NVIDIA Tesla K40c with 2880 CUDA core and operating system Ubuntu 14.04.
+It can be observed that, for the methods based on neural networks, while the run time at training time is significantly increased, at inference time only a very little increment is observed for getting the projection of the ego-view on the shared representation space. Therefore, at inference time, the proposed approach can be considered suitable for real-time applications.</p>
+</div>
+<figure id="S5.T5" class="ltx_table">
+<div id="S5.T5.1" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:129.8pt;vertical-align:-0.9pt;"><span class="ltx_transformed_inner" style="transform:translate(-25.4pt,7.6pt) scale(0.894957057195494,0.894957057195494) ;">
+<table id="S5.T5.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S5.T5.1.1.1.1" class="ltx_tr">
+<th id="S5.T5.1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">Method</th>
+<th id="S5.T5.1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">Tr. time (h/epoch)</th>
+<th id="S5.T5.1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">Inf. time (sec/image)</th>
+<th id="S5.T5.1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" style="padding-left:4.0pt;padding-right:4.0pt;">FLOPS (GMac)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S5.T5.1.1.2.1" class="ltx_tr">
+<th id="S5.T5.1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">MotionGraph <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>
+</th>
+<td id="S5.T5.1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">0.10</td>
+<td id="S5.T5.1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">0.01</td>
+<td id="S5.T5.1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_t" style="padding-left:4.0pt;padding-right:4.0pt;">0.45</td>
+</tr>
+<tr id="S5.T5.1.1.3.2" class="ltx_tr">
+<th id="S5.T5.1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-left:4.0pt;padding-right:4.0pt;">You2me <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>
+</th>
+<td id="S5.T5.1.1.3.2.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">2.50</td>
+<td id="S5.T5.1.1.3.2.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">0.17</td>
+<td id="S5.T5.1.1.3.2.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">12.74</td>
+</tr>
+<tr id="S5.T5.1.1.4.3" class="ltx_tr">
+<th id="S5.T5.1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-left:4.0pt;padding-right:4.0pt;">DeconvNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>
+</th>
+<td id="S5.T5.1.1.4.3.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">1.24</td>
+<td id="S5.T5.1.1.4.3.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">0.28</td>
+<td id="S5.T5.1.1.4.3.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">9.95</td>
+</tr>
+<tr id="S5.T5.1.1.5.4" class="ltx_tr">
+<th id="S5.T5.1.1.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-left:4.0pt;padding-right:4.0pt;">MotionGraph-SS</th>
+<td id="S5.T5.1.1.5.4.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">0.25</td>
+<td id="S5.T5.1.1.5.4.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">0.01</td>
+<td id="S5.T5.1.1.5.4.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">0.65</td>
+</tr>
+<tr id="S5.T5.1.1.6.5" class="ltx_tr">
+<th id="S5.T5.1.1.6.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-left:4.0pt;padding-right:4.0pt;">You2me-SS</th>
+<td id="S5.T5.1.1.6.5.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">26.06</td>
+<td id="S5.T5.1.1.6.5.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">0.30</td>
+<td id="S5.T5.1.1.6.5.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">12.74</td>
+</tr>
+<tr id="S5.T5.1.1.7.6" class="ltx_tr">
+<th id="S5.T5.1.1.7.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row" style="padding-left:4.0pt;padding-right:4.0pt;">DeconvNet-SS</th>
+<td id="S5.T5.1.1.7.6.2" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">13.00</td>
+<td id="S5.T5.1.1.7.6.3" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">0.49</td>
+<td id="S5.T5.1.1.7.6.4" class="ltx_td ltx_align_center" style="padding-left:4.0pt;padding-right:4.0pt;">9.95</td>
+</tr>
+<tr id="S5.T5.1.1.8.7" class="ltx_tr">
+<th id="S5.T5.1.1.8.7.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;">Ours</th>
+<td id="S5.T5.1.1.8.7.2" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;">40.33</td>
+<td id="S5.T5.1.1.8.7.3" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;">0.06</td>
+<td id="S5.T5.1.1.8.7.4" class="ltx_td ltx_align_center ltx_border_b" style="padding-left:4.0pt;padding-right:4.0pt;">9.82 (Tr.)/4.91 (Inf.)</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Comparison of time complexity (FLOPS) and actual run-times for training one epoch on the <span id="S5.T5.3.1" class="ltx_text ltx_font_italic">First2Third-Pose</span> dataset and for inference on a single image.</figcaption>
+</figure>
+<div id="S5.p9" class="ltx_para ltx_noindent">
+<p id="S5.p9.1" class="ltx_p"><span id="S5.p9.1.1" class="ltx_text ltx_font_bold">Insights on the joint embedded space.</span>
+To verify that the features obtained using our embedded space, say embedded features, are discriminative for 3D egopose estimation, we first apply PCA to the
+feature matrix to reduce the feature dimension to two, and then we visualized the features of videos corresponding to different activities
+via a scatter plot (each dot is a frame).
+In Figure <a href="#S5.F7" title="Figure 7 ‣ 5 Experiments ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a> we show example poses for three different activities (ground truth and prediction) together with the scatter plot of corresponding embedding features for the surrounding 1 second video segment.
+The 3D skeleton corresponding to the activity <span id="S5.p9.1.2" class="ltx_text ltx_font_italic">typing</span> differs from both <span id="S5.p9.1.3" class="ltx_text ltx_font_italic">bowling</span> and <span id="S5.p9.1.4" class="ltx_text ltx_font_italic">kneeling</span>, while those of <span id="S5.p9.1.5" class="ltx_text ltx_font_italic">bowling</span> and <span id="S5.p9.1.6" class="ltx_text ltx_font_italic">kneeling</span> are more similar. This is also reflected by the corresponding features.</p>
+</div>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>Model interpretation</h2>
+
+<figure id="S6.F8" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S6.F8.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2201.02017/assets/img/CCA_tsne_PAMI_ego1.2.png" id="S6.F8.sf1.g1" class="ltx_graphics ltx_img_landscape" width="216" height="162" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(a) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure id="S6.F8.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2201.02017/assets/img/CCA_tsne_PAMI_front1.2.png" id="S6.F8.sf2.g1" class="ltx_graphics ltx_img_landscape" width="216" height="162" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(b) </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>t-SNE of four different activities captured from first- (a) and third-person (b) views.</figcaption>
+</figure>
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">To shed light on the structure of the learned embedded space, we evaluated numerically the distance between corresponding first and third view embeddings of a same action. In addition, we visualized the embedding vectors corresponding to different activities captured from the same point of view (first-or third).
+In Figure <a href="#S6.F8" title="Figure 8 ‣ 6 Model interpretation ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a> we visualize via t-SNE the 1st- and 3rd-views embedding relative to 4 different actions in the joint space (each dot is a video). In both domains, the embedding of different activities are well separated, meaning they are discriminative for activity recognition. This also suggests that the embedded space can be useful for egocentric action recognition.</p>
+</div>
+<div id="S6.p2" class="ltx_para">
+<p id="S6.p2.1" class="ltx_p">Furthermore, we examined the relationship between first-view and third-view feature projections in our embedding space by using Canonical Correlation Analysis (CCA) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib49" title="" class="ltx_ref">49</a>]</cite>. To make the results more easily interpretable, we grouped the set of activities captured by our dataset into four classes, depending on the type of body movement: 1) short actions involving the whole body (rotating, walking, jogging, etc.); 2) actions requiring a vertical movements of the body or body parts (crouching, sit on ground, pick object right,etc.);
+3) short actions requiring mainly the movement of hands or feet (throwing, bowling, etc.);
+4) activities made of a sequence of several short actions (basketball, exercise, etc.). Table <a href="#S6.T6" title="Table 6 ‣ 6 Model interpretation ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a> reports the CCA coefficient among first-third view pairs of embeddings for each of these four classes. The correlation among first- and third- view embedding is strong, meaning that the features encode relevant geometrical information linking the two views.</p>
+</div>
+<figure id="S6.T6" class="ltx_table">
+<div id="S6.T6.1" class="ltx_inline-block ltx_transformed_outer" style="width:433.6pt;height:126pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(25.8pt,-7.5pt) scale(1.13496404247678,1.13496404247678) ;">
+<table id="S6.T6.1.1" class="ltx_tabular ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S6.T6.1.1.2.1" class="ltx_tr">
+<th id="S6.T6.1.1.2.1.1" class="ltx_td ltx_th ltx_th_row ltx_border_tt"></th>
+<th id="S6.T6.1.1.2.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="4">Class based Activities</th>
+</tr>
+<tr id="S6.T6.1.1.1" class="ltx_tr">
+<th id="S6.T6.1.1.1.1" class="ltx_td ltx_nopad ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_t"><svg version="1.1" height="21.61" width="65.8" overflow="visible"><g transform="translate(0,21.61) scale(1,-1)"><path d="M 0,21.61 65.8,0" stroke="#000000" stroke-width="0.4"></path><g class="ltx_svg_fog" transform="translate(0,0)"><g transform="translate(0,12.15) scale(1, -1)"><foreignObject width="23.45" height="12.15" overflow="visible">
+<span id="S6.T6.1.1.1.1.pic1.1.1" class="ltx_inline-block">
+<span id="S6.T6.1.1.1.1.pic1.1.1.1" class="ltx_inline-block ltx_align_left">
+<span id="S6.T6.1.1.1.1.pic1.1.1.1.1" class="ltx_p">Top</span>
+</span>
+</span></foreignObject></g></g><g class="ltx_svg_fog" transform="translate(32.9,12.15)"><g transform="translate(0,9.46) scale(1, -1)"><foreignObject width="32.9" height="9.46" overflow="visible">
+<span id="S6.T6.1.1.1.1.pic1.2.1" class="ltx_inline-block">
+<span id="S6.T6.1.1.1.1.pic1.2.1.1" class="ltx_inline-block ltx_align_right">
+<span id="S6.T6.1.1.1.1.pic1.2.1.1.1" class="ltx_p">Front</span>
+</span>
+</span></foreignObject></g></g></g></svg></th>
+<th id="S6.T6.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Complex</th>
+<th id="S6.T6.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Hands &amp; Feet</th>
+<th id="S6.T6.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Vertical Movement</th>
+<th id="S6.T6.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t">Whole Body</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S6.T6.1.1.3.1" class="ltx_tr">
+<th id="S6.T6.1.1.3.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t">Complex</th>
+<td id="S6.T6.1.1.3.1.2" class="ltx_td ltx_align_center ltx_border_t"><span id="S6.T6.1.1.3.1.2.1" class="ltx_text ltx_font_bold">0.58</span></td>
+<td id="S6.T6.1.1.3.1.3" class="ltx_td ltx_align_center ltx_border_t">0.15</td>
+<td id="S6.T6.1.1.3.1.4" class="ltx_td ltx_align_center ltx_border_t">-0.07</td>
+<td id="S6.T6.1.1.3.1.5" class="ltx_td ltx_align_center ltx_border_t">0.01</td>
+</tr>
+<tr id="S6.T6.1.1.4.2" class="ltx_tr">
+<th id="S6.T6.1.1.4.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">Hands &amp; Feet</th>
+<td id="S6.T6.1.1.4.2.2" class="ltx_td ltx_align_center">0.11</td>
+<td id="S6.T6.1.1.4.2.3" class="ltx_td ltx_align_center"><span id="S6.T6.1.1.4.2.3.1" class="ltx_text ltx_font_bold">0.62</span></td>
+<td id="S6.T6.1.1.4.2.4" class="ltx_td ltx_align_center">-0.01</td>
+<td id="S6.T6.1.1.4.2.5" class="ltx_td ltx_align_center">0.00</td>
+</tr>
+<tr id="S6.T6.1.1.5.3" class="ltx_tr">
+<th id="S6.T6.1.1.5.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row">Vertical Movement</th>
+<td id="S6.T6.1.1.5.3.2" class="ltx_td ltx_align_center">-0.06</td>
+<td id="S6.T6.1.1.5.3.3" class="ltx_td ltx_align_center">-0.08</td>
+<td id="S6.T6.1.1.5.3.4" class="ltx_td ltx_align_center"><span id="S6.T6.1.1.5.3.4.1" class="ltx_text ltx_font_bold">0.43</span></td>
+<td id="S6.T6.1.1.5.3.5" class="ltx_td ltx_align_center">-0.01</td>
+</tr>
+<tr id="S6.T6.1.1.6.4" class="ltx_tr">
+<th id="S6.T6.1.1.6.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb">Whole Body</th>
+<td id="S6.T6.1.1.6.4.2" class="ltx_td ltx_align_center ltx_border_bb">0.04</td>
+<td id="S6.T6.1.1.6.4.3" class="ltx_td ltx_align_center ltx_border_bb">-0.06</td>
+<td id="S6.T6.1.1.6.4.4" class="ltx_td ltx_align_center ltx_border_bb">0.07</td>
+<td id="S6.T6.1.1.6.4.5" class="ltx_td ltx_align_center ltx_border_bb"><span id="S6.T6.1.1.6.4.5.1" class="ltx_text ltx_font_bold">0.52</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 6: </span>Average CCA coefficient among first and third view pairs of embeddings for four different classes of activities.</figcaption>
+</figure>
+<figure id="S6.F9" class="ltx_figure"><img src="/html/2201.02017/assets/img/transversals.png" id="S6.F9.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="598" height="332" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>Examples of transversal for the activities <span id="S6.F9.5.1" class="ltx_text ltx_font_italic">sit to ground</span>, <span id="S6.F9.6.2" class="ltx_text ltx_font_italic">jogging</span>, and <span id="S6.F9.7.3" class="ltx_text ltx_font_italic">crouching</span>. The endpoints are highlighted in green. </figcaption>
+</figure>
+<div id="S6.p3" class="ltx_para">
+<p id="S6.p3.14" class="ltx_p">Finally, to get insights on the smoothness of the shared representation space, we analyzed several straight Euclidean transversals.
+As endpoints, we considered two frames of the same video, <math id="S6.p3.1.m1.1" class="ltx_Math" alttext="x_{i}" display="inline"><semantics id="S6.p3.1.m1.1a"><msub id="S6.p3.1.m1.1.1" xref="S6.p3.1.m1.1.1.cmml"><mi id="S6.p3.1.m1.1.1.2" xref="S6.p3.1.m1.1.1.2.cmml">x</mi><mi id="S6.p3.1.m1.1.1.3" xref="S6.p3.1.m1.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S6.p3.1.m1.1b"><apply id="S6.p3.1.m1.1.1.cmml" xref="S6.p3.1.m1.1.1"><csymbol cd="ambiguous" id="S6.p3.1.m1.1.1.1.cmml" xref="S6.p3.1.m1.1.1">subscript</csymbol><ci id="S6.p3.1.m1.1.1.2.cmml" xref="S6.p3.1.m1.1.1.2">𝑥</ci><ci id="S6.p3.1.m1.1.1.3.cmml" xref="S6.p3.1.m1.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.1.m1.1c">x_{i}</annotation></semantics></math> and <math id="S6.p3.2.m2.1" class="ltx_Math" alttext="x_{j}" display="inline"><semantics id="S6.p3.2.m2.1a"><msub id="S6.p3.2.m2.1.1" xref="S6.p3.2.m2.1.1.cmml"><mi id="S6.p3.2.m2.1.1.2" xref="S6.p3.2.m2.1.1.2.cmml">x</mi><mi id="S6.p3.2.m2.1.1.3" xref="S6.p3.2.m2.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S6.p3.2.m2.1b"><apply id="S6.p3.2.m2.1.1.cmml" xref="S6.p3.2.m2.1.1"><csymbol cd="ambiguous" id="S6.p3.2.m2.1.1.1.cmml" xref="S6.p3.2.m2.1.1">subscript</csymbol><ci id="S6.p3.2.m2.1.1.2.cmml" xref="S6.p3.2.m2.1.1.2">𝑥</ci><ci id="S6.p3.2.m2.1.1.3.cmml" xref="S6.p3.2.m2.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.2.m2.1c">x_{j}</annotation></semantics></math> and computed their projection onto the joint space, say <math id="S6.p3.3.m3.1" class="ltx_Math" alttext="z_{i}" display="inline"><semantics id="S6.p3.3.m3.1a"><msub id="S6.p3.3.m3.1.1" xref="S6.p3.3.m3.1.1.cmml"><mi id="S6.p3.3.m3.1.1.2" xref="S6.p3.3.m3.1.1.2.cmml">z</mi><mi id="S6.p3.3.m3.1.1.3" xref="S6.p3.3.m3.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S6.p3.3.m3.1b"><apply id="S6.p3.3.m3.1.1.cmml" xref="S6.p3.3.m3.1.1"><csymbol cd="ambiguous" id="S6.p3.3.m3.1.1.1.cmml" xref="S6.p3.3.m3.1.1">subscript</csymbol><ci id="S6.p3.3.m3.1.1.2.cmml" xref="S6.p3.3.m3.1.1.2">𝑧</ci><ci id="S6.p3.3.m3.1.1.3.cmml" xref="S6.p3.3.m3.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.3.m3.1c">z_{i}</annotation></semantics></math> and <math id="S6.p3.4.m4.1" class="ltx_Math" alttext="z_{j}" display="inline"><semantics id="S6.p3.4.m4.1a"><msub id="S6.p3.4.m4.1.1" xref="S6.p3.4.m4.1.1.cmml"><mi id="S6.p3.4.m4.1.1.2" xref="S6.p3.4.m4.1.1.2.cmml">z</mi><mi id="S6.p3.4.m4.1.1.3" xref="S6.p3.4.m4.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S6.p3.4.m4.1b"><apply id="S6.p3.4.m4.1.1.cmml" xref="S6.p3.4.m4.1.1"><csymbol cd="ambiguous" id="S6.p3.4.m4.1.1.1.cmml" xref="S6.p3.4.m4.1.1">subscript</csymbol><ci id="S6.p3.4.m4.1.1.2.cmml" xref="S6.p3.4.m4.1.1.2">𝑧</ci><ci id="S6.p3.4.m4.1.1.3.cmml" xref="S6.p3.4.m4.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.4.m4.1c">z_{j}</annotation></semantics></math>.
+We then obtained the corresponding skeletons <math id="S6.p3.5.m5.1" class="ltx_Math" alttext="p_{i}" display="inline"><semantics id="S6.p3.5.m5.1a"><msub id="S6.p3.5.m5.1.1" xref="S6.p3.5.m5.1.1.cmml"><mi id="S6.p3.5.m5.1.1.2" xref="S6.p3.5.m5.1.1.2.cmml">p</mi><mi id="S6.p3.5.m5.1.1.3" xref="S6.p3.5.m5.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S6.p3.5.m5.1b"><apply id="S6.p3.5.m5.1.1.cmml" xref="S6.p3.5.m5.1.1"><csymbol cd="ambiguous" id="S6.p3.5.m5.1.1.1.cmml" xref="S6.p3.5.m5.1.1">subscript</csymbol><ci id="S6.p3.5.m5.1.1.2.cmml" xref="S6.p3.5.m5.1.1.2">𝑝</ci><ci id="S6.p3.5.m5.1.1.3.cmml" xref="S6.p3.5.m5.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.5.m5.1c">p_{i}</annotation></semantics></math> and <math id="S6.p3.6.m6.1" class="ltx_Math" alttext="p_{j}" display="inline"><semantics id="S6.p3.6.m6.1a"><msub id="S6.p3.6.m6.1.1" xref="S6.p3.6.m6.1.1.cmml"><mi id="S6.p3.6.m6.1.1.2" xref="S6.p3.6.m6.1.1.2.cmml">p</mi><mi id="S6.p3.6.m6.1.1.3" xref="S6.p3.6.m6.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S6.p3.6.m6.1b"><apply id="S6.p3.6.m6.1.1.cmml" xref="S6.p3.6.m6.1.1"><csymbol cd="ambiguous" id="S6.p3.6.m6.1.1.1.cmml" xref="S6.p3.6.m6.1.1">subscript</csymbol><ci id="S6.p3.6.m6.1.1.2.cmml" xref="S6.p3.6.m6.1.1.2">𝑝</ci><ci id="S6.p3.6.m6.1.1.3.cmml" xref="S6.p3.6.m6.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.6.m6.1c">p_{j}</annotation></semantics></math> by using a supervised 3D egopose method (DeconvNet) pre-trained on the same dataset (<span id="S6.p3.14.1" class="ltx_text ltx_font_italic">First2Third-Pose</span>).
+Afterwards, we obtained points on the same line in the joint embedded space by interpolating between the two endopoints’s corresponding latent vectors as <math id="S6.p3.7.m7.1" class="ltx_Math" alttext="z_{t}=z_{i}+(z_{j}-z_{i})\beta" display="inline"><semantics id="S6.p3.7.m7.1a"><mrow id="S6.p3.7.m7.1.1" xref="S6.p3.7.m7.1.1.cmml"><msub id="S6.p3.7.m7.1.1.3" xref="S6.p3.7.m7.1.1.3.cmml"><mi id="S6.p3.7.m7.1.1.3.2" xref="S6.p3.7.m7.1.1.3.2.cmml">z</mi><mi id="S6.p3.7.m7.1.1.3.3" xref="S6.p3.7.m7.1.1.3.3.cmml">t</mi></msub><mo id="S6.p3.7.m7.1.1.2" xref="S6.p3.7.m7.1.1.2.cmml">=</mo><mrow id="S6.p3.7.m7.1.1.1" xref="S6.p3.7.m7.1.1.1.cmml"><msub id="S6.p3.7.m7.1.1.1.3" xref="S6.p3.7.m7.1.1.1.3.cmml"><mi id="S6.p3.7.m7.1.1.1.3.2" xref="S6.p3.7.m7.1.1.1.3.2.cmml">z</mi><mi id="S6.p3.7.m7.1.1.1.3.3" xref="S6.p3.7.m7.1.1.1.3.3.cmml">i</mi></msub><mo id="S6.p3.7.m7.1.1.1.2" xref="S6.p3.7.m7.1.1.1.2.cmml">+</mo><mrow id="S6.p3.7.m7.1.1.1.1" xref="S6.p3.7.m7.1.1.1.1.cmml"><mrow id="S6.p3.7.m7.1.1.1.1.1.1" xref="S6.p3.7.m7.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S6.p3.7.m7.1.1.1.1.1.1.2" xref="S6.p3.7.m7.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S6.p3.7.m7.1.1.1.1.1.1.1" xref="S6.p3.7.m7.1.1.1.1.1.1.1.cmml"><msub id="S6.p3.7.m7.1.1.1.1.1.1.1.2" xref="S6.p3.7.m7.1.1.1.1.1.1.1.2.cmml"><mi id="S6.p3.7.m7.1.1.1.1.1.1.1.2.2" xref="S6.p3.7.m7.1.1.1.1.1.1.1.2.2.cmml">z</mi><mi id="S6.p3.7.m7.1.1.1.1.1.1.1.2.3" xref="S6.p3.7.m7.1.1.1.1.1.1.1.2.3.cmml">j</mi></msub><mo id="S6.p3.7.m7.1.1.1.1.1.1.1.1" xref="S6.p3.7.m7.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S6.p3.7.m7.1.1.1.1.1.1.1.3" xref="S6.p3.7.m7.1.1.1.1.1.1.1.3.cmml"><mi id="S6.p3.7.m7.1.1.1.1.1.1.1.3.2" xref="S6.p3.7.m7.1.1.1.1.1.1.1.3.2.cmml">z</mi><mi id="S6.p3.7.m7.1.1.1.1.1.1.1.3.3" xref="S6.p3.7.m7.1.1.1.1.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="S6.p3.7.m7.1.1.1.1.1.1.3" xref="S6.p3.7.m7.1.1.1.1.1.1.1.cmml">)</mo></mrow><mo lspace="0em" rspace="0em" id="S6.p3.7.m7.1.1.1.1.2" xref="S6.p3.7.m7.1.1.1.1.2.cmml">​</mo><mi id="S6.p3.7.m7.1.1.1.1.3" xref="S6.p3.7.m7.1.1.1.1.3.cmml">β</mi></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S6.p3.7.m7.1b"><apply id="S6.p3.7.m7.1.1.cmml" xref="S6.p3.7.m7.1.1"><eq id="S6.p3.7.m7.1.1.2.cmml" xref="S6.p3.7.m7.1.1.2"></eq><apply id="S6.p3.7.m7.1.1.3.cmml" xref="S6.p3.7.m7.1.1.3"><csymbol cd="ambiguous" id="S6.p3.7.m7.1.1.3.1.cmml" xref="S6.p3.7.m7.1.1.3">subscript</csymbol><ci id="S6.p3.7.m7.1.1.3.2.cmml" xref="S6.p3.7.m7.1.1.3.2">𝑧</ci><ci id="S6.p3.7.m7.1.1.3.3.cmml" xref="S6.p3.7.m7.1.1.3.3">𝑡</ci></apply><apply id="S6.p3.7.m7.1.1.1.cmml" xref="S6.p3.7.m7.1.1.1"><plus id="S6.p3.7.m7.1.1.1.2.cmml" xref="S6.p3.7.m7.1.1.1.2"></plus><apply id="S6.p3.7.m7.1.1.1.3.cmml" xref="S6.p3.7.m7.1.1.1.3"><csymbol cd="ambiguous" id="S6.p3.7.m7.1.1.1.3.1.cmml" xref="S6.p3.7.m7.1.1.1.3">subscript</csymbol><ci id="S6.p3.7.m7.1.1.1.3.2.cmml" xref="S6.p3.7.m7.1.1.1.3.2">𝑧</ci><ci id="S6.p3.7.m7.1.1.1.3.3.cmml" xref="S6.p3.7.m7.1.1.1.3.3">𝑖</ci></apply><apply id="S6.p3.7.m7.1.1.1.1.cmml" xref="S6.p3.7.m7.1.1.1.1"><times id="S6.p3.7.m7.1.1.1.1.2.cmml" xref="S6.p3.7.m7.1.1.1.1.2"></times><apply id="S6.p3.7.m7.1.1.1.1.1.1.1.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1"><minus id="S6.p3.7.m7.1.1.1.1.1.1.1.1.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.1"></minus><apply id="S6.p3.7.m7.1.1.1.1.1.1.1.2.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S6.p3.7.m7.1.1.1.1.1.1.1.2.1.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S6.p3.7.m7.1.1.1.1.1.1.1.2.2.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.2.2">𝑧</ci><ci id="S6.p3.7.m7.1.1.1.1.1.1.1.2.3.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.2.3">𝑗</ci></apply><apply id="S6.p3.7.m7.1.1.1.1.1.1.1.3.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S6.p3.7.m7.1.1.1.1.1.1.1.3.1.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S6.p3.7.m7.1.1.1.1.1.1.1.3.2.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.3.2">𝑧</ci><ci id="S6.p3.7.m7.1.1.1.1.1.1.1.3.3.cmml" xref="S6.p3.7.m7.1.1.1.1.1.1.1.3.3">𝑖</ci></apply></apply><ci id="S6.p3.7.m7.1.1.1.1.3.cmml" xref="S6.p3.7.m7.1.1.1.1.3">𝛽</ci></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.7.m7.1c">z_{t}=z_{i}+(z_{j}-z_{i})\beta</annotation></semantics></math>, where <math id="S6.p3.8.m8.1" class="ltx_Math" alttext="\beta" display="inline"><semantics id="S6.p3.8.m8.1a"><mi id="S6.p3.8.m8.1.1" xref="S6.p3.8.m8.1.1.cmml">β</mi><annotation-xml encoding="MathML-Content" id="S6.p3.8.m8.1b"><ci id="S6.p3.8.m8.1.1.cmml" xref="S6.p3.8.m8.1.1">𝛽</ci></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.8.m8.1c">\beta</annotation></semantics></math> is a real number corresponding to the slope of the line.
+The input features for the 3D egopose supervised model, say <math id="S6.p3.9.m9.1" class="ltx_Math" alttext="\Phi(x_{t})" display="inline"><semantics id="S6.p3.9.m9.1a"><mrow id="S6.p3.9.m9.1.1" xref="S6.p3.9.m9.1.1.cmml"><mi mathvariant="normal" id="S6.p3.9.m9.1.1.3" xref="S6.p3.9.m9.1.1.3.cmml">Φ</mi><mo lspace="0em" rspace="0em" id="S6.p3.9.m9.1.1.2" xref="S6.p3.9.m9.1.1.2.cmml">​</mo><mrow id="S6.p3.9.m9.1.1.1.1" xref="S6.p3.9.m9.1.1.1.1.1.cmml"><mo stretchy="false" id="S6.p3.9.m9.1.1.1.1.2" xref="S6.p3.9.m9.1.1.1.1.1.cmml">(</mo><msub id="S6.p3.9.m9.1.1.1.1.1" xref="S6.p3.9.m9.1.1.1.1.1.cmml"><mi id="S6.p3.9.m9.1.1.1.1.1.2" xref="S6.p3.9.m9.1.1.1.1.1.2.cmml">x</mi><mi id="S6.p3.9.m9.1.1.1.1.1.3" xref="S6.p3.9.m9.1.1.1.1.1.3.cmml">t</mi></msub><mo stretchy="false" id="S6.p3.9.m9.1.1.1.1.3" xref="S6.p3.9.m9.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S6.p3.9.m9.1b"><apply id="S6.p3.9.m9.1.1.cmml" xref="S6.p3.9.m9.1.1"><times id="S6.p3.9.m9.1.1.2.cmml" xref="S6.p3.9.m9.1.1.2"></times><ci id="S6.p3.9.m9.1.1.3.cmml" xref="S6.p3.9.m9.1.1.3">Φ</ci><apply id="S6.p3.9.m9.1.1.1.1.1.cmml" xref="S6.p3.9.m9.1.1.1.1"><csymbol cd="ambiguous" id="S6.p3.9.m9.1.1.1.1.1.1.cmml" xref="S6.p3.9.m9.1.1.1.1">subscript</csymbol><ci id="S6.p3.9.m9.1.1.1.1.1.2.cmml" xref="S6.p3.9.m9.1.1.1.1.1.2">𝑥</ci><ci id="S6.p3.9.m9.1.1.1.1.1.3.cmml" xref="S6.p3.9.m9.1.1.1.1.1.3">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.9.m9.1c">\Phi(x_{t})</annotation></semantics></math>, are also obtained as interpolation from <math id="S6.p3.10.m10.1" class="ltx_Math" alttext="\Phi(x_{i})" display="inline"><semantics id="S6.p3.10.m10.1a"><mrow id="S6.p3.10.m10.1.1" xref="S6.p3.10.m10.1.1.cmml"><mi mathvariant="normal" id="S6.p3.10.m10.1.1.3" xref="S6.p3.10.m10.1.1.3.cmml">Φ</mi><mo lspace="0em" rspace="0em" id="S6.p3.10.m10.1.1.2" xref="S6.p3.10.m10.1.1.2.cmml">​</mo><mrow id="S6.p3.10.m10.1.1.1.1" xref="S6.p3.10.m10.1.1.1.1.1.cmml"><mo stretchy="false" id="S6.p3.10.m10.1.1.1.1.2" xref="S6.p3.10.m10.1.1.1.1.1.cmml">(</mo><msub id="S6.p3.10.m10.1.1.1.1.1" xref="S6.p3.10.m10.1.1.1.1.1.cmml"><mi id="S6.p3.10.m10.1.1.1.1.1.2" xref="S6.p3.10.m10.1.1.1.1.1.2.cmml">x</mi><mi id="S6.p3.10.m10.1.1.1.1.1.3" xref="S6.p3.10.m10.1.1.1.1.1.3.cmml">i</mi></msub><mo stretchy="false" id="S6.p3.10.m10.1.1.1.1.3" xref="S6.p3.10.m10.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S6.p3.10.m10.1b"><apply id="S6.p3.10.m10.1.1.cmml" xref="S6.p3.10.m10.1.1"><times id="S6.p3.10.m10.1.1.2.cmml" xref="S6.p3.10.m10.1.1.2"></times><ci id="S6.p3.10.m10.1.1.3.cmml" xref="S6.p3.10.m10.1.1.3">Φ</ci><apply id="S6.p3.10.m10.1.1.1.1.1.cmml" xref="S6.p3.10.m10.1.1.1.1"><csymbol cd="ambiguous" id="S6.p3.10.m10.1.1.1.1.1.1.cmml" xref="S6.p3.10.m10.1.1.1.1">subscript</csymbol><ci id="S6.p3.10.m10.1.1.1.1.1.2.cmml" xref="S6.p3.10.m10.1.1.1.1.1.2">𝑥</ci><ci id="S6.p3.10.m10.1.1.1.1.1.3.cmml" xref="S6.p3.10.m10.1.1.1.1.1.3">𝑖</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.10.m10.1c">\Phi(x_{i})</annotation></semantics></math> and <math id="S6.p3.11.m11.1" class="ltx_Math" alttext="\Phi(x_{j})" display="inline"><semantics id="S6.p3.11.m11.1a"><mrow id="S6.p3.11.m11.1.1" xref="S6.p3.11.m11.1.1.cmml"><mi mathvariant="normal" id="S6.p3.11.m11.1.1.3" xref="S6.p3.11.m11.1.1.3.cmml">Φ</mi><mo lspace="0em" rspace="0em" id="S6.p3.11.m11.1.1.2" xref="S6.p3.11.m11.1.1.2.cmml">​</mo><mrow id="S6.p3.11.m11.1.1.1.1" xref="S6.p3.11.m11.1.1.1.1.1.cmml"><mo stretchy="false" id="S6.p3.11.m11.1.1.1.1.2" xref="S6.p3.11.m11.1.1.1.1.1.cmml">(</mo><msub id="S6.p3.11.m11.1.1.1.1.1" xref="S6.p3.11.m11.1.1.1.1.1.cmml"><mi id="S6.p3.11.m11.1.1.1.1.1.2" xref="S6.p3.11.m11.1.1.1.1.1.2.cmml">x</mi><mi id="S6.p3.11.m11.1.1.1.1.1.3" xref="S6.p3.11.m11.1.1.1.1.1.3.cmml">j</mi></msub><mo stretchy="false" id="S6.p3.11.m11.1.1.1.1.3" xref="S6.p3.11.m11.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S6.p3.11.m11.1b"><apply id="S6.p3.11.m11.1.1.cmml" xref="S6.p3.11.m11.1.1"><times id="S6.p3.11.m11.1.1.2.cmml" xref="S6.p3.11.m11.1.1.2"></times><ci id="S6.p3.11.m11.1.1.3.cmml" xref="S6.p3.11.m11.1.1.3">Φ</ci><apply id="S6.p3.11.m11.1.1.1.1.1.cmml" xref="S6.p3.11.m11.1.1.1.1"><csymbol cd="ambiguous" id="S6.p3.11.m11.1.1.1.1.1.1.cmml" xref="S6.p3.11.m11.1.1.1.1">subscript</csymbol><ci id="S6.p3.11.m11.1.1.1.1.1.2.cmml" xref="S6.p3.11.m11.1.1.1.1.1.2">𝑥</ci><ci id="S6.p3.11.m11.1.1.1.1.1.3.cmml" xref="S6.p3.11.m11.1.1.1.1.1.3">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.11.m11.1c">\Phi(x_{j})</annotation></semantics></math>, and fed to the network together with the latent features <math id="S6.p3.12.m12.1" class="ltx_Math" alttext="z_{t}" display="inline"><semantics id="S6.p3.12.m12.1a"><msub id="S6.p3.12.m12.1.1" xref="S6.p3.12.m12.1.1.cmml"><mi id="S6.p3.12.m12.1.1.2" xref="S6.p3.12.m12.1.1.2.cmml">z</mi><mi id="S6.p3.12.m12.1.1.3" xref="S6.p3.12.m12.1.1.3.cmml">t</mi></msub><annotation-xml encoding="MathML-Content" id="S6.p3.12.m12.1b"><apply id="S6.p3.12.m12.1.1.cmml" xref="S6.p3.12.m12.1.1"><csymbol cd="ambiguous" id="S6.p3.12.m12.1.1.1.cmml" xref="S6.p3.12.m12.1.1">subscript</csymbol><ci id="S6.p3.12.m12.1.1.2.cmml" xref="S6.p3.12.m12.1.1.2">𝑧</ci><ci id="S6.p3.12.m12.1.1.3.cmml" xref="S6.p3.12.m12.1.1.3">𝑡</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.12.m12.1c">z_{t}</annotation></semantics></math>. In Fig.<a href="#S6.F9" title="Figure 9 ‣ 6 Model interpretation ‣ Enhancing Egocentric 3D Pose Estimation with Third Person Views" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a>, we present some illustrations. The first and last skeletons, highlighted in green, represent the endpoints. The visualizations of the corresponding skeletons lying on such Euclidean transversal, obtained by incrementing <math id="S6.p3.13.m13.1" class="ltx_Math" alttext="\beta" display="inline"><semantics id="S6.p3.13.m13.1a"><mi id="S6.p3.13.m13.1.1" xref="S6.p3.13.m13.1.1.cmml">β</mi><annotation-xml encoding="MathML-Content" id="S6.p3.13.m13.1b"><ci id="S6.p3.13.m13.1.1.cmml" xref="S6.p3.13.m13.1.1">𝛽</ci></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.13.m13.1c">\beta</annotation></semantics></math> from zero to one with step <math id="S6.p3.14.m14.1" class="ltx_Math" alttext="0.1" display="inline"><semantics id="S6.p3.14.m14.1a"><mn id="S6.p3.14.m14.1.1" xref="S6.p3.14.m14.1.1.cmml">0.1</mn><annotation-xml encoding="MathML-Content" id="S6.p3.14.m14.1b"><cn type="float" id="S6.p3.14.m14.1.1.cmml" xref="S6.p3.14.m14.1.1">0.1</cn></annotation-xml><annotation encoding="application/x-tex" id="S6.p3.14.m14.1c">0.1</annotation></semantics></math>, clearly show that the learned latent space can be considered to a large extent smooth.</p>
+</div>
+</section>
+<section id="S7" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span>Conclusion</h2>
+
+<div id="S7.p1" class="ltx_para">
+<p id="S7.p1.1" class="ltx_p">In this paper, we explored for the first-time how to exploit the link between first- and third-view perspective for the task of egocentric 3D pose estimation.
+We proposed a versatile framework to build image features that help to discriminate different 3D human poses from egocentric videos even in a target dataset different than the source dataset used to obtain the joint embedded space. Additionally, we built and made publicly available <span id="S7.p1.1.1" class="ltx_text ltx_font_italic">First2Third-Pose</span>, a large and synchronized dataset of first- and third-view videos capturing 14 people performing overall 40 different activities. Currently, this is the only 3D pose dataset with synchronized first and third-views videos.
+To bridge the heterogeneity gap between the two views, we proposed a self-supervised representation learning approach that learns to transform data samples from different views into a common embedding space, which is subsequently employed to extract features from unpaired and unseen egocentric videos.
+We provided insights into the structure of the joint learned feature space, through both data visualization and data analytical tools. These insights suggest that the learned feature space well separate different actions and may be therefore potentially useful also for skeleton based action recognition.
+We tested our approach on three state-of-the-art methods and two real datasets. Experimental results demonstrated that the joint embedding space learned with <span id="S7.p1.1.2" class="ltx_text ltx_font_italic">First2Third-Pose</span> can be used to enhance supervised state-of-the-art egopose estimation methods on different datasets, without the need of domain adaptation nor knowledge of camera parameters.
+Further research will investigate how to further close the gap between first- and third-view, and how to benefit both first- and third- view domains.</p>
+</div>
+</section>
+<section id="S8" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">8 </span>Acknowledgements</h2>
+
+<div id="S8.p1" class="ltx_para">
+<p id="S8.p1.1" class="ltx_p">This work has been partially supported by projects PID2020-120049RB-I00 and PID2019-110977GA-I00 funded by MCIN/ AEI /10.13039/501100011033 and by the ”European Union NextGenerationEU/PRTR”, as well as by grant RYC-2017-22563 funded by MCIN/ AEI /10.13039/501100011033 and by ”ESF Investing in your future”, and network RED2018-
+102511-T funded by MCIN/ AEI.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+M. Kutbi, X. Du, Y. Chang, B. Sun, N. Agadakos, H. Li, G. Hua, P. Mordohai,
+Usability studies of an egocentric vision-based robotic wheelchair, ACM
+Transactions on Human-Robot Interaction (THRI) 10 (1) (2020) 1–23.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+M. Dimiccoli, Computer vision for egocentric (first-person) vision, in:
+Computer Vision for Assistive Healthcare, Elsevier, 2018, pp. 183–210.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+H. Liang, J. Yuan, D. Thalmann, N. M. Thalmann, Ar in hand: Egocentric palm
+pose tracking and gesture recognition for augmented reality applications,
+Proceedings of the ACM International Conference on Multimedia (ACMMM) (2015)
+743–744.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+H. Jiang, K. Grauman, Seeing invisible poses: Estimating 3d body pose from
+egocentric video, Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition (CVPR) (2017) 3501–3509.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Y. Yuan, K. Kitani, 3d ego-pose estimation via imitation learning, Proceedings
+of the European Conference on Computer Vision (ECCV) (2018) 735–750.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Y. Yuan, K. Kitani, Ego-pose estimation and forecasting as real-time pd
+control, Proceedings of the IEEE International Conference on Computer Vision
+(ICCV) (2019) 10082–10092.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+E. Ng, D. Xiang, H. Joo, K. Grauman, You2me: Inferring body pose in egocentric
+video via first and second person interactions, Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition (CVPR) (2020)
+9890–9900.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+H. Jiang, V. K. Ithapu, Egocentric pose estimation from human vision span,
+Proceedings of the International Conference on Computer Vision (ICCV) (2021)
+11006–11014.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+J. Wang, L. Liu, W. Xu, K. Sarkar, C. Theobalt, Estimating egocentric 3d human
+pose in global space, Proceedings of the International Conference on Computer
+Vision (ICCV) (2021) 11500–11509.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+B. Xiao, H. Wu, Y. Wei, Simple baselines for human pose estimation and
+tracking, Proceedings of the European Conference on Computer Vision (ECCV)
+(2018) 466–481.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+S. Li, W. Zhang, A. B. Chan, Maximum-margin structured learning with deep
+networks for 3d human pose estimation, Proceedings of the IEEE International
+Conference on Computer Vision (ICCV) (2015) 2848–2856.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+B. Tekin, I. Katircioglu, M. Salzmann, V. Lepetit, P. Fua, Structured
+prediction of 3d human pose with deep neural networks, Proceedings of the
+British Machine Vision Conference (BMVC) (2016) 130–141.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+R. Dabral, A. Mundhada, U. Kusupati, S. Afaque, A. Sharma, A. Jain, Learning 3d
+human pose from structure and motion, Proceedings of the European Conference
+on Computer Vision (ECCV) (2018) 668–683.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+D. Tome, C. Russell, L. Agapito, Lifting from the deep: Convolutional 3d pose
+estimation from a single image, Proceedings of the IEEE Conference on
+Computer Vision and Pattern Recognition (CVPR) (2017) 2500–2509.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+F. Moreno-Noguer, 3d human pose estimation from a single image via distance
+matrix regression, Proceedings of the Conference on Computer Vision and
+Pattern Recognition (CVPR) (2017) 2823–2832.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Y. Cai, L. Ge, J. Liu, J. Cai, T.-J. Cham, J. Yuan, N. M. Thalmann, Exploiting
+spatial-temporal relationships for 3d pose estimation via graph convolutional
+networks, Proceedings of the IEEE/CVF International Conference on Computer
+Vision (2019) 2272–2281.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+D. Mehta, H. Rhodin, D. Casas, P. Fua, O. Sotnychenko, W. Xu, C. Theobalt,
+Monocular 3d human pose estimation in the wild using improved cnn
+supervision, Proceedings of the International Conference on 3D Vision (3DV)
+(2017) 506–516.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+C. Ionescu, D. Papava, V. Olaru, C. Sminchisescu, Human3. 6m: Large scale
+datasets and predictive methods for 3d human sensing in natural environments,
+IEEE Transactions on Pattern Analysis and Machine Intelligence (TPAMI) 36 (7)
+(2013) 1325–1339.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Y. Sun, Y. Ye, W. Liu, W. Gao, Y. Fu, T. Mei, Human mesh recovery from
+monocular images via a skeleton-disentangled representation, Proceedings of
+the IEEE/CVF International Conference on Computer Vision (2019) 5349–5358.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+K. Wang, J. Xie, G. Zhang, L. Liu, J. Yang, Sequential 3d human pose and shape
+estimation from point clouds, Proceedings of the IEEE/CVF Conference on
+Computer Vision and Pattern Recognition (2020) 7275–7284.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Y. Rong, T. Shiratori, H. Joo, Frankmocap: Fast monocular 3d hand and body
+motion capture by regression and integration, IEEE International Conference
+on Computer Vision Workshops (ICCVW) (2021) 1749–1759.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+X. Xu, H. Chen, F. Moreno-Noguer, L. A. Jeni, F. D. la Torre, 3d human pose,
+shape and texture from low-resolution images and videos, IEEE Transactions on
+Pattern Analysis and Machine Intelligence (TPAMI) (2021) In press.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+X. Sun, J. Shang, S. Liang, Y. Wei, Compositional human pose regression,
+Proceedings of the IEEE International Conference on Computer Vision (ICCV)
+(2017) 2602–2611.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+G. Pavlakos, X. Zhou, K. Daniilidis, Ordinal depth supervision for 3d human
+pose estimation, Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition (CVPR) (2018) 7307–7316.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+X. Zhou, X. Sun, W. Zhang, S. Liang, Y. Wei, Deep kinematic pose regression,
+Proceedings of the European Conference on Computer Vision (ECCV) (2016)
+186–201.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+U. Iqbal, P. Molchanov, J. Kautz, Weakly-supervised 3d human pose learning via
+multi-view images in the wild, Proceedings of the IEEE Conference on Computer
+Vision and Pattern Recognition (CVPR) (2020) 5243–5252.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+Y. Cai, L. Ge, J. Cai, J. Yuan, Weakly-supervised 3d hand pose estimation from
+monocular rgb images, Proceedings of the European Conference on Computer
+Vision (ECCV) (2018) 666–682.
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+S. Jenni, P. Favaro, Self-supervised multi-view synchronization learning for 3d
+pose estimation, Proceedings of the Asian Conference on Computer Vision
+(ACCV) (2020) 170–187.
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+H. Rhodin, M. Salzmann, P. Fua, Unsupervised geometry-aware representation for
+3d human pose estimation, Proceedings of the European Conference on Computer
+Vision (ECCV) (2018) 750–767.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+C. Li, K. M. Kitani, Model recommendation with virtual probes for egocentric
+hand detection, Proceedings of the IEEE International Conference on Computer
+Vision (ICCV) (2013) 2624–2631.
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+C. Li, K. M. Kitani, Pixel-level hand detection in ego-centric videos,
+Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR) (2013) 3570–3577.
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+G. Rogez, J. S. Supancic, D. Ramanan, First-person pose recognition using
+egocentric workspaces, Proceedings of the IEEE Conference on Computer Vision
+and Pattern Recognition (CVPR) (2015) 4325–4333.
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+T. Shiratori, H. S. Park, Y. Sheikh, J. K. Hodgins, et al., Motion capture from
+body mounted cameras, google Patents, Patent 8,786,680 (2014).
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+W. Xu, A. Chatterjee, M. Zollhoefer, H. Rhodin, P. Fua, H.-P. Seidel,
+C. Theobalt, Mo 2 cap 2: Real-time mobile 3d motion capture with a
+cap-mounted fisheye camera, IEEE Transactions on Visualization and Computer
+Graphics (TVCG) 25 (5) (2019) 2093–2101.
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+D. Tome, P. Peluse, L. Agapito, H. Badino, xr-egopose: Egocentric 3d human pose
+from an hmd camera, Proceedings of the IEEE International Conference on
+Computer Vision (ICCV) (2019) 7728–7738.
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+B. Soran, A. Farhadi, L. Shapiro, Action recognition in the presence of one
+egocentric and multiple static cameras, Proceedings of the Asian Conference
+on Computer Vision (ACCV) (2014) 178–193.
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+G. A. Sigurdsson, A. Gupta, C. Schmid, A. Farhadi, K. Alahari, Actor and
+observer: Joint modeling of first and third-person videos, Proceedings of the
+IEEE Conference on Computer Vision and Pattern Recognition (CVPR) (2018)
+7396–7404.
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+R. Yonetani, K. M. Kitani, Y. Sato, Recognizing micro-actions and reactions
+from paired egocentric videos, Proceedings of the IEEE Conference on Computer
+Vision and Pattern Recognition (CVPR) (2016) 2629–2638.
+
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock">
+S. Bambach, D. J. Crandall, C. Yu, Viewpoint integration for hand-based
+recognition of social interactions from a first-person view, Proceedings of
+the ACM International Conference on Multimodal Interaction (ICMI) (2015)
+351–354.
+
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock">
+C. Fan, J. Lee, M. Xu, K. Kumar Singh, Y. Jae Lee, D. J. Crandall, M. S. Ryoo,
+Identifying first-person camera wearers in third-person videos, Proceedings
+of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)
+(2017) 5125–5133.
+
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock">
+Y. Li, T. Nagarajan, B. Xiong, K. Grauman, Ego-exo: Transferring visual
+representations from third-person to first-person videos, Proceedings of the
+IEEE Conference on Computer Vision and Pattern Recognition (CVPR) (2021)
+6943–6953.
+
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock">
+C.-S. Chan, S.-Z. Chen, P.-X. Xie, C.-C. Chang, M. Sun, Recognition from hand
+cameras: A revisit with deep learning, Proceedings of the European Conference
+on Computer Vision (ECCV) (2016) 505–521.
+
+</span>
+</li>
+<li id="bib.bib43" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[43]</span>
+<span class="ltx_bibblock">
+Y. Wu, A. Kirillov, F. Massa, W.-Y. Lo, R. Girshick, Detectron2,
+<a target="_blank" href="https://github.com/facebookresearch/detectron2" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/facebookresearch/detectron2</a> (2019).
+
+</span>
+</li>
+<li id="bib.bib44" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[44]</span>
+<span class="ltx_bibblock">
+D. Pavllo, C. Feichtenhofer, D. Grangier, M. Auli, 3d human pose estimation in
+video with temporal convolutions and semi-supervised training, Proceedings of
+the IEEE Conference on Computer Vision and Pattern Recognition (CVPR) (2019)
+7753–7762.
+
+</span>
+</li>
+<li id="bib.bib45" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[45]</span>
+<span class="ltx_bibblock">
+G. A. Sigurdsson, A. Gupta, C. Schmid, A. Farhadi, K. Alahari, Actor and
+observer: Joint modeling of first and third-person videos, Proceedings of the
+IEEE Conference on Computer Vision and Pattern Recognition (CVPR) (2018)
+7396–7404.
+
+</span>
+</li>
+<li id="bib.bib46" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[46]</span>
+<span class="ltx_bibblock">
+K. He, X. Zhang, S. Ren, J. Sun, Deep residual learning for image recognition,
+Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition
+(CVPR) (2016) 770–778.
+
+</span>
+</li>
+<li id="bib.bib47" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[47]</span>
+<span class="ltx_bibblock">
+E. Ilg, N. Mayer, T. Saikia, M. Keuper, A. Dosovitskiy, T. Brox, Flownet 2.0:
+Evolution of optical flow estimation with deep networks, Proceedings of the
+Conference on Computer Vision and Pattern Recognition (CVPR) (2017)
+2462–2470.
+
+</span>
+</li>
+<li id="bib.bib48" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[48]</span>
+<span class="ltx_bibblock">
+Y. Bengio, J. Louradour, R. Collobert, J. Weston, Curriculum learning,
+Proceedings of the International Conference on Machine Learning (ICML) (2009)
+41–48.
+
+</span>
+</li>
+<li id="bib.bib49" class="ltx_bibitem">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">[49]</span>
+<span class="ltx_bibblock">
+H. Hotelling, Relations between two sets of variates, in: Breakthroughs in
+statistics, Springer, 1992, pp. 162–190.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2201.02016" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2201.02017" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2201.02017">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2201.02017" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2201.02018" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Wed Mar  6 11:30:44 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

@@ -1,0 +1,900 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2005.13797] 3D human pose estimation with adaptive receptive fields and dilated temporal convolutions</title><meta property="og:description" content="In this work, we demonstrate that receptive fields in 3D pose estimation can be effectively specified using optical flow. We introduce adaptive receptive fields, a simple and effective method to aid receptive field sel…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="3D human pose estimation with adaptive receptive fields and dilated temporal convolutions">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="3D human pose estimation with adaptive receptive fields and dilated temporal convolutions">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2005.13797">
+
+<!--Generated on Sat Mar  2 11:53:47 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">3D human pose estimation with adaptive receptive fields and dilated temporal convolutions</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Eduardo Castillo 
+<br class="ltx_break">Cornell Tech
+<br class="ltx_break">2 W Loop Rd, New York, NY 10044 
+<br class="ltx_break"><span id="id1.1.id1" class="ltx_text ltx_font_typewriter">ec833@cornell.edu</span> 
+<br class="ltx_break">Irene Font Peradejordi 
+<br class="ltx_break">Cornell Tech
+<br class="ltx_break">2 W Loop Rd, New York, NY 10044 
+<br class="ltx_break"><span id="id2.2.id2" class="ltx_text ltx_font_typewriter">if76@cornell.edu</span> 
+<br class="ltx_break">Michael Shin 
+<br class="ltx_break">Cornell Tech
+<br class="ltx_break">2 W Loop Rd, New York, NY 10044 
+<br class="ltx_break"><span id="id3.3.id3" class="ltx_text ltx_font_typewriter">js3552@cornell.edu</span> 
+<br class="ltx_break">Shobhna Jayaraman 
+<br class="ltx_break">Cornell Tech
+<br class="ltx_break">2 W Loop Rd, New York, NY 10044 
+<br class="ltx_break"><span id="id4.4.id4" class="ltx_text ltx_font_typewriter">sj747@cornell.edu</span> 
+<br class="ltx_break">
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id5.id1" class="ltx_p">In this work, we demonstrate that receptive fields in 3D pose estimation can be effectively specified using optical flow. We introduce adaptive receptive fields, a simple and effective method to aid receptive field selection in pose estimation models based on optical flow inference. We contrast the performance of a benchmark state-of-the-art model running on fixed receptive fields with their adaptive field counterparts. By using a reduced receptive field, our model can process slow-motion sequences (10x longer) 23% faster than the benchmark model running at regular speed. The reduction in computational cost is achieved while producing a pose prediction accuracy to within 0.36% of the benchmark model.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Three-dimensional pose estimation is a vibrant field of research in deep learning and computer vision. Efficient 3D pose estimation algorithms are extensively used in a variety of areas such as action recognition, virtual reality, and human-computer interaction <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. Driven by progress in inference accuracy as well as improved image data aggregation and dissemination, these algorithms have gained significant traction in commercial and industrial applications. Noteworthy examples include behavioral inference monitoring in the public safety sector and virtual fitting room implementations in the fashion industry <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">One of the key areas of research within 3D pose estimation focuses on reducing the ambiguity of 2D to 3D mappings in video multimedia. This ambiguity stems from the existence of multiple 3D poses which may be inferred from the same 2D joint keypoints. Previous work tackled this problem by capturing a video’s temporal information with recurrent neural networks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>. In our work, we aim to build on the approach of current state-of-the-art models in this space, achieved by Facebook AI Research in their paper “3D human pose estimation in video with temporal convolutions and semi-supervised training” <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. Facebook AI Research uses a novel approach to solve the ambiguity described above: instead of using a recurrent neural network (RNN), they use a fully convolutional 1D neural network (CNN) that takes 2D joint keypoint sequences as input and generates 3D pose estimates as output. To make sure they capture the long-term video information, they employ dilated convolutions. Their model results in higher accuracy, simplicity, as well as efficiency –both in terms of computational complexity, as well as the number of parameters compared to approaches that rely on RNN model structures <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Facebook AI Research’s work proposes both a supervised and unsupervised approach using two well-known computer vision datasets: Human3.6M and HumanEva. Collecting labels for 3D human pose estimation is quite resource-intensive as it requires an expensive motion-capture setup as well as lengthy recording sessions. For this reason, their supervised approach is particularly interesting.</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">Human3.6M contains 3.6 million video frames for 11 human subjects. Seven of them are annotated with 3D poses. With this data set, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> manages to outperform the previous best results by 6 mm (an 11% improvement) in mean per-joint position error. HumanEva-I is a smaller dataset, containing three human subjects recorded from three different camera views. HumanEva-I is also highly cited in the literature. The Human3.6M dataset is recorded at 50 Hz while the HumanEva-I is recorded at 60 Hz.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">Our team performed a deep technical analysis of the temporal dilated convolutional model proposed by Facebook AI Research and introduced a novel element–the adaptive receptive field parameter. We demonstrate that using optical flow to adapt the receptive fields depending on the amount of movement in a video over various sequences can help to reduce computational costs while achieving statistically equivalent mean joint displacement errors.</p>
+</div>
+<div id="S1.p6" class="ltx_para">
+<p id="S1.p6.1" class="ltx_p">Results are obtained by contrasting the performance of the state-of-the-art pre-trained model provided by Facebook AI Research on fixed receptive fields with their adaptive receptive field counterparts using Human3.6M videos with modified speeds. Our focus was to compare the baseline model of the video at 1x and 0.5x speeds with regards to the obtained mean per-joint error rate for a subject (subject S5 in our case), over varying receptive fields of 3, 9, 27, 81, and 243 frames.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>3D Pose Estimation</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Earlier methods for pose estimation revolve around feature extraction, with a focus on immutable factors (such as background scene, lighting, and skin color) from images, and mapping those features to a 3D human pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>. The problem of 3D human pose estimation has been addressed in multiple ways starting from a sequence of 2D human poses. The most successful and efficient approaches for pose estimation follow a consistent routine: (i) Estimate the 2D pose from images, (ii) Map the estimated 2D poses into 3D space.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">Many models show that a low-dimensional representation, such as 2D joint keypoints, are powerful enough to estimate 3D poses with high accuracy. Lee and Chen <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> were the first to infer 3D poses from their 2D projections given bone length. Through their work, Lee and Chen use a binary decision tree where each branch corresponds to two possible states of a joint relative to its parent. On the other hand, Chen and Ramanan first discussed the idea of a detached 2D pose to search for the nearest neighbor 3D pose within a large database of exemplar poses <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>.</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<p id="S2.SS1.p3.1" class="ltx_p">Moreno-Nouguer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> introduced a novel approach to automatically recover 3D human poses from a single image. They looked to solve the detection of edges, joints, or shadows to infer 3D poses from images. Their solution centered around a Bayesian Framework that integrates a generative model. This generative model was based on latent variables and discriminative 2D part detectors, and 3D inference using a pairwise distance matrix of 2D joints to obtain a distance matrix of 3D joints. And in addition to using multidimensional scaling (MDS) with pose-priors to rule out the ambiguities, this was a consistent attribute which they used to transform ground truth 3D joint positions.</p>
+</div>
+<div id="S2.SS1.p4" class="ltx_para">
+<p id="S2.SS1.p4.1" class="ltx_p">Cheol-hwan et. al <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> improved on Convolutional Neural Networks for 3D hand pose estimation from a single depth image. Since the hand is composed of six different parts, including sequential joints that provide restricted motion, CNNs fall short of modeling the complexity of this structure. To solve this, they propose a Hierarchically Structured Convolutional Recurrent Neural Network (HCRNN) with six branches that estimates the palm and fingers individually.</p>
+</div>
+<div id="S2.SS1.p5" class="ltx_para">
+<p id="S2.SS1.p5.1" class="ltx_p">When performing frame-by-frame 3D pose estimation, errors independent to each frame can cause jitter. This can be resolved by utilizing temporal information across a sequence of 2D joint positions to estimate a sequence of 3D poses. We discuss temporal dilated convolutional models in the next section of the paper.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Temporal dilated convolutional model</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Convolutional models enable parallelization over both the batch and the time dimensions while RNNs cannot be parallelized over time <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. In CNN models, the path of the gradient between output and input has a fixed length regardless of the sequence length, which mitigates vanishing and exploding gradients which affect RNNs. Moreover, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> proposes <span id="S2.SS2.p1.1.1" class="ltx_text ltx_font_italic">dilated convolutions</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> to model long-term dependencies while maintaining computational efficiency.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">In an attempt to solve the exploding and vanishing gradients problem and the difficulty of parallelizing the training using an RNN, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> already proposes a dilated temporal fully-convolutional neural network (DTFCN) as an automatic framework for semantic segmentation of motion. Additionally, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> has shown that temporal convolutional networks (TCN) perform just as well, or even better than RNNs in sequencing modeling tasks. Some years before, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> aalready proved the efficiency of dilated convolutions for semantic segmentation tasks. Their advantage resides in the systematic aggregation of multiscale contextual information without losing resolution. The architecture is based on the fact that dilated convolutions support exponential expansion of the receptive field without loss of resolution or coverage.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">To tackle the state saturation problem that LSTMs suffer from, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite> propose modeling temporal variations through a stateless dilated convolutional neural network, which uses dilated causal convolution, gated activations, and residual connections. Their work is in the voice-activity detection space where utterance is long, and thus requires the LSTM state to be periodically reset. Their proposed model achieves 14% improvement in false acceptance rate with a false rejection rate of 1% over state-of-the-art LSTMs for the voice-activity-detection task.</p>
+</div>
+<div id="S2.SS2.p4" class="ltx_para">
+<p id="S2.SS2.p4.1" class="ltx_p">Other papers successfully use dilated convolutions in tasks like machine translation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> and audio generation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>.</p>
+</div>
+<figure id="S2.F1" class="ltx_figure"><img src="/html/2005.13797/assets/ofimgs/nn.png" id="S2.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="548" height="97" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>An instantiation of the benchmark state-of-the-art model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, fully-convolutional 3D pose estimation architecture. The input consists of 2D keypoints for a receptive field of 243 frames (B = 4 blocks) with J = 17 joints. Convolutional layers are in green where 2J, 3d1, 1024 denotes 2 · J input channels, kernels of size 3 with dilation 1, and 1024 output channels. They also show tensor sizes in parentheses for a sample 1-frame prediction, where (243, 34) denotes 243 frames and 34 channels. Due to valid convolutions, they slice the residuals (left and right, symmetrically) to match the shape of subsequent tensors.</figcaption>
+</figure>
+<div id="S2.SS2.p5" class="ltx_para">
+<p id="S2.SS2.p5.1" class="ltx_p">The benchmark state-of-the-art model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> seen in figure <a href="#S2.F1" title="Figure 1 ‣ 2.2 Temporal dilated convolutional model ‣ 2 Related Work ‣ 3D human pose estimation with adaptive receptive fields and dilated temporal convolutions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> is using an input layer that takes the concatenated (<span id="S2.SS2.p5.1.1" class="ltx_text ltx_font_italic">x,y</span>) coordinates of the 17 unique joints per frame and applies a temporal convolution with kernel size<span id="S2.SS2.p5.1.2" class="ltx_text ltx_font_italic"> W </span>and <span id="S2.SS2.p5.1.3" class="ltx_text ltx_font_italic">C</span> output channels. This is followed by <span id="S2.SS2.p5.1.4" class="ltx_text ltx_font_italic">B</span> ResNet-style blocks which are surrounded by a skip-connection. Each block performs a 1D convolution with kernel size <span id="S2.SS2.p5.1.5" class="ltx_text ltx_font_italic">W</span> and dilation factor</p>
+<table id="S2.Ex1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.Ex1.m1.1" class="ltx_Math" alttext="D=W^{2}" display="block"><semantics id="S2.Ex1.m1.1a"><mrow id="S2.Ex1.m1.1.1" xref="S2.Ex1.m1.1.1.cmml"><mi id="S2.Ex1.m1.1.1.2" xref="S2.Ex1.m1.1.1.2.cmml">D</mi><mo id="S2.Ex1.m1.1.1.1" xref="S2.Ex1.m1.1.1.1.cmml">=</mo><msup id="S2.Ex1.m1.1.1.3" xref="S2.Ex1.m1.1.1.3.cmml"><mi id="S2.Ex1.m1.1.1.3.2" xref="S2.Ex1.m1.1.1.3.2.cmml">W</mi><mn id="S2.Ex1.m1.1.1.3.3" xref="S2.Ex1.m1.1.1.3.3.cmml">2</mn></msup></mrow><annotation-xml encoding="MathML-Content" id="S2.Ex1.m1.1b"><apply id="S2.Ex1.m1.1.1.cmml" xref="S2.Ex1.m1.1.1"><eq id="S2.Ex1.m1.1.1.1.cmml" xref="S2.Ex1.m1.1.1.1"></eq><ci id="S2.Ex1.m1.1.1.2.cmml" xref="S2.Ex1.m1.1.1.2">𝐷</ci><apply id="S2.Ex1.m1.1.1.3.cmml" xref="S2.Ex1.m1.1.1.3"><csymbol cd="ambiguous" id="S2.Ex1.m1.1.1.3.1.cmml" xref="S2.Ex1.m1.1.1.3">superscript</csymbol><ci id="S2.Ex1.m1.1.1.3.2.cmml" xref="S2.Ex1.m1.1.1.3.2">𝑊</ci><cn type="integer" id="S2.Ex1.m1.1.1.3.3.cmml" xref="S2.Ex1.m1.1.1.3.3">2</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.Ex1.m1.1c">D=W^{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p id="S2.SS2.p5.2" class="ltx_p">followed by a convolutional with kernel size 1. All convolutional operations, except in the last layer, are followed by batch normalization, ReLU functions, and dropout (p = 0.25). Each block increases the receptive field exponentially by factor <span id="S2.SS2.p5.2.1" class="ltx_text ltx_font_italic">W</span>, while the number of parameters only increases linearly. See figure <a href="#S2.F2" title="Figure 2 ‣ 2.2 Temporal dilated convolutional model ‣ 2 Related Work ‣ 3D human pose estimation with adaptive receptive fields and dilated temporal convolutions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> for a better understanding of this tree structure.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2005.13797/assets/ofimgs/tree.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="416" height="202" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>The benchmark state-of-the-art model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> temporal convolutional model takes 2D keypoint sequences (bottom) as input and generates 3D pose estimates as output (top). They employ dilated temporal convolutions to capture long-term information.</figcaption>
+</figure>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Optical Flow</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">Optical flow estimates the motion of every pixel in a sequence of images. It describes a sparse or dense vector field, where a displacement vector is assigned to a certain pixel position, which points to where that pixel can be found in another image. Mainstream optical flow estimation algorithms can be grouped as follows: region-based matching, differential, and energy-based algorithms.</p>
+</div>
+<div id="S2.SS3.p2" class="ltx_para">
+<p id="S2.SS3.p2.1" class="ltx_p">FlowNet–an optical flow neural network, resolves problems with minor displacements and noisy artifacts in estimated flow fields. In “Evolution of Optical Flow Networks with deep networks” <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>,the authors focus on the training data and discuss elements of scheduling the data presentation and its importance. They developed an architecture that includes warping the second image with an intermediate flow. They introduced a sub-network specializing in small motions to further focus on movement displacements. Both FlowNet1.0 and FlowNet2.0 are end-to-end architectures. FlowNet 2.0 shows decreased estimation error by more than 50%, but is marginally slower than the FlowNet 1.0. FlowNet 2.0 performed at the same level as standard state-of-the-art methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>.</p>
+</div>
+<div id="S2.SS3.p3" class="ltx_para">
+<p id="S2.SS3.p3.1" class="ltx_p">Jianzhong et al <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> propose a method to track the movement of objects. They analyzed many methods which are used to segment Video Objects, and proposed a new algorithm, using optical flow to track objects by using the contours of an object. The Horn–Schunck method of estimating optical flow is a global method that introduces a global constraint of smoothness to solve the aperture problem. The aperture problem states that any varying contours of different orientation moving at varying speeds can cause identical responses in a motion-sensitive neuron in the visual system. In the paper they use this algorithm, to get the position of moving pixels between frames from the velocity vector, in given video streams. Next, they take the contours and extract the object features to calculate the position and velocity values. They achieved accurate, rapid, and stable results with the algorithm to track the moving objects.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Adaptive Receptive Field Implementation - Experimental Setup</h2>
+
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Dataset Exploration: Human3.6M Dataset</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p">For our exploratory research, we heavily relied on the Human3.6M Dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite> which has 3.6 million 3D human poses and corresponding images, 11 actors (6 Male and 5 Female), and 17 action scenarios (Walking, Eating, Discussion, Phoning). The Human3.6M dataset has a high resolution of 50Hz with 4 different orientations, including accurate 3D Joint Positions and joint angles from a high-speed motion capture system. In addition, it also provides time-of-flight data and laser scans of the actors.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">As part of our dataset and pre-processing exploration, we picked Subject S5 as our subject for research. Amongst the actions, this subject pertained to the action “Posing”. As part of our guided methodology in our project, our choice was intended at making a comparative study so that baseline results with the mean per-joint position error for our model could be easily compared and tabulated later (refer to table 1, 2, 3 and 4).</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Optimized Temporal Convolution Modeling</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">The AWS EC2 instance specification we chose are as follows: p2.xlarge, with 4 vCPUs, x86_64 architecture with a K80 GPU backbone. As our baseline approach for a comparative study, from subject S5’s available 17 actions, we chose the “Posing” action for our research project.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">We performed interpolation to get the half-speed samples input to our optimized temporal model. The .cdf in the dataset were converted to .mat (MATLAB) files, then for our 2D and 3D datasets we performed matrix interpolations, ensuring we removed the NaN values for processing the obtained values in the final temporal model.</p>
+</div>
+<div id="S3.SS2.p3" class="ltx_para">
+<p id="S3.SS2.p3.1" class="ltx_p">After loading and converting the Human3.6M 2D frames, we created the 2D poses and saved the joint points in the preparation of the subject S5 dataset with depth, features, and poses attributes.</p>
+</div>
+<div id="S3.SS2.p4" class="ltx_para">
+<p id="S3.SS2.p4.1" class="ltx_p">The model was run for 80 epochs. The architecture of the temporal model exploits temporal information with dilated convolutions over 2D keypoint trajectories from the .npy files.</p>
+</div>
+<div id="S3.SS2.p5" class="ltx_para">
+<p id="S3.SS2.p5.1" class="ltx_p">The default configuration has input features for each joint, while the outputs for each joint are in the dataset files. For the Human 3.6M dataset, the number of output joints is 17. For the filter widths, which determine the number of receptive field frames (i.e. the "number of blocks"), this parameter is input as a flag ’–arc 3,3’ (for 9 frames) or ’–arc 3,3,3’ (for 27 frames), etc. during our run of the main script of the model. To note the metrics in the final evaluation step of our research, we measure these given four loss values over time over 80 epochs:</p>
+</div>
+<div id="S3.SS2.p6" class="ltx_para">
+<ul id="S3.I1" class="ltx_itemize">
+<li id="S3.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i1.p1" class="ltx_para">
+<p id="S3.I1.i1.p1.1" class="ltx_p">E1: Mean per-joint position error (MPJPE) over time which is the mean Euclidean distance between predicted joint positions and ground-truth joint positions.</p>
+</div>
+</li>
+<li id="S3.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i2.p1" class="ltx_para">
+<p id="S3.I1.i2.p1.1" class="ltx_p">E2: P-Mean per-joint position error which gives the error after alignment with the ground truth in translation, rotation, and scale.</p>
+</div>
+</li>
+<li id="S3.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i3.p1" class="ltx_para">
+<p id="S3.I1.i3.p1.1" class="ltx_p">E3: N-Mean per joint position error (N-MPJPE) which aligns the predicted poses with the ground-truth only in scale (N-MPJPE) for semi-supervised experiments.</p>
+</div>
+</li>
+<li id="S3.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i4.p1" class="ltx_para">
+<p id="S3.I1.i4.p1.1" class="ltx_p">Velocity Error which is the mean per-joint velocity error (MPJVE).</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S3.SS2.p7" class="ltx_para">
+<p id="S3.SS2.p7.1" class="ltx_p">These error values are reported later as our findings in the result section.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Optical Flow Modeling on Humans 3.6 Dataset</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">We deploy a deep convolutional neural network architecture based on the state-of-the-art FlowNet 2.0 architecture <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>. To assure consistency of results with existing literature, models are trained and validated on the reference Sintel benckmark dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>. As shown in figure <a href="#S3.F3" title="Figure 3 ‣ 3.3 Optical Flow Modeling on Humans 3.6 Dataset ‣ 3 Adaptive Receptive Field Implementation - Experimental Setup ‣ 3D human pose estimation with adaptive receptive fields and dilated temporal convolutions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>, detail granularity and resolution consistent with the FlowNet 2.0 results is achieved on the benchmark Sintel dataset.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2005.13797/assets/ofimgs/sintel1.png" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="277" height="120" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2005.13797/assets/ofimgs/sintel2.png" id="S3.F3.g2" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_landscape" width="277" height="104" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Representative Benchmark Results from FlowNet 2.0 Model</figcaption>
+</figure>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span>Optical Flow Modeling on Humans 3.6 Dataset</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.1" class="ltx_p">Following benchmarking of our optical flow model, a set of pose estimation videos was selected from our target 3D pose estimation dataset, Humans 3.6M <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>. This set of training and testing videos was processed into frames for optical flow inference using our trained FlowNet 2.0 model. Figure <a href="#S3.F4" title="Figure 4 ‣ 3.4 Optical Flow Modeling on Humans 3.6 Dataset ‣ 3 Adaptive Receptive Field Implementation - Experimental Setup ‣ 3D human pose estimation with adaptive receptive fields and dilated temporal convolutions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, shows representative results obtained through processing of the Humans 3.6M subject "S2" samples.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2005.13797/assets/ofimgs/s2_r.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="205" height="208" alt="Refer to caption"></div>
+<div class="ltx_flex_cell ltx_flex_size_2"><img src="/html/2005.13797/assets/ofimgs/s2_of.png" id="S3.F4.g2" class="ltx_graphics ltx_centering ltx_figure_panel ltx_img_square" width="195" height="208" alt="Refer to caption"></div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Representative Humans 3.6M Results from FlowNet 2.0 Model</figcaption>
+</figure>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.1" class="ltx_p">As shown, detail granularity and resolution on these samples remain adequate and consistent with results on the benchmark dataset. Moreover, high flow regions are indeed localized to areas consistent with subject dynamics, as confirmed by inspection of the raw training videos.</p>
+</div>
+</section>
+<section id="S3.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.5 </span>Adaptive Receptive Field Regression</h3>
+
+<div id="S3.SS5.p1" class="ltx_para">
+<p id="S3.SS5.p1.1" class="ltx_p">Following model validation on the target dataset, the flow field output of our optical flow model was used to estimate temporal information density across frames–the degree to which motion was present across contiguous pose frames–and produce a best-estimate receptive field parameter for processing of the given sample.</p>
+</div>
+<div id="S3.SS5.p2" class="ltx_para">
+<p id="S3.SS5.p2.1" class="ltx_p">Several methods of determining the optimal receptive field parameter from the flow field output were tested. First, a single motion value had to be calculated from a frame in the flow field output. The magnitude of the x and y vectors was used to determine a motion value for a single pixel. Then, to integrate these values for each pixel to represent the motion of a frame, various combinations of max-pooling and averaging were attempted. However, the simplest method of taking the max value from the entire frame (clipping outliers) proved to be the most effective. Intuitively, this made sense as most objects move in unison and because the still pixels in a frame shouldn’t affect the motion value. To combine the motion values of all frames to form a motion value for the entire video, we simply averaged the values from each frame.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Results</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">The evaluation metrics used are the same as those of the research community, as this made the results comparable. These are the mean per-joint position error (MPJPE) measured in mm. This is the Euclidean distance between the predicted joint position and ground truth joint position.</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">Experiments were performed for Subject S5 in the “Posing” action at a speed reduction factor of 10x <a href="#S4.F5" title="Figure 5 ‣ 4 Results ‣ 3D human pose estimation with adaptive receptive fields and dilated temporal convolutions" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>. Results show that a reduction in receptive field from 243 frames to 81 frames resulted in an MPJPE increase of just 0.36% or 0.1 mm (28.2 mm to 28.3 mm error). The benchmark state-of-the-art model, which runs on full-speed videos showed an increase in MPJPE of 1.27% or 0.6 mm (47.1 mm to 47.7 mm error) for the same receptive field parameter change.</p>
+</div>
+<div id="S4.p3" class="ltx_para">
+<p id="S4.p3.1" class="ltx_p">For our model, program execution time was reduced by approximately 23% (56.05 seconds versus 43.4 seconds) by reducing the receptive field as noted above, which further demonstrates the computational advantages of our adaptive model. Furthermore, this result strongly suggests that adaptive receptive fields could offer an effective alternative to fixed receptive field parameterization for systems deployed in highly dynamic environments.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure"><img src="/html/2005.13797/assets/ofimgs/slow.png" id="S4.F5.g1" class="ltx_graphics ltx_centering ltx_img_square" width="416" height="361" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Example of speed reduction video at 0.5x using interpolation</figcaption>
+</figure>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2005.13797/assets/ofimgs/recepfields.png" id="S4.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="416" height="256" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>The Figure below depicts Receptive Frames at (9, 27, 81 and 243) vs. the Mean Per-Joint Position True Protocol # 1 Error at 0.5x speed and 1x Speeds (refer to Table 1)</figcaption>
+</figure>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>True Protocol # 1 Error (MPJPE) vs. the Receptive Fields in both speeds</figcaption>
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">RECEPTIVE FIELDS</th>
+<th id="S4.T1.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">HALF SPEED (mm)</th>
+<th id="S4.T1.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">FULL SPEED (mm)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.2.1" class="ltx_tr">
+<td id="S4.T1.1.2.1.1" class="ltx_td ltx_align_left ltx_border_t">9 frames</td>
+<td id="S4.T1.1.2.1.2" class="ltx_td ltx_align_left ltx_border_t">77.369</td>
+<td id="S4.T1.1.2.1.3" class="ltx_td ltx_align_left ltx_border_t">59.146</td>
+</tr>
+<tr id="S4.T1.1.3.2" class="ltx_tr">
+<td id="S4.T1.1.3.2.1" class="ltx_td ltx_align_left">27 frames</td>
+<td id="S4.T1.1.3.2.2" class="ltx_td ltx_align_left">48.267</td>
+<td id="S4.T1.1.3.2.3" class="ltx_td ltx_align_left">31.609</td>
+</tr>
+<tr id="S4.T1.1.4.3" class="ltx_tr">
+<td id="S4.T1.1.4.3.1" class="ltx_td ltx_align_left">81 frames</td>
+<td id="S4.T1.1.4.3.2" class="ltx_td ltx_align_left">41.845</td>
+<td id="S4.T1.1.4.3.3" class="ltx_td ltx_align_left">24.866</td>
+</tr>
+<tr id="S4.T1.1.5.4" class="ltx_tr">
+<td id="S4.T1.1.5.4.1" class="ltx_td ltx_align_left ltx_border_bb">243 frames</td>
+<td id="S4.T1.1.5.4.2" class="ltx_td ltx_align_left ltx_border_bb">41.608</td>
+<td id="S4.T1.1.5.4.3" class="ltx_td ltx_align_left ltx_border_bb">22.077</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2: </span>True Protocol # 2 Error (P-MPJPE) vs. the Receptive Fields in both speeds</figcaption>
+<table id="S4.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">RECEPTIVE FIELDS</th>
+<th id="S4.T2.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">HALF SPEED (mm)</th>
+<th id="S4.T2.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">FULL SPEED (mm)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.2.1" class="ltx_tr">
+<td id="S4.T2.1.2.1.1" class="ltx_td ltx_align_left ltx_border_t">9 frames</td>
+<td id="S4.T2.1.2.1.2" class="ltx_td ltx_align_left ltx_border_t">44.057</td>
+<td id="S4.T2.1.2.1.3" class="ltx_td ltx_align_left ltx_border_t">42.219</td>
+</tr>
+<tr id="S4.T2.1.3.2" class="ltx_tr">
+<td id="S4.T2.1.3.2.1" class="ltx_td ltx_align_left">27 frames</td>
+<td id="S4.T2.1.3.2.2" class="ltx_td ltx_align_left">33.528</td>
+<td id="S4.T2.1.3.2.3" class="ltx_td ltx_align_left">25.986</td>
+</tr>
+<tr id="S4.T2.1.4.3" class="ltx_tr">
+<td id="S4.T2.1.4.3.1" class="ltx_td ltx_align_left">81 frames</td>
+<td id="S4.T2.1.4.3.2" class="ltx_td ltx_align_left">31.202</td>
+<td id="S4.T2.1.4.3.3" class="ltx_td ltx_align_left">20.110</td>
+</tr>
+<tr id="S4.T2.1.5.4" class="ltx_tr">
+<td id="S4.T2.1.5.4.1" class="ltx_td ltx_align_left ltx_border_bb">243 frames</td>
+<td id="S4.T2.1.5.4.2" class="ltx_td ltx_align_left ltx_border_bb">31.160</td>
+<td id="S4.T2.1.5.4.3" class="ltx_td ltx_align_left ltx_border_bb">17.567</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S4.T3" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 3: </span>True Protocol # 3 Error (N-MPJPE) vs. the Receptive Fields in both speeds</figcaption>
+<table id="S4.T3.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T3.1.1.1" class="ltx_tr">
+<th id="S4.T3.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">RECEPTIVE FIELDS</th>
+<th id="S4.T3.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">HALF SPEED (mm)</th>
+<th id="S4.T3.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">FULL SPEED (mm)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T3.1.2.1" class="ltx_tr">
+<td id="S4.T3.1.2.1.1" class="ltx_td ltx_align_left ltx_border_t">9 frames</td>
+<td id="S4.T3.1.2.1.2" class="ltx_td ltx_align_left ltx_border_t">60.420</td>
+<td id="S4.T3.1.2.1.3" class="ltx_td ltx_align_left ltx_border_t">50.651</td>
+</tr>
+<tr id="S4.T3.1.3.2" class="ltx_tr">
+<td id="S4.T3.1.3.2.1" class="ltx_td ltx_align_left">27 frames</td>
+<td id="S4.T3.1.3.2.2" class="ltx_td ltx_align_left">42.422</td>
+<td id="S4.T3.1.3.2.3" class="ltx_td ltx_align_left">30.785</td>
+</tr>
+<tr id="S4.T3.1.4.3" class="ltx_tr">
+<td id="S4.T3.1.4.3.1" class="ltx_td ltx_align_left">81 frames</td>
+<td id="S4.T3.1.4.3.2" class="ltx_td ltx_align_left">39.078</td>
+<td id="S4.T3.1.4.3.3" class="ltx_td ltx_align_left">24.667</td>
+</tr>
+<tr id="S4.T3.1.5.4" class="ltx_tr">
+<td id="S4.T3.1.5.4.1" class="ltx_td ltx_align_left ltx_border_bb">243 frames</td>
+<td id="S4.T3.1.5.4.2" class="ltx_td ltx_align_left ltx_border_bb">39.764</td>
+<td id="S4.T3.1.5.4.3" class="ltx_td ltx_align_left ltx_border_bb">21.976</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S4.T4" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 4: </span>Velocity (MPJVE) ERROR in both speeds</figcaption>
+<table id="S4.T4.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T4.1.1.1" class="ltx_tr">
+<th id="S4.T4.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">RECEPTIVE FIELDS</th>
+<th id="S4.T4.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt ltx_border_t">HALF SPEED (mm)</th>
+<th id="S4.T4.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">FULL SPEED (mm)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T4.1.2.1" class="ltx_tr">
+<td id="S4.T4.1.2.1.1" class="ltx_td ltx_align_left ltx_border_t">9 frames</td>
+<td id="S4.T4.1.2.1.2" class="ltx_td ltx_align_left ltx_border_t">2.713</td>
+<td id="S4.T4.1.2.1.3" class="ltx_td ltx_align_left ltx_border_t">2.308</td>
+</tr>
+<tr id="S4.T4.1.3.2" class="ltx_tr">
+<td id="S4.T4.1.3.2.1" class="ltx_td ltx_align_left">27 frames</td>
+<td id="S4.T4.1.3.2.2" class="ltx_td ltx_align_left">2.600</td>
+<td id="S4.T4.1.3.2.3" class="ltx_td ltx_align_left">2.094</td>
+</tr>
+<tr id="S4.T4.1.4.3" class="ltx_tr">
+<td id="S4.T4.1.4.3.1" class="ltx_td ltx_align_left">81 frames</td>
+<td id="S4.T4.1.4.3.2" class="ltx_td ltx_align_left">2.473</td>
+<td id="S4.T4.1.4.3.3" class="ltx_td ltx_align_left">1.861</td>
+</tr>
+<tr id="S4.T4.1.5.4" class="ltx_tr">
+<td id="S4.T4.1.5.4.1" class="ltx_td ltx_align_left ltx_border_bb">243 frames</td>
+<td id="S4.T4.1.5.4.2" class="ltx_td ltx_align_left ltx_border_bb">2.444</td>
+<td id="S4.T4.1.5.4.3" class="ltx_td ltx_align_left ltx_border_bb">1.749</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusions</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this work, we demonstrate that receptive fields in 3D pose estimation can be effectively specified using optical flow, which estimates the motion of every pixel in a sequence of images. By doing so, computational costs can be effectively decreased in low movement sequences while maintaining equivalent performance.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">Experiments performed using lower speed videos–modified using keypoints interpolation–of the Subject S5 (action “Posing”) of the Human3.6M dataset successfully shows that a reduction in receptive field from 243 frames to 81 frames resulted in an MPJPE increase of just 0.36% or 0.1 mm (28.2 mm to 28.3 mm error). The benchmark state-of-the-art model from Facebook AI research <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>, which runs on full-speed videos showed an increase in MPJPE of 1.27% or 0.6 mm (47.1 mm to 47.7 mm error) for the same receptive field parameter change.</p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p">Our proposed model execution time was lowered by approximately 23% (56.05 seconds versus 43.4 seconds) by reducing the receptive field as noted above, which further demonstrates the computational advantages of our adaptive model. Furthermore, this result strongly suggests that adaptive receptive fields could offer an effective alternative to fixed receptive field parameterization for systems deployed in highly dynamic environments.</p>
+</div>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>About the Team Members</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p"><span id="S6.p1.1.1" class="ltx_text ltx_font_bold">Michael Shin, CS’20</span>
+Michael has a bachelor’s degree in Computer Engineering from The University of Michigan. Prior to joining Cornell Tech, he worked as a GPU engineer for Intel creating software simulators of various pixel pipeline components for validation purposes. Since then he’s reinvented himself as an entrepreneur and developer specializing in the UX and development of iOS and Android apps. Michael is originally from Sydney, Australia.</p>
+</div>
+<div id="S6.p2" class="ltx_para">
+<p id="S6.p2.1" class="ltx_p"><span id="S6.p2.1.1" class="ltx_text ltx_font_bold">Eduardo Castillo, ECE’20</span>
+Eduardo has a bachelor’s degree in Mechanical Engineering, summa cum laude from Rowan University. Prior to joining Cornell Tech, he worked as a full-time design engineer at PSEG Nuclear developing design upgrades for large power generation assets. He is also an admitted fellow at the MIT System Design and Management program. Eduardo continues to work for PSEG Nuclear on a part-time basis and is also a small business owner in the cosmetics space. Eduardo is originally from Santo Domingo, Dominican Republic.</p>
+</div>
+<div id="S6.p3" class="ltx_para">
+<p id="S6.p3.1" class="ltx_p"><span id="S6.p3.1.1" class="ltx_text ltx_font_bold">Irene Font Peradejordi, CM’21</span>
+Irene has a bachelor’s degree in Design &amp; Advertising from Pompeu Fabra University in Barcelona. Prior to joining Cornell Tech, she earned a MSc in Cognitive Sciences and Artificial Intelligence from Tilburg University in The Netherlands. She worked in Barcelona and Boston in a MIT Media Lab startup and she helped found an AI community (Saturdays.AI) that expanded to more than 25 cities in Spain and Latin America. She is part of “la Caixa” Merit fully-funded Fellowship program.</p>
+</div>
+<div id="S6.p4" class="ltx_para">
+<p id="S6.p4.1" class="ltx_p"><span id="S6.p4.1.1" class="ltx_text ltx_font_bold">Shobhna Jayaraman, CS’20</span>
+Shobhna has a bachelor’s degree in Computer Science and Engineering from Amity University. Prior to joining Cornell Tech, she worked full-time as a software engineer/ DevOps engineer for Orange Business Services, Gurgaon, India. She has interned as a Data Analyst with several companies. During her bachelor’s, she wrote two machine learning focussed research papers which have been published in IEEE Xplore Journal.</p>
+</div>
+<section id="S6.SS0.SSSx1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">Acknowledgments</h4>
+
+<div id="S6.SS0.SSSx1.p1" class="ltx_para">
+<p id="S6.SS0.SSSx1.p1.1" class="ltx_p">We would like to express our deep gratitude to Dr. Jin Sun and Dr. Christopher Kanan, for their patient guidance, enthusiastic encouragement and insightful feedback during this project. Their engaging instruction, dynamic leadership and commitment to our success have been a beacon of hope for all of us during these unprecedented times.</p>
+</div>
+<div id="S6.SS0.SSSx1.p2" class="ltx_para">
+<p id="S6.SS0.SSSx1.p2.1" class="ltx_p">The project that gave rise to these results was partially supported by a fellowship from ”la Caixa” Foundation (ID 100010434) for Post-Graduate Studies. The fellowship code is LCF/BQ/AA18/11680107 (Irene Font Peradejordi).</p>
+</div>
+</section>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Dario Pavllo, Christoph Feichtenhofer, David Grangier, and Michael Auli.
+
+</span>
+<span class="ltx_bibblock">3d human pose estimation in video with temporal convolutions and
+semi-supervised training, 2018.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Cristina Ribeiro, Alexander Ferworn, Mieso Denko, and James Tran.
+
+</span>
+<span class="ltx_bibblock">Canine pose estimation: A computing for public safety solution.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text ltx_font_italic">2009 Canadian Conference on Computer and Robot Vision</span>, 2009.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Yuying Ge, Ruimao Zhang, Lingyun Wu, Xiaogang Wang, Xiaoou Tang, and Ping Luo.
+
+</span>
+<span class="ltx_bibblock">Deepfashion2: A versatile benchmark for detection, pose estimation,
+segmentation and re-identification of clothing images, 2019.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Ahmet Arac, Pingping Zhao, Bruce H. Dobkin, S. Thomas Carmichael, and Peyman
+Golshani.
+
+</span>
+<span class="ltx_bibblock">Deepbehavior: A deep learning toolbox for automated analysis of
+animal and human behavior imaging data.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text ltx_font_italic">Frontiers in Systems Neuroscience</span>, 13, 2019.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Mir Rayat Imtiaz Hossain and James J. Little.
+
+</span>
+<span class="ltx_bibblock">Exploiting temporal information for 3d human pose estimation.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text ltx_font_italic">Lecture Notes in Computer Science</span>, page 69–86, 2018.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Kyoungoh Lee, Inwoong Lee, and Sanghoon Lee.
+
+</span>
+<span class="ltx_bibblock">Propagating lstm: 3d pose estimation based on joint interdependency.
+
+</span>
+<span class="ltx_bibblock">In Vittorio Ferrari, Martial Hebert, Cristian Sminchisescu, and Yair
+Weiss, editors, <span id="bib.bib6.1.1" class="ltx_text ltx_font_italic">Computer Vision – ECCV 2018</span>, pages 123–141, Cham,
+2018. Springer International Publishing.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Proceedings of the 2004 ieee computer society conference on computer vision and
+pattern recognition.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib7.1.1" class="ltx_text ltx_font_italic">Proceedings of the 2004 IEEE Computer Society Conference on
+Computer Vision and Pattern Recognition, 2004. CVPR 2004.</span>, volume 2, 2004.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+G. Mori and J. Malik.
+
+</span>
+<span class="ltx_bibblock">Recovering 3d human body configurations using shape contexts.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text ltx_font_italic">IEEE Transactions on Pattern Analysis and Machine Intelligence</span>,
+28(7):1052–1062, 2006.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Hsi-Jian Lee and Zen Chen.
+
+</span>
+<span class="ltx_bibblock">Determination of 3d human body postures from a single view.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text ltx_font_italic">Computer Vision, Graphics, and Image Processing</span>, 30(2):148 –
+168, 1985.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Ching-Hang Chen and Deva Ramanan.
+
+</span>
+<span class="ltx_bibblock">3d human pose estimation = 2d pose estimation + matching, 2016.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+E. Simo-Serra, A. Quattoni, C. Torras, and F. Moreno-Noguer.
+
+</span>
+<span class="ltx_bibblock">A joint model for 2d and 3d pose estimation from a single image.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib11.1.1" class="ltx_text ltx_font_italic">2013 IEEE Conference on Computer Vision and Pattern
+Recognition</span>, pages 3634–3641, 2013.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Cheol hwan Yoo, Seo won Ji, Yong goo Shin, Seung wook Kim, and Sung jea Ko.
+
+</span>
+<span class="ltx_bibblock">Fast and accurate 3d hand pose estimation via recurrent neural
+network for capturing hand articulations, 2019.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Matthias Holschneider, Richard Kronland-Martinet, J. Morlet, and
+Ph Tchamitchian.
+
+</span>
+<span class="ltx_bibblock">A real-time algorithm for signal analysis with the help of the
+wavelet transform.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text ltx_font_italic">Wavelets, Time-Frequency Methods and Phase Space</span>, -1:286, 01
+1989.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Noshaba Cheema, Somayeh Hosseini, Janis Sprenger, Erik Herrmann, Han Du, Klaus
+Fischer, and Philipp Slusallek.
+
+</span>
+<span class="ltx_bibblock">Dilated temporal fully-convolutional network for semantic
+segmentation of motion capture data, 2018.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Shaojie Bai, J. Zico Kolter, and Vladlen Koltun.
+
+</span>
+<span class="ltx_bibblock">An empirical evaluation of generic convolutional and recurrent
+networks for sequence modeling, 2018.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+S. Chang, B. Li, G. Simko, T. N. Sainath, A. Tripathi, A. van den
+Oord, and O. Vinyals.
+
+</span>
+<span class="ltx_bibblock">Temporal modeling using dilated convolution and gating for
+voice-activity-detection.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib16.1.1" class="ltx_text ltx_font_italic">2018 IEEE International Conference on Acoustics, Speech and
+Signal Processing (ICASSP)</span>, pages 5549–5553, 2018.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Nal Kalchbrenner, Lasse Espeholt, Karen Simonyan, Aaron van den Oord, Alex
+Graves, and Koray Kavukcuoglu.
+
+</span>
+<span class="ltx_bibblock">Neural machine translation in linear time, 2016.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Aaron van den Oord, Sander Dieleman, Heiga Zen, Karen Simonyan, Oriol Vinyals,
+Alex Graves, Nal Kalchbrenner, Andrew Senior, and Koray Kavukcuoglu.
+
+</span>
+<span class="ltx_bibblock">Wavenet: A generative model for raw audio, 2016.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Eddy Ilg, Nikolaus Mayer, Tonmoy Saikia, Margret Keuper, Alexey Dosovitskiy,
+and Thomas Brox.
+
+</span>
+<span class="ltx_bibblock">Flownet 2.0: Evolution of optical flow estimation with deep networks,
+2016.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Zhiwen Chen, Jianzhong Cao, Yao Tang, and Linao Tang.
+
+</span>
+<span class="ltx_bibblock">Tracking of moving object based on optical flow detection.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib20.1.1" class="ltx_text ltx_font_italic">Proceedings of 2011 International Conference on Computer
+Science and Network Technology</span>, volume 2, pages 1096–1099, 2011.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+C. Ionescu, D. Papava, V. Olaru, and C. Sminchisescu.
+
+</span>
+<span class="ltx_bibblock">Human3.6m: Large scale datasets and predictive methods for 3d human
+sensing in natural environments.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text ltx_font_italic">IEEE Transactions on Pattern Analysis and Machine Intelligence</span>,
+36(7):1325–1339, 2014.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Fitsum Reda, Robert Pottorff, Jon Barker, and Bryan Catanzaro.
+
+</span>
+<span class="ltx_bibblock">flownet2-pytorch: Pytorch implementation of flownet 2.0: Evolution of
+optical flow estimation with deep networks.
+
+</span>
+<span class="ltx_bibblock"><a target="_blank" href="https://github.com/NVIDIA/flownet2-pytorch" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/NVIDIA/flownet2-pytorch</a>, 2017.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+D. J. Butler, J. Wulff, G. B. Stanley, and M. J. Black.
+
+</span>
+<span class="ltx_bibblock">A naturalistic open source movie for optical flow evaluation.
+
+</span>
+<span class="ltx_bibblock">In A. Fitzgibbon et al. (Eds.), editor, <span id="bib.bib23.1.1" class="ltx_text ltx_font_italic">European Conf. on
+Computer Vision (ECCV)</span>, Part IV, LNCS 7577, pages 611–625. Springer-Verlag,
+October 2012.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Catalin Ionescu, Dragos Papava, Vlad Olaru, and Cristian Sminchisescu.
+
+</span>
+<span class="ltx_bibblock">Human3.6m: Large scale datasets and predictive methods for 3d human
+sensing in natural environments.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.1.1" class="ltx_text ltx_font_italic">IEEE Trans. Pattern Anal. Mach. Intell.</span>, 36(7):1325–1339,
+July 2014.
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2005.13796" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2005.13797" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2005.13797">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2005.13797" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2005.13798" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Sat Mar  2 11:53:47 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

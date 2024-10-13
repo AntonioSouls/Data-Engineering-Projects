@@ -1,0 +1,1621 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2201.07384] Swin-Pose: Swin Transformer Based Human Pose Estimation</title><meta property="og:description" content="Convolutional neural networks (CNNs) have been widely utilized in many computer vision tasks. However, CNNs have a fixed reception field and lack the ability of long-range perception, which is crucial to human pose est…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Swin-Pose: Swin Transformer Based Human Pose Estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Swin-Pose: Swin Transformer Based Human Pose Estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2201.07384">
+
+<!--Generated on Mon Feb 26 18:55:04 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">Swin-Pose: Swin Transformer Based Human Pose Estimation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Zinan Xiong
+<br class="ltx_break">Department of Computer Science
+<br class="ltx_break">Universify of Massachusetts Lowell
+<br class="ltx_break">Lowell, MA 01851, USA
+<br class="ltx_break">zinan_xiong@student.uml.edu
+<br class="ltx_break">
+</span><span class="ltx_author_notes"><sup id="id4.2.id1" class="ltx_sup"><span id="id4.2.id1.1" class="ltx_text ltx_font_italic">∗</span></sup>Equal contribution</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Chenxi Wang<sup id="id5.2.id1" class="ltx_sup"><span id="id5.2.id1.1" class="ltx_text ltx_font_italic">∗</span></sup>
+<br class="ltx_break">Department of Electrical &amp; Computer Engineering
+<br class="ltx_break">Universify of Massachusetts Lowell
+<br class="ltx_break">Lowell, MA 01851, USA
+<br class="ltx_break">chenxi_wang1@student.uml.edu
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ying Li<sup id="id6.2.id1" class="ltx_sup"><span id="id6.2.id1.1" class="ltx_text ltx_font_italic">∗</span></sup>
+<br class="ltx_break">Alibaba Group, Hangzhou, China
+<br class="ltx_break">yunle.ly@alibaba-inc.com
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id7.id1" class="ltx_p">Convolutional neural networks (CNNs) have been widely utilized in many computer vision tasks. However, CNNs have a fixed reception field and lack the ability of long-range perception, which is crucial to human pose estimation. Transformer architecture has been adopted to computer vision applications recently and is proven to be a highly effective architecture. We are interested in exploring its capability in human pose estimation, and thus propose a novel model based on transformer, enhanced with a feature pyramid fusion structure. More specifically, we use pre-trained Swin Transformer to extract features, and leverage a feature pyramid structure to extract and fuse feature maps from different stages. The experiment results of our study have demonstrated that the proposed transformer-based model can achieve better performance compared to the state-of-the-art CNN-based models.
+</p>
+</div>
+<div id="p1" class="ltx_para">
+<p id="p1.1" class="ltx_p"><span id="p1.1.1" class="ltx_text ltx_font_bold ltx_font_italic">Index terms—</span> Human Pose Estimation, Swin Transformer, CNN, Feature Pyramid</p>
+</div>
+<figure id="S0.F1" class="ltx_figure"><img src="/html/2201.07384/assets/x1.png" id="S0.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="422" height="190" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Swin-Pose Architecture Overview.</figcaption>
+</figure>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>. Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Human pose estimation is one of the key tasks in computer vision, it aims to detect and locate persons with their body joints such as neck and shoulder. It has several important and promising applications, including action recognition, human-computer interaction, and gaming. There are still a lot of challenges brought by partial or full joint occlusions, differences in body shapes, and clothing. A large amount of work is devoted to obtain a better feature representation and distinguish the correct pose. However, the computation cost is high and its ability to adapt to all poses is still limited.
+</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Recently, deep convolutional neural networks (DCNNs) has proved its ability in computer vision tasks. Among all these approaches, two of them are mainstream methods: keypoint position regression<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, and keypoint heatmap estimation followed by choosing the location with the highest score<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>. The former one treats pose estimation as a joint position regression problem. The latter one puts a 2D Gaussian kernel on all keypoints, constructs ground truth heatmaps, and utilizes these heatmaps to supervise the prediction with L2 loss. The heatmap regression is relatively simpler to implement than the approach of keypoint regression, and it achieves both higher accuracy and efficiency.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">The attention mechanism calculates the similarity and weights between the current input and all the other inputs, then the model will put more effort into the context which has a higher weight.
+Transformer adopts the structure of encoder-decoder, but it has demonstrated that the replacement of the original design with multi-head self-attention leads to a better performance<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>.
+However, traditional transformer structure is unable to be used on the human pose estimation task directly. Its computation cost is tremendously high, and will be increased sharply with the size of feature map and consuming excessive memory. In addition, traditional transformer only generates the output feature map within one single scale, thus it has a limit performance on images with multi-scale objects.
+</p>
+</div>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">To leverage the long-range dependencies capturing ability of transformer, and avoid the excessive memory consumption, we choose Swin Transformer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> as our backbone. We also integrate it with a top-down feature pyramid to add the ability of scale-invariant. With this Swin Transformer structure and two different fusion methods, we propose a novel human pose estimation model Swin-Pose, it achieves outstanding results compared with HRNet-W48. Additionally, we perform a number of experiments and investigate the effects of input resolution, model size, and fusion method, and present the results in Section <a href="#S5" title="5 Ablation Study ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>. Related Work</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>. Human Pose Estimation</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">CNN has demonstrated its powerful ability in computer vision, owing to its characteristics of local connectivity, and weight sharing, thus also being widely applied to human pose estimation tasks.
+Convolutional Pose Machine generates 2D belief maps for the location of each part by several convolutional networks at each stage<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>, which encodes the spatial uncertainty of the locations, and captures the spatial relationships between the parts. Simple Baseline<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> uses ResNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> as the backbone to extract features, three deconvolutional layers are added to the last convolution stage, and generate the feature maps and heatmaps with high resolution.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">Instead of following one route, HRNet<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> recovers the high-resolution from low-resolution at sub-network and maintains high-resolution through the whole process. It gradually adds branches with lower resolution in parallel, but fuses the output from all branches, then passes the fused information through all branches, and finally generates the keypoint estimation.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><img src="/html/2201.07384/assets/x2.png" id="S2.F2.g1" class="ltx_graphics ltx_centering ltx_img_square" width="184" height="212" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Structure of Transformer Block.</figcaption>
+</figure>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>. Attention Mechanism and Transformer</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Originally, transformer models were applied to natural language processing (NLP). It stacks encoder and decoder together, both of which are consist of self-attention and feed-forward layers. The self-attention layer maps query, key and value to the output then computes the output as a weighted sum of values. A multi-head mechanism is also implemented to obtain the attention between different positions jointly and achieves a remarkable result<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Vision Transformer (ViT) splits the input images into patches of fixed size, then applies linear embeddings to each patch and send them through the transformer as tokens<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>. A learnable classification embedding is prepended to the patch, and a position embedding is also added to keep the positional information.
+TransPose is proposed to combine the translation equivalence of CNN and the long-range dependencies capturing ability of the transformer<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>. It uses convolutional neural network as its backbone, then connect to a transformer encode layer and captures the global dependencies at high-level feature maps.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">The structure of Swin Transformer is similar to ResNet and consists of four stages. By limiting the self-attention within non-overlapping local windows, Swin Transformer reduces the computation cost by a large margin<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>, making it applicable in downstream tasks. A shifted window partitioning approach is also applied to enable information communication between those non-overlapping windows.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>. Image Feature Fusion</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">Previous studies of feature fusion methods have established that multi-level features can be extracted and fused <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. HyperNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> concatenate the representatives before prediction, Spatial Pyramid Pooling <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> investigated the multi-scale filters. Furthermore, the image pyramid is famous for its ability to combine and utilize the features extracted from different scales and its characteristics of scale-invariant. Felzenszwalb <em id="S2.SS3.p1.1.1" class="ltx_emph ltx_font_italic">et al.</em> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> proposed an efficient and accurate system based on pictorial structures framework, they obtained the feature pyramids by repeated smoothing and sub-sampling from different levels, then a score at different positions and scales was identified.</p>
+</div>
+<div id="S2.SS3.p2" class="ltx_para">
+<p id="S2.SS3.p2.1" class="ltx_p">In 2017, Lin <em id="S2.SS3.p2.1.1" class="ltx_emph ltx_font_italic">et al.</em> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> described Feature Pyramid Networks for object detection. They identified a feature pyramid that has strong semantics from low to high levels to leverage the pyramidal shape of ConvNet’s <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> feature hierarchy.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Methodology</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">We propose Swin-Pose model that utilises a multi-method approach combining the Swin Transformer Block and feature pyramid fusing. The overview of our proposed model architecture is shown in Fig. <a href="#S0.F1" title="Figure 1 ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>, which follows the logic of the large version of Swin Transformer (Swin-L). The advantage of the swin transformer is that it allows us to extract important information and long-range dependencies between joints from the images. Before obtaining the embedding with the linear layer, the input images are split into four non-overlapping patches. After these patches are treated as “tokens”, the raw pixel RGB values are concatenated to produce the features. Once the embeddings are passed through four stages, feature maps are generated with different scales.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Furthermore, the feature pyramid is one of the most practical ways of examining the inherent multi-scale features. It is applied to fuse the feature maps and produce the output for keypoint heatmap regression.</p>
+</div>
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2201.07384/assets/x3.png" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="207" height="134" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Feature Fusion Module.</figcaption>
+</figure>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Swin-Pose Transformer Module</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.8" class="ltx_p">In our study, the vanilla Swin-Pose follows the settings in Swin Transformer, setting the patch size to <math id="S3.SS1.p1.1.m1.1" class="ltx_Math" alttext="4\times 4" display="inline"><semantics id="S3.SS1.p1.1.m1.1a"><mrow id="S3.SS1.p1.1.m1.1.1" xref="S3.SS1.p1.1.m1.1.1.cmml"><mn id="S3.SS1.p1.1.m1.1.1.2" xref="S3.SS1.p1.1.m1.1.1.2.cmml">4</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.1.m1.1.1.1" xref="S3.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S3.SS1.p1.1.m1.1.1.3" xref="S3.SS1.p1.1.m1.1.1.3.cmml">4</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.1.m1.1b"><apply id="S3.SS1.p1.1.m1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1"><times id="S3.SS1.p1.1.m1.1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.SS1.p1.1.m1.1.1.2.cmml" xref="S3.SS1.p1.1.m1.1.1.2">4</cn><cn type="integer" id="S3.SS1.p1.1.m1.1.1.3.cmml" xref="S3.SS1.p1.1.m1.1.1.3">4</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.1.m1.1c">4\times 4</annotation></semantics></math>. The tokens are sent to a linear embedding layer with a classification token prepended, and position information encoded, and its dimension is projected from <math id="S3.SS1.p1.2.m2.1" class="ltx_Math" alttext="4\times 4\times 3=48" display="inline"><semantics id="S3.SS1.p1.2.m2.1a"><mrow id="S3.SS1.p1.2.m2.1.1" xref="S3.SS1.p1.2.m2.1.1.cmml"><mrow id="S3.SS1.p1.2.m2.1.1.2" xref="S3.SS1.p1.2.m2.1.1.2.cmml"><mn id="S3.SS1.p1.2.m2.1.1.2.2" xref="S3.SS1.p1.2.m2.1.1.2.2.cmml">4</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.2.m2.1.1.2.1" xref="S3.SS1.p1.2.m2.1.1.2.1.cmml">×</mo><mn id="S3.SS1.p1.2.m2.1.1.2.3" xref="S3.SS1.p1.2.m2.1.1.2.3.cmml">4</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.2.m2.1.1.2.1a" xref="S3.SS1.p1.2.m2.1.1.2.1.cmml">×</mo><mn id="S3.SS1.p1.2.m2.1.1.2.4" xref="S3.SS1.p1.2.m2.1.1.2.4.cmml">3</mn></mrow><mo id="S3.SS1.p1.2.m2.1.1.1" xref="S3.SS1.p1.2.m2.1.1.1.cmml">=</mo><mn id="S3.SS1.p1.2.m2.1.1.3" xref="S3.SS1.p1.2.m2.1.1.3.cmml">48</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.2.m2.1b"><apply id="S3.SS1.p1.2.m2.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1"><eq id="S3.SS1.p1.2.m2.1.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1.1"></eq><apply id="S3.SS1.p1.2.m2.1.1.2.cmml" xref="S3.SS1.p1.2.m2.1.1.2"><times id="S3.SS1.p1.2.m2.1.1.2.1.cmml" xref="S3.SS1.p1.2.m2.1.1.2.1"></times><cn type="integer" id="S3.SS1.p1.2.m2.1.1.2.2.cmml" xref="S3.SS1.p1.2.m2.1.1.2.2">4</cn><cn type="integer" id="S3.SS1.p1.2.m2.1.1.2.3.cmml" xref="S3.SS1.p1.2.m2.1.1.2.3">4</cn><cn type="integer" id="S3.SS1.p1.2.m2.1.1.2.4.cmml" xref="S3.SS1.p1.2.m2.1.1.2.4">3</cn></apply><cn type="integer" id="S3.SS1.p1.2.m2.1.1.3.cmml" xref="S3.SS1.p1.2.m2.1.1.3">48</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.2.m2.1c">4\times 4\times 3=48</annotation></semantics></math> to an arbitrary value <math id="S3.SS1.p1.3.m3.1" class="ltx_Math" alttext="C" display="inline"><semantics id="S3.SS1.p1.3.m3.1a"><mi id="S3.SS1.p1.3.m3.1.1" xref="S3.SS1.p1.3.m3.1.1.cmml">C</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.3.m3.1b"><ci id="S3.SS1.p1.3.m3.1.1.cmml" xref="S3.SS1.p1.3.m3.1.1">𝐶</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.3.m3.1c">C</annotation></semantics></math>. A number of Swin Transformer blocks are applied to the embedded tokens and make up “Stage 1” together with the aformentioned linear embedding layer. In order to get a hierarchical representation, the output of “Stage 1” is then sent through a patch merging layer, where the <math id="S3.SS1.p1.4.m4.1" class="ltx_Math" alttext="2\times 2" display="inline"><semantics id="S3.SS1.p1.4.m4.1a"><mrow id="S3.SS1.p1.4.m4.1.1" xref="S3.SS1.p1.4.m4.1.1.cmml"><mn id="S3.SS1.p1.4.m4.1.1.2" xref="S3.SS1.p1.4.m4.1.1.2.cmml">2</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.4.m4.1.1.1" xref="S3.SS1.p1.4.m4.1.1.1.cmml">×</mo><mn id="S3.SS1.p1.4.m4.1.1.3" xref="S3.SS1.p1.4.m4.1.1.3.cmml">2</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.4.m4.1b"><apply id="S3.SS1.p1.4.m4.1.1.cmml" xref="S3.SS1.p1.4.m4.1.1"><times id="S3.SS1.p1.4.m4.1.1.1.cmml" xref="S3.SS1.p1.4.m4.1.1.1"></times><cn type="integer" id="S3.SS1.p1.4.m4.1.1.2.cmml" xref="S3.SS1.p1.4.m4.1.1.2">2</cn><cn type="integer" id="S3.SS1.p1.4.m4.1.1.3.cmml" xref="S3.SS1.p1.4.m4.1.1.3">2</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.4.m4.1c">2\times 2</annotation></semantics></math> neighbouring patches are merged together. Also, the resolution is down-sampled by a factor of 2, and the number of tokens is reduced by a factor of 4. A linear layer is also applied to change the dimension from <math id="S3.SS1.p1.5.m5.1" class="ltx_Math" alttext="4C" display="inline"><semantics id="S3.SS1.p1.5.m5.1a"><mrow id="S3.SS1.p1.5.m5.1.1" xref="S3.SS1.p1.5.m5.1.1.cmml"><mn id="S3.SS1.p1.5.m5.1.1.2" xref="S3.SS1.p1.5.m5.1.1.2.cmml">4</mn><mo lspace="0em" rspace="0em" id="S3.SS1.p1.5.m5.1.1.1" xref="S3.SS1.p1.5.m5.1.1.1.cmml">​</mo><mi id="S3.SS1.p1.5.m5.1.1.3" xref="S3.SS1.p1.5.m5.1.1.3.cmml">C</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.5.m5.1b"><apply id="S3.SS1.p1.5.m5.1.1.cmml" xref="S3.SS1.p1.5.m5.1.1"><times id="S3.SS1.p1.5.m5.1.1.1.cmml" xref="S3.SS1.p1.5.m5.1.1.1"></times><cn type="integer" id="S3.SS1.p1.5.m5.1.1.2.cmml" xref="S3.SS1.p1.5.m5.1.1.2">4</cn><ci id="S3.SS1.p1.5.m5.1.1.3.cmml" xref="S3.SS1.p1.5.m5.1.1.3">𝐶</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.5.m5.1c">4C</annotation></semantics></math> to <math id="S3.SS1.p1.6.m6.1" class="ltx_Math" alttext="2C" display="inline"><semantics id="S3.SS1.p1.6.m6.1a"><mrow id="S3.SS1.p1.6.m6.1.1" xref="S3.SS1.p1.6.m6.1.1.cmml"><mn id="S3.SS1.p1.6.m6.1.1.2" xref="S3.SS1.p1.6.m6.1.1.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS1.p1.6.m6.1.1.1" xref="S3.SS1.p1.6.m6.1.1.1.cmml">​</mo><mi id="S3.SS1.p1.6.m6.1.1.3" xref="S3.SS1.p1.6.m6.1.1.3.cmml">C</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.6.m6.1b"><apply id="S3.SS1.p1.6.m6.1.1.cmml" xref="S3.SS1.p1.6.m6.1.1"><times id="S3.SS1.p1.6.m6.1.1.1.cmml" xref="S3.SS1.p1.6.m6.1.1.1"></times><cn type="integer" id="S3.SS1.p1.6.m6.1.1.2.cmml" xref="S3.SS1.p1.6.m6.1.1.2">2</cn><ci id="S3.SS1.p1.6.m6.1.1.3.cmml" xref="S3.SS1.p1.6.m6.1.1.3">𝐶</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.6.m6.1c">2C</annotation></semantics></math>. As shown in Fig. 1, with the patch merging layer, multiple swin transformer blocks are connected, constituting three identical stages. Moreover, the resolutions of output are <math id="S3.SS1.p1.7.m7.1" class="ltx_Math" alttext="\frac{H}{16}\times\frac{W}{16}" display="inline"><semantics id="S3.SS1.p1.7.m7.1a"><mrow id="S3.SS1.p1.7.m7.1.1" xref="S3.SS1.p1.7.m7.1.1.cmml"><mfrac id="S3.SS1.p1.7.m7.1.1.2" xref="S3.SS1.p1.7.m7.1.1.2.cmml"><mi id="S3.SS1.p1.7.m7.1.1.2.2" xref="S3.SS1.p1.7.m7.1.1.2.2.cmml">H</mi><mn id="S3.SS1.p1.7.m7.1.1.2.3" xref="S3.SS1.p1.7.m7.1.1.2.3.cmml">16</mn></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.7.m7.1.1.1" xref="S3.SS1.p1.7.m7.1.1.1.cmml">×</mo><mfrac id="S3.SS1.p1.7.m7.1.1.3" xref="S3.SS1.p1.7.m7.1.1.3.cmml"><mi id="S3.SS1.p1.7.m7.1.1.3.2" xref="S3.SS1.p1.7.m7.1.1.3.2.cmml">W</mi><mn id="S3.SS1.p1.7.m7.1.1.3.3" xref="S3.SS1.p1.7.m7.1.1.3.3.cmml">16</mn></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.7.m7.1b"><apply id="S3.SS1.p1.7.m7.1.1.cmml" xref="S3.SS1.p1.7.m7.1.1"><times id="S3.SS1.p1.7.m7.1.1.1.cmml" xref="S3.SS1.p1.7.m7.1.1.1"></times><apply id="S3.SS1.p1.7.m7.1.1.2.cmml" xref="S3.SS1.p1.7.m7.1.1.2"><divide id="S3.SS1.p1.7.m7.1.1.2.1.cmml" xref="S3.SS1.p1.7.m7.1.1.2"></divide><ci id="S3.SS1.p1.7.m7.1.1.2.2.cmml" xref="S3.SS1.p1.7.m7.1.1.2.2">𝐻</ci><cn type="integer" id="S3.SS1.p1.7.m7.1.1.2.3.cmml" xref="S3.SS1.p1.7.m7.1.1.2.3">16</cn></apply><apply id="S3.SS1.p1.7.m7.1.1.3.cmml" xref="S3.SS1.p1.7.m7.1.1.3"><divide id="S3.SS1.p1.7.m7.1.1.3.1.cmml" xref="S3.SS1.p1.7.m7.1.1.3"></divide><ci id="S3.SS1.p1.7.m7.1.1.3.2.cmml" xref="S3.SS1.p1.7.m7.1.1.3.2">𝑊</ci><cn type="integer" id="S3.SS1.p1.7.m7.1.1.3.3.cmml" xref="S3.SS1.p1.7.m7.1.1.3.3">16</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.7.m7.1c">\frac{H}{16}\times\frac{W}{16}</annotation></semantics></math> and <math id="S3.SS1.p1.8.m8.1" class="ltx_Math" alttext="\frac{H}{32}\times\frac{W}{32}" display="inline"><semantics id="S3.SS1.p1.8.m8.1a"><mrow id="S3.SS1.p1.8.m8.1.1" xref="S3.SS1.p1.8.m8.1.1.cmml"><mfrac id="S3.SS1.p1.8.m8.1.1.2" xref="S3.SS1.p1.8.m8.1.1.2.cmml"><mi id="S3.SS1.p1.8.m8.1.1.2.2" xref="S3.SS1.p1.8.m8.1.1.2.2.cmml">H</mi><mn id="S3.SS1.p1.8.m8.1.1.2.3" xref="S3.SS1.p1.8.m8.1.1.2.3.cmml">32</mn></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.8.m8.1.1.1" xref="S3.SS1.p1.8.m8.1.1.1.cmml">×</mo><mfrac id="S3.SS1.p1.8.m8.1.1.3" xref="S3.SS1.p1.8.m8.1.1.3.cmml"><mi id="S3.SS1.p1.8.m8.1.1.3.2" xref="S3.SS1.p1.8.m8.1.1.3.2.cmml">W</mi><mn id="S3.SS1.p1.8.m8.1.1.3.3" xref="S3.SS1.p1.8.m8.1.1.3.3.cmml">32</mn></mfrac></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.8.m8.1b"><apply id="S3.SS1.p1.8.m8.1.1.cmml" xref="S3.SS1.p1.8.m8.1.1"><times id="S3.SS1.p1.8.m8.1.1.1.cmml" xref="S3.SS1.p1.8.m8.1.1.1"></times><apply id="S3.SS1.p1.8.m8.1.1.2.cmml" xref="S3.SS1.p1.8.m8.1.1.2"><divide id="S3.SS1.p1.8.m8.1.1.2.1.cmml" xref="S3.SS1.p1.8.m8.1.1.2"></divide><ci id="S3.SS1.p1.8.m8.1.1.2.2.cmml" xref="S3.SS1.p1.8.m8.1.1.2.2">𝐻</ci><cn type="integer" id="S3.SS1.p1.8.m8.1.1.2.3.cmml" xref="S3.SS1.p1.8.m8.1.1.2.3">32</cn></apply><apply id="S3.SS1.p1.8.m8.1.1.3.cmml" xref="S3.SS1.p1.8.m8.1.1.3"><divide id="S3.SS1.p1.8.m8.1.1.3.1.cmml" xref="S3.SS1.p1.8.m8.1.1.3"></divide><ci id="S3.SS1.p1.8.m8.1.1.3.2.cmml" xref="S3.SS1.p1.8.m8.1.1.3.2">𝑊</ci><cn type="integer" id="S3.SS1.p1.8.m8.1.1.3.3.cmml" xref="S3.SS1.p1.8.m8.1.1.3.3">32</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.8.m8.1c">\frac{H}{32}\times\frac{W}{32}</annotation></semantics></math>, respectively.</p>
+</div>
+<div id="S3.SS1.p2" class="ltx_para">
+<p id="S3.SS1.p2.1" class="ltx_p">The proposed transformer block is derived from the original swin transformer block <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>. It consists of LayerNorm (LN) layer, multi-head self-attention layer, 2-layer multilayer perception with Gaussian Error Linear Unit (GELU), and residual connection structure. More importantly, the standard multi-head self-attention layer is replaced by window-based multi-head self-attention (W-MSA) and shifted window-based multi-head self-attention (SW-MSA), respectively, as shown in Fig. <a href="#S2.F2" title="Figure 2 ‣ 2.1 . Human Pose Estimation ‣ 2 . Related Work ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<div id="S3.SS1.p3" class="ltx_para">
+<p id="S3.SS1.p3.1" class="ltx_p">After extracting features from the vanilla Swin-Pose transformer backbone, a heatmap regression layer is applied to estimate the locations of all keypoints.
+This vanilla Swin-Pose structure was trained initially without the pre-trained model of ImageNet. Surprisingly, our experiments obtained weak <math id="S3.SS1.p3.1.m1.1" class="ltx_Math" alttext="AP" display="inline"><semantics id="S3.SS1.p3.1.m1.1a"><mrow id="S3.SS1.p3.1.m1.1.1" xref="S3.SS1.p3.1.m1.1.1.cmml"><mi id="S3.SS1.p3.1.m1.1.1.2" xref="S3.SS1.p3.1.m1.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S3.SS1.p3.1.m1.1.1.1" xref="S3.SS1.p3.1.m1.1.1.1.cmml">​</mo><mi id="S3.SS1.p3.1.m1.1.1.3" xref="S3.SS1.p3.1.m1.1.1.3.cmml">P</mi></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p3.1.m1.1b"><apply id="S3.SS1.p3.1.m1.1.1.cmml" xref="S3.SS1.p3.1.m1.1.1"><times id="S3.SS1.p3.1.m1.1.1.1.cmml" xref="S3.SS1.p3.1.m1.1.1.1"></times><ci id="S3.SS1.p3.1.m1.1.1.2.cmml" xref="S3.SS1.p3.1.m1.1.1.2">𝐴</ci><ci id="S3.SS1.p3.1.m1.1.1.3.cmml" xref="S3.SS1.p3.1.m1.1.1.3">𝑃</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p3.1.m1.1c">AP</annotation></semantics></math> about 18% lower than previously reported models. This result may be explained by the fact that transformer requires a large scale dataset to achieve competitive performance. Although swin transformer has powerful performance in extracting features from the connections of the patches from different locations, the human pose estimation task heavily depends on the local features near each keypoint. To improve the local feature extraction performance of the Swin-Pose Transformer Module, we propose a feature fusion module before the heatmap regression layer, whose details are explained in the following subsection.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Feature Fusion Module</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.5" class="ltx_p">There are 4 stages in the structure of Swin Transformer, and the size of the output are <math id="S3.SS2.p1.1.m1.4" class="ltx_Math" alttext="\frac{H}{4}\times\frac{W}{4},\frac{H}{8}\times\frac{W}{8},\frac{H}{16}\times\frac{W}{16},\frac{H}{32}\times\frac{W}{32}" display="inline"><semantics id="S3.SS2.p1.1.m1.4a"><mrow id="S3.SS2.p1.1.m1.4.4.4" xref="S3.SS2.p1.1.m1.4.4.5.cmml"><mrow id="S3.SS2.p1.1.m1.1.1.1.1" xref="S3.SS2.p1.1.m1.1.1.1.1.cmml"><mfrac id="S3.SS2.p1.1.m1.1.1.1.1.2" xref="S3.SS2.p1.1.m1.1.1.1.1.2.cmml"><mi id="S3.SS2.p1.1.m1.1.1.1.1.2.2" xref="S3.SS2.p1.1.m1.1.1.1.1.2.2.cmml">H</mi><mn id="S3.SS2.p1.1.m1.1.1.1.1.2.3" xref="S3.SS2.p1.1.m1.1.1.1.1.2.3.cmml">4</mn></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p1.1.m1.1.1.1.1.1" xref="S3.SS2.p1.1.m1.1.1.1.1.1.cmml">×</mo><mfrac id="S3.SS2.p1.1.m1.1.1.1.1.3" xref="S3.SS2.p1.1.m1.1.1.1.1.3.cmml"><mi id="S3.SS2.p1.1.m1.1.1.1.1.3.2" xref="S3.SS2.p1.1.m1.1.1.1.1.3.2.cmml">W</mi><mn id="S3.SS2.p1.1.m1.1.1.1.1.3.3" xref="S3.SS2.p1.1.m1.1.1.1.1.3.3.cmml">4</mn></mfrac></mrow><mo id="S3.SS2.p1.1.m1.4.4.4.5" xref="S3.SS2.p1.1.m1.4.4.5.cmml">,</mo><mrow id="S3.SS2.p1.1.m1.2.2.2.2" xref="S3.SS2.p1.1.m1.2.2.2.2.cmml"><mfrac id="S3.SS2.p1.1.m1.2.2.2.2.2" xref="S3.SS2.p1.1.m1.2.2.2.2.2.cmml"><mi id="S3.SS2.p1.1.m1.2.2.2.2.2.2" xref="S3.SS2.p1.1.m1.2.2.2.2.2.2.cmml">H</mi><mn id="S3.SS2.p1.1.m1.2.2.2.2.2.3" xref="S3.SS2.p1.1.m1.2.2.2.2.2.3.cmml">8</mn></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p1.1.m1.2.2.2.2.1" xref="S3.SS2.p1.1.m1.2.2.2.2.1.cmml">×</mo><mfrac id="S3.SS2.p1.1.m1.2.2.2.2.3" xref="S3.SS2.p1.1.m1.2.2.2.2.3.cmml"><mi id="S3.SS2.p1.1.m1.2.2.2.2.3.2" xref="S3.SS2.p1.1.m1.2.2.2.2.3.2.cmml">W</mi><mn id="S3.SS2.p1.1.m1.2.2.2.2.3.3" xref="S3.SS2.p1.1.m1.2.2.2.2.3.3.cmml">8</mn></mfrac></mrow><mo id="S3.SS2.p1.1.m1.4.4.4.6" xref="S3.SS2.p1.1.m1.4.4.5.cmml">,</mo><mrow id="S3.SS2.p1.1.m1.3.3.3.3" xref="S3.SS2.p1.1.m1.3.3.3.3.cmml"><mfrac id="S3.SS2.p1.1.m1.3.3.3.3.2" xref="S3.SS2.p1.1.m1.3.3.3.3.2.cmml"><mi id="S3.SS2.p1.1.m1.3.3.3.3.2.2" xref="S3.SS2.p1.1.m1.3.3.3.3.2.2.cmml">H</mi><mn id="S3.SS2.p1.1.m1.3.3.3.3.2.3" xref="S3.SS2.p1.1.m1.3.3.3.3.2.3.cmml">16</mn></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p1.1.m1.3.3.3.3.1" xref="S3.SS2.p1.1.m1.3.3.3.3.1.cmml">×</mo><mfrac id="S3.SS2.p1.1.m1.3.3.3.3.3" xref="S3.SS2.p1.1.m1.3.3.3.3.3.cmml"><mi id="S3.SS2.p1.1.m1.3.3.3.3.3.2" xref="S3.SS2.p1.1.m1.3.3.3.3.3.2.cmml">W</mi><mn id="S3.SS2.p1.1.m1.3.3.3.3.3.3" xref="S3.SS2.p1.1.m1.3.3.3.3.3.3.cmml">16</mn></mfrac></mrow><mo id="S3.SS2.p1.1.m1.4.4.4.7" xref="S3.SS2.p1.1.m1.4.4.5.cmml">,</mo><mrow id="S3.SS2.p1.1.m1.4.4.4.4" xref="S3.SS2.p1.1.m1.4.4.4.4.cmml"><mfrac id="S3.SS2.p1.1.m1.4.4.4.4.2" xref="S3.SS2.p1.1.m1.4.4.4.4.2.cmml"><mi id="S3.SS2.p1.1.m1.4.4.4.4.2.2" xref="S3.SS2.p1.1.m1.4.4.4.4.2.2.cmml">H</mi><mn id="S3.SS2.p1.1.m1.4.4.4.4.2.3" xref="S3.SS2.p1.1.m1.4.4.4.4.2.3.cmml">32</mn></mfrac><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p1.1.m1.4.4.4.4.1" xref="S3.SS2.p1.1.m1.4.4.4.4.1.cmml">×</mo><mfrac id="S3.SS2.p1.1.m1.4.4.4.4.3" xref="S3.SS2.p1.1.m1.4.4.4.4.3.cmml"><mi id="S3.SS2.p1.1.m1.4.4.4.4.3.2" xref="S3.SS2.p1.1.m1.4.4.4.4.3.2.cmml">W</mi><mn id="S3.SS2.p1.1.m1.4.4.4.4.3.3" xref="S3.SS2.p1.1.m1.4.4.4.4.3.3.cmml">32</mn></mfrac></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.1.m1.4b"><list id="S3.SS2.p1.1.m1.4.4.5.cmml" xref="S3.SS2.p1.1.m1.4.4.4"><apply id="S3.SS2.p1.1.m1.1.1.1.1.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1"><times id="S3.SS2.p1.1.m1.1.1.1.1.1.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.1"></times><apply id="S3.SS2.p1.1.m1.1.1.1.1.2.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.2"><divide id="S3.SS2.p1.1.m1.1.1.1.1.2.1.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.2"></divide><ci id="S3.SS2.p1.1.m1.1.1.1.1.2.2.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.2.2">𝐻</ci><cn type="integer" id="S3.SS2.p1.1.m1.1.1.1.1.2.3.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.2.3">4</cn></apply><apply id="S3.SS2.p1.1.m1.1.1.1.1.3.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.3"><divide id="S3.SS2.p1.1.m1.1.1.1.1.3.1.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.3"></divide><ci id="S3.SS2.p1.1.m1.1.1.1.1.3.2.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.3.2">𝑊</ci><cn type="integer" id="S3.SS2.p1.1.m1.1.1.1.1.3.3.cmml" xref="S3.SS2.p1.1.m1.1.1.1.1.3.3">4</cn></apply></apply><apply id="S3.SS2.p1.1.m1.2.2.2.2.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2"><times id="S3.SS2.p1.1.m1.2.2.2.2.1.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.1"></times><apply id="S3.SS2.p1.1.m1.2.2.2.2.2.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.2"><divide id="S3.SS2.p1.1.m1.2.2.2.2.2.1.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.2"></divide><ci id="S3.SS2.p1.1.m1.2.2.2.2.2.2.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.2.2">𝐻</ci><cn type="integer" id="S3.SS2.p1.1.m1.2.2.2.2.2.3.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.2.3">8</cn></apply><apply id="S3.SS2.p1.1.m1.2.2.2.2.3.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.3"><divide id="S3.SS2.p1.1.m1.2.2.2.2.3.1.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.3"></divide><ci id="S3.SS2.p1.1.m1.2.2.2.2.3.2.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.3.2">𝑊</ci><cn type="integer" id="S3.SS2.p1.1.m1.2.2.2.2.3.3.cmml" xref="S3.SS2.p1.1.m1.2.2.2.2.3.3">8</cn></apply></apply><apply id="S3.SS2.p1.1.m1.3.3.3.3.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3"><times id="S3.SS2.p1.1.m1.3.3.3.3.1.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.1"></times><apply id="S3.SS2.p1.1.m1.3.3.3.3.2.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.2"><divide id="S3.SS2.p1.1.m1.3.3.3.3.2.1.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.2"></divide><ci id="S3.SS2.p1.1.m1.3.3.3.3.2.2.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.2.2">𝐻</ci><cn type="integer" id="S3.SS2.p1.1.m1.3.3.3.3.2.3.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.2.3">16</cn></apply><apply id="S3.SS2.p1.1.m1.3.3.3.3.3.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.3"><divide id="S3.SS2.p1.1.m1.3.3.3.3.3.1.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.3"></divide><ci id="S3.SS2.p1.1.m1.3.3.3.3.3.2.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.3.2">𝑊</ci><cn type="integer" id="S3.SS2.p1.1.m1.3.3.3.3.3.3.cmml" xref="S3.SS2.p1.1.m1.3.3.3.3.3.3">16</cn></apply></apply><apply id="S3.SS2.p1.1.m1.4.4.4.4.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4"><times id="S3.SS2.p1.1.m1.4.4.4.4.1.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.1"></times><apply id="S3.SS2.p1.1.m1.4.4.4.4.2.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.2"><divide id="S3.SS2.p1.1.m1.4.4.4.4.2.1.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.2"></divide><ci id="S3.SS2.p1.1.m1.4.4.4.4.2.2.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.2.2">𝐻</ci><cn type="integer" id="S3.SS2.p1.1.m1.4.4.4.4.2.3.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.2.3">32</cn></apply><apply id="S3.SS2.p1.1.m1.4.4.4.4.3.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.3"><divide id="S3.SS2.p1.1.m1.4.4.4.4.3.1.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.3"></divide><ci id="S3.SS2.p1.1.m1.4.4.4.4.3.2.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.3.2">𝑊</ci><cn type="integer" id="S3.SS2.p1.1.m1.4.4.4.4.3.3.cmml" xref="S3.SS2.p1.1.m1.4.4.4.4.3.3">32</cn></apply></apply></list></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.1.m1.4c">\frac{H}{4}\times\frac{W}{4},\frac{H}{8}\times\frac{W}{8},\frac{H}{16}\times\frac{W}{16},\frac{H}{32}\times\frac{W}{32}</annotation></semantics></math>, respectively, where <math id="S3.SS2.p1.2.m2.1" class="ltx_Math" alttext="H" display="inline"><semantics id="S3.SS2.p1.2.m2.1a"><mi id="S3.SS2.p1.2.m2.1.1" xref="S3.SS2.p1.2.m2.1.1.cmml">H</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.2.m2.1b"><ci id="S3.SS2.p1.2.m2.1.1.cmml" xref="S3.SS2.p1.2.m2.1.1">𝐻</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.2.m2.1c">H</annotation></semantics></math> and <math id="S3.SS2.p1.3.m3.1" class="ltx_Math" alttext="W" display="inline"><semantics id="S3.SS2.p1.3.m3.1a"><mi id="S3.SS2.p1.3.m3.1.1" xref="S3.SS2.p1.3.m3.1.1.cmml">W</mi><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.3.m3.1b"><ci id="S3.SS2.p1.3.m3.1.1.cmml" xref="S3.SS2.p1.3.m3.1.1">𝑊</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.3.m3.1c">W</annotation></semantics></math> are the height and width of the input image.
+In order to avoid situations where the model overfits to a specific scale and loses its generalization, we use top-down pathway and lateral connections to fuse the feature maps from different resolution levels and combine outputs of different resolutions and semantic information, as shown in Fig. <a href="#S3.F3" title="Figure 3 ‣ 3 Methodology ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>. During the fusion procedure, a <math id="S3.SS2.p1.4.m4.1" class="ltx_Math" alttext="1\times 1" display="inline"><semantics id="S3.SS2.p1.4.m4.1a"><mrow id="S3.SS2.p1.4.m4.1.1" xref="S3.SS2.p1.4.m4.1.1.cmml"><mn id="S3.SS2.p1.4.m4.1.1.2" xref="S3.SS2.p1.4.m4.1.1.2.cmml">1</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.p1.4.m4.1.1.1" xref="S3.SS2.p1.4.m4.1.1.1.cmml">×</mo><mn id="S3.SS2.p1.4.m4.1.1.3" xref="S3.SS2.p1.4.m4.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.p1.4.m4.1b"><apply id="S3.SS2.p1.4.m4.1.1.cmml" xref="S3.SS2.p1.4.m4.1.1"><times id="S3.SS2.p1.4.m4.1.1.1.cmml" xref="S3.SS2.p1.4.m4.1.1.1"></times><cn type="integer" id="S3.SS2.p1.4.m4.1.1.2.cmml" xref="S3.SS2.p1.4.m4.1.1.2">1</cn><cn type="integer" id="S3.SS2.p1.4.m4.1.1.3.cmml" xref="S3.SS2.p1.4.m4.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.p1.4.m4.1c">1\times 1</annotation></semantics></math> convolution is first used to change the channels of the output from the upper stage. Then a bi-linear up sampling is used to change the resolution while maintaining the number of channels, so both channels and resolution will match the output from the lower stage extracted through the lateral connection. Then we put them together, repeat the procedure of <math id="S3.SS2.p1.5.m5.1" class="ltx_math_unparsed" alttext="1\times" display="inline"><semantics id="S3.SS2.p1.5.m5.1a"><mrow id="S3.SS2.p1.5.m5.1b"><mn id="S3.SS2.p1.5.m5.1.1">1</mn><mo lspace="0.222em" id="S3.SS2.p1.5.m5.1.2">×</mo></mrow><annotation encoding="application/x-tex" id="S3.SS2.p1.5.m5.1c">1\times</annotation></semantics></math>1 and up sampling twice, get the final output with the highest resolution, and use it for the next step of heatmap regression.</p>
+</div>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">As shown in Fig. <a href="#S3.F4" title="Figure 4 ‣ 3.2 Feature Fusion Module ‣ 3 Methodology ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, we adopt two different methods to examine the effects of multi-scale feature fusion. Method A is the element-wise sum. It generates the new features from the summation operation of the original features, but a little information of the original features will be lost during the process. Method B concatenates those feature maps by splicing each feature map directly along the direction of the channel, thus all information will be kept.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2201.07384/assets/fig/sumvsconcat.jpg" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_square" width="240" height="232" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Feature Fusion Details.</figcaption>
+</figure>
+<figure id="S3.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering" style="font-size:70%;"><span class="ltx_tag ltx_tag_table">Table 1: </span>Comparison on the COCO validation set.</figcaption>
+<div id="S3.T1.6" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:433.6pt;height:215.1pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-82.5pt,40.9pt) scale(0.724351305637103,0.724351305637103) ;">
+<table id="S3.T1.6.6" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T1.6.6.6" class="ltx_tr">
+<td id="S3.T1.6.6.6.7" class="ltx_td ltx_align_left ltx_border_r ltx_border_tt"><span id="S3.T1.6.6.6.7.1" class="ltx_text" style="font-size:70%;">Method</span></td>
+<td id="S3.T1.6.6.6.8" class="ltx_td ltx_align_left ltx_border_r ltx_border_tt"><span id="S3.T1.6.6.6.8.1" class="ltx_text" style="font-size:70%;">Backbone</span></td>
+<td id="S3.T1.6.6.6.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T1.6.6.6.9.1" class="ltx_text" style="font-size:70%;">Pretrain</span></td>
+<td id="S3.T1.6.6.6.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T1.6.6.6.10.1" class="ltx_text" style="font-size:70%;">Input size</span></td>
+<td id="S3.T1.6.6.6.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T1.6.6.6.11.1" class="ltx_text" style="font-size:70%;">#Params</span></td>
+<td id="S3.T1.6.6.6.12" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S3.T1.6.6.6.12.1" class="ltx_text" style="font-size:70%;">GFLOPs</span></td>
+<td id="S3.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_border_tt"><math id="S3.T1.1.1.1.1.m1.1" class="ltx_Math" alttext="\mathrm{AP}" display="inline"><semantics id="S3.T1.1.1.1.1.m1.1a"><mi mathsize="70%" id="S3.T1.1.1.1.1.m1.1.1" xref="S3.T1.1.1.1.1.m1.1.1.cmml">AP</mi><annotation-xml encoding="MathML-Content" id="S3.T1.1.1.1.1.m1.1b"><ci id="S3.T1.1.1.1.1.m1.1.1.cmml" xref="S3.T1.1.1.1.1.m1.1.1">AP</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.1.1.1.1.m1.1c">\mathrm{AP}</annotation></semantics></math></td>
+<td id="S3.T1.2.2.2.2" class="ltx_td ltx_align_center ltx_border_tt"><math id="S3.T1.2.2.2.2.m1.1" class="ltx_Math" alttext="\mathrm{AP}^{50}" display="inline"><semantics id="S3.T1.2.2.2.2.m1.1a"><msup id="S3.T1.2.2.2.2.m1.1.1" xref="S3.T1.2.2.2.2.m1.1.1.cmml"><mi mathsize="70%" id="S3.T1.2.2.2.2.m1.1.1.2" xref="S3.T1.2.2.2.2.m1.1.1.2.cmml">AP</mi><mn mathsize="70%" id="S3.T1.2.2.2.2.m1.1.1.3" xref="S3.T1.2.2.2.2.m1.1.1.3.cmml">50</mn></msup><annotation-xml encoding="MathML-Content" id="S3.T1.2.2.2.2.m1.1b"><apply id="S3.T1.2.2.2.2.m1.1.1.cmml" xref="S3.T1.2.2.2.2.m1.1.1"><csymbol cd="ambiguous" id="S3.T1.2.2.2.2.m1.1.1.1.cmml" xref="S3.T1.2.2.2.2.m1.1.1">superscript</csymbol><ci id="S3.T1.2.2.2.2.m1.1.1.2.cmml" xref="S3.T1.2.2.2.2.m1.1.1.2">AP</ci><cn type="integer" id="S3.T1.2.2.2.2.m1.1.1.3.cmml" xref="S3.T1.2.2.2.2.m1.1.1.3">50</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.2.2.2.2.m1.1c">\mathrm{AP}^{50}</annotation></semantics></math></td>
+<td id="S3.T1.3.3.3.3" class="ltx_td ltx_align_center ltx_border_tt"><math id="S3.T1.3.3.3.3.m1.1" class="ltx_Math" alttext="\mathrm{AP}^{75}" display="inline"><semantics id="S3.T1.3.3.3.3.m1.1a"><msup id="S3.T1.3.3.3.3.m1.1.1" xref="S3.T1.3.3.3.3.m1.1.1.cmml"><mi mathsize="70%" id="S3.T1.3.3.3.3.m1.1.1.2" xref="S3.T1.3.3.3.3.m1.1.1.2.cmml">AP</mi><mn mathsize="70%" id="S3.T1.3.3.3.3.m1.1.1.3" xref="S3.T1.3.3.3.3.m1.1.1.3.cmml">75</mn></msup><annotation-xml encoding="MathML-Content" id="S3.T1.3.3.3.3.m1.1b"><apply id="S3.T1.3.3.3.3.m1.1.1.cmml" xref="S3.T1.3.3.3.3.m1.1.1"><csymbol cd="ambiguous" id="S3.T1.3.3.3.3.m1.1.1.1.cmml" xref="S3.T1.3.3.3.3.m1.1.1">superscript</csymbol><ci id="S3.T1.3.3.3.3.m1.1.1.2.cmml" xref="S3.T1.3.3.3.3.m1.1.1.2">AP</ci><cn type="integer" id="S3.T1.3.3.3.3.m1.1.1.3.cmml" xref="S3.T1.3.3.3.3.m1.1.1.3">75</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.3.3.3.3.m1.1c">\mathrm{AP}^{75}</annotation></semantics></math></td>
+<td id="S3.T1.4.4.4.4" class="ltx_td ltx_align_center ltx_border_tt"><math id="S3.T1.4.4.4.4.m1.1" class="ltx_Math" alttext="\mathrm{AP}^{M}" display="inline"><semantics id="S3.T1.4.4.4.4.m1.1a"><msup id="S3.T1.4.4.4.4.m1.1.1" xref="S3.T1.4.4.4.4.m1.1.1.cmml"><mi mathsize="70%" id="S3.T1.4.4.4.4.m1.1.1.2" xref="S3.T1.4.4.4.4.m1.1.1.2.cmml">AP</mi><mi mathsize="70%" id="S3.T1.4.4.4.4.m1.1.1.3" xref="S3.T1.4.4.4.4.m1.1.1.3.cmml">M</mi></msup><annotation-xml encoding="MathML-Content" id="S3.T1.4.4.4.4.m1.1b"><apply id="S3.T1.4.4.4.4.m1.1.1.cmml" xref="S3.T1.4.4.4.4.m1.1.1"><csymbol cd="ambiguous" id="S3.T1.4.4.4.4.m1.1.1.1.cmml" xref="S3.T1.4.4.4.4.m1.1.1">superscript</csymbol><ci id="S3.T1.4.4.4.4.m1.1.1.2.cmml" xref="S3.T1.4.4.4.4.m1.1.1.2">AP</ci><ci id="S3.T1.4.4.4.4.m1.1.1.3.cmml" xref="S3.T1.4.4.4.4.m1.1.1.3">𝑀</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.4.4.4.4.m1.1c">\mathrm{AP}^{M}</annotation></semantics></math></td>
+<td id="S3.T1.5.5.5.5" class="ltx_td ltx_align_center ltx_border_tt"><math id="S3.T1.5.5.5.5.m1.1" class="ltx_Math" alttext="\mathrm{AP}^{L}" display="inline"><semantics id="S3.T1.5.5.5.5.m1.1a"><msup id="S3.T1.5.5.5.5.m1.1.1" xref="S3.T1.5.5.5.5.m1.1.1.cmml"><mi mathsize="70%" id="S3.T1.5.5.5.5.m1.1.1.2" xref="S3.T1.5.5.5.5.m1.1.1.2.cmml">AP</mi><mi mathsize="70%" id="S3.T1.5.5.5.5.m1.1.1.3" xref="S3.T1.5.5.5.5.m1.1.1.3.cmml">L</mi></msup><annotation-xml encoding="MathML-Content" id="S3.T1.5.5.5.5.m1.1b"><apply id="S3.T1.5.5.5.5.m1.1.1.cmml" xref="S3.T1.5.5.5.5.m1.1.1"><csymbol cd="ambiguous" id="S3.T1.5.5.5.5.m1.1.1.1.cmml" xref="S3.T1.5.5.5.5.m1.1.1">superscript</csymbol><ci id="S3.T1.5.5.5.5.m1.1.1.2.cmml" xref="S3.T1.5.5.5.5.m1.1.1.2">AP</ci><ci id="S3.T1.5.5.5.5.m1.1.1.3.cmml" xref="S3.T1.5.5.5.5.m1.1.1.3">𝐿</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.5.5.5.5.m1.1c">\mathrm{AP}^{L}</annotation></semantics></math></td>
+<td id="S3.T1.6.6.6.6" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt"><math id="S3.T1.6.6.6.6.m1.1" class="ltx_Math" alttext="\mathrm{AR}" display="inline"><semantics id="S3.T1.6.6.6.6.m1.1a"><mi mathsize="70%" id="S3.T1.6.6.6.6.m1.1.1" xref="S3.T1.6.6.6.6.m1.1.1.cmml">AR</mi><annotation-xml encoding="MathML-Content" id="S3.T1.6.6.6.6.m1.1b"><ci id="S3.T1.6.6.6.6.m1.1.1.cmml" xref="S3.T1.6.6.6.6.m1.1.1">AR</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.6.6.6.6.m1.1c">\mathrm{AR}</annotation></semantics></math></td>
+</tr>
+<tr id="S3.T1.6.6.7.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.7.1.1.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.1.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.7.1.1.1.1.1.1" class="ltx_text" style="font-size:70%;">8-stage Hourglass</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.7.1.1.1.1.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib14" title="" class="ltx_ref">14</a><span id="S3.T1.6.6.7.1.1.1.1.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.7.1.1.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.7.1.1.1.2.1.1" class="ltx_text" style="font-size:70%;">CPN</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.7.1.1.1.2.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib1" title="" class="ltx_ref">1</a><span id="S3.T1.6.6.7.1.1.1.2.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.7.1.1.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.1.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.7.1.1.1.3.1.1" class="ltx_text" style="font-size:70%;">CPN + OHKM</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.7.1.1.1.3.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib1" title="" class="ltx_ref">1</a><span id="S3.T1.6.6.7.1.1.1.3.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.7.1.1.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.1.1.4.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.7.1.1.1.4.1.1" class="ltx_text" style="font-size:70%;">SimpleBaseline</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.7.1.1.1.4.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib20" title="" class="ltx_ref">20</a><span id="S3.T1.6.6.7.1.1.1.4.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.7.1.1.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.1.1.5.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.7.1.1.1.5.1.1" class="ltx_text" style="font-size:70%;">SimpleBaseline</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.7.1.1.1.5.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib20" title="" class="ltx_ref">20</a><span id="S3.T1.6.6.7.1.1.1.5.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.7.1.1.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.1.1.6.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.7.1.1.1.6.1.1" class="ltx_text" style="font-size:70%;">SimpleBaseline</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.7.1.1.1.6.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib20" title="" class="ltx_ref">20</a><span id="S3.T1.6.6.7.1.1.1.6.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.7.1.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.2.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.2.1.1.1.1" class="ltx_text" style="font-size:70%;">8-stage Hourglass</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.2.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.2.1.2.1.1" class="ltx_text" style="font-size:70%;">ResNet-50</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.2.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.2.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.2.1.3.1.1" class="ltx_text" style="font-size:70%;">ResNet-50</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.2.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.2.1.4.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.2.1.4.1.1" class="ltx_text" style="font-size:70%;">ResNet-50</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.2.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.2.1.5.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.2.1.5.1.1" class="ltx_text" style="font-size:70%;">ResNet-101</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.2.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.2.1.6.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.2.1.6.1.1" class="ltx_text" style="font-size:70%;">ResNet-152</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.7.1.3.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.3.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.3.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.3.1.1.1.1" class="ltx_text" style="font-size:70%;">N</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.3.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.3.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.3.1.2.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.3.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.3.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.3.1.3.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.3.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.3.1.4.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.3.1.4.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.3.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.3.1.5.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.3.1.5.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.3.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.3.1.6.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.3.1.6.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.7.1.4.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.4.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.4.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.4.1.1.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.4.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.4.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.4.1.2.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.4.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.4.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.4.1.3.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.4.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.4.1.4.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.4.1.4.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.4.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.4.1.5.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.4.1.5.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.4.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.4.1.6.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.4.1.6.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.7.1.5.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.5.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.5.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.5.1.1.1.1" class="ltx_text" style="font-size:70%;">25.1M</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.5.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.5.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.5.1.2.1.1" class="ltx_text" style="font-size:70%;">27.0M</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.5.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.5.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.5.1.3.1.1" class="ltx_text" style="font-size:70%;">27.0M</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.5.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.5.1.4.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.5.1.4.1.1" class="ltx_text" style="font-size:70%;">34.0M</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.5.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.5.1.5.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.5.1.5.1.1" class="ltx_text" style="font-size:70%;">53.0M</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.5.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.5.1.6.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.5.1.6.1.1" class="ltx_text" style="font-size:70%;">68.6M</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.7.1.6.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.6.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.6.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.6.1.1.1.1" class="ltx_text" style="font-size:70%;">14.3</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.6.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.6.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.6.1.2.1.1" class="ltx_text" style="font-size:70%;">6.20</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.6.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.6.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.6.1.3.1.1" class="ltx_text" style="font-size:70%;">6.20</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.6.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.6.1.4.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.6.1.4.1.1" class="ltx_text" style="font-size:70%;">8.90</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.6.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.6.1.5.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.6.1.5.1.1" class="ltx_text" style="font-size:70%;">12.4</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.6.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.6.1.6.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.6.1.6.1.1" class="ltx_text" style="font-size:70%;">15.7</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.7" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.7.1.7.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.7.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.7.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.7.1.1.1.1" class="ltx_text" style="font-size:70%;">66.9</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.7.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.7.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.7.1.2.1.1" class="ltx_text" style="font-size:70%;">68.6</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.7.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.7.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.7.1.3.1.1" class="ltx_text" style="font-size:70%;">69.4</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.7.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.7.1.4.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.7.1.4.1.1" class="ltx_text" style="font-size:70%;">70.4</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.7.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.7.1.5.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.7.1.5.1.1" class="ltx_text" style="font-size:70%;">71.4</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.7.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.7.1.6.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.7.1.7.1.6.1.1" class="ltx_text" style="font-size:70%;">72.0</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.8" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.7.1.8.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.8.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.8.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.8.1.1.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.8.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.8.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.8.1.2.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.8.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.8.1.3.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.8.1.3.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.8.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.8.1.4.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.8.1.4.1.1" class="ltx_text" style="font-size:70%;">88.6</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.8.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.8.1.5.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.8.1.5.1.1" class="ltx_text" style="font-size:70%;">89.3</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.8.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.8.1.6.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.8.1.6.1.1" class="ltx_text" style="font-size:70%;">89.3</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.9" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.7.1.9.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.9.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.9.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.9.1.1.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.9.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.9.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.9.1.2.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.9.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.9.1.3.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.9.1.3.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.9.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.9.1.4.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.9.1.4.1.1" class="ltx_text" style="font-size:70%;">78.3</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.9.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.9.1.5.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.9.1.5.1.1" class="ltx_text" style="font-size:70%;">79.3</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.9.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.9.1.6.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.9.1.6.1.1" class="ltx_text" style="font-size:70%;">79.8</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.10" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.7.1.10.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.10.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.10.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.10.1.1.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.10.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.10.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.10.1.2.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.10.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.10.1.3.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.10.1.3.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.10.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.10.1.4.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.10.1.4.1.1" class="ltx_text" style="font-size:70%;">67.1</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.10.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.10.1.5.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.10.1.5.1.1" class="ltx_text" style="font-size:70%;">68.1</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.10.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.10.1.6.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.10.1.6.1.1" class="ltx_text" style="font-size:70%;">68.7</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.11" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.7.1.11.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.11.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.11.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.11.1.1.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.11.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.11.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.11.1.2.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.11.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.11.1.3.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.11.1.3.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.11.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.11.1.4.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.11.1.4.1.1" class="ltx_text" style="font-size:70%;">77.2</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.11.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.11.1.5.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.11.1.5.1.1" class="ltx_text" style="font-size:70%;">78.1</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.11.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.11.1.6.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.11.1.6.1.1" class="ltx_text" style="font-size:70%;">78.9</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.7.1.12" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.7.1.12.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.7.1.12.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.12.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.12.1.1.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.12.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.12.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.12.1.2.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.12.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.12.1.3.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.12.1.3.1.1" class="ltx_text" style="font-size:70%;">–</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.12.1.4" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.12.1.4.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.12.1.4.1.1" class="ltx_text" style="font-size:70%;">76.3</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.12.1.5" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.12.1.5.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.12.1.5.1.1" class="ltx_text" style="font-size:70%;">77.1</span></td>
+</tr>
+<tr id="S3.T1.6.6.7.1.12.1.6" class="ltx_tr">
+<td id="S3.T1.6.6.7.1.12.1.6.1" class="ltx_td ltx_nopad_r ltx_align_center"><span id="S3.T1.6.6.7.1.12.1.6.1.1" class="ltx_text" style="font-size:70%;">77.8</span></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr id="S3.T1.6.6.8.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.8.2.1.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.1.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.8.2.1.1.1.1.1" class="ltx_text" style="font-size:70%;">HRNet-W32</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.8.2.1.1.1.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib18" title="" class="ltx_ref">18</a><span id="S3.T1.6.6.8.2.1.1.1.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.8.2.1.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.8.2.1.1.2.1.1" class="ltx_text" style="font-size:70%;">HRNet-W32</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.8.2.1.1.2.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib18" title="" class="ltx_ref">18</a><span id="S3.T1.6.6.8.2.1.1.2.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.8.2.1.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.1.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.8.2.1.1.3.1.1" class="ltx_text" style="font-size:70%;">HRNet-W48</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.8.2.1.1.3.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib18" title="" class="ltx_ref">18</a><span id="S3.T1.6.6.8.2.1.1.3.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.8.2.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.2.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.2.1.1.1.1" class="ltx_text" style="font-size:70%;">HRNet-W32</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.2.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.2.1.2.1.1" class="ltx_text" style="font-size:70%;">HRNet-W32</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.2.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.2.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.2.1.3.1.1" class="ltx_text" style="font-size:70%;">HRNet-W48</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.8.2.3.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.3.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.3.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.3.1.1.1.1" class="ltx_text" style="font-size:70%;">N</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.3.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.3.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.3.1.2.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.3.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.3.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.3.1.3.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.8.2.4.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.4.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.4.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.4.1.1.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.4.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.4.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.4.1.2.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.4.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.4.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.4.1.3.1.1" class="ltx_text" style="font-size:70%;">256 × 192</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.8.2.5.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.5.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.5.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.5.1.1.1.1" class="ltx_text" style="font-size:70%;">28.5M</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.5.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.5.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.5.1.2.1.1" class="ltx_text" style="font-size:70%;">28.5M</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.5.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.5.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.5.1.3.1.1" class="ltx_text" style="font-size:70%;">63.6M</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.8.2.6.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.6.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.6.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.6.1.1.1.1" class="ltx_text" style="font-size:70%;">7.10</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.6.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.6.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.6.1.2.1.1" class="ltx_text" style="font-size:70%;">7.10</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.6.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.6.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.6.1.3.1.1" class="ltx_text" style="font-size:70%;">14.6</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.7" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.8.2.7.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.7.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.7.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.7.1.1.1.1" class="ltx_text" style="font-size:70%;">73.4</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.7.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.7.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.7.1.2.1.1" class="ltx_text" style="font-size:70%;">74.4</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.7.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.7.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.7.1.3.1.1" class="ltx_text" style="font-size:70%;">75.1</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.8" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.8.2.8.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.8.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.8.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.8.1.1.1.1" class="ltx_text" style="font-size:70%;">89.5</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.8.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.8.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.8.1.2.1.1" class="ltx_text" style="font-size:70%;">90.5</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.8.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.8.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.8.1.3.1.1" class="ltx_text" style="font-size:70%;">90.6</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.9" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.8.2.9.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.9.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.9.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.9.1.1.1.1" class="ltx_text" style="font-size:70%;">80.7</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.9.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.9.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.9.1.2.1.1" class="ltx_text" style="font-size:70%;">81.9</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.9.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.9.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.9.1.3.1.1" class="ltx_text" style="font-size:70%;">82.2</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.10" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.8.2.10.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.10.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.10.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.10.1.1.1.1" class="ltx_text" style="font-size:70%;">70.2</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.10.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.10.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.10.1.2.1.1" class="ltx_text" style="font-size:70%;">70.8</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.10.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.10.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.10.1.3.1.1" class="ltx_text" style="font-size:70%;">71.5</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.11" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.8.2.11.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.11.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.11.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.11.1.1.1.1" class="ltx_text" style="font-size:70%;">80.1</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.11.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.11.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.11.1.2.1.1" class="ltx_text" style="font-size:70%;">81.0</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.11.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.11.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.11.1.3.1.1" class="ltx_text" style="font-size:70%;">81.8</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.8.2.12" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.8.2.12.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.8.2.12.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.12.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.12.1.1.1.1" class="ltx_text" style="font-size:70%;">78.9</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.12.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.12.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.12.1.2.1.1" class="ltx_text" style="font-size:70%;">79.8</span></td>
+</tr>
+<tr id="S3.T1.6.6.8.2.12.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.8.2.12.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.8.2.12.1.3.1.1" class="ltx_text" style="font-size:70%;">80.4</span></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr id="S3.T1.6.6.9.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.9.3.1.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.1.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.9.3.1.1.1.1.1" class="ltx_text" style="font-size:70%;">SimpleBaseline</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.9.3.1.1.1.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib20" title="" class="ltx_ref">20</a><span id="S3.T1.6.6.9.3.1.1.1.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.9.3.1.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.1.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.9.3.1.1.2.1.1" class="ltx_text" style="font-size:70%;">HRNet-W32</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.9.3.1.1.2.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib18" title="" class="ltx_ref">18</a><span id="S3.T1.6.6.9.3.1.1.2.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+<tr id="S3.T1.6.6.9.3.1.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.1.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left">
+<span id="S3.T1.6.6.9.3.1.1.3.1.1" class="ltx_text" style="font-size:70%;">HRNet-W48</span><cite class="ltx_cite ltx_citemacro_cite"><span id="S3.T1.6.6.9.3.1.1.3.1.2.1" class="ltx_text" style="font-size:70%;">[</span><a href="#bib.bib18" title="" class="ltx_ref">18</a><span id="S3.T1.6.6.9.3.1.1.3.1.3.2" class="ltx_text" style="font-size:70%;">]</span></cite>
+</td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.9.3.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.2.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.2.1.1.1.1" class="ltx_text" style="font-size:70%;">ResNet-152</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.2.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.2.1.2.1.1" class="ltx_text" style="font-size:70%;">HRNet-W32</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.2.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.2.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.2.1.3.1.1" class="ltx_text" style="font-size:70%;">HRNet-W48</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.9.3.3.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.3.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.3.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.3.1.1.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.3.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.3.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.3.1.2.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.3.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.3.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.3.1.3.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.9.3.4.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.4.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.4.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.4.1.1.1.1" class="ltx_text" style="font-size:70%;">384 × 288</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.4.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.4.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.4.1.2.1.1" class="ltx_text" style="font-size:70%;">384 × 288</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.4.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.4.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.4.1.3.1.1" class="ltx_text" style="font-size:70%;">384 × 288</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.9.3.5.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.5.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.5.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.5.1.1.1.1" class="ltx_text" style="font-size:70%;">68.6M</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.5.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.5.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.5.1.2.1.1" class="ltx_text" style="font-size:70%;">28.5M</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.5.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.5.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.5.1.3.1.1" class="ltx_text" style="font-size:70%;">63.6M</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.9.3.6.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.6.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.6.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.6.1.1.1.1" class="ltx_text" style="font-size:70%;">35.6</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.6.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.6.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.6.1.2.1.1" class="ltx_text" style="font-size:70%;">16.0</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.6.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.6.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.6.1.3.1.1" class="ltx_text" style="font-size:70%;">32.9</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.7" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.9.3.7.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.7.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.7.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.7.1.1.1.1" class="ltx_text" style="font-size:70%;">74.3</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.7.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.7.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.7.1.2.1.1" class="ltx_text" style="font-size:70%;">75.8</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.7.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.7.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.7.1.3.1.1" class="ltx_text" style="font-size:70%;">76.3</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.8" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.9.3.8.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.8.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.8.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.8.1.1.1.1" class="ltx_text" style="font-size:70%;">89.6</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.8.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.8.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.8.1.2.1.1" class="ltx_text" style="font-size:70%;">90.6</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.8.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.8.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.8.1.3.1.1" class="ltx_text" style="font-size:70%;">90.8</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.9" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.9.3.9.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.9.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.9.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.9.1.1.1.1" class="ltx_text" style="font-size:70%;">81.1</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.9.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.9.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.9.1.2.1.1" class="ltx_text" style="font-size:70%;">82.7</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.9.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.9.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.9.1.3.1.1" class="ltx_text" style="font-size:70%;">82.9</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.10" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.9.3.10.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.10.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.10.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.10.1.1.1.1" class="ltx_text" style="font-size:70%;">70.5</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.10.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.10.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.10.1.2.1.1" class="ltx_text" style="font-size:70%;">71.9</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.10.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.10.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.10.1.3.1.1" class="ltx_text" style="font-size:70%;">72.3</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.11" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.9.3.11.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.11.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.11.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.11.1.1.1.1" class="ltx_text" style="font-size:70%;">79.7</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.11.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.11.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.11.1.2.1.1" class="ltx_text" style="font-size:70%;">82.8</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.11.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.11.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.11.1.3.1.1" class="ltx_text" style="font-size:70%;">83.4</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.9.3.12" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.9.3.12.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.9.3.12.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.12.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.12.1.1.1.1" class="ltx_text" style="font-size:70%;">79.7</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.12.1.2" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.12.1.2.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.12.1.2.1.1" class="ltx_text" style="font-size:70%;">81.0</span></td>
+</tr>
+<tr id="S3.T1.6.6.9.3.12.1.3" class="ltx_tr">
+<td id="S3.T1.6.6.9.3.12.1.3.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.9.3.12.1.3.1.1" class="ltx_text" style="font-size:70%;">81.2</span></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr id="S3.T1.6.6.10.4" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.10.4.1.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.1.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.1.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.1.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">Ours</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.10.4.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.2.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.2.1.1.1.1" class="ltx_text" style="font-size:70%;">Swin-L with concatenation</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.10.4.3.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.3.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.3.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.3.1.1.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.10.4.4.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.4.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.4.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.4.1.1.1.1" class="ltx_text" style="font-size:70%;">384 × 384</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.10.4.5.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.5.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.5.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.5.1.1.1.1" class="ltx_text" style="font-size:70%;">197.9M</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<table id="S3.T1.6.6.10.4.6.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.6.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.6.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.6.1.1.1.1" class="ltx_text" style="font-size:70%;">204.5</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.7" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.10.4.7.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.7.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.7.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.7.1.1.1.1" class="ltx_text" style="font-size:70%;">76.2</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.8" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.10.4.8.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.8.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.8.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.8.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">93.4</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.9" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.10.4.9.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.9.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.9.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.9.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">83.3</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.10" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.10.4.10.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.10.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.10.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.10.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">72.6</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.11" class="ltx_td ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.10.4.11.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.11.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.11.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.11.1.1.1.1" class="ltx_text" style="font-size:70%;">81.5</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.10.4.12" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t">
+<table id="S3.T1.6.6.10.4.12.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.10.4.12.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.10.4.12.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.10.4.12.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">84.7</span></td>
+</tr>
+</table>
+</td>
+</tr>
+<tr id="S3.T1.6.6.11.5" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.1" class="ltx_td ltx_align_left ltx_border_bb ltx_border_r"></td>
+<td id="S3.T1.6.6.11.5.2" class="ltx_td ltx_align_left ltx_border_bb ltx_border_r">
+<table id="S3.T1.6.6.11.5.2.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.2.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.2.1.1.1.1" class="ltx_text" style="font-size:70%;">Swin-L with element-wise sum</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r">
+<table id="S3.T1.6.6.11.5.3.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.3.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.3.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.3.1.1.1.1" class="ltx_text" style="font-size:70%;">Y</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r">
+<table id="S3.T1.6.6.11.5.4.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.4.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.4.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.4.1.1.1.1" class="ltx_text" style="font-size:70%;">384 × 384</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r">
+<table id="S3.T1.6.6.11.5.5.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.5.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.5.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.5.1.1.1.1" class="ltx_text" style="font-size:70%;">196.4M</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.6" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r">
+<table id="S3.T1.6.6.11.5.6.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.6.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.6.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.6.1.1.1.1" class="ltx_text" style="font-size:70%;">202.6</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.7" class="ltx_td ltx_align_center ltx_border_bb">
+<table id="S3.T1.6.6.11.5.7.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.7.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.7.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.7.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">76.3</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.8" class="ltx_td ltx_align_center ltx_border_bb">
+<table id="S3.T1.6.6.11.5.8.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.8.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.8.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.8.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">93.5</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.9" class="ltx_td ltx_align_center ltx_border_bb">
+<table id="S3.T1.6.6.11.5.9.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.9.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.9.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.9.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">83.4</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.10" class="ltx_td ltx_align_center ltx_border_bb">
+<table id="S3.T1.6.6.11.5.10.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.10.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.10.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.10.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">72.5</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.11" class="ltx_td ltx_align_center ltx_border_bb">
+<table id="S3.T1.6.6.11.5.11.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.11.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.11.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.11.1.1.1.1" class="ltx_text" style="font-size:70%;">81.7</span></td>
+</tr>
+</table>
+</td>
+<td id="S3.T1.6.6.11.5.12" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb">
+<table id="S3.T1.6.6.11.5.12.1" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.6.6.11.5.12.1.1" class="ltx_tr">
+<td id="S3.T1.6.6.11.5.12.1.1.1" class="ltx_td ltx_nopad_r ltx_align_left"><span id="S3.T1.6.6.11.5.12.1.1.1.1" class="ltx_text ltx_font_bold" style="font-size:70%;">84.7</span></td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Analysis</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">We think transformer structure is more suitable for human pose estimation tasks than convolutional neural networks, as CNNs use fixed-size filters to extract features from input images. Thus, they usually only have a fixed-sized reception field and lack the ability to gain relationships between far apart pixels. However, getting this long-range dependence information is essential to human pose estimation tasks. It can help locate the position of body joints that are not close to each other or even occluded. With the help of the attention mechanism, transformer calculates the similarity and relation between different pixels within the range and assign weights accordingly, thus gaining the ability to extract long-range dependence information.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.1" class="ltx_p">But transformer models are generally larger than CNN models, and they require more training data to achieve a comparable result. Besides the model we trained with pre-trained weights, we also tried to train this transformer-based model from scratch to determine how many differences there would be. From the experiment results, the AP of the model trained from scratch can be as much as 20% worse than that of the pretrained one and proves the importance of pretraining.</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Experiments</h2>
+
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>. Dataset</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">The COCO person keypoints detection dataset<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> contains over 200,000 images and 250,000 person instances. In this dataset, the person instances are all labelled with 17 keypoints, consisting of 5 face landmarks and 12 body joints. All the keypoints are annotated with three values: the x coordinate, the y coordinate, and a flag indicating whether the keypoint is visible and labelled. Most of the persons are at medium or large scale, and a large number of the persons are only partially visible, thus bringing challenges to our task. The training set train2017 contains more than 150,000 people, and the evaluation set val2017 contains 5,000 images.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>. Evaluation Metric</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">The main objective of human pose estimation is predicting the keypoints as close as possible to the ground truth. Thus a precise method to evaluate the prediction is needed. We adopt Object Keypoint Similarity (OKS)<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> to evaluate our model, which is inspired by object detection metrics, and commonly used to evaluate models in human pose estimation. It calculates the degree of match between predicted and ground truth, and normalized by the person scale. The result is within the range of 0 to 1, a higher value means the prediction is closer to the ground truth.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.4" class="ltx_p">We report the average precision (AP) and average recall (AR) scores following the standard COCO format, where AP is calculated as the mean average precision at 10 positions when the value of OKS are 0.50, 0.55, 0.60, …, 0.90, 0.95, and <math id="S4.SS2.p2.1.m1.1" class="ltx_Math" alttext="AP^{50}" display="inline"><semantics id="S4.SS2.p2.1.m1.1a"><mrow id="S4.SS2.p2.1.m1.1.1" xref="S4.SS2.p2.1.m1.1.1.cmml"><mi id="S4.SS2.p2.1.m1.1.1.2" xref="S4.SS2.p2.1.m1.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.1.m1.1.1.1" xref="S4.SS2.p2.1.m1.1.1.1.cmml">​</mo><msup id="S4.SS2.p2.1.m1.1.1.3" xref="S4.SS2.p2.1.m1.1.1.3.cmml"><mi id="S4.SS2.p2.1.m1.1.1.3.2" xref="S4.SS2.p2.1.m1.1.1.3.2.cmml">P</mi><mn id="S4.SS2.p2.1.m1.1.1.3.3" xref="S4.SS2.p2.1.m1.1.1.3.3.cmml">50</mn></msup></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.1.m1.1b"><apply id="S4.SS2.p2.1.m1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1"><times id="S4.SS2.p2.1.m1.1.1.1.cmml" xref="S4.SS2.p2.1.m1.1.1.1"></times><ci id="S4.SS2.p2.1.m1.1.1.2.cmml" xref="S4.SS2.p2.1.m1.1.1.2">𝐴</ci><apply id="S4.SS2.p2.1.m1.1.1.3.cmml" xref="S4.SS2.p2.1.m1.1.1.3"><csymbol cd="ambiguous" id="S4.SS2.p2.1.m1.1.1.3.1.cmml" xref="S4.SS2.p2.1.m1.1.1.3">superscript</csymbol><ci id="S4.SS2.p2.1.m1.1.1.3.2.cmml" xref="S4.SS2.p2.1.m1.1.1.3.2">𝑃</ci><cn type="integer" id="S4.SS2.p2.1.m1.1.1.3.3.cmml" xref="S4.SS2.p2.1.m1.1.1.3.3">50</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.1.m1.1c">AP^{50}</annotation></semantics></math>, <math id="S4.SS2.p2.2.m2.1" class="ltx_Math" alttext="AP^{75}" display="inline"><semantics id="S4.SS2.p2.2.m2.1a"><mrow id="S4.SS2.p2.2.m2.1.1" xref="S4.SS2.p2.2.m2.1.1.cmml"><mi id="S4.SS2.p2.2.m2.1.1.2" xref="S4.SS2.p2.2.m2.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.2.m2.1.1.1" xref="S4.SS2.p2.2.m2.1.1.1.cmml">​</mo><msup id="S4.SS2.p2.2.m2.1.1.3" xref="S4.SS2.p2.2.m2.1.1.3.cmml"><mi id="S4.SS2.p2.2.m2.1.1.3.2" xref="S4.SS2.p2.2.m2.1.1.3.2.cmml">P</mi><mn id="S4.SS2.p2.2.m2.1.1.3.3" xref="S4.SS2.p2.2.m2.1.1.3.3.cmml">75</mn></msup></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.2.m2.1b"><apply id="S4.SS2.p2.2.m2.1.1.cmml" xref="S4.SS2.p2.2.m2.1.1"><times id="S4.SS2.p2.2.m2.1.1.1.cmml" xref="S4.SS2.p2.2.m2.1.1.1"></times><ci id="S4.SS2.p2.2.m2.1.1.2.cmml" xref="S4.SS2.p2.2.m2.1.1.2">𝐴</ci><apply id="S4.SS2.p2.2.m2.1.1.3.cmml" xref="S4.SS2.p2.2.m2.1.1.3"><csymbol cd="ambiguous" id="S4.SS2.p2.2.m2.1.1.3.1.cmml" xref="S4.SS2.p2.2.m2.1.1.3">superscript</csymbol><ci id="S4.SS2.p2.2.m2.1.1.3.2.cmml" xref="S4.SS2.p2.2.m2.1.1.3.2">𝑃</ci><cn type="integer" id="S4.SS2.p2.2.m2.1.1.3.3.cmml" xref="S4.SS2.p2.2.m2.1.1.3.3">75</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.2.m2.1c">AP^{75}</annotation></semantics></math>, <math id="S4.SS2.p2.3.m3.1" class="ltx_Math" alttext="AP^{M}" display="inline"><semantics id="S4.SS2.p2.3.m3.1a"><mrow id="S4.SS2.p2.3.m3.1.1" xref="S4.SS2.p2.3.m3.1.1.cmml"><mi id="S4.SS2.p2.3.m3.1.1.2" xref="S4.SS2.p2.3.m3.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.3.m3.1.1.1" xref="S4.SS2.p2.3.m3.1.1.1.cmml">​</mo><msup id="S4.SS2.p2.3.m3.1.1.3" xref="S4.SS2.p2.3.m3.1.1.3.cmml"><mi id="S4.SS2.p2.3.m3.1.1.3.2" xref="S4.SS2.p2.3.m3.1.1.3.2.cmml">P</mi><mi id="S4.SS2.p2.3.m3.1.1.3.3" xref="S4.SS2.p2.3.m3.1.1.3.3.cmml">M</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.3.m3.1b"><apply id="S4.SS2.p2.3.m3.1.1.cmml" xref="S4.SS2.p2.3.m3.1.1"><times id="S4.SS2.p2.3.m3.1.1.1.cmml" xref="S4.SS2.p2.3.m3.1.1.1"></times><ci id="S4.SS2.p2.3.m3.1.1.2.cmml" xref="S4.SS2.p2.3.m3.1.1.2">𝐴</ci><apply id="S4.SS2.p2.3.m3.1.1.3.cmml" xref="S4.SS2.p2.3.m3.1.1.3"><csymbol cd="ambiguous" id="S4.SS2.p2.3.m3.1.1.3.1.cmml" xref="S4.SS2.p2.3.m3.1.1.3">superscript</csymbol><ci id="S4.SS2.p2.3.m3.1.1.3.2.cmml" xref="S4.SS2.p2.3.m3.1.1.3.2">𝑃</ci><ci id="S4.SS2.p2.3.m3.1.1.3.3.cmml" xref="S4.SS2.p2.3.m3.1.1.3.3">𝑀</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.3.m3.1c">AP^{M}</annotation></semantics></math>, <math id="S4.SS2.p2.4.m4.1" class="ltx_Math" alttext="AP^{L}" display="inline"><semantics id="S4.SS2.p2.4.m4.1a"><mrow id="S4.SS2.p2.4.m4.1.1" xref="S4.SS2.p2.4.m4.1.1.cmml"><mi id="S4.SS2.p2.4.m4.1.1.2" xref="S4.SS2.p2.4.m4.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p2.4.m4.1.1.1" xref="S4.SS2.p2.4.m4.1.1.1.cmml">​</mo><msup id="S4.SS2.p2.4.m4.1.1.3" xref="S4.SS2.p2.4.m4.1.1.3.cmml"><mi id="S4.SS2.p2.4.m4.1.1.3.2" xref="S4.SS2.p2.4.m4.1.1.3.2.cmml">P</mi><mi id="S4.SS2.p2.4.m4.1.1.3.3" xref="S4.SS2.p2.4.m4.1.1.3.3.cmml">L</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p2.4.m4.1b"><apply id="S4.SS2.p2.4.m4.1.1.cmml" xref="S4.SS2.p2.4.m4.1.1"><times id="S4.SS2.p2.4.m4.1.1.1.cmml" xref="S4.SS2.p2.4.m4.1.1.1"></times><ci id="S4.SS2.p2.4.m4.1.1.2.cmml" xref="S4.SS2.p2.4.m4.1.1.2">𝐴</ci><apply id="S4.SS2.p2.4.m4.1.1.3.cmml" xref="S4.SS2.p2.4.m4.1.1.3"><csymbol cd="ambiguous" id="S4.SS2.p2.4.m4.1.1.3.1.cmml" xref="S4.SS2.p2.4.m4.1.1.3">superscript</csymbol><ci id="S4.SS2.p2.4.m4.1.1.3.2.cmml" xref="S4.SS2.p2.4.m4.1.1.3.2">𝑃</ci><ci id="S4.SS2.p2.4.m4.1.1.3.3.cmml" xref="S4.SS2.p2.4.m4.1.1.3.3">𝐿</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p2.4.m4.1c">AP^{L}</annotation></semantics></math> are also recorded.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>. Settings</h3>
+
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.5" class="ltx_p">There are four Swin Transformers with different size, namely Swin Tiny (Swin-T), Swin Small (Swin-S), Swin Base (Swin-B), and Swin Large (Swin-L). In order to achieve the best result, we choose Swin-L here, with weights pretrained on ImageNet-22K dataset which contains 14.2 million images and 22K classes. The input image size is set to <math id="S4.SS3.p1.1.m1.1" class="ltx_Math" alttext="384\times 384" display="inline"><semantics id="S4.SS3.p1.1.m1.1a"><mrow id="S4.SS3.p1.1.m1.1.1" xref="S4.SS3.p1.1.m1.1.1.cmml"><mn id="S4.SS3.p1.1.m1.1.1.2" xref="S4.SS3.p1.1.m1.1.1.2.cmml">384</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS3.p1.1.m1.1.1.1" xref="S4.SS3.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS3.p1.1.m1.1.1.3" xref="S4.SS3.p1.1.m1.1.1.3.cmml">384</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.1.m1.1b"><apply id="S4.SS3.p1.1.m1.1.1.cmml" xref="S4.SS3.p1.1.m1.1.1"><times id="S4.SS3.p1.1.m1.1.1.1.cmml" xref="S4.SS3.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS3.p1.1.m1.1.1.2.cmml" xref="S4.SS3.p1.1.m1.1.1.2">384</cn><cn type="integer" id="S4.SS3.p1.1.m1.1.1.3.cmml" xref="S4.SS3.p1.1.m1.1.1.3">384</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.1.m1.1c">384\times 384</annotation></semantics></math>, the embedding dimension for the first stage is set to <math id="S4.SS3.p1.2.m2.1" class="ltx_Math" alttext="C=192" display="inline"><semantics id="S4.SS3.p1.2.m2.1a"><mrow id="S4.SS3.p1.2.m2.1.1" xref="S4.SS3.p1.2.m2.1.1.cmml"><mi id="S4.SS3.p1.2.m2.1.1.2" xref="S4.SS3.p1.2.m2.1.1.2.cmml">C</mi><mo id="S4.SS3.p1.2.m2.1.1.1" xref="S4.SS3.p1.2.m2.1.1.1.cmml">=</mo><mn id="S4.SS3.p1.2.m2.1.1.3" xref="S4.SS3.p1.2.m2.1.1.3.cmml">192</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.2.m2.1b"><apply id="S4.SS3.p1.2.m2.1.1.cmml" xref="S4.SS3.p1.2.m2.1.1"><eq id="S4.SS3.p1.2.m2.1.1.1.cmml" xref="S4.SS3.p1.2.m2.1.1.1"></eq><ci id="S4.SS3.p1.2.m2.1.1.2.cmml" xref="S4.SS3.p1.2.m2.1.1.2">𝐶</ci><cn type="integer" id="S4.SS3.p1.2.m2.1.1.3.cmml" xref="S4.SS3.p1.2.m2.1.1.3">192</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.2.m2.1c">C=192</annotation></semantics></math>, the window size is set to 12, the number of blocks and number of heads for each stage are set to <math id="S4.SS3.p1.3.m3.4" class="ltx_Math" alttext="\{2,2,18,2\}" display="inline"><semantics id="S4.SS3.p1.3.m3.4a"><mrow id="S4.SS3.p1.3.m3.4.5.2" xref="S4.SS3.p1.3.m3.4.5.1.cmml"><mo stretchy="false" id="S4.SS3.p1.3.m3.4.5.2.1" xref="S4.SS3.p1.3.m3.4.5.1.cmml">{</mo><mn id="S4.SS3.p1.3.m3.1.1" xref="S4.SS3.p1.3.m3.1.1.cmml">2</mn><mo id="S4.SS3.p1.3.m3.4.5.2.2" xref="S4.SS3.p1.3.m3.4.5.1.cmml">,</mo><mn id="S4.SS3.p1.3.m3.2.2" xref="S4.SS3.p1.3.m3.2.2.cmml">2</mn><mo id="S4.SS3.p1.3.m3.4.5.2.3" xref="S4.SS3.p1.3.m3.4.5.1.cmml">,</mo><mn id="S4.SS3.p1.3.m3.3.3" xref="S4.SS3.p1.3.m3.3.3.cmml">18</mn><mo id="S4.SS3.p1.3.m3.4.5.2.4" xref="S4.SS3.p1.3.m3.4.5.1.cmml">,</mo><mn id="S4.SS3.p1.3.m3.4.4" xref="S4.SS3.p1.3.m3.4.4.cmml">2</mn><mo stretchy="false" id="S4.SS3.p1.3.m3.4.5.2.5" xref="S4.SS3.p1.3.m3.4.5.1.cmml">}</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.3.m3.4b"><set id="S4.SS3.p1.3.m3.4.5.1.cmml" xref="S4.SS3.p1.3.m3.4.5.2"><cn type="integer" id="S4.SS3.p1.3.m3.1.1.cmml" xref="S4.SS3.p1.3.m3.1.1">2</cn><cn type="integer" id="S4.SS3.p1.3.m3.2.2.cmml" xref="S4.SS3.p1.3.m3.2.2">2</cn><cn type="integer" id="S4.SS3.p1.3.m3.3.3.cmml" xref="S4.SS3.p1.3.m3.3.3">18</cn><cn type="integer" id="S4.SS3.p1.3.m3.4.4.cmml" xref="S4.SS3.p1.3.m3.4.4">2</cn></set></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.3.m3.4c">\{2,2,18,2\}</annotation></semantics></math> and <math id="S4.SS3.p1.4.m4.4" class="ltx_Math" alttext="\{6,12,24,48\}" display="inline"><semantics id="S4.SS3.p1.4.m4.4a"><mrow id="S4.SS3.p1.4.m4.4.5.2" xref="S4.SS3.p1.4.m4.4.5.1.cmml"><mo stretchy="false" id="S4.SS3.p1.4.m4.4.5.2.1" xref="S4.SS3.p1.4.m4.4.5.1.cmml">{</mo><mn id="S4.SS3.p1.4.m4.1.1" xref="S4.SS3.p1.4.m4.1.1.cmml">6</mn><mo id="S4.SS3.p1.4.m4.4.5.2.2" xref="S4.SS3.p1.4.m4.4.5.1.cmml">,</mo><mn id="S4.SS3.p1.4.m4.2.2" xref="S4.SS3.p1.4.m4.2.2.cmml">12</mn><mo id="S4.SS3.p1.4.m4.4.5.2.3" xref="S4.SS3.p1.4.m4.4.5.1.cmml">,</mo><mn id="S4.SS3.p1.4.m4.3.3" xref="S4.SS3.p1.4.m4.3.3.cmml">24</mn><mo id="S4.SS3.p1.4.m4.4.5.2.4" xref="S4.SS3.p1.4.m4.4.5.1.cmml">,</mo><mn id="S4.SS3.p1.4.m4.4.4" xref="S4.SS3.p1.4.m4.4.4.cmml">48</mn><mo stretchy="false" id="S4.SS3.p1.4.m4.4.5.2.5" xref="S4.SS3.p1.4.m4.4.5.1.cmml">}</mo></mrow><annotation-xml encoding="MathML-Content" id="S4.SS3.p1.4.m4.4b"><set id="S4.SS3.p1.4.m4.4.5.1.cmml" xref="S4.SS3.p1.4.m4.4.5.2"><cn type="integer" id="S4.SS3.p1.4.m4.1.1.cmml" xref="S4.SS3.p1.4.m4.1.1">6</cn><cn type="integer" id="S4.SS3.p1.4.m4.2.2.cmml" xref="S4.SS3.p1.4.m4.2.2">12</cn><cn type="integer" id="S4.SS3.p1.4.m4.3.3.cmml" xref="S4.SS3.p1.4.m4.3.3">24</cn><cn type="integer" id="S4.SS3.p1.4.m4.4.4.cmml" xref="S4.SS3.p1.4.m4.4.4">48</cn></set></annotation-xml><annotation encoding="application/x-tex" id="S4.SS3.p1.4.m4.4c">\{6,12,24,48\}</annotation></semantics></math>, respectively. The total model size and computation complexity is about <math id="S4.SS3.p1.5.m5.1" class="ltx_math_unparsed" alttext="2\times" display="inline"><semantics id="S4.SS3.p1.5.m5.1a"><mrow id="S4.SS3.p1.5.m5.1b"><mn id="S4.SS3.p1.5.m5.1.1">2</mn><mo lspace="0.222em" id="S4.SS3.p1.5.m5.1.2">×</mo></mrow><annotation encoding="application/x-tex" id="S4.SS3.p1.5.m5.1c">2\times</annotation></semantics></math> the Swin-B model. We set the batch size to 10, which is limited by the memory, and set the number of epoches to 240. Adam optimizer is used, with initial learning rate experimentally set to 5e-5, and learning rate is reduced by a factor of 10 when the epoch reaches 60, 120 and 160.</p>
+</div>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span>. Results</h3>
+
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.5" class="ltx_p">We compare our results with previous state-of-the-art human pose estimation models, including SimpleBaseline, Cascaded Pyramid Network (CPN), Hourglass, and HRNet, and show the results in Table. <a href="#S3.T1" title="Table 1 ‣ 3.2 Feature Fusion Module ‣ 3 Methodology ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>. As it shows, our two models with concatenation and element-wise sum, respectively, both achieve a better result on <math id="S4.SS4.p1.1.m1.1" class="ltx_Math" alttext="AP^{50}" display="inline"><semantics id="S4.SS4.p1.1.m1.1a"><mrow id="S4.SS4.p1.1.m1.1.1" xref="S4.SS4.p1.1.m1.1.1.cmml"><mi id="S4.SS4.p1.1.m1.1.1.2" xref="S4.SS4.p1.1.m1.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS4.p1.1.m1.1.1.1" xref="S4.SS4.p1.1.m1.1.1.1.cmml">​</mo><msup id="S4.SS4.p1.1.m1.1.1.3" xref="S4.SS4.p1.1.m1.1.1.3.cmml"><mi id="S4.SS4.p1.1.m1.1.1.3.2" xref="S4.SS4.p1.1.m1.1.1.3.2.cmml">P</mi><mn id="S4.SS4.p1.1.m1.1.1.3.3" xref="S4.SS4.p1.1.m1.1.1.3.3.cmml">50</mn></msup></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p1.1.m1.1b"><apply id="S4.SS4.p1.1.m1.1.1.cmml" xref="S4.SS4.p1.1.m1.1.1"><times id="S4.SS4.p1.1.m1.1.1.1.cmml" xref="S4.SS4.p1.1.m1.1.1.1"></times><ci id="S4.SS4.p1.1.m1.1.1.2.cmml" xref="S4.SS4.p1.1.m1.1.1.2">𝐴</ci><apply id="S4.SS4.p1.1.m1.1.1.3.cmml" xref="S4.SS4.p1.1.m1.1.1.3"><csymbol cd="ambiguous" id="S4.SS4.p1.1.m1.1.1.3.1.cmml" xref="S4.SS4.p1.1.m1.1.1.3">superscript</csymbol><ci id="S4.SS4.p1.1.m1.1.1.3.2.cmml" xref="S4.SS4.p1.1.m1.1.1.3.2">𝑃</ci><cn type="integer" id="S4.SS4.p1.1.m1.1.1.3.3.cmml" xref="S4.SS4.p1.1.m1.1.1.3.3">50</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p1.1.m1.1c">AP^{50}</annotation></semantics></math>, <math id="S4.SS4.p1.2.m2.1" class="ltx_Math" alttext="AP^{75}" display="inline"><semantics id="S4.SS4.p1.2.m2.1a"><mrow id="S4.SS4.p1.2.m2.1.1" xref="S4.SS4.p1.2.m2.1.1.cmml"><mi id="S4.SS4.p1.2.m2.1.1.2" xref="S4.SS4.p1.2.m2.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS4.p1.2.m2.1.1.1" xref="S4.SS4.p1.2.m2.1.1.1.cmml">​</mo><msup id="S4.SS4.p1.2.m2.1.1.3" xref="S4.SS4.p1.2.m2.1.1.3.cmml"><mi id="S4.SS4.p1.2.m2.1.1.3.2" xref="S4.SS4.p1.2.m2.1.1.3.2.cmml">P</mi><mn id="S4.SS4.p1.2.m2.1.1.3.3" xref="S4.SS4.p1.2.m2.1.1.3.3.cmml">75</mn></msup></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p1.2.m2.1b"><apply id="S4.SS4.p1.2.m2.1.1.cmml" xref="S4.SS4.p1.2.m2.1.1"><times id="S4.SS4.p1.2.m2.1.1.1.cmml" xref="S4.SS4.p1.2.m2.1.1.1"></times><ci id="S4.SS4.p1.2.m2.1.1.2.cmml" xref="S4.SS4.p1.2.m2.1.1.2">𝐴</ci><apply id="S4.SS4.p1.2.m2.1.1.3.cmml" xref="S4.SS4.p1.2.m2.1.1.3"><csymbol cd="ambiguous" id="S4.SS4.p1.2.m2.1.1.3.1.cmml" xref="S4.SS4.p1.2.m2.1.1.3">superscript</csymbol><ci id="S4.SS4.p1.2.m2.1.1.3.2.cmml" xref="S4.SS4.p1.2.m2.1.1.3.2">𝑃</ci><cn type="integer" id="S4.SS4.p1.2.m2.1.1.3.3.cmml" xref="S4.SS4.p1.2.m2.1.1.3.3">75</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p1.2.m2.1c">AP^{75}</annotation></semantics></math> and <math id="S4.SS4.p1.3.m3.1" class="ltx_Math" alttext="AP^{M}" display="inline"><semantics id="S4.SS4.p1.3.m3.1a"><mrow id="S4.SS4.p1.3.m3.1.1" xref="S4.SS4.p1.3.m3.1.1.cmml"><mi id="S4.SS4.p1.3.m3.1.1.2" xref="S4.SS4.p1.3.m3.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS4.p1.3.m3.1.1.1" xref="S4.SS4.p1.3.m3.1.1.1.cmml">​</mo><msup id="S4.SS4.p1.3.m3.1.1.3" xref="S4.SS4.p1.3.m3.1.1.3.cmml"><mi id="S4.SS4.p1.3.m3.1.1.3.2" xref="S4.SS4.p1.3.m3.1.1.3.2.cmml">P</mi><mi id="S4.SS4.p1.3.m3.1.1.3.3" xref="S4.SS4.p1.3.m3.1.1.3.3.cmml">M</mi></msup></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p1.3.m3.1b"><apply id="S4.SS4.p1.3.m3.1.1.cmml" xref="S4.SS4.p1.3.m3.1.1"><times id="S4.SS4.p1.3.m3.1.1.1.cmml" xref="S4.SS4.p1.3.m3.1.1.1"></times><ci id="S4.SS4.p1.3.m3.1.1.2.cmml" xref="S4.SS4.p1.3.m3.1.1.2">𝐴</ci><apply id="S4.SS4.p1.3.m3.1.1.3.cmml" xref="S4.SS4.p1.3.m3.1.1.3"><csymbol cd="ambiguous" id="S4.SS4.p1.3.m3.1.1.3.1.cmml" xref="S4.SS4.p1.3.m3.1.1.3">superscript</csymbol><ci id="S4.SS4.p1.3.m3.1.1.3.2.cmml" xref="S4.SS4.p1.3.m3.1.1.3.2">𝑃</ci><ci id="S4.SS4.p1.3.m3.1.1.3.3.cmml" xref="S4.SS4.p1.3.m3.1.1.3.3">𝑀</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p1.3.m3.1c">AP^{M}</annotation></semantics></math>, and have 3.5% improvement on <math id="S4.SS4.p1.4.m4.1" class="ltx_Math" alttext="AR" display="inline"><semantics id="S4.SS4.p1.4.m4.1a"><mrow id="S4.SS4.p1.4.m4.1.1" xref="S4.SS4.p1.4.m4.1.1.cmml"><mi id="S4.SS4.p1.4.m4.1.1.2" xref="S4.SS4.p1.4.m4.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS4.p1.4.m4.1.1.1" xref="S4.SS4.p1.4.m4.1.1.1.cmml">​</mo><mi id="S4.SS4.p1.4.m4.1.1.3" xref="S4.SS4.p1.4.m4.1.1.3.cmml">R</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p1.4.m4.1b"><apply id="S4.SS4.p1.4.m4.1.1.cmml" xref="S4.SS4.p1.4.m4.1.1"><times id="S4.SS4.p1.4.m4.1.1.1.cmml" xref="S4.SS4.p1.4.m4.1.1.1"></times><ci id="S4.SS4.p1.4.m4.1.1.2.cmml" xref="S4.SS4.p1.4.m4.1.1.2">𝐴</ci><ci id="S4.SS4.p1.4.m4.1.1.3.cmml" xref="S4.SS4.p1.4.m4.1.1.3">𝑅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p1.4.m4.1c">AR</annotation></semantics></math>. Besides that, Swin-L with element-wise sum achieves the same <math id="S4.SS4.p1.5.m5.1" class="ltx_Math" alttext="AP" display="inline"><semantics id="S4.SS4.p1.5.m5.1a"><mrow id="S4.SS4.p1.5.m5.1.1" xref="S4.SS4.p1.5.m5.1.1.cmml"><mi id="S4.SS4.p1.5.m5.1.1.2" xref="S4.SS4.p1.5.m5.1.1.2.cmml">A</mi><mo lspace="0em" rspace="0em" id="S4.SS4.p1.5.m5.1.1.1" xref="S4.SS4.p1.5.m5.1.1.1.cmml">​</mo><mi id="S4.SS4.p1.5.m5.1.1.3" xref="S4.SS4.p1.5.m5.1.1.3.cmml">P</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p1.5.m5.1b"><apply id="S4.SS4.p1.5.m5.1.1.cmml" xref="S4.SS4.p1.5.m5.1.1"><times id="S4.SS4.p1.5.m5.1.1.1.cmml" xref="S4.SS4.p1.5.m5.1.1.1"></times><ci id="S4.SS4.p1.5.m5.1.1.2.cmml" xref="S4.SS4.p1.5.m5.1.1.2">𝐴</ci><ci id="S4.SS4.p1.5.m5.1.1.3.cmml" xref="S4.SS4.p1.5.m5.1.1.3">𝑃</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p1.5.m5.1c">AP</annotation></semantics></math> as HRNet-W48.</p>
+</div>
+<figure id="S4.T2" class="ltx_table">
+
+<figcaption class="ltx_caption ltx_centering" style="font-size:70%;"><span class="ltx_tag ltx_tag_table">Table 2: </span>Results of different fusion methods, input resolution, and model size</figcaption><div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<div id="S4.T2.3" class="ltx_inline-block ltx_figure_panel ltx_align_center ltx_transformed_outer" style="width:216.8pt;height:105.7pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-57.8pt,28.2pt) scale(0.652165940666497,0.652165940666497) ;">
+<table id="S4.T2.3.1" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T2.3.1.1.1" class="ltx_tr">
+<td id="S4.T2.3.1.1.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S4.T2.3.1.1.1.1.1" class="ltx_text" style="font-size:70%;">ID</span></td>
+<td id="S4.T2.3.1.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S4.T2.3.1.1.1.2.1" class="ltx_text" style="font-size:70%;">Backbone</span></td>
+<td id="S4.T2.3.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">
+<span id="S4.T2.3.1.1.1.3.1" class="ltx_text" style="font-size:70%;">Pretrain</span><sup id="S4.T2.3.1.1.1.3.2" class="ltx_sup"><span id="S4.T2.3.1.1.1.3.2.1" class="ltx_text" style="font-size:70%;">1</span></sup>
+</td>
+<td id="S4.T2.3.1.1.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">
+<span id="S4.T2.3.1.1.1.4.1" class="ltx_text" style="font-size:70%;">Fusion Method</span><sup id="S4.T2.3.1.1.1.4.2" class="ltx_sup"><span id="S4.T2.3.1.1.1.4.2.1" class="ltx_text" style="font-size:70%;">2</span></sup>
+</td>
+<td id="S4.T2.3.1.1.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S4.T2.3.1.1.1.5.1" class="ltx_text" style="font-size:70%;">Input size</span></td>
+<td id="S4.T2.3.1.1.1.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S4.T2.3.1.1.1.6.1" class="ltx_text" style="font-size:70%;">#Params</span></td>
+<td id="S4.T2.3.1.1.1.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt"><span id="S4.T2.3.1.1.1.7.1" class="ltx_text" style="font-size:70%;">GFLOPs</span></td>
+<td id="S4.T2.3.1.1.1.8" class="ltx_td ltx_align_left ltx_border_tt"><span id="S4.T2.3.1.1.1.8.1" class="ltx_text" style="font-size:70%;">AP</span></td>
+<td id="S4.T2.3.1.1.1.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt"><span id="S4.T2.3.1.1.1.9.1" class="ltx_text" style="font-size:70%;">AR</span></td>
+</tr>
+<tr id="S4.T2.3.1.2.2" class="ltx_tr">
+<td id="S4.T2.3.1.2.2.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.2.2.1.1" class="ltx_text" style="font-size:70%;">1</span></td>
+<td id="S4.T2.3.1.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.2.2.2.1" class="ltx_text" style="font-size:70%;">Swin-S</span></td>
+<td id="S4.T2.3.1.2.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.2.2.3.1" class="ltx_text" style="font-size:70%;">1K</span></td>
+<td id="S4.T2.3.1.2.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.2.2.4.1" class="ltx_text" style="font-size:70%;">Concat</span></td>
+<td id="S4.T2.3.1.2.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.2.2.5.1" class="ltx_text" style="font-size:70%;">224 × 224</span></td>
+<td id="S4.T2.3.1.2.2.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.2.2.6.1" class="ltx_text" style="font-size:70%;">49.5M</span></td>
+<td id="S4.T2.3.1.2.2.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.2.2.7.1" class="ltx_text" style="font-size:70%;">11.9</span></td>
+<td id="S4.T2.3.1.2.2.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.3.1.2.2.8.1" class="ltx_text" style="font-size:70%;">71.6</span></td>
+<td id="S4.T2.3.1.2.2.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t"><span id="S4.T2.3.1.2.2.9.1" class="ltx_text" style="font-size:70%;">75.2</span></td>
+</tr>
+<tr id="S4.T2.3.1.3.3" class="ltx_tr">
+<td id="S4.T2.3.1.3.3.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.3.3.1.1" class="ltx_text" style="font-size:70%;">2</span></td>
+<td id="S4.T2.3.1.3.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.3.3.2.1" class="ltx_text" style="font-size:70%;">Swin-S</span></td>
+<td id="S4.T2.3.1.3.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.3.3.3.1" class="ltx_text" style="font-size:70%;">1K</span></td>
+<td id="S4.T2.3.1.3.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.3.3.4.1" class="ltx_text" style="font-size:70%;">Sum</span></td>
+<td id="S4.T2.3.1.3.3.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.3.3.5.1" class="ltx_text" style="font-size:70%;">224 × 224</span></td>
+<td id="S4.T2.3.1.3.3.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.3.3.6.1" class="ltx_text" style="font-size:70%;">49.1M</span></td>
+<td id="S4.T2.3.1.3.3.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.3.3.7.1" class="ltx_text" style="font-size:70%;">11.7</span></td>
+<td id="S4.T2.3.1.3.3.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.3.1.3.3.8.1" class="ltx_text" style="font-size:70%;">71.7</span></td>
+<td id="S4.T2.3.1.3.3.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t"><span id="S4.T2.3.1.3.3.9.1" class="ltx_text" style="font-size:70%;">75.2</span></td>
+</tr>
+<tr id="S4.T2.3.1.4.4" class="ltx_tr">
+<td id="S4.T2.3.1.4.4.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.4.4.1.1" class="ltx_text" style="font-size:70%;">3</span></td>
+<td id="S4.T2.3.1.4.4.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.4.4.2.1" class="ltx_text" style="font-size:70%;">Swin-B</span></td>
+<td id="S4.T2.3.1.4.4.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.4.4.3.1" class="ltx_text" style="font-size:70%;">22K</span></td>
+<td id="S4.T2.3.1.4.4.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.4.4.4.1" class="ltx_text" style="font-size:70%;">Concat</span></td>
+<td id="S4.T2.3.1.4.4.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.4.4.5.1" class="ltx_text" style="font-size:70%;">224 × 224</span></td>
+<td id="S4.T2.3.1.4.4.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.4.4.6.1" class="ltx_text" style="font-size:70%;">88.0M</span></td>
+<td id="S4.T2.3.1.4.4.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.4.4.7.1" class="ltx_text" style="font-size:70%;">15.9</span></td>
+<td id="S4.T2.3.1.4.4.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.3.1.4.4.8.1" class="ltx_text" style="font-size:70%;">72.6</span></td>
+<td id="S4.T2.3.1.4.4.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t"><span id="S4.T2.3.1.4.4.9.1" class="ltx_text" style="font-size:70%;">75.9</span></td>
+</tr>
+<tr id="S4.T2.3.1.5.5" class="ltx_tr">
+<td id="S4.T2.3.1.5.5.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.5.5.1.1" class="ltx_text" style="font-size:70%;">4</span></td>
+<td id="S4.T2.3.1.5.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.5.5.2.1" class="ltx_text" style="font-size:70%;">Swin-B</span></td>
+<td id="S4.T2.3.1.5.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.5.5.3.1" class="ltx_text" style="font-size:70%;">22K</span></td>
+<td id="S4.T2.3.1.5.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.5.5.4.1" class="ltx_text" style="font-size:70%;">Sum</span></td>
+<td id="S4.T2.3.1.5.5.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.5.5.5.1" class="ltx_text" style="font-size:70%;">224 × 224</span></td>
+<td id="S4.T2.3.1.5.5.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.5.5.6.1" class="ltx_text" style="font-size:70%;">87.3M</span></td>
+<td id="S4.T2.3.1.5.5.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.5.5.7.1" class="ltx_text" style="font-size:70%;">15.7</span></td>
+<td id="S4.T2.3.1.5.5.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.3.1.5.5.8.1" class="ltx_text" style="font-size:70%;">72.2</span></td>
+<td id="S4.T2.3.1.5.5.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t"><span id="S4.T2.3.1.5.5.9.1" class="ltx_text" style="font-size:70%;">75.7</span></td>
+</tr>
+<tr id="S4.T2.3.1.6.6" class="ltx_tr">
+<td id="S4.T2.3.1.6.6.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.6.6.1.1" class="ltx_text" style="font-size:70%;">5</span></td>
+<td id="S4.T2.3.1.6.6.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.6.6.2.1" class="ltx_text" style="font-size:70%;">Swin-L</span></td>
+<td id="S4.T2.3.1.6.6.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.6.6.3.1" class="ltx_text" style="font-size:70%;">22K</span></td>
+<td id="S4.T2.3.1.6.6.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.6.6.4.1" class="ltx_text" style="font-size:70%;">Concat</span></td>
+<td id="S4.T2.3.1.6.6.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.6.6.5.1" class="ltx_text" style="font-size:70%;">224 × 224</span></td>
+<td id="S4.T2.3.1.6.6.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.6.6.6.1" class="ltx_text" style="font-size:70%;">197.9M</span></td>
+<td id="S4.T2.3.1.6.6.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.6.6.7.1" class="ltx_text" style="font-size:70%;">24.2</span></td>
+<td id="S4.T2.3.1.6.6.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.3.1.6.6.8.1" class="ltx_text" style="font-size:70%;">72.8</span></td>
+<td id="S4.T2.3.1.6.6.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t"><span id="S4.T2.3.1.6.6.9.1" class="ltx_text" style="font-size:70%;">76.1</span></td>
+</tr>
+<tr id="S4.T2.3.1.7.7" class="ltx_tr">
+<td id="S4.T2.3.1.7.7.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.7.7.1.1" class="ltx_text" style="font-size:70%;">6</span></td>
+<td id="S4.T2.3.1.7.7.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.7.7.2.1" class="ltx_text" style="font-size:70%;">Swin-L</span></td>
+<td id="S4.T2.3.1.7.7.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.7.7.3.1" class="ltx_text" style="font-size:70%;">22K</span></td>
+<td id="S4.T2.3.1.7.7.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.7.7.4.1" class="ltx_text" style="font-size:70%;">Concat</span></td>
+<td id="S4.T2.3.1.7.7.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.7.7.5.1" class="ltx_text" style="font-size:70%;">384 × 384</span></td>
+<td id="S4.T2.3.1.7.7.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.7.7.6.1" class="ltx_text" style="font-size:70%;">197.9M</span></td>
+<td id="S4.T2.3.1.7.7.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.7.7.7.1" class="ltx_text" style="font-size:70%;">204.5</span></td>
+<td id="S4.T2.3.1.7.7.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.3.1.7.7.8.1" class="ltx_text" style="font-size:70%;">76.2</span></td>
+<td id="S4.T2.3.1.7.7.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t"><span id="S4.T2.3.1.7.7.9.1" class="ltx_text" style="font-size:70%;">84.7</span></td>
+</tr>
+<tr id="S4.T2.3.1.8.8" class="ltx_tr">
+<td id="S4.T2.3.1.8.8.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.8.8.1.1" class="ltx_text" style="font-size:70%;">7</span></td>
+<td id="S4.T2.3.1.8.8.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.8.8.2.1" class="ltx_text" style="font-size:70%;">Swin-L</span></td>
+<td id="S4.T2.3.1.8.8.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.8.8.3.1" class="ltx_text" style="font-size:70%;">22K</span></td>
+<td id="S4.T2.3.1.8.8.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.8.8.4.1" class="ltx_text" style="font-size:70%;">Sum</span></td>
+<td id="S4.T2.3.1.8.8.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.8.8.5.1" class="ltx_text" style="font-size:70%;">224 × 224</span></td>
+<td id="S4.T2.3.1.8.8.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.8.8.6.1" class="ltx_text" style="font-size:70%;">196.4M</span></td>
+<td id="S4.T2.3.1.8.8.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.3.1.8.8.7.1" class="ltx_text" style="font-size:70%;">23.6</span></td>
+<td id="S4.T2.3.1.8.8.8" class="ltx_td ltx_align_center ltx_border_t"><span id="S4.T2.3.1.8.8.8.1" class="ltx_text" style="font-size:70%;">72.9</span></td>
+<td id="S4.T2.3.1.8.8.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t"><span id="S4.T2.3.1.8.8.9.1" class="ltx_text" style="font-size:70%;">76.3</span></td>
+</tr>
+<tr id="S4.T2.3.1.9.9" class="ltx_tr">
+<td id="S4.T2.3.1.9.9.1" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t"><span id="S4.T2.3.1.9.9.1.1" class="ltx_text" style="font-size:70%;">8</span></td>
+<td id="S4.T2.3.1.9.9.2" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t"><span id="S4.T2.3.1.9.9.2.1" class="ltx_text" style="font-size:70%;">Swin-L</span></td>
+<td id="S4.T2.3.1.9.9.3" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t"><span id="S4.T2.3.1.9.9.3.1" class="ltx_text" style="font-size:70%;">22K</span></td>
+<td id="S4.T2.3.1.9.9.4" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t"><span id="S4.T2.3.1.9.9.4.1" class="ltx_text" style="font-size:70%;">Sum</span></td>
+<td id="S4.T2.3.1.9.9.5" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t"><span id="S4.T2.3.1.9.9.5.1" class="ltx_text" style="font-size:70%;">384 × 384</span></td>
+<td id="S4.T2.3.1.9.9.6" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t"><span id="S4.T2.3.1.9.9.6.1" class="ltx_text" style="font-size:70%;">196.4M</span></td>
+<td id="S4.T2.3.1.9.9.7" class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t"><span id="S4.T2.3.1.9.9.7.1" class="ltx_text" style="font-size:70%;">202.6</span></td>
+<td id="S4.T2.3.1.9.9.8" class="ltx_td ltx_align_center ltx_border_bb ltx_border_t"><span id="S4.T2.3.1.9.9.8.1" class="ltx_text" style="font-size:70%;">76.3</span></td>
+<td id="S4.T2.3.1.9.9.9" class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t"><span id="S4.T2.3.1.9.9.9.1" class="ltx_text" style="font-size:70%;">84.7</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<ul id="S4.I1" class="ltx_itemize ltx_centering ltx_figure_panel">
+<li id="S4.I1.ix1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1</span> 
+<div id="S4.I1.ix1.p1" class="ltx_para">
+<p id="S4.I1.ix1.p1.1" class="ltx_p"><span id="S4.I1.ix1.p1.1.1" class="ltx_text" style="font-size:80%;">Pretrain: models pretrained on ImageNet-1K or ImageNet-22K.</span></p>
+</div>
+</li>
+<li id="S4.I1.ix2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2</span> 
+<div id="S4.I1.ix2.p1" class="ltx_para">
+<p id="S4.I1.ix2.p1.1" class="ltx_p"><span id="S4.I1.ix2.p1.1.1" class="ltx_text" style="font-size:80%;">Fusion Method: Concat (Concatenation), Sum (Element-wise Sum)</span></p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Ablation Study</h2>
+
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span>. Input Resolution</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.2" class="ltx_p">An ablation study is chosen to determine the factor of input resolution that affects the performance. The results of our model based on Swin-L are presented in Table. <a href="#S4.T2" title="Table 2 ‣ 4.4 . Results ‣ 4 Experiments ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, with two fusion methods, and input resolution set to <math id="S5.SS1.p1.1.m1.1" class="ltx_Math" alttext="224\times 224" display="inline"><semantics id="S5.SS1.p1.1.m1.1a"><mrow id="S5.SS1.p1.1.m1.1.1" xref="S5.SS1.p1.1.m1.1.1.cmml"><mn id="S5.SS1.p1.1.m1.1.1.2" xref="S5.SS1.p1.1.m1.1.1.2.cmml">224</mn><mo lspace="0.222em" rspace="0.222em" id="S5.SS1.p1.1.m1.1.1.1" xref="S5.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S5.SS1.p1.1.m1.1.1.3" xref="S5.SS1.p1.1.m1.1.1.3.cmml">224</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.SS1.p1.1.m1.1b"><apply id="S5.SS1.p1.1.m1.1.1.cmml" xref="S5.SS1.p1.1.m1.1.1"><times id="S5.SS1.p1.1.m1.1.1.1.cmml" xref="S5.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S5.SS1.p1.1.m1.1.1.2.cmml" xref="S5.SS1.p1.1.m1.1.1.2">224</cn><cn type="integer" id="S5.SS1.p1.1.m1.1.1.3.cmml" xref="S5.SS1.p1.1.m1.1.1.3">224</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS1.p1.1.m1.1c">224\times 224</annotation></semantics></math> and <math id="S5.SS1.p1.2.m2.1" class="ltx_Math" alttext="384\times 384" display="inline"><semantics id="S5.SS1.p1.2.m2.1a"><mrow id="S5.SS1.p1.2.m2.1.1" xref="S5.SS1.p1.2.m2.1.1.cmml"><mn id="S5.SS1.p1.2.m2.1.1.2" xref="S5.SS1.p1.2.m2.1.1.2.cmml">384</mn><mo lspace="0.222em" rspace="0.222em" id="S5.SS1.p1.2.m2.1.1.1" xref="S5.SS1.p1.2.m2.1.1.1.cmml">×</mo><mn id="S5.SS1.p1.2.m2.1.1.3" xref="S5.SS1.p1.2.m2.1.1.3.cmml">384</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.SS1.p1.2.m2.1b"><apply id="S5.SS1.p1.2.m2.1.1.cmml" xref="S5.SS1.p1.2.m2.1.1"><times id="S5.SS1.p1.2.m2.1.1.1.cmml" xref="S5.SS1.p1.2.m2.1.1.1"></times><cn type="integer" id="S5.SS1.p1.2.m2.1.1.2.cmml" xref="S5.SS1.p1.2.m2.1.1.2">384</cn><cn type="integer" id="S5.SS1.p1.2.m2.1.1.3.cmml" xref="S5.SS1.p1.2.m2.1.1.3">384</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.SS1.p1.2.m2.1c">384\times 384</annotation></semantics></math>, respectively. As shown in the table, comparing experiments 5, 6, 7 and 8, with the input resolution increased, the average precision has increased by 3.4 points for both fusion methods, with the price of a significant larger GFLOPs.</p>
+</div>
+</section>
+<section id="S5.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span>. Model Size</h3>
+
+<div id="S5.SS2.p1" class="ltx_para">
+<p id="S5.SS2.p1.1" class="ltx_p">The experiments were conducted over the different sizes of Swin-B and Swin-L. As shown in the Table. <a href="#S4.T2" title="Table 2 ‣ 4.4 . Results ‣ 4 Experiments ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, comparing the two results between experiments 3 and 5, it can be seen that the larger size of backbone only contributes limited improvements to its results. Similarly, no significant increase was found in experiment 4 compared with experiment 7. In addition, the computation cost and model size increase significantly, as the result of the growing FLOPs and number of parameters.
+Overall, these results indicate the trade-offs between precision and computation cost. A smaller backbone should be selected if the computation cost is of higher priority.
+</p>
+</div>
+</section>
+<section id="S5.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.3 </span>. Fusion Approach</h3>
+
+<div id="S5.SS3.p1" class="ltx_para">
+<p id="S5.SS3.p1.1" class="ltx_p">We study how two different fusion methods, namely element-wise sum and concatenation along channels, affect the performance of our models. It has been demonstrated that concatenation is able to retain as much information as possible during the fusion process. However, the number of parameters for concatenation will be greater than element-wise sum, which results in higher cost from the calculation. In particular, an independent ablation experiment was performed to determine whether there was a difference between the two fusion methods.</p>
+</div>
+<div id="S5.SS3.p2" class="ltx_para">
+<p id="S5.SS3.p2.1" class="ltx_p">In summary, it can be seen from the data in Table. <a href="#S4.T2" title="Table 2 ‣ 4.4 . Results ‣ 4 Experiments ‣ Swin-Pose: Swin Transformer Based Human Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, these results show that the computation cost of concatenation is slightly higher than the element-wise sum.</p>
+</div>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>Conclusion</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">In this paper, we have explored the application of transformer to human pose estimation and presented two slightly different versions of models.
+The hierarchical structure of the Swin Transformer inspires us to adopt feature pyramid, fuse the feature maps output by different stages together, and build a more substantial model. The two proposed models achieve competitive results compared to the famous HRNet-W48 and other CNN based models.</p>
+</div>
+<div id="S6.p2" class="ltx_para">
+<p id="S6.p2.1" class="ltx_p">Although the results demonstrate that transformer models can be successfully implemented to human pose estimation tasks with competitive performance, the main challenge is that transformer models are huge with almost two times more parameters and six times more FLOPs. Further studies need to be carried out in order to reduce the computation cost and obtain an outstanding performance compared with CNN models.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text" style="font-size:90%;">
+Y. Chen, Z. Wang, Y. Peng, Z. Zhang, G. Yu, and J. Sun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.2.1" class="ltx_text" style="font-size:90%;">Cascaded pyramid network for multi-person pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib1.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span><span id="bib.bib1.5.3" class="ltx_text" style="font-size:90%;">, pages 7103–7112, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text" style="font-size:90%;">
+X. Chu, W. Ouyang, H. Li, and X. Wang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.2.1" class="ltx_text" style="font-size:90%;">Structured feature learning for pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib2.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition</span><span id="bib.bib2.5.3" class="ltx_text" style="font-size:90%;">, pages 4715–4723, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text" style="font-size:90%;">
+J. Deng, S. Bei, S. Shaojing, and Z. Zhen.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.2.1" class="ltx_text" style="font-size:90%;">Feature fusion methods in deep-learning generic object detection: A
+survey.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib3.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">2020 IEEE 9th Joint International Information Technology and
+Artificial Intelligence Conference (ITAIC)</span><span id="bib.bib3.5.3" class="ltx_text" style="font-size:90%;">, volume 9, pages 431–437. IEEE,
+2020.
+</span>
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text" style="font-size:90%;">
+A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai,
+T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, et al.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.2.1" class="ltx_text" style="font-size:90%;">An image is worth 16x16 words: Transformers for image recognition at
+scale.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">arXiv preprint arXiv:2010.11929</span><span id="bib.bib4.4.2" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text" style="font-size:90%;">
+P. F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ramanan.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.2.1" class="ltx_text" style="font-size:90%;">Object detection with discriminatively trained part-based models.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE transactions on pattern analysis and machine intelligence</span><span id="bib.bib5.4.2" class="ltx_text" style="font-size:90%;">,
+32(9):1627–1645, 2009.
+</span>
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text" style="font-size:90%;">
+K. He, X. Zhang, S. Ren, and J. Sun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.2.1" class="ltx_text" style="font-size:90%;">Spatial pyramid pooling in deep convolutional networks for visual
+recognition.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE transactions on pattern analysis and machine intelligence</span><span id="bib.bib6.4.2" class="ltx_text" style="font-size:90%;">,
+37(9):1904–1916, 2015.
+</span>
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text" style="font-size:90%;">
+K. He, X. Zhang, S. Ren, and J. Sun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.2.1" class="ltx_text" style="font-size:90%;">Deep residual learning for image recognition.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib7.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span><span id="bib.bib7.5.3" class="ltx_text" style="font-size:90%;">, pages 770–778, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text" style="font-size:90%;">
+T. Kong, A. Yao, Y. Chen, and F. Sun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.2.1" class="ltx_text" style="font-size:90%;">Hypernet: Towards accurate region proposal generation and joint
+object detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib8.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span><span id="bib.bib8.5.3" class="ltx_text" style="font-size:90%;">, pages 845–853, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text" style="font-size:90%;">
+A. Krizhevsky, I. Sutskever, and G. E. Hinton.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.2.1" class="ltx_text" style="font-size:90%;">Imagenet classification with deep convolutional neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Advances in neural information processing systems</span><span id="bib.bib9.4.2" class="ltx_text" style="font-size:90%;">, 25, 2012.
+</span>
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span id="bib.bib10.1.1" class="ltx_text" style="font-size:90%;">
+Y. Li, C. Wang, Y. Cao, B. Liu, J. Tan, and Y. Luo.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.2.1" class="ltx_text" style="font-size:90%;">Human pose estimation based in-home lower body rehabilitation system.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib10.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">2020 International Joint Conference on Neural Networks
+(IJCNN)</span><span id="bib.bib10.5.3" class="ltx_text" style="font-size:90%;">, pages 1–8. IEEE, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span id="bib.bib11.1.1" class="ltx_text" style="font-size:90%;">
+T.-Y. Lin, P. Dollár, R. Girshick, K. He, B. Hariharan, and S. Belongie.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.2.1" class="ltx_text" style="font-size:90%;">Feature pyramid networks for object detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib11.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span><span id="bib.bib11.5.3" class="ltx_text" style="font-size:90%;">, pages 2117–2125, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span id="bib.bib12.1.1" class="ltx_text" style="font-size:90%;">
+T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan,
+P. Dollár, and C. L. Zitnick.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.2.1" class="ltx_text" style="font-size:90%;">Microsoft coco: Common objects in context.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib12.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">European conference on computer vision</span><span id="bib.bib12.5.3" class="ltx_text" style="font-size:90%;">, pages 740–755.
+Springer, 2014.
+</span>
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text" style="font-size:90%;">
+Z. Liu, Y. Lin, Y. Cao, H. Hu, Y. Wei, Z. Zhang, S. Lin, and B. Guo.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.2.1" class="ltx_text" style="font-size:90%;">Swin transformer: Hierarchical vision transformer using shifted
+windows.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib13.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE/CVF International Conference on
+Computer Vision</span><span id="bib.bib13.5.3" class="ltx_text" style="font-size:90%;">, pages 10012–10022, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text" style="font-size:90%;">
+A. Newell, K. Yang, and J. Deng.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.2.1" class="ltx_text" style="font-size:90%;">Stacked hourglass networks for human pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib14.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">European conference on computer vision</span><span id="bib.bib14.5.3" class="ltx_text" style="font-size:90%;">, pages 483–499.
+Springer, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span id="bib.bib15.1.1" class="ltx_text" style="font-size:90%;">
+A. Toshev and C. Szegedy.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.2.1" class="ltx_text" style="font-size:90%;">Deeppose: Human pose estimation via deep neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib15.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE conference on computer vision and
+pattern recognition</span><span id="bib.bib15.5.3" class="ltx_text" style="font-size:90%;">, pages 1653–1660, 2014.
+</span>
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text" style="font-size:90%;">
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez,
+Ł. Kaiser, and I. Polosukhin.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.2.1" class="ltx_text" style="font-size:90%;">Attention is all you need.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Advances in neural information processing systems</span><span id="bib.bib16.4.2" class="ltx_text" style="font-size:90%;">, 30, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span id="bib.bib17.1.1" class="ltx_text" style="font-size:90%;">
+C. Wang, Y. Li, Z. Xiong, Y. Luo, and Y. Cao.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.2.1" class="ltx_text" style="font-size:90%;">Lower body rehabilitation dataset and model optimization.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib17.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">2021 IEEE International Conference on Multimedia and Expo
+(ICME)</span><span id="bib.bib17.5.3" class="ltx_text" style="font-size:90%;">, pages 1–6. IEEE, 2021.
+</span>
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span id="bib.bib18.1.1" class="ltx_text" style="font-size:90%;">
+J. Wang, K. Sun, T. Cheng, B. Jiang, C. Deng, Y. Zhao, D. Liu, Y. Mu, M. Tan,
+X. Wang, et al.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.2.1" class="ltx_text" style="font-size:90%;">Deep high-resolution representation learning for visual recognition.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE transactions on pattern analysis and machine intelligence</span><span id="bib.bib18.4.2" class="ltx_text" style="font-size:90%;">,
+43(10):3349–3364, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text" style="font-size:90%;">
+S.-E. Wei, V. Ramakrishna, T. Kanade, and Y. Sheikh.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.2.1" class="ltx_text" style="font-size:90%;">Convolutional pose machines.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib19.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE conference on Computer Vision and
+Pattern Recognition</span><span id="bib.bib19.5.3" class="ltx_text" style="font-size:90%;">, pages 4724–4732, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text" style="font-size:90%;">
+B. Xiao, H. Wu, and Y. Wei.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.2.1" class="ltx_text" style="font-size:90%;">Simple baselines for human pose estimation and tracking.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib20.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the European conference on computer vision
+(ECCV)</span><span id="bib.bib20.5.3" class="ltx_text" style="font-size:90%;">, pages 466–481, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text" style="font-size:90%;">
+S. Yang, Z. Quan, M. Nie, and W. Yang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.2.1" class="ltx_text" style="font-size:90%;">Transpose: Keypoint localization via transformer.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib21.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Proceedings of the IEEE/CVF International Conference on
+Computer Vision</span><span id="bib.bib21.5.3" class="ltx_text" style="font-size:90%;">, pages 11802–11812, 2021.
+</span>
+</span>
+</li>
+</ul>
+</section>
+<div id="p2" class="ltx_para">
+<p id="p2.1" class="ltx_p"></p>
+</div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2201.07383" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2201.07384" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2201.07384">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2201.07384" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2201.07385" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Mon Feb 26 18:55:04 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

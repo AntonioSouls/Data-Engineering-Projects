@@ -1,0 +1,846 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2108.00249] SyDog: A Synthetic Dog Dataset for Improved 2D Pose Estimation</title><meta property="og:description" content="Estimating the pose of animals can facilitate the understanding of animal motion which is fundamental in disciplines such as biomechanics, neuroscience, ethology, robotics and the entertainment industry. Human pose est…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SyDog: A Synthetic Dog Dataset for Improved 2D Pose Estimation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="SyDog: A Synthetic Dog Dataset for Improved 2D Pose Estimation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2108.00249">
+
+<!--Generated on Fri Mar  8 13:24:43 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">SyDog: A Synthetic Dog Dataset for Improved 2D Pose Estimation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Moira Shooter   Charles Malleson   Adrian Hilton 
+<br class="ltx_break">University of Surrey
+<br class="ltx_break">Stag Hill
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"> University Campus
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"> Guildford GU2 7XH
+<br class="ltx_break"><span id="id1.1.id1" class="ltx_text ltx_font_typewriter" style="font-size:90%;">{m.shooter,charles.malleson,a.hilton}@surrey.ac.uk</span>
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id2.id1" class="ltx_p">Estimating the pose of animals can facilitate the understanding of animal motion which is fundamental in disciplines such as biomechanics, neuroscience, ethology, robotics and the entertainment industry. Human pose estimation models have achieved high performance due to the huge amount of training data available. Achieving the same results for animal pose estimation is challenging due to the lack of animal pose datasets. To address this problem we introduce SyDog: a synthetic dataset of dogs containing ground truth pose and bounding box coordinates which was generated using the game engine, Unity.
+We demonstrate that pose estimation models trained on SyDog achieve better performance than models trained purely on real data and significantly reduce the need for the labour intensive labelling of images. We release the SyDog dataset as a training and evaluation benchmark for research in animal motion.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2108.00249/assets/images/ICCV_visuals.jpg" id="S1.F1.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="479" height="269" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Pipeline showing the process of generating the SyDog dataset. The dog’s motion is controlled using keyboard inputs. A virtual camera follows and renders a frame of the dog with different appearance, pose, lighting (post-processing effects), environment, and camera view points. These parameters are randomly sampled to make the data more diverse. RGB images, 2D pose and bounding box coordinate annotation are simultaneously generated.</figcaption>
+</figure>
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Estimating the pose of animals from video <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> helps to understand the animal motion and this supports many applications and disciplines such as veterinary science where lameness can be diagnosed early and recovery monitored; biomechanical applications where gait is analysed to improve animal performance in sports such as horse racing and dressage; neuroscience where motion is analysed to understand behaviour and/or relate motion to brain activity <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>; robotics where robots learn from animal motion data <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>; and in the entertainment industry to produce more natural and realistic animal animations and to create 3D representations of animals. The traditional and most accurate method to track the motion of subjects of interest is optical motion capture. This involves placing reflective markers on the subject and uses a system with multiple cameras to capture their 3D location. This method has its disadvantages in that it requires expertise and time to set up, it can be stressful to the animal, it can change the animal’s behaviour, animals can be uncooperative and in some cases it is impossible to bring the animal into a lab. Another disadvantage is that the lighting conditions need to be fairly controlled, typically restricting such systems to laboratories. Non-contact video-based estimation of animal motion has the potential to overcome these limitations. Deep learning methods are known to perform well with huge amounts of data. The main focus in the literature has been on human pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib25" title="" class="ltx_ref">25</a>, <a href="#bib.bib26" title="" class="ltx_ref">26</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite> where large amounts of training data have allowed high accuracy to be obtained. It is challenging to achieve the same quality results for animals as there is less training data available <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>. The standard way to create datasets is to annotate each image manually, but annotating several keypoints in thousands of images is both labour intensive and expensive. However, in recent years the generation of synthetic data has been an accelerator for machine learning <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib23" title="" class="ltx_ref">23</a>, <a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">In this work we address the lack of animal datasets by creating a dataset consisting of images of dogs rendered using a real-time game engine.
+To add variation into the data, the dog’s appearance and pose, the environment, the camera viewing points and the lighting conditions were modified. Using this approach, we generated a synthetic dataset containing 32k annotated images.We evaluate the pose estimation models trained with synthetic data on the StanfordExtra dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>. Because networks trained only on synthetic data often fail to generalize to real world examples (the domain gap) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite>, two techniques were applied separately: fine-tuning the networks and training the networks with a combination of real and synthetic samples. We demonstrate that models trained on synthetic data increase the models’ performances and reduce the need for labour intensive image annotation.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">The <span id="S1.p3.1.1" class="ltx_text ltx_font_bold">main contributions</span> of this work are: (i) We present a real-time system that generates 2D annotated images containing dogs. (ii) We release SyDog, a large scale annotated dataset of dogs with 2D keypoints and bounding box coordinates. (iii) We show that using the SyDog dataset improves the accuracy of pose estimation models and reduces the need for labour intensive labelling.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Data Generation</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">In this section we present how the SyDog dataset was generated. Figure <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ SyDog: A Synthetic Dog Dataset for Improved 2D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> demonstrates the pipeline overview for generating the synthetic data.</p>
+</div>
+<div id="S2.p2" class="ltx_para">
+<p id="S2.p2.2" class="ltx_p">We generated <span id="S2.p2.2.1" class="ltx_text ltx_font_bold">the synthetic dataset</span> using the game engine Unity3D. We built upon Zhang <span id="S2.p2.2.2" class="ltx_text ltx_font_italic">et al.</span>’s project <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite> which produces natural animations for quadruped animals from real motion data using a novel neural network architecture which they call Adaptive Neural Networks. By using this system we were able to control the animal’s motion using keyboard inputs and make the dataset more varied by transitioning the dog’s pose from one state to another. To add more variety into the dataset, the dog’s appearance, the environment, the camera viewing points and the lighting conditions (post-processing effects) were randomly modified. We produced 32k images along with annotations of 25 keypoints and bounding box coordinates. We refer the reader to the supplementary material for samples of the SyDog dataset.
+
+<br class="ltx_break"><span id="S2.p2.2.3" class="ltx_text ltx_font_bold">Dog models.</span> We used 8 different type of dogs, 1 came with Zhang <span id="S2.p2.2.4" class="ltx_text ltx_font_italic">et al.</span>’s project, which we will refer to as the <span id="S2.p2.2.5" class="ltx_text ltx_font_italic">default</span> model, 5 were imported from the RGBD-Dog dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>, and 2 were a fat and a skinny version of the <span id="S2.p2.2.6" class="ltx_text ltx_font_italic">default</span> model. The models represent dogs ranging from big to small sized breeds. The models were manually scaled and rigged based on the <span id="S2.p2.2.7" class="ltx_text ltx_font_italic">default</span> model for the models to be correctly imported into the project.
+
+<br class="ltx_break"><span id="S2.p2.2.8" class="ltx_text ltx_font_bold">Dog textures.</span> To create different types of textures quickly and without the need of manually UV-unwrapping the models and manually producing textures, the textures were generated procedurally using shaders and mapped onto the surfaces by applying triplanar mapping. Triplanar mapping is a technique which applies textures onto a model from three directions using the world space positions. The initial setup of the shader can take time, but once implemented many textures can be generated by modifying the parameters of the shader such as the colour, size and position of the spots and the main colour of the dog. In total we have generated 12 types of fur texture, which are randomly sampled when rendering the images.
+
+<br class="ltx_break"><span id="S2.p2.2.9" class="ltx_text ltx_font_bold">Post-processing effects.</span> The post-processing effects from Unity were used to generate different lighting conditions and add noise to the renders. We added different types of grain which differ in particle size, intensity value, colour, and luminance contribution. We colour graded the image with saturation values which are randomly sampled between [-100, 100]; and with brightness values that range between [-20, 35]. 
+<br class="ltx_break"><span id="S2.p2.2.10" class="ltx_text ltx_font_bold">Camera.</span> The camera was set to follow and look at the dog while being randomly positioned around the dog to capture it from different angles. The camera’s field of view values were sampled uniformly at random between [50,100] degrees.
+<br class="ltx_break"><span id="S2.p2.2.11" class="ltx_text ltx_font_bold">Environment.</span> Different environments were created by modifying the sky and terrain textures. To set the sky texture we randomly sampled 1341 images from the Kaggle Landscape Pictures dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>. Additionally, 10 different terrain textures were collected from the internet consisting of grass, autumn leaves (2x), dry mud (2x), cobble stone, pebbles, sand, snow and tiles. 
+<br class="ltx_break"><span id="S2.p2.2.12" class="ltx_text ltx_font_bold">2D annotation.</span> To save the 2D annotations we located the 3D joint positions in world space and transform them into screen space. When the program runs, the 2D keypoints, the frame number and the bounding box coordinates with the 256x256 RGB image are saved. The bounding box coordinates were computed by adding 10 pixels to the minimum and maximum of the <math id="S2.p2.1.m1.1" class="ltx_Math" alttext="x" display="inline"><semantics id="S2.p2.1.m1.1a"><mi id="S2.p2.1.m1.1.1" xref="S2.p2.1.m1.1.1.cmml">x</mi><annotation-xml encoding="MathML-Content" id="S2.p2.1.m1.1b"><ci id="S2.p2.1.m1.1.1.cmml" xref="S2.p2.1.m1.1.1">𝑥</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p2.1.m1.1c">x</annotation></semantics></math>- and <math id="S2.p2.2.m2.1" class="ltx_Math" alttext="y" display="inline"><semantics id="S2.p2.2.m2.1a"><mi id="S2.p2.2.m2.1.1" xref="S2.p2.2.m2.1.1.cmml">y</mi><annotation-xml encoding="MathML-Content" id="S2.p2.2.m2.1b"><ci id="S2.p2.2.m2.1.1.cmml" xref="S2.p2.2.m2.1.1">𝑦</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.p2.2.m2.1c">y</annotation></semantics></math>-coordinates. The average time to produce a synthetic is 33 milliseconds. By contrast, manual annotation of an image with these keypoints typically takes at least a minute. The data was generated on a MacBook Pro 2016 with a 2.9 GHz Quad-Core Intel Core i7 processor and a AMD Radeon Pro 460 4GB.</p>
+</div>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Experiments and Results</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">We trained a 2-stacked hourglass network with 2 blocks (2HG), an 8-stacked hourglass network with 1 block (8HG) and a pre-trained Mask R-CNN model with a ResNet50 as a backbone. We refer the reader to the supplementary material and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> for further details on the training set up and the networks, respectively.</p>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Six experiments were conducted: Firstly, the networks were trained with solely synthetic data. Secondly, the networks were trained purely on the StanfordExtra dataset. Thirdly, the networks which were trained only on synthetic data were fine-tuned with the StanfordExtra dataset using the same parameters as the first experiment. Then, we repeated the third experiment but with a smaller learning rate. Finally, the networks were trained on a mixed dataset which is a dataset that contains both the StanfordExtra and (either the whole or a fraction of) the SyDog dataset.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Datasets</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.1" class="ltx_p"><span id="S3.SS1.p1.1.1" class="ltx_text ltx_font_bold">The StanfordExtra dataset</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> is based on the Stanford Dogs dataset <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> and contains 12k real images which cover 120 different types of dogs. The 2D joint annotations were modified to reflect our synthetic data labels. Only the common joints were included in the annotations and the joints that differed between the StanfordExtra and the Synthetic Dog datasets, the keypoints’ visibility were set to invisible. We used the StandfordExtra training-test split, which are publicly available <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>.
+To train the networks on synthetic data, <span id="S3.SS1.p1.1.2" class="ltx_text ltx_font_bold">the SyDog dataset</span> was divided by the different types of dog. 6 dogs were used for training, 1 for validation and 1 for testing. To train the networks with the mixed dataset, either the whole or a fraction of SyDog dataset was made available for training.</p>
+</div>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Evaluation metrics</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">The networks were evaluated using the percentage of correct keypoints (PCK) and the mean per joint position error (MPJPE), which were both normalized with respect to the length of the bounding box diagonal. The PCK measures whether the predicted keypoints are within a threshold from the true keypoints. The threshold was set to 10% of the bounding box diagonal. The MPJPE is the mean of the per joint position error <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>. The evaluation metrics are calculated for visible keypoints only.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Results for SyDog test dataset</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">Table <a href="#S3.T1" title="Table 1 ‣ 3.3 Results for SyDog test dataset ‣ 3 Experiments and Results ‣ SyDog: A Synthetic Dog Dataset for Improved 2D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> shows the pose estimation results for the 2HG, 8H and Mask R-CNN. Some challenges do arise for the Mask R-CNN when it has to predict certain poses such as sitting and when it is presented with certain camera view points such as when the dog is far away.</p>
+</div>
+<figure id="S3.T1" class="ltx_table">
+<table id="S3.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S3.T1.1.1.1" class="ltx_tr">
+<th id="S3.T1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Network</th>
+<th id="S3.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">PCK (%)</th>
+<th id="S3.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">MPJPE (%)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S3.T1.1.2.1" class="ltx_tr">
+<th id="S3.T1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_tt">2HG</th>
+<td id="S3.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">77.76</td>
+<td id="S3.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">6.51</td>
+</tr>
+<tr id="S3.T1.1.3.2" class="ltx_tr">
+<th id="S3.T1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r">8HG</th>
+<td id="S3.T1.1.3.2.2" class="ltx_td ltx_align_center ltx_border_r">77.57</td>
+<td id="S3.T1.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r">6.56</td>
+</tr>
+<tr id="S3.T1.1.4.3" class="ltx_tr">
+<th id="S3.T1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r">Mask R-CNN</th>
+<td id="S3.T1.1.4.3.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">68.98</td>
+<td id="S3.T1.1.4.3.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">11.02</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Average PCK@0.1 and MPJPE from the 2HG, 8HG and the Mask R-CNN on the SyDog test dataset. </figcaption>
+</figure>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span>Results for StanfordExtra test dataset</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.1" class="ltx_p">The average PCK and MPJPE for all experiments are shown in Table <a href="#S3.T2" title="Table 2 ‣ 3.4 Results for StanfordExtra test dataset ‣ 3 Experiments and Results ‣ SyDog: A Synthetic Dog Dataset for Improved 2D Pose Estimation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<figure id="S3.T2" class="ltx_table">
+<div id="S3.T2.8.8" class="ltx_inline-block ltx_align_center ltx_transformed_outer" style="width:365.1pt;height:396pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="transform:translate(0.0pt,0.0pt) scale(1.0,1.0) ;">
+<table id="S3.T2.8.8.8" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.T2.2.2.2.2" class="ltx_tr">
+<td id="S3.T2.2.2.2.2.3" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Network</td>
+<td id="S3.T2.2.2.2.2.4" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Dataset</td>
+<td id="S3.T2.2.2.2.2.5" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Learning rate</td>
+<td id="S3.T2.1.1.1.1.1" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">PCK (%) <math id="S3.T2.1.1.1.1.1.m1.1" class="ltx_Math" alttext="\uparrow" display="inline"><semantics id="S3.T2.1.1.1.1.1.m1.1a"><mo stretchy="false" id="S3.T2.1.1.1.1.1.m1.1.1" xref="S3.T2.1.1.1.1.1.m1.1.1.cmml">↑</mo><annotation-xml encoding="MathML-Content" id="S3.T2.1.1.1.1.1.m1.1b"><ci id="S3.T2.1.1.1.1.1.m1.1.1.cmml" xref="S3.T2.1.1.1.1.1.m1.1.1">↑</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.1.1.1.1.1.m1.1c">\uparrow</annotation></semantics></math>
+</td>
+<td id="S3.T2.2.2.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">MPJPE (%) <math id="S3.T2.2.2.2.2.2.m1.1" class="ltx_Math" alttext="\downarrow" display="inline"><semantics id="S3.T2.2.2.2.2.2.m1.1a"><mo stretchy="false" id="S3.T2.2.2.2.2.2.m1.1.1" xref="S3.T2.2.2.2.2.2.m1.1.1.cmml">↓</mo><annotation-xml encoding="MathML-Content" id="S3.T2.2.2.2.2.2.m1.1b"><ci id="S3.T2.2.2.2.2.2.m1.1.1.cmml" xref="S3.T2.2.2.2.2.2.m1.1.1">↓</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.2.2.2.2.2.m1.1c">\downarrow</annotation></semantics></math>
+</td>
+</tr>
+<tr id="S3.T2.8.8.8.9.1" class="ltx_tr">
+<td id="S3.T2.8.8.8.9.1.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_tt" rowspan="7"><span id="S3.T2.8.8.8.9.1.1.1" class="ltx_text">2HG</span></td>
+<td id="S3.T2.8.8.8.9.1.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_tt">Real</td>
+<td id="S3.T2.8.8.8.9.1.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_tt">0.001</td>
+<td id="S3.T2.8.8.8.9.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">68.61</td>
+<td id="S3.T2.8.8.8.9.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">15.84</td>
+</tr>
+<tr id="S3.T2.8.8.8.10.2" class="ltx_tr">
+<td id="S3.T2.8.8.8.10.2.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Synthetic</td>
+<td id="S3.T2.8.8.8.10.2.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">0.001</td>
+<td id="S3.T2.8.8.8.10.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">16.20</td>
+<td id="S3.T2.8.8.8.10.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">46.26</td>
+</tr>
+<tr id="S3.T2.3.3.3.3" class="ltx_tr">
+<td id="S3.T2.3.3.3.3.2" class="ltx_td ltx_align_left ltx_border_r">FT</td>
+<td id="S3.T2.3.3.3.3.1" class="ltx_td ltx_align_left ltx_border_r">0.001 <math id="S3.T2.3.3.3.3.1.m1.1" class="ltx_Math" alttext="\rightarrow" display="inline"><semantics id="S3.T2.3.3.3.3.1.m1.1a"><mo stretchy="false" id="S3.T2.3.3.3.3.1.m1.1.1" xref="S3.T2.3.3.3.3.1.m1.1.1.cmml">→</mo><annotation-xml encoding="MathML-Content" id="S3.T2.3.3.3.3.1.m1.1b"><ci id="S3.T2.3.3.3.3.1.m1.1.1.cmml" xref="S3.T2.3.3.3.3.1.m1.1.1">→</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.3.3.3.3.1.m1.1c">\rightarrow</annotation></semantics></math> 0.001</td>
+<td id="S3.T2.3.3.3.3.3" class="ltx_td ltx_align_center ltx_border_r">76.57</td>
+<td id="S3.T2.3.3.3.3.4" class="ltx_td ltx_align_center ltx_border_r">11.80</td>
+</tr>
+<tr id="S3.T2.4.4.4.4" class="ltx_tr">
+<td id="S3.T2.4.4.4.4.2" class="ltx_td ltx_align_left ltx_border_r">FT</td>
+<td id="S3.T2.4.4.4.4.1" class="ltx_td ltx_align_left ltx_border_r">0.001 <math id="S3.T2.4.4.4.4.1.m1.1" class="ltx_Math" alttext="\rightarrow" display="inline"><semantics id="S3.T2.4.4.4.4.1.m1.1a"><mo stretchy="false" id="S3.T2.4.4.4.4.1.m1.1.1" xref="S3.T2.4.4.4.4.1.m1.1.1.cmml">→</mo><annotation-xml encoding="MathML-Content" id="S3.T2.4.4.4.4.1.m1.1b"><ci id="S3.T2.4.4.4.4.1.m1.1.1.cmml" xref="S3.T2.4.4.4.4.1.m1.1.1">→</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.4.4.4.4.1.m1.1c">\rightarrow</annotation></semantics></math> 0.000001</td>
+<td id="S3.T2.4.4.4.4.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.4.4.4.4.3.1" class="ltx_text ltx_font_bold">77.19</span></td>
+<td id="S3.T2.4.4.4.4.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.4.4.4.4.4.1" class="ltx_text ltx_font_bold">11.32</span></td>
+</tr>
+<tr id="S3.T2.8.8.8.11.3" class="ltx_tr">
+<td id="S3.T2.8.8.8.11.3.1" class="ltx_td ltx_align_left ltx_border_r">Mixed@0.1</td>
+<td id="S3.T2.8.8.8.11.3.2" class="ltx_td ltx_align_left ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.11.3.3" class="ltx_td ltx_align_center ltx_border_r">63.14</td>
+<td id="S3.T2.8.8.8.11.3.4" class="ltx_td ltx_align_center ltx_border_r">19.08</td>
+</tr>
+<tr id="S3.T2.8.8.8.12.4" class="ltx_tr">
+<td id="S3.T2.8.8.8.12.4.1" class="ltx_td ltx_align_left ltx_border_r">Mixed@0.5</td>
+<td id="S3.T2.8.8.8.12.4.2" class="ltx_td ltx_align_left ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.12.4.3" class="ltx_td ltx_align_center ltx_border_r">68.43</td>
+<td id="S3.T2.8.8.8.12.4.4" class="ltx_td ltx_align_center ltx_border_r">15.50</td>
+</tr>
+<tr id="S3.T2.8.8.8.13.5" class="ltx_tr">
+<td id="S3.T2.8.8.8.13.5.1" class="ltx_td ltx_align_left ltx_border_r">Mixed@1.0</td>
+<td id="S3.T2.8.8.8.13.5.2" class="ltx_td ltx_align_left ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.13.5.3" class="ltx_td ltx_align_center ltx_border_r">70.46</td>
+<td id="S3.T2.8.8.8.13.5.4" class="ltx_td ltx_align_center ltx_border_r">14.76</td>
+</tr>
+<tr id="S3.T2.8.8.8.14.6" class="ltx_tr">
+<td id="S3.T2.8.8.8.14.6.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_tt" rowspan="7"><span id="S3.T2.8.8.8.14.6.1.1" class="ltx_text">8HG</span></td>
+<td id="S3.T2.8.8.8.14.6.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_tt">Real</td>
+<td id="S3.T2.8.8.8.14.6.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_tt">0.001</td>
+<td id="S3.T2.8.8.8.14.6.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">68.90</td>
+<td id="S3.T2.8.8.8.14.6.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">15.64</td>
+</tr>
+<tr id="S3.T2.8.8.8.15.7" class="ltx_tr">
+<td id="S3.T2.8.8.8.15.7.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Synthetic</td>
+<td id="S3.T2.8.8.8.15.7.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">0.001</td>
+<td id="S3.T2.8.8.8.15.7.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">17.34</td>
+<td id="S3.T2.8.8.8.15.7.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">45.08</td>
+</tr>
+<tr id="S3.T2.5.5.5.5" class="ltx_tr">
+<td id="S3.T2.5.5.5.5.2" class="ltx_td ltx_align_left ltx_border_r">FT</td>
+<td id="S3.T2.5.5.5.5.1" class="ltx_td ltx_align_left ltx_border_r">0.001 <math id="S3.T2.5.5.5.5.1.m1.1" class="ltx_Math" alttext="\rightarrow" display="inline"><semantics id="S3.T2.5.5.5.5.1.m1.1a"><mo stretchy="false" id="S3.T2.5.5.5.5.1.m1.1.1" xref="S3.T2.5.5.5.5.1.m1.1.1.cmml">→</mo><annotation-xml encoding="MathML-Content" id="S3.T2.5.5.5.5.1.m1.1b"><ci id="S3.T2.5.5.5.5.1.m1.1.1.cmml" xref="S3.T2.5.5.5.5.1.m1.1.1">→</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.5.5.5.5.1.m1.1c">\rightarrow</annotation></semantics></math> 0.001</td>
+<td id="S3.T2.5.5.5.5.3" class="ltx_td ltx_align_center ltx_border_r">78.31</td>
+<td id="S3.T2.5.5.5.5.4" class="ltx_td ltx_align_center ltx_border_r">11.47</td>
+</tr>
+<tr id="S3.T2.6.6.6.6" class="ltx_tr">
+<td id="S3.T2.6.6.6.6.2" class="ltx_td ltx_align_left ltx_border_r">FT</td>
+<td id="S3.T2.6.6.6.6.1" class="ltx_td ltx_align_left ltx_border_r">0.001 <math id="S3.T2.6.6.6.6.1.m1.1" class="ltx_Math" alttext="\rightarrow" display="inline"><semantics id="S3.T2.6.6.6.6.1.m1.1a"><mo stretchy="false" id="S3.T2.6.6.6.6.1.m1.1.1" xref="S3.T2.6.6.6.6.1.m1.1.1.cmml">→</mo><annotation-xml encoding="MathML-Content" id="S3.T2.6.6.6.6.1.m1.1b"><ci id="S3.T2.6.6.6.6.1.m1.1.1.cmml" xref="S3.T2.6.6.6.6.1.m1.1.1">→</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.6.6.6.6.1.m1.1c">\rightarrow</annotation></semantics></math> 0.00001</td>
+<td id="S3.T2.6.6.6.6.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.6.6.6.6.3.1" class="ltx_text ltx_font_bold">78.65</span></td>
+<td id="S3.T2.6.6.6.6.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.6.6.6.6.4.1" class="ltx_text ltx_font_bold">11.19</span></td>
+</tr>
+<tr id="S3.T2.8.8.8.16.8" class="ltx_tr">
+<td id="S3.T2.8.8.8.16.8.1" class="ltx_td ltx_align_left ltx_border_r">Mixed@0.1</td>
+<td id="S3.T2.8.8.8.16.8.2" class="ltx_td ltx_align_left ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.16.8.3" class="ltx_td ltx_align_center ltx_border_r">65.04</td>
+<td id="S3.T2.8.8.8.16.8.4" class="ltx_td ltx_align_center ltx_border_r">17.81</td>
+</tr>
+<tr id="S3.T2.8.8.8.17.9" class="ltx_tr">
+<td id="S3.T2.8.8.8.17.9.1" class="ltx_td ltx_align_left ltx_border_r">Mixed@0.5</td>
+<td id="S3.T2.8.8.8.17.9.2" class="ltx_td ltx_align_left ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.17.9.3" class="ltx_td ltx_align_center ltx_border_r">71.76</td>
+<td id="S3.T2.8.8.8.17.9.4" class="ltx_td ltx_align_center ltx_border_r">15.19</td>
+</tr>
+<tr id="S3.T2.8.8.8.18.10" class="ltx_tr">
+<td id="S3.T2.8.8.8.18.10.1" class="ltx_td ltx_align_left ltx_border_r">Mixed@1.0</td>
+<td id="S3.T2.8.8.8.18.10.2" class="ltx_td ltx_align_left ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.18.10.3" class="ltx_td ltx_align_center ltx_border_r">72.09</td>
+<td id="S3.T2.8.8.8.18.10.4" class="ltx_td ltx_align_center ltx_border_r">14.97</td>
+</tr>
+<tr id="S3.T2.8.8.8.19.11" class="ltx_tr">
+<td id="S3.T2.8.8.8.19.11.1" class="ltx_td ltx_align_left ltx_border_b ltx_border_l ltx_border_r ltx_border_tt" rowspan="7"><span id="S3.T2.8.8.8.19.11.1.1" class="ltx_text">Mask R-CNN</span></td>
+<td id="S3.T2.8.8.8.19.11.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_tt">Real</td>
+<td id="S3.T2.8.8.8.19.11.3" class="ltx_td ltx_align_left ltx_border_r ltx_border_tt">0.00001</td>
+<td id="S3.T2.8.8.8.19.11.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">43.60</td>
+<td id="S3.T2.8.8.8.19.11.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">21.58</td>
+</tr>
+<tr id="S3.T2.8.8.8.20.12" class="ltx_tr">
+<td id="S3.T2.8.8.8.20.12.1" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">Synthetic</td>
+<td id="S3.T2.8.8.8.20.12.2" class="ltx_td ltx_align_left ltx_border_r ltx_border_t">0.001</td>
+<td id="S3.T2.8.8.8.20.12.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">13.22</td>
+<td id="S3.T2.8.8.8.20.12.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">37.49</td>
+</tr>
+<tr id="S3.T2.7.7.7.7" class="ltx_tr">
+<td id="S3.T2.7.7.7.7.2" class="ltx_td ltx_align_left ltx_border_r">FT</td>
+<td id="S3.T2.7.7.7.7.1" class="ltx_td ltx_align_left ltx_border_r">0.00001 <math id="S3.T2.7.7.7.7.1.m1.1" class="ltx_Math" alttext="\rightarrow" display="inline"><semantics id="S3.T2.7.7.7.7.1.m1.1a"><mo stretchy="false" id="S3.T2.7.7.7.7.1.m1.1.1" xref="S3.T2.7.7.7.7.1.m1.1.1.cmml">→</mo><annotation-xml encoding="MathML-Content" id="S3.T2.7.7.7.7.1.m1.1b"><ci id="S3.T2.7.7.7.7.1.m1.1.1.cmml" xref="S3.T2.7.7.7.7.1.m1.1.1">→</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.7.7.7.7.1.m1.1c">\rightarrow</annotation></semantics></math> 0.00001</td>
+<td id="S3.T2.7.7.7.7.3" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.7.7.7.7.3.1" class="ltx_text ltx_font_bold">50.77</span></td>
+<td id="S3.T2.7.7.7.7.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S3.T2.7.7.7.7.4.1" class="ltx_text ltx_font_bold">20.03</span></td>
+</tr>
+<tr id="S3.T2.8.8.8.8" class="ltx_tr">
+<td id="S3.T2.8.8.8.8.2" class="ltx_td ltx_align_left ltx_border_r">FT</td>
+<td id="S3.T2.8.8.8.8.1" class="ltx_td ltx_align_left ltx_border_r">0.00001 <math id="S3.T2.8.8.8.8.1.m1.1" class="ltx_Math" alttext="\rightarrow" display="inline"><semantics id="S3.T2.8.8.8.8.1.m1.1a"><mo stretchy="false" id="S3.T2.8.8.8.8.1.m1.1.1" xref="S3.T2.8.8.8.8.1.m1.1.1.cmml">→</mo><annotation-xml encoding="MathML-Content" id="S3.T2.8.8.8.8.1.m1.1b"><ci id="S3.T2.8.8.8.8.1.m1.1.1.cmml" xref="S3.T2.8.8.8.8.1.m1.1.1">→</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.T2.8.8.8.8.1.m1.1c">\rightarrow</annotation></semantics></math> 0.000001</td>
+<td id="S3.T2.8.8.8.8.3" class="ltx_td ltx_align_center ltx_border_r">46.58</td>
+<td id="S3.T2.8.8.8.8.4" class="ltx_td ltx_align_center ltx_border_r">21.17</td>
+</tr>
+<tr id="S3.T2.8.8.8.21.13" class="ltx_tr">
+<td id="S3.T2.8.8.8.21.13.1" class="ltx_td ltx_align_left ltx_border_r">Mixed@0.1</td>
+<td id="S3.T2.8.8.8.21.13.2" class="ltx_td ltx_align_left ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.21.13.3" class="ltx_td ltx_align_center ltx_border_r">41.27</td>
+<td id="S3.T2.8.8.8.21.13.4" class="ltx_td ltx_align_center ltx_border_r">22.82</td>
+</tr>
+<tr id="S3.T2.8.8.8.22.14" class="ltx_tr">
+<td id="S3.T2.8.8.8.22.14.1" class="ltx_td ltx_align_left ltx_border_r">Mixed@0.5</td>
+<td id="S3.T2.8.8.8.22.14.2" class="ltx_td ltx_align_left ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.22.14.3" class="ltx_td ltx_align_center ltx_border_r">47.71</td>
+<td id="S3.T2.8.8.8.22.14.4" class="ltx_td ltx_align_center ltx_border_r">21.64</td>
+</tr>
+<tr id="S3.T2.8.8.8.23.15" class="ltx_tr">
+<td id="S3.T2.8.8.8.23.15.1" class="ltx_td ltx_align_left ltx_border_b ltx_border_r">Mixed@1.0</td>
+<td id="S3.T2.8.8.8.23.15.2" class="ltx_td ltx_align_left ltx_border_b ltx_border_r">0.001</td>
+<td id="S3.T2.8.8.8.23.15.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">45.77</td>
+<td id="S3.T2.8.8.8.23.15.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">21.61</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2: </span>Results on the StanfordExtra test dataset. Results are shown from the 2-and 8-stacked hourglass (2HG, 8HG) and the Mask R-CNN trained solely on the StanfordExtra dataset (Real) and solely on the SyDog dataset (Synthetic) together with the fine-tuned (FT) models and the models trained with a mixed dataset (Mixed@fraction). The performance is evaluated using the percentage of correct keypoints (PCK) with a threshold set to 0.1 and the mean per joint per error (MPJPE) which are both w.r.t. the length of the ground truth bounding box diagonal. </figcaption>
+</figure>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.1" class="ltx_p"><span id="S3.SS4.p2.1.1" class="ltx_text ltx_font_bold">Isolated training</span> The networks trained solely on synthetic data performed poorly on real data, which was expected due to the domain gap. Another possible reason could be that the SyDog dataset does not cover all breeds in the StanfordExtra dataset. The results from the networks trained only on real data were used as a baseline to evaluate the use of the SyDog dataset.
+
+<br class="ltx_break"><span id="S3.SS4.p2.1.2" class="ltx_text ltx_font_bold">Fine-tuning</span>
+There’s a significant increase in performance when fine-tuning the stacked hourglass networks with the same learning rate, and there is an even better performance when fine-tuning with a smaller learning rate. When fine-tuning the 2HG and the 8HG with a smaller learning rate the models’ PCK performances are increased by 12.51% and 14.15%, respectively. The performance of the Mask R-CNN did not improve when fine-tuning with smaller learning rates, yet it performs better than the Mask R-CNN that was trained solely on real data. 
+<br class="ltx_break"><span id="S3.SS4.p2.1.3" class="ltx_text ltx_font_bold">Training with mixed dataset</span> The best performance for the stacked hourglass networks is when the mixed dataset contains the full synthetic dataset, this is different for the Mask R-CNN; the Mask R-CNN performs best when the mixed dataset contains only half of the synthetic dataset, however using the full synthetic dataset in the mixed dataset produces better results than when the Mask R-CNN is trained solely with real data.</p>
+</div>
+<div id="S3.SS4.p3" class="ltx_para">
+<p id="S3.SS4.p3.1" class="ltx_p">Our results clearly demonstrate the benefits of using the synthetic data generated by our system. We show that using a mixed dataset when training gives a slight boost in the performance and that fine-tuning the networks results in a significant boost in the performance compared to the networks trained only on real data.
+The synthetic data generated by our system is not very photorealistic. However, it already improves the accuracy of the pose estimation models by 12.51% in the case of the 2-stacked hourglass network. We expect that improvements in photorealism would result in further improvements in pose estimation.
+</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Conclusion</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">To solve the lack of animal datasets, we introduce SyDog a synthetic dataset containing dogs with 2D pose and bounding box annotation which was generated using real-time rendering technology. The dataset was made varied by modifying the dog’s appearance, pose, environment, lighting conditions (post-process effects) and camera view points. To evaluate the use of the SyDog dataset we conducted extensive experiments on the real dataset, StanfordExtra. We bridged the domain gap by fine-tuning the networks trained on synthetic data with real data and training the networks with a mixed dataset (synthetic+real). We demonstrated that using the SyDog dataset <span id="S4.p1.1.1" class="ltx_text ltx_font_bold">increases the performance of pose estimation models</span> trained solely on real data and significantly <span id="S4.p1.1.2" class="ltx_text ltx_font_bold">reduces</span> the need for <span id="S4.p1.1.3" class="ltx_text ltx_font_bold">labour intensive labelling</span> which in turn <span id="S4.p1.1.4" class="ltx_text ltx_font_bold">speeds up the process</span>. The models trained with a mixed dataset return a slight increase in performance and models that were fine-tuned with real data return a significant increase in performance. The data generated does not look very photorealistic; however we showed that it already notably improves the accuracy of the pose estimation models. Future work would involve improving the photorealism of the data for yet further improvements in pose. In this work we focused on 2D pose estimation and generated data with 2D annotations but with further work, the system could be extended to generate 3D annotations and modified to produce scenes that handle occlusions, multiple dogs and interactions.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography" style="font-size:90%;">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text" style="font-size:90%;">
+Igor Barros Barbosa, Marco Cristani, Barbara Caputo, Aleksander Rognhaugen, and
+Theoharis Theoharis.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.2.1" class="ltx_text" style="font-size:90%;">Looking beyond appearances: Synthetic training data for deep cnns in
+re-identification.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib1.4.2" class="ltx_text" style="font-size:90%;">, abs/1701.03153, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text" style="font-size:90%;">
+Benjamin Biggs, Oliver Boyne, James Charles, Andrew Fitzgibbon, and Roberto
+Cipolla.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.2.1" class="ltx_text" style="font-size:90%;">Who left the dogs out? 3d animal reconstruction with expectation
+maximization in the loop, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text" style="font-size:90%;">
+Benjamin Biggs, Oliver Boyne, James Charles, Andrew Fitzgibbon, and Roberto
+Cipolla.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.2.1" class="ltx_text" style="font-size:90%;">Who left the dogs out?: 3D animal reconstruction with expectation
+maximization in the loop.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib3.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ECCV</span><span id="bib.bib3.5.3" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text" style="font-size:90%;">
+Benjamin Biggs, Thomas Roddick, Andrew Fitzgibbon, and Roberto Cipolla.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.2.1" class="ltx_text" style="font-size:90%;">Creatures great and SMAL: Recovering the shape and motion of
+animals from video.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib4.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ACCV</span><span id="bib.bib4.5.3" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text" style="font-size:90%;">
+Jinkun Cao, Hongyang Tang, Haoshu Fang, Xiaoyong Shen, Cewu Lu, and Yu-Wing
+Tai.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.2.1" class="ltx_text" style="font-size:90%;">Cross-domain adaptation for animal pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib5.4.2" class="ltx_text" style="font-size:90%;">, abs/1908.05806, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text" style="font-size:90%;">
+Zhe Cao, Gines Hidalgo, Tomas Simon, Shih-En Wei, and Yaser Sheikh.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.2.1" class="ltx_text" style="font-size:90%;">Openpose: Realtime multi-person 2d pose estimation using part
+affinity fields.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib6.4.2" class="ltx_text" style="font-size:90%;">, abs/1812.08008, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text" style="font-size:90%;">
+Wenzheng Chen, Huan Wang, Yangyan Li, Hao Su, Changhe Tu, Dani Lischinski,
+Daniel Cohen-Or, and Baoquan Chen.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.2.1" class="ltx_text" style="font-size:90%;">Synthesizing training images for boosting human 3d pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib7.4.2" class="ltx_text" style="font-size:90%;">, abs/1604.02703, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text" style="font-size:90%;">
+Haoshu Fang, Shuqin Xie, and Cewu Lu.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.2.1" class="ltx_text" style="font-size:90%;">RMPE: regional multi-person pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib8.4.2" class="ltx_text" style="font-size:90%;">, abs/1612.00137, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text" style="font-size:90%;">
+Adam Gosztolai, Semih Günel, Marco Pietro Abrate, Daniel Morales,
+Victor Lobato Ríos, Helge Rhodin, Pascal Fua, and Pavan Ramdya.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.2.1" class="ltx_text" style="font-size:90%;">Liftpose3d, a deep learning-based approach for transforming 2d to 3d
+pose in laboratory animals.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">bioRxiv</span><span id="bib.bib9.4.2" class="ltx_text" style="font-size:90%;">, 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span id="bib.bib10.1.1" class="ltx_text" style="font-size:90%;">
+Jacob M Graving, Daniel Chae, Hemal Naik, Liang Li, Benjamin Koger, Blair R
+Costelloe, and Iain D Couzin.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.2.1" class="ltx_text" style="font-size:90%;">Deepposekit, a software toolkit for fast and robust animal pose
+estimation using deep learning.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib10.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">eLife</span><span id="bib.bib10.4.2" class="ltx_text" style="font-size:90%;">, 8:e47994, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span id="bib.bib11.1.1" class="ltx_text" style="font-size:90%;">
+Kaiming He, Georgia Gkioxari, Piotr Dollár, and Ross B. Girshick.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.2.1" class="ltx_text" style="font-size:90%;">Mask R-CNN.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib11.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib11.4.2" class="ltx_text" style="font-size:90%;">, abs/1703.06870, 2017.
+</span>
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span id="bib.bib12.1.1" class="ltx_text" style="font-size:90%;">
+Tadanobu Inoue, Subhajit Chaudhury, Giovanni De Magistris, and Sakyasingha
+Dasgupta.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.2.1" class="ltx_text" style="font-size:90%;">Transfer learning from synthetic to real images using variational
+autoencoders for precise position detection.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib12.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib12.4.2" class="ltx_text" style="font-size:90%;">, abs/1807.01990, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text" style="font-size:90%;">
+Sinead Kearney, Wenbin Li, Martin Parsons, Kwang In Kim, and Darren Cosker.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.2.1" class="ltx_text" style="font-size:90%;">Rgbd-dog: Predicting canine pose from rgbd sensors.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib13.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">IEEE/CVF Conference on Computer Vision and Pattern
+Recognition (CVPR)</span><span id="bib.bib13.5.3" class="ltx_text" style="font-size:90%;">, June 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span id="bib.bib14.1.1" class="ltx_text" style="font-size:90%;">
+Aditya Khosla, Nityananda Jayadevaprakash, Bangpeng Yao, and Li Fei-Fei.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.2.1" class="ltx_text" style="font-size:90%;">Novel dataset for fine-grained image categorization.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib14.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib14.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">First Workshop on Fine-Grained Visual Categorization, IEEE
+Conference on Computer Vision and Pattern Recognition</span><span id="bib.bib14.5.3" class="ltx_text" style="font-size:90%;">, Colorado Springs, CO,
+June 2011.
+</span>
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span id="bib.bib15.1.1" class="ltx_text" style="font-size:90%;">
+Sijin Li and Antoni B. Chan.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.2.1" class="ltx_text" style="font-size:90%;">3d human pose estimation from monocular images with deep
+convolutional neural network.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib15.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib15.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">ACCV</span><span id="bib.bib15.5.3" class="ltx_text" style="font-size:90%;">, 2014.
+</span>
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text" style="font-size:90%;">
+Alexander Mathis, Pranav Mamidanna, Kevin M. Cury, Taiga Abe, Venkatesh N.
+Murthy, Mackenzie Weygandt Mathis, and Matthias Bethge.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.2.1" class="ltx_text" style="font-size:90%;">Deeplabcut: markerless pose estimation of user-defined body parts
+with deep learning.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">Nature Neuroscience</span><span id="bib.bib16.4.2" class="ltx_text" style="font-size:90%;">, 21(9):1281–1289, Sep 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span id="bib.bib17.1.1" class="ltx_text" style="font-size:90%;">
+Jiteng Mu, Weichao Qiu, Gregory D. Hager, and Alan L. Yuille.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.2.1" class="ltx_text" style="font-size:90%;">Learning from synthetic animals.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib17.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib17.4.2" class="ltx_text" style="font-size:90%;">, abs/1912.08265, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span id="bib.bib18.1.1" class="ltx_text" style="font-size:90%;">
+Elon Musk.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.2.1" class="ltx_text" style="font-size:90%;">An integrated brain-machine interface platform with thousands of
+channels.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib18.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">J Med Internet Res</span><span id="bib.bib18.4.2" class="ltx_text" style="font-size:90%;">, 21(10):e16194, Oct 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span id="bib.bib19.1.1" class="ltx_text" style="font-size:90%;">
+Alejandro Newell, Kaiyu Yang, and Jia Deng.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.2.1" class="ltx_text" style="font-size:90%;">Stacked hourglass networks for human pose estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib19.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib19.4.2" class="ltx_text" style="font-size:90%;">, abs/1603.06937, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span id="bib.bib20.1.1" class="ltx_text" style="font-size:90%;">
+OpenAI, Ilge Akkaya, Marcin Andrychowicz, Maciek Chociej, Mateusz Litwin, Bob
+McGrew, Arthur Petron, Alex Paino, Matthias Plappert, Glenn Powell, Raphael
+Ribas, Jonas Schneider, Nikolas Tezak, Jerry Tworek, Peter Welinder, Lilian
+Weng, Qiming Yuan, Wojciech Zaremba, and Lei Zhang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.2.1" class="ltx_text" style="font-size:90%;">Solving rubik’s cube with a robot hand.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib20.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib20.4.2" class="ltx_text" style="font-size:90%;">, abs/1910.07113, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span id="bib.bib21.1.1" class="ltx_text" style="font-size:90%;">
+Xue Bin Peng, Erwin Coumans, Tingnan Zhang, Tsang-Wei Edward Lee, Jie Tan, and
+Sergey Levine.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.2.1" class="ltx_text" style="font-size:90%;">Learning agile robotic locomotion skills by imitating animals.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib21.3.1" class="ltx_text" style="font-size:90%;">In </span><span id="bib.bib21.4.2" class="ltx_text ltx_font_italic" style="font-size:90%;">Robotics: Science and Systems</span><span id="bib.bib21.5.3" class="ltx_text" style="font-size:90%;">, 07 2020.
+</span>
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span id="bib.bib22.1.1" class="ltx_text" style="font-size:90%;">
+T.D. Pereira, D. E. Aldarondo, L. Willmore, M. Kislin, S. S.-H. Wang, M.
+Murthy, and J. W. Shaevitz.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.2.1" class="ltx_text" style="font-size:90%;">Fast animal pose estimation using deep neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib22.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">bioRxiv</span><span id="bib.bib22.4.2" class="ltx_text" style="font-size:90%;">, 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span id="bib.bib23.1.1" class="ltx_text" style="font-size:90%;">
+Stephan R. Richter, Vibhav Vineet, Stefan Roth, and Vladlen Koltun.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.2.1" class="ltx_text" style="font-size:90%;">Playing for data: Ground truth from computer games.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib23.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib23.4.2" class="ltx_text" style="font-size:90%;">, abs/1608.02192, 2016.
+</span>
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span id="bib.bib24.1.1" class="ltx_text" style="font-size:90%;">
+Arnaud Rougetet.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib24.2.1" class="ltx_text" style="font-size:90%;">Landscape pictures, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span id="bib.bib25.1.1" class="ltx_text" style="font-size:90%;">
+Ke Sun, Bin Xiao, Dong Liu, and Jingdong Wang.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.2.1" class="ltx_text" style="font-size:90%;">Deep high-resolution representation learning for human pose
+estimation.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib25.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib25.4.2" class="ltx_text" style="font-size:90%;">, abs/1902.09212, 2019.
+</span>
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span id="bib.bib26.1.1" class="ltx_text" style="font-size:90%;">
+Jonathan Tompson, Ross Goroshin, Arjun Jain, Yann LeCun, and Christoph Bregler.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.2.1" class="ltx_text" style="font-size:90%;">Efficient object localization using convolutional networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib26.4.2" class="ltx_text" style="font-size:90%;">, abs/1411.4280, 2014.
+</span>
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span id="bib.bib27.1.1" class="ltx_text" style="font-size:90%;">
+Alexander Toshev and Christian Szegedy.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.2.1" class="ltx_text" style="font-size:90%;">Deeppose: Human pose estimation via deep neural networks.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib27.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib27.4.2" class="ltx_text" style="font-size:90%;">, abs/1312.4659, 2013.
+</span>
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span id="bib.bib28.1.1" class="ltx_text" style="font-size:90%;">
+He Zhang, Sebastian Starke, Taku Komura, and Jun Saito.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.2.1" class="ltx_text" style="font-size:90%;">Mode-adaptive neural networks for quadruped motion control.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib28.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">ACM Trans. Graph.</span><span id="bib.bib28.4.2" class="ltx_text" style="font-size:90%;">, 37(4), July 2018.
+</span>
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span id="bib.bib29.1.1" class="ltx_text" style="font-size:90%;">
+Silvia Zuffi, Angjoo Kanazawa, Tanya Y. Berger-Wolf, and Michael J. Black.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.2.1" class="ltx_text" style="font-size:90%;">Three-d safari: Learning to estimate zebra pose, shape, and texture
+from images ”in the wild”.
+</span>
+</span>
+<span class="ltx_bibblock"><span id="bib.bib29.3.1" class="ltx_text ltx_font_italic" style="font-size:90%;">CoRR</span><span id="bib.bib29.4.2" class="ltx_text" style="font-size:90%;">, abs/1908.07201, 2019.
+</span>
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2108.00248" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2108.00249" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2108.00249">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2108.00249" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2108.00250" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Fri Mar  8 13:24:43 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

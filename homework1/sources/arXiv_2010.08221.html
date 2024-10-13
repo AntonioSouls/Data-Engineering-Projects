@@ -1,0 +1,1286 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2010.08221] HPERL: 3D Human Pose Estimation from RGB and LiDAR</title><meta property="og:description" content="In-the-wild human pose estimation has a huge potential for various fields, ranging from animation and action recognition to intention recognition and prediction for autonomous driving.
+The current state-of-the-art is f…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HPERL: 3D Human Pose Estimation from RGB and LiDAR">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="HPERL: 3D Human Pose Estimation from RGB and LiDAR">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2010.08221">
+
+<!--Generated on Sun Mar 10 23:00:00 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="keywords" lang="en" content="
+sensor fusion,  3D human pose estimation,  LiDAR,  RGB,  autonomous vehicles,  perception
+">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">HPERL: 3D Human Pose Estimation
+<br class="ltx_break">from RGB and LiDAR
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+
+Michael Fürst12,
+Shriya T. P. Gupta13,
+René Schuster2,
+Oliver Wasenmüller24 and
+Didier Stricker25
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">1Equal contribution
+</span>
+<span class="ltx_contact ltx_role_affiliation">2DFKI - German Research Center for Artificial Intelligence, <span id="id1.1.id1" class="ltx_text ltx_font_typewriter">firstname.lastname@dfki.de</span>
+</span>
+<span class="ltx_contact ltx_role_affiliation">3Birla Institute of Technology and Science (BITS) Pilani, <span id="id2.2.id1" class="ltx_text ltx_font_typewriter">f20160060@goa.bits-pilani.ac.in</span>
+</span>
+<span class="ltx_contact ltx_role_affiliation">4University of Applied Sciences Mannheim, <span id="id3.3.id1" class="ltx_text ltx_font_typewriter">o.wasenmueller@hs-mannheim.de</span>
+</span>
+<span class="ltx_contact ltx_role_affiliation">5University of Kaiserslautern - TUK
+</span></span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id4.id1" class="ltx_p">In-the-wild human pose estimation has a huge potential for various fields, ranging from animation and action recognition to intention recognition and prediction for autonomous driving.
+The current state-of-the-art is focused only on RGB and RGB-D approaches for predicting the 3D human pose.
+However, not using precise LiDAR depth information limits the performance and leads to very inaccurate absolute pose estimation.
+With LiDAR sensors becoming more affordable and common on robots and autonomous vehicle setups, we propose an end-to-end architecture using RGB and LiDAR to predict the absolute 3D human pose with unprecedented precision.
+Additionally, we introduce a weakly-supervised approach to generate 3D predictions using 2D pose annotations from PedX <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>.
+This allows for many new opportunities in the field of 3D human pose estimation.</p>
+</div>
+<div class="ltx_keywords">
+<h6 class="ltx_title ltx_title_keywords">Index Terms: </h6>
+sensor fusion, 3D human pose estimation, LiDAR, RGB, autonomous vehicles, perception
+
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">Introduction</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Human pose estimation and understanding is the foundation for intention recognition and action recognition.
+In the context of fully autonomous or highly automated vehicles, it is essential to recognize and understand the pointing gestures of a police officer or other traffic participants.
+The overall body pose also enables the estimation of whether a pedestrian is looking at a vehicle and waiting or crossing the street without seeing the car. Thus, it allows the automated car to react even before the pedestrian is on the road.
+Furthermore, it can help with the rotation ambiguity for pedestrians. While it is debatable if the foot, hip or torso direction is the front of a pedestrian, with human pose estimation there is no need for a decision, since all joints are provided and a more detailed understanding is enabled.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">However, there is presently a lack of human pose estimation approaches for pedestrians.
+Currently most approaches in human pose estimation focus on controlled environments, and the few that handle in-the-wild scenarios do not focus on the specific situation of pedestrian detection in autonomous driving.
+Autonomous vehicles need a good detection rate.
+Furthermore, algorithms should be tuned towards false positives rather than false negatives, since the latter puts the pedestrians in great danger.
+In contrast to most datasets and algorithms focusing on human pose estimation, the distance at which pedestrian detection happens is a challenge.
+Relevant pedestrians on the sidewalk are typically 5-50 meters away from the ego-vehicle.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.1" class="ltx_p">Moreover, with LiDAR sensors becoming more affordable and being used as a main sensor for other tasks in this field, there is the opportunity to not only rely on RGB as the current state-of-the-art does, but to use LiDAR as an additional input modality.
+In 3D object detection, it has been shown that the addition of LiDAR enables a game changing precision.
+We are the first to show similar insights for human pose estimation using our HPERL (Fig. <a href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>).</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><span id="S1.F1.1.pic1" class="ltx_picture ltx_centering" style="width:423.5pt;height:278.2pt;">\begin{overpic}[width=424.94574pt,tics=10]{images/Title.pdf}
+\put(1.0,62.0){RGB only}
+\put(51.0,62.0){HPERL~{}(RGB + LiDAR)}
+\end{overpic}</span>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Depth ambiguity is solved by incorporating LiDAR information. The visualization of the predicted 3D poses and the ground truth 3D bounding boxes shows a poor performance for the RGB only case due to the depth ambiguity. But our HPERL can precisely predict the poses and their absolute position, using LiDAR information. In 2D image space, the depth ambiguity leads to visually appealing results for both approaches.</figcaption>
+</figure>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">To make 3D human pose estimation precise enough for the demands of autonomous driving, we propose:
+</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">A novel end-to-end architecture for multi-person 3D pose estimation that fuses RGB images and LiDAR point clouds for superior precision,</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">a weakly-supervised training procedure for simultaneous 2D and 3D pose estimation using only 2D pose labels,</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">evaluation metrics to assess the 3D performance of our approach without expensive 3D pose annotations.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Related Work</span>
+</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">Faster R-CNN<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> is one of the most influential object detectors.
+Inspiring many approaches, it is also at the core of our work.
+It has a region proposal network, that predicts regions of interest in the image and then refines those predictions with a second stage.
+Approaches following this scheme can be observed in many fields related to our work.
+In the following sections, we briefly introduce all the associated fields.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS1.4.1.1" class="ltx_text">II-A</span> </span><span id="S2.SS1.5.2" class="ltx_text ltx_font_italic">3D Detection proves importance of LiDAR</span>
+</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">For 3D object detection in the field of autonomous driving, there is a division of approaches based on the sensor modalities used for detection.
+There are RGB only approaches, LiDAR only approaches and RGB+LiDAR approaches.
+RGB only approaches are actively researched <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> but cannot achieve the performance of LiDAR approaches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>, <a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>. Most approaches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> are in the RGB+LiDAR category, but majorly influential to our HPERL are AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> and LRPD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>.
+LRPD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> has shown that for detecting far away pedestrians precisely, the details of the RGB image and the precision of LiDAR are both essential. This indicates that RGB+LiDAR fusion can yield great performance improvements for precise human pose estimation.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> follows a two stage approach like Faster R-CNN. In the first stage, they generate region proposals from the RGB and LiDAR inputs and fuse them using the RoI crops.
+The second stage then operates on the RoI feature crops like the refinement stage of Faster R-CNN, with the main conceptual difference being that the regression is for 3D boxes instead of 2D boxes.
+This structure allows it to be adapted to human pose estimation approaches following the Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> schema.</p>
+</div>
+<figure id="S2.F2" class="ltx_figure"><span id="S2.F2.1.pic1" class="ltx_picture ltx_centering" style="width:423.5pt;height:180.7pt;">\begin{overpic}[width=424.94574pt,tics=10]{images/Depth_Ambiguity.pdf}
+\put(10.0,33.0){Image Plane}
+\put(0.5,0.0){$d_{cam}=0$}
+\put(72.0,0.0){$d_{1}$}
+\put(90.0,0.0){$d_{2}$}
+\put(99.0,0.0){$d$}
+\end{overpic}</span>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>The two pedestrians (yellow, green) appear to be of the same size in the RGB image, even though they have different distances from the camera. A slight change in height can have an impact on the estimated distance. A network can still partially reconstruct the depth from other cues, but this is more difficult than with the correct LiDAR depth information.</figcaption>
+</figure>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS2.4.1.1" class="ltx_text">II-B</span> </span><span id="S2.SS2.5.2" class="ltx_text ltx_font_italic">2D Human Pose Estimation</span>
+</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">In the past, 2D human pose estimation has been successfully solved by various approaches on RGB images only.
+DeepPose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> applied CNNs in a cascaded regressor for 2D human pose estimation, whereas Tompson et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> predicted heatmaps for the joints instead of direct regression.
+In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite> and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, the heatmap idea is further improved upon.
+With the advent of multi-person pose estimation, two main categories of pose estimators emerged.</p>
+</div>
+<section id="S2.SS2.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S2.SS2.SSS1.4.1.1" class="ltx_text">II-B</span>1 </span>Bottom-Up</h4>
+
+<div id="S2.SS2.SSS1.p1" class="ltx_para">
+<p id="S2.SS2.SSS1.p1.1" class="ltx_p">Approaches predicting a heatmap of the joint positions first, and then combining the joints into human poses are called bottom-up methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib17" title="" class="ltx_ref">17</a>, <a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>.</p>
+</div>
+</section>
+<section id="S2.SS2.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S2.SS2.SSS2.4.1.1" class="ltx_text">II-B</span>2 </span>Top-Down</h4>
+
+<div id="S2.SS2.SSS2.p1" class="ltx_para">
+<p id="S2.SS2.SSS2.p1.1" class="ltx_p">These follow the opposite approach, by first predicting a bounding box around the person and then regressing the joints of that person <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>, <a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite>. As a direct descendant of Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, Mask R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite> is the most adaptable approach from this category proving the strength of its architecture in bounding box regression, segmentation and human pose estimation.
+DensePose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite> is a descendant of Mask R-CNN that maps the UV-coordinates of a 3D model to a person in the image, demonstrating the versatility of top-down estimators.</p>
+</div>
+<div id="S2.SS2.SSS2.p2" class="ltx_para">
+<p id="S2.SS2.SSS2.p2.1" class="ltx_p">Our approach is inspired by Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> and can be attributed to the top-down category. This method was chosen, as 3D object detectors with fusion typically rely on Faster R-CNN like approaches.</p>
+</div>
+</section>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS3.4.1.1" class="ltx_text">II-C</span> </span><span id="S2.SS3.5.2" class="ltx_text ltx_font_italic">3D Human Pose Estimation</span>
+</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">Li et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite> solve the 3D pose estimation task by directly regressing the joint positions and then detecting the actual 3D joints. In contrast, Chen et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite> predict 2D poses, match them to a 3D pose library and use the best match as the 3D pose. Similarly, Martinez et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite> use a simple neural network to predict 3D poses from the 2D poses. But Zhou et al. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite> observe that the sequential nature of separated sequential approaches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite> hinders performance. So, they integrate the learning process by having images from 2D in-the-wild and 3D indoor datasets in one batch. The 2D module is trained with 2D images and the 3D module is trained using 2D constraints and 3D regression data.</p>
+</div>
+<div id="S2.SS3.p2" class="ltx_para">
+<p id="S2.SS3.p2.1" class="ltx_p">Further, there are RGB-D approaches like <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>, <a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>. But as VNect <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite> shows, RGB-D methods suffer from limited application domains, mostly restricted to indoors. Moreover, the precision is not superior to RGB only methods.</p>
+</div>
+<div id="S2.SS3.p3" class="ltx_para">
+<p id="S2.SS3.p3.1" class="ltx_p">LCR-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>, <a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite> is a simple yet effective representative of the 3D pose estimation category.
+Its overall architecture is similar to Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.
+However, instead of just predicting regions of interest, it adds pose proposals, which are then refined in a second stage.
+The refinement has multiple parallel regression heads, one for each pose proposal, allowing a high degree of specialization in the poses.</p>
+</div>
+<div id="S2.SS3.p4" class="ltx_para">
+<p id="S2.SS3.p4.1" class="ltx_p">Although 3D object detection has shown the importance of LiDAR, mainly for resolving scale ambiguity errors as in Fig. <a href="#S2.F2" title="Figure 2 ‣ II-A 3D Detection proves importance of LiDAR ‣ II Related Work ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>, none of the presented pose estimation approaches use a fusion of RGB and LiDAR.
+Analysing the state-of-the-art, Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> style methods in 3D object detection (AVOD) and in 3D human pose estimation (LCR-Net) share a common structure that can be exploited.
+To the best of our knowledge, there have been no experiments on the fusion of RGB and LiDAR for 3D human pose estimation.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Approach</span>
+</h2>
+
+<figure id="S3.F3" class="ltx_figure"><span id="S3.F3.1.pic1" class="ltx_picture ltx_centering" style="width:423.5pt;height:123.6pt;">\begin{overpic}[width=424.94574pt,tics=10]{images/Architecture.pdf}
+\end{overpic}</span>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Our HPERL architecture processes the RGB images and LiDAR point clouds as input modalities, using an RPN based on AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> as the <span id="S3.F3.5.1" class="ltx_text ltx_font_italic">Feature Extraction Stage</span>. Inspired by LCR-Net <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>, our <span id="S3.F3.6.2" class="ltx_text ltx_font_italic">Pose Estimation Stage</span> predicts scores and deltas for the <span id="S3.F3.7.3" class="ltx_text ltx_font_italic">K</span> anchor poses. In contrast to other approaches, the anchor poses are generated from the 3D boxes of the first stage. By adding the deltas to these anchors and selecting based on the classification scores, the poses are predicted. These poses are then in a last step combined and filtered, whereas there may be multiple proposals per pedestrian.</figcaption>
+</figure>
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">Here we outline the main components of our end-to-end trainable pose estimation network, with the first stage as the Region Proposal Network (RPN) and the second stage composed of the classification and regression branches (Fig. <a href="#S3.F3" title="Figure 3 ‣ III Approach ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>). We use an AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> inspired first stage for HPERL and a Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> inspired first stage for the RGB baseline. As for the second stage, we use an LCRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite> inspired module in both cases. Thus, we perform the pose estimation in a top-down approach by first generating the region proposals and then estimating the human poses in the defined regions.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS1.4.1.1" class="ltx_text">III-A</span> </span><span id="S3.SS1.5.2" class="ltx_text ltx_font_italic">Network Architecture</span>
+</h3>
+
+<section id="S3.SS1.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS1.SSS1.4.1.1" class="ltx_text">III-A</span>1 </span>Multimodal Feature Extraction</h4>
+
+<div id="S3.SS1.SSS1.p1" class="ltx_para">
+<p id="S3.SS1.SSS1.p1.1" class="ltx_p">For the case of using both RGB and LiDAR data as input modalities, we first process the LiDAR point clouds by following the procedure in MV3D <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> to create a six channel Bird’s Eye View (BEV) representation.
+The first stage of AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> has two parallel VGG-16 modules for extracting features from the RGB and BEV inputs.
+We modified these VGG-16 modules to use group normalization and 256 output channels in the feature maps.
+Using the anchor grid defined in Section <a href="#S3.SS2" title="III-B Anchor Generation ‣ III Approach ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">III-B</span></span></a>, we project the 3D anchors onto the respective views and apply RoI align to crop the feature maps. The channel dimension is reduced to one by a fully connected layer, and the RGB and LiDAR views are averaged. Then, the objectness scores and regression offsets for the region proposals are predicted.</p>
+</div>
+<div id="S3.SS1.SSS1.p2" class="ltx_para">
+<p id="S3.SS1.SSS1.p2.1" class="ltx_p">In contrast to AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, we use the RoI align operation to extract the features for a region proposal. RoI align avoids rounding off operations and preserves the spatial information, helping the overall performance of the network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>.
+But unlike AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, the two streams of cropped RGB and LiDAR features are concatenated instead of averaged, preventing loss of information.
+These features are then passed to the second stage of HPERL.</p>
+</div>
+</section>
+<section id="S3.SS1.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS1.SSS2.4.1.1" class="ltx_text">III-A</span>2 </span>Unimodal Feature Extraction</h4>
+
+<div id="S3.SS1.SSS2.p1" class="ltx_para">
+<p id="S3.SS1.SSS2.p1.1" class="ltx_p">For the baseline model having only RGB data as the input modality,
+we use the first stage of Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> with a Resnet50 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite> feature extractor and a Feature Pyramid Network (FPN) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>]</cite> backbone. The weights are initialized from a COCO <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite> pre-trained version provided in the TorchVision library.
+For this network, the RoI align operation is used to crop and resize the features to enable a fair comparison between the multimodal and unimodal approaches.</p>
+</div>
+</section>
+<section id="S3.SS1.SSS3" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS1.SSS3.4.1.1" class="ltx_text">III-A</span>3 </span>Classification and Regression</h4>
+
+<div id="S3.SS1.SSS3.p1" class="ltx_para">
+<p id="S3.SS1.SSS3.p1.3" class="ltx_p">Based on the RoI features of the first stage, the second stage of our model classifies the proposals and predicts the regression deltas.
+A fully connected layer is used for classifying each region proposal into one of the <math id="S3.SS1.SSS3.p1.1.m1.1" class="ltx_Math" alttext="K" display="inline"><semantics id="S3.SS1.SSS3.p1.1.m1.1a"><mi id="S3.SS1.SSS3.p1.1.m1.1.1" xref="S3.SS1.SSS3.p1.1.m1.1.1.cmml">K</mi><annotation-xml encoding="MathML-Content" id="S3.SS1.SSS3.p1.1.m1.1b"><ci id="S3.SS1.SSS3.p1.1.m1.1.1.cmml" xref="S3.SS1.SSS3.p1.1.m1.1.1">𝐾</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.SSS3.p1.1.m1.1c">K</annotation></semantics></math> anchor poses or the background.
+Another parallel fully connected layer predicts a set of <math id="S3.SS1.SSS3.p1.2.m2.1" class="ltx_Math" alttext="5\times J\times(K+1)" display="inline"><semantics id="S3.SS1.SSS3.p1.2.m2.1a"><mrow id="S3.SS1.SSS3.p1.2.m2.1.1" xref="S3.SS1.SSS3.p1.2.m2.1.1.cmml"><mn id="S3.SS1.SSS3.p1.2.m2.1.1.3" xref="S3.SS1.SSS3.p1.2.m2.1.1.3.cmml">5</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.SSS3.p1.2.m2.1.1.2" xref="S3.SS1.SSS3.p1.2.m2.1.1.2.cmml">×</mo><mi id="S3.SS1.SSS3.p1.2.m2.1.1.4" xref="S3.SS1.SSS3.p1.2.m2.1.1.4.cmml">J</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.SSS3.p1.2.m2.1.1.2a" xref="S3.SS1.SSS3.p1.2.m2.1.1.2.cmml">×</mo><mrow id="S3.SS1.SSS3.p1.2.m2.1.1.1.1" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.2" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.cmml">(</mo><mrow id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.cmml"><mi id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.2" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.2.cmml">K</mi><mo id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.1" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.1.cmml">+</mo><mn id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.3" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.3.cmml">1</mn></mrow><mo stretchy="false" id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.3" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.SSS3.p1.2.m2.1b"><apply id="S3.SS1.SSS3.p1.2.m2.1.1.cmml" xref="S3.SS1.SSS3.p1.2.m2.1.1"><times id="S3.SS1.SSS3.p1.2.m2.1.1.2.cmml" xref="S3.SS1.SSS3.p1.2.m2.1.1.2"></times><cn type="integer" id="S3.SS1.SSS3.p1.2.m2.1.1.3.cmml" xref="S3.SS1.SSS3.p1.2.m2.1.1.3">5</cn><ci id="S3.SS1.SSS3.p1.2.m2.1.1.4.cmml" xref="S3.SS1.SSS3.p1.2.m2.1.1.4">𝐽</ci><apply id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.cmml" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1"><plus id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.1.cmml" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.1"></plus><ci id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.2.cmml" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.2">𝐾</ci><cn type="integer" id="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.3.cmml" xref="S3.SS1.SSS3.p1.2.m2.1.1.1.1.1.3">1</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.SSS3.p1.2.m2.1c">5\times J\times(K+1)</annotation></semantics></math> pose deltas.
+Here, <math id="S3.SS1.SSS3.p1.3.m3.1" class="ltx_Math" alttext="J=13" display="inline"><semantics id="S3.SS1.SSS3.p1.3.m3.1a"><mrow id="S3.SS1.SSS3.p1.3.m3.1.1" xref="S3.SS1.SSS3.p1.3.m3.1.1.cmml"><mi id="S3.SS1.SSS3.p1.3.m3.1.1.2" xref="S3.SS1.SSS3.p1.3.m3.1.1.2.cmml">J</mi><mo id="S3.SS1.SSS3.p1.3.m3.1.1.1" xref="S3.SS1.SSS3.p1.3.m3.1.1.1.cmml">=</mo><mn id="S3.SS1.SSS3.p1.3.m3.1.1.3" xref="S3.SS1.SSS3.p1.3.m3.1.1.3.cmml">13</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.SSS3.p1.3.m3.1b"><apply id="S3.SS1.SSS3.p1.3.m3.1.1.cmml" xref="S3.SS1.SSS3.p1.3.m3.1.1"><eq id="S3.SS1.SSS3.p1.3.m3.1.1.1.cmml" xref="S3.SS1.SSS3.p1.3.m3.1.1.1"></eq><ci id="S3.SS1.SSS3.p1.3.m3.1.1.2.cmml" xref="S3.SS1.SSS3.p1.3.m3.1.1.2">𝐽</ci><cn type="integer" id="S3.SS1.SSS3.p1.3.m3.1.1.3.cmml" xref="S3.SS1.SSS3.p1.3.m3.1.1.3">13</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.SSS3.p1.3.m3.1c">J=13</annotation></semantics></math> is the number of joints, 5 represents the two values for 2D regression and three values for 3D regression. These pose deltas are then added to the anchor pose proposals to regress the actual 2D and 3D poses.</p>
+</div>
+</section>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS2.4.1.1" class="ltx_text">III-B</span> </span><span id="S3.SS2.5.2" class="ltx_text ltx_font_italic">Anchor Generation</span>
+</h3>
+
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2010.08221/assets/images/anchor_generation.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="592" height="171" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>The pose proposals are generated by fitting the anchor poses into the predicted RoIs during inference. This is done by offsetting the anchor poses by an amount equal to the lowermost coordinates of the bounding box and then scaling them by the width and height of the RoI.</figcaption>
+</figure>
+<section id="S3.SS2.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS2.SSS1.4.1.1" class="ltx_text">III-B</span>1 </span>Anchor Boxes</h4>
+
+<div id="S3.SS2.SSS1.p1" class="ltx_para">
+<p id="S3.SS2.SSS1.p1.5" class="ltx_p">For the first stage of HPERL, we pass a pre-defined grid of 3D anchor boxes which is defined by the ground plane and area extents. The ground plane for our task is represented using the point-normal form of a plane <math id="S3.SS2.SSS1.p1.1.m1.1" class="ltx_Math" alttext="n\cdot(r-r_{0})=0" display="inline"><semantics id="S3.SS2.SSS1.p1.1.m1.1a"><mrow id="S3.SS2.SSS1.p1.1.m1.1.1" xref="S3.SS2.SSS1.p1.1.m1.1.1.cmml"><mrow id="S3.SS2.SSS1.p1.1.m1.1.1.1" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.cmml"><mi id="S3.SS2.SSS1.p1.1.m1.1.1.1.3" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.3.cmml">n</mi><mo lspace="0.222em" rspace="0.222em" id="S3.SS2.SSS1.p1.1.m1.1.1.1.2" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.2.cmml">⋅</mo><mrow id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.2" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.cmml">(</mo><mrow id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.cmml"><mi id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.2" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.2.cmml">r</mi><mo id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.1" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.cmml"><mi id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.2" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.2.cmml">r</mi><mn id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.3" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.3.cmml">0</mn></msub></mrow><mo stretchy="false" id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.3" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow><mo id="S3.SS2.SSS1.p1.1.m1.1.1.2" xref="S3.SS2.SSS1.p1.1.m1.1.1.2.cmml">=</mo><mn id="S3.SS2.SSS1.p1.1.m1.1.1.3" xref="S3.SS2.SSS1.p1.1.m1.1.1.3.cmml">0</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.1.m1.1b"><apply id="S3.SS2.SSS1.p1.1.m1.1.1.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1"><eq id="S3.SS2.SSS1.p1.1.m1.1.1.2.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.2"></eq><apply id="S3.SS2.SSS1.p1.1.m1.1.1.1.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1"><ci id="S3.SS2.SSS1.p1.1.m1.1.1.1.2.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.2">⋅</ci><ci id="S3.SS2.SSS1.p1.1.m1.1.1.1.3.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.3">𝑛</ci><apply id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1"><minus id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.1.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.1"></minus><ci id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.2.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.2">𝑟</ci><apply id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.1.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.2.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.2">𝑟</ci><cn type="integer" id="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.3.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.1.1.1.1.3.3">0</cn></apply></apply></apply><cn type="integer" id="S3.SS2.SSS1.p1.1.m1.1.1.3.cmml" xref="S3.SS2.SSS1.p1.1.m1.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.1.m1.1c">n\cdot(r-r_{0})=0</annotation></semantics></math>, with a normal <math id="S3.SS2.SSS1.p1.2.m2.3" class="ltx_Math" alttext="n=(a,b,c)" display="inline"><semantics id="S3.SS2.SSS1.p1.2.m2.3a"><mrow id="S3.SS2.SSS1.p1.2.m2.3.4" xref="S3.SS2.SSS1.p1.2.m2.3.4.cmml"><mi id="S3.SS2.SSS1.p1.2.m2.3.4.2" xref="S3.SS2.SSS1.p1.2.m2.3.4.2.cmml">n</mi><mo id="S3.SS2.SSS1.p1.2.m2.3.4.1" xref="S3.SS2.SSS1.p1.2.m2.3.4.1.cmml">=</mo><mrow id="S3.SS2.SSS1.p1.2.m2.3.4.3.2" xref="S3.SS2.SSS1.p1.2.m2.3.4.3.1.cmml"><mo stretchy="false" id="S3.SS2.SSS1.p1.2.m2.3.4.3.2.1" xref="S3.SS2.SSS1.p1.2.m2.3.4.3.1.cmml">(</mo><mi id="S3.SS2.SSS1.p1.2.m2.1.1" xref="S3.SS2.SSS1.p1.2.m2.1.1.cmml">a</mi><mo id="S3.SS2.SSS1.p1.2.m2.3.4.3.2.2" xref="S3.SS2.SSS1.p1.2.m2.3.4.3.1.cmml">,</mo><mi id="S3.SS2.SSS1.p1.2.m2.2.2" xref="S3.SS2.SSS1.p1.2.m2.2.2.cmml">b</mi><mo id="S3.SS2.SSS1.p1.2.m2.3.4.3.2.3" xref="S3.SS2.SSS1.p1.2.m2.3.4.3.1.cmml">,</mo><mi id="S3.SS2.SSS1.p1.2.m2.3.3" xref="S3.SS2.SSS1.p1.2.m2.3.3.cmml">c</mi><mo stretchy="false" id="S3.SS2.SSS1.p1.2.m2.3.4.3.2.4" xref="S3.SS2.SSS1.p1.2.m2.3.4.3.1.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.2.m2.3b"><apply id="S3.SS2.SSS1.p1.2.m2.3.4.cmml" xref="S3.SS2.SSS1.p1.2.m2.3.4"><eq id="S3.SS2.SSS1.p1.2.m2.3.4.1.cmml" xref="S3.SS2.SSS1.p1.2.m2.3.4.1"></eq><ci id="S3.SS2.SSS1.p1.2.m2.3.4.2.cmml" xref="S3.SS2.SSS1.p1.2.m2.3.4.2">𝑛</ci><vector id="S3.SS2.SSS1.p1.2.m2.3.4.3.1.cmml" xref="S3.SS2.SSS1.p1.2.m2.3.4.3.2"><ci id="S3.SS2.SSS1.p1.2.m2.1.1.cmml" xref="S3.SS2.SSS1.p1.2.m2.1.1">𝑎</ci><ci id="S3.SS2.SSS1.p1.2.m2.2.2.cmml" xref="S3.SS2.SSS1.p1.2.m2.2.2">𝑏</ci><ci id="S3.SS2.SSS1.p1.2.m2.3.3.cmml" xref="S3.SS2.SSS1.p1.2.m2.3.3">𝑐</ci></vector></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.2.m2.3c">n=(a,b,c)</annotation></semantics></math> and a point <math id="S3.SS2.SSS1.p1.3.m3.3" class="ltx_Math" alttext="r_{0}=(x_{0},y_{0},z_{0})" display="inline"><semantics id="S3.SS2.SSS1.p1.3.m3.3a"><mrow id="S3.SS2.SSS1.p1.3.m3.3.3" xref="S3.SS2.SSS1.p1.3.m3.3.3.cmml"><msub id="S3.SS2.SSS1.p1.3.m3.3.3.5" xref="S3.SS2.SSS1.p1.3.m3.3.3.5.cmml"><mi id="S3.SS2.SSS1.p1.3.m3.3.3.5.2" xref="S3.SS2.SSS1.p1.3.m3.3.3.5.2.cmml">r</mi><mn id="S3.SS2.SSS1.p1.3.m3.3.3.5.3" xref="S3.SS2.SSS1.p1.3.m3.3.3.5.3.cmml">0</mn></msub><mo id="S3.SS2.SSS1.p1.3.m3.3.3.4" xref="S3.SS2.SSS1.p1.3.m3.3.3.4.cmml">=</mo><mrow id="S3.SS2.SSS1.p1.3.m3.3.3.3.3" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.4.cmml"><mo stretchy="false" id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.4" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.4.cmml">(</mo><msub id="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1" xref="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.cmml"><mi id="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.2" xref="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.2.cmml">x</mi><mn id="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.3" xref="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.3.cmml">0</mn></msub><mo id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.5" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.4.cmml">,</mo><msub id="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2" xref="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.cmml"><mi id="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.2" xref="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.2.cmml">y</mi><mn id="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.3" xref="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.3.cmml">0</mn></msub><mo id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.6" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.4.cmml">,</mo><msub id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.cmml"><mi id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.2" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.2.cmml">z</mi><mn id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.3" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.3.cmml">0</mn></msub><mo stretchy="false" id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.7" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.4.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.3.m3.3b"><apply id="S3.SS2.SSS1.p1.3.m3.3.3.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3"><eq id="S3.SS2.SSS1.p1.3.m3.3.3.4.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.4"></eq><apply id="S3.SS2.SSS1.p1.3.m3.3.3.5.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.5"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.3.m3.3.3.5.1.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.5">subscript</csymbol><ci id="S3.SS2.SSS1.p1.3.m3.3.3.5.2.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.5.2">𝑟</ci><cn type="integer" id="S3.SS2.SSS1.p1.3.m3.3.3.5.3.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.5.3">0</cn></apply><vector id="S3.SS2.SSS1.p1.3.m3.3.3.3.4.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.3"><apply id="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.cmml" xref="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.1.cmml" xref="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1">subscript</csymbol><ci id="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.2.cmml" xref="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.2">𝑥</ci><cn type="integer" id="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.3.cmml" xref="S3.SS2.SSS1.p1.3.m3.1.1.1.1.1.3">0</cn></apply><apply id="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.cmml" xref="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.1.cmml" xref="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2">subscript</csymbol><ci id="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.2.cmml" xref="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.2">𝑦</ci><cn type="integer" id="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.3.cmml" xref="S3.SS2.SSS1.p1.3.m3.2.2.2.2.2.3">0</cn></apply><apply id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.1.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3">subscript</csymbol><ci id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.2.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.2">𝑧</ci><cn type="integer" id="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.3.cmml" xref="S3.SS2.SSS1.p1.3.m3.3.3.3.3.3.3">0</cn></apply></vector></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.3.m3.3c">r_{0}=(x_{0},y_{0},z_{0})</annotation></semantics></math>.
+We define <math id="S3.SS2.SSS1.p1.4.m4.3" class="ltx_Math" alttext="n=(0,-1,0)" display="inline"><semantics id="S3.SS2.SSS1.p1.4.m4.3a"><mrow id="S3.SS2.SSS1.p1.4.m4.3.3" xref="S3.SS2.SSS1.p1.4.m4.3.3.cmml"><mi id="S3.SS2.SSS1.p1.4.m4.3.3.3" xref="S3.SS2.SSS1.p1.4.m4.3.3.3.cmml">n</mi><mo id="S3.SS2.SSS1.p1.4.m4.3.3.2" xref="S3.SS2.SSS1.p1.4.m4.3.3.2.cmml">=</mo><mrow id="S3.SS2.SSS1.p1.4.m4.3.3.1.1" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.2.cmml"><mo stretchy="false" id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.2" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.2.cmml">(</mo><mn id="S3.SS2.SSS1.p1.4.m4.1.1" xref="S3.SS2.SSS1.p1.4.m4.1.1.cmml">0</mn><mo id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.3" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.2.cmml">,</mo><mrow id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1.cmml"><mo id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1a" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1.cmml">−</mo><mn id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1.2" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1.2.cmml">1</mn></mrow><mo id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.4" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.2.cmml">,</mo><mn id="S3.SS2.SSS1.p1.4.m4.2.2" xref="S3.SS2.SSS1.p1.4.m4.2.2.cmml">0</mn><mo stretchy="false" id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.5" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.2.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.4.m4.3b"><apply id="S3.SS2.SSS1.p1.4.m4.3.3.cmml" xref="S3.SS2.SSS1.p1.4.m4.3.3"><eq id="S3.SS2.SSS1.p1.4.m4.3.3.2.cmml" xref="S3.SS2.SSS1.p1.4.m4.3.3.2"></eq><ci id="S3.SS2.SSS1.p1.4.m4.3.3.3.cmml" xref="S3.SS2.SSS1.p1.4.m4.3.3.3">𝑛</ci><vector id="S3.SS2.SSS1.p1.4.m4.3.3.1.2.cmml" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.1"><cn type="integer" id="S3.SS2.SSS1.p1.4.m4.1.1.cmml" xref="S3.SS2.SSS1.p1.4.m4.1.1">0</cn><apply id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1.cmml" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1"><minus id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1.1.cmml" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1"></minus><cn type="integer" id="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1.2.cmml" xref="S3.SS2.SSS1.p1.4.m4.3.3.1.1.1.2">1</cn></apply><cn type="integer" id="S3.SS2.SSS1.p1.4.m4.2.2.cmml" xref="S3.SS2.SSS1.p1.4.m4.2.2">0</cn></vector></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.4.m4.3c">n=(0,-1,0)</annotation></semantics></math> to match our known camera orientation.
+The offset point <math id="S3.SS2.SSS1.p1.5.m5.1" class="ltx_Math" alttext="r_{0}" display="inline"><semantics id="S3.SS2.SSS1.p1.5.m5.1a"><msub id="S3.SS2.SSS1.p1.5.m5.1.1" xref="S3.SS2.SSS1.p1.5.m5.1.1.cmml"><mi id="S3.SS2.SSS1.p1.5.m5.1.1.2" xref="S3.SS2.SSS1.p1.5.m5.1.1.2.cmml">r</mi><mn id="S3.SS2.SSS1.p1.5.m5.1.1.3" xref="S3.SS2.SSS1.p1.5.m5.1.1.3.cmml">0</mn></msub><annotation-xml encoding="MathML-Content" id="S3.SS2.SSS1.p1.5.m5.1b"><apply id="S3.SS2.SSS1.p1.5.m5.1.1.cmml" xref="S3.SS2.SSS1.p1.5.m5.1.1"><csymbol cd="ambiguous" id="S3.SS2.SSS1.p1.5.m5.1.1.1.cmml" xref="S3.SS2.SSS1.p1.5.m5.1.1">subscript</csymbol><ci id="S3.SS2.SSS1.p1.5.m5.1.1.2.cmml" xref="S3.SS2.SSS1.p1.5.m5.1.1.2">𝑟</ci><cn type="integer" id="S3.SS2.SSS1.p1.5.m5.1.1.3.cmml" xref="S3.SS2.SSS1.p1.5.m5.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS2.SSS1.p1.5.m5.1c">r_{0}</annotation></semantics></math> is estimated using the RANSAC <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite> algorithm with an additional offset of 1.8m to cover the ground.</p>
+</div>
+<div id="S3.SS2.SSS1.p2" class="ltx_para">
+<p id="S3.SS2.SSS1.p2.1" class="ltx_p">We compute x and z ranges of the area extents by taking the minimum and maximum values of 3D pedestrian locations in the ground truth. The anchors are distributed over these area extents with a stride of 0.2m and the corresponding y coordinates are computed using the plane equation.</p>
+</div>
+</section>
+<section id="S3.SS2.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS2.SSS2.4.1.1" class="ltx_text">III-B</span>2 </span>Anchor Poses</h4>
+
+<div id="S3.SS2.SSS2.p1" class="ltx_para">
+<p id="S3.SS2.SSS2.p1.1" class="ltx_p">In order to choose a representative set of pedestrian poses, we define eight anchor poses which are a subset of the anchor poses used in LCRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>. Amongst these, we exclude all the half body anchor poses because the pedestrian pose estimation task has only full body poses. Out of the remaining ones, we choose the ones that have a non-zero occurrence in the PedX <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> dataset. To align the anchor poses to the world coordinate system, we use the re-alignment procedure described in LCRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>. In addition, we negate the y coordinates, as the negative y direction is the up-axis in our system. During the training phase, since there is no 3D ground truth available to assign the target deltas directly, we create the pose proposals as a pre-processing step using the ground truth bounding boxes. We add the predicted deltas to these pose proposals and train our model using only the 2D pose annotations and the projected 3D predictions. For inference, the pose proposals are generated by fitting anchor poses into the predicted RoIs as depicted in Fig. <a href="#S3.F4" title="Figure 4 ‣ III-B Anchor Generation ‣ III Approach ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.</p>
+</div>
+</section>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS3.4.1.1" class="ltx_text">III-C</span> </span><span id="S3.SS3.5.2" class="ltx_text ltx_font_italic">Loss Computation</span>
+</h3>
+
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">Since we aim to simultaneously predict the 2D and 3D poses in our model, we use a weighted multitask loss function composed of the RPN losses, the classification loss, the 2D loss and the projected 3D loss as follows:</p>
+<table id="S3.E1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E1.m1.1" class="ltx_Math" alttext="L_{total}=L_{RPN}+L_{cls}+L_{2D}+L_{3D}" display="block"><semantics id="S3.E1.m1.1a"><mrow id="S3.E1.m1.1.1" xref="S3.E1.m1.1.1.cmml"><msub id="S3.E1.m1.1.1.2" xref="S3.E1.m1.1.1.2.cmml"><mi id="S3.E1.m1.1.1.2.2" xref="S3.E1.m1.1.1.2.2.cmml">L</mi><mrow id="S3.E1.m1.1.1.2.3" xref="S3.E1.m1.1.1.2.3.cmml"><mi id="S3.E1.m1.1.1.2.3.2" xref="S3.E1.m1.1.1.2.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.2.3.1" xref="S3.E1.m1.1.1.2.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.2.3.3" xref="S3.E1.m1.1.1.2.3.3.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.2.3.1a" xref="S3.E1.m1.1.1.2.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.2.3.4" xref="S3.E1.m1.1.1.2.3.4.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.2.3.1b" xref="S3.E1.m1.1.1.2.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.2.3.5" xref="S3.E1.m1.1.1.2.3.5.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.2.3.1c" xref="S3.E1.m1.1.1.2.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.2.3.6" xref="S3.E1.m1.1.1.2.3.6.cmml">l</mi></mrow></msub><mo id="S3.E1.m1.1.1.1" xref="S3.E1.m1.1.1.1.cmml">=</mo><mrow id="S3.E1.m1.1.1.3" xref="S3.E1.m1.1.1.3.cmml"><msub id="S3.E1.m1.1.1.3.2" xref="S3.E1.m1.1.1.3.2.cmml"><mi id="S3.E1.m1.1.1.3.2.2" xref="S3.E1.m1.1.1.3.2.2.cmml">L</mi><mrow id="S3.E1.m1.1.1.3.2.3" xref="S3.E1.m1.1.1.3.2.3.cmml"><mi id="S3.E1.m1.1.1.3.2.3.2" xref="S3.E1.m1.1.1.3.2.3.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.2.3.1" xref="S3.E1.m1.1.1.3.2.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.2.3.3" xref="S3.E1.m1.1.1.3.2.3.3.cmml">P</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.2.3.1a" xref="S3.E1.m1.1.1.3.2.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.2.3.4" xref="S3.E1.m1.1.1.3.2.3.4.cmml">N</mi></mrow></msub><mo id="S3.E1.m1.1.1.3.1" xref="S3.E1.m1.1.1.3.1.cmml">+</mo><msub id="S3.E1.m1.1.1.3.3" xref="S3.E1.m1.1.1.3.3.cmml"><mi id="S3.E1.m1.1.1.3.3.2" xref="S3.E1.m1.1.1.3.3.2.cmml">L</mi><mrow id="S3.E1.m1.1.1.3.3.3" xref="S3.E1.m1.1.1.3.3.3.cmml"><mi id="S3.E1.m1.1.1.3.3.3.2" xref="S3.E1.m1.1.1.3.3.3.2.cmml">c</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.3.1" xref="S3.E1.m1.1.1.3.3.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.3.3.3" xref="S3.E1.m1.1.1.3.3.3.3.cmml">l</mi><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.3.3.1a" xref="S3.E1.m1.1.1.3.3.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.3.3.4" xref="S3.E1.m1.1.1.3.3.3.4.cmml">s</mi></mrow></msub><mo id="S3.E1.m1.1.1.3.1a" xref="S3.E1.m1.1.1.3.1.cmml">+</mo><msub id="S3.E1.m1.1.1.3.4" xref="S3.E1.m1.1.1.3.4.cmml"><mi id="S3.E1.m1.1.1.3.4.2" xref="S3.E1.m1.1.1.3.4.2.cmml">L</mi><mrow id="S3.E1.m1.1.1.3.4.3" xref="S3.E1.m1.1.1.3.4.3.cmml"><mn id="S3.E1.m1.1.1.3.4.3.2" xref="S3.E1.m1.1.1.3.4.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.4.3.1" xref="S3.E1.m1.1.1.3.4.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.4.3.3" xref="S3.E1.m1.1.1.3.4.3.3.cmml">D</mi></mrow></msub><mo id="S3.E1.m1.1.1.3.1b" xref="S3.E1.m1.1.1.3.1.cmml">+</mo><msub id="S3.E1.m1.1.1.3.5" xref="S3.E1.m1.1.1.3.5.cmml"><mi id="S3.E1.m1.1.1.3.5.2" xref="S3.E1.m1.1.1.3.5.2.cmml">L</mi><mrow id="S3.E1.m1.1.1.3.5.3" xref="S3.E1.m1.1.1.3.5.3.cmml"><mn id="S3.E1.m1.1.1.3.5.3.2" xref="S3.E1.m1.1.1.3.5.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S3.E1.m1.1.1.3.5.3.1" xref="S3.E1.m1.1.1.3.5.3.1.cmml">​</mo><mi id="S3.E1.m1.1.1.3.5.3.3" xref="S3.E1.m1.1.1.3.5.3.3.cmml">D</mi></mrow></msub></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E1.m1.1b"><apply id="S3.E1.m1.1.1.cmml" xref="S3.E1.m1.1.1"><eq id="S3.E1.m1.1.1.1.cmml" xref="S3.E1.m1.1.1.1"></eq><apply id="S3.E1.m1.1.1.2.cmml" xref="S3.E1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.2.1.cmml" xref="S3.E1.m1.1.1.2">subscript</csymbol><ci id="S3.E1.m1.1.1.2.2.cmml" xref="S3.E1.m1.1.1.2.2">𝐿</ci><apply id="S3.E1.m1.1.1.2.3.cmml" xref="S3.E1.m1.1.1.2.3"><times id="S3.E1.m1.1.1.2.3.1.cmml" xref="S3.E1.m1.1.1.2.3.1"></times><ci id="S3.E1.m1.1.1.2.3.2.cmml" xref="S3.E1.m1.1.1.2.3.2">𝑡</ci><ci id="S3.E1.m1.1.1.2.3.3.cmml" xref="S3.E1.m1.1.1.2.3.3">𝑜</ci><ci id="S3.E1.m1.1.1.2.3.4.cmml" xref="S3.E1.m1.1.1.2.3.4">𝑡</ci><ci id="S3.E1.m1.1.1.2.3.5.cmml" xref="S3.E1.m1.1.1.2.3.5">𝑎</ci><ci id="S3.E1.m1.1.1.2.3.6.cmml" xref="S3.E1.m1.1.1.2.3.6">𝑙</ci></apply></apply><apply id="S3.E1.m1.1.1.3.cmml" xref="S3.E1.m1.1.1.3"><plus id="S3.E1.m1.1.1.3.1.cmml" xref="S3.E1.m1.1.1.3.1"></plus><apply id="S3.E1.m1.1.1.3.2.cmml" xref="S3.E1.m1.1.1.3.2"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.2.1.cmml" xref="S3.E1.m1.1.1.3.2">subscript</csymbol><ci id="S3.E1.m1.1.1.3.2.2.cmml" xref="S3.E1.m1.1.1.3.2.2">𝐿</ci><apply id="S3.E1.m1.1.1.3.2.3.cmml" xref="S3.E1.m1.1.1.3.2.3"><times id="S3.E1.m1.1.1.3.2.3.1.cmml" xref="S3.E1.m1.1.1.3.2.3.1"></times><ci id="S3.E1.m1.1.1.3.2.3.2.cmml" xref="S3.E1.m1.1.1.3.2.3.2">𝑅</ci><ci id="S3.E1.m1.1.1.3.2.3.3.cmml" xref="S3.E1.m1.1.1.3.2.3.3">𝑃</ci><ci id="S3.E1.m1.1.1.3.2.3.4.cmml" xref="S3.E1.m1.1.1.3.2.3.4">𝑁</ci></apply></apply><apply id="S3.E1.m1.1.1.3.3.cmml" xref="S3.E1.m1.1.1.3.3"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.3.1.cmml" xref="S3.E1.m1.1.1.3.3">subscript</csymbol><ci id="S3.E1.m1.1.1.3.3.2.cmml" xref="S3.E1.m1.1.1.3.3.2">𝐿</ci><apply id="S3.E1.m1.1.1.3.3.3.cmml" xref="S3.E1.m1.1.1.3.3.3"><times id="S3.E1.m1.1.1.3.3.3.1.cmml" xref="S3.E1.m1.1.1.3.3.3.1"></times><ci id="S3.E1.m1.1.1.3.3.3.2.cmml" xref="S3.E1.m1.1.1.3.3.3.2">𝑐</ci><ci id="S3.E1.m1.1.1.3.3.3.3.cmml" xref="S3.E1.m1.1.1.3.3.3.3">𝑙</ci><ci id="S3.E1.m1.1.1.3.3.3.4.cmml" xref="S3.E1.m1.1.1.3.3.3.4">𝑠</ci></apply></apply><apply id="S3.E1.m1.1.1.3.4.cmml" xref="S3.E1.m1.1.1.3.4"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.4.1.cmml" xref="S3.E1.m1.1.1.3.4">subscript</csymbol><ci id="S3.E1.m1.1.1.3.4.2.cmml" xref="S3.E1.m1.1.1.3.4.2">𝐿</ci><apply id="S3.E1.m1.1.1.3.4.3.cmml" xref="S3.E1.m1.1.1.3.4.3"><times id="S3.E1.m1.1.1.3.4.3.1.cmml" xref="S3.E1.m1.1.1.3.4.3.1"></times><cn type="integer" id="S3.E1.m1.1.1.3.4.3.2.cmml" xref="S3.E1.m1.1.1.3.4.3.2">2</cn><ci id="S3.E1.m1.1.1.3.4.3.3.cmml" xref="S3.E1.m1.1.1.3.4.3.3">𝐷</ci></apply></apply><apply id="S3.E1.m1.1.1.3.5.cmml" xref="S3.E1.m1.1.1.3.5"><csymbol cd="ambiguous" id="S3.E1.m1.1.1.3.5.1.cmml" xref="S3.E1.m1.1.1.3.5">subscript</csymbol><ci id="S3.E1.m1.1.1.3.5.2.cmml" xref="S3.E1.m1.1.1.3.5.2">𝐿</ci><apply id="S3.E1.m1.1.1.3.5.3.cmml" xref="S3.E1.m1.1.1.3.5.3"><times id="S3.E1.m1.1.1.3.5.3.1.cmml" xref="S3.E1.m1.1.1.3.5.3.1"></times><cn type="integer" id="S3.E1.m1.1.1.3.5.3.2.cmml" xref="S3.E1.m1.1.1.3.5.3.2">3</cn><ci id="S3.E1.m1.1.1.3.5.3.3.cmml" xref="S3.E1.m1.1.1.3.5.3.3">𝐷</ci></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E1.m1.1c">L_{total}=L_{RPN}+L_{cls}+L_{2D}+L_{3D}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<section id="S3.SS3.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS3.SSS1.4.1.1" class="ltx_text">III-C</span>1 </span>RPN Loss</h4>
+
+<div id="S3.SS3.SSS1.p1" class="ltx_para">
+<p id="S3.SS3.SSS1.p1.4" class="ltx_p"><math id="S3.SS3.SSS1.p1.1.m1.1" class="ltx_Math" alttext="L_{RPN}" display="inline"><semantics id="S3.SS3.SSS1.p1.1.m1.1a"><msub id="S3.SS3.SSS1.p1.1.m1.1.1" xref="S3.SS3.SSS1.p1.1.m1.1.1.cmml"><mi id="S3.SS3.SSS1.p1.1.m1.1.1.2" xref="S3.SS3.SSS1.p1.1.m1.1.1.2.cmml">L</mi><mrow id="S3.SS3.SSS1.p1.1.m1.1.1.3" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.cmml"><mi id="S3.SS3.SSS1.p1.1.m1.1.1.3.2" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS1.p1.1.m1.1.1.3.1" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS1.p1.1.m1.1.1.3.3" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.3.cmml">P</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS1.p1.1.m1.1.1.3.1a" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS1.p1.1.m1.1.1.3.4" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.4.cmml">N</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.1.m1.1b"><apply id="S3.SS3.SSS1.p1.1.m1.1.1.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.1.m1.1.1.1.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.1.m1.1.1.2.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.2">𝐿</ci><apply id="S3.SS3.SSS1.p1.1.m1.1.1.3.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.3"><times id="S3.SS3.SSS1.p1.1.m1.1.1.3.1.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.1"></times><ci id="S3.SS3.SSS1.p1.1.m1.1.1.3.2.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.2">𝑅</ci><ci id="S3.SS3.SSS1.p1.1.m1.1.1.3.3.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.3">𝑃</ci><ci id="S3.SS3.SSS1.p1.1.m1.1.1.3.4.cmml" xref="S3.SS3.SSS1.p1.1.m1.1.1.3.4">𝑁</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.1.m1.1c">L_{RPN}</annotation></semantics></math> is composed of two components - the objectness loss <math id="S3.SS3.SSS1.p1.2.m2.1" class="ltx_Math" alttext="L_{obj}" display="inline"><semantics id="S3.SS3.SSS1.p1.2.m2.1a"><msub id="S3.SS3.SSS1.p1.2.m2.1.1" xref="S3.SS3.SSS1.p1.2.m2.1.1.cmml"><mi id="S3.SS3.SSS1.p1.2.m2.1.1.2" xref="S3.SS3.SSS1.p1.2.m2.1.1.2.cmml">L</mi><mrow id="S3.SS3.SSS1.p1.2.m2.1.1.3" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.cmml"><mi id="S3.SS3.SSS1.p1.2.m2.1.1.3.2" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.2.cmml">o</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS1.p1.2.m2.1.1.3.1" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS1.p1.2.m2.1.1.3.3" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.3.cmml">b</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS1.p1.2.m2.1.1.3.1a" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS1.p1.2.m2.1.1.3.4" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.4.cmml">j</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.2.m2.1b"><apply id="S3.SS3.SSS1.p1.2.m2.1.1.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.2.m2.1.1.1.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.2.m2.1.1.2.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.2">𝐿</ci><apply id="S3.SS3.SSS1.p1.2.m2.1.1.3.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.3"><times id="S3.SS3.SSS1.p1.2.m2.1.1.3.1.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.1"></times><ci id="S3.SS3.SSS1.p1.2.m2.1.1.3.2.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.2">𝑜</ci><ci id="S3.SS3.SSS1.p1.2.m2.1.1.3.3.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.3">𝑏</ci><ci id="S3.SS3.SSS1.p1.2.m2.1.1.3.4.cmml" xref="S3.SS3.SSS1.p1.2.m2.1.1.3.4">𝑗</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.2.m2.1c">L_{obj}</annotation></semantics></math> and the box regression loss <math id="S3.SS3.SSS1.p1.3.m3.1" class="ltx_Math" alttext="L_{reg}" display="inline"><semantics id="S3.SS3.SSS1.p1.3.m3.1a"><msub id="S3.SS3.SSS1.p1.3.m3.1.1" xref="S3.SS3.SSS1.p1.3.m3.1.1.cmml"><mi id="S3.SS3.SSS1.p1.3.m3.1.1.2" xref="S3.SS3.SSS1.p1.3.m3.1.1.2.cmml">L</mi><mrow id="S3.SS3.SSS1.p1.3.m3.1.1.3" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.cmml"><mi id="S3.SS3.SSS1.p1.3.m3.1.1.3.2" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.2.cmml">r</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS1.p1.3.m3.1.1.3.1" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS1.p1.3.m3.1.1.3.3" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.3.cmml">e</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS1.p1.3.m3.1.1.3.1a" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS1.p1.3.m3.1.1.3.4" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.4.cmml">g</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.3.m3.1b"><apply id="S3.SS3.SSS1.p1.3.m3.1.1.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.3.m3.1.1.1.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.3.m3.1.1.2.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.2">𝐿</ci><apply id="S3.SS3.SSS1.p1.3.m3.1.1.3.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.3"><times id="S3.SS3.SSS1.p1.3.m3.1.1.3.1.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.1"></times><ci id="S3.SS3.SSS1.p1.3.m3.1.1.3.2.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.2">𝑟</ci><ci id="S3.SS3.SSS1.p1.3.m3.1.1.3.3.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.3">𝑒</ci><ci id="S3.SS3.SSS1.p1.3.m3.1.1.3.4.cmml" xref="S3.SS3.SSS1.p1.3.m3.1.1.3.4">𝑔</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.3.m3.1c">L_{reg}</annotation></semantics></math>. For HPERL, we compute these as specified in the first stage of AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> using 3D ground truth boxes as the targets. Whereas for the RGB baseline, we compute the <math id="S3.SS3.SSS1.p1.4.m4.1" class="ltx_Math" alttext="L_{RPN}" display="inline"><semantics id="S3.SS3.SSS1.p1.4.m4.1a"><msub id="S3.SS3.SSS1.p1.4.m4.1.1" xref="S3.SS3.SSS1.p1.4.m4.1.1.cmml"><mi id="S3.SS3.SSS1.p1.4.m4.1.1.2" xref="S3.SS3.SSS1.p1.4.m4.1.1.2.cmml">L</mi><mrow id="S3.SS3.SSS1.p1.4.m4.1.1.3" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.cmml"><mi id="S3.SS3.SSS1.p1.4.m4.1.1.3.2" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.2.cmml">R</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS1.p1.4.m4.1.1.3.1" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS1.p1.4.m4.1.1.3.3" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.3.cmml">P</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS1.p1.4.m4.1.1.3.1a" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS1.p1.4.m4.1.1.3.4" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.4.cmml">N</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS1.p1.4.m4.1b"><apply id="S3.SS3.SSS1.p1.4.m4.1.1.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS1.p1.4.m4.1.1.1.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1">subscript</csymbol><ci id="S3.SS3.SSS1.p1.4.m4.1.1.2.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.2">𝐿</ci><apply id="S3.SS3.SSS1.p1.4.m4.1.1.3.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.3"><times id="S3.SS3.SSS1.p1.4.m4.1.1.3.1.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.1"></times><ci id="S3.SS3.SSS1.p1.4.m4.1.1.3.2.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.2">𝑅</ci><ci id="S3.SS3.SSS1.p1.4.m4.1.1.3.3.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.3">𝑃</ci><ci id="S3.SS3.SSS1.p1.4.m4.1.1.3.4.cmml" xref="S3.SS3.SSS1.p1.4.m4.1.1.3.4">𝑁</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS1.p1.4.m4.1c">L_{RPN}</annotation></semantics></math> as in Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> with the targets as 2D ground truth boxes.</p>
+</div>
+</section>
+<section id="S3.SS3.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS3.SSS2.4.1.1" class="ltx_text">III-C</span>2 </span>Anchor Pose Classification Loss</h4>
+
+<div id="S3.SS3.SSS2.p1" class="ltx_para">
+<p id="S3.SS3.SSS2.p1.1" class="ltx_p">Assignment of the anchor pose ground truth is a two step process.
+First a categorization in foreground and background is done by IoU matching to the ground truth, then for foreground objects a similarity score is used to assign the best anchor pose.</p>
+</div>
+<div id="S3.SS3.SSS2.p2" class="ltx_para">
+<p id="S3.SS3.SSS2.p2.1" class="ltx_p">The IoU computation between the ground truth and predicted RoIs varies with input modalities.
+For the 3D RoIs of HPERL, we project them into the 2D BEV space and then calculate the 2D IoUs.
+But for the RGB baseline, we directly use the predicted 2D RoIs to compute the IoUs.
+If the IoUs with all ground truth boxes are lower than <math id="S3.SS3.SSS2.p2.1.m1.1" class="ltx_Math" alttext="0.3" display="inline"><semantics id="S3.SS3.SSS2.p2.1.m1.1a"><mn id="S3.SS3.SSS2.p2.1.m1.1.1" xref="S3.SS3.SSS2.p2.1.m1.1.1.cmml">0.3</mn><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p2.1.m1.1b"><cn type="float" id="S3.SS3.SSS2.p2.1.m1.1.1.cmml" xref="S3.SS3.SSS2.p2.1.m1.1.1">0.3</cn></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p2.1.m1.1c">0.3</annotation></semantics></math>, the RoI is assigned to the background class.
+Otherwise, it is assigned the box with the highest IoU.</p>
+</div>
+<div id="S3.SS3.SSS2.p3" class="ltx_para">
+<p id="S3.SS3.SSS2.p3.9" class="ltx_p">Given the assignment of ground truth to the RoI, similarities between the ground truth and anchor poses are computed for non-background RoIs.
+The anchor pose having the highest euclidean similarity is used as the classification target:</p>
+<table id="S3.E2" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E2.m1.3" class="ltx_Math" alttext="k_{target}=\arg\max_{k\in K}\sum_{j=1}^{J}||a_{k,j}-g_{j}||," display="block"><semantics id="S3.E2.m1.3a"><mrow id="S3.E2.m1.3.3.1" xref="S3.E2.m1.3.3.1.1.cmml"><mrow id="S3.E2.m1.3.3.1.1" xref="S3.E2.m1.3.3.1.1.cmml"><msub id="S3.E2.m1.3.3.1.1.3" xref="S3.E2.m1.3.3.1.1.3.cmml"><mi id="S3.E2.m1.3.3.1.1.3.2" xref="S3.E2.m1.3.3.1.1.3.2.cmml">k</mi><mrow id="S3.E2.m1.3.3.1.1.3.3" xref="S3.E2.m1.3.3.1.1.3.3.cmml"><mi id="S3.E2.m1.3.3.1.1.3.3.2" xref="S3.E2.m1.3.3.1.1.3.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.3.3.1.1.3.3.1" xref="S3.E2.m1.3.3.1.1.3.3.1.cmml">​</mo><mi id="S3.E2.m1.3.3.1.1.3.3.3" xref="S3.E2.m1.3.3.1.1.3.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.3.3.1.1.3.3.1a" xref="S3.E2.m1.3.3.1.1.3.3.1.cmml">​</mo><mi id="S3.E2.m1.3.3.1.1.3.3.4" xref="S3.E2.m1.3.3.1.1.3.3.4.cmml">r</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.3.3.1.1.3.3.1b" xref="S3.E2.m1.3.3.1.1.3.3.1.cmml">​</mo><mi id="S3.E2.m1.3.3.1.1.3.3.5" xref="S3.E2.m1.3.3.1.1.3.3.5.cmml">g</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.3.3.1.1.3.3.1c" xref="S3.E2.m1.3.3.1.1.3.3.1.cmml">​</mo><mi id="S3.E2.m1.3.3.1.1.3.3.6" xref="S3.E2.m1.3.3.1.1.3.3.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="S3.E2.m1.3.3.1.1.3.3.1d" xref="S3.E2.m1.3.3.1.1.3.3.1.cmml">​</mo><mi id="S3.E2.m1.3.3.1.1.3.3.7" xref="S3.E2.m1.3.3.1.1.3.3.7.cmml">t</mi></mrow></msub><mo id="S3.E2.m1.3.3.1.1.2" xref="S3.E2.m1.3.3.1.1.2.cmml">=</mo><mrow id="S3.E2.m1.3.3.1.1.1" xref="S3.E2.m1.3.3.1.1.1.cmml"><mrow id="S3.E2.m1.3.3.1.1.1.3" xref="S3.E2.m1.3.3.1.1.1.3.cmml"><mi id="S3.E2.m1.3.3.1.1.1.3.1" xref="S3.E2.m1.3.3.1.1.1.3.1.cmml">arg</mi><mo lspace="0.167em" id="S3.E2.m1.3.3.1.1.1.3a" xref="S3.E2.m1.3.3.1.1.1.3.cmml">⁡</mo><munder id="S3.E2.m1.3.3.1.1.1.3.2" xref="S3.E2.m1.3.3.1.1.1.3.2.cmml"><mi id="S3.E2.m1.3.3.1.1.1.3.2.2" xref="S3.E2.m1.3.3.1.1.1.3.2.2.cmml">max</mi><mrow id="S3.E2.m1.3.3.1.1.1.3.2.3" xref="S3.E2.m1.3.3.1.1.1.3.2.3.cmml"><mi id="S3.E2.m1.3.3.1.1.1.3.2.3.2" xref="S3.E2.m1.3.3.1.1.1.3.2.3.2.cmml">k</mi><mo id="S3.E2.m1.3.3.1.1.1.3.2.3.1" xref="S3.E2.m1.3.3.1.1.1.3.2.3.1.cmml">∈</mo><mi id="S3.E2.m1.3.3.1.1.1.3.2.3.3" xref="S3.E2.m1.3.3.1.1.1.3.2.3.3.cmml">K</mi></mrow></munder></mrow><mo lspace="0em" rspace="0em" id="S3.E2.m1.3.3.1.1.1.2" xref="S3.E2.m1.3.3.1.1.1.2.cmml">​</mo><mrow id="S3.E2.m1.3.3.1.1.1.1" xref="S3.E2.m1.3.3.1.1.1.1.cmml"><munderover id="S3.E2.m1.3.3.1.1.1.1.2" xref="S3.E2.m1.3.3.1.1.1.1.2.cmml"><mo movablelimits="false" rspace="0em" id="S3.E2.m1.3.3.1.1.1.1.2.2.2" xref="S3.E2.m1.3.3.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S3.E2.m1.3.3.1.1.1.1.2.2.3" xref="S3.E2.m1.3.3.1.1.1.1.2.2.3.cmml"><mi id="S3.E2.m1.3.3.1.1.1.1.2.2.3.2" xref="S3.E2.m1.3.3.1.1.1.1.2.2.3.2.cmml">j</mi><mo id="S3.E2.m1.3.3.1.1.1.1.2.2.3.1" xref="S3.E2.m1.3.3.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S3.E2.m1.3.3.1.1.1.1.2.2.3.3" xref="S3.E2.m1.3.3.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S3.E2.m1.3.3.1.1.1.1.2.3" xref="S3.E2.m1.3.3.1.1.1.1.2.3.cmml">J</mi></munderover><mrow id="S3.E2.m1.3.3.1.1.1.1.1.1" xref="S3.E2.m1.3.3.1.1.1.1.1.2.cmml"><mo stretchy="false" id="S3.E2.m1.3.3.1.1.1.1.1.1.2" xref="S3.E2.m1.3.3.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S3.E2.m1.3.3.1.1.1.1.1.1.1" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.cmml"><msub id="S3.E2.m1.3.3.1.1.1.1.1.1.1.2" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.2.cmml"><mi id="S3.E2.m1.3.3.1.1.1.1.1.1.1.2.2" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.2.2.cmml">a</mi><mrow id="S3.E2.m1.2.2.2.4" xref="S3.E2.m1.2.2.2.3.cmml"><mi id="S3.E2.m1.1.1.1.1" xref="S3.E2.m1.1.1.1.1.cmml">k</mi><mo id="S3.E2.m1.2.2.2.4.1" xref="S3.E2.m1.2.2.2.3.cmml">,</mo><mi id="S3.E2.m1.2.2.2.2" xref="S3.E2.m1.2.2.2.2.cmml">j</mi></mrow></msub><mo id="S3.E2.m1.3.3.1.1.1.1.1.1.1.1" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S3.E2.m1.3.3.1.1.1.1.1.1.1.3" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.cmml"><mi id="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.2" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.2.cmml">g</mi><mi id="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.3" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.3.cmml">j</mi></msub></mrow><mo stretchy="false" id="S3.E2.m1.3.3.1.1.1.1.1.1.3" xref="S3.E2.m1.3.3.1.1.1.1.1.2.1.cmml">‖</mo></mrow></mrow></mrow></mrow><mo id="S3.E2.m1.3.3.1.2" xref="S3.E2.m1.3.3.1.1.cmml">,</mo></mrow><annotation-xml encoding="MathML-Content" id="S3.E2.m1.3b"><apply id="S3.E2.m1.3.3.1.1.cmml" xref="S3.E2.m1.3.3.1"><eq id="S3.E2.m1.3.3.1.1.2.cmml" xref="S3.E2.m1.3.3.1.1.2"></eq><apply id="S3.E2.m1.3.3.1.1.3.cmml" xref="S3.E2.m1.3.3.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.3.3.1.1.3.1.cmml" xref="S3.E2.m1.3.3.1.1.3">subscript</csymbol><ci id="S3.E2.m1.3.3.1.1.3.2.cmml" xref="S3.E2.m1.3.3.1.1.3.2">𝑘</ci><apply id="S3.E2.m1.3.3.1.1.3.3.cmml" xref="S3.E2.m1.3.3.1.1.3.3"><times id="S3.E2.m1.3.3.1.1.3.3.1.cmml" xref="S3.E2.m1.3.3.1.1.3.3.1"></times><ci id="S3.E2.m1.3.3.1.1.3.3.2.cmml" xref="S3.E2.m1.3.3.1.1.3.3.2">𝑡</ci><ci id="S3.E2.m1.3.3.1.1.3.3.3.cmml" xref="S3.E2.m1.3.3.1.1.3.3.3">𝑎</ci><ci id="S3.E2.m1.3.3.1.1.3.3.4.cmml" xref="S3.E2.m1.3.3.1.1.3.3.4">𝑟</ci><ci id="S3.E2.m1.3.3.1.1.3.3.5.cmml" xref="S3.E2.m1.3.3.1.1.3.3.5">𝑔</ci><ci id="S3.E2.m1.3.3.1.1.3.3.6.cmml" xref="S3.E2.m1.3.3.1.1.3.3.6">𝑒</ci><ci id="S3.E2.m1.3.3.1.1.3.3.7.cmml" xref="S3.E2.m1.3.3.1.1.3.3.7">𝑡</ci></apply></apply><apply id="S3.E2.m1.3.3.1.1.1.cmml" xref="S3.E2.m1.3.3.1.1.1"><times id="S3.E2.m1.3.3.1.1.1.2.cmml" xref="S3.E2.m1.3.3.1.1.1.2"></times><apply id="S3.E2.m1.3.3.1.1.1.3.cmml" xref="S3.E2.m1.3.3.1.1.1.3"><arg id="S3.E2.m1.3.3.1.1.1.3.1.cmml" xref="S3.E2.m1.3.3.1.1.1.3.1"></arg><apply id="S3.E2.m1.3.3.1.1.1.3.2.cmml" xref="S3.E2.m1.3.3.1.1.1.3.2"><csymbol cd="ambiguous" id="S3.E2.m1.3.3.1.1.1.3.2.1.cmml" xref="S3.E2.m1.3.3.1.1.1.3.2">subscript</csymbol><max id="S3.E2.m1.3.3.1.1.1.3.2.2.cmml" xref="S3.E2.m1.3.3.1.1.1.3.2.2"></max><apply id="S3.E2.m1.3.3.1.1.1.3.2.3.cmml" xref="S3.E2.m1.3.3.1.1.1.3.2.3"><in id="S3.E2.m1.3.3.1.1.1.3.2.3.1.cmml" xref="S3.E2.m1.3.3.1.1.1.3.2.3.1"></in><ci id="S3.E2.m1.3.3.1.1.1.3.2.3.2.cmml" xref="S3.E2.m1.3.3.1.1.1.3.2.3.2">𝑘</ci><ci id="S3.E2.m1.3.3.1.1.1.3.2.3.3.cmml" xref="S3.E2.m1.3.3.1.1.1.3.2.3.3">𝐾</ci></apply></apply></apply><apply id="S3.E2.m1.3.3.1.1.1.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1"><apply id="S3.E2.m1.3.3.1.1.1.1.2.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.3.3.1.1.1.1.2.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2">superscript</csymbol><apply id="S3.E2.m1.3.3.1.1.1.1.2.2.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.3.3.1.1.1.1.2.2.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2">subscript</csymbol><sum id="S3.E2.m1.3.3.1.1.1.1.2.2.2.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2.2.2"></sum><apply id="S3.E2.m1.3.3.1.1.1.1.2.2.3.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2.2.3"><eq id="S3.E2.m1.3.3.1.1.1.1.2.2.3.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2.2.3.1"></eq><ci id="S3.E2.m1.3.3.1.1.1.1.2.2.3.2.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2.2.3.2">𝑗</ci><cn type="integer" id="S3.E2.m1.3.3.1.1.1.1.2.2.3.3.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S3.E2.m1.3.3.1.1.1.1.2.3.cmml" xref="S3.E2.m1.3.3.1.1.1.1.2.3">𝐽</ci></apply><apply id="S3.E2.m1.3.3.1.1.1.1.1.2.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1"><csymbol cd="latexml" id="S3.E2.m1.3.3.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.2">norm</csymbol><apply id="S3.E2.m1.3.3.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1"><minus id="S3.E2.m1.3.3.1.1.1.1.1.1.1.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.1"></minus><apply id="S3.E2.m1.3.3.1.1.1.1.1.1.1.2.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S3.E2.m1.3.3.1.1.1.1.1.1.1.2.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S3.E2.m1.3.3.1.1.1.1.1.1.1.2.2.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.2.2">𝑎</ci><list id="S3.E2.m1.2.2.2.3.cmml" xref="S3.E2.m1.2.2.2.4"><ci id="S3.E2.m1.1.1.1.1.cmml" xref="S3.E2.m1.1.1.1.1">𝑘</ci><ci id="S3.E2.m1.2.2.2.2.cmml" xref="S3.E2.m1.2.2.2.2">𝑗</ci></list></apply><apply id="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.1.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.2.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.2">𝑔</ci><ci id="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.3.cmml" xref="S3.E2.m1.3.3.1.1.1.1.1.1.1.3.3">𝑗</ci></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E2.m1.3c">k_{target}=\arg\max_{k\in K}\sum_{j=1}^{J}||a_{k,j}-g_{j}||,</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.SSS2.p3.8" class="ltx_p">where <math id="S3.SS3.SSS2.p3.1.m1.2" class="ltx_Math" alttext="a_{k,j}" display="inline"><semantics id="S3.SS3.SSS2.p3.1.m1.2a"><msub id="S3.SS3.SSS2.p3.1.m1.2.3" xref="S3.SS3.SSS2.p3.1.m1.2.3.cmml"><mi id="S3.SS3.SSS2.p3.1.m1.2.3.2" xref="S3.SS3.SSS2.p3.1.m1.2.3.2.cmml">a</mi><mrow id="S3.SS3.SSS2.p3.1.m1.2.2.2.4" xref="S3.SS3.SSS2.p3.1.m1.2.2.2.3.cmml"><mi id="S3.SS3.SSS2.p3.1.m1.1.1.1.1" xref="S3.SS3.SSS2.p3.1.m1.1.1.1.1.cmml">k</mi><mo id="S3.SS3.SSS2.p3.1.m1.2.2.2.4.1" xref="S3.SS3.SSS2.p3.1.m1.2.2.2.3.cmml">,</mo><mi id="S3.SS3.SSS2.p3.1.m1.2.2.2.2" xref="S3.SS3.SSS2.p3.1.m1.2.2.2.2.cmml">j</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p3.1.m1.2b"><apply id="S3.SS3.SSS2.p3.1.m1.2.3.cmml" xref="S3.SS3.SSS2.p3.1.m1.2.3"><csymbol cd="ambiguous" id="S3.SS3.SSS2.p3.1.m1.2.3.1.cmml" xref="S3.SS3.SSS2.p3.1.m1.2.3">subscript</csymbol><ci id="S3.SS3.SSS2.p3.1.m1.2.3.2.cmml" xref="S3.SS3.SSS2.p3.1.m1.2.3.2">𝑎</ci><list id="S3.SS3.SSS2.p3.1.m1.2.2.2.3.cmml" xref="S3.SS3.SSS2.p3.1.m1.2.2.2.4"><ci id="S3.SS3.SSS2.p3.1.m1.1.1.1.1.cmml" xref="S3.SS3.SSS2.p3.1.m1.1.1.1.1">𝑘</ci><ci id="S3.SS3.SSS2.p3.1.m1.2.2.2.2.cmml" xref="S3.SS3.SSS2.p3.1.m1.2.2.2.2">𝑗</ci></list></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p3.1.m1.2c">a_{k,j}</annotation></semantics></math> is the position of joint <math id="S3.SS3.SSS2.p3.2.m2.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S3.SS3.SSS2.p3.2.m2.1a"><mi id="S3.SS3.SSS2.p3.2.m2.1.1" xref="S3.SS3.SSS2.p3.2.m2.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p3.2.m2.1b"><ci id="S3.SS3.SSS2.p3.2.m2.1.1.cmml" xref="S3.SS3.SSS2.p3.2.m2.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p3.2.m2.1c">j</annotation></semantics></math> of the <math id="S3.SS3.SSS2.p3.3.m3.1" class="ltx_Math" alttext="k" display="inline"><semantics id="S3.SS3.SSS2.p3.3.m3.1a"><mi id="S3.SS3.SSS2.p3.3.m3.1.1" xref="S3.SS3.SSS2.p3.3.m3.1.1.cmml">k</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p3.3.m3.1b"><ci id="S3.SS3.SSS2.p3.3.m3.1.1.cmml" xref="S3.SS3.SSS2.p3.3.m3.1.1">𝑘</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p3.3.m3.1c">k</annotation></semantics></math>-th anchor pose, <math id="S3.SS3.SSS2.p3.4.m4.1" class="ltx_Math" alttext="g_{j}" display="inline"><semantics id="S3.SS3.SSS2.p3.4.m4.1a"><msub id="S3.SS3.SSS2.p3.4.m4.1.1" xref="S3.SS3.SSS2.p3.4.m4.1.1.cmml"><mi id="S3.SS3.SSS2.p3.4.m4.1.1.2" xref="S3.SS3.SSS2.p3.4.m4.1.1.2.cmml">g</mi><mi id="S3.SS3.SSS2.p3.4.m4.1.1.3" xref="S3.SS3.SSS2.p3.4.m4.1.1.3.cmml">j</mi></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p3.4.m4.1b"><apply id="S3.SS3.SSS2.p3.4.m4.1.1.cmml" xref="S3.SS3.SSS2.p3.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS2.p3.4.m4.1.1.1.cmml" xref="S3.SS3.SSS2.p3.4.m4.1.1">subscript</csymbol><ci id="S3.SS3.SSS2.p3.4.m4.1.1.2.cmml" xref="S3.SS3.SSS2.p3.4.m4.1.1.2">𝑔</ci><ci id="S3.SS3.SSS2.p3.4.m4.1.1.3.cmml" xref="S3.SS3.SSS2.p3.4.m4.1.1.3">𝑗</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p3.4.m4.1c">g_{j}</annotation></semantics></math> represents the joint <math id="S3.SS3.SSS2.p3.5.m5.1" class="ltx_Math" alttext="j" display="inline"><semantics id="S3.SS3.SSS2.p3.5.m5.1a"><mi id="S3.SS3.SSS2.p3.5.m5.1.1" xref="S3.SS3.SSS2.p3.5.m5.1.1.cmml">j</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p3.5.m5.1b"><ci id="S3.SS3.SSS2.p3.5.m5.1.1.cmml" xref="S3.SS3.SSS2.p3.5.m5.1.1">𝑗</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p3.5.m5.1c">j</annotation></semantics></math> of the ground truth, <math id="S3.SS3.SSS2.p3.6.m6.1" class="ltx_Math" alttext="J" display="inline"><semantics id="S3.SS3.SSS2.p3.6.m6.1a"><mi id="S3.SS3.SSS2.p3.6.m6.1.1" xref="S3.SS3.SSS2.p3.6.m6.1.1.cmml">J</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p3.6.m6.1b"><ci id="S3.SS3.SSS2.p3.6.m6.1.1.cmml" xref="S3.SS3.SSS2.p3.6.m6.1.1">𝐽</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p3.6.m6.1c">J</annotation></semantics></math> is the number of joints and <math id="S3.SS3.SSS2.p3.7.m7.1" class="ltx_Math" alttext="K" display="inline"><semantics id="S3.SS3.SSS2.p3.7.m7.1a"><mi id="S3.SS3.SSS2.p3.7.m7.1.1" xref="S3.SS3.SSS2.p3.7.m7.1.1.cmml">K</mi><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p3.7.m7.1b"><ci id="S3.SS3.SSS2.p3.7.m7.1.1.cmml" xref="S3.SS3.SSS2.p3.7.m7.1.1">𝐾</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p3.7.m7.1c">K</annotation></semantics></math> is the number of anchor poses.
+For computing the loss, we use a sparse cross entropy function given the target index <math id="S3.SS3.SSS2.p3.8.m8.1" class="ltx_Math" alttext="k_{target}" display="inline"><semantics id="S3.SS3.SSS2.p3.8.m8.1a"><msub id="S3.SS3.SSS2.p3.8.m8.1.1" xref="S3.SS3.SSS2.p3.8.m8.1.1.cmml"><mi id="S3.SS3.SSS2.p3.8.m8.1.1.2" xref="S3.SS3.SSS2.p3.8.m8.1.1.2.cmml">k</mi><mrow id="S3.SS3.SSS2.p3.8.m8.1.1.3" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.cmml"><mi id="S3.SS3.SSS2.p3.8.m8.1.1.3.2" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.2.cmml">t</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS2.p3.8.m8.1.1.3.1" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS2.p3.8.m8.1.1.3.3" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.3.cmml">a</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS2.p3.8.m8.1.1.3.1a" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS2.p3.8.m8.1.1.3.4" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.4.cmml">r</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS2.p3.8.m8.1.1.3.1b" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS2.p3.8.m8.1.1.3.5" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.5.cmml">g</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS2.p3.8.m8.1.1.3.1c" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS2.p3.8.m8.1.1.3.6" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.6.cmml">e</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS2.p3.8.m8.1.1.3.1d" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS2.p3.8.m8.1.1.3.7" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.7.cmml">t</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS2.p3.8.m8.1b"><apply id="S3.SS3.SSS2.p3.8.m8.1.1.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS2.p3.8.m8.1.1.1.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1">subscript</csymbol><ci id="S3.SS3.SSS2.p3.8.m8.1.1.2.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.2">𝑘</ci><apply id="S3.SS3.SSS2.p3.8.m8.1.1.3.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.3"><times id="S3.SS3.SSS2.p3.8.m8.1.1.3.1.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.1"></times><ci id="S3.SS3.SSS2.p3.8.m8.1.1.3.2.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.2">𝑡</ci><ci id="S3.SS3.SSS2.p3.8.m8.1.1.3.3.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.3">𝑎</ci><ci id="S3.SS3.SSS2.p3.8.m8.1.1.3.4.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.4">𝑟</ci><ci id="S3.SS3.SSS2.p3.8.m8.1.1.3.5.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.5">𝑔</ci><ci id="S3.SS3.SSS2.p3.8.m8.1.1.3.6.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.6">𝑒</ci><ci id="S3.SS3.SSS2.p3.8.m8.1.1.3.7.cmml" xref="S3.SS3.SSS2.p3.8.m8.1.1.3.7">𝑡</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS2.p3.8.m8.1c">k_{target}</annotation></semantics></math>.</p>
+</div>
+</section>
+<section id="S3.SS3.SSS3" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS3.SSS3.4.1.1" class="ltx_text">III-C</span>3 </span>2D Pose Refinement Loss</h4>
+
+<div id="S3.SS3.SSS3.p1" class="ltx_para">
+<p id="S3.SS3.SSS3.p1.6" class="ltx_p">For <math id="S3.SS3.SSS3.p1.1.m1.1" class="ltx_Math" alttext="L_{2D}" display="inline"><semantics id="S3.SS3.SSS3.p1.1.m1.1a"><msub id="S3.SS3.SSS3.p1.1.m1.1.1" xref="S3.SS3.SSS3.p1.1.m1.1.1.cmml"><mi id="S3.SS3.SSS3.p1.1.m1.1.1.2" xref="S3.SS3.SSS3.p1.1.m1.1.1.2.cmml">L</mi><mrow id="S3.SS3.SSS3.p1.1.m1.1.1.3" xref="S3.SS3.SSS3.p1.1.m1.1.1.3.cmml"><mn id="S3.SS3.SSS3.p1.1.m1.1.1.3.2" xref="S3.SS3.SSS3.p1.1.m1.1.1.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS3.SSS3.p1.1.m1.1.1.3.1" xref="S3.SS3.SSS3.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS3.p1.1.m1.1.1.3.3" xref="S3.SS3.SSS3.p1.1.m1.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.1.m1.1b"><apply id="S3.SS3.SSS3.p1.1.m1.1.1.cmml" xref="S3.SS3.SSS3.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.1.m1.1.1.1.cmml" xref="S3.SS3.SSS3.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.SSS3.p1.1.m1.1.1.2.cmml" xref="S3.SS3.SSS3.p1.1.m1.1.1.2">𝐿</ci><apply id="S3.SS3.SSS3.p1.1.m1.1.1.3.cmml" xref="S3.SS3.SSS3.p1.1.m1.1.1.3"><times id="S3.SS3.SSS3.p1.1.m1.1.1.3.1.cmml" xref="S3.SS3.SSS3.p1.1.m1.1.1.3.1"></times><cn type="integer" id="S3.SS3.SSS3.p1.1.m1.1.1.3.2.cmml" xref="S3.SS3.SSS3.p1.1.m1.1.1.3.2">2</cn><ci id="S3.SS3.SSS3.p1.1.m1.1.1.3.3.cmml" xref="S3.SS3.SSS3.p1.1.m1.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.1.m1.1c">L_{2D}</annotation></semantics></math>, we add the predicted 2D regression deltas to the anchor poses to obtain a set of final 2D predictions <math id="S3.SS3.SSS3.p1.2.m2.1" class="ltx_Math" alttext="P_{2D}" display="inline"><semantics id="S3.SS3.SSS3.p1.2.m2.1a"><msub id="S3.SS3.SSS3.p1.2.m2.1.1" xref="S3.SS3.SSS3.p1.2.m2.1.1.cmml"><mi id="S3.SS3.SSS3.p1.2.m2.1.1.2" xref="S3.SS3.SSS3.p1.2.m2.1.1.2.cmml">P</mi><mrow id="S3.SS3.SSS3.p1.2.m2.1.1.3" xref="S3.SS3.SSS3.p1.2.m2.1.1.3.cmml"><mn id="S3.SS3.SSS3.p1.2.m2.1.1.3.2" xref="S3.SS3.SSS3.p1.2.m2.1.1.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS3.SSS3.p1.2.m2.1.1.3.1" xref="S3.SS3.SSS3.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS3.p1.2.m2.1.1.3.3" xref="S3.SS3.SSS3.p1.2.m2.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.2.m2.1b"><apply id="S3.SS3.SSS3.p1.2.m2.1.1.cmml" xref="S3.SS3.SSS3.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.2.m2.1.1.1.cmml" xref="S3.SS3.SSS3.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.SSS3.p1.2.m2.1.1.2.cmml" xref="S3.SS3.SSS3.p1.2.m2.1.1.2">𝑃</ci><apply id="S3.SS3.SSS3.p1.2.m2.1.1.3.cmml" xref="S3.SS3.SSS3.p1.2.m2.1.1.3"><times id="S3.SS3.SSS3.p1.2.m2.1.1.3.1.cmml" xref="S3.SS3.SSS3.p1.2.m2.1.1.3.1"></times><cn type="integer" id="S3.SS3.SSS3.p1.2.m2.1.1.3.2.cmml" xref="S3.SS3.SSS3.p1.2.m2.1.1.3.2">2</cn><ci id="S3.SS3.SSS3.p1.2.m2.1.1.3.3.cmml" xref="S3.SS3.SSS3.p1.2.m2.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.2.m2.1c">P_{2D}</annotation></semantics></math>.
+Using the IoU comparison method described above, we assign the target values <math id="S3.SS3.SSS3.p1.3.m3.1" class="ltx_Math" alttext="T_{2D}" display="inline"><semantics id="S3.SS3.SSS3.p1.3.m3.1a"><msub id="S3.SS3.SSS3.p1.3.m3.1.1" xref="S3.SS3.SSS3.p1.3.m3.1.1.cmml"><mi id="S3.SS3.SSS3.p1.3.m3.1.1.2" xref="S3.SS3.SSS3.p1.3.m3.1.1.2.cmml">T</mi><mrow id="S3.SS3.SSS3.p1.3.m3.1.1.3" xref="S3.SS3.SSS3.p1.3.m3.1.1.3.cmml"><mn id="S3.SS3.SSS3.p1.3.m3.1.1.3.2" xref="S3.SS3.SSS3.p1.3.m3.1.1.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS3.SSS3.p1.3.m3.1.1.3.1" xref="S3.SS3.SSS3.p1.3.m3.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS3.p1.3.m3.1.1.3.3" xref="S3.SS3.SSS3.p1.3.m3.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.3.m3.1b"><apply id="S3.SS3.SSS3.p1.3.m3.1.1.cmml" xref="S3.SS3.SSS3.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.3.m3.1.1.1.cmml" xref="S3.SS3.SSS3.p1.3.m3.1.1">subscript</csymbol><ci id="S3.SS3.SSS3.p1.3.m3.1.1.2.cmml" xref="S3.SS3.SSS3.p1.3.m3.1.1.2">𝑇</ci><apply id="S3.SS3.SSS3.p1.3.m3.1.1.3.cmml" xref="S3.SS3.SSS3.p1.3.m3.1.1.3"><times id="S3.SS3.SSS3.p1.3.m3.1.1.3.1.cmml" xref="S3.SS3.SSS3.p1.3.m3.1.1.3.1"></times><cn type="integer" id="S3.SS3.SSS3.p1.3.m3.1.1.3.2.cmml" xref="S3.SS3.SSS3.p1.3.m3.1.1.3.2">2</cn><ci id="S3.SS3.SSS3.p1.3.m3.1.1.3.3.cmml" xref="S3.SS3.SSS3.p1.3.m3.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.3.m3.1c">T_{2D}</annotation></semantics></math> for each of the <math id="S3.SS3.SSS3.p1.4.m4.1" class="ltx_Math" alttext="N_{fg}" display="inline"><semantics id="S3.SS3.SSS3.p1.4.m4.1a"><msub id="S3.SS3.SSS3.p1.4.m4.1.1" xref="S3.SS3.SSS3.p1.4.m4.1.1.cmml"><mi id="S3.SS3.SSS3.p1.4.m4.1.1.2" xref="S3.SS3.SSS3.p1.4.m4.1.1.2.cmml">N</mi><mrow id="S3.SS3.SSS3.p1.4.m4.1.1.3" xref="S3.SS3.SSS3.p1.4.m4.1.1.3.cmml"><mi id="S3.SS3.SSS3.p1.4.m4.1.1.3.2" xref="S3.SS3.SSS3.p1.4.m4.1.1.3.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.SS3.SSS3.p1.4.m4.1.1.3.1" xref="S3.SS3.SSS3.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS3.p1.4.m4.1.1.3.3" xref="S3.SS3.SSS3.p1.4.m4.1.1.3.3.cmml">g</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.4.m4.1b"><apply id="S3.SS3.SSS3.p1.4.m4.1.1.cmml" xref="S3.SS3.SSS3.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.4.m4.1.1.1.cmml" xref="S3.SS3.SSS3.p1.4.m4.1.1">subscript</csymbol><ci id="S3.SS3.SSS3.p1.4.m4.1.1.2.cmml" xref="S3.SS3.SSS3.p1.4.m4.1.1.2">𝑁</ci><apply id="S3.SS3.SSS3.p1.4.m4.1.1.3.cmml" xref="S3.SS3.SSS3.p1.4.m4.1.1.3"><times id="S3.SS3.SSS3.p1.4.m4.1.1.3.1.cmml" xref="S3.SS3.SSS3.p1.4.m4.1.1.3.1"></times><ci id="S3.SS3.SSS3.p1.4.m4.1.1.3.2.cmml" xref="S3.SS3.SSS3.p1.4.m4.1.1.3.2">𝑓</ci><ci id="S3.SS3.SSS3.p1.4.m4.1.1.3.3.cmml" xref="S3.SS3.SSS3.p1.4.m4.1.1.3.3">𝑔</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.4.m4.1c">N_{fg}</annotation></semantics></math> foreground RoIs as the corresponding 2D ground truth poses.
+The 2D regression loss is computed as a smooth L1 loss between the target poses <math id="S3.SS3.SSS3.p1.5.m5.1" class="ltx_Math" alttext="T_{2D}" display="inline"><semantics id="S3.SS3.SSS3.p1.5.m5.1a"><msub id="S3.SS3.SSS3.p1.5.m5.1.1" xref="S3.SS3.SSS3.p1.5.m5.1.1.cmml"><mi id="S3.SS3.SSS3.p1.5.m5.1.1.2" xref="S3.SS3.SSS3.p1.5.m5.1.1.2.cmml">T</mi><mrow id="S3.SS3.SSS3.p1.5.m5.1.1.3" xref="S3.SS3.SSS3.p1.5.m5.1.1.3.cmml"><mn id="S3.SS3.SSS3.p1.5.m5.1.1.3.2" xref="S3.SS3.SSS3.p1.5.m5.1.1.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS3.SSS3.p1.5.m5.1.1.3.1" xref="S3.SS3.SSS3.p1.5.m5.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS3.p1.5.m5.1.1.3.3" xref="S3.SS3.SSS3.p1.5.m5.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.5.m5.1b"><apply id="S3.SS3.SSS3.p1.5.m5.1.1.cmml" xref="S3.SS3.SSS3.p1.5.m5.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.5.m5.1.1.1.cmml" xref="S3.SS3.SSS3.p1.5.m5.1.1">subscript</csymbol><ci id="S3.SS3.SSS3.p1.5.m5.1.1.2.cmml" xref="S3.SS3.SSS3.p1.5.m5.1.1.2">𝑇</ci><apply id="S3.SS3.SSS3.p1.5.m5.1.1.3.cmml" xref="S3.SS3.SSS3.p1.5.m5.1.1.3"><times id="S3.SS3.SSS3.p1.5.m5.1.1.3.1.cmml" xref="S3.SS3.SSS3.p1.5.m5.1.1.3.1"></times><cn type="integer" id="S3.SS3.SSS3.p1.5.m5.1.1.3.2.cmml" xref="S3.SS3.SSS3.p1.5.m5.1.1.3.2">2</cn><ci id="S3.SS3.SSS3.p1.5.m5.1.1.3.3.cmml" xref="S3.SS3.SSS3.p1.5.m5.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.5.m5.1c">T_{2D}</annotation></semantics></math> and the predicted pose proposals <math id="S3.SS3.SSS3.p1.6.m6.1" class="ltx_Math" alttext="P_{2D}" display="inline"><semantics id="S3.SS3.SSS3.p1.6.m6.1a"><msub id="S3.SS3.SSS3.p1.6.m6.1.1" xref="S3.SS3.SSS3.p1.6.m6.1.1.cmml"><mi id="S3.SS3.SSS3.p1.6.m6.1.1.2" xref="S3.SS3.SSS3.p1.6.m6.1.1.2.cmml">P</mi><mrow id="S3.SS3.SSS3.p1.6.m6.1.1.3" xref="S3.SS3.SSS3.p1.6.m6.1.1.3.cmml"><mn id="S3.SS3.SSS3.p1.6.m6.1.1.3.2" xref="S3.SS3.SSS3.p1.6.m6.1.1.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS3.SSS3.p1.6.m6.1.1.3.1" xref="S3.SS3.SSS3.p1.6.m6.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS3.p1.6.m6.1.1.3.3" xref="S3.SS3.SSS3.p1.6.m6.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.6.m6.1b"><apply id="S3.SS3.SSS3.p1.6.m6.1.1.cmml" xref="S3.SS3.SSS3.p1.6.m6.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.6.m6.1.1.1.cmml" xref="S3.SS3.SSS3.p1.6.m6.1.1">subscript</csymbol><ci id="S3.SS3.SSS3.p1.6.m6.1.1.2.cmml" xref="S3.SS3.SSS3.p1.6.m6.1.1.2">𝑃</ci><apply id="S3.SS3.SSS3.p1.6.m6.1.1.3.cmml" xref="S3.SS3.SSS3.p1.6.m6.1.1.3"><times id="S3.SS3.SSS3.p1.6.m6.1.1.3.1.cmml" xref="S3.SS3.SSS3.p1.6.m6.1.1.3.1"></times><cn type="integer" id="S3.SS3.SSS3.p1.6.m6.1.1.3.2.cmml" xref="S3.SS3.SSS3.p1.6.m6.1.1.3.2">2</cn><ci id="S3.SS3.SSS3.p1.6.m6.1.1.3.3.cmml" xref="S3.SS3.SSS3.p1.6.m6.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.6.m6.1c">P_{2D}</annotation></semantics></math>.
+The regression loss is computed only for the foreground classes:</p>
+<table id="S3.E3" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E3.m1.4" class="ltx_Math" alttext="L_{2D}(P_{2D},T_{2D})=\frac{1}{N_{fg}}\sum_{i=1}^{N_{fg}}l_{i}\cdot\texttt{smooth\_l1}(p_{i},t_{i})" display="block"><semantics id="S3.E3.m1.4a"><mrow id="S3.E3.m1.4.4" xref="S3.E3.m1.4.4.cmml"><mrow id="S3.E3.m1.2.2.2" xref="S3.E3.m1.2.2.2.cmml"><msub id="S3.E3.m1.2.2.2.4" xref="S3.E3.m1.2.2.2.4.cmml"><mi id="S3.E3.m1.2.2.2.4.2" xref="S3.E3.m1.2.2.2.4.2.cmml">L</mi><mrow id="S3.E3.m1.2.2.2.4.3" xref="S3.E3.m1.2.2.2.4.3.cmml"><mn id="S3.E3.m1.2.2.2.4.3.2" xref="S3.E3.m1.2.2.2.4.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.E3.m1.2.2.2.4.3.1" xref="S3.E3.m1.2.2.2.4.3.1.cmml">​</mo><mi id="S3.E3.m1.2.2.2.4.3.3" xref="S3.E3.m1.2.2.2.4.3.3.cmml">D</mi></mrow></msub><mo lspace="0em" rspace="0em" id="S3.E3.m1.2.2.2.3" xref="S3.E3.m1.2.2.2.3.cmml">​</mo><mrow id="S3.E3.m1.2.2.2.2.2" xref="S3.E3.m1.2.2.2.2.3.cmml"><mo stretchy="false" id="S3.E3.m1.2.2.2.2.2.3" xref="S3.E3.m1.2.2.2.2.3.cmml">(</mo><msub id="S3.E3.m1.1.1.1.1.1.1" xref="S3.E3.m1.1.1.1.1.1.1.cmml"><mi id="S3.E3.m1.1.1.1.1.1.1.2" xref="S3.E3.m1.1.1.1.1.1.1.2.cmml">P</mi><mrow id="S3.E3.m1.1.1.1.1.1.1.3" xref="S3.E3.m1.1.1.1.1.1.1.3.cmml"><mn id="S3.E3.m1.1.1.1.1.1.1.3.2" xref="S3.E3.m1.1.1.1.1.1.1.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.E3.m1.1.1.1.1.1.1.3.1" xref="S3.E3.m1.1.1.1.1.1.1.3.1.cmml">​</mo><mi id="S3.E3.m1.1.1.1.1.1.1.3.3" xref="S3.E3.m1.1.1.1.1.1.1.3.3.cmml">D</mi></mrow></msub><mo id="S3.E3.m1.2.2.2.2.2.4" xref="S3.E3.m1.2.2.2.2.3.cmml">,</mo><msub id="S3.E3.m1.2.2.2.2.2.2" xref="S3.E3.m1.2.2.2.2.2.2.cmml"><mi id="S3.E3.m1.2.2.2.2.2.2.2" xref="S3.E3.m1.2.2.2.2.2.2.2.cmml">T</mi><mrow id="S3.E3.m1.2.2.2.2.2.2.3" xref="S3.E3.m1.2.2.2.2.2.2.3.cmml"><mn id="S3.E3.m1.2.2.2.2.2.2.3.2" xref="S3.E3.m1.2.2.2.2.2.2.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.E3.m1.2.2.2.2.2.2.3.1" xref="S3.E3.m1.2.2.2.2.2.2.3.1.cmml">​</mo><mi id="S3.E3.m1.2.2.2.2.2.2.3.3" xref="S3.E3.m1.2.2.2.2.2.2.3.3.cmml">D</mi></mrow></msub><mo stretchy="false" id="S3.E3.m1.2.2.2.2.2.5" xref="S3.E3.m1.2.2.2.2.3.cmml">)</mo></mrow></mrow><mo id="S3.E3.m1.4.4.5" xref="S3.E3.m1.4.4.5.cmml">=</mo><mrow id="S3.E3.m1.4.4.4" xref="S3.E3.m1.4.4.4.cmml"><mfrac id="S3.E3.m1.4.4.4.4" xref="S3.E3.m1.4.4.4.4.cmml"><mn id="S3.E3.m1.4.4.4.4.2" xref="S3.E3.m1.4.4.4.4.2.cmml">1</mn><msub id="S3.E3.m1.4.4.4.4.3" xref="S3.E3.m1.4.4.4.4.3.cmml"><mi id="S3.E3.m1.4.4.4.4.3.2" xref="S3.E3.m1.4.4.4.4.3.2.cmml">N</mi><mrow id="S3.E3.m1.4.4.4.4.3.3" xref="S3.E3.m1.4.4.4.4.3.3.cmml"><mi id="S3.E3.m1.4.4.4.4.3.3.2" xref="S3.E3.m1.4.4.4.4.3.3.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.4.4.3.3.1" xref="S3.E3.m1.4.4.4.4.3.3.1.cmml">​</mo><mi id="S3.E3.m1.4.4.4.4.3.3.3" xref="S3.E3.m1.4.4.4.4.3.3.3.cmml">g</mi></mrow></msub></mfrac><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.4.3" xref="S3.E3.m1.4.4.4.3.cmml">​</mo><mrow id="S3.E3.m1.4.4.4.2" xref="S3.E3.m1.4.4.4.2.cmml"><munderover id="S3.E3.m1.4.4.4.2.3" xref="S3.E3.m1.4.4.4.2.3.cmml"><mo movablelimits="false" id="S3.E3.m1.4.4.4.2.3.2.2" xref="S3.E3.m1.4.4.4.2.3.2.2.cmml">∑</mo><mrow id="S3.E3.m1.4.4.4.2.3.2.3" xref="S3.E3.m1.4.4.4.2.3.2.3.cmml"><mi id="S3.E3.m1.4.4.4.2.3.2.3.2" xref="S3.E3.m1.4.4.4.2.3.2.3.2.cmml">i</mi><mo id="S3.E3.m1.4.4.4.2.3.2.3.1" xref="S3.E3.m1.4.4.4.2.3.2.3.1.cmml">=</mo><mn id="S3.E3.m1.4.4.4.2.3.2.3.3" xref="S3.E3.m1.4.4.4.2.3.2.3.3.cmml">1</mn></mrow><msub id="S3.E3.m1.4.4.4.2.3.3" xref="S3.E3.m1.4.4.4.2.3.3.cmml"><mi id="S3.E3.m1.4.4.4.2.3.3.2" xref="S3.E3.m1.4.4.4.2.3.3.2.cmml">N</mi><mrow id="S3.E3.m1.4.4.4.2.3.3.3" xref="S3.E3.m1.4.4.4.2.3.3.3.cmml"><mi id="S3.E3.m1.4.4.4.2.3.3.3.2" xref="S3.E3.m1.4.4.4.2.3.3.3.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.4.2.3.3.3.1" xref="S3.E3.m1.4.4.4.2.3.3.3.1.cmml">​</mo><mi id="S3.E3.m1.4.4.4.2.3.3.3.3" xref="S3.E3.m1.4.4.4.2.3.3.3.3.cmml">g</mi></mrow></msub></munderover><mrow id="S3.E3.m1.4.4.4.2.2" xref="S3.E3.m1.4.4.4.2.2.cmml"><mrow id="S3.E3.m1.4.4.4.2.2.4" xref="S3.E3.m1.4.4.4.2.2.4.cmml"><msub id="S3.E3.m1.4.4.4.2.2.4.2" xref="S3.E3.m1.4.4.4.2.2.4.2.cmml"><mi id="S3.E3.m1.4.4.4.2.2.4.2.2" xref="S3.E3.m1.4.4.4.2.2.4.2.2.cmml">l</mi><mi id="S3.E3.m1.4.4.4.2.2.4.2.3" xref="S3.E3.m1.4.4.4.2.2.4.2.3.cmml">i</mi></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E3.m1.4.4.4.2.2.4.1" xref="S3.E3.m1.4.4.4.2.2.4.1.cmml">⋅</mo><mtext class="ltx_mathvariant_monospace" id="S3.E3.m1.4.4.4.2.2.4.3" xref="S3.E3.m1.4.4.4.2.2.4.3a.cmml">smooth_l1</mtext></mrow><mo lspace="0em" rspace="0em" id="S3.E3.m1.4.4.4.2.2.3" xref="S3.E3.m1.4.4.4.2.2.3.cmml">​</mo><mrow id="S3.E3.m1.4.4.4.2.2.2.2" xref="S3.E3.m1.4.4.4.2.2.2.3.cmml"><mo stretchy="false" id="S3.E3.m1.4.4.4.2.2.2.2.3" xref="S3.E3.m1.4.4.4.2.2.2.3.cmml">(</mo><msub id="S3.E3.m1.3.3.3.1.1.1.1.1" xref="S3.E3.m1.3.3.3.1.1.1.1.1.cmml"><mi id="S3.E3.m1.3.3.3.1.1.1.1.1.2" xref="S3.E3.m1.3.3.3.1.1.1.1.1.2.cmml">p</mi><mi id="S3.E3.m1.3.3.3.1.1.1.1.1.3" xref="S3.E3.m1.3.3.3.1.1.1.1.1.3.cmml">i</mi></msub><mo id="S3.E3.m1.4.4.4.2.2.2.2.4" xref="S3.E3.m1.4.4.4.2.2.2.3.cmml">,</mo><msub id="S3.E3.m1.4.4.4.2.2.2.2.2" xref="S3.E3.m1.4.4.4.2.2.2.2.2.cmml"><mi id="S3.E3.m1.4.4.4.2.2.2.2.2.2" xref="S3.E3.m1.4.4.4.2.2.2.2.2.2.cmml">t</mi><mi id="S3.E3.m1.4.4.4.2.2.2.2.2.3" xref="S3.E3.m1.4.4.4.2.2.2.2.2.3.cmml">i</mi></msub><mo stretchy="false" id="S3.E3.m1.4.4.4.2.2.2.2.5" xref="S3.E3.m1.4.4.4.2.2.2.3.cmml">)</mo></mrow></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E3.m1.4b"><apply id="S3.E3.m1.4.4.cmml" xref="S3.E3.m1.4.4"><eq id="S3.E3.m1.4.4.5.cmml" xref="S3.E3.m1.4.4.5"></eq><apply id="S3.E3.m1.2.2.2.cmml" xref="S3.E3.m1.2.2.2"><times id="S3.E3.m1.2.2.2.3.cmml" xref="S3.E3.m1.2.2.2.3"></times><apply id="S3.E3.m1.2.2.2.4.cmml" xref="S3.E3.m1.2.2.2.4"><csymbol cd="ambiguous" id="S3.E3.m1.2.2.2.4.1.cmml" xref="S3.E3.m1.2.2.2.4">subscript</csymbol><ci id="S3.E3.m1.2.2.2.4.2.cmml" xref="S3.E3.m1.2.2.2.4.2">𝐿</ci><apply id="S3.E3.m1.2.2.2.4.3.cmml" xref="S3.E3.m1.2.2.2.4.3"><times id="S3.E3.m1.2.2.2.4.3.1.cmml" xref="S3.E3.m1.2.2.2.4.3.1"></times><cn type="integer" id="S3.E3.m1.2.2.2.4.3.2.cmml" xref="S3.E3.m1.2.2.2.4.3.2">2</cn><ci id="S3.E3.m1.2.2.2.4.3.3.cmml" xref="S3.E3.m1.2.2.2.4.3.3">𝐷</ci></apply></apply><interval closure="open" id="S3.E3.m1.2.2.2.2.3.cmml" xref="S3.E3.m1.2.2.2.2.2"><apply id="S3.E3.m1.1.1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E3.m1.1.1.1.1.1.1.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1">subscript</csymbol><ci id="S3.E3.m1.1.1.1.1.1.1.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.2">𝑃</ci><apply id="S3.E3.m1.1.1.1.1.1.1.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.3"><times id="S3.E3.m1.1.1.1.1.1.1.3.1.cmml" xref="S3.E3.m1.1.1.1.1.1.1.3.1"></times><cn type="integer" id="S3.E3.m1.1.1.1.1.1.1.3.2.cmml" xref="S3.E3.m1.1.1.1.1.1.1.3.2">2</cn><ci id="S3.E3.m1.1.1.1.1.1.1.3.3.cmml" xref="S3.E3.m1.1.1.1.1.1.1.3.3">𝐷</ci></apply></apply><apply id="S3.E3.m1.2.2.2.2.2.2.cmml" xref="S3.E3.m1.2.2.2.2.2.2"><csymbol cd="ambiguous" id="S3.E3.m1.2.2.2.2.2.2.1.cmml" xref="S3.E3.m1.2.2.2.2.2.2">subscript</csymbol><ci id="S3.E3.m1.2.2.2.2.2.2.2.cmml" xref="S3.E3.m1.2.2.2.2.2.2.2">𝑇</ci><apply id="S3.E3.m1.2.2.2.2.2.2.3.cmml" xref="S3.E3.m1.2.2.2.2.2.2.3"><times id="S3.E3.m1.2.2.2.2.2.2.3.1.cmml" xref="S3.E3.m1.2.2.2.2.2.2.3.1"></times><cn type="integer" id="S3.E3.m1.2.2.2.2.2.2.3.2.cmml" xref="S3.E3.m1.2.2.2.2.2.2.3.2">2</cn><ci id="S3.E3.m1.2.2.2.2.2.2.3.3.cmml" xref="S3.E3.m1.2.2.2.2.2.2.3.3">𝐷</ci></apply></apply></interval></apply><apply id="S3.E3.m1.4.4.4.cmml" xref="S3.E3.m1.4.4.4"><times id="S3.E3.m1.4.4.4.3.cmml" xref="S3.E3.m1.4.4.4.3"></times><apply id="S3.E3.m1.4.4.4.4.cmml" xref="S3.E3.m1.4.4.4.4"><divide id="S3.E3.m1.4.4.4.4.1.cmml" xref="S3.E3.m1.4.4.4.4"></divide><cn type="integer" id="S3.E3.m1.4.4.4.4.2.cmml" xref="S3.E3.m1.4.4.4.4.2">1</cn><apply id="S3.E3.m1.4.4.4.4.3.cmml" xref="S3.E3.m1.4.4.4.4.3"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.4.4.3.1.cmml" xref="S3.E3.m1.4.4.4.4.3">subscript</csymbol><ci id="S3.E3.m1.4.4.4.4.3.2.cmml" xref="S3.E3.m1.4.4.4.4.3.2">𝑁</ci><apply id="S3.E3.m1.4.4.4.4.3.3.cmml" xref="S3.E3.m1.4.4.4.4.3.3"><times id="S3.E3.m1.4.4.4.4.3.3.1.cmml" xref="S3.E3.m1.4.4.4.4.3.3.1"></times><ci id="S3.E3.m1.4.4.4.4.3.3.2.cmml" xref="S3.E3.m1.4.4.4.4.3.3.2">𝑓</ci><ci id="S3.E3.m1.4.4.4.4.3.3.3.cmml" xref="S3.E3.m1.4.4.4.4.3.3.3">𝑔</ci></apply></apply></apply><apply id="S3.E3.m1.4.4.4.2.cmml" xref="S3.E3.m1.4.4.4.2"><apply id="S3.E3.m1.4.4.4.2.3.cmml" xref="S3.E3.m1.4.4.4.2.3"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.4.2.3.1.cmml" xref="S3.E3.m1.4.4.4.2.3">superscript</csymbol><apply id="S3.E3.m1.4.4.4.2.3.2.cmml" xref="S3.E3.m1.4.4.4.2.3"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.4.2.3.2.1.cmml" xref="S3.E3.m1.4.4.4.2.3">subscript</csymbol><sum id="S3.E3.m1.4.4.4.2.3.2.2.cmml" xref="S3.E3.m1.4.4.4.2.3.2.2"></sum><apply id="S3.E3.m1.4.4.4.2.3.2.3.cmml" xref="S3.E3.m1.4.4.4.2.3.2.3"><eq id="S3.E3.m1.4.4.4.2.3.2.3.1.cmml" xref="S3.E3.m1.4.4.4.2.3.2.3.1"></eq><ci id="S3.E3.m1.4.4.4.2.3.2.3.2.cmml" xref="S3.E3.m1.4.4.4.2.3.2.3.2">𝑖</ci><cn type="integer" id="S3.E3.m1.4.4.4.2.3.2.3.3.cmml" xref="S3.E3.m1.4.4.4.2.3.2.3.3">1</cn></apply></apply><apply id="S3.E3.m1.4.4.4.2.3.3.cmml" xref="S3.E3.m1.4.4.4.2.3.3"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.4.2.3.3.1.cmml" xref="S3.E3.m1.4.4.4.2.3.3">subscript</csymbol><ci id="S3.E3.m1.4.4.4.2.3.3.2.cmml" xref="S3.E3.m1.4.4.4.2.3.3.2">𝑁</ci><apply id="S3.E3.m1.4.4.4.2.3.3.3.cmml" xref="S3.E3.m1.4.4.4.2.3.3.3"><times id="S3.E3.m1.4.4.4.2.3.3.3.1.cmml" xref="S3.E3.m1.4.4.4.2.3.3.3.1"></times><ci id="S3.E3.m1.4.4.4.2.3.3.3.2.cmml" xref="S3.E3.m1.4.4.4.2.3.3.3.2">𝑓</ci><ci id="S3.E3.m1.4.4.4.2.3.3.3.3.cmml" xref="S3.E3.m1.4.4.4.2.3.3.3.3">𝑔</ci></apply></apply></apply><apply id="S3.E3.m1.4.4.4.2.2.cmml" xref="S3.E3.m1.4.4.4.2.2"><times id="S3.E3.m1.4.4.4.2.2.3.cmml" xref="S3.E3.m1.4.4.4.2.2.3"></times><apply id="S3.E3.m1.4.4.4.2.2.4.cmml" xref="S3.E3.m1.4.4.4.2.2.4"><ci id="S3.E3.m1.4.4.4.2.2.4.1.cmml" xref="S3.E3.m1.4.4.4.2.2.4.1">⋅</ci><apply id="S3.E3.m1.4.4.4.2.2.4.2.cmml" xref="S3.E3.m1.4.4.4.2.2.4.2"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.4.2.2.4.2.1.cmml" xref="S3.E3.m1.4.4.4.2.2.4.2">subscript</csymbol><ci id="S3.E3.m1.4.4.4.2.2.4.2.2.cmml" xref="S3.E3.m1.4.4.4.2.2.4.2.2">𝑙</ci><ci id="S3.E3.m1.4.4.4.2.2.4.2.3.cmml" xref="S3.E3.m1.4.4.4.2.2.4.2.3">𝑖</ci></apply><ci id="S3.E3.m1.4.4.4.2.2.4.3a.cmml" xref="S3.E3.m1.4.4.4.2.2.4.3"><mtext class="ltx_mathvariant_monospace" id="S3.E3.m1.4.4.4.2.2.4.3.cmml" xref="S3.E3.m1.4.4.4.2.2.4.3">smooth_l1</mtext></ci></apply><interval closure="open" id="S3.E3.m1.4.4.4.2.2.2.3.cmml" xref="S3.E3.m1.4.4.4.2.2.2.2"><apply id="S3.E3.m1.3.3.3.1.1.1.1.1.cmml" xref="S3.E3.m1.3.3.3.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E3.m1.3.3.3.1.1.1.1.1.1.cmml" xref="S3.E3.m1.3.3.3.1.1.1.1.1">subscript</csymbol><ci id="S3.E3.m1.3.3.3.1.1.1.1.1.2.cmml" xref="S3.E3.m1.3.3.3.1.1.1.1.1.2">𝑝</ci><ci id="S3.E3.m1.3.3.3.1.1.1.1.1.3.cmml" xref="S3.E3.m1.3.3.3.1.1.1.1.1.3">𝑖</ci></apply><apply id="S3.E3.m1.4.4.4.2.2.2.2.2.cmml" xref="S3.E3.m1.4.4.4.2.2.2.2.2"><csymbol cd="ambiguous" id="S3.E3.m1.4.4.4.2.2.2.2.2.1.cmml" xref="S3.E3.m1.4.4.4.2.2.2.2.2">subscript</csymbol><ci id="S3.E3.m1.4.4.4.2.2.2.2.2.2.cmml" xref="S3.E3.m1.4.4.4.2.2.2.2.2.2">𝑡</ci><ci id="S3.E3.m1.4.4.4.2.2.2.2.2.3.cmml" xref="S3.E3.m1.4.4.4.2.2.2.2.2.3">𝑖</ci></apply></interval></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E3.m1.4c">L_{2D}(P_{2D},T_{2D})=\frac{1}{N_{fg}}\sum_{i=1}^{N_{fg}}l_{i}\cdot\texttt{smooth\_l1}(p_{i},t_{i})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p id="S3.SS3.SSS3.p1.9" class="ltx_p">where <math id="S3.SS3.SSS3.p1.7.m1.1" class="ltx_Math" alttext="l_{i}=1" display="inline"><semantics id="S3.SS3.SSS3.p1.7.m1.1a"><mrow id="S3.SS3.SSS3.p1.7.m1.1.1" xref="S3.SS3.SSS3.p1.7.m1.1.1.cmml"><msub id="S3.SS3.SSS3.p1.7.m1.1.1.2" xref="S3.SS3.SSS3.p1.7.m1.1.1.2.cmml"><mi id="S3.SS3.SSS3.p1.7.m1.1.1.2.2" xref="S3.SS3.SSS3.p1.7.m1.1.1.2.2.cmml">l</mi><mi id="S3.SS3.SSS3.p1.7.m1.1.1.2.3" xref="S3.SS3.SSS3.p1.7.m1.1.1.2.3.cmml">i</mi></msub><mo id="S3.SS3.SSS3.p1.7.m1.1.1.1" xref="S3.SS3.SSS3.p1.7.m1.1.1.1.cmml">=</mo><mn id="S3.SS3.SSS3.p1.7.m1.1.1.3" xref="S3.SS3.SSS3.p1.7.m1.1.1.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.7.m1.1b"><apply id="S3.SS3.SSS3.p1.7.m1.1.1.cmml" xref="S3.SS3.SSS3.p1.7.m1.1.1"><eq id="S3.SS3.SSS3.p1.7.m1.1.1.1.cmml" xref="S3.SS3.SSS3.p1.7.m1.1.1.1"></eq><apply id="S3.SS3.SSS3.p1.7.m1.1.1.2.cmml" xref="S3.SS3.SSS3.p1.7.m1.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.7.m1.1.1.2.1.cmml" xref="S3.SS3.SSS3.p1.7.m1.1.1.2">subscript</csymbol><ci id="S3.SS3.SSS3.p1.7.m1.1.1.2.2.cmml" xref="S3.SS3.SSS3.p1.7.m1.1.1.2.2">𝑙</ci><ci id="S3.SS3.SSS3.p1.7.m1.1.1.2.3.cmml" xref="S3.SS3.SSS3.p1.7.m1.1.1.2.3">𝑖</ci></apply><cn type="integer" id="S3.SS3.SSS3.p1.7.m1.1.1.3.cmml" xref="S3.SS3.SSS3.p1.7.m1.1.1.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.7.m1.1c">l_{i}=1</annotation></semantics></math> if <math id="S3.SS3.SSS3.p1.8.m2.1" class="ltx_Math" alttext="y_{i}&gt;0" display="inline"><semantics id="S3.SS3.SSS3.p1.8.m2.1a"><mrow id="S3.SS3.SSS3.p1.8.m2.1.1" xref="S3.SS3.SSS3.p1.8.m2.1.1.cmml"><msub id="S3.SS3.SSS3.p1.8.m2.1.1.2" xref="S3.SS3.SSS3.p1.8.m2.1.1.2.cmml"><mi id="S3.SS3.SSS3.p1.8.m2.1.1.2.2" xref="S3.SS3.SSS3.p1.8.m2.1.1.2.2.cmml">y</mi><mi id="S3.SS3.SSS3.p1.8.m2.1.1.2.3" xref="S3.SS3.SSS3.p1.8.m2.1.1.2.3.cmml">i</mi></msub><mo id="S3.SS3.SSS3.p1.8.m2.1.1.1" xref="S3.SS3.SSS3.p1.8.m2.1.1.1.cmml">&gt;</mo><mn id="S3.SS3.SSS3.p1.8.m2.1.1.3" xref="S3.SS3.SSS3.p1.8.m2.1.1.3.cmml">0</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.8.m2.1b"><apply id="S3.SS3.SSS3.p1.8.m2.1.1.cmml" xref="S3.SS3.SSS3.p1.8.m2.1.1"><gt id="S3.SS3.SSS3.p1.8.m2.1.1.1.cmml" xref="S3.SS3.SSS3.p1.8.m2.1.1.1"></gt><apply id="S3.SS3.SSS3.p1.8.m2.1.1.2.cmml" xref="S3.SS3.SSS3.p1.8.m2.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.8.m2.1.1.2.1.cmml" xref="S3.SS3.SSS3.p1.8.m2.1.1.2">subscript</csymbol><ci id="S3.SS3.SSS3.p1.8.m2.1.1.2.2.cmml" xref="S3.SS3.SSS3.p1.8.m2.1.1.2.2">𝑦</ci><ci id="S3.SS3.SSS3.p1.8.m2.1.1.2.3.cmml" xref="S3.SS3.SSS3.p1.8.m2.1.1.2.3">𝑖</ci></apply><cn type="integer" id="S3.SS3.SSS3.p1.8.m2.1.1.3.cmml" xref="S3.SS3.SSS3.p1.8.m2.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.8.m2.1c">y_{i}&gt;0</annotation></semantics></math> else <math id="S3.SS3.SSS3.p1.9.m3.1" class="ltx_Math" alttext="l_{i}=0" display="inline"><semantics id="S3.SS3.SSS3.p1.9.m3.1a"><mrow id="S3.SS3.SSS3.p1.9.m3.1.1" xref="S3.SS3.SSS3.p1.9.m3.1.1.cmml"><msub id="S3.SS3.SSS3.p1.9.m3.1.1.2" xref="S3.SS3.SSS3.p1.9.m3.1.1.2.cmml"><mi id="S3.SS3.SSS3.p1.9.m3.1.1.2.2" xref="S3.SS3.SSS3.p1.9.m3.1.1.2.2.cmml">l</mi><mi id="S3.SS3.SSS3.p1.9.m3.1.1.2.3" xref="S3.SS3.SSS3.p1.9.m3.1.1.2.3.cmml">i</mi></msub><mo id="S3.SS3.SSS3.p1.9.m3.1.1.1" xref="S3.SS3.SSS3.p1.9.m3.1.1.1.cmml">=</mo><mn id="S3.SS3.SSS3.p1.9.m3.1.1.3" xref="S3.SS3.SSS3.p1.9.m3.1.1.3.cmml">0</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS3.p1.9.m3.1b"><apply id="S3.SS3.SSS3.p1.9.m3.1.1.cmml" xref="S3.SS3.SSS3.p1.9.m3.1.1"><eq id="S3.SS3.SSS3.p1.9.m3.1.1.1.cmml" xref="S3.SS3.SSS3.p1.9.m3.1.1.1"></eq><apply id="S3.SS3.SSS3.p1.9.m3.1.1.2.cmml" xref="S3.SS3.SSS3.p1.9.m3.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.SSS3.p1.9.m3.1.1.2.1.cmml" xref="S3.SS3.SSS3.p1.9.m3.1.1.2">subscript</csymbol><ci id="S3.SS3.SSS3.p1.9.m3.1.1.2.2.cmml" xref="S3.SS3.SSS3.p1.9.m3.1.1.2.2">𝑙</ci><ci id="S3.SS3.SSS3.p1.9.m3.1.1.2.3.cmml" xref="S3.SS3.SSS3.p1.9.m3.1.1.2.3">𝑖</ci></apply><cn type="integer" id="S3.SS3.SSS3.p1.9.m3.1.1.3.cmml" xref="S3.SS3.SSS3.p1.9.m3.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS3.p1.9.m3.1c">l_{i}=0</annotation></semantics></math>.</p>
+</div>
+</section>
+<section id="S3.SS3.SSS4" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span id="S3.SS3.SSS4.4.1.1" class="ltx_text">III-C</span>4 </span>3D Pose Refinement Loss</h4>
+
+<div id="S3.SS3.SSS4.p1" class="ltx_para">
+<p id="S3.SS3.SSS4.p1.4" class="ltx_p">For <math id="S3.SS3.SSS4.p1.1.m1.1" class="ltx_Math" alttext="L_{3D}" display="inline"><semantics id="S3.SS3.SSS4.p1.1.m1.1a"><msub id="S3.SS3.SSS4.p1.1.m1.1.1" xref="S3.SS3.SSS4.p1.1.m1.1.1.cmml"><mi id="S3.SS3.SSS4.p1.1.m1.1.1.2" xref="S3.SS3.SSS4.p1.1.m1.1.1.2.cmml">L</mi><mrow id="S3.SS3.SSS4.p1.1.m1.1.1.3" xref="S3.SS3.SSS4.p1.1.m1.1.1.3.cmml"><mn id="S3.SS3.SSS4.p1.1.m1.1.1.3.2" xref="S3.SS3.SSS4.p1.1.m1.1.1.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S3.SS3.SSS4.p1.1.m1.1.1.3.1" xref="S3.SS3.SSS4.p1.1.m1.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS4.p1.1.m1.1.1.3.3" xref="S3.SS3.SSS4.p1.1.m1.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS4.p1.1.m1.1b"><apply id="S3.SS3.SSS4.p1.1.m1.1.1.cmml" xref="S3.SS3.SSS4.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS4.p1.1.m1.1.1.1.cmml" xref="S3.SS3.SSS4.p1.1.m1.1.1">subscript</csymbol><ci id="S3.SS3.SSS4.p1.1.m1.1.1.2.cmml" xref="S3.SS3.SSS4.p1.1.m1.1.1.2">𝐿</ci><apply id="S3.SS3.SSS4.p1.1.m1.1.1.3.cmml" xref="S3.SS3.SSS4.p1.1.m1.1.1.3"><times id="S3.SS3.SSS4.p1.1.m1.1.1.3.1.cmml" xref="S3.SS3.SSS4.p1.1.m1.1.1.3.1"></times><cn type="integer" id="S3.SS3.SSS4.p1.1.m1.1.1.3.2.cmml" xref="S3.SS3.SSS4.p1.1.m1.1.1.3.2">3</cn><ci id="S3.SS3.SSS4.p1.1.m1.1.1.3.3.cmml" xref="S3.SS3.SSS4.p1.1.m1.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS4.p1.1.m1.1c">L_{3D}</annotation></semantics></math>, we add the regressed deltas to the 3D anchor poses to obtain absolute 3D poses <math id="S3.SS3.SSS4.p1.2.m2.1" class="ltx_Math" alttext="P_{3D}" display="inline"><semantics id="S3.SS3.SSS4.p1.2.m2.1a"><msub id="S3.SS3.SSS4.p1.2.m2.1.1" xref="S3.SS3.SSS4.p1.2.m2.1.1.cmml"><mi id="S3.SS3.SSS4.p1.2.m2.1.1.2" xref="S3.SS3.SSS4.p1.2.m2.1.1.2.cmml">P</mi><mrow id="S3.SS3.SSS4.p1.2.m2.1.1.3" xref="S3.SS3.SSS4.p1.2.m2.1.1.3.cmml"><mn id="S3.SS3.SSS4.p1.2.m2.1.1.3.2" xref="S3.SS3.SSS4.p1.2.m2.1.1.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S3.SS3.SSS4.p1.2.m2.1.1.3.1" xref="S3.SS3.SSS4.p1.2.m2.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS4.p1.2.m2.1.1.3.3" xref="S3.SS3.SSS4.p1.2.m2.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS4.p1.2.m2.1b"><apply id="S3.SS3.SSS4.p1.2.m2.1.1.cmml" xref="S3.SS3.SSS4.p1.2.m2.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS4.p1.2.m2.1.1.1.cmml" xref="S3.SS3.SSS4.p1.2.m2.1.1">subscript</csymbol><ci id="S3.SS3.SSS4.p1.2.m2.1.1.2.cmml" xref="S3.SS3.SSS4.p1.2.m2.1.1.2">𝑃</ci><apply id="S3.SS3.SSS4.p1.2.m2.1.1.3.cmml" xref="S3.SS3.SSS4.p1.2.m2.1.1.3"><times id="S3.SS3.SSS4.p1.2.m2.1.1.3.1.cmml" xref="S3.SS3.SSS4.p1.2.m2.1.1.3.1"></times><cn type="integer" id="S3.SS3.SSS4.p1.2.m2.1.1.3.2.cmml" xref="S3.SS3.SSS4.p1.2.m2.1.1.3.2">3</cn><ci id="S3.SS3.SSS4.p1.2.m2.1.1.3.3.cmml" xref="S3.SS3.SSS4.p1.2.m2.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS4.p1.2.m2.1c">P_{3D}</annotation></semantics></math>. Since the 3D ground truth is not available, we project the 3D poses into the 2D image space and compute the smooth L1 loss using a projection function <math id="S3.SS3.SSS4.p1.3.m3.1" class="ltx_Math" alttext="\texttt{Pr}(\cdot)" display="inline"><semantics id="S3.SS3.SSS4.p1.3.m3.1a"><mrow id="S3.SS3.SSS4.p1.3.m3.1.2" xref="S3.SS3.SSS4.p1.3.m3.1.2.cmml"><mtext class="ltx_mathvariant_monospace" id="S3.SS3.SSS4.p1.3.m3.1.2.2" xref="S3.SS3.SSS4.p1.3.m3.1.2.2a.cmml">Pr</mtext><mo lspace="0em" rspace="0em" id="S3.SS3.SSS4.p1.3.m3.1.2.1" xref="S3.SS3.SSS4.p1.3.m3.1.2.1.cmml">​</mo><mrow id="S3.SS3.SSS4.p1.3.m3.1.2.3.2" xref="S3.SS3.SSS4.p1.3.m3.1.2.cmml"><mo stretchy="false" id="S3.SS3.SSS4.p1.3.m3.1.2.3.2.1" xref="S3.SS3.SSS4.p1.3.m3.1.2.cmml">(</mo><mo lspace="0em" rspace="0em" id="S3.SS3.SSS4.p1.3.m3.1.1" xref="S3.SS3.SSS4.p1.3.m3.1.1.cmml">⋅</mo><mo stretchy="false" id="S3.SS3.SSS4.p1.3.m3.1.2.3.2.2" xref="S3.SS3.SSS4.p1.3.m3.1.2.cmml">)</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS4.p1.3.m3.1b"><apply id="S3.SS3.SSS4.p1.3.m3.1.2.cmml" xref="S3.SS3.SSS4.p1.3.m3.1.2"><times id="S3.SS3.SSS4.p1.3.m3.1.2.1.cmml" xref="S3.SS3.SSS4.p1.3.m3.1.2.1"></times><ci id="S3.SS3.SSS4.p1.3.m3.1.2.2a.cmml" xref="S3.SS3.SSS4.p1.3.m3.1.2.2"><mtext class="ltx_mathvariant_monospace" id="S3.SS3.SSS4.p1.3.m3.1.2.2.cmml" xref="S3.SS3.SSS4.p1.3.m3.1.2.2">Pr</mtext></ci><ci id="S3.SS3.SSS4.p1.3.m3.1.1.cmml" xref="S3.SS3.SSS4.p1.3.m3.1.1">⋅</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS4.p1.3.m3.1c">\texttt{Pr}(\cdot)</annotation></semantics></math> and the 2D ground truth poses <math id="S3.SS3.SSS4.p1.4.m4.1" class="ltx_Math" alttext="T_{2D}" display="inline"><semantics id="S3.SS3.SSS4.p1.4.m4.1a"><msub id="S3.SS3.SSS4.p1.4.m4.1.1" xref="S3.SS3.SSS4.p1.4.m4.1.1.cmml"><mi id="S3.SS3.SSS4.p1.4.m4.1.1.2" xref="S3.SS3.SSS4.p1.4.m4.1.1.2.cmml">T</mi><mrow id="S3.SS3.SSS4.p1.4.m4.1.1.3" xref="S3.SS3.SSS4.p1.4.m4.1.1.3.cmml"><mn id="S3.SS3.SSS4.p1.4.m4.1.1.3.2" xref="S3.SS3.SSS4.p1.4.m4.1.1.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.SS3.SSS4.p1.4.m4.1.1.3.1" xref="S3.SS3.SSS4.p1.4.m4.1.1.3.1.cmml">​</mo><mi id="S3.SS3.SSS4.p1.4.m4.1.1.3.3" xref="S3.SS3.SSS4.p1.4.m4.1.1.3.3.cmml">D</mi></mrow></msub><annotation-xml encoding="MathML-Content" id="S3.SS3.SSS4.p1.4.m4.1b"><apply id="S3.SS3.SSS4.p1.4.m4.1.1.cmml" xref="S3.SS3.SSS4.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S3.SS3.SSS4.p1.4.m4.1.1.1.cmml" xref="S3.SS3.SSS4.p1.4.m4.1.1">subscript</csymbol><ci id="S3.SS3.SSS4.p1.4.m4.1.1.2.cmml" xref="S3.SS3.SSS4.p1.4.m4.1.1.2">𝑇</ci><apply id="S3.SS3.SSS4.p1.4.m4.1.1.3.cmml" xref="S3.SS3.SSS4.p1.4.m4.1.1.3"><times id="S3.SS3.SSS4.p1.4.m4.1.1.3.1.cmml" xref="S3.SS3.SSS4.p1.4.m4.1.1.3.1"></times><cn type="integer" id="S3.SS3.SSS4.p1.4.m4.1.1.3.2.cmml" xref="S3.SS3.SSS4.p1.4.m4.1.1.3.2">2</cn><ci id="S3.SS3.SSS4.p1.4.m4.1.1.3.3.cmml" xref="S3.SS3.SSS4.p1.4.m4.1.1.3.3">𝐷</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.SSS4.p1.4.m4.1c">T_{2D}</annotation></semantics></math>. Similar to the 2D loss, this is also computed for the foreground classes:</p>
+<table id="S3.E4" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S3.E4.m1.4" class="ltx_Math" alttext="L_{3D}(P_{3D},T_{2D})=\frac{1}{N_{fg}}\sum_{i=1}^{N_{fg}}l_{i}\cdot\texttt{smooth\_l1}(\texttt{Pr}(p_{i}),t_{i})" display="block"><semantics id="S3.E4.m1.4a"><mrow id="S3.E4.m1.4.4" xref="S3.E4.m1.4.4.cmml"><mrow id="S3.E4.m1.2.2.2" xref="S3.E4.m1.2.2.2.cmml"><msub id="S3.E4.m1.2.2.2.4" xref="S3.E4.m1.2.2.2.4.cmml"><mi id="S3.E4.m1.2.2.2.4.2" xref="S3.E4.m1.2.2.2.4.2.cmml">L</mi><mrow id="S3.E4.m1.2.2.2.4.3" xref="S3.E4.m1.2.2.2.4.3.cmml"><mn id="S3.E4.m1.2.2.2.4.3.2" xref="S3.E4.m1.2.2.2.4.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S3.E4.m1.2.2.2.4.3.1" xref="S3.E4.m1.2.2.2.4.3.1.cmml">​</mo><mi id="S3.E4.m1.2.2.2.4.3.3" xref="S3.E4.m1.2.2.2.4.3.3.cmml">D</mi></mrow></msub><mo lspace="0em" rspace="0em" id="S3.E4.m1.2.2.2.3" xref="S3.E4.m1.2.2.2.3.cmml">​</mo><mrow id="S3.E4.m1.2.2.2.2.2" xref="S3.E4.m1.2.2.2.2.3.cmml"><mo stretchy="false" id="S3.E4.m1.2.2.2.2.2.3" xref="S3.E4.m1.2.2.2.2.3.cmml">(</mo><msub id="S3.E4.m1.1.1.1.1.1.1" xref="S3.E4.m1.1.1.1.1.1.1.cmml"><mi id="S3.E4.m1.1.1.1.1.1.1.2" xref="S3.E4.m1.1.1.1.1.1.1.2.cmml">P</mi><mrow id="S3.E4.m1.1.1.1.1.1.1.3" xref="S3.E4.m1.1.1.1.1.1.1.3.cmml"><mn id="S3.E4.m1.1.1.1.1.1.1.3.2" xref="S3.E4.m1.1.1.1.1.1.1.3.2.cmml">3</mn><mo lspace="0em" rspace="0em" id="S3.E4.m1.1.1.1.1.1.1.3.1" xref="S3.E4.m1.1.1.1.1.1.1.3.1.cmml">​</mo><mi id="S3.E4.m1.1.1.1.1.1.1.3.3" xref="S3.E4.m1.1.1.1.1.1.1.3.3.cmml">D</mi></mrow></msub><mo id="S3.E4.m1.2.2.2.2.2.4" xref="S3.E4.m1.2.2.2.2.3.cmml">,</mo><msub id="S3.E4.m1.2.2.2.2.2.2" xref="S3.E4.m1.2.2.2.2.2.2.cmml"><mi id="S3.E4.m1.2.2.2.2.2.2.2" xref="S3.E4.m1.2.2.2.2.2.2.2.cmml">T</mi><mrow id="S3.E4.m1.2.2.2.2.2.2.3" xref="S3.E4.m1.2.2.2.2.2.2.3.cmml"><mn id="S3.E4.m1.2.2.2.2.2.2.3.2" xref="S3.E4.m1.2.2.2.2.2.2.3.2.cmml">2</mn><mo lspace="0em" rspace="0em" id="S3.E4.m1.2.2.2.2.2.2.3.1" xref="S3.E4.m1.2.2.2.2.2.2.3.1.cmml">​</mo><mi id="S3.E4.m1.2.2.2.2.2.2.3.3" xref="S3.E4.m1.2.2.2.2.2.2.3.3.cmml">D</mi></mrow></msub><mo stretchy="false" id="S3.E4.m1.2.2.2.2.2.5" xref="S3.E4.m1.2.2.2.2.3.cmml">)</mo></mrow></mrow><mo id="S3.E4.m1.4.4.5" xref="S3.E4.m1.4.4.5.cmml">=</mo><mrow id="S3.E4.m1.4.4.4" xref="S3.E4.m1.4.4.4.cmml"><mfrac id="S3.E4.m1.4.4.4.4" xref="S3.E4.m1.4.4.4.4.cmml"><mn id="S3.E4.m1.4.4.4.4.2" xref="S3.E4.m1.4.4.4.4.2.cmml">1</mn><msub id="S3.E4.m1.4.4.4.4.3" xref="S3.E4.m1.4.4.4.4.3.cmml"><mi id="S3.E4.m1.4.4.4.4.3.2" xref="S3.E4.m1.4.4.4.4.3.2.cmml">N</mi><mrow id="S3.E4.m1.4.4.4.4.3.3" xref="S3.E4.m1.4.4.4.4.3.3.cmml"><mi id="S3.E4.m1.4.4.4.4.3.3.2" xref="S3.E4.m1.4.4.4.4.3.3.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.4.4.4.4.3.3.1" xref="S3.E4.m1.4.4.4.4.3.3.1.cmml">​</mo><mi id="S3.E4.m1.4.4.4.4.3.3.3" xref="S3.E4.m1.4.4.4.4.3.3.3.cmml">g</mi></mrow></msub></mfrac><mo lspace="0em" rspace="0em" id="S3.E4.m1.4.4.4.3" xref="S3.E4.m1.4.4.4.3.cmml">​</mo><mrow id="S3.E4.m1.4.4.4.2" xref="S3.E4.m1.4.4.4.2.cmml"><munderover id="S3.E4.m1.4.4.4.2.3" xref="S3.E4.m1.4.4.4.2.3.cmml"><mo movablelimits="false" id="S3.E4.m1.4.4.4.2.3.2.2" xref="S3.E4.m1.4.4.4.2.3.2.2.cmml">∑</mo><mrow id="S3.E4.m1.4.4.4.2.3.2.3" xref="S3.E4.m1.4.4.4.2.3.2.3.cmml"><mi id="S3.E4.m1.4.4.4.2.3.2.3.2" xref="S3.E4.m1.4.4.4.2.3.2.3.2.cmml">i</mi><mo id="S3.E4.m1.4.4.4.2.3.2.3.1" xref="S3.E4.m1.4.4.4.2.3.2.3.1.cmml">=</mo><mn id="S3.E4.m1.4.4.4.2.3.2.3.3" xref="S3.E4.m1.4.4.4.2.3.2.3.3.cmml">1</mn></mrow><msub id="S3.E4.m1.4.4.4.2.3.3" xref="S3.E4.m1.4.4.4.2.3.3.cmml"><mi id="S3.E4.m1.4.4.4.2.3.3.2" xref="S3.E4.m1.4.4.4.2.3.3.2.cmml">N</mi><mrow id="S3.E4.m1.4.4.4.2.3.3.3" xref="S3.E4.m1.4.4.4.2.3.3.3.cmml"><mi id="S3.E4.m1.4.4.4.2.3.3.3.2" xref="S3.E4.m1.4.4.4.2.3.3.3.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.E4.m1.4.4.4.2.3.3.3.1" xref="S3.E4.m1.4.4.4.2.3.3.3.1.cmml">​</mo><mi id="S3.E4.m1.4.4.4.2.3.3.3.3" xref="S3.E4.m1.4.4.4.2.3.3.3.3.cmml">g</mi></mrow></msub></munderover><mrow id="S3.E4.m1.4.4.4.2.2" xref="S3.E4.m1.4.4.4.2.2.cmml"><mrow id="S3.E4.m1.4.4.4.2.2.4" xref="S3.E4.m1.4.4.4.2.2.4.cmml"><msub id="S3.E4.m1.4.4.4.2.2.4.2" xref="S3.E4.m1.4.4.4.2.2.4.2.cmml"><mi id="S3.E4.m1.4.4.4.2.2.4.2.2" xref="S3.E4.m1.4.4.4.2.2.4.2.2.cmml">l</mi><mi id="S3.E4.m1.4.4.4.2.2.4.2.3" xref="S3.E4.m1.4.4.4.2.2.4.2.3.cmml">i</mi></msub><mo lspace="0.222em" rspace="0.222em" id="S3.E4.m1.4.4.4.2.2.4.1" xref="S3.E4.m1.4.4.4.2.2.4.1.cmml">⋅</mo><mtext class="ltx_mathvariant_monospace" id="S3.E4.m1.4.4.4.2.2.4.3" xref="S3.E4.m1.4.4.4.2.2.4.3a.cmml">smooth_l1</mtext></mrow><mo lspace="0em" rspace="0em" id="S3.E4.m1.4.4.4.2.2.3" xref="S3.E4.m1.4.4.4.2.2.3.cmml">​</mo><mrow id="S3.E4.m1.4.4.4.2.2.2.2" xref="S3.E4.m1.4.4.4.2.2.2.3.cmml"><mo stretchy="false" id="S3.E4.m1.4.4.4.2.2.2.2.3" xref="S3.E4.m1.4.4.4.2.2.2.3.cmml">(</mo><mrow id="S3.E4.m1.3.3.3.1.1.1.1.1" xref="S3.E4.m1.3.3.3.1.1.1.1.1.cmml"><mtext class="ltx_mathvariant_monospace" id="S3.E4.m1.3.3.3.1.1.1.1.1.3" xref="S3.E4.m1.3.3.3.1.1.1.1.1.3a.cmml">Pr</mtext><mo lspace="0em" rspace="0em" id="S3.E4.m1.3.3.3.1.1.1.1.1.2" xref="S3.E4.m1.3.3.3.1.1.1.1.1.2.cmml">​</mo><mrow id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.2" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.cmml">(</mo><msub id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.cmml"><mi id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.2" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.2.cmml">p</mi><mi id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.3" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.3.cmml">i</mi></msub><mo stretchy="false" id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.3" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow><mo id="S3.E4.m1.4.4.4.2.2.2.2.4" xref="S3.E4.m1.4.4.4.2.2.2.3.cmml">,</mo><msub id="S3.E4.m1.4.4.4.2.2.2.2.2" xref="S3.E4.m1.4.4.4.2.2.2.2.2.cmml"><mi id="S3.E4.m1.4.4.4.2.2.2.2.2.2" xref="S3.E4.m1.4.4.4.2.2.2.2.2.2.cmml">t</mi><mi id="S3.E4.m1.4.4.4.2.2.2.2.2.3" xref="S3.E4.m1.4.4.4.2.2.2.2.2.3.cmml">i</mi></msub><mo stretchy="false" id="S3.E4.m1.4.4.4.2.2.2.2.5" xref="S3.E4.m1.4.4.4.2.2.2.3.cmml">)</mo></mrow></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.E4.m1.4b"><apply id="S3.E4.m1.4.4.cmml" xref="S3.E4.m1.4.4"><eq id="S3.E4.m1.4.4.5.cmml" xref="S3.E4.m1.4.4.5"></eq><apply id="S3.E4.m1.2.2.2.cmml" xref="S3.E4.m1.2.2.2"><times id="S3.E4.m1.2.2.2.3.cmml" xref="S3.E4.m1.2.2.2.3"></times><apply id="S3.E4.m1.2.2.2.4.cmml" xref="S3.E4.m1.2.2.2.4"><csymbol cd="ambiguous" id="S3.E4.m1.2.2.2.4.1.cmml" xref="S3.E4.m1.2.2.2.4">subscript</csymbol><ci id="S3.E4.m1.2.2.2.4.2.cmml" xref="S3.E4.m1.2.2.2.4.2">𝐿</ci><apply id="S3.E4.m1.2.2.2.4.3.cmml" xref="S3.E4.m1.2.2.2.4.3"><times id="S3.E4.m1.2.2.2.4.3.1.cmml" xref="S3.E4.m1.2.2.2.4.3.1"></times><cn type="integer" id="S3.E4.m1.2.2.2.4.3.2.cmml" xref="S3.E4.m1.2.2.2.4.3.2">3</cn><ci id="S3.E4.m1.2.2.2.4.3.3.cmml" xref="S3.E4.m1.2.2.2.4.3.3">𝐷</ci></apply></apply><interval closure="open" id="S3.E4.m1.2.2.2.2.3.cmml" xref="S3.E4.m1.2.2.2.2.2"><apply id="S3.E4.m1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E4.m1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1">subscript</csymbol><ci id="S3.E4.m1.1.1.1.1.1.1.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.2">𝑃</ci><apply id="S3.E4.m1.1.1.1.1.1.1.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3"><times id="S3.E4.m1.1.1.1.1.1.1.3.1.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.1"></times><cn type="integer" id="S3.E4.m1.1.1.1.1.1.1.3.2.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.2">3</cn><ci id="S3.E4.m1.1.1.1.1.1.1.3.3.cmml" xref="S3.E4.m1.1.1.1.1.1.1.3.3">𝐷</ci></apply></apply><apply id="S3.E4.m1.2.2.2.2.2.2.cmml" xref="S3.E4.m1.2.2.2.2.2.2"><csymbol cd="ambiguous" id="S3.E4.m1.2.2.2.2.2.2.1.cmml" xref="S3.E4.m1.2.2.2.2.2.2">subscript</csymbol><ci id="S3.E4.m1.2.2.2.2.2.2.2.cmml" xref="S3.E4.m1.2.2.2.2.2.2.2">𝑇</ci><apply id="S3.E4.m1.2.2.2.2.2.2.3.cmml" xref="S3.E4.m1.2.2.2.2.2.2.3"><times id="S3.E4.m1.2.2.2.2.2.2.3.1.cmml" xref="S3.E4.m1.2.2.2.2.2.2.3.1"></times><cn type="integer" id="S3.E4.m1.2.2.2.2.2.2.3.2.cmml" xref="S3.E4.m1.2.2.2.2.2.2.3.2">2</cn><ci id="S3.E4.m1.2.2.2.2.2.2.3.3.cmml" xref="S3.E4.m1.2.2.2.2.2.2.3.3">𝐷</ci></apply></apply></interval></apply><apply id="S3.E4.m1.4.4.4.cmml" xref="S3.E4.m1.4.4.4"><times id="S3.E4.m1.4.4.4.3.cmml" xref="S3.E4.m1.4.4.4.3"></times><apply id="S3.E4.m1.4.4.4.4.cmml" xref="S3.E4.m1.4.4.4.4"><divide id="S3.E4.m1.4.4.4.4.1.cmml" xref="S3.E4.m1.4.4.4.4"></divide><cn type="integer" id="S3.E4.m1.4.4.4.4.2.cmml" xref="S3.E4.m1.4.4.4.4.2">1</cn><apply id="S3.E4.m1.4.4.4.4.3.cmml" xref="S3.E4.m1.4.4.4.4.3"><csymbol cd="ambiguous" id="S3.E4.m1.4.4.4.4.3.1.cmml" xref="S3.E4.m1.4.4.4.4.3">subscript</csymbol><ci id="S3.E4.m1.4.4.4.4.3.2.cmml" xref="S3.E4.m1.4.4.4.4.3.2">𝑁</ci><apply id="S3.E4.m1.4.4.4.4.3.3.cmml" xref="S3.E4.m1.4.4.4.4.3.3"><times id="S3.E4.m1.4.4.4.4.3.3.1.cmml" xref="S3.E4.m1.4.4.4.4.3.3.1"></times><ci id="S3.E4.m1.4.4.4.4.3.3.2.cmml" xref="S3.E4.m1.4.4.4.4.3.3.2">𝑓</ci><ci id="S3.E4.m1.4.4.4.4.3.3.3.cmml" xref="S3.E4.m1.4.4.4.4.3.3.3">𝑔</ci></apply></apply></apply><apply id="S3.E4.m1.4.4.4.2.cmml" xref="S3.E4.m1.4.4.4.2"><apply id="S3.E4.m1.4.4.4.2.3.cmml" xref="S3.E4.m1.4.4.4.2.3"><csymbol cd="ambiguous" id="S3.E4.m1.4.4.4.2.3.1.cmml" xref="S3.E4.m1.4.4.4.2.3">superscript</csymbol><apply id="S3.E4.m1.4.4.4.2.3.2.cmml" xref="S3.E4.m1.4.4.4.2.3"><csymbol cd="ambiguous" id="S3.E4.m1.4.4.4.2.3.2.1.cmml" xref="S3.E4.m1.4.4.4.2.3">subscript</csymbol><sum id="S3.E4.m1.4.4.4.2.3.2.2.cmml" xref="S3.E4.m1.4.4.4.2.3.2.2"></sum><apply id="S3.E4.m1.4.4.4.2.3.2.3.cmml" xref="S3.E4.m1.4.4.4.2.3.2.3"><eq id="S3.E4.m1.4.4.4.2.3.2.3.1.cmml" xref="S3.E4.m1.4.4.4.2.3.2.3.1"></eq><ci id="S3.E4.m1.4.4.4.2.3.2.3.2.cmml" xref="S3.E4.m1.4.4.4.2.3.2.3.2">𝑖</ci><cn type="integer" id="S3.E4.m1.4.4.4.2.3.2.3.3.cmml" xref="S3.E4.m1.4.4.4.2.3.2.3.3">1</cn></apply></apply><apply id="S3.E4.m1.4.4.4.2.3.3.cmml" xref="S3.E4.m1.4.4.4.2.3.3"><csymbol cd="ambiguous" id="S3.E4.m1.4.4.4.2.3.3.1.cmml" xref="S3.E4.m1.4.4.4.2.3.3">subscript</csymbol><ci id="S3.E4.m1.4.4.4.2.3.3.2.cmml" xref="S3.E4.m1.4.4.4.2.3.3.2">𝑁</ci><apply id="S3.E4.m1.4.4.4.2.3.3.3.cmml" xref="S3.E4.m1.4.4.4.2.3.3.3"><times id="S3.E4.m1.4.4.4.2.3.3.3.1.cmml" xref="S3.E4.m1.4.4.4.2.3.3.3.1"></times><ci id="S3.E4.m1.4.4.4.2.3.3.3.2.cmml" xref="S3.E4.m1.4.4.4.2.3.3.3.2">𝑓</ci><ci id="S3.E4.m1.4.4.4.2.3.3.3.3.cmml" xref="S3.E4.m1.4.4.4.2.3.3.3.3">𝑔</ci></apply></apply></apply><apply id="S3.E4.m1.4.4.4.2.2.cmml" xref="S3.E4.m1.4.4.4.2.2"><times id="S3.E4.m1.4.4.4.2.2.3.cmml" xref="S3.E4.m1.4.4.4.2.2.3"></times><apply id="S3.E4.m1.4.4.4.2.2.4.cmml" xref="S3.E4.m1.4.4.4.2.2.4"><ci id="S3.E4.m1.4.4.4.2.2.4.1.cmml" xref="S3.E4.m1.4.4.4.2.2.4.1">⋅</ci><apply id="S3.E4.m1.4.4.4.2.2.4.2.cmml" xref="S3.E4.m1.4.4.4.2.2.4.2"><csymbol cd="ambiguous" id="S3.E4.m1.4.4.4.2.2.4.2.1.cmml" xref="S3.E4.m1.4.4.4.2.2.4.2">subscript</csymbol><ci id="S3.E4.m1.4.4.4.2.2.4.2.2.cmml" xref="S3.E4.m1.4.4.4.2.2.4.2.2">𝑙</ci><ci id="S3.E4.m1.4.4.4.2.2.4.2.3.cmml" xref="S3.E4.m1.4.4.4.2.2.4.2.3">𝑖</ci></apply><ci id="S3.E4.m1.4.4.4.2.2.4.3a.cmml" xref="S3.E4.m1.4.4.4.2.2.4.3"><mtext class="ltx_mathvariant_monospace" id="S3.E4.m1.4.4.4.2.2.4.3.cmml" xref="S3.E4.m1.4.4.4.2.2.4.3">smooth_l1</mtext></ci></apply><interval closure="open" id="S3.E4.m1.4.4.4.2.2.2.3.cmml" xref="S3.E4.m1.4.4.4.2.2.2.2"><apply id="S3.E4.m1.3.3.3.1.1.1.1.1.cmml" xref="S3.E4.m1.3.3.3.1.1.1.1.1"><times id="S3.E4.m1.3.3.3.1.1.1.1.1.2.cmml" xref="S3.E4.m1.3.3.3.1.1.1.1.1.2"></times><ci id="S3.E4.m1.3.3.3.1.1.1.1.1.3a.cmml" xref="S3.E4.m1.3.3.3.1.1.1.1.1.3"><mtext class="ltx_mathvariant_monospace" id="S3.E4.m1.3.3.3.1.1.1.1.1.3.cmml" xref="S3.E4.m1.3.3.3.1.1.1.1.1.3">Pr</mtext></ci><apply id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1"><csymbol cd="ambiguous" id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.1.cmml" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1">subscript</csymbol><ci id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.2.cmml" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.2">𝑝</ci><ci id="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.3.cmml" xref="S3.E4.m1.3.3.3.1.1.1.1.1.1.1.1.3">𝑖</ci></apply></apply><apply id="S3.E4.m1.4.4.4.2.2.2.2.2.cmml" xref="S3.E4.m1.4.4.4.2.2.2.2.2"><csymbol cd="ambiguous" id="S3.E4.m1.4.4.4.2.2.2.2.2.1.cmml" xref="S3.E4.m1.4.4.4.2.2.2.2.2">subscript</csymbol><ci id="S3.E4.m1.4.4.4.2.2.2.2.2.2.cmml" xref="S3.E4.m1.4.4.4.2.2.2.2.2.2">𝑡</ci><ci id="S3.E4.m1.4.4.4.2.2.2.2.2.3.cmml" xref="S3.E4.m1.4.4.4.2.2.2.2.2.3">𝑖</ci></apply></interval></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.E4.m1.4c">L_{3D}(P_{3D},T_{2D})=\frac{1}{N_{fg}}\sum_{i=1}^{N_{fg}}l_{i}\cdot\texttt{smooth\_l1}(\texttt{Pr}(p_{i}),t_{i})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td rowspan="1" class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S3.SS4.4.1.1" class="ltx_text">III-D</span> </span><span id="S3.SS4.5.2" class="ltx_text ltx_font_italic">Implementation Details</span>
+</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.4" class="ltx_p">For HPERL, we trained our model for a total of 50 epochs with a batch size of 1, an Adam optimizer and an initial learning rate of <math id="S3.SS4.p1.1.m1.1" class="ltx_Math" alttext="5e^{-5}" display="inline"><semantics id="S3.SS4.p1.1.m1.1a"><mrow id="S3.SS4.p1.1.m1.1.1" xref="S3.SS4.p1.1.m1.1.1.cmml"><mn id="S3.SS4.p1.1.m1.1.1.2" xref="S3.SS4.p1.1.m1.1.1.2.cmml">5</mn><mo lspace="0em" rspace="0em" id="S3.SS4.p1.1.m1.1.1.1" xref="S3.SS4.p1.1.m1.1.1.1.cmml">​</mo><msup id="S3.SS4.p1.1.m1.1.1.3" xref="S3.SS4.p1.1.m1.1.1.3.cmml"><mi id="S3.SS4.p1.1.m1.1.1.3.2" xref="S3.SS4.p1.1.m1.1.1.3.2.cmml">e</mi><mrow id="S3.SS4.p1.1.m1.1.1.3.3" xref="S3.SS4.p1.1.m1.1.1.3.3.cmml"><mo id="S3.SS4.p1.1.m1.1.1.3.3a" xref="S3.SS4.p1.1.m1.1.1.3.3.cmml">−</mo><mn id="S3.SS4.p1.1.m1.1.1.3.3.2" xref="S3.SS4.p1.1.m1.1.1.3.3.2.cmml">5</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.1.m1.1b"><apply id="S3.SS4.p1.1.m1.1.1.cmml" xref="S3.SS4.p1.1.m1.1.1"><times id="S3.SS4.p1.1.m1.1.1.1.cmml" xref="S3.SS4.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.SS4.p1.1.m1.1.1.2.cmml" xref="S3.SS4.p1.1.m1.1.1.2">5</cn><apply id="S3.SS4.p1.1.m1.1.1.3.cmml" xref="S3.SS4.p1.1.m1.1.1.3"><csymbol cd="ambiguous" id="S3.SS4.p1.1.m1.1.1.3.1.cmml" xref="S3.SS4.p1.1.m1.1.1.3">superscript</csymbol><ci id="S3.SS4.p1.1.m1.1.1.3.2.cmml" xref="S3.SS4.p1.1.m1.1.1.3.2">𝑒</ci><apply id="S3.SS4.p1.1.m1.1.1.3.3.cmml" xref="S3.SS4.p1.1.m1.1.1.3.3"><minus id="S3.SS4.p1.1.m1.1.1.3.3.1.cmml" xref="S3.SS4.p1.1.m1.1.1.3.3"></minus><cn type="integer" id="S3.SS4.p1.1.m1.1.1.3.3.2.cmml" xref="S3.SS4.p1.1.m1.1.1.3.3.2">5</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.1.m1.1c">5e^{-5}</annotation></semantics></math>.
+Learning rate is not decayed as the network is trained from scratch for both the inputs and so a higher value is required.
+Whereas for the RGB baseline, we trained our model for a total of 170 epochs with a batch size of 4 and an initial learning rate of <math id="S3.SS4.p1.2.m2.1" class="ltx_Math" alttext="1e^{-3}" display="inline"><semantics id="S3.SS4.p1.2.m2.1a"><mrow id="S3.SS4.p1.2.m2.1.1" xref="S3.SS4.p1.2.m2.1.1.cmml"><mn id="S3.SS4.p1.2.m2.1.1.2" xref="S3.SS4.p1.2.m2.1.1.2.cmml">1</mn><mo lspace="0em" rspace="0em" id="S3.SS4.p1.2.m2.1.1.1" xref="S3.SS4.p1.2.m2.1.1.1.cmml">​</mo><msup id="S3.SS4.p1.2.m2.1.1.3" xref="S3.SS4.p1.2.m2.1.1.3.cmml"><mi id="S3.SS4.p1.2.m2.1.1.3.2" xref="S3.SS4.p1.2.m2.1.1.3.2.cmml">e</mi><mrow id="S3.SS4.p1.2.m2.1.1.3.3" xref="S3.SS4.p1.2.m2.1.1.3.3.cmml"><mo id="S3.SS4.p1.2.m2.1.1.3.3a" xref="S3.SS4.p1.2.m2.1.1.3.3.cmml">−</mo><mn id="S3.SS4.p1.2.m2.1.1.3.3.2" xref="S3.SS4.p1.2.m2.1.1.3.3.2.cmml">3</mn></mrow></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.2.m2.1b"><apply id="S3.SS4.p1.2.m2.1.1.cmml" xref="S3.SS4.p1.2.m2.1.1"><times id="S3.SS4.p1.2.m2.1.1.1.cmml" xref="S3.SS4.p1.2.m2.1.1.1"></times><cn type="integer" id="S3.SS4.p1.2.m2.1.1.2.cmml" xref="S3.SS4.p1.2.m2.1.1.2">1</cn><apply id="S3.SS4.p1.2.m2.1.1.3.cmml" xref="S3.SS4.p1.2.m2.1.1.3"><csymbol cd="ambiguous" id="S3.SS4.p1.2.m2.1.1.3.1.cmml" xref="S3.SS4.p1.2.m2.1.1.3">superscript</csymbol><ci id="S3.SS4.p1.2.m2.1.1.3.2.cmml" xref="S3.SS4.p1.2.m2.1.1.3.2">𝑒</ci><apply id="S3.SS4.p1.2.m2.1.1.3.3.cmml" xref="S3.SS4.p1.2.m2.1.1.3.3"><minus id="S3.SS4.p1.2.m2.1.1.3.3.1.cmml" xref="S3.SS4.p1.2.m2.1.1.3.3"></minus><cn type="integer" id="S3.SS4.p1.2.m2.1.1.3.3.2.cmml" xref="S3.SS4.p1.2.m2.1.1.3.3.2">3</cn></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.2.m2.1c">1e^{-3}</annotation></semantics></math>.
+We decayed the learning rate by a factor of 0.8 after every 50 epochs and use a COCO pre-trained backbone.
+RMSProp optimizer from the PyTorch library was used.
+In order to make the networks direction-invariant, we extend the existing dataset with left-to-right flipped versions of the training set.
+We flip the RGB image from left to right, followed by flipping the LiDAR point cloud along the x-axis.
+Note that in our work, the x-axis represents the right direction and the origin lies at the camera center.
+For the pose annotations, we represent the flipped x coordinate of the 2D pose in terms of the image width <math id="S3.SS4.p1.3.m3.1" class="ltx_Math" alttext="w" display="inline"><semantics id="S3.SS4.p1.3.m3.1a"><mi id="S3.SS4.p1.3.m3.1.1" xref="S3.SS4.p1.3.m3.1.1.cmml">w</mi><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.3.m3.1b"><ci id="S3.SS4.p1.3.m3.1.1.cmml" xref="S3.SS4.p1.3.m3.1.1">𝑤</ci></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.3.m3.1c">w</annotation></semantics></math> as <math id="S3.SS4.p1.4.m4.1" class="ltx_Math" alttext="f(x)=w-x" display="inline"><semantics id="S3.SS4.p1.4.m4.1a"><mrow id="S3.SS4.p1.4.m4.1.2" xref="S3.SS4.p1.4.m4.1.2.cmml"><mrow id="S3.SS4.p1.4.m4.1.2.2" xref="S3.SS4.p1.4.m4.1.2.2.cmml"><mi id="S3.SS4.p1.4.m4.1.2.2.2" xref="S3.SS4.p1.4.m4.1.2.2.2.cmml">f</mi><mo lspace="0em" rspace="0em" id="S3.SS4.p1.4.m4.1.2.2.1" xref="S3.SS4.p1.4.m4.1.2.2.1.cmml">​</mo><mrow id="S3.SS4.p1.4.m4.1.2.2.3.2" xref="S3.SS4.p1.4.m4.1.2.2.cmml"><mo stretchy="false" id="S3.SS4.p1.4.m4.1.2.2.3.2.1" xref="S3.SS4.p1.4.m4.1.2.2.cmml">(</mo><mi id="S3.SS4.p1.4.m4.1.1" xref="S3.SS4.p1.4.m4.1.1.cmml">x</mi><mo stretchy="false" id="S3.SS4.p1.4.m4.1.2.2.3.2.2" xref="S3.SS4.p1.4.m4.1.2.2.cmml">)</mo></mrow></mrow><mo id="S3.SS4.p1.4.m4.1.2.1" xref="S3.SS4.p1.4.m4.1.2.1.cmml">=</mo><mrow id="S3.SS4.p1.4.m4.1.2.3" xref="S3.SS4.p1.4.m4.1.2.3.cmml"><mi id="S3.SS4.p1.4.m4.1.2.3.2" xref="S3.SS4.p1.4.m4.1.2.3.2.cmml">w</mi><mo id="S3.SS4.p1.4.m4.1.2.3.1" xref="S3.SS4.p1.4.m4.1.2.3.1.cmml">−</mo><mi id="S3.SS4.p1.4.m4.1.2.3.3" xref="S3.SS4.p1.4.m4.1.2.3.3.cmml">x</mi></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p1.4.m4.1b"><apply id="S3.SS4.p1.4.m4.1.2.cmml" xref="S3.SS4.p1.4.m4.1.2"><eq id="S3.SS4.p1.4.m4.1.2.1.cmml" xref="S3.SS4.p1.4.m4.1.2.1"></eq><apply id="S3.SS4.p1.4.m4.1.2.2.cmml" xref="S3.SS4.p1.4.m4.1.2.2"><times id="S3.SS4.p1.4.m4.1.2.2.1.cmml" xref="S3.SS4.p1.4.m4.1.2.2.1"></times><ci id="S3.SS4.p1.4.m4.1.2.2.2.cmml" xref="S3.SS4.p1.4.m4.1.2.2.2">𝑓</ci><ci id="S3.SS4.p1.4.m4.1.1.cmml" xref="S3.SS4.p1.4.m4.1.1">𝑥</ci></apply><apply id="S3.SS4.p1.4.m4.1.2.3.cmml" xref="S3.SS4.p1.4.m4.1.2.3"><minus id="S3.SS4.p1.4.m4.1.2.3.1.cmml" xref="S3.SS4.p1.4.m4.1.2.3.1"></minus><ci id="S3.SS4.p1.4.m4.1.2.3.2.cmml" xref="S3.SS4.p1.4.m4.1.2.3.2">𝑤</ci><ci id="S3.SS4.p1.4.m4.1.2.3.3.cmml" xref="S3.SS4.p1.4.m4.1.2.3.3">𝑥</ci></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p1.4.m4.1c">f(x)=w-x</annotation></semantics></math>.
+Additionally, we filter out the samples having missing joints or missing segmented point clouds during the data loading phase.
+For the post processing, we follow the pose proposals integration described in LCRNet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>.</p>
+</div>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.1" class="ltx_p">Overall, we introduced a novel architecture for multi-person 3D human pose estimation, using RGB and LiDAR data for in-the-wild scenarios of autonomous driving.
+
+</p>
+</div>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Evaluation</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">We evaluated our HPERL network architecture on the PedX <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite> dataset and validated our RGB baseline against state-of-the-art on the MPII <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite> dataset.
+In contrast to MPII, the PedX dataset is new and has not yet been widely used.
+The dataset has 9380 images with instance segmentation on pointclouds and 2D pose annotations.
+3D bounding box annotations were generated by using the outer hull of the outlier cleaned 3D instance segmentation.
+The dataset does not provide 3D pose annotations, which leads to our indirect performance evaluation via newly introduced metrics.
+We use common evaluation metrics such as Percentage of Correct Keypoints (PCKh@0.5), 2D Mean Per Joint Position Error (MPJPE) and add new metrics for indirect 3D evaluation.
+Center Point Depth Error (CDE) computes the axis aligned bounding box around the predicted pose and computes the depth error against the correct 3D bounding box.
+Center Point X-Y Error (XYE) uses the same aligned bounding boxes and computes the error orthogonal to the depth, allowing separate inspection of error sources.
+Therefore, these metrics can capture the absolute position error of the predictions.</p>
+</div>
+<figure id="S4.T1" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Comparison of RGB Baseline vs HPERL on PedX. LiDAR significantly improves the precision of 3D location (1/5 CDE, 1/3 XYE). 2D results improve slightly (MPJPE and PCKh@0.5).</figcaption>
+<table id="S4.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T1.1.1.1" class="ltx_tr">
+<th id="S4.T1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">Model</th>
+<th id="S4.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">Type</th>
+<th id="S4.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">2D MPJPE</th>
+<th id="S4.T1.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">PCKh</th>
+<th id="S4.T1.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">CDE</th>
+<th id="S4.T1.1.1.1.6" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">XYE</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T1.1.2.1" class="ltx_tr">
+<th id="S4.T1.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">RGB Base. [ours]</th>
+<td id="S4.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2D</td>
+<td id="S4.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">87.76px</td>
+<td id="S4.T1.1.2.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">65.02%</td>
+<td id="S4.T1.1.2.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T1.1.2.1.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+</tr>
+<tr id="S4.T1.1.3.2" class="ltx_tr">
+<th id="S4.T1.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r">(RGB only)</th>
+<td id="S4.T1.1.3.2.2" class="ltx_td ltx_align_center ltx_border_r">3D</td>
+<td id="S4.T1.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r">87.66px</td>
+<td id="S4.T1.1.3.2.4" class="ltx_td ltx_align_center ltx_border_r">65.92%</td>
+<td id="S4.T1.1.3.2.5" class="ltx_td ltx_align_center ltx_border_r">4.88m</td>
+<td id="S4.T1.1.3.2.6" class="ltx_td ltx_align_center ltx_border_r">1.44m</td>
+</tr>
+<tr id="S4.T1.1.4.3" class="ltx_tr">
+<th id="S4.T1.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">HPERL [ours]</th>
+<td id="S4.T1.1.4.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2D</td>
+<td id="S4.T1.1.4.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">45.66px</td>
+<td id="S4.T1.1.4.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">70.08%</td>
+<td id="S4.T1.1.4.3.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T1.1.4.3.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+</tr>
+<tr id="S4.T1.1.5.4" class="ltx_tr">
+<th id="S4.T1.1.5.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r">(RGB + LiDAR)</th>
+<td id="S4.T1.1.5.4.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">3D</td>
+<td id="S4.T1.1.5.4.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S4.T1.1.5.4.3.1" class="ltx_text ltx_font_bold">45.65px</span></td>
+<td id="S4.T1.1.5.4.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S4.T1.1.5.4.4.1" class="ltx_text ltx_font_bold">70.22%</span></td>
+<td id="S4.T1.1.5.4.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S4.T1.1.5.4.5.1" class="ltx_text ltx_font_bold">0.95m</span></td>
+<td id="S4.T1.1.5.4.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S4.T1.1.5.4.6.1" class="ltx_text ltx_font_bold">0.39m</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">Since there are no baselines on the PedX dataset, we implemented an RGB baseline (RGB only version of our model) similar to LCR-Net++<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite> and tested it on MPII <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite> and PedX <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>.
+Table <a href="#S4.T2" title="TABLE II ‣ IV-A RGB Baseline vs HPERL ‣ IV Evaluation ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a> and Table <a href="#S4.T3" title="TABLE III ‣ IV-A RGB Baseline vs HPERL ‣ IV Evaluation ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">III</span></a> prove a similar performance to the original LCR-Net++ for our RGB baseline.
+The sole difference between the RGB baseline and HPERL is in the LiDAR extension.
+This allows us to attribute all performance gains over the baseline to adding LiDAR.</p>
+</div>
+<div id="S4.p3" class="ltx_para">
+<p id="S4.p3.1" class="ltx_p">To show the improvements by including LiDAR, we compare our RGB baseline against our HPERL with as identical parameters as possible.
+Both networks were trained to optimal accuracy with similar parameters, the same training procedure and the same data.
+The current state-of-the-art typically evaluates 3D performance root-joint relative.
+With the availability of LiDAR, we can evaluate absolute 3D performance.
+Most approaches only provide root relative results, however our RGB baseline and HPERL produce absolute 3D predictions.
+In our evaluation, we capture the error of the root joint by the CDE and XYE metrics introduced above.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS1.4.1.1" class="ltx_text">IV-A</span> </span><span id="S4.SS1.5.2" class="ltx_text ltx_font_italic">RGB Baseline vs HPERL</span>
+</h3>
+
+<figure id="S4.T2" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE II: </span>RGB Baseline (inspired by LCRNet++) Verification on MPII</figcaption>
+<table id="S4.T2.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<th id="S4.T2.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Model</th>
+<th id="S4.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">Category</th>
+<th id="S4.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">Type</th>
+<th id="S4.T2.1.1.1.4" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">2D MPJPE</th>
+<th id="S4.T2.1.1.1.5" class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t">PCKh@0.5</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S4.T2.1.2.1" class="ltx_tr">
+<th id="S4.T2.1.2.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">LCRNet++<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>
+</th>
+<td id="S4.T2.1.2.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">single</td>
+<td id="S4.T2.1.2.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2D</td>
+<td id="S4.T2.1.2.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T2.1.2.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">74.61%</td>
+</tr>
+<tr id="S4.T2.1.3.2" class="ltx_tr">
+<th id="S4.T2.1.3.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r">RGB Baseline (ours)</th>
+<td id="S4.T2.1.3.2.2" class="ltx_td ltx_align_center ltx_border_r">single</td>
+<td id="S4.T2.1.3.2.3" class="ltx_td ltx_align_center ltx_border_r">2D</td>
+<td id="S4.T2.1.3.2.4" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T2.1.3.2.4.1" class="ltx_text ltx_font_bold">58.30px</span></td>
+<td id="S4.T2.1.3.2.5" class="ltx_td ltx_align_center ltx_border_r"><span id="S4.T2.1.3.2.5.1" class="ltx_text ltx_font_bold">81.95%</span></td>
+</tr>
+<tr id="S4.T2.1.4.3" class="ltx_tr">
+<th id="S4.T2.1.4.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r ltx_border_t">RGB Baseline (ours)</th>
+<td id="S4.T2.1.4.3.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">multi</td>
+<td id="S4.T2.1.4.3.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">2D</td>
+<td id="S4.T2.1.4.3.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">61.53px</td>
+<td id="S4.T2.1.4.3.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">79.82%</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure id="S4.T3" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE III: </span>RGB Baseline (inspired by LCRNet++) Verification on PedX.</figcaption>
+<table id="S4.T3.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T3.1.1.1" class="ltx_tr">
+<th id="S4.T3.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">Model</th>
+<td id="S4.T3.1.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Type</td>
+<td id="S4.T3.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Trained On</td>
+<td id="S4.T3.1.1.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2D MPJPE</td>
+<td id="S4.T3.1.1.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">PCKh@0.5</td>
+</tr>
+<tr id="S4.T3.1.2.2" class="ltx_tr">
+<th id="S4.T3.1.2.2.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">LCRNet++<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>
+</th>
+<td id="S4.T3.1.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2D</td>
+<td id="S4.T3.1.2.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">non PedX</td>
+<td id="S4.T3.1.2.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">246.98px</td>
+<td id="S4.T3.1.2.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">52.35%</td>
+</tr>
+<tr id="S4.T3.1.3.3" class="ltx_tr">
+<th id="S4.T3.1.3.3.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r">LCRNet++<cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>
+</th>
+<td id="S4.T3.1.3.3.2" class="ltx_td ltx_align_center ltx_border_r">3D</td>
+<td id="S4.T3.1.3.3.3" class="ltx_td ltx_align_center ltx_border_r">non PedX</td>
+<td id="S4.T3.1.3.3.4" class="ltx_td ltx_align_center ltx_border_r">250.60px</td>
+<td id="S4.T3.1.3.3.5" class="ltx_td ltx_align_center ltx_border_r">47.44%</td>
+</tr>
+<tr id="S4.T3.1.4.4" class="ltx_tr">
+<th id="S4.T3.1.4.4.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r">RGB Base. (ours)</th>
+<td id="S4.T3.1.4.4.2" class="ltx_td ltx_align_center ltx_border_r">2D</td>
+<td id="S4.T3.1.4.4.3" class="ltx_td ltx_align_center ltx_border_r">non PedX</td>
+<td id="S4.T3.1.4.4.4" class="ltx_td ltx_align_center ltx_border_r">151.73px</td>
+<td id="S4.T3.1.4.4.5" class="ltx_td ltx_align_center ltx_border_r">36.53%</td>
+</tr>
+<tr id="S4.T3.1.5.5" class="ltx_tr">
+<th id="S4.T3.1.5.5.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t">RGB Base. (ours)</th>
+<td id="S4.T3.1.5.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2D</td>
+<td id="S4.T3.1.5.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">PedX</td>
+<td id="S4.T3.1.5.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">87.76px</td>
+<td id="S4.T3.1.5.5.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">65.02%</td>
+</tr>
+<tr id="S4.T3.1.6.6" class="ltx_tr">
+<th id="S4.T3.1.6.6.1" class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r">RGB Base. (ours)</th>
+<td id="S4.T3.1.6.6.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">3D</td>
+<td id="S4.T3.1.6.6.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r">PedX</td>
+<td id="S4.T3.1.6.6.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S4.T3.1.6.6.4.1" class="ltx_text ltx_font_bold">87.66px</span></td>
+<td id="S4.T3.1.6.6.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r"><span id="S4.T3.1.6.6.5.1" class="ltx_text ltx_font_bold">65.92%</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.6" class="ltx_p">The 2D MPJPE and PCKh@0.5 metrics capture improvements in the pose predictions.
+Our HPERL reduces the 2D MPJPE by a factor of <math id="S4.SS1.p1.1.m1.1" class="ltx_Math" alttext="1.9" display="inline"><semantics id="S4.SS1.p1.1.m1.1a"><mn id="S4.SS1.p1.1.m1.1.1" xref="S4.SS1.p1.1.m1.1.1.cmml">1.9</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.1.m1.1b"><cn type="float" id="S4.SS1.p1.1.m1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1">1.9</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.1.m1.1c">1.9</annotation></semantics></math> and improves the PCKh for 2D and projected 3D by <math id="S4.SS1.p1.2.m2.1" class="ltx_Math" alttext="+4.3\%" display="inline"><semantics id="S4.SS1.p1.2.m2.1a"><mrow id="S4.SS1.p1.2.m2.1.1" xref="S4.SS1.p1.2.m2.1.1.cmml"><mo id="S4.SS1.p1.2.m2.1.1a" xref="S4.SS1.p1.2.m2.1.1.cmml">+</mo><mrow id="S4.SS1.p1.2.m2.1.1.2" xref="S4.SS1.p1.2.m2.1.1.2.cmml"><mn id="S4.SS1.p1.2.m2.1.1.2.2" xref="S4.SS1.p1.2.m2.1.1.2.2.cmml">4.3</mn><mo id="S4.SS1.p1.2.m2.1.1.2.1" xref="S4.SS1.p1.2.m2.1.1.2.1.cmml">%</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.2.m2.1b"><apply id="S4.SS1.p1.2.m2.1.1.cmml" xref="S4.SS1.p1.2.m2.1.1"><plus id="S4.SS1.p1.2.m2.1.1.1.cmml" xref="S4.SS1.p1.2.m2.1.1"></plus><apply id="S4.SS1.p1.2.m2.1.1.2.cmml" xref="S4.SS1.p1.2.m2.1.1.2"><csymbol cd="latexml" id="S4.SS1.p1.2.m2.1.1.2.1.cmml" xref="S4.SS1.p1.2.m2.1.1.2.1">percent</csymbol><cn type="float" id="S4.SS1.p1.2.m2.1.1.2.2.cmml" xref="S4.SS1.p1.2.m2.1.1.2.2">4.3</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.2.m2.1c">+4.3\%</annotation></semantics></math> (Table <a href="#S4.T1" title="TABLE I ‣ IV Evaluation ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>).
+The improvements in CDE and XYE depict the performance of our model with respect to absolute positioning of the pose.
+Here HPERL reduces the CDE and XYE by a factor of <math id="S4.SS1.p1.3.m3.1" class="ltx_Math" alttext="5.1" display="inline"><semantics id="S4.SS1.p1.3.m3.1a"><mn id="S4.SS1.p1.3.m3.1.1" xref="S4.SS1.p1.3.m3.1.1.cmml">5.1</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.3.m3.1b"><cn type="float" id="S4.SS1.p1.3.m3.1.1.cmml" xref="S4.SS1.p1.3.m3.1.1">5.1</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.3.m3.1c">5.1</annotation></semantics></math> and <math id="S4.SS1.p1.4.m4.1" class="ltx_Math" alttext="3.7" display="inline"><semantics id="S4.SS1.p1.4.m4.1a"><mn id="S4.SS1.p1.4.m4.1.1" xref="S4.SS1.p1.4.m4.1.1.cmml">3.7</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.4.m4.1b"><cn type="float" id="S4.SS1.p1.4.m4.1.1.cmml" xref="S4.SS1.p1.4.m4.1.1">3.7</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.4.m4.1c">3.7</annotation></semantics></math> respectively (Table <a href="#S4.T1" title="TABLE I ‣ IV Evaluation ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>).
+The best 3D object detectors specialized and evaluated on the very competitive KITTI <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite> benchmark currently achieve errors of <math id="S4.SS1.p1.5.m5.1" class="ltx_Math" alttext="0.11-0.22" display="inline"><semantics id="S4.SS1.p1.5.m5.1a"><mrow id="S4.SS1.p1.5.m5.1.1" xref="S4.SS1.p1.5.m5.1.1.cmml"><mn id="S4.SS1.p1.5.m5.1.1.2" xref="S4.SS1.p1.5.m5.1.1.2.cmml">0.11</mn><mo id="S4.SS1.p1.5.m5.1.1.1" xref="S4.SS1.p1.5.m5.1.1.1.cmml">−</mo><mn id="S4.SS1.p1.5.m5.1.1.3" xref="S4.SS1.p1.5.m5.1.1.3.cmml">0.22</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.5.m5.1b"><apply id="S4.SS1.p1.5.m5.1.1.cmml" xref="S4.SS1.p1.5.m5.1.1"><minus id="S4.SS1.p1.5.m5.1.1.1.cmml" xref="S4.SS1.p1.5.m5.1.1.1"></minus><cn type="float" id="S4.SS1.p1.5.m5.1.1.2.cmml" xref="S4.SS1.p1.5.m5.1.1.2">0.11</cn><cn type="float" id="S4.SS1.p1.5.m5.1.1.3.cmml" xref="S4.SS1.p1.5.m5.1.1.3">0.22</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.5.m5.1c">0.11-0.22</annotation></semantics></math>m on pedestrians <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>.
+Our HPERL significantly outperforms RGB only pose estimators and achieves 3D precision (<math id="S4.SS1.p1.6.m6.1" class="ltx_Math" alttext="0.39" display="inline"><semantics id="S4.SS1.p1.6.m6.1a"><mn id="S4.SS1.p1.6.m6.1.1" xref="S4.SS1.p1.6.m6.1.1.cmml">0.39</mn><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.6.m6.1b"><cn type="float" id="S4.SS1.p1.6.m6.1.1.cmml" xref="S4.SS1.p1.6.m6.1.1">0.39</cn></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.6.m6.1c">0.39</annotation></semantics></math>m XYE) almost similar to the state-of-the-art in pedestrian detection on KITTI.</p>
+</div>
+<div id="S4.SS1.p2" class="ltx_para">
+<p id="S4.SS1.p2.1" class="ltx_p">Furthermore, we visually inspected the performance of our algorithm. Fig. <a href="#S4.F5" title="Figure 5 ‣ IV-A RGB Baseline vs HPERL ‣ IV Evaluation ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> shows a case where our HPERL is able to precisely locate the pedestrian despite heavy occlusion by a silver SUV. In Fig. <a href="#S4.F6" title="Figure 6 ‣ IV-A RGB Baseline vs HPERL ‣ IV Evaluation ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>, we do a qualitative comparison of the RGB baseline and HPERL.</p>
+</div>
+<figure id="S4.F5" class="ltx_figure"><img src="/html/2010.08221/assets/images/occlusion_3.png" id="S4.F5.1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="586" height="247" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Heavily occluded pedestrians can be located precisely with limited pose quality using the LiDAR pointcloud. The pedestrians occluded by the silver SUV (manually marked blue) are precisely located. 2D predictions are shown in yellow, 3D predictions in red, 3D ground truth in orange and the occluding car in blue.</figcaption>
+</figure>
+<figure id="S4.F6" class="ltx_figure"><span id="S4.F6.1.pic1" class="ltx_picture ltx_centering" style="width:423.5pt;height:232.7pt;">\begin{overpic}[width=424.94574pt,tics=10]{images/arranged_v2.png}
+\put(2.25,53.0){Normal Case}
+\put(22.0,53.0){Group of Pedestrians}
+\put(41.5,53.0){Cyclist}
+\put(61.0,53.0){Pushing Bicycle}
+\put(80.5,53.0){Occlusion}
+\put(0.0,35.5){\rotatebox{90.0}{Ground Truth}}
+\put(0.0,17.75){\rotatebox{90.0}{RGB baseline}}
+\put(0.0,0.0){\rotatebox{90.0}{HPERL~{}(ours)}}
+\end{overpic}</span>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Qualitative comparison of performance between the RGB baseline and HPERL. The poses are depicted in yellow. In common scenarios shown on the left, both algorithms detect the pedestrians, but the baseline struggles with false positives at multiple depths. Albeit a rare case, the cyclist on the bicycle is well detected by both methods. Pushing a bicycle however causes false positives for RGB baseline and an imprecise detection for HPERL. Partial occlusions are difficult for both approaches, however HPERL is able to detect the pedestrian but at the cost of a false positive.</figcaption>
+</figure>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S4.SS2.4.1.1" class="ltx_text">IV-B</span> </span><span id="S4.SS2.5.2" class="ltx_text ltx_font_italic">Ablation Studies</span>
+</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.1" class="ltx_p">To verify the effectiveness of all the components of our approach, we derived ablation studies. We changed the feature extractor, pre-training, internal network parameters and recorded the metrics (Table <a href="#S4.T4" title="TABLE IV ‣ IV-B Ablation Studies ‣ IV Evaluation ‣ HPERL: 3D Human Pose Estimation from RGB and LiDAR" class="ltx_ref"><span class="ltx_text ltx_ref_tag">IV</span></a>).
+We observed that for the 3D performance (CDE and XYE), adding LiDAR information has the biggest performance impact.
+Even poorly configured versions of HPERL outperform the RGB baseline.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">Analysing the results of the ablation study, we found that having a customized model with fewer parameters and less generalization gap outperforms initializing the model with Imagenet <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib41" title="" class="ltx_ref">41</a>]</cite> pre-trained weights.
+For the fusion strategy, we observed that concatenation is better suited than the mean operation.
+But for the data augmentation, we were able to see only a minor improvement, which is explained by the natural variance in poses and a roughly symmetrical distribution of poses regarding the LR-axis.</p>
+</div>
+<figure id="S4.T4" class="ltx_table">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE IV: </span>Ablation studies of HPERL on the PedX dataset. Feature extractor, pre-training, fusion, RoI operation and data augmentation were varied to determine the impacts on the 3D pose estimation on PedX. The biggest impact is due to adding LiDAR.</figcaption>
+<table id="S4.T4.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S4.T4.1.1.1" class="ltx_tr">
+<td id="S4.T4.1.1.1.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">Feature Extractor</td>
+<td id="S4.T4.1.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">Input</td>
+<td id="S4.T4.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">Pretrained</td>
+<td id="S4.T4.1.1.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">#Features</td>
+<td id="S4.T4.1.1.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">Fusion</td>
+<td id="S4.T4.1.1.1.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">RoI Op.</td>
+<td id="S4.T4.1.1.1.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">Data Aug.</td>
+<td id="S4.T4.1.1.1.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">2D MPJPE</td>
+<td id="S4.T4.1.1.1.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">PCKh@0.5</td>
+<td id="S4.T4.1.1.1.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">CDE</td>
+<td id="S4.T4.1.1.1.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_t" style="padding-bottom:2.15277pt;">XYE</td>
+</tr>
+<tr id="S4.T4.1.2.2" class="ltx_tr">
+<td id="S4.T4.1.2.2.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_tt">Resnet-50</td>
+<td id="S4.T4.1.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">RGB</td>
+<td id="S4.T4.1.2.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">COCO</td>
+<td id="S4.T4.1.2.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">256</td>
+<td id="S4.T4.1.2.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">-</td>
+<td id="S4.T4.1.2.2.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">RoI Align</td>
+<td id="S4.T4.1.2.2.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">LR-Flip</td>
+<td id="S4.T4.1.2.2.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">87.66px</td>
+<td id="S4.T4.1.2.2.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">65.92%</td>
+<td id="S4.T4.1.2.2.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">4.88m</td>
+<td id="S4.T4.1.2.2.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">1.44m</td>
+</tr>
+<tr id="S4.T4.1.3.3" class="ltx_tr">
+<td id="S4.T4.1.3.3.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_tt">VGG-16</td>
+<td id="S4.T4.1.3.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">RGB + LiDAR</td>
+<td id="S4.T4.1.3.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">Imagenet</td>
+<td id="S4.T4.1.3.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">512</td>
+<td id="S4.T4.1.3.3.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">Concat</td>
+<td id="S4.T4.1.3.3.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">RoI Pool</td>
+<td id="S4.T4.1.3.3.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">No</td>
+<td id="S4.T4.1.3.3.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">131.25px</td>
+<td id="S4.T4.1.3.3.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">56.13%</td>
+<td id="S4.T4.1.3.3.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">2.38m</td>
+<td id="S4.T4.1.3.3.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">1.10m</td>
+</tr>
+<tr id="S4.T4.1.4.4" class="ltx_tr">
+<td id="S4.T4.1.4.4.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">VGG-16</td>
+<td id="S4.T4.1.4.4.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RGB + LiDAR</td>
+<td id="S4.T4.1.4.4.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Imagenet</td>
+<td id="S4.T4.1.4.4.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">512</td>
+<td id="S4.T4.1.4.4.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Concat</td>
+<td id="S4.T4.1.4.4.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RoI Align</td>
+<td id="S4.T4.1.4.4.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">No</td>
+<td id="S4.T4.1.4.4.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">74.62px</td>
+<td id="S4.T4.1.4.4.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">58.67%</td>
+<td id="S4.T4.1.4.4.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">1.50m</td>
+<td id="S4.T4.1.4.4.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.64m</td>
+</tr>
+<tr id="S4.T4.1.5.5" class="ltx_tr">
+<td id="S4.T4.1.5.5.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">Resnet-50</td>
+<td id="S4.T4.1.5.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RGB + LiDAR</td>
+<td id="S4.T4.1.5.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Imagenet</td>
+<td id="S4.T4.1.5.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">1024</td>
+<td id="S4.T4.1.5.5.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Concat</td>
+<td id="S4.T4.1.5.5.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RoI Align</td>
+<td id="S4.T4.1.5.5.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">No</td>
+<td id="S4.T4.1.5.5.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">64.87px</td>
+<td id="S4.T4.1.5.5.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">61.41%</td>
+<td id="S4.T4.1.5.5.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">1.27m</td>
+<td id="S4.T4.1.5.5.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.56m</td>
+</tr>
+<tr id="S4.T4.1.6.6" class="ltx_tr">
+<td id="S4.T4.1.6.6.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_tt">VGG-16</td>
+<td id="S4.T4.1.6.6.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">RGB + LiDAR</td>
+<td id="S4.T4.1.6.6.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">No</td>
+<td id="S4.T4.1.6.6.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">256</td>
+<td id="S4.T4.1.6.6.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">Mean</td>
+<td id="S4.T4.1.6.6.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">RoI Pool</td>
+<td id="S4.T4.1.6.6.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">No</td>
+<td id="S4.T4.1.6.6.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">80.39px</td>
+<td id="S4.T4.1.6.6.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">63.07%</td>
+<td id="S4.T4.1.6.6.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">1.57m</td>
+<td id="S4.T4.1.6.6.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_tt">0.73m</td>
+</tr>
+<tr id="S4.T4.1.7.7" class="ltx_tr">
+<td id="S4.T4.1.7.7.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">VGG-16</td>
+<td id="S4.T4.1.7.7.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RGB + LiDAR</td>
+<td id="S4.T4.1.7.7.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">No</td>
+<td id="S4.T4.1.7.7.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">256</td>
+<td id="S4.T4.1.7.7.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Concat</td>
+<td id="S4.T4.1.7.7.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RoI Pool</td>
+<td id="S4.T4.1.7.7.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">No</td>
+<td id="S4.T4.1.7.7.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">70.03px</td>
+<td id="S4.T4.1.7.7.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">65.04%</td>
+<td id="S4.T4.1.7.7.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">1.02m</td>
+<td id="S4.T4.1.7.7.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.58m</td>
+</tr>
+<tr id="S4.T4.1.8.8" class="ltx_tr">
+<td id="S4.T4.1.8.8.1" class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_t">VGG-16</td>
+<td id="S4.T4.1.8.8.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RGB + LiDAR</td>
+<td id="S4.T4.1.8.8.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">No</td>
+<td id="S4.T4.1.8.8.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">256</td>
+<td id="S4.T4.1.8.8.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">Concat</td>
+<td id="S4.T4.1.8.8.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RoI Align</td>
+<td id="S4.T4.1.8.8.7" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">No</td>
+<td id="S4.T4.1.8.8.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">60.28px</td>
+<td id="S4.T4.1.8.8.9" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">65.87%</td>
+<td id="S4.T4.1.8.8.10" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T4.1.8.8.10.1" class="ltx_text ltx_font_bold">0.85m</span></td>
+<td id="S4.T4.1.8.8.11" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">0.49m</td>
+</tr>
+<tr id="S4.T4.1.9.9" class="ltx_tr">
+<td id="S4.T4.1.9.9.1" class="ltx_td ltx_align_left ltx_border_b ltx_border_l ltx_border_r ltx_border_t">VGG-16</td>
+<td id="S4.T4.1.9.9.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">RGB + LiDAR</td>
+<td id="S4.T4.1.9.9.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">No</td>
+<td id="S4.T4.1.9.9.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">256</td>
+<td id="S4.T4.1.9.9.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">Concat</td>
+<td id="S4.T4.1.9.9.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">RoI Align</td>
+<td id="S4.T4.1.9.9.7" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">LR-Flip</td>
+<td id="S4.T4.1.9.9.8" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T4.1.9.9.8.1" class="ltx_text ltx_font_bold">59.52px</span></td>
+<td id="S4.T4.1.9.9.9" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T4.1.9.9.9.1" class="ltx_text ltx_font_bold">68.56%</span></td>
+<td id="S4.T4.1.9.9.10" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">0.99m</td>
+<td id="S4.T4.1.9.9.11" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T4.1.9.9.11.1" class="ltx_text ltx_font_bold">0.49m</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Conclusions</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this paper, we presented HPERL using a fusion of RGB images and LiDAR point clouds to precisely locate pedestrians and predict their pose.
+This method was trained to detect the 3D human poses without using any 3D pose annotations.
+Our approach applied an implicit formulation of the learning goal via projection and 3D bounding boxes to learn the 3D predictions.
+Thus, we introduced the CDE and XYE metrics to capture the 3D precision of the predictions.
+This opens up new opportunities to deploy human pose estimation in the wild.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">Our research shows the versatility of a 3D detector’s fusion schema.
+In this work we used AVOD <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> as a backbone, however all backbones following the two stage approach introduced by Faster R-CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite> are compatible with our proposed architecture.</p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p">The results of our empirical analysis demonstrate a promising performance, which can be attributed to the inclusion of LiDAR as an additional input modality.
+However, the lack of in-the-wild datasets hinders large scale evaluations and development.
+We hope that our work encourages the creation of datasets and further research, enabling the usage of human pose estimation for autonomous vehicles and other applications requiring high absolute precision.
+</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_font_smallcaps ltx_title_section">ACKNOWLEDGMENT</h2>
+
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">The research leading to these results is funded by the German Federal Ministry for Economic Affairs and Energy within the project ”KI-Absicherung” (grant: 19A19005U).</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+W. Kim, M. S. Ramanagopal, C. Barto, M.-Y. Yu, K. Rosaen, N. Goumas,
+R. Vasudevan, and M. Johnson-Roberson, “Pedx: Benchmark dataset for metric
+3-d pose estimation of pedestrians in complex urban intersections,” <span id="bib.bib1.1.1" class="ltx_text ltx_font_italic">IEEE Robotics and Automation Letters</span>, vol. 4, no. 2, pp. 1940–1947, 2019.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+S. Ren, K. He, R. Girshick, and J. Sun, “Faster r-cnn: Towards real-time
+object detection with region proposal networks,” in <span id="bib.bib2.1.1" class="ltx_text ltx_font_italic">Advances in Neural
+Information Processing Systems (NeurIPS)</span>, 2015.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+M. Weber, M. Fürst, and J. M. Zöllner, “Direct 3d detection of
+vehicles in monocular images with a cnn based 3d decoder,” in <span id="bib.bib3.1.1" class="ltx_text ltx_font_italic">IEEE
+Intelligent Vehicles Symposium (IV)</span>, 2019.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+A. H. Lang, S. Vora, H. Caesar, L. Zhou, J. Yang, and O. Beijbom,
+“Pointpillars: Fast encoders for object detection from point clouds,” in
+<span id="bib.bib4.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</span>,
+2019.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+S. Shi, X. Wang, and H. Li, “Pointrcnn: 3d object proposal generation and
+detection from point cloud,” in <span id="bib.bib5.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and
+Pattern Recognition (CVPR)</span>, 2019.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Z. Yang, Y. Sun, S. Liu, X. Shen, and J. Jia, “Ipod: Intensive point-based
+object detector for point cloud,” <span id="bib.bib6.1.1" class="ltx_text ltx_font_italic">Computing Research Repository (CoRR),
+abs/1812.05276</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+X. Chen, H. Ma, J. Wan, B. Li, and T. Xia, “Multi-view 3d object detection
+network for autonomous driving,” in <span id="bib.bib7.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision
+and Pattern Recognition (CVPR)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+J. Ku, A. D. Pon, S. Walsh, and S. L. Waslander, “Improving 3d object
+detection for pedestrians with virtual multi-view synthesis orientation
+estimation,” in <span id="bib.bib8.1.1" class="ltx_text ltx_font_italic">IEEE/RSJ International Conference on Intelligent Robots
+and Systems (IROS)</span>, 2019.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+C. R. Qi, W. Liu, C. Wu, H. Su, and L. J. Guibas, “Frustum pointnets for 3d
+object detection from rgb-d data,” in <span id="bib.bib9.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer
+Vision and Pattern Recognition (CVPR)</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+J. Ku, M. Mozifian, J. Lee, A. Harakeh, and S. L. Waslander, “Joint 3d
+proposal generation and object detection from view aggregation,” in <span id="bib.bib10.1.1" class="ltx_text ltx_font_italic">IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)</span>,
+2018.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+M. Fuerst, O. Wasenmueller, and D. Stricker, “Lrpd: Long range 3d pedestrian
+detection leveraging specific strengths of lidar and rgb,” in <span id="bib.bib11.1.1" class="ltx_text ltx_font_italic">IEEE
+International Conference on Intelligent Transportation Systems (ITSC)</span>, 2020.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+A. Toshev and C. Szegedy, “Deeppose: Human pose estimation via deep neural
+networks,” in <span id="bib.bib12.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, 2014.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+J. Tompson, R. Goroshin, A. Jain, Y. LeCun, and C. Bregler, “Efficient object
+localization using convolutional networks,” in <span id="bib.bib13.1.1" class="ltx_text ltx_font_italic">IEEE Conference on
+Computer Vision and Pattern Recognition (CVPR)</span>, 2015.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+S.-E. Wei, V. Ramakrishna, T. Kanade, and Y. Sheikh, “Convolutional pose
+machines,” in <span id="bib.bib14.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, 2016.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+A. Newell, K. Yang, and J. Deng, “Stacked hourglass networks for human pose
+estimation,” in <span id="bib.bib15.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision (ECCV)</span>,
+Springer, 2016.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+L. Pishchulin, E. Insafutdinov, S. Tang, B. Andres, M. Andriluka, P. V. Gehler,
+and B. Schiele, “Deepcut: Joint subset partition and labeling for multi
+person pose estimation,” in <span id="bib.bib16.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and
+Pattern Recognition (CVPR)</span>, 2016.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Z. Cao, T. Simon, S.-E. Wei, and Y. Sheikh, “Realtime multi-person 2d pose
+estimation using part affinity fields,” in <span id="bib.bib17.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer
+Vision and Pattern Recognition (CVPR)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+K. Sun, B. Xiao, D. Liu, and J. Wang, “Deep high-resolution representation
+learning for human pose estimation,” in <span id="bib.bib18.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer
+Vision and Pattern Recognition (CVPR)</span>, 2019.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+H.-S. Fang, S. Xie, Y.-W. Tai, and C. Lu, “Rmpe: Regional multi-person pose
+estimation,” in <span id="bib.bib19.1.1" class="ltx_text ltx_font_italic">IEEE International Conference on Computer Vision
+(ICCV)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+G. Papandreou, T. Zhu, N. Kanazawa, A. Toshev, J. Tompson, C. Bregler, and
+K. Murphy, “Towards accurate multi-person pose estimation in the wild,” in
+<span id="bib.bib20.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</span>,
+2017.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+S. Huang, M. Gong, and D. Tao, “A coarse-fine network for keypoint
+localization,” in <span id="bib.bib21.1.1" class="ltx_text ltx_font_italic">IEEE International Conference on Computer Vision
+(ICCV)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Y. Chen, Z. Wang, Y. Peng, Z. Zhang, G. Yu, and J. Sun, “Cascaded pyramid
+network for multi-person pose estimation,” in <span id="bib.bib22.1.1" class="ltx_text ltx_font_italic">IEEE Conference on
+Computer Vision and Pattern Recognition (CVPR)</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+K. He, G. Gkioxari, P. Dollár, and R. Girshick, “Mask r-cnn,” in <span id="bib.bib23.1.1" class="ltx_text ltx_font_italic">IEEE International Conference on Computer Vision (ICCV)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+R. Alp Güler, N. Neverova, and I. Kokkinos, “Densepose: Dense human pose
+estimation in the wild,” in <span id="bib.bib24.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and
+Pattern Recognition (CVPR)</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+S. Li and A. B. Chan, “3d human pose estimation from monocular images with
+deep convolutional neural network,” in <span id="bib.bib25.1.1" class="ltx_text ltx_font_italic">Asian Conference on Computer
+Vision (ACCV)</span>, Springer, 2014.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+C.-H. Chen and D. Ramanan, “3d human pose estimation= 2d pose estimation+
+matching,” in <span id="bib.bib26.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+J. Martinez, R. Hossain, J. Romero, and J. J. Little, “A simple yet effective
+baseline for 3d human pose estimation,” in <span id="bib.bib27.1.1" class="ltx_text ltx_font_italic">IEEE International
+Conference on Computer Vision (ICCV)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+X. Zhou, Q. Huang, X. Sun, X. Xue, and Y. Wei, “Towards 3d human pose
+estimation in the wild: a weakly-supervised approach,” in <span id="bib.bib28.1.1" class="ltx_text ltx_font_italic">IEEE
+International Conference on Computer Vision (ICCV)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+C. Zimmermann, T. Welschehold, C. Dornhege, W. Burgard, and T. Brox, “3d human
+pose estimation in rgbd images for robotic task learning,” in <span id="bib.bib29.1.1" class="ltx_text ltx_font_italic">IEEE
+International Conference on Robotics and Automation (ICRA)</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+R. Girshick, J. Shotton, P. Kohli, A. Criminisi, and A. Fitzgibbon, “Efficient
+regression of general-activity human poses from depth images,” in <span id="bib.bib30.1.1" class="ltx_text ltx_font_italic">IEEE
+International Conference on Computer Vision (ICCV)</span>, 2011.
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+D. Mehta, S. Sridhar, O. Sotnychenko, H. Rhodin, M. Shafiei, H.-P. Seidel,
+W. Xu, D. Casas, and C. Theobalt, “Vnect: Real-time 3d human pose estimation
+with a single rgb camera,” <span id="bib.bib31.1.1" class="ltx_text ltx_font_italic">ACM Transactions on Graphics (TOG)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+G. Rogez, P. Weinzaepfel, and C. Schmid, “Lcr-net:
+Localization-classification-regression for human pose,” in <span id="bib.bib32.1.1" class="ltx_text ltx_font_italic">IEEE
+Conference on Computer Vision and Pattern Recognition (CVPR)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+G. Rogez, P. Weinzaepfel, and C. Schmid, “Lcr-net++: Multi-person 2d and 3d
+pose detection in natural images,” <span id="bib.bib33.1.1" class="ltx_text ltx_font_italic">IEEE Transactions on Pattern
+Analysis and Machine Intelligence(TPAMI)</span>, vol. 42, no. 5, pp. 1146–1161,
+2019.
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+K. He, G. Gkioxari, P. Dollár, and R. Girshick, “Mask r-cnn,” in <span id="bib.bib34.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image
+recognition,” in <span id="bib.bib35.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision and Pattern
+Recognition (CVPR)</span>, 2016.
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+T.-Y. Lin, P. Dollár, R. Girshick, K. He, B. Hariharan, and S. Belongie,
+“Feature pyramid networks for object detection,” in <span id="bib.bib36.1.1" class="ltx_text ltx_font_italic">IEEE Conference on
+Computer Vision and Pattern Recognition (CVPR)</span>, 2017.
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan,
+P. Dollár, and C. L. Zitnick, “Microsoft coco: Common objects in
+context,” in <span id="bib.bib37.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision (ECCV)</span>, Springer,
+2014.
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+M. A. Fischler and R. C. Bolles, “Random sample consensus: a paradigm for
+model fitting with applications to image analysis and automated
+cartography,” <span id="bib.bib38.1.1" class="ltx_text ltx_font_italic">Communications of the ACM</span>, vol. 24, no. 6, pp. 381–395,
+1981.
+
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock">
+M. Andriluka, L. Pishchulin, P. Gehler, and B. Schiele, “2d human pose
+estimation: New benchmark and state of the art analysis,” in <span id="bib.bib39.1.1" class="ltx_text ltx_font_italic">IEEE
+Conference on Computer Vision and Pattern Recognition (CVPR)</span>, 2014.
+
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock">
+A. Geiger, P. Lenz, and R. Urtasun, “Are we ready for autonomous driving? the
+kitti vision benchmark suite,” in <span id="bib.bib40.1.1" class="ltx_text ltx_font_italic">IEEE Conference on Computer Vision
+and Pattern Recognition (CVPR)</span>, 2012.
+
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock">
+J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-Fei, “Imagenet: A
+large-scale hierarchical image database,” in <span id="bib.bib41.1.1" class="ltx_text ltx_font_italic">IEEE Conference on
+Computer Vision and Pattern Recognition (CVPR)</span>, 2009.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2010.08220" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2010.08221" class="ar5iv-text-button ar5iv-severity-error">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2010.08221">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2010.08221" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2010.08222" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Sun Mar 10 23:00:00 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

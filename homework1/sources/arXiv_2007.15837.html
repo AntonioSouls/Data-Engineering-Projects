@@ -1,0 +1,1468 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2007.15837] ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation</title><meta property="og:description" content="Gaze estimation is a fundamental task in many applications of computer vision, human computer interaction and robotics. Many state-of-the-art methods are trained and tested on custom datasets, making comparison across …">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2007.15837">
+
+<!--Generated on Thu Mar 14 12:44:41 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span id="id1" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">institutetext: </span>Department of Computer Science, ETH Zurich
+<br class="ltx_break"><span id="id1.1" class="ltx_note ltx_role_email"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">email: </span>{xucong.zhang, spark, siyu.tang, otmar.hilliges}@inf.ethz.ch</span></span></span>
+<br class="ltx_break"></span></span></span><span id="id2" class="ltx_note ltx_role_institutetext"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_note_type">institutetext: </span>Google Inc.
+<br class="ltx_break"><span id="id2.1" class="ltx_note ltx_role_email"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_note_type">email: </span>tbeeler@google.com</span></span></span></span></span></span>
+<h1 class="ltx_title ltx_title_document">ETH-XGaze: A Large Scale Dataset 
+<br class="ltx_break">for Gaze Estimation under Extreme Head Pose and Gaze Variation</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Xucong Zhang
+</span><span class="ltx_author_notes">11</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Seonwook Park
+</span><span class="ltx_author_notes">11</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Thabo Beeler
+</span><span class="ltx_author_notes">22</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Derek Bradley
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Siyu Tang
+</span><span class="ltx_author_notes">11</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Otmar Hilliges
+</span><span class="ltx_author_notes">11</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id1.id1" class="ltx_p">Gaze estimation is a fundamental task in many applications of computer vision, human computer interaction and robotics. Many state-of-the-art methods are trained and tested on custom datasets, making comparison across methods challenging. Furthermore, existing gaze estimation datasets have limited head pose and gaze variations, and the evaluations are conducted using different protocols and metrics.
+In this paper, we propose a new gaze estimation dataset called ETH-XGaze, consisting of over one million high-resolution images of varying gaze under extreme head poses. We collect this dataset from 110 participants with a custom hardware setup including 18 digital SLR cameras and adjustable illumination conditions, and a calibrated system to record ground truth gaze targets.
+We show that our dataset can significantly improve the robustness of gaze estimation methods across different head poses and gaze angles. Additionally, we define a standardized experimental protocol and evaluation metric on ETH-XGaze, to better unify gaze estimation research going forward. The dataset and benchmark website are available at
+
+<a target="_blank" href="https://ait.ethz.ch/projects/2020/ETH-XGaze" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://ait.ethz.ch/projects/2020/ETH-XGaze</a></p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Estimating eye-gaze from monocular images alone has recently received significant interest in computer vision <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>, <a href="#bib.bib38" title="" class="ltx_ref">38</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite> due to its significance in many application domains ranging from the cognitive sciences and HCI to robotics and semi-autonomous driving <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib23" title="" class="ltx_ref">23</a>, <a href="#bib.bib32" title="" class="ltx_ref">32</a>]</cite>.
+Many arising computing paradigms such as smart-home appliances, autonomous cars and robots, as well as body-worn cameras will rely on understanding the attention and intent of humans without directly interacting with the observed person.
+We argue that in order
+to be more robust to a larger variety of environmental conditions, future methods should be able to accurately estimate the gaze of humans in a broader range of settings, including variation of viewpoint, extreme gaze angles, lighting variation, input image resolutions, and in the presence of occluders such as glasses.</p>
+</div>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Unfortunately, existing gaze datasets do not cater to such use-cases and are mostly limited to the frontal setting, covering a relatively narrow range of head poses and gaze directions. These are typically collected via laptops <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite>, mobile devices <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> or in stationary settings <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>. Recent work has moved towards more unconstrained environmental conditions in particular with respect to lighting but the coverage of head pose and gaze direction ranges remains limited <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite>.</p>
+</div>
+<div id="S1.p3" class="ltx_para">
+<p id="S1.p3.2" class="ltx_p">In this paper we detail a new dataset, dubbed ETH-XGaze, to facilitate research into robust gaze estimation methods. The dataset exhaustively samples large variations in head poses, up to the limit of where both eyes are still visible (maximum <math id="S1.p3.1.m1.1" class="ltx_Math" alttext="\pm 70^{\circ}" display="inline"><semantics id="S1.p3.1.m1.1a"><mrow id="S1.p3.1.m1.1.1" xref="S1.p3.1.m1.1.1.cmml"><mo id="S1.p3.1.m1.1.1a" xref="S1.p3.1.m1.1.1.cmml">±</mo><msup id="S1.p3.1.m1.1.1.2" xref="S1.p3.1.m1.1.1.2.cmml"><mn id="S1.p3.1.m1.1.1.2.2" xref="S1.p3.1.m1.1.1.2.2.cmml">70</mn><mo id="S1.p3.1.m1.1.1.2.3" xref="S1.p3.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S1.p3.1.m1.1b"><apply id="S1.p3.1.m1.1.1.cmml" xref="S1.p3.1.m1.1.1"><csymbol cd="latexml" id="S1.p3.1.m1.1.1.1.cmml" xref="S1.p3.1.m1.1.1">plus-or-minus</csymbol><apply id="S1.p3.1.m1.1.1.2.cmml" xref="S1.p3.1.m1.1.1.2"><csymbol cd="ambiguous" id="S1.p3.1.m1.1.1.2.1.cmml" xref="S1.p3.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S1.p3.1.m1.1.1.2.2.cmml" xref="S1.p3.1.m1.1.1.2.2">70</cn><compose id="S1.p3.1.m1.1.1.2.3.cmml" xref="S1.p3.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.p3.1.m1.1c">\pm 70^{\circ}</annotation></semantics></math> from directly facing the camera) as well as comprehensive gaze directions (maximum <math id="S1.p3.2.m2.1" class="ltx_Math" alttext="\pm 50^{\circ}" display="inline"><semantics id="S1.p3.2.m2.1a"><mrow id="S1.p3.2.m2.1.1" xref="S1.p3.2.m2.1.1.cmml"><mo id="S1.p3.2.m2.1.1a" xref="S1.p3.2.m2.1.1.cmml">±</mo><msup id="S1.p3.2.m2.1.1.2" xref="S1.p3.2.m2.1.1.2.cmml"><mn id="S1.p3.2.m2.1.1.2.2" xref="S1.p3.2.m2.1.1.2.2.cmml">50</mn><mo id="S1.p3.2.m2.1.1.2.3" xref="S1.p3.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S1.p3.2.m2.1b"><apply id="S1.p3.2.m2.1.1.cmml" xref="S1.p3.2.m2.1.1"><csymbol cd="latexml" id="S1.p3.2.m2.1.1.1.cmml" xref="S1.p3.2.m2.1.1">plus-or-minus</csymbol><apply id="S1.p3.2.m2.1.1.2.cmml" xref="S1.p3.2.m2.1.1.2"><csymbol cd="ambiguous" id="S1.p3.2.m2.1.1.2.1.cmml" xref="S1.p3.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S1.p3.2.m2.1.1.2.2.cmml" xref="S1.p3.2.m2.1.1.2.2">50</cn><compose id="S1.p3.2.m2.1.1.2.3.cmml" xref="S1.p3.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S1.p3.2.m2.1c">\pm 50^{\circ}</annotation></semantics></math> in the head coordinate system) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>.
+The dataset will allow for the development of new methods that can robustly estimate gaze direction without requiring a quasi-frontal camera placement. We show experimentally that
+i) the data distribution of ETH-XGaze is more comprehensive than other datasets
+(e.g., our dataset broadens the scope for eye-gaze research),
+and ii) that training on our dataset significantly improves robustness towards head pose and gaze direction variations.
+Beyond extending the gaze and head-pose ranges, the proposed dataset allocates considerably more pixels to the periocular region compared to existing datasets (e.g. refer to Fig. <a href="#S3.F3" title="Figure 3 ‣ 3.3 Data Characteristics ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>). This allows to train gaze estimators that can take advantage of the high-resolution imagery of modern camera hardware to improve gaze prediction. We collect data from 110 participants with different ethnicity, age, and gender –  some with glasses and some without – in order to provide a rich and diverse dataset. For each of the participants we capture over 500 gaze directions with full-on illumination, plus an additional 90 samples under 15 different illumination conditions. This results in a total of over 1 million labeled samples. For all samples, the ground-truth gaze direction is known since the gaze is guided by stimuli displayed on a large screen in front of the participant, ensuring good label quality even under extreme view angles.
+The capture setup is depicted in Fig. <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a> (left).</p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2007.15837/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="415" height="181" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Our data collection device includes 18 high-resolution Canon 250D digital SLR cameras (marked with red circles), a projector to project the stimuli on the screen, and four Walimex Daylight 250 light boxes. A chair with a head rest is positioned approximately one meter away from the screen. Captured samples under different head poses and lighting conditions are shown on the right.</figcaption>
+</figure>
+<div id="S1.p4" class="ltx_para">
+<p id="S1.p4.1" class="ltx_p">To ensure fair and systematic comparisons between future methods that leverage this new large-scale dataset, we also propose a standardized evaluation protocol. Unlike other fields in computer vision that have benefited from such benchmark frameworks (i.e. image classification <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>, face recognition <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>, full-body <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>, hand pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite> and multiview stereo reconstruction <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib29" title="" class="ltx_ref">29</a>]</cite>), the gaze estimation community has so far relied on a heterogeneous environment where many papers employ custom data pre-processing and evaluation protocols, rendering direct comparisons challenging.
+Motivated by the benchmarking approaches in adjacent areas we create a website open to the public to submit, evaluate and compare gaze estimation methods based on ETH-XGaze.</p>
+</div>
+<div id="S1.p5" class="ltx_para">
+<p id="S1.p5.1" class="ltx_p">Finally, in order to provide initial insights into the value of our dataset, we provide results from a simple gaze estimation method that can serve as a baseline. Our estimation approach leverages a standard CNN architecture (i.e., ResNet-50 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>), trained with the task of estimating gaze from a monocular face patch. We present the estimation results as well as an ablation study of training on different subsets of our dataset, indicating the importance of all sampled dimensions (e.g. head pose and gaze angles, number of subjects, lighting conditions and input image resolution). We hope this baseline method and evaluations will inspire future research in gaze estimation using our ETH-XGaze dataset.</p>
+</div>
+<div id="S1.p6" class="ltx_para ltx_noindent">
+<p id="S1.p6.1" class="ltx_p">In summary, our contribution is three-fold:</p>
+<ul id="S1.I1" class="ltx_itemize">
+<li id="S1.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i1.p1" class="ltx_para">
+<p id="S1.I1.i1.p1.1" class="ltx_p">A large scale dataset (over 1 Mio samples) for gaze estimation covering a large head pose and gaze range from 110 participants of different age, gender and ethnicity with consistent label quality and high-resolution images.</p>
+</div>
+</li>
+<li id="S1.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i2.p1" class="ltx_para">
+<p id="S1.I1.i2.p1.1" class="ltx_p">Standardized experimental protocol and evaluation metrics including a new robustness evaluation.</p>
+</div>
+</li>
+<li id="S1.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S1.I1.i3.p1" class="ltx_para">
+<p id="S1.I1.i3.p1.1" class="ltx_p">Detailed analysis on different factors for gaze estimation training.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Related Work</h2>
+
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Gaze Estimation Algorithms</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Initial learning-based gaze estimation methods often assume a static head pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>,
+with later works allowing for gradually more head pose freedom <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>, <a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite>.
+In parallel, gaze estimation errors on public datasets have improved rapidly in recent years, through the use of domain adaptation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite>, Bayesian networks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>, adversarial approaches <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib35" title="" class="ltx_ref">35</a>]</cite>, coarse-to-fine <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite>, and multi-region CNNs <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>.
+Recent development in the person-specific adaptation of gaze estimators <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>, <a href="#bib.bib38" title="" class="ltx_ref">38</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> are quickly reducing error metrics on public datasets even further. However, gaze-estimation is studied mostly in the frontal setting which does not apply to many emerging application domains.
+There is hence a need for a systematic method to understanding the robustness of a model with regards to gaze direction and head orientation ranges.
+We thus propose our gaze estimation dataset to cover these factors and propose concrete tasks for their evaluation.</p>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Gaze Datasets</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Newly introduced datasets in any area of research tend to push the limits of the data distribution represented in existing datasets.
+Multi-view cameras have been used to cover head poses in previous works.
+However, there are limited range of head poses <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>, or limited effective resolution on face region using machine vision cameras <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite> or wide-angle cameras <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib40" title="" class="ltx_ref">40</a>]</cite>.
+The Columbia dataset uses five high-resolution camera while only 5,880 samples with discrete gaze directions are recorded <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>.
+UT Multi-view (UTMV) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite> is recorded with eight machine version cameras, and HUMBI is recorded with multiple wide-angle cameras, however, their resolution of eye region is small in the captured image.
+Capturing different head poses with a single camera can be achieved by asking participants to explicitly move their head during recording as in EYEDIAP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, moving the camera and gaze target around the participant as in Gaze360 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, or both as in RT-GENE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>.
+Some of these approaches do result in lower resolution images, and as such are not informative in the development of generative models <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib30" title="" class="ltx_ref">30</a>]</cite> or gaze redirection methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib38" title="" class="ltx_ref">38</a>]</cite>. Therefore, these methods had to revert to the synthetic data from UnityEye <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib37" title="" class="ltx_ref">37</a>]</cite> or the relatively small Columbia datasets <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite>.
+In addition, it is more challenging to aim for the acquisition of a balanced dataset in terms of head pose and gaze estimation ranges when capturing in the wild (cf. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>, <a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>), as is later shown in this paper in parameter range comparisons between our proposed dataset and existing ones.
+Our high resolution dataset tackles the mentioned challenge of limited head pose and gaze direction ranges in existing datasets, taking meaningful steps towards constructing a balanced set of training data for learning high performance and robust gaze estimation models. Furthermore, we see potential in leveraging the high quality imagery to enable future work in areas adjacent to gaze-estimation such as generative modeling of the eye-region, Computer Graphics and facial reconstruction.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">A comprehensive summary of current gaze estimation datasets in relationship to ours is shown in Tab. <a href="#S3.T1" title="Table 1 ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Evaluation Protocols</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">Having public benchmark frameworks for evaluation of popular algorithms is common for many computer vision tasks such as image classification <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib28" title="" class="ltx_ref">28</a>]</cite>, face recognition <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, pedestrian detection <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> and hand pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib43" title="" class="ltx_ref">43</a>]</cite>.
+Unfortunately, there is neither a unified evaluation protocol for gaze estimation nor an existing dataset that can serve as a general evaluation platform.
+Despite existing best practices, most previous work relies on their own data pre-processing and sometimes uses different training-test splits for evaluation.
+To provide a platform for gaze estimation evaluation, we share our dataset ETH-XGaze and define a set of clearly defined evaluation procedures. Furthermore, an online evaluation system and public leader-board are released along with the dataset).</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>ETH-XGaze Dataset</h2>
+
+<figure id="S3.T1" class="ltx_table">
+<table id="S3.T1.38" class="ltx_tabular ltx_align_middle">
+<tr id="S3.T1.38.39" class="ltx_tr">
+<td id="S3.T1.38.39.1" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_tt" style="width:59.8pt;"></td>
+<td id="S3.T1.38.39.2" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_tt" style="width:42.7pt;">
+<span id="S3.T1.38.39.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.39.2.1.1" class="ltx_p"><span id="S3.T1.38.39.2.1.1.1" class="ltx_text ltx_font_bold"># Peo.</span></span>
+</span>
+</td>
+<td id="S3.T1.38.39.3" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_tt" style="width:62.6pt;">
+<span id="S3.T1.38.39.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.39.3.1.1" class="ltx_p"><span id="S3.T1.38.39.3.1.1.1" class="ltx_text ltx_font_bold">Maximum Head Pose</span></span>
+</span>
+</td>
+<td id="S3.T1.38.39.4" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_tt" style="width:62.6pt;">
+<span id="S3.T1.38.39.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.39.4.1.1" class="ltx_p"><span id="S3.T1.38.39.4.1.1.1" class="ltx_text ltx_font_bold">Maximum Gaze</span></span>
+</span>
+</td>
+<td id="S3.T1.38.39.5" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_tt" style="width:51.2pt;">
+<span id="S3.T1.38.39.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.39.5.1.1" class="ltx_p"><span id="S3.T1.38.39.5.1.1.1" class="ltx_text ltx_font_bold"># Data</span></span>
+</span>
+</td>
+<td id="S3.T1.38.39.6" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_tt" style="width:54.1pt;">
+<span id="S3.T1.38.39.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.39.6.1.1" class="ltx_p"><span id="S3.T1.38.39.6.1.1.1" class="ltx_text ltx_font_bold">Resolution</span></span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.5.5" class="ltx_tr">
+<td id="S3.T1.5.5.6" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_t" style="width:59.8pt;">
+<span id="S3.T1.5.5.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.5.5.6.1.1" class="ltx_p">Columbia <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib31" title="" class="ltx_ref">31</a>]</cite></span>
+</span>
+</td>
+<td id="S3.T1.5.5.7" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_t" style="width:42.7pt;">
+<span id="S3.T1.5.5.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.5.5.7.1.1" class="ltx_p">56</span>
+</span>
+</td>
+<td id="S3.T1.2.2.2" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_t" style="width:62.6pt;">
+<span id="S3.T1.2.2.2.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.2.2.2.2.2" class="ltx_p"><math id="S3.T1.1.1.1.1.1.m1.1" class="ltx_Math" alttext="0^{\circ}" display="inline"><semantics id="S3.T1.1.1.1.1.1.m1.1a"><msup id="S3.T1.1.1.1.1.1.m1.1.1" xref="S3.T1.1.1.1.1.1.m1.1.1.cmml"><mn id="S3.T1.1.1.1.1.1.m1.1.1.2" xref="S3.T1.1.1.1.1.1.m1.1.1.2.cmml">0</mn><mo id="S3.T1.1.1.1.1.1.m1.1.1.3" xref="S3.T1.1.1.1.1.1.m1.1.1.3.cmml">∘</mo></msup><annotation-xml encoding="MathML-Content" id="S3.T1.1.1.1.1.1.m1.1b"><apply id="S3.T1.1.1.1.1.1.m1.1.1.cmml" xref="S3.T1.1.1.1.1.1.m1.1.1"><csymbol cd="ambiguous" id="S3.T1.1.1.1.1.1.m1.1.1.1.cmml" xref="S3.T1.1.1.1.1.1.m1.1.1">superscript</csymbol><cn type="integer" id="S3.T1.1.1.1.1.1.m1.1.1.2.cmml" xref="S3.T1.1.1.1.1.1.m1.1.1.2">0</cn><compose id="S3.T1.1.1.1.1.1.m1.1.1.3.cmml" xref="S3.T1.1.1.1.1.1.m1.1.1.3"></compose></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.1.1.1.1.1.m1.1c">0^{\circ}</annotation></semantics></math>, <math id="S3.T1.2.2.2.2.2.m2.1" class="ltx_Math" alttext="\pm 30^{\circ}" display="inline"><semantics id="S3.T1.2.2.2.2.2.m2.1a"><mrow id="S3.T1.2.2.2.2.2.m2.1.1" xref="S3.T1.2.2.2.2.2.m2.1.1.cmml"><mo id="S3.T1.2.2.2.2.2.m2.1.1a" xref="S3.T1.2.2.2.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.2.2.2.2.2.m2.1.1.2" xref="S3.T1.2.2.2.2.2.m2.1.1.2.cmml"><mn id="S3.T1.2.2.2.2.2.m2.1.1.2.2" xref="S3.T1.2.2.2.2.2.m2.1.1.2.2.cmml">30</mn><mo id="S3.T1.2.2.2.2.2.m2.1.1.2.3" xref="S3.T1.2.2.2.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.2.2.2.2.2.m2.1b"><apply id="S3.T1.2.2.2.2.2.m2.1.1.cmml" xref="S3.T1.2.2.2.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.2.2.2.2.2.m2.1.1.1.cmml" xref="S3.T1.2.2.2.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.2.2.2.2.2.m2.1.1.2.cmml" xref="S3.T1.2.2.2.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.2.2.2.2.2.m2.1.1.2.1.cmml" xref="S3.T1.2.2.2.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.2.2.2.2.2.m2.1.1.2.2.cmml" xref="S3.T1.2.2.2.2.2.m2.1.1.2.2">30</cn><compose id="S3.T1.2.2.2.2.2.m2.1.1.2.3.cmml" xref="S3.T1.2.2.2.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.2.2.2.2.2.m2.1c">\pm 30^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.4.4.4" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_t" style="width:62.6pt;">
+<span id="S3.T1.4.4.4.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.4.4.4.2.2" class="ltx_p"><math id="S3.T1.3.3.3.1.1.m1.1" class="ltx_Math" alttext="\pm 15^{\circ}" display="inline"><semantics id="S3.T1.3.3.3.1.1.m1.1a"><mrow id="S3.T1.3.3.3.1.1.m1.1.1" xref="S3.T1.3.3.3.1.1.m1.1.1.cmml"><mo id="S3.T1.3.3.3.1.1.m1.1.1a" xref="S3.T1.3.3.3.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.3.3.3.1.1.m1.1.1.2" xref="S3.T1.3.3.3.1.1.m1.1.1.2.cmml"><mn id="S3.T1.3.3.3.1.1.m1.1.1.2.2" xref="S3.T1.3.3.3.1.1.m1.1.1.2.2.cmml">15</mn><mo id="S3.T1.3.3.3.1.1.m1.1.1.2.3" xref="S3.T1.3.3.3.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.3.3.3.1.1.m1.1b"><apply id="S3.T1.3.3.3.1.1.m1.1.1.cmml" xref="S3.T1.3.3.3.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.3.3.3.1.1.m1.1.1.1.cmml" xref="S3.T1.3.3.3.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.3.3.3.1.1.m1.1.1.2.cmml" xref="S3.T1.3.3.3.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.3.3.3.1.1.m1.1.1.2.1.cmml" xref="S3.T1.3.3.3.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.3.3.3.1.1.m1.1.1.2.2.cmml" xref="S3.T1.3.3.3.1.1.m1.1.1.2.2">15</cn><compose id="S3.T1.3.3.3.1.1.m1.1.1.2.3.cmml" xref="S3.T1.3.3.3.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.3.3.3.1.1.m1.1c">\pm 15^{\circ}</annotation></semantics></math>, <math id="S3.T1.4.4.4.2.2.m2.1" class="ltx_Math" alttext="\pm 10^{\circ}" display="inline"><semantics id="S3.T1.4.4.4.2.2.m2.1a"><mrow id="S3.T1.4.4.4.2.2.m2.1.1" xref="S3.T1.4.4.4.2.2.m2.1.1.cmml"><mo id="S3.T1.4.4.4.2.2.m2.1.1a" xref="S3.T1.4.4.4.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.4.4.4.2.2.m2.1.1.2" xref="S3.T1.4.4.4.2.2.m2.1.1.2.cmml"><mn id="S3.T1.4.4.4.2.2.m2.1.1.2.2" xref="S3.T1.4.4.4.2.2.m2.1.1.2.2.cmml">10</mn><mo id="S3.T1.4.4.4.2.2.m2.1.1.2.3" xref="S3.T1.4.4.4.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.4.4.4.2.2.m2.1b"><apply id="S3.T1.4.4.4.2.2.m2.1.1.cmml" xref="S3.T1.4.4.4.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.4.4.4.2.2.m2.1.1.1.cmml" xref="S3.T1.4.4.4.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.4.4.4.2.2.m2.1.1.2.cmml" xref="S3.T1.4.4.4.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.4.4.4.2.2.m2.1.1.2.1.cmml" xref="S3.T1.4.4.4.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.4.4.4.2.2.m2.1.1.2.2.cmml" xref="S3.T1.4.4.4.2.2.m2.1.1.2.2">10</cn><compose id="S3.T1.4.4.4.2.2.m2.1.1.2.3.cmml" xref="S3.T1.4.4.4.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.4.4.4.2.2.m2.1c">\pm 10^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.5.5.8" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_t" style="width:51.2pt;">
+<span id="S3.T1.5.5.8.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.5.5.8.1.1" class="ltx_p">5,880</span>
+</span>
+</td>
+<td id="S3.T1.5.5.5" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_t" style="width:54.1pt;">
+<span id="S3.T1.5.5.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.5.5.5.1.1" class="ltx_p"><math id="S3.T1.5.5.5.1.1.m1.1" class="ltx_math_unparsed" alttext="5184\times" display="inline"><semantics id="S3.T1.5.5.5.1.1.m1.1a"><mrow id="S3.T1.5.5.5.1.1.m1.1b"><mn id="S3.T1.5.5.5.1.1.m1.1.1">5184</mn><mo lspace="0.222em" id="S3.T1.5.5.5.1.1.m1.1.2">×</mo></mrow><annotation encoding="application/x-tex" id="S3.T1.5.5.5.1.1.m1.1c">5184\times</annotation></semantics></math>3456</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.10.10" class="ltx_tr">
+<td id="S3.T1.10.10.6" class="ltx_td ltx_align_justify ltx_align_middle" style="width:59.8pt;">
+<span id="S3.T1.10.10.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.10.10.6.1.1" class="ltx_p">UTMV <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib33" title="" class="ltx_ref">33</a>]</cite></span>
+</span>
+</td>
+<td id="S3.T1.10.10.7" class="ltx_td ltx_align_justify ltx_align_middle" style="width:42.7pt;">
+<span id="S3.T1.10.10.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.10.10.7.1.1" class="ltx_p">50</span>
+</span>
+</td>
+<td id="S3.T1.7.7.2" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.7.7.2.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.7.7.2.2.2" class="ltx_p"><math id="S3.T1.6.6.1.1.1.m1.1" class="ltx_Math" alttext="\pm 36^{\circ}" display="inline"><semantics id="S3.T1.6.6.1.1.1.m1.1a"><mrow id="S3.T1.6.6.1.1.1.m1.1.1" xref="S3.T1.6.6.1.1.1.m1.1.1.cmml"><mo id="S3.T1.6.6.1.1.1.m1.1.1a" xref="S3.T1.6.6.1.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.6.6.1.1.1.m1.1.1.2" xref="S3.T1.6.6.1.1.1.m1.1.1.2.cmml"><mn id="S3.T1.6.6.1.1.1.m1.1.1.2.2" xref="S3.T1.6.6.1.1.1.m1.1.1.2.2.cmml">36</mn><mo id="S3.T1.6.6.1.1.1.m1.1.1.2.3" xref="S3.T1.6.6.1.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.6.6.1.1.1.m1.1b"><apply id="S3.T1.6.6.1.1.1.m1.1.1.cmml" xref="S3.T1.6.6.1.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.6.6.1.1.1.m1.1.1.1.cmml" xref="S3.T1.6.6.1.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.6.6.1.1.1.m1.1.1.2.cmml" xref="S3.T1.6.6.1.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.6.6.1.1.1.m1.1.1.2.1.cmml" xref="S3.T1.6.6.1.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.6.6.1.1.1.m1.1.1.2.2.cmml" xref="S3.T1.6.6.1.1.1.m1.1.1.2.2">36</cn><compose id="S3.T1.6.6.1.1.1.m1.1.1.2.3.cmml" xref="S3.T1.6.6.1.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.6.6.1.1.1.m1.1c">\pm 36^{\circ}</annotation></semantics></math>, <math id="S3.T1.7.7.2.2.2.m2.1" class="ltx_Math" alttext="\pm 36^{\circ}" display="inline"><semantics id="S3.T1.7.7.2.2.2.m2.1a"><mrow id="S3.T1.7.7.2.2.2.m2.1.1" xref="S3.T1.7.7.2.2.2.m2.1.1.cmml"><mo id="S3.T1.7.7.2.2.2.m2.1.1a" xref="S3.T1.7.7.2.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.7.7.2.2.2.m2.1.1.2" xref="S3.T1.7.7.2.2.2.m2.1.1.2.cmml"><mn id="S3.T1.7.7.2.2.2.m2.1.1.2.2" xref="S3.T1.7.7.2.2.2.m2.1.1.2.2.cmml">36</mn><mo id="S3.T1.7.7.2.2.2.m2.1.1.2.3" xref="S3.T1.7.7.2.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.7.7.2.2.2.m2.1b"><apply id="S3.T1.7.7.2.2.2.m2.1.1.cmml" xref="S3.T1.7.7.2.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.7.7.2.2.2.m2.1.1.1.cmml" xref="S3.T1.7.7.2.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.7.7.2.2.2.m2.1.1.2.cmml" xref="S3.T1.7.7.2.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.7.7.2.2.2.m2.1.1.2.1.cmml" xref="S3.T1.7.7.2.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.7.7.2.2.2.m2.1.1.2.2.cmml" xref="S3.T1.7.7.2.2.2.m2.1.1.2.2">36</cn><compose id="S3.T1.7.7.2.2.2.m2.1.1.2.3.cmml" xref="S3.T1.7.7.2.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.7.7.2.2.2.m2.1c">\pm 36^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.9.9.4" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.9.9.4.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.9.9.4.2.2" class="ltx_p"><math id="S3.T1.8.8.3.1.1.m1.1" class="ltx_Math" alttext="\pm 50^{\circ}" display="inline"><semantics id="S3.T1.8.8.3.1.1.m1.1a"><mrow id="S3.T1.8.8.3.1.1.m1.1.1" xref="S3.T1.8.8.3.1.1.m1.1.1.cmml"><mo id="S3.T1.8.8.3.1.1.m1.1.1a" xref="S3.T1.8.8.3.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.8.8.3.1.1.m1.1.1.2" xref="S3.T1.8.8.3.1.1.m1.1.1.2.cmml"><mn id="S3.T1.8.8.3.1.1.m1.1.1.2.2" xref="S3.T1.8.8.3.1.1.m1.1.1.2.2.cmml">50</mn><mo id="S3.T1.8.8.3.1.1.m1.1.1.2.3" xref="S3.T1.8.8.3.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.8.8.3.1.1.m1.1b"><apply id="S3.T1.8.8.3.1.1.m1.1.1.cmml" xref="S3.T1.8.8.3.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.8.8.3.1.1.m1.1.1.1.cmml" xref="S3.T1.8.8.3.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.8.8.3.1.1.m1.1.1.2.cmml" xref="S3.T1.8.8.3.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.8.8.3.1.1.m1.1.1.2.1.cmml" xref="S3.T1.8.8.3.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.8.8.3.1.1.m1.1.1.2.2.cmml" xref="S3.T1.8.8.3.1.1.m1.1.1.2.2">50</cn><compose id="S3.T1.8.8.3.1.1.m1.1.1.2.3.cmml" xref="S3.T1.8.8.3.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.8.8.3.1.1.m1.1c">\pm 50^{\circ}</annotation></semantics></math>, <math id="S3.T1.9.9.4.2.2.m2.1" class="ltx_Math" alttext="\pm 36^{\circ}" display="inline"><semantics id="S3.T1.9.9.4.2.2.m2.1a"><mrow id="S3.T1.9.9.4.2.2.m2.1.1" xref="S3.T1.9.9.4.2.2.m2.1.1.cmml"><mo id="S3.T1.9.9.4.2.2.m2.1.1a" xref="S3.T1.9.9.4.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.9.9.4.2.2.m2.1.1.2" xref="S3.T1.9.9.4.2.2.m2.1.1.2.cmml"><mn id="S3.T1.9.9.4.2.2.m2.1.1.2.2" xref="S3.T1.9.9.4.2.2.m2.1.1.2.2.cmml">36</mn><mo id="S3.T1.9.9.4.2.2.m2.1.1.2.3" xref="S3.T1.9.9.4.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.9.9.4.2.2.m2.1b"><apply id="S3.T1.9.9.4.2.2.m2.1.1.cmml" xref="S3.T1.9.9.4.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.9.9.4.2.2.m2.1.1.1.cmml" xref="S3.T1.9.9.4.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.9.9.4.2.2.m2.1.1.2.cmml" xref="S3.T1.9.9.4.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.9.9.4.2.2.m2.1.1.2.1.cmml" xref="S3.T1.9.9.4.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.9.9.4.2.2.m2.1.1.2.2.cmml" xref="S3.T1.9.9.4.2.2.m2.1.1.2.2">36</cn><compose id="S3.T1.9.9.4.2.2.m2.1.1.2.3.cmml" xref="S3.T1.9.9.4.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.9.9.4.2.2.m2.1c">\pm 36^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.10.10.8" class="ltx_td ltx_align_justify ltx_align_middle" style="width:51.2pt;">
+<span id="S3.T1.10.10.8.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.10.10.8.1.1" class="ltx_p">64,000</span>
+</span>
+</td>
+<td id="S3.T1.10.10.5" class="ltx_td ltx_align_justify ltx_align_middle" style="width:54.1pt;">
+<span id="S3.T1.10.10.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.10.10.5.1.1" class="ltx_p"><math id="S3.T1.10.10.5.1.1.m1.1" class="ltx_Math" alttext="1280\times 1024" display="inline"><semantics id="S3.T1.10.10.5.1.1.m1.1a"><mrow id="S3.T1.10.10.5.1.1.m1.1.1" xref="S3.T1.10.10.5.1.1.m1.1.1.cmml"><mn id="S3.T1.10.10.5.1.1.m1.1.1.2" xref="S3.T1.10.10.5.1.1.m1.1.1.2.cmml">1280</mn><mo lspace="0.222em" rspace="0.222em" id="S3.T1.10.10.5.1.1.m1.1.1.1" xref="S3.T1.10.10.5.1.1.m1.1.1.1.cmml">×</mo><mn id="S3.T1.10.10.5.1.1.m1.1.1.3" xref="S3.T1.10.10.5.1.1.m1.1.1.3.cmml">1024</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.10.10.5.1.1.m1.1b"><apply id="S3.T1.10.10.5.1.1.m1.1.1.cmml" xref="S3.T1.10.10.5.1.1.m1.1.1"><times id="S3.T1.10.10.5.1.1.m1.1.1.1.cmml" xref="S3.T1.10.10.5.1.1.m1.1.1.1"></times><cn type="integer" id="S3.T1.10.10.5.1.1.m1.1.1.2.cmml" xref="S3.T1.10.10.5.1.1.m1.1.1.2">1280</cn><cn type="integer" id="S3.T1.10.10.5.1.1.m1.1.1.3.cmml" xref="S3.T1.10.10.5.1.1.m1.1.1.3">1024</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.10.10.5.1.1.m1.1c">1280\times 1024</annotation></semantics></math></span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.14.14" class="ltx_tr">
+<td id="S3.T1.14.14.5" class="ltx_td ltx_align_justify ltx_align_middle" style="width:59.8pt;">
+<span id="S3.T1.14.14.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.14.14.5.1.1" class="ltx_p">EYEDIAP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite></span>
+</span>
+</td>
+<td id="S3.T1.14.14.6" class="ltx_td ltx_align_justify ltx_align_middle" style="width:42.7pt;">
+<span id="S3.T1.14.14.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.14.14.6.1.1" class="ltx_p">16</span>
+</span>
+</td>
+<td id="S3.T1.12.12.2" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.12.12.2.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.12.12.2.2.2" class="ltx_p"><math id="S3.T1.11.11.1.1.1.m1.1" class="ltx_Math" alttext="\pm 15^{\circ}" display="inline"><semantics id="S3.T1.11.11.1.1.1.m1.1a"><mrow id="S3.T1.11.11.1.1.1.m1.1.1" xref="S3.T1.11.11.1.1.1.m1.1.1.cmml"><mo id="S3.T1.11.11.1.1.1.m1.1.1a" xref="S3.T1.11.11.1.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.11.11.1.1.1.m1.1.1.2" xref="S3.T1.11.11.1.1.1.m1.1.1.2.cmml"><mn id="S3.T1.11.11.1.1.1.m1.1.1.2.2" xref="S3.T1.11.11.1.1.1.m1.1.1.2.2.cmml">15</mn><mo id="S3.T1.11.11.1.1.1.m1.1.1.2.3" xref="S3.T1.11.11.1.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.11.11.1.1.1.m1.1b"><apply id="S3.T1.11.11.1.1.1.m1.1.1.cmml" xref="S3.T1.11.11.1.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.11.11.1.1.1.m1.1.1.1.cmml" xref="S3.T1.11.11.1.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.11.11.1.1.1.m1.1.1.2.cmml" xref="S3.T1.11.11.1.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.11.11.1.1.1.m1.1.1.2.1.cmml" xref="S3.T1.11.11.1.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.11.11.1.1.1.m1.1.1.2.2.cmml" xref="S3.T1.11.11.1.1.1.m1.1.1.2.2">15</cn><compose id="S3.T1.11.11.1.1.1.m1.1.1.2.3.cmml" xref="S3.T1.11.11.1.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.11.11.1.1.1.m1.1c">\pm 15^{\circ}</annotation></semantics></math>, <math id="S3.T1.12.12.2.2.2.m2.1" class="ltx_Math" alttext="30^{\circ}" display="inline"><semantics id="S3.T1.12.12.2.2.2.m2.1a"><msup id="S3.T1.12.12.2.2.2.m2.1.1" xref="S3.T1.12.12.2.2.2.m2.1.1.cmml"><mn id="S3.T1.12.12.2.2.2.m2.1.1.2" xref="S3.T1.12.12.2.2.2.m2.1.1.2.cmml">30</mn><mo id="S3.T1.12.12.2.2.2.m2.1.1.3" xref="S3.T1.12.12.2.2.2.m2.1.1.3.cmml">∘</mo></msup><annotation-xml encoding="MathML-Content" id="S3.T1.12.12.2.2.2.m2.1b"><apply id="S3.T1.12.12.2.2.2.m2.1.1.cmml" xref="S3.T1.12.12.2.2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.T1.12.12.2.2.2.m2.1.1.1.cmml" xref="S3.T1.12.12.2.2.2.m2.1.1">superscript</csymbol><cn type="integer" id="S3.T1.12.12.2.2.2.m2.1.1.2.cmml" xref="S3.T1.12.12.2.2.2.m2.1.1.2">30</cn><compose id="S3.T1.12.12.2.2.2.m2.1.1.3.cmml" xref="S3.T1.12.12.2.2.2.m2.1.1.3"></compose></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.12.12.2.2.2.m2.1c">30^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.14.14.4" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.14.14.4.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.14.14.4.2.2" class="ltx_p"><math id="S3.T1.13.13.3.1.1.m1.1" class="ltx_Math" alttext="\pm 25^{\circ}" display="inline"><semantics id="S3.T1.13.13.3.1.1.m1.1a"><mrow id="S3.T1.13.13.3.1.1.m1.1.1" xref="S3.T1.13.13.3.1.1.m1.1.1.cmml"><mo id="S3.T1.13.13.3.1.1.m1.1.1a" xref="S3.T1.13.13.3.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.13.13.3.1.1.m1.1.1.2" xref="S3.T1.13.13.3.1.1.m1.1.1.2.cmml"><mn id="S3.T1.13.13.3.1.1.m1.1.1.2.2" xref="S3.T1.13.13.3.1.1.m1.1.1.2.2.cmml">25</mn><mo id="S3.T1.13.13.3.1.1.m1.1.1.2.3" xref="S3.T1.13.13.3.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.13.13.3.1.1.m1.1b"><apply id="S3.T1.13.13.3.1.1.m1.1.1.cmml" xref="S3.T1.13.13.3.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.13.13.3.1.1.m1.1.1.1.cmml" xref="S3.T1.13.13.3.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.13.13.3.1.1.m1.1.1.2.cmml" xref="S3.T1.13.13.3.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.13.13.3.1.1.m1.1.1.2.1.cmml" xref="S3.T1.13.13.3.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.13.13.3.1.1.m1.1.1.2.2.cmml" xref="S3.T1.13.13.3.1.1.m1.1.1.2.2">25</cn><compose id="S3.T1.13.13.3.1.1.m1.1.1.2.3.cmml" xref="S3.T1.13.13.3.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.13.13.3.1.1.m1.1c">\pm 25^{\circ}</annotation></semantics></math>, <math id="S3.T1.14.14.4.2.2.m2.1" class="ltx_Math" alttext="20^{\circ}" display="inline"><semantics id="S3.T1.14.14.4.2.2.m2.1a"><msup id="S3.T1.14.14.4.2.2.m2.1.1" xref="S3.T1.14.14.4.2.2.m2.1.1.cmml"><mn id="S3.T1.14.14.4.2.2.m2.1.1.2" xref="S3.T1.14.14.4.2.2.m2.1.1.2.cmml">20</mn><mo id="S3.T1.14.14.4.2.2.m2.1.1.3" xref="S3.T1.14.14.4.2.2.m2.1.1.3.cmml">∘</mo></msup><annotation-xml encoding="MathML-Content" id="S3.T1.14.14.4.2.2.m2.1b"><apply id="S3.T1.14.14.4.2.2.m2.1.1.cmml" xref="S3.T1.14.14.4.2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.T1.14.14.4.2.2.m2.1.1.1.cmml" xref="S3.T1.14.14.4.2.2.m2.1.1">superscript</csymbol><cn type="integer" id="S3.T1.14.14.4.2.2.m2.1.1.2.cmml" xref="S3.T1.14.14.4.2.2.m2.1.1.2">20</cn><compose id="S3.T1.14.14.4.2.2.m2.1.1.3.cmml" xref="S3.T1.14.14.4.2.2.m2.1.1.3"></compose></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.14.14.4.2.2.m2.1c">20^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.14.14.7" class="ltx_td ltx_align_justify ltx_align_middle" style="width:51.2pt;">
+<span id="S3.T1.14.14.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.14.14.7.1.1" class="ltx_p">237 min</span>
+</span>
+</td>
+<td id="S3.T1.14.14.8" class="ltx_td ltx_align_justify ltx_align_middle" style="width:54.1pt;">
+<span id="S3.T1.14.14.8.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.14.14.8.1.1" class="ltx_p">HD &amp; VGA</span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.19.19" class="ltx_tr">
+<td id="S3.T1.19.19.6" class="ltx_td ltx_align_justify ltx_align_middle" style="width:59.8pt;">
+<span id="S3.T1.19.19.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.19.19.6.1.1" class="ltx_p">MPIIGaze <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite></span>
+</span>
+</td>
+<td id="S3.T1.19.19.7" class="ltx_td ltx_align_justify ltx_align_middle" style="width:42.7pt;">
+<span id="S3.T1.19.19.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.19.19.7.1.1" class="ltx_p">15</span>
+</span>
+</td>
+<td id="S3.T1.16.16.2" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.16.16.2.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.16.16.2.2.2" class="ltx_p"><math id="S3.T1.15.15.1.1.1.m1.1" class="ltx_Math" alttext="\pm 15^{\circ}" display="inline"><semantics id="S3.T1.15.15.1.1.1.m1.1a"><mrow id="S3.T1.15.15.1.1.1.m1.1.1" xref="S3.T1.15.15.1.1.1.m1.1.1.cmml"><mo id="S3.T1.15.15.1.1.1.m1.1.1a" xref="S3.T1.15.15.1.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.15.15.1.1.1.m1.1.1.2" xref="S3.T1.15.15.1.1.1.m1.1.1.2.cmml"><mn id="S3.T1.15.15.1.1.1.m1.1.1.2.2" xref="S3.T1.15.15.1.1.1.m1.1.1.2.2.cmml">15</mn><mo id="S3.T1.15.15.1.1.1.m1.1.1.2.3" xref="S3.T1.15.15.1.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.15.15.1.1.1.m1.1b"><apply id="S3.T1.15.15.1.1.1.m1.1.1.cmml" xref="S3.T1.15.15.1.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.15.15.1.1.1.m1.1.1.1.cmml" xref="S3.T1.15.15.1.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.15.15.1.1.1.m1.1.1.2.cmml" xref="S3.T1.15.15.1.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.15.15.1.1.1.m1.1.1.2.1.cmml" xref="S3.T1.15.15.1.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.15.15.1.1.1.m1.1.1.2.2.cmml" xref="S3.T1.15.15.1.1.1.m1.1.1.2.2">15</cn><compose id="S3.T1.15.15.1.1.1.m1.1.1.2.3.cmml" xref="S3.T1.15.15.1.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.15.15.1.1.1.m1.1c">\pm 15^{\circ}</annotation></semantics></math>, <math id="S3.T1.16.16.2.2.2.m2.1" class="ltx_Math" alttext="30^{\circ}" display="inline"><semantics id="S3.T1.16.16.2.2.2.m2.1a"><msup id="S3.T1.16.16.2.2.2.m2.1.1" xref="S3.T1.16.16.2.2.2.m2.1.1.cmml"><mn id="S3.T1.16.16.2.2.2.m2.1.1.2" xref="S3.T1.16.16.2.2.2.m2.1.1.2.cmml">30</mn><mo id="S3.T1.16.16.2.2.2.m2.1.1.3" xref="S3.T1.16.16.2.2.2.m2.1.1.3.cmml">∘</mo></msup><annotation-xml encoding="MathML-Content" id="S3.T1.16.16.2.2.2.m2.1b"><apply id="S3.T1.16.16.2.2.2.m2.1.1.cmml" xref="S3.T1.16.16.2.2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.T1.16.16.2.2.2.m2.1.1.1.cmml" xref="S3.T1.16.16.2.2.2.m2.1.1">superscript</csymbol><cn type="integer" id="S3.T1.16.16.2.2.2.m2.1.1.2.cmml" xref="S3.T1.16.16.2.2.2.m2.1.1.2">30</cn><compose id="S3.T1.16.16.2.2.2.m2.1.1.3.cmml" xref="S3.T1.16.16.2.2.2.m2.1.1.3"></compose></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.16.16.2.2.2.m2.1c">30^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.18.18.4" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.18.18.4.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.18.18.4.2.2" class="ltx_p"><math id="S3.T1.17.17.3.1.1.m1.1" class="ltx_Math" alttext="\pm 20^{\circ}" display="inline"><semantics id="S3.T1.17.17.3.1.1.m1.1a"><mrow id="S3.T1.17.17.3.1.1.m1.1.1" xref="S3.T1.17.17.3.1.1.m1.1.1.cmml"><mo id="S3.T1.17.17.3.1.1.m1.1.1a" xref="S3.T1.17.17.3.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.17.17.3.1.1.m1.1.1.2" xref="S3.T1.17.17.3.1.1.m1.1.1.2.cmml"><mn id="S3.T1.17.17.3.1.1.m1.1.1.2.2" xref="S3.T1.17.17.3.1.1.m1.1.1.2.2.cmml">20</mn><mo id="S3.T1.17.17.3.1.1.m1.1.1.2.3" xref="S3.T1.17.17.3.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.17.17.3.1.1.m1.1b"><apply id="S3.T1.17.17.3.1.1.m1.1.1.cmml" xref="S3.T1.17.17.3.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.17.17.3.1.1.m1.1.1.1.cmml" xref="S3.T1.17.17.3.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.17.17.3.1.1.m1.1.1.2.cmml" xref="S3.T1.17.17.3.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.17.17.3.1.1.m1.1.1.2.1.cmml" xref="S3.T1.17.17.3.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.17.17.3.1.1.m1.1.1.2.2.cmml" xref="S3.T1.17.17.3.1.1.m1.1.1.2.2">20</cn><compose id="S3.T1.17.17.3.1.1.m1.1.1.2.3.cmml" xref="S3.T1.17.17.3.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.17.17.3.1.1.m1.1c">\pm 20^{\circ}</annotation></semantics></math>, <math id="S3.T1.18.18.4.2.2.m2.1" class="ltx_Math" alttext="\pm 20^{\circ}" display="inline"><semantics id="S3.T1.18.18.4.2.2.m2.1a"><mrow id="S3.T1.18.18.4.2.2.m2.1.1" xref="S3.T1.18.18.4.2.2.m2.1.1.cmml"><mo id="S3.T1.18.18.4.2.2.m2.1.1a" xref="S3.T1.18.18.4.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.18.18.4.2.2.m2.1.1.2" xref="S3.T1.18.18.4.2.2.m2.1.1.2.cmml"><mn id="S3.T1.18.18.4.2.2.m2.1.1.2.2" xref="S3.T1.18.18.4.2.2.m2.1.1.2.2.cmml">20</mn><mo id="S3.T1.18.18.4.2.2.m2.1.1.2.3" xref="S3.T1.18.18.4.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.18.18.4.2.2.m2.1b"><apply id="S3.T1.18.18.4.2.2.m2.1.1.cmml" xref="S3.T1.18.18.4.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.18.18.4.2.2.m2.1.1.1.cmml" xref="S3.T1.18.18.4.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.18.18.4.2.2.m2.1.1.2.cmml" xref="S3.T1.18.18.4.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.18.18.4.2.2.m2.1.1.2.1.cmml" xref="S3.T1.18.18.4.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.18.18.4.2.2.m2.1.1.2.2.cmml" xref="S3.T1.18.18.4.2.2.m2.1.1.2.2">20</cn><compose id="S3.T1.18.18.4.2.2.m2.1.1.2.3.cmml" xref="S3.T1.18.18.4.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.18.18.4.2.2.m2.1c">\pm 20^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.19.19.8" class="ltx_td ltx_align_justify ltx_align_middle" style="width:51.2pt;">
+<span id="S3.T1.19.19.8.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.19.19.8.1.1" class="ltx_p">213,659</span>
+</span>
+</td>
+<td id="S3.T1.19.19.5" class="ltx_td ltx_align_justify ltx_align_middle" style="width:54.1pt;">
+<span id="S3.T1.19.19.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.19.19.5.1.1" class="ltx_p"><math id="S3.T1.19.19.5.1.1.m1.1" class="ltx_Math" alttext="1280\times 720" display="inline"><semantics id="S3.T1.19.19.5.1.1.m1.1a"><mrow id="S3.T1.19.19.5.1.1.m1.1.1" xref="S3.T1.19.19.5.1.1.m1.1.1.cmml"><mn id="S3.T1.19.19.5.1.1.m1.1.1.2" xref="S3.T1.19.19.5.1.1.m1.1.1.2.cmml">1280</mn><mo lspace="0.222em" rspace="0.222em" id="S3.T1.19.19.5.1.1.m1.1.1.1" xref="S3.T1.19.19.5.1.1.m1.1.1.1.cmml">×</mo><mn id="S3.T1.19.19.5.1.1.m1.1.1.3" xref="S3.T1.19.19.5.1.1.m1.1.1.3.cmml">720</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.19.19.5.1.1.m1.1b"><apply id="S3.T1.19.19.5.1.1.m1.1.1.cmml" xref="S3.T1.19.19.5.1.1.m1.1.1"><times id="S3.T1.19.19.5.1.1.m1.1.1.1.cmml" xref="S3.T1.19.19.5.1.1.m1.1.1.1"></times><cn type="integer" id="S3.T1.19.19.5.1.1.m1.1.1.2.cmml" xref="S3.T1.19.19.5.1.1.m1.1.1.2">1280</cn><cn type="integer" id="S3.T1.19.19.5.1.1.m1.1.1.3.cmml" xref="S3.T1.19.19.5.1.1.m1.1.1.3">720</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.19.19.5.1.1.m1.1c">1280\times 720</annotation></semantics></math></span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.24.24" class="ltx_tr">
+<td id="S3.T1.24.24.6" class="ltx_td ltx_align_justify ltx_align_middle" style="width:59.8pt;">
+<span id="S3.T1.24.24.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.24.24.6.1.1" class="ltx_p">GazeCapture <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite></span>
+</span>
+</td>
+<td id="S3.T1.24.24.7" class="ltx_td ltx_align_justify ltx_align_middle" style="width:42.7pt;">
+<span id="S3.T1.24.24.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.24.24.7.1.1" class="ltx_p">1,474</span>
+</span>
+</td>
+<td id="S3.T1.21.21.2" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.21.21.2.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.21.21.2.2.2" class="ltx_p"><math id="S3.T1.20.20.1.1.1.m1.1" class="ltx_Math" alttext="\pm 30^{\circ}" display="inline"><semantics id="S3.T1.20.20.1.1.1.m1.1a"><mrow id="S3.T1.20.20.1.1.1.m1.1.1" xref="S3.T1.20.20.1.1.1.m1.1.1.cmml"><mo id="S3.T1.20.20.1.1.1.m1.1.1a" xref="S3.T1.20.20.1.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.20.20.1.1.1.m1.1.1.2" xref="S3.T1.20.20.1.1.1.m1.1.1.2.cmml"><mn id="S3.T1.20.20.1.1.1.m1.1.1.2.2" xref="S3.T1.20.20.1.1.1.m1.1.1.2.2.cmml">30</mn><mo id="S3.T1.20.20.1.1.1.m1.1.1.2.3" xref="S3.T1.20.20.1.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.20.20.1.1.1.m1.1b"><apply id="S3.T1.20.20.1.1.1.m1.1.1.cmml" xref="S3.T1.20.20.1.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.20.20.1.1.1.m1.1.1.1.cmml" xref="S3.T1.20.20.1.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.20.20.1.1.1.m1.1.1.2.cmml" xref="S3.T1.20.20.1.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.20.20.1.1.1.m1.1.1.2.1.cmml" xref="S3.T1.20.20.1.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.20.20.1.1.1.m1.1.1.2.2.cmml" xref="S3.T1.20.20.1.1.1.m1.1.1.2.2">30</cn><compose id="S3.T1.20.20.1.1.1.m1.1.1.2.3.cmml" xref="S3.T1.20.20.1.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.20.20.1.1.1.m1.1c">\pm 30^{\circ}</annotation></semantics></math>, <math id="S3.T1.21.21.2.2.2.m2.1" class="ltx_Math" alttext="40^{\circ}" display="inline"><semantics id="S3.T1.21.21.2.2.2.m2.1a"><msup id="S3.T1.21.21.2.2.2.m2.1.1" xref="S3.T1.21.21.2.2.2.m2.1.1.cmml"><mn id="S3.T1.21.21.2.2.2.m2.1.1.2" xref="S3.T1.21.21.2.2.2.m2.1.1.2.cmml">40</mn><mo id="S3.T1.21.21.2.2.2.m2.1.1.3" xref="S3.T1.21.21.2.2.2.m2.1.1.3.cmml">∘</mo></msup><annotation-xml encoding="MathML-Content" id="S3.T1.21.21.2.2.2.m2.1b"><apply id="S3.T1.21.21.2.2.2.m2.1.1.cmml" xref="S3.T1.21.21.2.2.2.m2.1.1"><csymbol cd="ambiguous" id="S3.T1.21.21.2.2.2.m2.1.1.1.cmml" xref="S3.T1.21.21.2.2.2.m2.1.1">superscript</csymbol><cn type="integer" id="S3.T1.21.21.2.2.2.m2.1.1.2.cmml" xref="S3.T1.21.21.2.2.2.m2.1.1.2">40</cn><compose id="S3.T1.21.21.2.2.2.m2.1.1.3.cmml" xref="S3.T1.21.21.2.2.2.m2.1.1.3"></compose></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.21.21.2.2.2.m2.1c">40^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.23.23.4" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.23.23.4.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.23.23.4.2.2" class="ltx_p"><math id="S3.T1.22.22.3.1.1.m1.1" class="ltx_Math" alttext="\pm 20^{\circ}" display="inline"><semantics id="S3.T1.22.22.3.1.1.m1.1a"><mrow id="S3.T1.22.22.3.1.1.m1.1.1" xref="S3.T1.22.22.3.1.1.m1.1.1.cmml"><mo id="S3.T1.22.22.3.1.1.m1.1.1a" xref="S3.T1.22.22.3.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.22.22.3.1.1.m1.1.1.2" xref="S3.T1.22.22.3.1.1.m1.1.1.2.cmml"><mn id="S3.T1.22.22.3.1.1.m1.1.1.2.2" xref="S3.T1.22.22.3.1.1.m1.1.1.2.2.cmml">20</mn><mo id="S3.T1.22.22.3.1.1.m1.1.1.2.3" xref="S3.T1.22.22.3.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.22.22.3.1.1.m1.1b"><apply id="S3.T1.22.22.3.1.1.m1.1.1.cmml" xref="S3.T1.22.22.3.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.22.22.3.1.1.m1.1.1.1.cmml" xref="S3.T1.22.22.3.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.22.22.3.1.1.m1.1.1.2.cmml" xref="S3.T1.22.22.3.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.22.22.3.1.1.m1.1.1.2.1.cmml" xref="S3.T1.22.22.3.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.22.22.3.1.1.m1.1.1.2.2.cmml" xref="S3.T1.22.22.3.1.1.m1.1.1.2.2">20</cn><compose id="S3.T1.22.22.3.1.1.m1.1.1.2.3.cmml" xref="S3.T1.22.22.3.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.22.22.3.1.1.m1.1c">\pm 20^{\circ}</annotation></semantics></math>, <math id="S3.T1.23.23.4.2.2.m2.1" class="ltx_Math" alttext="\pm 20^{\circ}" display="inline"><semantics id="S3.T1.23.23.4.2.2.m2.1a"><mrow id="S3.T1.23.23.4.2.2.m2.1.1" xref="S3.T1.23.23.4.2.2.m2.1.1.cmml"><mo id="S3.T1.23.23.4.2.2.m2.1.1a" xref="S3.T1.23.23.4.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.23.23.4.2.2.m2.1.1.2" xref="S3.T1.23.23.4.2.2.m2.1.1.2.cmml"><mn id="S3.T1.23.23.4.2.2.m2.1.1.2.2" xref="S3.T1.23.23.4.2.2.m2.1.1.2.2.cmml">20</mn><mo id="S3.T1.23.23.4.2.2.m2.1.1.2.3" xref="S3.T1.23.23.4.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.23.23.4.2.2.m2.1b"><apply id="S3.T1.23.23.4.2.2.m2.1.1.cmml" xref="S3.T1.23.23.4.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.23.23.4.2.2.m2.1.1.1.cmml" xref="S3.T1.23.23.4.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.23.23.4.2.2.m2.1.1.2.cmml" xref="S3.T1.23.23.4.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.23.23.4.2.2.m2.1.1.2.1.cmml" xref="S3.T1.23.23.4.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.23.23.4.2.2.m2.1.1.2.2.cmml" xref="S3.T1.23.23.4.2.2.m2.1.1.2.2">20</cn><compose id="S3.T1.23.23.4.2.2.m2.1.1.2.3.cmml" xref="S3.T1.23.23.4.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.23.23.4.2.2.m2.1c">\pm 20^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.24.24.8" class="ltx_td ltx_align_justify ltx_align_middle" style="width:51.2pt;">
+<span id="S3.T1.24.24.8.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.24.24.8.1.1" class="ltx_p">2,445,504</span>
+</span>
+</td>
+<td id="S3.T1.24.24.5" class="ltx_td ltx_align_justify ltx_align_middle" style="width:54.1pt;">
+<span id="S3.T1.24.24.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.24.24.5.1.1" class="ltx_p"><math id="S3.T1.24.24.5.1.1.m1.1" class="ltx_Math" alttext="640\times 480" display="inline"><semantics id="S3.T1.24.24.5.1.1.m1.1a"><mrow id="S3.T1.24.24.5.1.1.m1.1.1" xref="S3.T1.24.24.5.1.1.m1.1.1.cmml"><mn id="S3.T1.24.24.5.1.1.m1.1.1.2" xref="S3.T1.24.24.5.1.1.m1.1.1.2.cmml">640</mn><mo lspace="0.222em" rspace="0.222em" id="S3.T1.24.24.5.1.1.m1.1.1.1" xref="S3.T1.24.24.5.1.1.m1.1.1.1.cmml">×</mo><mn id="S3.T1.24.24.5.1.1.m1.1.1.3" xref="S3.T1.24.24.5.1.1.m1.1.1.3.cmml">480</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.24.24.5.1.1.m1.1b"><apply id="S3.T1.24.24.5.1.1.m1.1.1.cmml" xref="S3.T1.24.24.5.1.1.m1.1.1"><times id="S3.T1.24.24.5.1.1.m1.1.1.1.cmml" xref="S3.T1.24.24.5.1.1.m1.1.1.1"></times><cn type="integer" id="S3.T1.24.24.5.1.1.m1.1.1.2.cmml" xref="S3.T1.24.24.5.1.1.m1.1.1.2">640</cn><cn type="integer" id="S3.T1.24.24.5.1.1.m1.1.1.3.cmml" xref="S3.T1.24.24.5.1.1.m1.1.1.3">480</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.24.24.5.1.1.m1.1c">640\times 480</annotation></semantics></math></span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.29.29" class="ltx_tr">
+<td id="S3.T1.29.29.6" class="ltx_td ltx_align_justify ltx_align_middle" style="width:59.8pt;">
+<span id="S3.T1.29.29.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.29.29.6.1.1" class="ltx_p">RT-GENE <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite></span>
+</span>
+</td>
+<td id="S3.T1.29.29.7" class="ltx_td ltx_align_justify ltx_align_middle" style="width:42.7pt;">
+<span id="S3.T1.29.29.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.29.29.7.1.1" class="ltx_p">15</span>
+</span>
+</td>
+<td id="S3.T1.26.26.2" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.26.26.2.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.26.26.2.2.2" class="ltx_p"><math id="S3.T1.25.25.1.1.1.m1.1" class="ltx_Math" alttext="\pm 40^{\circ}" display="inline"><semantics id="S3.T1.25.25.1.1.1.m1.1a"><mrow id="S3.T1.25.25.1.1.1.m1.1.1" xref="S3.T1.25.25.1.1.1.m1.1.1.cmml"><mo id="S3.T1.25.25.1.1.1.m1.1.1a" xref="S3.T1.25.25.1.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.25.25.1.1.1.m1.1.1.2" xref="S3.T1.25.25.1.1.1.m1.1.1.2.cmml"><mn id="S3.T1.25.25.1.1.1.m1.1.1.2.2" xref="S3.T1.25.25.1.1.1.m1.1.1.2.2.cmml">40</mn><mo id="S3.T1.25.25.1.1.1.m1.1.1.2.3" xref="S3.T1.25.25.1.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.25.25.1.1.1.m1.1b"><apply id="S3.T1.25.25.1.1.1.m1.1.1.cmml" xref="S3.T1.25.25.1.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.25.25.1.1.1.m1.1.1.1.cmml" xref="S3.T1.25.25.1.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.25.25.1.1.1.m1.1.1.2.cmml" xref="S3.T1.25.25.1.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.25.25.1.1.1.m1.1.1.2.1.cmml" xref="S3.T1.25.25.1.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.25.25.1.1.1.m1.1.1.2.2.cmml" xref="S3.T1.25.25.1.1.1.m1.1.1.2.2">40</cn><compose id="S3.T1.25.25.1.1.1.m1.1.1.2.3.cmml" xref="S3.T1.25.25.1.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.25.25.1.1.1.m1.1c">\pm 40^{\circ}</annotation></semantics></math>, <math id="S3.T1.26.26.2.2.2.m2.1" class="ltx_Math" alttext="\pm 40^{\circ}" display="inline"><semantics id="S3.T1.26.26.2.2.2.m2.1a"><mrow id="S3.T1.26.26.2.2.2.m2.1.1" xref="S3.T1.26.26.2.2.2.m2.1.1.cmml"><mo id="S3.T1.26.26.2.2.2.m2.1.1a" xref="S3.T1.26.26.2.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.26.26.2.2.2.m2.1.1.2" xref="S3.T1.26.26.2.2.2.m2.1.1.2.cmml"><mn id="S3.T1.26.26.2.2.2.m2.1.1.2.2" xref="S3.T1.26.26.2.2.2.m2.1.1.2.2.cmml">40</mn><mo id="S3.T1.26.26.2.2.2.m2.1.1.2.3" xref="S3.T1.26.26.2.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.26.26.2.2.2.m2.1b"><apply id="S3.T1.26.26.2.2.2.m2.1.1.cmml" xref="S3.T1.26.26.2.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.26.26.2.2.2.m2.1.1.1.cmml" xref="S3.T1.26.26.2.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.26.26.2.2.2.m2.1.1.2.cmml" xref="S3.T1.26.26.2.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.26.26.2.2.2.m2.1.1.2.1.cmml" xref="S3.T1.26.26.2.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.26.26.2.2.2.m2.1.1.2.2.cmml" xref="S3.T1.26.26.2.2.2.m2.1.1.2.2">40</cn><compose id="S3.T1.26.26.2.2.2.m2.1.1.2.3.cmml" xref="S3.T1.26.26.2.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.26.26.2.2.2.m2.1c">\pm 40^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.28.28.4" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.28.28.4.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.28.28.4.2.2" class="ltx_p"><math id="S3.T1.27.27.3.1.1.m1.1" class="ltx_Math" alttext="\pm 40^{\circ}" display="inline"><semantics id="S3.T1.27.27.3.1.1.m1.1a"><mrow id="S3.T1.27.27.3.1.1.m1.1.1" xref="S3.T1.27.27.3.1.1.m1.1.1.cmml"><mo id="S3.T1.27.27.3.1.1.m1.1.1a" xref="S3.T1.27.27.3.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.27.27.3.1.1.m1.1.1.2" xref="S3.T1.27.27.3.1.1.m1.1.1.2.cmml"><mn id="S3.T1.27.27.3.1.1.m1.1.1.2.2" xref="S3.T1.27.27.3.1.1.m1.1.1.2.2.cmml">40</mn><mo id="S3.T1.27.27.3.1.1.m1.1.1.2.3" xref="S3.T1.27.27.3.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.27.27.3.1.1.m1.1b"><apply id="S3.T1.27.27.3.1.1.m1.1.1.cmml" xref="S3.T1.27.27.3.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.27.27.3.1.1.m1.1.1.1.cmml" xref="S3.T1.27.27.3.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.27.27.3.1.1.m1.1.1.2.cmml" xref="S3.T1.27.27.3.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.27.27.3.1.1.m1.1.1.2.1.cmml" xref="S3.T1.27.27.3.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.27.27.3.1.1.m1.1.1.2.2.cmml" xref="S3.T1.27.27.3.1.1.m1.1.1.2.2">40</cn><compose id="S3.T1.27.27.3.1.1.m1.1.1.2.3.cmml" xref="S3.T1.27.27.3.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.27.27.3.1.1.m1.1c">\pm 40^{\circ}</annotation></semantics></math>, <math id="S3.T1.28.28.4.2.2.m2.1" class="ltx_Math" alttext="-40^{\circ}" display="inline"><semantics id="S3.T1.28.28.4.2.2.m2.1a"><mrow id="S3.T1.28.28.4.2.2.m2.1.1" xref="S3.T1.28.28.4.2.2.m2.1.1.cmml"><mo id="S3.T1.28.28.4.2.2.m2.1.1a" xref="S3.T1.28.28.4.2.2.m2.1.1.cmml">−</mo><msup id="S3.T1.28.28.4.2.2.m2.1.1.2" xref="S3.T1.28.28.4.2.2.m2.1.1.2.cmml"><mn id="S3.T1.28.28.4.2.2.m2.1.1.2.2" xref="S3.T1.28.28.4.2.2.m2.1.1.2.2.cmml">40</mn><mo id="S3.T1.28.28.4.2.2.m2.1.1.2.3" xref="S3.T1.28.28.4.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.28.28.4.2.2.m2.1b"><apply id="S3.T1.28.28.4.2.2.m2.1.1.cmml" xref="S3.T1.28.28.4.2.2.m2.1.1"><minus id="S3.T1.28.28.4.2.2.m2.1.1.1.cmml" xref="S3.T1.28.28.4.2.2.m2.1.1"></minus><apply id="S3.T1.28.28.4.2.2.m2.1.1.2.cmml" xref="S3.T1.28.28.4.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.28.28.4.2.2.m2.1.1.2.1.cmml" xref="S3.T1.28.28.4.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.28.28.4.2.2.m2.1.1.2.2.cmml" xref="S3.T1.28.28.4.2.2.m2.1.1.2.2">40</cn><compose id="S3.T1.28.28.4.2.2.m2.1.1.2.3.cmml" xref="S3.T1.28.28.4.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.28.28.4.2.2.m2.1c">-40^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.29.29.8" class="ltx_td ltx_align_justify ltx_align_middle" style="width:51.2pt;">
+<span id="S3.T1.29.29.8.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.29.29.8.1.1" class="ltx_p">122,531</span>
+</span>
+</td>
+<td id="S3.T1.29.29.5" class="ltx_td ltx_align_justify ltx_align_middle" style="width:54.1pt;">
+<span id="S3.T1.29.29.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.29.29.5.1.1" class="ltx_p"><math id="S3.T1.29.29.5.1.1.m1.1" class="ltx_Math" alttext="1920\times 1080" display="inline"><semantics id="S3.T1.29.29.5.1.1.m1.1a"><mrow id="S3.T1.29.29.5.1.1.m1.1.1" xref="S3.T1.29.29.5.1.1.m1.1.1.cmml"><mn id="S3.T1.29.29.5.1.1.m1.1.1.2" xref="S3.T1.29.29.5.1.1.m1.1.1.2.cmml">1920</mn><mo lspace="0.222em" rspace="0.222em" id="S3.T1.29.29.5.1.1.m1.1.1.1" xref="S3.T1.29.29.5.1.1.m1.1.1.1.cmml">×</mo><mn id="S3.T1.29.29.5.1.1.m1.1.1.3" xref="S3.T1.29.29.5.1.1.m1.1.1.3.cmml">1080</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.29.29.5.1.1.m1.1b"><apply id="S3.T1.29.29.5.1.1.m1.1.1.cmml" xref="S3.T1.29.29.5.1.1.m1.1.1"><times id="S3.T1.29.29.5.1.1.m1.1.1.1.cmml" xref="S3.T1.29.29.5.1.1.m1.1.1.1"></times><cn type="integer" id="S3.T1.29.29.5.1.1.m1.1.1.2.cmml" xref="S3.T1.29.29.5.1.1.m1.1.1.2">1920</cn><cn type="integer" id="S3.T1.29.29.5.1.1.m1.1.1.3.cmml" xref="S3.T1.29.29.5.1.1.m1.1.1.3">1080</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.29.29.5.1.1.m1.1c">1920\times 1080</annotation></semantics></math></span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.33.33" class="ltx_tr">
+<td id="S3.T1.33.33.5" class="ltx_td ltx_align_justify ltx_align_middle" style="width:59.8pt;">
+<span id="S3.T1.33.33.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.33.33.5.1.1" class="ltx_p">Gaze360 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite></span>
+</span>
+</td>
+<td id="S3.T1.33.33.6" class="ltx_td ltx_align_justify ltx_align_middle" style="width:42.7pt;">
+<span id="S3.T1.33.33.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.33.33.6.1.1" class="ltx_p">238</span>
+</span>
+</td>
+<td id="S3.T1.30.30.1" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.30.30.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.30.30.1.1.1" class="ltx_p"><math id="S3.T1.30.30.1.1.1.m1.1" class="ltx_Math" alttext="\pm 90^{\circ}" display="inline"><semantics id="S3.T1.30.30.1.1.1.m1.1a"><mrow id="S3.T1.30.30.1.1.1.m1.1.1" xref="S3.T1.30.30.1.1.1.m1.1.1.cmml"><mo id="S3.T1.30.30.1.1.1.m1.1.1a" xref="S3.T1.30.30.1.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.30.30.1.1.1.m1.1.1.2" xref="S3.T1.30.30.1.1.1.m1.1.1.2.cmml"><mn id="S3.T1.30.30.1.1.1.m1.1.1.2.2" xref="S3.T1.30.30.1.1.1.m1.1.1.2.2.cmml">90</mn><mo id="S3.T1.30.30.1.1.1.m1.1.1.2.3" xref="S3.T1.30.30.1.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.30.30.1.1.1.m1.1b"><apply id="S3.T1.30.30.1.1.1.m1.1.1.cmml" xref="S3.T1.30.30.1.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.30.30.1.1.1.m1.1.1.1.cmml" xref="S3.T1.30.30.1.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.30.30.1.1.1.m1.1.1.2.cmml" xref="S3.T1.30.30.1.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.30.30.1.1.1.m1.1.1.2.1.cmml" xref="S3.T1.30.30.1.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.30.30.1.1.1.m1.1.1.2.2.cmml" xref="S3.T1.30.30.1.1.1.m1.1.1.2.2">90</cn><compose id="S3.T1.30.30.1.1.1.m1.1.1.2.3.cmml" xref="S3.T1.30.30.1.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.30.30.1.1.1.m1.1c">\pm 90^{\circ}</annotation></semantics></math>, unknown</span>
+</span>
+</td>
+<td id="S3.T1.32.32.3" class="ltx_td ltx_align_justify ltx_align_middle" style="width:62.6pt;">
+<span id="S3.T1.32.32.3.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.32.32.3.2.2" class="ltx_p"><math id="S3.T1.31.31.2.1.1.m1.1" class="ltx_Math" alttext="\pm 140^{\circ}" display="inline"><semantics id="S3.T1.31.31.2.1.1.m1.1a"><mrow id="S3.T1.31.31.2.1.1.m1.1.1" xref="S3.T1.31.31.2.1.1.m1.1.1.cmml"><mo id="S3.T1.31.31.2.1.1.m1.1.1a" xref="S3.T1.31.31.2.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.31.31.2.1.1.m1.1.1.2" xref="S3.T1.31.31.2.1.1.m1.1.1.2.cmml"><mn id="S3.T1.31.31.2.1.1.m1.1.1.2.2" xref="S3.T1.31.31.2.1.1.m1.1.1.2.2.cmml">140</mn><mo id="S3.T1.31.31.2.1.1.m1.1.1.2.3" xref="S3.T1.31.31.2.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.31.31.2.1.1.m1.1b"><apply id="S3.T1.31.31.2.1.1.m1.1.1.cmml" xref="S3.T1.31.31.2.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.31.31.2.1.1.m1.1.1.1.cmml" xref="S3.T1.31.31.2.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.31.31.2.1.1.m1.1.1.2.cmml" xref="S3.T1.31.31.2.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.31.31.2.1.1.m1.1.1.2.1.cmml" xref="S3.T1.31.31.2.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.31.31.2.1.1.m1.1.1.2.2.cmml" xref="S3.T1.31.31.2.1.1.m1.1.1.2.2">140</cn><compose id="S3.T1.31.31.2.1.1.m1.1.1.2.3.cmml" xref="S3.T1.31.31.2.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.31.31.2.1.1.m1.1c">\pm 140^{\circ}</annotation></semantics></math>, <math id="S3.T1.32.32.3.2.2.m2.1" class="ltx_Math" alttext="-50^{\circ}" display="inline"><semantics id="S3.T1.32.32.3.2.2.m2.1a"><mrow id="S3.T1.32.32.3.2.2.m2.1.1" xref="S3.T1.32.32.3.2.2.m2.1.1.cmml"><mo id="S3.T1.32.32.3.2.2.m2.1.1a" xref="S3.T1.32.32.3.2.2.m2.1.1.cmml">−</mo><msup id="S3.T1.32.32.3.2.2.m2.1.1.2" xref="S3.T1.32.32.3.2.2.m2.1.1.2.cmml"><mn id="S3.T1.32.32.3.2.2.m2.1.1.2.2" xref="S3.T1.32.32.3.2.2.m2.1.1.2.2.cmml">50</mn><mo id="S3.T1.32.32.3.2.2.m2.1.1.2.3" xref="S3.T1.32.32.3.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.32.32.3.2.2.m2.1b"><apply id="S3.T1.32.32.3.2.2.m2.1.1.cmml" xref="S3.T1.32.32.3.2.2.m2.1.1"><minus id="S3.T1.32.32.3.2.2.m2.1.1.1.cmml" xref="S3.T1.32.32.3.2.2.m2.1.1"></minus><apply id="S3.T1.32.32.3.2.2.m2.1.1.2.cmml" xref="S3.T1.32.32.3.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.32.32.3.2.2.m2.1.1.2.1.cmml" xref="S3.T1.32.32.3.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.32.32.3.2.2.m2.1.1.2.2.cmml" xref="S3.T1.32.32.3.2.2.m2.1.1.2.2">50</cn><compose id="S3.T1.32.32.3.2.2.m2.1.1.2.3.cmml" xref="S3.T1.32.32.3.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.32.32.3.2.2.m2.1c">-50^{\circ}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.33.33.7" class="ltx_td ltx_align_justify ltx_align_middle" style="width:51.2pt;">
+<span id="S3.T1.33.33.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.33.33.7.1.1" class="ltx_p">172,000</span>
+</span>
+</td>
+<td id="S3.T1.33.33.4" class="ltx_td ltx_align_justify ltx_align_middle" style="width:54.1pt;">
+<span id="S3.T1.33.33.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.33.33.4.1.1" class="ltx_p"><math id="S3.T1.33.33.4.1.1.m1.1" class="ltx_Math" alttext="4096\times 3382" display="inline"><semantics id="S3.T1.33.33.4.1.1.m1.1a"><mrow id="S3.T1.33.33.4.1.1.m1.1.1" xref="S3.T1.33.33.4.1.1.m1.1.1.cmml"><mn id="S3.T1.33.33.4.1.1.m1.1.1.2" xref="S3.T1.33.33.4.1.1.m1.1.1.2.cmml">4096</mn><mo lspace="0.222em" rspace="0.222em" id="S3.T1.33.33.4.1.1.m1.1.1.1" xref="S3.T1.33.33.4.1.1.m1.1.1.1.cmml">×</mo><mn id="S3.T1.33.33.4.1.1.m1.1.1.3" xref="S3.T1.33.33.4.1.1.m1.1.1.3.cmml">3382</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.33.33.4.1.1.m1.1b"><apply id="S3.T1.33.33.4.1.1.m1.1.1.cmml" xref="S3.T1.33.33.4.1.1.m1.1.1"><times id="S3.T1.33.33.4.1.1.m1.1.1.1.cmml" xref="S3.T1.33.33.4.1.1.m1.1.1.1"></times><cn type="integer" id="S3.T1.33.33.4.1.1.m1.1.1.2.cmml" xref="S3.T1.33.33.4.1.1.m1.1.1.2">4096</cn><cn type="integer" id="S3.T1.33.33.4.1.1.m1.1.1.3.cmml" xref="S3.T1.33.33.4.1.1.m1.1.1.3">3382</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.33.33.4.1.1.m1.1c">4096\times 3382</annotation></semantics></math></span>
+</span>
+</td>
+</tr>
+<tr id="S3.T1.38.38" class="ltx_tr">
+<td id="S3.T1.38.38.6" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_bb ltx_border_t" style="width:59.8pt;">
+<span id="S3.T1.38.38.6.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.38.6.1.1" class="ltx_p"><span id="S3.T1.38.38.6.1.1.1" class="ltx_text ltx_font_bold">ETH-XGaze</span></span>
+</span>
+</td>
+<td id="S3.T1.38.38.7" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_bb ltx_border_t" style="width:42.7pt;">
+<span id="S3.T1.38.38.7.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.38.7.1.1" class="ltx_p">110</span>
+</span>
+</td>
+<td id="S3.T1.35.35.2" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_bb ltx_border_t" style="width:62.6pt;">
+<span id="S3.T1.35.35.2.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.35.35.2.2.2" class="ltx_p"><math id="S3.T1.34.34.1.1.1.m1.1" class="ltx_Math" alttext="\bm{\pm 80^{\circ}}" display="inline"><semantics id="S3.T1.34.34.1.1.1.m1.1a"><mrow id="S3.T1.34.34.1.1.1.m1.1.1" xref="S3.T1.34.34.1.1.1.m1.1.1.cmml"><mo class="ltx_mathvariant_bold" mathvariant="bold" id="S3.T1.34.34.1.1.1.m1.1.1a" xref="S3.T1.34.34.1.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.34.34.1.1.1.m1.1.1.2" xref="S3.T1.34.34.1.1.1.m1.1.1.2.cmml"><mn id="S3.T1.34.34.1.1.1.m1.1.1.2.2" xref="S3.T1.34.34.1.1.1.m1.1.1.2.2.cmml">𝟖𝟎</mn><mo class="ltx_mathvariant_bold" mathvariant="bold" id="S3.T1.34.34.1.1.1.m1.1.1.2.3" xref="S3.T1.34.34.1.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.34.34.1.1.1.m1.1b"><apply id="S3.T1.34.34.1.1.1.m1.1.1.cmml" xref="S3.T1.34.34.1.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.34.34.1.1.1.m1.1.1.1.cmml" xref="S3.T1.34.34.1.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.34.34.1.1.1.m1.1.1.2.cmml" xref="S3.T1.34.34.1.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.34.34.1.1.1.m1.1.1.2.1.cmml" xref="S3.T1.34.34.1.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.34.34.1.1.1.m1.1.1.2.2.cmml" xref="S3.T1.34.34.1.1.1.m1.1.1.2.2">80</cn><compose id="S3.T1.34.34.1.1.1.m1.1.1.2.3.cmml" xref="S3.T1.34.34.1.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.34.34.1.1.1.m1.1c">\bm{\pm 80^{\circ}}</annotation></semantics></math>, <math id="S3.T1.35.35.2.2.2.m2.1" class="ltx_Math" alttext="\bm{\pm 80^{\circ}}" display="inline"><semantics id="S3.T1.35.35.2.2.2.m2.1a"><mrow id="S3.T1.35.35.2.2.2.m2.1.1" xref="S3.T1.35.35.2.2.2.m2.1.1.cmml"><mo class="ltx_mathvariant_bold" mathvariant="bold" id="S3.T1.35.35.2.2.2.m2.1.1a" xref="S3.T1.35.35.2.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.35.35.2.2.2.m2.1.1.2" xref="S3.T1.35.35.2.2.2.m2.1.1.2.cmml"><mn id="S3.T1.35.35.2.2.2.m2.1.1.2.2" xref="S3.T1.35.35.2.2.2.m2.1.1.2.2.cmml">𝟖𝟎</mn><mo class="ltx_mathvariant_bold" mathvariant="bold" id="S3.T1.35.35.2.2.2.m2.1.1.2.3" xref="S3.T1.35.35.2.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.35.35.2.2.2.m2.1b"><apply id="S3.T1.35.35.2.2.2.m2.1.1.cmml" xref="S3.T1.35.35.2.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.35.35.2.2.2.m2.1.1.1.cmml" xref="S3.T1.35.35.2.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.35.35.2.2.2.m2.1.1.2.cmml" xref="S3.T1.35.35.2.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.35.35.2.2.2.m2.1.1.2.1.cmml" xref="S3.T1.35.35.2.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.35.35.2.2.2.m2.1.1.2.2.cmml" xref="S3.T1.35.35.2.2.2.m2.1.1.2.2">80</cn><compose id="S3.T1.35.35.2.2.2.m2.1.1.2.3.cmml" xref="S3.T1.35.35.2.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.35.35.2.2.2.m2.1c">\bm{\pm 80^{\circ}}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.37.37.4" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_bb ltx_border_t" style="width:62.6pt;">
+<span id="S3.T1.37.37.4.2" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.37.37.4.2.2" class="ltx_p"><math id="S3.T1.36.36.3.1.1.m1.1" class="ltx_Math" alttext="\bm{\pm 120^{\circ}}" display="inline"><semantics id="S3.T1.36.36.3.1.1.m1.1a"><mrow id="S3.T1.36.36.3.1.1.m1.1.1" xref="S3.T1.36.36.3.1.1.m1.1.1.cmml"><mo class="ltx_mathvariant_bold" mathvariant="bold" id="S3.T1.36.36.3.1.1.m1.1.1a" xref="S3.T1.36.36.3.1.1.m1.1.1.cmml">±</mo><msup id="S3.T1.36.36.3.1.1.m1.1.1.2" xref="S3.T1.36.36.3.1.1.m1.1.1.2.cmml"><mn id="S3.T1.36.36.3.1.1.m1.1.1.2.2" xref="S3.T1.36.36.3.1.1.m1.1.1.2.2.cmml">𝟏𝟐𝟎</mn><mo class="ltx_mathvariant_bold" mathvariant="bold" id="S3.T1.36.36.3.1.1.m1.1.1.2.3" xref="S3.T1.36.36.3.1.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.36.36.3.1.1.m1.1b"><apply id="S3.T1.36.36.3.1.1.m1.1.1.cmml" xref="S3.T1.36.36.3.1.1.m1.1.1"><csymbol cd="latexml" id="S3.T1.36.36.3.1.1.m1.1.1.1.cmml" xref="S3.T1.36.36.3.1.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.T1.36.36.3.1.1.m1.1.1.2.cmml" xref="S3.T1.36.36.3.1.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.T1.36.36.3.1.1.m1.1.1.2.1.cmml" xref="S3.T1.36.36.3.1.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.36.36.3.1.1.m1.1.1.2.2.cmml" xref="S3.T1.36.36.3.1.1.m1.1.1.2.2">120</cn><compose id="S3.T1.36.36.3.1.1.m1.1.1.2.3.cmml" xref="S3.T1.36.36.3.1.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.36.36.3.1.1.m1.1c">\bm{\pm 120^{\circ}}</annotation></semantics></math>, <math id="S3.T1.37.37.4.2.2.m2.1" class="ltx_Math" alttext="\bm{\pm 70^{\circ}}" display="inline"><semantics id="S3.T1.37.37.4.2.2.m2.1a"><mrow id="S3.T1.37.37.4.2.2.m2.1.1" xref="S3.T1.37.37.4.2.2.m2.1.1.cmml"><mo class="ltx_mathvariant_bold" mathvariant="bold" id="S3.T1.37.37.4.2.2.m2.1.1a" xref="S3.T1.37.37.4.2.2.m2.1.1.cmml">±</mo><msup id="S3.T1.37.37.4.2.2.m2.1.1.2" xref="S3.T1.37.37.4.2.2.m2.1.1.2.cmml"><mn id="S3.T1.37.37.4.2.2.m2.1.1.2.2" xref="S3.T1.37.37.4.2.2.m2.1.1.2.2.cmml">𝟕𝟎</mn><mo class="ltx_mathvariant_bold" mathvariant="bold" id="S3.T1.37.37.4.2.2.m2.1.1.2.3" xref="S3.T1.37.37.4.2.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.37.37.4.2.2.m2.1b"><apply id="S3.T1.37.37.4.2.2.m2.1.1.cmml" xref="S3.T1.37.37.4.2.2.m2.1.1"><csymbol cd="latexml" id="S3.T1.37.37.4.2.2.m2.1.1.1.cmml" xref="S3.T1.37.37.4.2.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.T1.37.37.4.2.2.m2.1.1.2.cmml" xref="S3.T1.37.37.4.2.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.T1.37.37.4.2.2.m2.1.1.2.1.cmml" xref="S3.T1.37.37.4.2.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.T1.37.37.4.2.2.m2.1.1.2.2.cmml" xref="S3.T1.37.37.4.2.2.m2.1.1.2.2">70</cn><compose id="S3.T1.37.37.4.2.2.m2.1.1.2.3.cmml" xref="S3.T1.37.37.4.2.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.37.37.4.2.2.m2.1c">\bm{\pm 70^{\circ}}</annotation></semantics></math></span>
+</span>
+</td>
+<td id="S3.T1.38.38.8" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_bb ltx_border_t" style="width:51.2pt;">
+<span id="S3.T1.38.38.8.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.38.8.1.1" class="ltx_p">1,083,492</span>
+</span>
+</td>
+<td id="S3.T1.38.38.5" class="ltx_td ltx_align_justify ltx_align_middle ltx_border_bb ltx_border_t" style="width:54.1pt;">
+<span id="S3.T1.38.38.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.T1.38.38.5.1.1" class="ltx_p"><math id="S3.T1.38.38.5.1.1.m1.1" class="ltx_Math" alttext="\bm{6000\times 4000}" display="inline"><semantics id="S3.T1.38.38.5.1.1.m1.1a"><mrow id="S3.T1.38.38.5.1.1.m1.1.1" xref="S3.T1.38.38.5.1.1.m1.1.1.cmml"><mn id="S3.T1.38.38.5.1.1.m1.1.1.2" xref="S3.T1.38.38.5.1.1.m1.1.1.2.cmml">𝟔𝟎𝟎𝟎</mn><mo class="ltx_mathvariant_bold" lspace="0.222em" mathvariant="bold" rspace="0.222em" id="S3.T1.38.38.5.1.1.m1.1.1.1" xref="S3.T1.38.38.5.1.1.m1.1.1.1.cmml">×</mo><mn id="S3.T1.38.38.5.1.1.m1.1.1.3" xref="S3.T1.38.38.5.1.1.m1.1.1.3.cmml">𝟒𝟎𝟎𝟎</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.T1.38.38.5.1.1.m1.1b"><apply id="S3.T1.38.38.5.1.1.m1.1.1.cmml" xref="S3.T1.38.38.5.1.1.m1.1.1"><times id="S3.T1.38.38.5.1.1.m1.1.1.1.cmml" xref="S3.T1.38.38.5.1.1.m1.1.1.1"></times><cn type="integer" id="S3.T1.38.38.5.1.1.m1.1.1.2.cmml" xref="S3.T1.38.38.5.1.1.m1.1.1.2">6000</cn><cn type="integer" id="S3.T1.38.38.5.1.1.m1.1.1.3.cmml" xref="S3.T1.38.38.5.1.1.m1.1.1.3">4000</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.T1.38.38.5.1.1.m1.1c">\bm{6000\times 4000}</annotation></semantics></math></span>
+</span>
+</td>
+</tr>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 1: </span>Overview of popular gaze estimation datasets showing the number of participants, the maximum head poses and gaze in horizontal (around yaw axis) and vertical (around pitch axis) directions in the camera coordinate system, amount of data (number of images or duration of video), and image resolution.</figcaption>
+</figure>
+<div id="S3.p1" class="ltx_para ltx_noindent">
+<p id="S3.p1.1" class="ltx_p">There are several parameters that define a comprehensive gaze estimation dataset, including: head pose, gaze direction, subject appearance, illumination condition, and image resolution.
+We design the ETH-XGaze data collection procedure with the main objective to maximize the parameter range along each of those dimensions as much as possible.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Acquisition Setup</h3>
+
+<div id="S3.SS1.p1" class="ltx_para">
+<p id="S3.SS1.p1.3" class="ltx_p">The setup used for data collection is shown in the left of Fig. <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+We capture the subject with 18 Canon 250D digital SLR cameras from different viewpoints to cover a large range of head poses.
+There are five paired cameras for geometry capture and eight cameras for texture acquisition, such as to enable 3D face reconstruction in the future. The resolution of the captured images is very high (<math id="S3.SS1.p1.1.m1.1" class="ltx_Math" alttext="6000\times 4000" display="inline"><semantics id="S3.SS1.p1.1.m1.1a"><mrow id="S3.SS1.p1.1.m1.1.1" xref="S3.SS1.p1.1.m1.1.1.cmml"><mn id="S3.SS1.p1.1.m1.1.1.2" xref="S3.SS1.p1.1.m1.1.1.2.cmml">6000</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.1.m1.1.1.1" xref="S3.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S3.SS1.p1.1.m1.1.1.3" xref="S3.SS1.p1.1.m1.1.1.3.cmml">4000</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.1.m1.1b"><apply id="S3.SS1.p1.1.m1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1"><times id="S3.SS1.p1.1.m1.1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.SS1.p1.1.m1.1.1.2.cmml" xref="S3.SS1.p1.1.m1.1.1.2">6000</cn><cn type="integer" id="S3.SS1.p1.1.m1.1.1.3.cmml" xref="S3.SS1.p1.1.m1.1.1.3">4000</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.1.m1.1c">6000\times 4000</annotation></semantics></math> pixels).
+All cameras are connected via ESPER trigger boxes<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>https://www.esperhq.com</span></span></span> to a Raspberry Pi, and a wireless mouse is used to send the triggering signal to the Raspberry Pi.
+The delay between mouse click and triggering the camera is below 0.05 seconds.
+A large screen (<math id="S3.SS1.p1.2.m2.1" class="ltx_Math" alttext="120\times 100" display="inline"><semantics id="S3.SS1.p1.2.m2.1a"><mrow id="S3.SS1.p1.2.m2.1.1" xref="S3.SS1.p1.2.m2.1.1.cmml"><mn id="S3.SS1.p1.2.m2.1.1.2" xref="S3.SS1.p1.2.m2.1.1.2.cmml">120</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.2.m2.1.1.1" xref="S3.SS1.p1.2.m2.1.1.1.cmml">×</mo><mn id="S3.SS1.p1.2.m2.1.1.3" xref="S3.SS1.p1.2.m2.1.1.3.cmml">100</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.2.m2.1b"><apply id="S3.SS1.p1.2.m2.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1"><times id="S3.SS1.p1.2.m2.1.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1.1"></times><cn type="integer" id="S3.SS1.p1.2.m2.1.1.2.cmml" xref="S3.SS1.p1.2.m2.1.1.2">120</cn><cn type="integer" id="S3.SS1.p1.2.m2.1.1.3.cmml" xref="S3.SS1.p1.2.m2.1.1.3">100</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.2.m2.1c">120\times 100</annotation></semantics></math> cm) is placed in the center of the cameras to show the stimuli controlled by the Raspberry Pi and projected by a projector. Since some cameras are placed behind the screen, we create cutout holes for their lenses.
+There are four light boxes (Walimex Daylight 250) surrounding the screen and each of them is equipped with a light bulb that emits <math id="S3.SS1.p1.3.m3.1" class="ltx_Math" alttext="\sim" display="inline"><semantics id="S3.SS1.p1.3.m3.1a"><mo id="S3.SS1.p1.3.m3.1.1" xref="S3.SS1.p1.3.m3.1.1.cmml">∼</mo><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.3.m3.1b"><csymbol cd="latexml" id="S3.SS1.p1.3.m3.1.1.cmml" xref="S3.SS1.p1.3.m3.1.1">similar-to</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.3.m3.1c">\sim</annotation></semantics></math>4500lm.
+The Raspberry Pi can turn each of the light boxes on or off to simulate different illumination conditions.
+We mount polarization filters in front of both the light box and camera and carefully adjust the filter angle to attenuate specular reflection off the face of the participants.
+During recording, the participants are sitting at approximately one meter distance in front of the screen, with the head placed in a head rest to reduce unintentional head motion.</p>
+</div>
+<figure id="S3.F2" class="ltx_figure"><img src="/html/2007.15837/assets/x2.png" id="S3.F2.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="151" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Head pose (top row) and gaze direction (bottom row) distributions of different datasets. The head pose of Gaze360 is not shown here since it is not provided by the dataset.</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Collection Procedure</h3>
+
+<div id="S3.SS2.p1" class="ltx_para">
+<p id="S3.SS2.p1.1" class="ltx_p">During data collection, the participant focuses on a shrinking circle and clicks the mouse when the circle becomes a dot, providing the gaze point.
+The position of gaze points are randomly distributed on the screen.
+We have three methods to ensure the participant is looking at the dot when clicking the mouse.
+First, the participant has a short time window of 0.5 second to click the mouse to successfully collect one sample.
+Second, the shrinking time of the circle is random such that the participant has to focus on the shrinking circle to avoid missing the triggering time window.
+Third, the participant is told to collect a fixed amount of samples and any missing mouse click will increase the collection time.
+For most of the data collection, all four light boxes are fully on, in order to provide the maximum brightness, but we additionally simulate 15 illumination conditions by switching on and off the four light boxes.</p>
+</div>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Data Characteristics</h3>
+
+<figure id="S3.F3" class="ltx_figure"><img src="/html/2007.15837/assets/x3.png" id="S3.F3.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="438" height="189" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Data examples and corresponding cropped eye images from different gaze estimation datasets. ETH-XGaze has the highest image resolution and quality.</figcaption>
+</figure>
+<div id="S3.SS3.p1" class="ltx_para">
+<p id="S3.SS3.p1.1" class="ltx_p">In total, we collect data from 110 participants (47 female and 63 male), aged between 19 and 41 years.
+17 of them wore contact lenses and 17 of them wore eye glasses during recording.
+The ethnicities of the participants includes Caucasian, Middle Eastern, East Asian, South Asian and African.
+Each participant collected 525 gaze points under the full-lighting condition, and 90 gaze points under the varying lighting conditions - six gaze points for each of the 15 lighting conditions.
+For each gaze point, a total of 18 images was collected by the 18 different cameras.
+We manually removed samples for which the participant was not looking at the ground-truth point-of-regard due to blinking, motion blur etc.
+This results in total 1,083,492 images samples for whole ETH-XGaze dataset.</p>
+</div>
+<div id="S3.SS3.p2" class="ltx_para">
+<p id="S3.SS3.p2.1" class="ltx_p">A comparison between the proposed and existing datasets can be found in Tab. <a href="#S3.T1" title="Table 1 ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.
+Our dataset surpasses existing datasets regarding the following aspects.</p>
+</div>
+<div id="S3.SS3.p3" class="ltx_para">
+<p id="S3.SS3.p3.1" class="ltx_p"><span id="S3.SS3.p3.1.1" class="ltx_text ltx_font_bold">Head pose.</span> ETH-XGaze has the largest range of head poses compared to existing datasets, as shown in the first row of Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Acquisition Setup ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>. Examples from ETH-XGaze with different head poses are shown in Fig. <a href="#S3.F5" title="Figure 5 ‣ 3.5 Data Pre-processing ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.
+In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, it is stated that the effective head pose range of Gaze360 is <math id="S3.SS3.p3.1.m1.1" class="ltx_Math" alttext="\pm 90^{\circ}" display="inline"><semantics id="S3.SS3.p3.1.m1.1a"><mrow id="S3.SS3.p3.1.m1.1.1" xref="S3.SS3.p3.1.m1.1.1.cmml"><mo id="S3.SS3.p3.1.m1.1.1a" xref="S3.SS3.p3.1.m1.1.1.cmml">±</mo><msup id="S3.SS3.p3.1.m1.1.1.2" xref="S3.SS3.p3.1.m1.1.1.2.cmml"><mn id="S3.SS3.p3.1.m1.1.1.2.2" xref="S3.SS3.p3.1.m1.1.1.2.2.cmml">90</mn><mo id="S3.SS3.p3.1.m1.1.1.2.3" xref="S3.SS3.p3.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p3.1.m1.1b"><apply id="S3.SS3.p3.1.m1.1.1.cmml" xref="S3.SS3.p3.1.m1.1.1"><csymbol cd="latexml" id="S3.SS3.p3.1.m1.1.1.1.cmml" xref="S3.SS3.p3.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.SS3.p3.1.m1.1.1.2.cmml" xref="S3.SS3.p3.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.p3.1.m1.1.1.2.1.cmml" xref="S3.SS3.p3.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.SS3.p3.1.m1.1.1.2.2.cmml" xref="S3.SS3.p3.1.m1.1.1.2.2">90</cn><compose id="S3.SS3.p3.1.m1.1.1.2.3.cmml" xref="S3.SS3.p3.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p3.1.m1.1c">\pm 90^{\circ}</annotation></semantics></math> in horizontal direction and limited head poses in vertical direction. However, head pose annotations are not provided in their dataset and hence we cannot visualize it here.</p>
+</div>
+<div id="S3.SS3.p4" class="ltx_para">
+<p id="S3.SS3.p4.2" class="ltx_p"><span id="S3.SS3.p4.2.1" class="ltx_text ltx_font_bold">Gaze direction.</span> ETH-XGaze has the largest range of gaze directions compared to existing datasets.
+The second row of Fig. <a href="#S3.F2" title="Figure 2 ‣ 3.1 Acquisition Setup ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a> compares the gaze direction distributions.
+Although Gaze360 reports <math id="S3.SS3.p4.1.m1.1" class="ltx_Math" alttext="\pm 140^{\circ}" display="inline"><semantics id="S3.SS3.p4.1.m1.1a"><mrow id="S3.SS3.p4.1.m1.1.1" xref="S3.SS3.p4.1.m1.1.1.cmml"><mo id="S3.SS3.p4.1.m1.1.1a" xref="S3.SS3.p4.1.m1.1.1.cmml">±</mo><msup id="S3.SS3.p4.1.m1.1.1.2" xref="S3.SS3.p4.1.m1.1.1.2.cmml"><mn id="S3.SS3.p4.1.m1.1.1.2.2" xref="S3.SS3.p4.1.m1.1.1.2.2.cmml">140</mn><mo id="S3.SS3.p4.1.m1.1.1.2.3" xref="S3.SS3.p4.1.m1.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.1.m1.1b"><apply id="S3.SS3.p4.1.m1.1.1.cmml" xref="S3.SS3.p4.1.m1.1.1"><csymbol cd="latexml" id="S3.SS3.p4.1.m1.1.1.1.cmml" xref="S3.SS3.p4.1.m1.1.1">plus-or-minus</csymbol><apply id="S3.SS3.p4.1.m1.1.1.2.cmml" xref="S3.SS3.p4.1.m1.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.p4.1.m1.1.1.2.1.cmml" xref="S3.SS3.p4.1.m1.1.1.2">superscript</csymbol><cn type="integer" id="S3.SS3.p4.1.m1.1.1.2.2.cmml" xref="S3.SS3.p4.1.m1.1.1.2.2">140</cn><compose id="S3.SS3.p4.1.m1.1.1.2.3.cmml" xref="S3.SS3.p4.1.m1.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.1.m1.1c">\pm 140^{\circ}</annotation></semantics></math> coverage on the horizontal gaze direction, the dataset contains only very few samples beyond <math id="S3.SS3.p4.2.m2.1" class="ltx_Math" alttext="\pm 70^{\circ}" display="inline"><semantics id="S3.SS3.p4.2.m2.1a"><mrow id="S3.SS3.p4.2.m2.1.1" xref="S3.SS3.p4.2.m2.1.1.cmml"><mo id="S3.SS3.p4.2.m2.1.1a" xref="S3.SS3.p4.2.m2.1.1.cmml">±</mo><msup id="S3.SS3.p4.2.m2.1.1.2" xref="S3.SS3.p4.2.m2.1.1.2.cmml"><mn id="S3.SS3.p4.2.m2.1.1.2.2" xref="S3.SS3.p4.2.m2.1.1.2.2.cmml">70</mn><mo id="S3.SS3.p4.2.m2.1.1.2.3" xref="S3.SS3.p4.2.m2.1.1.2.3.cmml">∘</mo></msup></mrow><annotation-xml encoding="MathML-Content" id="S3.SS3.p4.2.m2.1b"><apply id="S3.SS3.p4.2.m2.1.1.cmml" xref="S3.SS3.p4.2.m2.1.1"><csymbol cd="latexml" id="S3.SS3.p4.2.m2.1.1.1.cmml" xref="S3.SS3.p4.2.m2.1.1">plus-or-minus</csymbol><apply id="S3.SS3.p4.2.m2.1.1.2.cmml" xref="S3.SS3.p4.2.m2.1.1.2"><csymbol cd="ambiguous" id="S3.SS3.p4.2.m2.1.1.2.1.cmml" xref="S3.SS3.p4.2.m2.1.1.2">superscript</csymbol><cn type="integer" id="S3.SS3.p4.2.m2.1.1.2.2.cmml" xref="S3.SS3.p4.2.m2.1.1.2.2">70</cn><compose id="S3.SS3.p4.2.m2.1.1.2.3.cmml" xref="S3.SS3.p4.2.m2.1.1.2.3"></compose></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS3.p4.2.m2.1c">\pm 70^{\circ}</annotation></semantics></math>.
+ETH-XGaze is evenly sampled across a large range of horizontal and vertical gaze directions.</p>
+</div>
+<div id="S3.SS3.p5" class="ltx_para">
+<p id="S3.SS3.p5.1" class="ltx_p"><span id="S3.SS3.p5.1.1" class="ltx_text ltx_font_bold">Image resolution.</span> ETH-XGaze has the highest image resolution compared to existing datasets, especially the effective resolution on the face region.
+We show some examples and corresponding cropped eye images from different datasets in Fig <a href="#S3.F3" title="Figure 3 ‣ 3.3 Data Characteristics ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.
+The Columbia dataset also has high image resolution, however, the dataset is comprised of only 5,880 samples.
+While EYEDIAP, MPIIGaze, RT-GENE and Gaze360 have fairly high resolution imagery as well, the participant is far away from the camera which results in low effective eye region resolution.</p>
+</div>
+<div id="S3.SS3.p6" class="ltx_para">
+<p id="S3.SS3.p6.1" class="ltx_p"><span id="S3.SS3.p6.1.1" class="ltx_text ltx_font_bold">Controlled illumination conditions.</span> ETH-XGaze provides a set of controlled illumination conditions.
+Although uncontrolled in-the-wild illumination conditions are important for gaze estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>, <a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>, controlled illumination conditions provide complementary information to better understand illumination impact and enable light synthesis.
+As shown in Fig. <a href="#S3.F4" title="Figure 4 ‣ 3.4 ETH-XGaze Utility ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>, we record 16 different illumination conditions.</p>
+</div>
+</section>
+<section id="S3.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span>ETH-XGaze Utility</h3>
+
+<div id="S3.SS4.p1" class="ltx_para">
+<p id="S3.SS4.p1.1" class="ltx_p">ETH-XGaze makes it possible to <em id="S3.SS4.p1.1.1" class="ltx_emph ltx_font_italic">train</em> gaze estimators that cover large ranges of head poses and gaze directions. This allows to better estimate gaze from oblique viewpoints, such as overhead cameras.
+ETH-XGaze can also be used to <em id="S3.SS4.p1.1.2" class="ltx_emph ltx_font_italic">evaluate</em> the robustness of a gaze estimation method with respect to these factors.
+In our dataset the head pose remains fixed and thus does not follow the traditional <em id="S3.SS4.p1.1.3" class="ltx_emph ltx_font_italic">head-pose-following-gaze</em> pattern. However, by imaging from 18 viewpoints we densely sample all natural pose-gaze combinations with respect to the camera, suitable for varied applications like gaze estimation from a personal laptop or attention measurement inside a smart home.</p>
+</div>
+<figure id="S3.F4" class="ltx_figure"><img src="/html/2007.15837/assets/x4.png" id="S3.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="57" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Samples of the 16 illumination conditions created by switching on and off the four light boxes. The first row are the original samples, and the second row employs histogram equalization. The first column is the full-lighting setting.</figcaption>
+</figure>
+<div id="S3.SS4.p2" class="ltx_para">
+<p id="S3.SS4.p2.1" class="ltx_p">Our dataset allows future gaze prediction methods to train on high-resolution imagery, which is critical for generative methods <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>, <a href="#bib.bib25" title="" class="ltx_ref">25</a>, <a href="#bib.bib38" title="" class="ltx_ref">38</a>, <a href="#bib.bib34" title="" class="ltx_ref">34</a>]</cite>.
+Since the generated image quality highly depends on the training image quality, Columbia and the synthetic UnityEYE dataset have been used during training in the past.
+Our ETH-XGaze provides high-resolution images (<math id="S3.SS4.p2.1.m1.1" class="ltx_Math" alttext="6000\times 4000" display="inline"><semantics id="S3.SS4.p2.1.m1.1a"><mrow id="S3.SS4.p2.1.m1.1.1" xref="S3.SS4.p2.1.m1.1.1.cmml"><mn id="S3.SS4.p2.1.m1.1.1.2" xref="S3.SS4.p2.1.m1.1.1.2.cmml">6000</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS4.p2.1.m1.1.1.1" xref="S3.SS4.p2.1.m1.1.1.1.cmml">×</mo><mn id="S3.SS4.p2.1.m1.1.1.3" xref="S3.SS4.p2.1.m1.1.1.3.cmml">4000</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS4.p2.1.m1.1b"><apply id="S3.SS4.p2.1.m1.1.1.cmml" xref="S3.SS4.p2.1.m1.1.1"><times id="S3.SS4.p2.1.m1.1.1.1.cmml" xref="S3.SS4.p2.1.m1.1.1.1"></times><cn type="integer" id="S3.SS4.p2.1.m1.1.1.2.cmml" xref="S3.SS4.p2.1.m1.1.1.2">6000</cn><cn type="integer" id="S3.SS4.p2.1.m1.1.1.3.cmml" xref="S3.SS4.p2.1.m1.1.1.3">4000</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS4.p2.1.m1.1c">6000\times 4000</annotation></semantics></math> pixels), and more importantly the face region occupies a large portion of the image.</p>
+</div>
+<div id="S3.SS4.p3" class="ltx_para">
+<p id="S3.SS4.p3.1" class="ltx_p">Since the data in ETH-XGaze has been captured to allow for 3D geometry reconstruction using multi-view photogrammetry methods (i.e. <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>), it provides the potential of synthesizing high-quality gaze estimation data in the future. Parametric eye models <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib36" title="" class="ltx_ref">36</a>, <a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> can be fit to the data to build a controllable rig of the eye <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>.
+Such a rig can then be used to re-render novel images of different lighting conditions, gaze directions, and head poses with state-of-the-art rendering techniques, providing additional training data for gaze estimation task.</p>
+</div>
+</section>
+<section id="S3.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.5 </span>Data Pre-processing</h3>
+
+<div id="S3.SS5.p1" class="ltx_para">
+<p id="S3.SS5.p1.1" class="ltx_p">We crop the face patch out of the original image as input for gaze estimation model training.
+For each input image sample, we first perform face and facial landmark detection using a state-of-the-art method <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>.
+We then fit a 3D morphable model of the face to the detected landmarks to estimate the 3D head pose <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>.
+The 3D head pose along with camera calibration information is used to perform data normalization <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib41" title="" class="ltx_ref">41</a>]</cite>.
+In a nutshell, the data normalization method maps the input image to a normalized space where a virtual camera is used to warp the face patch out of the original input image according to 3D head pose.
+It rotates a virtual camera to cancel the head rotation around the row axis, and moves the virtual camera to a fixed distance from the face center to warp the face patch of fixed size.
+More details can be found in the original paper <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib41" title="" class="ltx_ref">41</a>]</cite>.
+During data normalization, we define the face center as the center of the four eye corners and two nose corners, we set the focal length of the virtual camera to be 960 mm, the normalized distance to be 300 mm, and the cropped face image is <math id="S3.SS5.p1.1.m1.1" class="ltx_Math" alttext="448\times 448" display="inline"><semantics id="S3.SS5.p1.1.m1.1a"><mrow id="S3.SS5.p1.1.m1.1.1" xref="S3.SS5.p1.1.m1.1.1.cmml"><mn id="S3.SS5.p1.1.m1.1.1.2" xref="S3.SS5.p1.1.m1.1.1.2.cmml">448</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS5.p1.1.m1.1.1.1" xref="S3.SS5.p1.1.m1.1.1.1.cmml">×</mo><mn id="S3.SS5.p1.1.m1.1.1.3" xref="S3.SS5.p1.1.m1.1.1.3.cmml">448</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS5.p1.1.m1.1b"><apply id="S3.SS5.p1.1.m1.1.1.cmml" xref="S3.SS5.p1.1.m1.1.1"><times id="S3.SS5.p1.1.m1.1.1.1.cmml" xref="S3.SS5.p1.1.m1.1.1.1"></times><cn type="integer" id="S3.SS5.p1.1.m1.1.1.2.cmml" xref="S3.SS5.p1.1.m1.1.1.2">448</cn><cn type="integer" id="S3.SS5.p1.1.m1.1.1.3.cmml" xref="S3.SS5.p1.1.m1.1.1.3">448</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS5.p1.1.m1.1c">448\times 448</annotation></semantics></math> pixels.
+Examples of face patches after data normalization are shown in Fig. <a href="#S3.F5" title="Figure 5 ‣ 3.5 Data Pre-processing ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>.
+The processed data along with original imagery are released to public.</p>
+</div>
+<figure id="S3.F5" class="ltx_figure"><img src="/html/2007.15837/assets/x5.png" id="S3.F5.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="415" height="92" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Data examples captured by 18 different camera views. The red arrow is the gaze direction. The face patch images shown are after data normalization.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Evaluation Protocol</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">One goal of this paper is to establish a benchmark to evaluate gaze estimation algorithms.
+For this purpose, we define four evaluations on ETH-XGaze.
+The first three evaluations - cross-dataset, within-dataset, and person-specific evaluations - are popular evaluations found in the current gaze estimation literature. In addition, we propose to also assess robustness over head poses and gaze directions as a fourth evaluation criteria, which is made possible by ETH-XGaze.</p>
+</div>
+<section id="S4.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span>Baseline Method</h3>
+
+<div id="S4.SS1.p1" class="ltx_para">
+<p id="S4.SS1.p1.1" class="ltx_p">We provide a baseline gaze estimation method using an off-the-shelf ResNet-50 network <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>.
+This baseline takes the full-face patch covering <math id="S4.SS1.p1.1.m1.1" class="ltx_Math" alttext="224\times 224" display="inline"><semantics id="S4.SS1.p1.1.m1.1a"><mrow id="S4.SS1.p1.1.m1.1.1" xref="S4.SS1.p1.1.m1.1.1.cmml"><mn id="S4.SS1.p1.1.m1.1.1.2" xref="S4.SS1.p1.1.m1.1.1.2.cmml">224</mn><mo lspace="0.222em" rspace="0.222em" id="S4.SS1.p1.1.m1.1.1.1" xref="S4.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S4.SS1.p1.1.m1.1.1.3" xref="S4.SS1.p1.1.m1.1.1.3.cmml">224</mn></mrow><annotation-xml encoding="MathML-Content" id="S4.SS1.p1.1.m1.1b"><apply id="S4.SS1.p1.1.m1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1"><times id="S4.SS1.p1.1.m1.1.1.1.cmml" xref="S4.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S4.SS1.p1.1.m1.1.1.2.cmml" xref="S4.SS1.p1.1.m1.1.1.2">224</cn><cn type="integer" id="S4.SS1.p1.1.m1.1.1.3.cmml" xref="S4.SS1.p1.1.m1.1.1.3">224</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS1.p1.1.m1.1c">224\times 224</annotation></semantics></math> pixels as input and outputs the horizontal and vertical gaze angles.
+We used the ADAM <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> optimizer with an initial learning rate of 0.0001, and the batch size is set to be 50.
+We trained the baseline model for 25 epochs and decay the learning rate by a factor of 0.1 every 10 epochs.</p>
+</div>
+</section>
+<section id="S4.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span>Dataset Preparation</h3>
+
+<div id="S4.SS2.p1" class="ltx_para">
+<p id="S4.SS2.p1.3" class="ltx_p">We split ETH-XGaze into three parts: a training set <math id="S4.SS2.p1.1.m1.1" class="ltx_Math" alttext="\mathbb{TR}" display="inline"><semantics id="S4.SS2.p1.1.m1.1a"><mrow id="S4.SS2.p1.1.m1.1.1" xref="S4.SS2.p1.1.m1.1.1.cmml"><mi id="S4.SS2.p1.1.m1.1.1.2" xref="S4.SS2.p1.1.m1.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.1.m1.1.1.1" xref="S4.SS2.p1.1.m1.1.1.1.cmml">​</mo><mi id="S4.SS2.p1.1.m1.1.1.3" xref="S4.SS2.p1.1.m1.1.1.3.cmml">ℝ</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.1.m1.1b"><apply id="S4.SS2.p1.1.m1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1"><times id="S4.SS2.p1.1.m1.1.1.1.cmml" xref="S4.SS2.p1.1.m1.1.1.1"></times><ci id="S4.SS2.p1.1.m1.1.1.2.cmml" xref="S4.SS2.p1.1.m1.1.1.2">𝕋</ci><ci id="S4.SS2.p1.1.m1.1.1.3.cmml" xref="S4.SS2.p1.1.m1.1.1.3">ℝ</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.1.m1.1c">\mathbb{TR}</annotation></semantics></math> comprised of 80 participants, a test set for within-dataset evaluation <math id="S4.SS2.p1.2.m2.1" class="ltx_Math" alttext="\mathbb{TE}" display="inline"><semantics id="S4.SS2.p1.2.m2.1a"><mrow id="S4.SS2.p1.2.m2.1.1" xref="S4.SS2.p1.2.m2.1.1.cmml"><mi id="S4.SS2.p1.2.m2.1.1.2" xref="S4.SS2.p1.2.m2.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.2.m2.1.1.1" xref="S4.SS2.p1.2.m2.1.1.1.cmml">​</mo><mi id="S4.SS2.p1.2.m2.1.1.3" xref="S4.SS2.p1.2.m2.1.1.3.cmml">𝔼</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.2.m2.1b"><apply id="S4.SS2.p1.2.m2.1.1.cmml" xref="S4.SS2.p1.2.m2.1.1"><times id="S4.SS2.p1.2.m2.1.1.1.cmml" xref="S4.SS2.p1.2.m2.1.1.1"></times><ci id="S4.SS2.p1.2.m2.1.1.2.cmml" xref="S4.SS2.p1.2.m2.1.1.2">𝕋</ci><ci id="S4.SS2.p1.2.m2.1.1.3.cmml" xref="S4.SS2.p1.2.m2.1.1.3">𝔼</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.2.m2.1c">\mathbb{TE}</annotation></semantics></math> containing 15 participants, and a test set for person-specific evaluation <math id="S4.SS2.p1.3.m3.1" class="ltx_Math" alttext="\mathbb{TES}" display="inline"><semantics id="S4.SS2.p1.3.m3.1a"><mrow id="S4.SS2.p1.3.m3.1.1" xref="S4.SS2.p1.3.m3.1.1.cmml"><mi id="S4.SS2.p1.3.m3.1.1.2" xref="S4.SS2.p1.3.m3.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.3.m3.1.1.1" xref="S4.SS2.p1.3.m3.1.1.1.cmml">​</mo><mi id="S4.SS2.p1.3.m3.1.1.3" xref="S4.SS2.p1.3.m3.1.1.3.cmml">𝔼</mi><mo lspace="0em" rspace="0em" id="S4.SS2.p1.3.m3.1.1.1a" xref="S4.SS2.p1.3.m3.1.1.1.cmml">​</mo><mi id="S4.SS2.p1.3.m3.1.1.4" xref="S4.SS2.p1.3.m3.1.1.4.cmml">𝕊</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS2.p1.3.m3.1b"><apply id="S4.SS2.p1.3.m3.1.1.cmml" xref="S4.SS2.p1.3.m3.1.1"><times id="S4.SS2.p1.3.m3.1.1.1.cmml" xref="S4.SS2.p1.3.m3.1.1.1"></times><ci id="S4.SS2.p1.3.m3.1.1.2.cmml" xref="S4.SS2.p1.3.m3.1.1.2">𝕋</ci><ci id="S4.SS2.p1.3.m3.1.1.3.cmml" xref="S4.SS2.p1.3.m3.1.1.3">𝔼</ci><ci id="S4.SS2.p1.3.m3.1.1.4.cmml" xref="S4.SS2.p1.3.m3.1.1.4">𝕊</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS2.p1.3.m3.1c">\mathbb{TES}</annotation></semantics></math> consisting of another 15 participants. Splitting the test data into two disjoint sets allows us to release ground truth gaze required for the person-specific evaluation (Sec. <a href="#S4.SS5" title="4.5 Person-specific Evaluation ‣ 4 Evaluation Protocol ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4.5</span></a>).
+We ensured that the subjects in both training and test sets exhibit diverse gender, age, and ethnicity, some with and some without glasses. While we release both ground-truth gaze and imagery for the training set, we withhold the ground-truth gaze for the test sets. Authors are encouraged to submit gaze predictions on test samples to the benchmark website, and the performance will be evaluated and reported. This enables future research to compare to existing methods on neutral grounds.</p>
+</div>
+<div id="S4.SS2.p2" class="ltx_para">
+<p id="S4.SS2.p2.1" class="ltx_p">Aside from the proposed ETH-XGaze dataset, we also evaluated other existing datasets with our baseline method.
+These datasets were pre-processed as we described in Sec. <a href="#S3.SS5" title="3.5 Data Pre-processing ‣ 3 ETH-XGaze Dataset ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3.5</span></a>. For the <span id="S4.SS2.p2.1.1" class="ltx_text ltx_font_italic">EYEDIAP</span> dataset, we used both screen sequence and floating target sequences and sampled the video sequences every 15 frames. For the <span id="S4.SS2.p2.1.2" class="ltx_text ltx_font_italic">GazeCapture</span> dataset, we used the pre-processing pipeline from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite> to obtain 3D head poses since the dataset does not provide camera parameters.
+For the <span id="S4.SS2.p2.1.3" class="ltx_text ltx_font_italic">Gaze360</span> dataset, we used the face bounding box provided by the dataset to crop the face patch, alongside the 3D gaze ground-truth.
+We will ask authors of these datasets for permission to release the processed data such that the community can use it for evaluations on ETH-XGaze.</p>
+</div>
+</section>
+<section id="S4.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span>Cross-dataset Evaluation</h3>
+
+<figure id="S4.T2" class="ltx_table">
+<table id="S4.T2.1.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tr id="S4.T2.1.1.1" class="ltx_tr">
+<td id="S4.T2.1.1.1.1" class="ltx_td ltx_nopad ltx_align_center ltx_border_l ltx_border_r ltx_border_t"><svg version="1.1" height="18.92" width="65.42" overflow="visible"><g transform="translate(0,18.92) scale(1,-1)"><path d="M 0,18.92 65.42,0" stroke="#000000" stroke-width="0.4"></path><g class="ltx_svg_fog" transform="translate(0,0)"><g transform="translate(0,9.46) scale(1, -1)"><foreignObject width="32.71" height="9.46" overflow="visible">
+<span id="S4.T2.1.1.1.1.pic1.1.1" class="ltx_inline-block">
+<span id="S4.T2.1.1.1.1.pic1.1.1.1" class="ltx_inline-block ltx_align_left">
+<span id="S4.T2.1.1.1.1.pic1.1.1.1.1" class="ltx_p">Train</span>
+</span>
+</span></foreignObject></g></g><g class="ltx_svg_fog" transform="translate(39.59,9.46)"><g transform="translate(0,9.46) scale(1, -1)"><foreignObject width="25.83" height="9.46" overflow="visible">
+<span id="S4.T2.1.1.1.1.pic1.2.1" class="ltx_inline-block">
+<span id="S4.T2.1.1.1.1.pic1.2.1.1" class="ltx_inline-block ltx_align_right">
+<span id="S4.T2.1.1.1.1.pic1.2.1.1.1" class="ltx_p">Test</span>
+</span>
+</span></foreignObject></g></g></g></svg></td>
+<td id="S4.T2.1.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">MPIIGaze</td>
+<td id="S4.T2.1.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">EYEDIAP</td>
+<td id="S4.T2.1.1.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<span id="S4.T2.1.1.1.4.1" class="ltx_text"></span> <span id="S4.T2.1.1.1.4.2" class="ltx_text">
+<span id="S4.T2.1.1.1.4.2.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T2.1.1.1.4.2.1.1" class="ltx_tr">
+<span id="S4.T2.1.1.1.4.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Gaze</span></span>
+<span id="S4.T2.1.1.1.4.2.1.2" class="ltx_tr">
+<span id="S4.T2.1.1.1.4.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">Capture</span></span>
+</span></span><span id="S4.T2.1.1.1.4.3" class="ltx_text"></span></td>
+<td id="S4.T2.1.1.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<span id="S4.T2.1.1.1.5.1" class="ltx_text"></span> <span id="S4.T2.1.1.1.5.2" class="ltx_text">
+<span id="S4.T2.1.1.1.5.2.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T2.1.1.1.5.2.1.1" class="ltx_tr">
+<span id="S4.T2.1.1.1.5.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">RT</span></span>
+<span id="S4.T2.1.1.1.5.2.1.2" class="ltx_tr">
+<span id="S4.T2.1.1.1.5.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">-GENE</span></span>
+</span></span><span id="S4.T2.1.1.1.5.3" class="ltx_text"></span></td>
+<td id="S4.T2.1.1.1.6" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">Gaze360</td>
+<td id="S4.T2.1.1.1.7" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">ETH-XGaze</td>
+<td id="S4.T2.1.1.1.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">
+<span id="S4.T2.1.1.1.8.1" class="ltx_text"></span> <span id="S4.T2.1.1.1.8.2" class="ltx_text">
+<span id="S4.T2.1.1.1.8.2.1" class="ltx_tabular ltx_align_middle">
+<span id="S4.T2.1.1.1.8.2.1.1" class="ltx_tr">
+<span id="S4.T2.1.1.1.8.2.1.1.1" class="ltx_td ltx_nopad_r ltx_align_center">Ave.</span></span>
+<span id="S4.T2.1.1.1.8.2.1.2" class="ltx_tr">
+<span id="S4.T2.1.1.1.8.2.1.2.1" class="ltx_td ltx_nopad_r ltx_align_center">Rank</span></span>
+</span></span><span id="S4.T2.1.1.1.8.3" class="ltx_text"></span></td>
+</tr>
+<tr id="S4.T2.1.1.2" class="ltx_tr">
+<td id="S4.T2.1.1.2.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">MPIIGaze</td>
+<td id="S4.T2.1.1.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T2.1.1.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">17.9</td>
+<td id="S4.T2.1.1.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.1.1.2.4.1" class="ltx_text ltx_font_bold">6.3</span></td>
+<td id="S4.T2.1.1.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">14.9</td>
+<td id="S4.T2.1.1.2.6" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">31.7</td>
+<td id="S4.T2.1.1.2.7" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">34.9</td>
+<td id="S4.T2.1.1.2.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2.6</td>
+</tr>
+<tr id="S4.T2.1.1.3" class="ltx_tr">
+<td id="S4.T2.1.1.3.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">EYEDIAP</td>
+<td id="S4.T2.1.1.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">16.9</td>
+<td id="S4.T2.1.1.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T2.1.1.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">14.2</td>
+<td id="S4.T2.1.1.3.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">15.6</td>
+<td id="S4.T2.1.1.3.6" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">33.7</td>
+<td id="S4.T2.1.1.3.7" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">41.7</td>
+<td id="S4.T2.1.1.3.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">4.2</td>
+</tr>
+<tr id="S4.T2.1.1.4" class="ltx_tr">
+<td id="S4.T2.1.1.4.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">GazeCapture</td>
+<td id="S4.T2.1.1.4.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.1.1.4.2.1" class="ltx_text ltx_font_bold">4.5</span></td>
+<td id="S4.T2.1.1.4.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">13.7</td>
+<td id="S4.T2.1.1.4.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T2.1.1.4.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.1.1.4.5.1" class="ltx_text ltx_font_bold">14.7</span></td>
+<td id="S4.T2.1.1.4.6" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">30.2</td>
+<td id="S4.T2.1.1.4.7" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">29.4</td>
+<td id="S4.T2.1.1.4.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T2.1.1.4.8.1" class="ltx_text ltx_font_bold">1.8</span></td>
+</tr>
+<tr id="S4.T2.1.1.5" class="ltx_tr">
+<td id="S4.T2.1.1.5.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">RT-GENE</td>
+<td id="S4.T2.1.1.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">12.0</td>
+<td id="S4.T2.1.1.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">21.2</td>
+<td id="S4.T2.1.1.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">13.2</td>
+<td id="S4.T2.1.1.5.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T2.1.1.5.6" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">34.7</td>
+<td id="S4.T2.1.1.5.7" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">42.6</td>
+<td id="S4.T2.1.1.5.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">4.6</td>
+</tr>
+<tr id="S4.T2.1.1.6" class="ltx_tr">
+<td id="S4.T2.1.1.6.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t">Gaze360</td>
+<td id="S4.T2.1.1.6.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">10.3</td>
+<td id="S4.T2.1.1.6.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">11.3</td>
+<td id="S4.T2.1.1.6.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">12.9</td>
+<td id="S4.T2.1.1.6.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">26.6</td>
+<td id="S4.T2.1.1.6.6" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t">-</td>
+<td id="S4.T2.1.1.6.7" class="ltx_td ltx_align_center ltx_border_rr ltx_border_t"><span id="S4.T2.1.1.6.7.1" class="ltx_text ltx_font_bold">17.0</span></td>
+<td id="S4.T2.1.1.6.8" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">2.8</td>
+</tr>
+<tr id="S4.T2.1.1.7" class="ltx_tr">
+<td id="S4.T2.1.1.7.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_tt">ETH-XGaze</td>
+<td id="S4.T2.1.1.7.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">7.5</td>
+<td id="S4.T2.1.1.7.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt"><span id="S4.T2.1.1.7.3.1" class="ltx_text ltx_font_bold">11.0</span></td>
+<td id="S4.T2.1.1.7.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">10.5</td>
+<td id="S4.T2.1.1.7.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">31.2</td>
+<td id="S4.T2.1.1.7.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_rr ltx_border_tt"><span id="S4.T2.1.1.7.6.1" class="ltx_text ltx_font_bold">27.3</span></td>
+<td id="S4.T2.1.1.7.7" class="ltx_td ltx_align_center ltx_border_b ltx_border_rr ltx_border_tt">-</td>
+<td id="S4.T2.1.1.7.8" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_tt">2.0</td>
+</tr>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 2: </span>Gaze estimation errors in degrees on cross-dataset evaluations. The last column shows the average ranking on each test sets, and all other numbers are gaze estimation error in degrees.
+</figcaption>
+</figure>
+<div id="S4.SS3.p1" class="ltx_para">
+<p id="S4.SS3.p1.1" class="ltx_p">Cross-dataset evaluation has gained popularity since it indicates the generalization capabilities of a gaze estimation method.
+We define the cross-dataset evaluation as training the model on ETH-XGaze and testing on other datasets, as well as training on other datasets and testing on ETH-XGaze.</p>
+</div>
+<div id="S4.SS3.p2" class="ltx_para">
+<p id="S4.SS3.p2.1" class="ltx_p">We conducted the pair-wise cross-dataset evaluations on different datasets and show results achieved by the baseline in Tab. <a href="#S4.T2" title="Table 2 ‣ 4.3 Cross-dataset Evaluation ‣ 4 Evaluation Protocol ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.
+The results exhibit rather large gaze estimation errors when testing on our ETH-XGaze, indicating that there is a big domain gap between ETH-XGaze and previous datasets.
+This stems from the fact that ETH-XGaze exhibits much larger variation in head pose and gaze direction compared to other datasets.
+Therefore, the gaze estimator has to extrapolate to those unseen head poses and gaze directions which is known to be a difficult machine learning task.</p>
+</div>
+<div id="S4.SS3.p3" class="ltx_para">
+<p id="S4.SS3.p3.1" class="ltx_p">Training on GazeCapture achieves the best overall ranking since it contains similar head pose and gaze ranges compared to MPIIGaze, RT-GENE and EYEDIAP.
+However, it performs poorly on test datasets that exhibit large variation in head pose and gaze direction such as Gaze360 and our ETH-XGaze.
+In contrast, ETH-XGaze enables thorough benchmarking of generalization capabilities of future gaze estimation approaches.</p>
+</div>
+<div id="S4.SS3.p4" class="ltx_para">
+<p id="S4.SS3.p4.1" class="ltx_p">The model trained on Gaze360 achieves the best cross-dataset performance on ETH-XGaze since they contain similar head pose and gaze direction ranges.
+However, Gaze360 has been collected “in the wild” setting and can suffer from low-quality images and gaze labels (see Fig. <a href="#S4.F6" title="Figure 6 ‣ 4.3 Cross-dataset Evaluation ‣ 4 Evaluation Protocol ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>).
+Our dataset, despite the lab setting, still allows for good performance (the best on EYEDIAP and Gaze360) without any data augmentation.</p>
+</div>
+<figure id="S4.F6" class="ltx_figure"><img src="/html/2007.15837/assets/x6.png" id="S4.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="438" height="61" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Test samples from different datasets. We show results from training on Gaze360 and testing on ETH-XGaze (left), and training on ETH-XGaze and testing on Gaze360 (middle) and RT-GENE (right). The green arrow denotes ground truth and the red arrow is the prediction. The numbers give the respective gaze estimation errors in degrees.</figcaption>
+</figure>
+</section>
+<section id="S4.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span>Within-dataset Evaluation</h3>
+
+<figure id="S4.T3" class="ltx_table">
+<table id="S4.T3.1" class="ltx_tabular ltx_centering ltx_align_middle">
+<tr id="S4.T3.1.1" class="ltx_tr">
+<td id="S4.T3.1.1.1" class="ltx_td ltx_border_l ltx_border_r ltx_border_t"></td>
+<td id="S4.T3.1.1.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">ETH-XGaze</td>
+<td id="S4.T3.1.1.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">MPIIGaze</td>
+<td id="S4.T3.1.1.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">EYEDIAP</td>
+<td id="S4.T3.1.1.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">GazeCapture</td>
+<td id="S4.T3.1.1.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">RT-GENE</td>
+</tr>
+<tr id="S4.T3.1.2" class="ltx_tr">
+<td id="S4.T3.1.2.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite>
+</td>
+<td id="S4.T3.1.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.2.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">5.2</td>
+<td id="S4.T3.1.2.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.2.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">3.5</td>
+<td id="S4.T3.1.2.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+</tr>
+<tr id="S4.T3.1.3" class="ltx_tr">
+<td id="S4.T3.1.3.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>
+</td>
+<td id="S4.T3.1.3.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">4.8</td>
+<td id="S4.T3.1.3.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.3.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.3.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.3.6.1" class="ltx_text ltx_font_bold">8.7</span></td>
+</tr>
+<tr id="S4.T3.1.4" class="ltx_tr">
+<td id="S4.T3.1.4.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>]</cite>
+</td>
+<td id="S4.T3.1.4.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.4.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S4.T3.1.4.3.1" class="ltx_text ltx_font_bold">4.5</span></td>
+<td id="S4.T3.1.4.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">10.3</td>
+<td id="S4.T3.1.4.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.4.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+</tr>
+<tr id="S4.T3.1.5" class="ltx_tr">
+<td id="S4.T3.1.5.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib39" title="" class="ltx_ref">39</a>]</cite>
+</td>
+<td id="S4.T3.1.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">6.8</td>
+<td id="S4.T3.1.5.5" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+<td id="S4.T3.1.5.6" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">-</td>
+</tr>
+<tr id="S4.T3.1.6" class="ltx_tr">
+<td id="S4.T3.1.6.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t">Baseline</td>
+<td id="S4.T3.1.6.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">4.5</td>
+<td id="S4.T3.1.6.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">4.8</td>
+<td id="S4.T3.1.6.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T3.1.6.4.1" class="ltx_text ltx_font_bold">6.5</span></td>
+<td id="S4.T3.1.6.5" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S4.T3.1.6.5.1" class="ltx_text ltx_font_bold">3.3</span></td>
+<td id="S4.T3.1.6.6" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">12.0</td>
+</tr>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 3: </span>Comparison of the baseline with current state-of-the-art on within dataset evaluations. Numbers are gaze estimation errors in degrees.</figcaption>
+</figure>
+<div id="S4.SS4.p1" class="ltx_para">
+<p id="S4.SS4.p1.2" class="ltx_p">Within-dataset evaluation is another popular means of evaluating gaze estimation methods.
+Here the method is trained on <math id="S4.SS4.p1.1.m1.1" class="ltx_Math" alttext="\mathbb{TR}" display="inline"><semantics id="S4.SS4.p1.1.m1.1a"><mrow id="S4.SS4.p1.1.m1.1.1" xref="S4.SS4.p1.1.m1.1.1.cmml"><mi id="S4.SS4.p1.1.m1.1.1.2" xref="S4.SS4.p1.1.m1.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS4.p1.1.m1.1.1.1" xref="S4.SS4.p1.1.m1.1.1.1.cmml">​</mo><mi id="S4.SS4.p1.1.m1.1.1.3" xref="S4.SS4.p1.1.m1.1.1.3.cmml">ℝ</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p1.1.m1.1b"><apply id="S4.SS4.p1.1.m1.1.1.cmml" xref="S4.SS4.p1.1.m1.1.1"><times id="S4.SS4.p1.1.m1.1.1.1.cmml" xref="S4.SS4.p1.1.m1.1.1.1"></times><ci id="S4.SS4.p1.1.m1.1.1.2.cmml" xref="S4.SS4.p1.1.m1.1.1.2">𝕋</ci><ci id="S4.SS4.p1.1.m1.1.1.3.cmml" xref="S4.SS4.p1.1.m1.1.1.3">ℝ</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p1.1.m1.1c">\mathbb{TR}</annotation></semantics></math> and evaluated on <math id="S4.SS4.p1.2.m2.1" class="ltx_Math" alttext="\mathbb{TE}" display="inline"><semantics id="S4.SS4.p1.2.m2.1a"><mrow id="S4.SS4.p1.2.m2.1.1" xref="S4.SS4.p1.2.m2.1.1.cmml"><mi id="S4.SS4.p1.2.m2.1.1.2" xref="S4.SS4.p1.2.m2.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS4.p1.2.m2.1.1.1" xref="S4.SS4.p1.2.m2.1.1.1.cmml">​</mo><mi id="S4.SS4.p1.2.m2.1.1.3" xref="S4.SS4.p1.2.m2.1.1.3.cmml">𝔼</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS4.p1.2.m2.1b"><apply id="S4.SS4.p1.2.m2.1.1.cmml" xref="S4.SS4.p1.2.m2.1.1"><times id="S4.SS4.p1.2.m2.1.1.1.cmml" xref="S4.SS4.p1.2.m2.1.1.1"></times><ci id="S4.SS4.p1.2.m2.1.1.2.cmml" xref="S4.SS4.p1.2.m2.1.1.2">𝕋</ci><ci id="S4.SS4.p1.2.m2.1.1.3.cmml" xref="S4.SS4.p1.2.m2.1.1.3">𝔼</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS4.p1.2.m2.1c">\mathbb{TE}</annotation></semantics></math>.
+Tab. <a href="#S4.T3" title="Table 3 ‣ 4.4 Within-dataset Evaluation ‣ 4 Evaluation Protocol ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a> shows performances of the baseline alongside comparisons to recent state-of-the-art methods. The baseline achieves an error of 4.7 degrees on average on ETH-XGaze, which is reasonably low given the large ranges of head poses and gaze directions. On other datasets, the baseline exhibits an accuracy comparable to current state-of-the-art methods, indicating that it is a strong baseline. The results of the other methods are taken from the respective publications.</p>
+</div>
+</section>
+<section id="S4.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.5 </span>Person-specific Evaluation</h3>
+
+<figure id="S4.F7" class="ltx_figure"><img src="/html/2007.15837/assets/figures/person_specific.png" id="S4.F7.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="538" height="128" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Gaze estimation errors for person-specific evaluation of our baseline. We show the gaze estimation errors with and without training with 200 calibration samples. The number above each bar is the gaze estimation error in degrees.</figcaption>
+</figure>
+<div id="S4.SS5.p1" class="ltx_para">
+<p id="S4.SS5.p1.4" class="ltx_p">Person-specific gaze estimation has gained a lot of attention in recent years <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>, <a href="#bib.bib38" title="" class="ltx_ref">38</a>, <a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> due to the huge improvements that can be achieved from even just a few personal calibration samples.
+We randomly selected 200 samples from each participant in <math id="S4.SS5.p1.1.m1.1" class="ltx_Math" alttext="\mathbb{TES}" display="inline"><semantics id="S4.SS5.p1.1.m1.1a"><mrow id="S4.SS5.p1.1.m1.1.1" xref="S4.SS5.p1.1.m1.1.1.cmml"><mi id="S4.SS5.p1.1.m1.1.1.2" xref="S4.SS5.p1.1.m1.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS5.p1.1.m1.1.1.1" xref="S4.SS5.p1.1.m1.1.1.1.cmml">​</mo><mi id="S4.SS5.p1.1.m1.1.1.3" xref="S4.SS5.p1.1.m1.1.1.3.cmml">𝔼</mi><mo lspace="0em" rspace="0em" id="S4.SS5.p1.1.m1.1.1.1a" xref="S4.SS5.p1.1.m1.1.1.1.cmml">​</mo><mi id="S4.SS5.p1.1.m1.1.1.4" xref="S4.SS5.p1.1.m1.1.1.4.cmml">𝕊</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.1.m1.1b"><apply id="S4.SS5.p1.1.m1.1.1.cmml" xref="S4.SS5.p1.1.m1.1.1"><times id="S4.SS5.p1.1.m1.1.1.1.cmml" xref="S4.SS5.p1.1.m1.1.1.1"></times><ci id="S4.SS5.p1.1.m1.1.1.2.cmml" xref="S4.SS5.p1.1.m1.1.1.2">𝕋</ci><ci id="S4.SS5.p1.1.m1.1.1.3.cmml" xref="S4.SS5.p1.1.m1.1.1.3">𝔼</ci><ci id="S4.SS5.p1.1.m1.1.1.4.cmml" xref="S4.SS5.p1.1.m1.1.1.4">𝕊</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.1.m1.1c">\mathbb{TES}</annotation></semantics></math> as the personal calibration samples.
+The protocol is to train the model with <math id="S4.SS5.p1.2.m2.1" class="ltx_Math" alttext="\mathbb{TR}" display="inline"><semantics id="S4.SS5.p1.2.m2.1a"><mrow id="S4.SS5.p1.2.m2.1.1" xref="S4.SS5.p1.2.m2.1.1.cmml"><mi id="S4.SS5.p1.2.m2.1.1.2" xref="S4.SS5.p1.2.m2.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS5.p1.2.m2.1.1.1" xref="S4.SS5.p1.2.m2.1.1.1.cmml">​</mo><mi id="S4.SS5.p1.2.m2.1.1.3" xref="S4.SS5.p1.2.m2.1.1.3.cmml">ℝ</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.2.m2.1b"><apply id="S4.SS5.p1.2.m2.1.1.cmml" xref="S4.SS5.p1.2.m2.1.1"><times id="S4.SS5.p1.2.m2.1.1.1.cmml" xref="S4.SS5.p1.2.m2.1.1.1"></times><ci id="S4.SS5.p1.2.m2.1.1.2.cmml" xref="S4.SS5.p1.2.m2.1.1.2">𝕋</ci><ci id="S4.SS5.p1.2.m2.1.1.3.cmml" xref="S4.SS5.p1.2.m2.1.1.3">ℝ</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.2.m2.1c">\mathbb{TR}</annotation></semantics></math> and up to 200 personal calibration samples, and to test on the remaining samples of <math id="S4.SS5.p1.3.m3.1" class="ltx_Math" alttext="\mathbb{TES}" display="inline"><semantics id="S4.SS5.p1.3.m3.1a"><mrow id="S4.SS5.p1.3.m3.1.1" xref="S4.SS5.p1.3.m3.1.1.cmml"><mi id="S4.SS5.p1.3.m3.1.1.2" xref="S4.SS5.p1.3.m3.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS5.p1.3.m3.1.1.1" xref="S4.SS5.p1.3.m3.1.1.1.cmml">​</mo><mi id="S4.SS5.p1.3.m3.1.1.3" xref="S4.SS5.p1.3.m3.1.1.3.cmml">𝔼</mi><mo lspace="0em" rspace="0em" id="S4.SS5.p1.3.m3.1.1.1a" xref="S4.SS5.p1.3.m3.1.1.1.cmml">​</mo><mi id="S4.SS5.p1.3.m3.1.1.4" xref="S4.SS5.p1.3.m3.1.1.4.cmml">𝕊</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.3.m3.1b"><apply id="S4.SS5.p1.3.m3.1.1.cmml" xref="S4.SS5.p1.3.m3.1.1"><times id="S4.SS5.p1.3.m3.1.1.1.cmml" xref="S4.SS5.p1.3.m3.1.1.1"></times><ci id="S4.SS5.p1.3.m3.1.1.2.cmml" xref="S4.SS5.p1.3.m3.1.1.2">𝕋</ci><ci id="S4.SS5.p1.3.m3.1.1.3.cmml" xref="S4.SS5.p1.3.m3.1.1.3">𝔼</ci><ci id="S4.SS5.p1.3.m3.1.1.4.cmml" xref="S4.SS5.p1.3.m3.1.1.4">𝕊</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.3.m3.1c">\mathbb{TES}</annotation></semantics></math> – for each of the 15 test subjects. We pre-trained the model on <math id="S4.SS5.p1.4.m4.1" class="ltx_Math" alttext="\mathbb{TR}" display="inline"><semantics id="S4.SS5.p1.4.m4.1a"><mrow id="S4.SS5.p1.4.m4.1.1" xref="S4.SS5.p1.4.m4.1.1.cmml"><mi id="S4.SS5.p1.4.m4.1.1.2" xref="S4.SS5.p1.4.m4.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS5.p1.4.m4.1.1.1" xref="S4.SS5.p1.4.m4.1.1.1.cmml">​</mo><mi id="S4.SS5.p1.4.m4.1.1.3" xref="S4.SS5.p1.4.m4.1.1.3.cmml">ℝ</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS5.p1.4.m4.1b"><apply id="S4.SS5.p1.4.m4.1.1.cmml" xref="S4.SS5.p1.4.m4.1.1"><times id="S4.SS5.p1.4.m4.1.1.1.cmml" xref="S4.SS5.p1.4.m4.1.1.1"></times><ci id="S4.SS5.p1.4.m4.1.1.2.cmml" xref="S4.SS5.p1.4.m4.1.1.2">𝕋</ci><ci id="S4.SS5.p1.4.m4.1.1.3.cmml" xref="S4.SS5.p1.4.m4.1.1.3">ℝ</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS5.p1.4.m4.1c">\mathbb{TR}</annotation></semantics></math> and then fine-tune it using the 200 samples with 25 epochs.</p>
+</div>
+<div id="S4.SS5.p2" class="ltx_para">
+<p id="S4.SS5.p2.1" class="ltx_p">Results from the baseline in Fig. <a href="#S4.F7" title="Figure 7 ‣ 4.5 Person-specific Evaluation ‣ 4 Evaluation Protocol ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a> show that personal calibration improves the gaze estimates by a large margin.
+The goal of this evaluation is not only to achieve good results but also to rely on as few calibration samples as possible.</p>
+</div>
+</section>
+<section id="S4.SS6" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.6 </span>Robustness Evaluation</h3>
+
+<div id="S4.SS6.p1" class="ltx_para">
+<p id="S4.SS6.p1.1" class="ltx_p">Previous gaze estimation works usually only report the mean gaze estimation errors without detailed analysis across head poses and gaze directions. This is partly due to the lack of sufficient data samples to cover a wide range. Knowing the performance of an algorithm with respect to these factors is important, since a method with a higher overall error might have lower error within a specific range of interest. Hence we introduce a detailed evaluation to show the robustness across head poses and gaze directions. Fig. <a href="#S5.F8" title="Figure 8 ‣ 5 Demonstration of ETH-XGaze ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a> shows the performance of the baseline on <math id="S4.SS6.p1.1.m1.1" class="ltx_Math" alttext="\mathbb{TE}" display="inline"><semantics id="S4.SS6.p1.1.m1.1a"><mrow id="S4.SS6.p1.1.m1.1.1" xref="S4.SS6.p1.1.m1.1.1.cmml"><mi id="S4.SS6.p1.1.m1.1.1.2" xref="S4.SS6.p1.1.m1.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S4.SS6.p1.1.m1.1.1.1" xref="S4.SS6.p1.1.m1.1.1.1.cmml">​</mo><mi id="S4.SS6.p1.1.m1.1.1.3" xref="S4.SS6.p1.1.m1.1.1.3.cmml">𝔼</mi></mrow><annotation-xml encoding="MathML-Content" id="S4.SS6.p1.1.m1.1b"><apply id="S4.SS6.p1.1.m1.1.1.cmml" xref="S4.SS6.p1.1.m1.1.1"><times id="S4.SS6.p1.1.m1.1.1.1.cmml" xref="S4.SS6.p1.1.m1.1.1.1"></times><ci id="S4.SS6.p1.1.m1.1.1.2.cmml" xref="S4.SS6.p1.1.m1.1.1.2">𝕋</ci><ci id="S4.SS6.p1.1.m1.1.1.3.cmml" xref="S4.SS6.p1.1.m1.1.1.3">𝔼</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S4.SS6.p1.1.m1.1c">\mathbb{TE}</annotation></semantics></math> over horizontal and vertical axes of the head pose and gaze direction. The different colors represent the different training sets. While these plots evaluate the performance of the different training sets, the benchmark will compare different algorithms instead.
+A flat curve across the entire graph, as in the case of training on ETH-XGaze, indicates robustness to head pose and gaze direction variation.</p>
+</div>
+</section>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Demonstration of ETH-XGaze</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">In this section, we evaluate the importance of different factors during training.
+Previous gaze estimation datasets cannot serve as the evaluation set for an ablation study of different factors such as head poses, gaze directions and illumination conditions due to the limited coverage.
+In contrast, the proposed ETH-XGaze is an ideal dataset for these evaluations.</p>
+</div>
+<figure id="S5.F8" class="ltx_figure"><img src="/html/2007.15837/assets/x7.png" id="S5.F8.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="415" height="272" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>Gaze estimation error distribution across head poses (first row) and gaze directions (second row) in horizontal and vertical directions respectively. The colored curves represent results with different training sets tested on <math id="S5.F8.2.m1.1" class="ltx_Math" alttext="\mathbb{TE}" display="inline"><semantics id="S5.F8.2.m1.1b"><mrow id="S5.F8.2.m1.1.1" xref="S5.F8.2.m1.1.1.cmml"><mi id="S5.F8.2.m1.1.1.2" xref="S5.F8.2.m1.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S5.F8.2.m1.1.1.1" xref="S5.F8.2.m1.1.1.1.cmml">​</mo><mi id="S5.F8.2.m1.1.1.3" xref="S5.F8.2.m1.1.1.3.cmml">𝔼</mi></mrow><annotation-xml encoding="MathML-Content" id="S5.F8.2.m1.1c"><apply id="S5.F8.2.m1.1.1.cmml" xref="S5.F8.2.m1.1.1"><times id="S5.F8.2.m1.1.1.1.cmml" xref="S5.F8.2.m1.1.1.1"></times><ci id="S5.F8.2.m1.1.1.2.cmml" xref="S5.F8.2.m1.1.1.2">𝕋</ci><ci id="S5.F8.2.m1.1.1.3.cmml" xref="S5.F8.2.m1.1.1.3">𝔼</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.F8.2.m1.1d">\mathbb{TE}</annotation></semantics></math>.</figcaption>
+</figure>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.8" class="ltx_p"><span id="S5.p2.8.1" class="ltx_text ltx_font_bold">Head Pose and Gaze Direction.</span> We created several training subsets from <math id="S5.p2.1.m1.1" class="ltx_Math" alttext="\mathbb{TR}" display="inline"><semantics id="S5.p2.1.m1.1a"><mrow id="S5.p2.1.m1.1.1" xref="S5.p2.1.m1.1.1.cmml"><mi id="S5.p2.1.m1.1.1.2" xref="S5.p2.1.m1.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S5.p2.1.m1.1.1.1" xref="S5.p2.1.m1.1.1.1.cmml">​</mo><mi id="S5.p2.1.m1.1.1.3" xref="S5.p2.1.m1.1.1.3.cmml">ℝ</mi></mrow><annotation-xml encoding="MathML-Content" id="S5.p2.1.m1.1b"><apply id="S5.p2.1.m1.1.1.cmml" xref="S5.p2.1.m1.1.1"><times id="S5.p2.1.m1.1.1.1.cmml" xref="S5.p2.1.m1.1.1.1"></times><ci id="S5.p2.1.m1.1.1.2.cmml" xref="S5.p2.1.m1.1.1.2">𝕋</ci><ci id="S5.p2.1.m1.1.1.3.cmml" xref="S5.p2.1.m1.1.1.3">ℝ</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p2.1.m1.1c">\mathbb{TR}</annotation></semantics></math> by constraining the head poses and/or gaze directions angle ranges to be <math id="S5.p2.2.m2.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S5.p2.2.m2.1a"><mo id="S5.p2.2.m2.1.1" xref="S5.p2.2.m2.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S5.p2.2.m2.1b"><csymbol cd="latexml" id="S5.p2.2.m2.1.1.cmml" xref="S5.p2.2.m2.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S5.p2.2.m2.1c">\pm</annotation></semantics></math>80, <math id="S5.p2.3.m3.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S5.p2.3.m3.1a"><mo id="S5.p2.3.m3.1.1" xref="S5.p2.3.m3.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S5.p2.3.m3.1b"><csymbol cd="latexml" id="S5.p2.3.m3.1.1.cmml" xref="S5.p2.3.m3.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S5.p2.3.m3.1c">\pm</annotation></semantics></math>60, <math id="S5.p2.4.m4.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S5.p2.4.m4.1a"><mo id="S5.p2.4.m4.1.1" xref="S5.p2.4.m4.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S5.p2.4.m4.1b"><csymbol cd="latexml" id="S5.p2.4.m4.1.1.cmml" xref="S5.p2.4.m4.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S5.p2.4.m4.1c">\pm</annotation></semantics></math>40, and <math id="S5.p2.5.m5.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S5.p2.5.m5.1a"><mo id="S5.p2.5.m5.1.1" xref="S5.p2.5.m5.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S5.p2.5.m5.1b"><csymbol cd="latexml" id="S5.p2.5.m5.1.1.cmml" xref="S5.p2.5.m5.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S5.p2.5.m5.1c">\pm</annotation></semantics></math>20 in both horizontal and vertical directions.
+To keep the same amount of training samples for each subsets, we randomly re-sampled each training subset to have the same amount of samples as the minimal training set, i.e. the training set of <math id="S5.p2.6.m6.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S5.p2.6.m6.1a"><mo id="S5.p2.6.m6.1.1" xref="S5.p2.6.m6.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S5.p2.6.m6.1b"><csymbol cd="latexml" id="S5.p2.6.m6.1.1.cmml" xref="S5.p2.6.m6.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S5.p2.6.m6.1c">\pm</annotation></semantics></math>20 in both head poses and gaze directions.
+The results of testing on <math id="S5.p2.7.m7.1" class="ltx_Math" alttext="\mathbb{TE}" display="inline"><semantics id="S5.p2.7.m7.1a"><mrow id="S5.p2.7.m7.1.1" xref="S5.p2.7.m7.1.1.cmml"><mi id="S5.p2.7.m7.1.1.2" xref="S5.p2.7.m7.1.1.2.cmml">𝕋</mi><mo lspace="0em" rspace="0em" id="S5.p2.7.m7.1.1.1" xref="S5.p2.7.m7.1.1.1.cmml">​</mo><mi id="S5.p2.7.m7.1.1.3" xref="S5.p2.7.m7.1.1.3.cmml">𝔼</mi></mrow><annotation-xml encoding="MathML-Content" id="S5.p2.7.m7.1b"><apply id="S5.p2.7.m7.1.1.cmml" xref="S5.p2.7.m7.1.1"><times id="S5.p2.7.m7.1.1.1.cmml" xref="S5.p2.7.m7.1.1.1"></times><ci id="S5.p2.7.m7.1.1.2.cmml" xref="S5.p2.7.m7.1.1.2">𝕋</ci><ci id="S5.p2.7.m7.1.1.3.cmml" xref="S5.p2.7.m7.1.1.3">𝔼</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p2.7.m7.1c">\mathbb{TE}</annotation></semantics></math> are shown in the left of Fig. <a href="#S5.F9" title="Figure 9 ‣ 5 Demonstration of ETH-XGaze ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a>.
+As we can see from the figure, constraining the head pose and gaze direction results in worse performance in general, especially when we constrain both head pose and gaze direction ranges.
+Constraining the gaze directions achieves worse results than constraining head poses, which indicates gaze directions have more impact than the head poses.
+Specifically, when we constrained the angle range to be <math id="S5.p2.8.m8.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S5.p2.8.m8.1a"><mo id="S5.p2.8.m8.1.1" xref="S5.p2.8.m8.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S5.p2.8.m8.1b"><csymbol cd="latexml" id="S5.p2.8.m8.1.1.cmml" xref="S5.p2.8.m8.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S5.p2.8.m8.1c">\pm</annotation></semantics></math>40 degrees, the performance decrease caused by constraining head poses is 34.6%, constraining gaze directions is 82.1%, and constraining both head poses and gaze directions is 206.4%.</p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p"><span id="S5.p3.1.1" class="ltx_text ltx_font_bold">Illumination condition.</span> In the center of Fig. <a href="#S5.F9" title="Figure 9 ‣ 5 Demonstration of ETH-XGaze ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a>, we show results by training the baseline with all lighting conditions or only with the full-lighting condition.
+The performance drop (<math id="S5.p3.1.m1.1" class="ltx_Math" alttext="9\%" display="inline"><semantics id="S5.p3.1.m1.1a"><mrow id="S5.p3.1.m1.1.1" xref="S5.p3.1.m1.1.1.cmml"><mn id="S5.p3.1.m1.1.1.2" xref="S5.p3.1.m1.1.1.2.cmml">9</mn><mo id="S5.p3.1.m1.1.1.1" xref="S5.p3.1.m1.1.1.1.cmml">%</mo></mrow><annotation-xml encoding="MathML-Content" id="S5.p3.1.m1.1b"><apply id="S5.p3.1.m1.1.1.cmml" xref="S5.p3.1.m1.1.1"><csymbol cd="latexml" id="S5.p3.1.m1.1.1.1.cmml" xref="S5.p3.1.m1.1.1.1">percent</csymbol><cn type="integer" id="S5.p3.1.m1.1.1.2.cmml" xref="S5.p3.1.m1.1.1.2">9</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p3.1.m1.1c">9\%</annotation></semantics></math> from 7.8 degrees to 8.5 degrees) indicates the impact of lighting conditions on gaze estimation performance.</p>
+</div>
+<div id="S5.p4" class="ltx_para">
+<p id="S5.p4.1" class="ltx_p"><span id="S5.p4.1.1" class="ltx_text ltx_font_bold">Personal appearance.</span> In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>, the authors show gaze estimation performance with different numbers of participants.
+Our repeated experiment with our baseline on ETH-XGaze shows the same trend as increasing number of participants improves the performance (see Fig. <a href="#S5.F9" title="Figure 9 ‣ 5 Demonstration of ETH-XGaze ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a>, right).</p>
+</div>
+<div id="S5.p5" class="ltx_para">
+<p id="S5.p5.4" class="ltx_p"><span id="S5.p5.4.1" class="ltx_text ltx_font_bold">Input resolution.</span>
+The image resolution analysis in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite> was only for eye images and the highest resolution was <math id="S5.p5.1.m1.1" class="ltx_Math" alttext="60\times 36" display="inline"><semantics id="S5.p5.1.m1.1a"><mrow id="S5.p5.1.m1.1.1" xref="S5.p5.1.m1.1.1.cmml"><mn id="S5.p5.1.m1.1.1.2" xref="S5.p5.1.m1.1.1.2.cmml">60</mn><mo lspace="0.222em" rspace="0.222em" id="S5.p5.1.m1.1.1.1" xref="S5.p5.1.m1.1.1.1.cmml">×</mo><mn id="S5.p5.1.m1.1.1.3" xref="S5.p5.1.m1.1.1.3.cmml">36</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.p5.1.m1.1b"><apply id="S5.p5.1.m1.1.1.cmml" xref="S5.p5.1.m1.1.1"><times id="S5.p5.1.m1.1.1.1.cmml" xref="S5.p5.1.m1.1.1.1"></times><cn type="integer" id="S5.p5.1.m1.1.1.2.cmml" xref="S5.p5.1.m1.1.1.2">60</cn><cn type="integer" id="S5.p5.1.m1.1.1.3.cmml" xref="S5.p5.1.m1.1.1.3">36</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p5.1.m1.1c">60\times 36</annotation></semantics></math>.
+The default input face patch image size to ResNet is <math id="S5.p5.2.m2.1" class="ltx_Math" alttext="224\times 224" display="inline"><semantics id="S5.p5.2.m2.1a"><mrow id="S5.p5.2.m2.1.1" xref="S5.p5.2.m2.1.1.cmml"><mn id="S5.p5.2.m2.1.1.2" xref="S5.p5.2.m2.1.1.2.cmml">224</mn><mo lspace="0.222em" rspace="0.222em" id="S5.p5.2.m2.1.1.1" xref="S5.p5.2.m2.1.1.1.cmml">×</mo><mn id="S5.p5.2.m2.1.1.3" xref="S5.p5.2.m2.1.1.3.cmml">224</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.p5.2.m2.1b"><apply id="S5.p5.2.m2.1.1.cmml" xref="S5.p5.2.m2.1.1"><times id="S5.p5.2.m2.1.1.1.cmml" xref="S5.p5.2.m2.1.1.1"></times><cn type="integer" id="S5.p5.2.m2.1.1.2.cmml" xref="S5.p5.2.m2.1.1.2">224</cn><cn type="integer" id="S5.p5.2.m2.1.1.3.cmml" xref="S5.p5.2.m2.1.1.3">224</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p5.2.m2.1c">224\times 224</annotation></semantics></math> which we used in our baseline.
+We resized the input image to be <math id="S5.p5.3.m3.1" class="ltx_Math" alttext="112\times 112" display="inline"><semantics id="S5.p5.3.m3.1a"><mrow id="S5.p5.3.m3.1.1" xref="S5.p5.3.m3.1.1.cmml"><mn id="S5.p5.3.m3.1.1.2" xref="S5.p5.3.m3.1.1.2.cmml">112</mn><mo lspace="0.222em" rspace="0.222em" id="S5.p5.3.m3.1.1.1" xref="S5.p5.3.m3.1.1.1.cmml">×</mo><mn id="S5.p5.3.m3.1.1.3" xref="S5.p5.3.m3.1.1.3.cmml">112</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.p5.3.m3.1b"><apply id="S5.p5.3.m3.1.1.cmml" xref="S5.p5.3.m3.1.1"><times id="S5.p5.3.m3.1.1.1.cmml" xref="S5.p5.3.m3.1.1.1"></times><cn type="integer" id="S5.p5.3.m3.1.1.2.cmml" xref="S5.p5.3.m3.1.1.2">112</cn><cn type="integer" id="S5.p5.3.m3.1.1.3.cmml" xref="S5.p5.3.m3.1.1.3">112</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p5.3.m3.1c">112\times 112</annotation></semantics></math> and <math id="S5.p5.4.m4.1" class="ltx_Math" alttext="448\times 448" display="inline"><semantics id="S5.p5.4.m4.1a"><mrow id="S5.p5.4.m4.1.1" xref="S5.p5.4.m4.1.1.cmml"><mn id="S5.p5.4.m4.1.1.2" xref="S5.p5.4.m4.1.1.2.cmml">448</mn><mo lspace="0.222em" rspace="0.222em" id="S5.p5.4.m4.1.1.1" xref="S5.p5.4.m4.1.1.1.cmml">×</mo><mn id="S5.p5.4.m4.1.1.3" xref="S5.p5.4.m4.1.1.3.cmml">448</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.p5.4.m4.1b"><apply id="S5.p5.4.m4.1.1.cmml" xref="S5.p5.4.m4.1.1"><times id="S5.p5.4.m4.1.1.1.cmml" xref="S5.p5.4.m4.1.1.1"></times><cn type="integer" id="S5.p5.4.m4.1.1.2.cmml" xref="S5.p5.4.m4.1.1.2">448</cn><cn type="integer" id="S5.p5.4.m4.1.1.3.cmml" xref="S5.p5.4.m4.1.1.3">448</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.p5.4.m4.1c">448\times 448</annotation></semantics></math> and then fed them into the baseline.
+Since there is an average pooling layer at the end of the ResNet convolutional layers, we do not need to modify the architecture with respect to different resolutions.</p>
+</div>
+<figure id="S5.F9" class="ltx_figure"><img src="/html/2007.15837/assets/x8.png" id="S5.F9.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="438" height="120" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>Gaze estimation error distribution by constraining head poses and gaze directions (left), lighting conditions (middle), and number of people (right) during training. The number above each bar is the gaze estimation error in degrees.</figcaption>
+</figure>
+<figure id="S5.T4" class="ltx_table">
+<table id="S5.T4.7.7" class="ltx_tabular ltx_centering ltx_align_middle">
+<tr id="S5.T4.4.4.4" class="ltx_tr">
+<td id="S5.T4.1.1.1.1" class="ltx_td ltx_nopad ltx_align_center ltx_border_l ltx_border_r ltx_border_t"><svg version="1.1" height="18.92" width="65.42" overflow="visible"><g transform="translate(0,18.92) scale(1,-1)"><path d="M 0,18.92 65.42,0" stroke="#000000" stroke-width="0.4"></path><g class="ltx_svg_fog" transform="translate(0,0)"><g transform="translate(0,9.46) scale(1, -1)"><foreignObject width="32.71" height="9.46" overflow="visible">
+<span id="S5.T4.1.1.1.1.pic1.1.1" class="ltx_inline-block">
+<span id="S5.T4.1.1.1.1.pic1.1.1.1" class="ltx_inline-block ltx_align_left">
+<span id="S5.T4.1.1.1.1.pic1.1.1.1.1" class="ltx_p">Train</span>
+</span>
+</span></foreignObject></g></g><g class="ltx_svg_fog" transform="translate(39.59,9.46)"><g transform="translate(0,9.46) scale(1, -1)"><foreignObject width="25.83" height="9.46" overflow="visible">
+<span id="S5.T4.1.1.1.1.pic1.2.1" class="ltx_inline-block">
+<span id="S5.T4.1.1.1.1.pic1.2.1.1" class="ltx_inline-block ltx_align_right">
+<span id="S5.T4.1.1.1.1.pic1.2.1.1.1" class="ltx_p">Test</span>
+</span>
+</span></foreignObject></g></g></g></svg></td>
+<td id="S5.T4.2.2.2.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><math id="S5.T4.2.2.2.2.m1.1" class="ltx_Math" alttext="112\times 112" display="inline"><semantics id="S5.T4.2.2.2.2.m1.1a"><mrow id="S5.T4.2.2.2.2.m1.1.1" xref="S5.T4.2.2.2.2.m1.1.1.cmml"><mn id="S5.T4.2.2.2.2.m1.1.1.2" xref="S5.T4.2.2.2.2.m1.1.1.2.cmml">112</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T4.2.2.2.2.m1.1.1.1" xref="S5.T4.2.2.2.2.m1.1.1.1.cmml">×</mo><mn id="S5.T4.2.2.2.2.m1.1.1.3" xref="S5.T4.2.2.2.2.m1.1.1.3.cmml">112</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T4.2.2.2.2.m1.1b"><apply id="S5.T4.2.2.2.2.m1.1.1.cmml" xref="S5.T4.2.2.2.2.m1.1.1"><times id="S5.T4.2.2.2.2.m1.1.1.1.cmml" xref="S5.T4.2.2.2.2.m1.1.1.1"></times><cn type="integer" id="S5.T4.2.2.2.2.m1.1.1.2.cmml" xref="S5.T4.2.2.2.2.m1.1.1.2">112</cn><cn type="integer" id="S5.T4.2.2.2.2.m1.1.1.3.cmml" xref="S5.T4.2.2.2.2.m1.1.1.3">112</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T4.2.2.2.2.m1.1c">112\times 112</annotation></semantics></math></td>
+<td id="S5.T4.3.3.3.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><math id="S5.T4.3.3.3.3.m1.1" class="ltx_Math" alttext="224\times 224" display="inline"><semantics id="S5.T4.3.3.3.3.m1.1a"><mrow id="S5.T4.3.3.3.3.m1.1.1" xref="S5.T4.3.3.3.3.m1.1.1.cmml"><mn id="S5.T4.3.3.3.3.m1.1.1.2" xref="S5.T4.3.3.3.3.m1.1.1.2.cmml">224</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T4.3.3.3.3.m1.1.1.1" xref="S5.T4.3.3.3.3.m1.1.1.1.cmml">×</mo><mn id="S5.T4.3.3.3.3.m1.1.1.3" xref="S5.T4.3.3.3.3.m1.1.1.3.cmml">224</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T4.3.3.3.3.m1.1b"><apply id="S5.T4.3.3.3.3.m1.1.1.cmml" xref="S5.T4.3.3.3.3.m1.1.1"><times id="S5.T4.3.3.3.3.m1.1.1.1.cmml" xref="S5.T4.3.3.3.3.m1.1.1.1"></times><cn type="integer" id="S5.T4.3.3.3.3.m1.1.1.2.cmml" xref="S5.T4.3.3.3.3.m1.1.1.2">224</cn><cn type="integer" id="S5.T4.3.3.3.3.m1.1.1.3.cmml" xref="S5.T4.3.3.3.3.m1.1.1.3">224</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T4.3.3.3.3.m1.1c">224\times 224</annotation></semantics></math></td>
+<td id="S5.T4.4.4.4.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><math id="S5.T4.4.4.4.4.m1.1" class="ltx_Math" alttext="448\times 448" display="inline"><semantics id="S5.T4.4.4.4.4.m1.1a"><mrow id="S5.T4.4.4.4.4.m1.1.1" xref="S5.T4.4.4.4.4.m1.1.1.cmml"><mn id="S5.T4.4.4.4.4.m1.1.1.2" xref="S5.T4.4.4.4.4.m1.1.1.2.cmml">448</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T4.4.4.4.4.m1.1.1.1" xref="S5.T4.4.4.4.4.m1.1.1.1.cmml">×</mo><mn id="S5.T4.4.4.4.4.m1.1.1.3" xref="S5.T4.4.4.4.4.m1.1.1.3.cmml">448</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T4.4.4.4.4.m1.1b"><apply id="S5.T4.4.4.4.4.m1.1.1.cmml" xref="S5.T4.4.4.4.4.m1.1.1"><times id="S5.T4.4.4.4.4.m1.1.1.1.cmml" xref="S5.T4.4.4.4.4.m1.1.1.1"></times><cn type="integer" id="S5.T4.4.4.4.4.m1.1.1.2.cmml" xref="S5.T4.4.4.4.4.m1.1.1.2">448</cn><cn type="integer" id="S5.T4.4.4.4.4.m1.1.1.3.cmml" xref="S5.T4.4.4.4.4.m1.1.1.3">448</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T4.4.4.4.4.m1.1c">448\times 448</annotation></semantics></math></td>
+</tr>
+<tr id="S5.T4.5.5.5" class="ltx_tr">
+<td id="S5.T4.5.5.5.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"><math id="S5.T4.5.5.5.1.m1.1" class="ltx_Math" alttext="112\times 112" display="inline"><semantics id="S5.T4.5.5.5.1.m1.1a"><mrow id="S5.T4.5.5.5.1.m1.1.1" xref="S5.T4.5.5.5.1.m1.1.1.cmml"><mn id="S5.T4.5.5.5.1.m1.1.1.2" xref="S5.T4.5.5.5.1.m1.1.1.2.cmml">112</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T4.5.5.5.1.m1.1.1.1" xref="S5.T4.5.5.5.1.m1.1.1.1.cmml">×</mo><mn id="S5.T4.5.5.5.1.m1.1.1.3" xref="S5.T4.5.5.5.1.m1.1.1.3.cmml">112</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T4.5.5.5.1.m1.1b"><apply id="S5.T4.5.5.5.1.m1.1.1.cmml" xref="S5.T4.5.5.5.1.m1.1.1"><times id="S5.T4.5.5.5.1.m1.1.1.1.cmml" xref="S5.T4.5.5.5.1.m1.1.1.1"></times><cn type="integer" id="S5.T4.5.5.5.1.m1.1.1.2.cmml" xref="S5.T4.5.5.5.1.m1.1.1.2">112</cn><cn type="integer" id="S5.T4.5.5.5.1.m1.1.1.3.cmml" xref="S5.T4.5.5.5.1.m1.1.1.3">112</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T4.5.5.5.1.m1.1c">112\times 112</annotation></semantics></math></td>
+<td id="S5.T4.5.5.5.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S5.T4.5.5.5.2.1" class="ltx_text ltx_font_bold">5.4</span></td>
+<td id="S5.T4.5.5.5.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">25.3</td>
+<td id="S5.T4.5.5.5.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">37.2</td>
+</tr>
+<tr id="S5.T4.6.6.6" class="ltx_tr">
+<td id="S5.T4.6.6.6.1" class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t"><math id="S5.T4.6.6.6.1.m1.1" class="ltx_Math" alttext="224\times 224" display="inline"><semantics id="S5.T4.6.6.6.1.m1.1a"><mrow id="S5.T4.6.6.6.1.m1.1.1" xref="S5.T4.6.6.6.1.m1.1.1.cmml"><mn id="S5.T4.6.6.6.1.m1.1.1.2" xref="S5.T4.6.6.6.1.m1.1.1.2.cmml">224</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T4.6.6.6.1.m1.1.1.1" xref="S5.T4.6.6.6.1.m1.1.1.1.cmml">×</mo><mn id="S5.T4.6.6.6.1.m1.1.1.3" xref="S5.T4.6.6.6.1.m1.1.1.3.cmml">224</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T4.6.6.6.1.m1.1b"><apply id="S5.T4.6.6.6.1.m1.1.1.cmml" xref="S5.T4.6.6.6.1.m1.1.1"><times id="S5.T4.6.6.6.1.m1.1.1.1.cmml" xref="S5.T4.6.6.6.1.m1.1.1.1"></times><cn type="integer" id="S5.T4.6.6.6.1.m1.1.1.2.cmml" xref="S5.T4.6.6.6.1.m1.1.1.2">224</cn><cn type="integer" id="S5.T4.6.6.6.1.m1.1.1.3.cmml" xref="S5.T4.6.6.6.1.m1.1.1.3">224</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T4.6.6.6.1.m1.1c">224\times 224</annotation></semantics></math></td>
+<td id="S5.T4.6.6.6.2" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">20.2</td>
+<td id="S5.T4.6.6.6.3" class="ltx_td ltx_align_center ltx_border_r ltx_border_t"><span id="S5.T4.6.6.6.3.1" class="ltx_text ltx_font_bold">4.5</span></td>
+<td id="S5.T4.6.6.6.4" class="ltx_td ltx_align_center ltx_border_r ltx_border_t">42.1</td>
+</tr>
+<tr id="S5.T4.7.7.7" class="ltx_tr">
+<td id="S5.T4.7.7.7.1" class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r ltx_border_t"><math id="S5.T4.7.7.7.1.m1.1" class="ltx_Math" alttext="448\times 448" display="inline"><semantics id="S5.T4.7.7.7.1.m1.1a"><mrow id="S5.T4.7.7.7.1.m1.1.1" xref="S5.T4.7.7.7.1.m1.1.1.cmml"><mn id="S5.T4.7.7.7.1.m1.1.1.2" xref="S5.T4.7.7.7.1.m1.1.1.2.cmml">448</mn><mo lspace="0.222em" rspace="0.222em" id="S5.T4.7.7.7.1.m1.1.1.1" xref="S5.T4.7.7.7.1.m1.1.1.1.cmml">×</mo><mn id="S5.T4.7.7.7.1.m1.1.1.3" xref="S5.T4.7.7.7.1.m1.1.1.3.cmml">448</mn></mrow><annotation-xml encoding="MathML-Content" id="S5.T4.7.7.7.1.m1.1b"><apply id="S5.T4.7.7.7.1.m1.1.1.cmml" xref="S5.T4.7.7.7.1.m1.1.1"><times id="S5.T4.7.7.7.1.m1.1.1.1.cmml" xref="S5.T4.7.7.7.1.m1.1.1.1"></times><cn type="integer" id="S5.T4.7.7.7.1.m1.1.1.2.cmml" xref="S5.T4.7.7.7.1.m1.1.1.2">448</cn><cn type="integer" id="S5.T4.7.7.7.1.m1.1.1.3.cmml" xref="S5.T4.7.7.7.1.m1.1.1.3">448</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S5.T4.7.7.7.1.m1.1c">448\times 448</annotation></semantics></math></td>
+<td id="S5.T4.7.7.7.2" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">65.1</td>
+<td id="S5.T4.7.7.7.3" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t">54.7</td>
+<td id="S5.T4.7.7.7.4" class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t"><span id="S5.T4.7.7.7.4.1" class="ltx_text ltx_font_bold">4.2</span></td>
+</tr>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">Table 4: </span>Gaze estimation errors in degrees generated by models trained with different input image sizes in pixels.</figcaption>
+</figure>
+<div id="S5.p6" class="ltx_para">
+<p id="S5.p6.1" class="ltx_p">The results of resolution variation are shown in Tab. <a href="#S5.T4" title="Table 4 ‣ 5 Demonstration of ETH-XGaze ‣ ETH-XGaze: A Large Scale Dataset for Gaze Estimation under Extreme Head Pose and Gaze Variation" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.
+The performance is improved when training and testing on higher resolutions, which indicates the potential of high-resolution gaze estimation.
+However, different with results in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite>, the model trained on one size achieves much worse results on other sizes.
+This can be caused by the much higher image resolution in ETH-XGaze with large appearance differences compared to the MPIIGaze in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib42" title="" class="ltx_ref">42</a>]</cite>.
+We did not specifically develop the method to handle cross-resolution input images and expect future works can properly deal with cross-resolution training.</p>
+</div>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span>Conclusion</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">We present a new large-scale gaze estimation dataset ETH-XGaze, featuring large variation in head pose and gaze direction, high-resolution imagery, varied subject appearance, systematic illumination conditions, as well as accurate ground-truth gaze vectors. Evaluation using a baseline method shows that training on ETH-XGaze significantly improves robustness towards variation in head pose and gaze direction compared to existing datasets, adding a very valuable resource for future work on gaze estimation.
+In addition, we propose a standardized experimental protocol and evaluation framework that will be made available via the benchmark website alongside the dataset, allowing for fair comparison of gaze estimation algorithms on neutral ground.</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">Acknowledgements</h2>
+
+<figure id="Sx1.1" class="ltx_figure ltx_align_floatright"><img src="/html/2007.15837/assets/figures/LOGO_ERC-FLAG_EU_.jpg" id="Sx1.1.g1" class="ltx_graphics ltx_img_landscape" width="180" height="76" alt="[Uncaptioned image]">
+</figure>
+<div id="Sx1.p1" class="ltx_para">
+<p id="Sx1.p1.1" class="ltx_p">We thank the participants of our dataset for their contributions, our reviewers for helping us improve the paper, and Jan Wezel for helping with the hardware setup.
+This project has received funding from the European Research Council (ERC) under the European Union’s Horizon 2020 research and innovation programme grant agreement No. StG-2016-717054.</p>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Baluja, S., Pomerleau, D.: Non-intrusive gaze tracking using artificial neural
+networks. In: Advances in Neural Information Processing Systems. pp. 753–760
+(1994)
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Beeler, T., Bickel, B., Beardsley, P., Sumner, B., Gross, M.: High-quality
+single-shot capture of facial geometry. In: ACM Transactions on Graphics
+(TOG), pp. 1–9 (2010)
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Bérard, P., Bradley, D., Gross, M., Beeler, T.: Lightweight eye capture
+using a parametric model. ACM Transactions on Graphics (TOG) <span id="bib.bib3.1.1" class="ltx_text ltx_font_bold">35</span>(4),
+1–12 (2016)
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Bérard, P., Bradley, D., Gross, M., Beeler, T.: Practical person-specific
+eye rigging. In: Computer Graphics Forum. vol. 38, pp. 441–454. Wiley Online
+Library (2019)
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Bulat, A., Tzimiropoulos, G.: How far are we from solving the 2d &amp; 3d face
+alignment problem?(and a dataset of 230,000 3d facial landmarks). In:
+Proceedings of the IEEE International Conference on Computer Vision. pp.
+1021–1030 (2017)
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Cheng, Y., Huang, S., Wang, F., Qian, C., Lu, F.: A coarse-to-fine adaptive
+network for appearance-based gaze estimation. In: Proceedings of the AAAI
+Conference on Artificial Intelligence. pp. 10623–10630 (2020)
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Demiris, Y.: Prediction of intent in robotics and multi-agent systems.
+Cognitive processing <span id="bib.bib7.1.1" class="ltx_text ltx_font_bold">8</span>(3), 151–158 (2007)
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Dollar, P., Wojek, C., Schiele, B., Perona, P.: Pedestrian detection: An
+evaluation of the state of the art. IEEE transactions on pattern analysis and
+machine intelligence <span id="bib.bib8.1.1" class="ltx_text ltx_font_bold">34</span>(4), 743–761 (2011)
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Fischer, T., Jin Chang, H., Demiris, Y.: Rt-gene: Real-time eye gaze estimation
+in natural environments. In: Proceedings of the European Conference on
+Computer Vision. pp. 334–352 (2018)
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Funes Mora, K.A., Monay, F., Odobez, J.M.: Eyediap: A database for the
+development and evaluation of gaze estimation algorithms from rgb and rgb-d
+cameras. In: Proceedings of the ACM Symposium on Eye Tracking Research &amp;
+Applications. pp. 255–258. ACM (2014)
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image
+recognition. In: Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition. pp. 770–778 (2016)
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+He, Z., Spurr, A., Zhang, X., Hilliges, O.: Photo-realistic monocular gaze
+redirection using generative adversarial networks. In: Proceedings of the
+IEEE International Conference on Computer Vision. pp. 6932–6941 (2019)
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Huang, Q., Veeraraghavan, A., Sabharwal, A.: Tabletgaze: dataset and analysis
+for unconstrained appearance-based gaze estimation in mobile tablets. Machine
+Vision and Applications <span id="bib.bib13.1.1" class="ltx_text ltx_font_bold">28</span>(5-6), 445–461 (2017)
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Huber, P., Hu, G., Tena, R., Mortazavian, P., Koppen, P., Christmas, W.J.,
+Ratsch, M., Kittler, J.: A multiresolution 3d morphable face model and
+fitting framework. In: Proceedings of the 11th International Joint Conference
+on Computer Vision, Imaging and Computer Graphics Theory and Applications
+(2016)
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Ionescu, C., Papava, D., Olaru, V., Sminchisescu, C.: Human3.6m: large scale
+datasets and predictive methods for 3d human sensing in natural environments.
+IEEE Transactions on Pattern Analysis and Machine Intelligence
+<span id="bib.bib15.1.1" class="ltx_text ltx_font_bold">36</span>(7), 1325–1339 (jul 2014)
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Kellnhofer, P., Recasens, A., Stent, S., Matusik, W., Torralba, A.: Gaze360:
+physically unconstrained gaze estimation in the wild. In: Proceedings of the
+IEEE International Conference on Computer Vision. pp. 6912–6921 (2019)
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Kemelmacher-Shlizerman, I., Seitz, S.M., Miller, D., Brossard, E.: The megaface
+benchmark: 1 million faces for recognition at scale. In: Proceedings of the
+IEEE Conference on Computer Vision and Pattern Recognition. pp. 4873–4882
+(2016)
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Kingma, D.P., Ba, J.: Adam: A method for stochastic optimization. arXiv
+preprint arXiv:1412.6980 (2014)
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Krafka, K., Khosla, A., Kellnhofer, P., Kannan, H., Bhandarkar, S., Matusik,
+W., Torralba, A.: Eye tracking for everyone. In: Proceedings of the IEEE
+Conference on Computer Vision and Pattern Recognition. pp. 2176–2184 (2016)
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Liu, G., Yu, Y., Mora, K.A.F., Odobez, J.M.: A differential approach for gaze
+estimation with calibration. In: British Machine Vision Conference. vol. 2,
+p. 6 (2018)
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Lu, F., Sugano, Y., Okabe, T., Sato, Y.: Inferring human gaze from appearance
+via adaptive linear regression. In: Proceedings of the IEEE International
+Conference on Computer Vision. pp. 153–160. IEEE (2011)
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Lu, F., Sugano, Y., Okabe, T., Sato, Y.: Adaptive linear regression for
+appearance-based gaze estimation. IEEE Transactions on Pattern Analysis and
+Machine Intelligence <span id="bib.bib22.1.1" class="ltx_text ltx_font_bold">36</span>(10), 2033–2046 (2014)
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+Majaranta, P., Bulling, A.: Eye tracking and eye-based human–computer
+interaction. In: Advances in physiological computing, pp. 39–65. Springer
+(2014)
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Nech, A., Kemelmacher-Shlizerman, I.: Level playing field for million scale
+face recognition. In: Proceedings of the IEEE Conference on Computer Vision
+and Pattern Recognition. pp. 7044–7053 (2017)
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+Park, S., Mello, S.D., Molchanov, P., Iqbal, U., Hilliges, O., Kautz, J.:
+Few-shot adaptive gaze estimation. In: Proceedings of the IEEE International
+Conference on Computer Vision. pp. 9368–9377 (2019)
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+Park, S., Spurr, A., Hilliges, O.: Deep pictorial gaze estimation. In:
+Proceedings of the European Conference on Computer Vision. pp. 721–738
+(2018)
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+Ruch, T.C., Fulton, J.F.: Medical physiology and biophysics. Academic Medicine
+<span id="bib.bib27.1.1" class="ltx_text ltx_font_bold">35</span>(11),  1067 (1960)
+
+</span>
+</li>
+<li id="bib.bib28" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+Russakovsky, O., Deng, J., Su, H., Krause, J., Satheesh, S., Ma, S., Huang, Z.,
+Karpathy, A., Khosla, A., Bernstein, M., et al.: Imagenet large scale visual
+recognition challenge. International journal of computer vision
+<span id="bib.bib28.1.1" class="ltx_text ltx_font_bold">115</span>(3), 211–252 (2015)
+
+</span>
+</li>
+<li id="bib.bib29" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+Seitz, S.M., Curless, B., Diebel, J., Scharstein, D., Szeliski, R.: A
+comparison and evaluation of multi-view stereo reconstruction algorithms. In:
+Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition. vol. 1, pp. 519–528. IEEE (2006)
+
+</span>
+</li>
+<li id="bib.bib30" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+Shrivastava, A., Pfister, T., Tuzel, O., Susskind, J., Wang, W., Webb, R.:
+Learning from simulated and unsupervised images through adversarial training.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition. pp. 2107–2116 (2017)
+
+</span>
+</li>
+<li id="bib.bib31" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+Smith, B.A., Yin, Q., Feiner, S.K., Nayar, S.K.: Gaze locking: passive eye
+contact detection for human-object interaction. In: Proceedings of the 26th
+annual ACM symposium on User interface software and technology. pp. 271–280
+(2013)
+
+</span>
+</li>
+<li id="bib.bib32" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+Soo Park, H., Jain, E., Sheikh, Y.: Predicting primary gaze behavior using
+social saliency fields. In: Proceedings of the IEEE International Conference
+on Computer Vision. pp. 3503–3510 (2013)
+
+</span>
+</li>
+<li id="bib.bib33" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+Sugano, Y., Matsushita, Y., Sato, Y.: Learning-by-synthesis for
+appearance-based 3d gaze estimation. In: Proceedings of the IEEE Conference
+on Computer Vision and Pattern Recognition. pp. 1821–1828 (2014)
+
+</span>
+</li>
+<li id="bib.bib34" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+Wang, K., Zhao, R., Ji, Q.: A hierarchical generative model for eye image
+synthesis and eye gaze estimation. In: Proceedings of the IEEE Conference on
+Computer Vision and Pattern Recognition. pp. 440–448 (2018)
+
+</span>
+</li>
+<li id="bib.bib35" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+Wang, K., Zhao, R., Su, H., Ji, Q.: Generalizing eye tracking with bayesian
+adversarial learning. In: Proceedings of the IEEE Conference on Computer
+Vision and Pattern Recognition. pp. 11907–11916 (2019)
+
+</span>
+</li>
+<li id="bib.bib36" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+Wood, E., Baltrušaitis, T., Morency, L.P., Robinson, P., Bulling, A.: A
+3d morphable eye region model for gaze estimation. In: Proceedings of the
+European Conference on Computer Vision. pp. 297–313. Springer (2016)
+
+</span>
+</li>
+<li id="bib.bib37" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+Wood, E., Baltrušaitis, T., Morency, L.P., Robinson, P., Bulling, A.:
+Learning an appearance-based gaze estimator from one million synthesised
+images. In: Proceedings of the ACM Symposium on Eye Tracking Research &amp;
+Applications. pp. 131–138 (2016)
+
+</span>
+</li>
+<li id="bib.bib38" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock">
+Yu, Y., Liu, G., Odobez, J.M.: Improving few-shot user-specific gaze adaptation
+via gaze redirection synthesis. In: Proceedings of the IEEE Conference on
+Computer Vision and Pattern Recognition. pp. 11937–11946 (2019)
+
+</span>
+</li>
+<li id="bib.bib39" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock">
+Yu, Y., Odobez, J.M.: Unsupervised representation learning for gaze estimation.
+In: Proceedings of the IEEE Conference on Computer Vision and Pattern
+Recognition. pp. 7314–7324 (2020)
+
+</span>
+</li>
+<li id="bib.bib40" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock">
+Yu, Z., Yoon, J.S., Venkatesh, P., Park, J., Yu, J., Park, H.S.: Humbi 1.0:
+Human multiview behavioral imaging dataset (June 2020)
+
+</span>
+</li>
+<li id="bib.bib41" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock">
+Zhang, X., Sugano, Y., Bulling, A.: Revisiting data normalization for
+appearance-based gaze estimation. In: Proceedings of the ACM Symposium on Eye
+Tracking Research &amp; Applications. p. 12. ACM (2018)
+
+</span>
+</li>
+<li id="bib.bib42" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock">
+Zhang, X., Sugano, Y., Fritz, M., Bulling, A.: Mpiigaze: Real-world dataset and
+deep appearance-based gaze estimation. IEEE Transactions on Pattern Analysis
+and Machine Intelligence <span id="bib.bib42.1.1" class="ltx_text ltx_font_bold">41</span>(1), 162–175 (2019)
+
+</span>
+</li>
+<li id="bib.bib43" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[43]</span>
+<span class="ltx_bibblock">
+Zimmermann, C., Ceylan, D., Yang, J., Russell, B., Argus, M., Brox, T.:
+Freihand: A dataset for markerless capture of hand pose and shape from single
+rgb images. In: Proceedings of the IEEE International Conference on Computer
+Vision. pp. 813–822 (2019)
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2007.15836" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2007.15837" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2007.15837">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2007.15837" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2007.15838" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Thu Mar 14 12:44:41 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

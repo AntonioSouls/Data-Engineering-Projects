@@ -1,0 +1,830 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2105.09843] Teat Pose Estimation via RGBD Segmentation for Automated Milking</title><meta property="og:description" content="We present initial results in the development of a novel robot using RGBD cameras, image segmentation, and a simple teat pose estimation algorithm for automated milking.
+We relate on the analysis of the accuracy of dif…">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Teat Pose Estimation via RGBD Segmentation for Automated Milking">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="Teat Pose Estimation via RGBD Segmentation for Automated Milking">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2105.09843">
+
+<!--Generated on Mon Mar 18 19:37:48 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document" style="font-size:173%;">Teat Pose Estimation via RGBD Segmentation for Automated Milking
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Nicolas Borla<sup id="id9.9.id1" class="ltx_sup"><span id="id9.9.id1.1" class="ltx_text ltx_font_italic">1</span></sup>, Fabian Kuster<sup id="id10.10.id2" class="ltx_sup"><span id="id10.10.id2.1" class="ltx_text ltx_font_italic">1</span></sup>, Jonas Langenegger<sup id="id11.11.id3" class="ltx_sup"><span id="id11.11.id3.1" class="ltx_text ltx_font_italic">1</span></sup>, Juan Ribera<sup id="id12.12.id4" class="ltx_sup"><span id="id12.12.id4.1" class="ltx_text ltx_font_italic">2</span></sup>, Marcel Honegger<sup id="id13.13.id5" class="ltx_sup"><span id="id13.13.id5.1" class="ltx_text ltx_font_italic">1</span></sup>, Giovanni Toffetti<sup id="id14.14.id6" class="ltx_sup"><span id="id14.14.id6.1" class="ltx_text ltx_font_italic">2</span></sup> 
+<br class="ltx_break">
+
+
+Zurich University of Applied Sciences (ZHAW)
+
+</span><span class="ltx_author_notes">This research project is supported by Innosuisse, the Swiss Innovation Agency, with project number 40368.1 IP-ENG.<sup id="id15.15.id1" class="ltx_sup"><span id="id15.15.id1.1" class="ltx_text ltx_font_italic">1</span></sup> The authors are with the Institute of Mechatronic Systems (IMS), Technikumstrasse 5,
+8401 Winterthur, Switzerland<sup id="id16.16.id1" class="ltx_sup"><span id="id16.16.id1.1" class="ltx_text ltx_font_italic">2</span></sup> The authors are with the Institute of Applied Information Technology (InIT), Obere Kirchgasse 2, 8400 Winterthur, Switzerland</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id17.id1" class="ltx_p">We present initial results in the development of a novel robot using RGBD cameras, image segmentation, and a simple teat pose estimation algorithm for automated milking.
+We relate on the analysis of the accuracy of different commercial RGBD cameras in realistic conditions.
+Although preliminary, our initial implementation shows that 2D image segmentation combined with point cloud processing can achieve repeatable millimeter-scale precision in estimating (synthetic) teat tip positions and cup attachment approach.
+The solution is also applicable in a cloud robotics setup, with GPU-based segmentation executed on an edge device or cloud.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span id="S1.1.1" class="ltx_text ltx_font_smallcaps">Introduction</span>
+</h2>
+
+<div id="S1.p1" class="ltx_para">
+<p id="S1.p1.1" class="ltx_p">Milking robots have been in use for almost 30 years, after the first systems were installed in the Netherlands in 1992 <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>]</cite>. Today, the main suppliers of milking robots are Lely, DeLaval and GEA Farm Technologies. Their systems are typically used on large dairy farms and are optimized for milking cows up to 3 times per day, and around the clock.
+However, in many European countries such as Switzerland, dairy farms typically have less than 60 cows and they are usually milked only twice, once in the morning and once in the evening, while they are left to graze during the day. This use case requires milking robots that occupy less space, so that it is easier to install several systems in parallel in existing barns, and it requires the robots to milk cows as efficiently as possible, because the time slots for milking are far shorter. For this reason, we started a research project to design a new generation of milking robot, using the latest technologies to reduce the space required for the milking robot manipulator, and to reduce the time required to milk cows.
+<br class="ltx_break">While most existing milking robots only offer 3 degrees of freedom (DoF) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, this new manipulator offers 5 DoF, so that the milking cups can be positioned in all Cartesian coordinates, and their orientation aligned to the orientation of the teats. This allows to more reliably place and attach the milking cups to the teats.
+<br class="ltx_break"></p>
+</div>
+<figure id="S1.F1" class="ltx_figure"><img src="/html/2105.09843/assets/x1.png" id="S1.F1.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="465" height="367" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Kinematic model of the milking robot</figcaption>
+</figure>
+<div id="S1.p2" class="ltx_para">
+<p id="S1.p2.1" class="ltx_p">Attaching milking cups to teats often takes more than a minute with existing milking robots <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>. Before attaching cups, these robots often scan the teats with laser scanners to detect the teats positions, then the manipulator moves the cups to the teats for attachment. Attachments fail in 5 to 10% of all cases <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>, which requires another scan of the teats, for another trial to attach the cups.
+<br class="ltx_break">With a new approach to detect the teat poses with RGBD cameras in real-time, attaching the cups to teats does not require a preceding, time-consuming scanning procedure. Instead, the teat positions and orientations are detected while the robot manipulator is moving the cups to the estimated position of the teats, and is adjusting the motion to the detected positions with each measurement. This will reduce the time needed to attach the cups to the teats, and increase the reliability of the attachment process significantly.
+<br class="ltx_break"></p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span id="S2.1.1" class="ltx_text ltx_font_smallcaps">Related Work</span>
+</h2>
+
+<div id="S2.p1" class="ltx_para">
+<p id="S2.p1.1" class="ltx_p">In the following subsections we relate on the state of the art of commercial automated milking robots, published research in the field, and more general algorithmic approaches that can be applied to the problem at hand.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS1.4.1.1" class="ltx_text">II-A</span> </span><span id="S2.SS1.5.2" class="ltx_text ltx_font_italic">Commercial Milking Robots</span>
+</h3>
+
+<div id="S2.SS1.p1" class="ltx_para">
+<p id="S2.SS1.p1.1" class="ltx_p">Five major international commercial milking robot suppliers provide their services worldwide:
+Lely, DeLaval, GEA, SAC, and Lemmer-Fullwood.
+Apart from them, there are several smaller (typically national) suppliers. A complete discussion of the pros and cons of each solution is beyond the scope of this paper, moreover there are several specialized publications offering such comparisons online<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>E.g., <span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://www.melkroboter.net</span> (in German)</span></span></span>.</p>
+</div>
+<div id="S2.SS1.p2" class="ltx_para">
+<p id="S2.SS1.p2.1" class="ltx_p">Overall, the major drawbacks common to all current commercial solutions are:</p>
+</div>
+<div id="S2.SS1.p3" class="ltx_para">
+<ul id="S2.I1" class="ltx_itemize">
+<li id="S2.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S2.I1.i1.p1" class="ltx_para">
+<p id="S2.I1.i1.p1.1" class="ltx_p">High cost per milking robot unit;</p>
+</div>
+</li>
+<li id="S2.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S2.I1.i2.p1" class="ltx_para">
+<p id="S2.I1.i2.p1.1" class="ltx_p">Intense robot usage to amortize investment cost;</p>
+</div>
+</li>
+<li id="S2.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S2.I1.i3.p1" class="ltx_para">
+<p id="S2.I1.i3.p1.1" class="ltx_p">High cost of replacement parts and materials;</p>
+</div>
+</li>
+<li id="S2.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S2.I1.i4.p1" class="ltx_para">
+<p id="S2.I1.i4.p1.1" class="ltx_p">Limited or no support for continuous learning / adaptation to cow udder morphology (i.e., personalization)</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS2.4.1.1" class="ltx_text">II-B</span> </span><span id="S2.SS2.5.2" class="ltx_text ltx_font_italic">Automated Milking Literature</span>
+</h3>
+
+<div id="S2.SS2.p1" class="ltx_para">
+<p id="S2.SS2.p1.1" class="ltx_p">Many of the current state of the art solutions rely on laser scanner technology to detect teats and estimate their pose. A 2D laser scanner implies a scanning procedure, moving the sensor to different heights to achieve a 3D measurement. A significant drawback of this design is that the measurement cannot be performed in real-time. If the cow moves, a new measurement procedure is needed before the cups can be attached.
+Relying purely on depth information, laser technology may fail in correct teat identification, therefore manipulating the suction cups in the wrong direction. For this reason, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> proposes a fast and reliable solution to the problem using Time of Flight (ToF), RGBD and Thermal Imaging.
+The study from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> for vision systems for livestock reports that RGB-D technologies are preferable to ToF cameras.</p>
+</div>
+<div id="S2.SS2.p2" class="ltx_para">
+<p id="S2.SS2.p2.1" class="ltx_p">Similarly, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib6" title="" class="ltx_ref">6</a>]</cite> takes a stand against the limitations of laser assisted edge detection technologies, which cannot differentiate between a healthy and a diseased teat. They propose two alternatives to the task: a Haar-cascade classifier and a YOLO classifier for cow teats. Both approaches work on real time but lack reliable accuracy.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para">
+<p id="S2.SS2.p3.1" class="ltx_p">In <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> several references are given to teat pose estimation algorithms applied by commercial milking robots. However, the authors state that their method to identify teat tip positions from low resolution 3D-ToF camera videos is superior to all previously reported ones. The method is based on edge detection on the depth image combined with matching U-shaped templates. To account for teat size and distance from camera, resized U-shapes are applied for correlation. In order to account for non-vertical teats, PCA (principal component analysis) is used to obtain rotational invariant teats. The proposed solution requires limited computation and achieves teat pose estimation at 4 to 8 FPS. Validation results show “90% of the frames being successfully tracked” on 15 videos.</p>
+</div>
+<div id="S2.SS2.p4" class="ltx_para">
+<p id="S2.SS2.p4.1" class="ltx_p">The work in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, discusses the application of 3D vision technologies to precision livestock farming, including in automated milking, and concludes that at time of publication (2019) 3D deep learning solutions were not yet applicable due to a lack of sufficient training data, a problem common to all 3D deep learning computer vision applications.</p>
+</div>
+<div id="S2.SS2.p5" class="ltx_para">
+<p id="S2.SS2.p5.1" class="ltx_p">Finally, in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite>, the authors use a 3D-ToF camera
+to collect both RGB images and a point cloud. They process the point cloud applying the k-nearest algorithm for segmentation, but such method cannot distinguish the udder from the teats, resulting in imprecise segmentation. To counter this problem, their method relies on assumptions on the camera position w.r.t. the teat for teat detection. Still, this prevents them from correctly identifying teats on real cows where udder morphology is highly variant.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S2.SS3.4.1.1" class="ltx_text">II-C</span> </span><span id="S2.SS3.5.2" class="ltx_text ltx_font_italic">Object Detection, Pose Estimation, Grasping</span>
+</h3>
+
+<div id="S2.SS3.p1" class="ltx_para">
+<p id="S2.SS3.p1.1" class="ltx_p">As reported in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>, ”the ability for robots and computers to see and understand the environment is becoming a burgeoning field, needed in autonomous vehicles, augmented reality, drones, facial recognition, and robotic helpers”. Since the rise of the CNN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> deep learning based methods for image classification have reached state of the art performance for 2D detection. Nevertheless, 3D scene interpretation methods continue to struggle because of 1) the lack of publicly available RGB-D data sets <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> and 2) the not yet widespread adoption of depth cameras compared to 2D ones <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite>.</p>
+</div>
+<div id="S2.SS3.p2" class="ltx_para">
+<p id="S2.SS3.p2.1" class="ltx_p">Several algorithms have been developed for automated pose estimation and / or grasp generation of objects in literature, for instance <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite>, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite>.
+The approaches above address the general problem of grasping and manipulating unknown objects, however they cannot directly be applied to our specific manipulation task (i.e., teat attachment and successful pumping).
+One possible approach that goes in the direction of generalizing object classes and their manipulation is <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>
+which uses semantic 3D keypoints for object representation and enables the specification for robot action planning and grasping with centimeter level precision. Our initial work done in this paper is a needed step to try to apply that kind of approach to automated milking.</p>
+</div>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span id="S3.1.1" class="ltx_text ltx_font_smallcaps">Requirements</span>
+</h2>
+
+<div id="S3.p1" class="ltx_para">
+<p id="S3.p1.1" class="ltx_p">The initial requirements from the project specification for the teat pose estimation algorithm prototype were:</p>
+<ul id="S3.I1" class="ltx_itemize">
+<li id="S3.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i1.p1" class="ltx_para">
+<p id="S3.I1.i1.p1.1" class="ltx_p">Pose estimation must be performed continuously during the movement of the robotic arm;</p>
+</div>
+</li>
+<li id="S3.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i2.p1" class="ltx_para">
+<p id="S3.I1.i2.p1.1" class="ltx_p">Maximum estimation time of all teat poses of 10 seconds (this includes any arm movement required to reduce uncertainty);</p>
+</div>
+</li>
+<li id="S3.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I1.i3.p1" class="ltx_para">
+<p id="S3.I1.i3.p1.1" class="ltx_p">Recognition of the correct pose (within an error of 0.5 centimeters) in at least 90% of teats.</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S3.p2" class="ltx_para">
+<p id="S3.p2.1" class="ltx_p">Apart from these formal requirements coming from the project contract, further requirements for the solution stemmed from the fact that the robot shape and kinematics had to be designed, hence further requirements for the algorithm are:</p>
+</div>
+<div id="S3.p3" class="ltx_para">
+<ul id="S3.I2" class="ltx_itemize">
+<li id="S3.I2.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I2.i1.p1" class="ltx_para">
+<p id="S3.I2.i1.p1.1" class="ltx_p">No assumptions should be made about camera(s) positions and orientations w.r.t. the udder;</p>
+</div>
+</li>
+<li id="S3.I2.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I2.i2.p1" class="ltx_para">
+<p id="S3.I2.i2.p1.1" class="ltx_p">Occlusions have to be expected and taken into account;</p>
+</div>
+</li>
+<li id="S3.I2.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S3.I2.i3.p1" class="ltx_para">
+<p id="S3.I2.i3.p1.1" class="ltx_p">No assumptions should be made about teat number<span id="footnote2" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span>Not all cows have exactly 4 teats <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>]</cite></span></span></span>, positions, and orientations (cow’s udder morphology);</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S3.p4" class="ltx_para">
+<p id="S3.p4.1" class="ltx_p">No initial requirements were given with respect to the architecture and cost of the compute unit (or GPU) to be used for the implementation.</p>
+</div>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span id="S4.1.1" class="ltx_text ltx_font_smallcaps">Solution Architecture</span>
+</h2>
+
+<div id="S4.p1" class="ltx_para">
+<p id="S4.p1.1" class="ltx_p">Given the requirements from the previous section, and our analysis of the state of the art from Section <a href="#S2" title="II Related Work ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">II</span></a>, we oriented ourselves in choosing a solution that would allow us to minimize assumptions (e.g., on poses / frames) and at the same time account for natural variation (i.e., changing udder morphology, teat colors, light conditions).
+This lead us to restrict the space of solutions towards a combination of Neural Networks (NNs) based on Deep Learning (DL) with pose estimation from point clouds (PCLs).</p>
+</div>
+<div id="S4.p2" class="ltx_para">
+<p id="S4.p2.1" class="ltx_p">In this respect, our review of the literature of DL solutions applied to 3D convinced us that, at that specific moment, we could not leverage any existing 3D DL technology for the project, be it for reasons of prediction performance (both in terms of rate and accuracy) or training cost (including training data set labelling).</p>
+</div>
+<div id="S4.p3" class="ltx_para">
+<p id="S4.p3.1" class="ltx_p">Upon this reasoning, we decided to build on existing mature DL technologies to identify teats from 2D color images. The rationale here is that 2D DL allows us to minimize false positives in recognition while accounting for natural variation of morphology, colors, and light conditions. Here, discounting the different NN models, the main decision to make was whether to use multi-object identification (i.e., bounding boxes around teats) or multi-object segmentation (i.e., a pixel mask for all pixels belonging to each teat). We opted for the second alternative which, albeit slower (e.g., with Mask-RCNN), allowed us to have a more precise mask closely matching the shape of the teats as seen in 2D.</p>
+</div>
+<div id="S4.p4" class="ltx_para">
+<p id="S4.p4.1" class="ltx_p">To bridge the gap from 2D to 3D, we borrowed the idea from <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite> to project the mask stemming from the 2D teat identification step into the point cloud with a frustum to “carve out” teats in three dimensions.
+Then, for each 3D teat candidate, a combination of clustering, PCA, and surface normals algorithms can be used to estimate the orientation of a teat, identify the tip, and compute the its 6 DOF pose in 3D space.</p>
+</div>
+<div id="S4.p5" class="ltx_para">
+<p id="S4.p5.1" class="ltx_p">The resulting high level functioning of our solution is depicted in Figure <a href="#S4.F2" title="Figure 2 ‣ IV Solution Architecture ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<figure id="S4.F2" class="ltx_figure"><img src="/html/2105.09843/assets/img/ICRA_flow.png" id="S4.F2.g1" class="ltx_graphics ltx_centering ltx_img_square" width="538" height="592" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Main functional blocks of our teat pose estimation solution</figcaption>
+</figure>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span id="S5.1.1" class="ltx_text ltx_font_smallcaps">Implementation</span>
+</h2>
+
+<div id="S5.p1" class="ltx_para">
+<p id="S5.p1.1" class="ltx_p">The implementation of the solution was distributed across the labs participating in the project based on expertise. ICCLab (InIT) focused on the teat pose estimation algorithm, while the IMS took responsibility of all the robotic aspects, from the evaluation of different cameras for the task at hand, to their calibration and correction of errors, to the design of the final robot and the programming of the arm control logic.</p>
+</div>
+<div id="S5.p2" class="ltx_para">
+<p id="S5.p2.1" class="ltx_p">Given the distributed nature of the project and the possibility to apply cloud robotics solutions to the final product, we decided to implement the software stack for the project as a distributed system from the get go. In particular, we used containerization and a multi-master ROS design to isolate the different versions of operating systems, ROS, and libraries that were needed for the different components of the project.</p>
+</div>
+<div id="S5.p3" class="ltx_para">
+<p id="S5.p3.1" class="ltx_p">The overall component architecture of the final implementation is depicted in Figure <a href="#S5.F3" title="Figure 3 ‣ V Implementation ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+<figure id="S5.F3" class="ltx_figure"><img src="/html/2105.09843/assets/img/ICRA_FMC.png" id="S5.F3.g1" class="ltx_graphics ltx_img_landscape" width="598" height="399" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>FMC architectural diagram of our teat pose estimation solution</figcaption>
+</figure>
+<div id="S5.p4" class="ltx_para">
+<p id="S5.p4.1" class="ltx_p">We opted for using three different ROS nodes each implementing a subset of the functionalities:</p>
+<ul id="S5.I1" class="ltx_itemize">
+<li id="S5.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S5.I1.i1.p1" class="ltx_para">
+<p id="S5.I1.i1.p1.1" class="ltx_p">the <em id="S5.I1.i1.p1.1.1" class="ltx_emph ltx_font_italic">Pose Estimation node</em> is the interface to the sensor data and the robot. It receives the (time synchronized) messages from the camera sensors (i.e., RGB image and point cloud), forwards the RBG image to the NN, awaits for the teat masks to be detected, and uses the masks to publish the detected teat poses;</p>
+</div>
+</li>
+<li id="S5.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S5.I1.i2.p1" class="ltx_para">
+<p id="S5.I1.i2.p1.1" class="ltx_p">the <em id="S5.I1.i2.p1.1.1" class="ltx_emph ltx_font_italic">Segmentation node</em> hosts the NN that performs the multi-object image segmentation and publishes the detected masks;</p>
+</div>
+</li>
+<li id="S5.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S5.I1.i3.p1" class="ltx_para">
+<p id="S5.I1.i3.p1.1" class="ltx_p">the <em id="S5.I1.i3.p1.1.1" class="ltx_emph ltx_font_italic">Arm Control node</em> receives multiple messages about estimated teat poses and performs arm movement planning if a configurable number of teat pose estimates is consistent over time.</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S5.p5" class="ltx_para">
+<p id="S5.p5.1" class="ltx_p">In the following subsections we relate on the implementation of each of the nodes.</p>
+</div>
+<section id="S5.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS1.4.1.1" class="ltx_text">V-A</span> </span><span id="S5.SS1.5.2" class="ltx_text ltx_font_italic">Pose Estimation Node (find_teat_poses)</span>
+</h3>
+
+<div id="S5.SS1.p1" class="ltx_para">
+<p id="S5.SS1.p1.1" class="ltx_p">This is the node that connects the robot to the segmentation neural network node. A synchronized message filter receives both the point cloud and the rgbImage published at the same time instant. The node saves the point cloud in memory and forwards the rgbImage to be processed by the NN.</p>
+</div>
+<div id="S5.SS1.p2" class="ltx_para">
+<p id="S5.SS1.p2.1" class="ltx_p">After segmentation, the NN publishes the segmented image for visualization and the ”masks” resulting from segmentation. We use a project specific ROS message format to reduce the amount of data that is passed back from the NN to represent the masks.</p>
+</div>
+<div id="S5.SS1.p3" class="ltx_para">
+<p id="S5.SS1.p3.1" class="ltx_p">Upon reception of the masks the node find_teat_poses uses the 2D mask contour to extract the corresponding 3D points from the point cloud and to estimate the position and orientation of all visible teats.
+Teat points are extracted from the point cloud by first applying a voxelization step, then projecting the rays matching each teat masks contour in 3D space and removing anything outside of the generated frustum.</p>
+</div>
+<div id="S5.SS1.p4" class="ltx_para">
+<p id="S5.SS1.p4.1" class="ltx_p">Finally a set of pose estimation algorithms are applied to estimate teat tip positions and the required orientation of the teat cup for a successful attachment. All teats poses are published and visualized with a marker as in Figure <a href="#S5.F4" title="Figure 4 ‣ V-A Pose Estimation Node (find_teat_poses) ‣ V Implementation ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.</p>
+</div>
+<figure id="S5.F4" class="ltx_figure"><img src="/html/2105.09843/assets/img/markers.png" id="S5.F4.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="479" height="344" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Visualization of teat pose markers and teat segmentation</figcaption>
+</figure>
+<div id="S5.SS1.p5" class="ltx_para">
+<p id="S5.SS1.p5.1" class="ltx_p"><span id="S5.SS1.p5.1.1" class="ltx_text ltx_font_bold">Teat Tip Pose Estimation Algorithms:</span>
+With the 3D points for each teat as input, different algorithms can be applied to understand the location of the teat tip and the required orientation of a teat cup to perform an attachment. We relied on two simple implementations from geometric principles: principal component analysis (PCA) and using surface normals.</p>
+</div>
+<div id="S5.SS1.p6" class="ltx_para">
+<p id="S5.SS1.p6.1" class="ltx_p">With the PCA algorithm, the underlying assumption is that cow teats have a generic cylindrical shape and are longer than wider, hence running PCA on the 3D points of a teat would yield the teat “cylinder axis” as the main principal component.
+Given the fact that the teat axis can be represented by two vectors with opposite orientation, we use the camera position to identify the vector direction for cup attachment (i.e., upwards rather than downwards) hence the teat tip.</p>
+</div>
+<div id="S5.SS1.p7" class="ltx_para">
+<p id="S5.SS1.p7.1" class="ltx_p">The surface normals algorithm is based on a different idea to identify a teat axis. That is, if a cow teat is approximately cylindrical, the vectors that are orthogonal to its surface (i.e., ”surface normals”) will also be normal to the teat axis. Hence, the teat axis direction can be estimated by finding the vector that minimizes the sum of the dot products with the vector itself for each surface normal.
+As in the case of the PCA algorithm, a further step to correctly identify the vector orientation for teat attachment has to be performed.</p>
+</div>
+</section>
+<section id="S5.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S5.SS2.4.1.1" class="ltx_text">V-B</span> </span><span id="S5.SS2.5.2" class="ltx_text ltx_font_italic">Segmentation Node (Neural Network)</span>
+</h3>
+
+<div id="S5.SS2.p1" class="ltx_para">
+<p id="S5.SS2.p1.1" class="ltx_p">In the course of the project we experimented with different publicly available neural network implementations to perform either object detection or multi-object segmentation.</p>
+</div>
+<div id="S5.SS2.p2" class="ltx_para">
+<p id="S5.SS2.p2.1" class="ltx_p">In the end we built our prototype based at on two implementations of the MaskRCNN paper: Matterport’s MaskRCNN <span id="footnote3" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">3</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">3</sup><span class="ltx_tag ltx_tag_note">3</span><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://github.com/matterport/Mask_RCNN</span></span></span></span> and Facebook Research’s Detectron2 implementation of MaskRCNN<span id="footnote4" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">4</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">4</sup><span class="ltx_tag ltx_tag_note">4</span><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://github.com/facebookresearch/detectron2</span></span></span></span>.</p>
+</div>
+<div id="S5.SS2.p3" class="ltx_para">
+<p id="S5.SS2.p3.1" class="ltx_p">Both implementations are highly configurable and allowed us to use 640x480 pixel images as input wrapping the invocation of their inference functionality in a simple ROS topic subscriber callback handler.</p>
+</div>
+<div id="S5.SS2.p4" class="ltx_para">
+<p id="S5.SS2.p4.1" class="ltx_p">Benchmarks<span id="footnote5" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">5</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">5</sup><span class="ltx_tag ltx_tag_note">5</span><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://github.com/facebookresearch/maskrcnn-benchmark/issues/449</span></span></span></span> of both implementations show clear differences in the Average Precision (AP) between them showing Detectron2 having better accuracy. Moreover, benchmarks show the implementations from matterport have a 4x slower throughput (imgs/sec) compared to Detectron2<span id="footnote6" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">6</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">6</sup><span class="ltx_tag ltx_tag_note">6</span><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://detectron2.readthedocs.io/en/latest/notes/benchmarks.html</span></span></span></span>. These drawbacks and the generally better performance of the Detectron2 implementation led to it being the favorite for the segmentation task.</p>
+</div>
+</section>
+</section>
+<section id="S6" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span id="S6.1.1" class="ltx_text ltx_font_smallcaps">Results</span>
+</h2>
+
+<div id="S6.p1" class="ltx_para">
+<p id="S6.p1.1" class="ltx_p">In this section we relate on the methodology and results obtained in evaluating different commercial cameras and implementing a first prototype of a complete teat pose estimation and attachment solution.</p>
+</div>
+<section id="S6.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S6.SS1.4.1.1" class="ltx_text">VI-A</span> </span><span id="S6.SS1.5.2" class="ltx_text ltx_font_italic">3D sensor</span>
+</h3>
+
+<div id="S6.SS1.p1" class="ltx_para">
+<p id="S6.SS1.p1.1" class="ltx_p">An essential requirement for the 3D sensor mentioned in the previous sections is that pose estimation must be performed on the fly during arm (and cow) movement. Therefore, no sensor which needs a scanning procedure is suitable. We selected five 3D cameras among the newest models available on the market and carried out an accurate evaluation of their performance to choose the most suitable for our task. These cameras are produced by different manufacturers and use various measurement technologies:
+</p>
+<ul id="S6.I1" class="ltx_itemize">
+<li id="S6.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I1.i1.p1" class="ltx_para">
+<p id="S6.I1.i1.p1.1" class="ltx_p">Orbbec Astra Embedded S</p>
+</div>
+</li>
+<li id="S6.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I1.i2.p1" class="ltx_para">
+<p id="S6.I1.i2.p1.1" class="ltx_p">Orbbec Astra Stereo S U3</p>
+</div>
+</li>
+<li id="S6.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I1.i3.p1" class="ltx_para">
+<p id="S6.I1.i3.p1.1" class="ltx_p">PMD/Infineon CamBoard Pico Flexx</p>
+</div>
+</li>
+<li id="S6.I1.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I1.i4.p1" class="ltx_para">
+<p id="S6.I1.i4.p1.1" class="ltx_p">Intel RealSense SR305</p>
+</div>
+</li>
+<li id="S6.I1.i5" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I1.i5.p1" class="ltx_para">
+<p id="S6.I1.i5.p1.1" class="ltx_p">Intel RealSense D435</p>
+</div>
+</li>
+</ul>
+</div>
+<figure id="S6.F5" class="ltx_figure"><img src="/html/2105.09843/assets/img/camera_test_setup.jpg" id="S6.F5.g1" class="ltx_graphics ltx_img_landscape" width="598" height="151" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Test setup used to evaluate the performance of different cameras: (1) 3D camera, (2) test object placed in the left track, (3) test object placed in the central track, (4) test object placed in the right track, (5) the distance is measured placing the test object further away from the camera (every 200mm)</figcaption>
+</figure>
+<div id="S6.SS1.p2" class="ltx_para">
+<p id="S6.SS1.p2.1" class="ltx_p">To estimate distances, the two cameras of Orbbec and the Intel D435 use active IR stereo vision, the Pico Flexx uses an IR Time-of-Flight sensor, and the Intel SR305 uses structured light. All cameras except the Pico Flexx integrates an RGB camera, meaning that they provide data in the form of 3D point clouds and 2D colour images.
+<br class="ltx_break">To evaluate the five cameras, we used a test setup already available at IMS for the test of general purpose 3D sensors <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite>. This setup consists of a steel plate with plastic stops every 200mm up to a distance of 1.4m with three tracks: left, centre and right. The test object is a 3D printed L-form with a surface of 100x150mm (the surface is orthogonal to the camera). The test object is placed every 200mm, and the distance is measured by averaging the points measured on the surface. Figure <a href="#S6.F5" title="Figure 5 ‣ VI-A 3D sensor ‣ VI Results ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a> illustrates the concept of the test setup.</p>
+</div>
+<div id="S6.SS1.p3" class="ltx_para">
+<p id="S6.SS1.p3.1" class="ltx_p">The absolute accuracy of the distance measurement for all cameras is evaluated under different conditions using the test setup. The different situation evaluated are:</p>
+<ul id="S6.I2" class="ltx_itemize">
+<li id="S6.I2.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I2.i1.p1" class="ltx_para">
+<p id="S6.I2.i1.p1.1" class="ltx_p">Different light condition (direct light from headlamp, room light or night)</p>
+</div>
+</li>
+<li id="S6.I2.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I2.i2.p1" class="ltx_para">
+<p id="S6.I2.i2.p1.1" class="ltx_p">Different colour of the test object (White, Black or Pink like the teats of the cow)</p>
+</div>
+</li>
+<li id="S6.I2.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I2.i3.p1" class="ltx_para">
+<p id="S6.I2.i3.p1.1" class="ltx_p">Lateral shift (change track)</p>
+</div>
+</li>
+<li id="S6.I2.i4" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I2.i4.p1" class="ltx_para">
+<p id="S6.I2.i4.p1.1" class="ltx_p">Influence of a 5mm glass panel in front of the camera (to simulate the sealing needed to work outdoor)</p>
+</div>
+</li>
+<li id="S6.I2.i5" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I2.i5.p1" class="ltx_para">
+<p id="S6.I2.i5.p1.1" class="ltx_p">Variance (repeatability of the measurement)</p>
+</div>
+</li>
+<li id="S6.I2.i6" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span> 
+<div id="S6.I2.i6.p1" class="ltx_para">
+<p id="S6.I2.i6.p1.1" class="ltx_p">Influence of the camera resolution (for the cameras which offer a configurable resolution)</p>
+</div>
+</li>
+</ul>
+</div>
+<div id="S6.SS1.p4" class="ltx_para">
+<p id="S6.SS1.p4.1" class="ltx_p">The results of the test are shown in figure <a href="#S6.F6" title="Figure 6 ‣ VI-A 3D sensor ‣ VI Results ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>. In this chart, only the maximal error for distances up to 1m is considered for all different conditions and cameras. The reasons are that the robot’s working range under the cow is limited to 1m in the mechanical requirements and that it makes it easier to show the accuracy of the cameras and the influence of the test conditions.
+<br class="ltx_break">As a general behaviour, all cameras show an error in absolute accuracy that increases approximately quadratically with distance.
+The maximum error at 1m distance, shown in figure <a href="#S6.F6" title="Figure 6 ‣ VI-A 3D sensor ‣ VI Results ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>, also reflects how fast the error grows for each camera.
+<br class="ltx_break">The variance is not illustrated because under steady condition is less than 0.2mm for all cameras. It is not the repeated measurement that introduces a relevant error in the measurement, but rather a change in the measurement conditions.
+<br class="ltx_break">It can be noted that the PicoFlexx, the Intel SR305 and the Orbecc stereo have similar performances and overall are better than the other two cameras. PicoFlexx uses IR Time of Flight technology and seems to be more sensitive to different working conditions. Moreover, this camera has no RGB sensor included. The Intel SR305 is much larger than The Orbbec Stereo (at least twice the volume) and less accurate. Therefore, we chose the Orbbec stereo for our implementation. This camera performs overall better than all other sensors tested, has an RGB camera already incorporated, and according to the manufacturer is specifically developed to work in a multi-camera setup. A setup with multiple cameras could be interesting for the milking robot, and therefore, the same tests were repeated using two Orbbec stereo pointing at the same object. The results showed no interference between the cameras and the same result as the setup with only one camera.</p>
+</div>
+<figure id="S6.F6" class="ltx_figure"><img src="/html/2105.09843/assets/img/Accuracy_up_to_1_m_wImages.png" id="S6.F6.g1" class="ltx_graphics ltx_img_landscape" width="598" height="391" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Maximal distance measurement error for objects up to 1m under diverse conditions</figcaption>
+</figure>
+</section>
+<section id="S6.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S6.SS2.4.1.1" class="ltx_text">VI-B</span> </span><span id="S6.SS2.5.2" class="ltx_text ltx_font_italic">Pose Estimation Accuracy</span>
+</h3>
+
+<div id="S6.SS2.p1" class="ltx_para">
+<p id="S6.SS2.p1.1" class="ltx_p">In the current first phase of the project, experiments were conducted with a dummy cow under laboratory conditions. This framework implies an indoor environment, varying (low) light conditions, and no varying udder geometry. We used the UR10e robot as a manipulator with the Orbbec Astra Stereo S U3 camera and a single teat cup mounted on the robot flange. An Ubuntu computer was selected as a local controller with the ROS framework for software development. The 2D camera image is sent over wifi to a separate virtual machine in our local cloud computing cluster equipped with a Nvidia Tesla T4 graphic card for teat detection. Upon detection, teat masks are used to predict teat poses on the robot. To validate the four calculated teat positions, we moved the robot with the attached teat cup to each teat of the udder one after the other. 
+<br class="ltx_break"></p>
+</div>
+<figure id="S6.F7" class="ltx_figure"><img src="" id="S6.F7.g1" class="ltx_graphics ltx_missing ltx_missing_image" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Teat pose error deviation for each teat (789 measurement)</figcaption>
+</figure>
+<div id="S6.SS2.p2" class="ltx_para">
+<p id="S6.SS2.p2.1" class="ltx_p">The first experimental question we ask concerns the accuracy in estimation of the pose of the teat tip and its repeatability.
+To evaluate this, we kept the cow model in the same position and we precisely measured teat tip poses for each teat (T1-T4) to provide a ground truth.
+Then we ran 789 teat position estimation cycles under varying light conditions and initial arm positions, measured the error of the pose estimation w.r.t. the ground truth obtaining the results in Figure <a href="#S6.F7" title="Figure 7 ‣ VI-B Pose Estimation Accuracy ‣ VI Results ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a> and Table <a href="#S6.T1" title="TABLE I ‣ VI-B Pose Estimation Accuracy ‣ VI Results ‣ Teat Pose Estimation via RGBD Segmentation for Automated Milking" class="ltx_ref"><span class="ltx_text ltx_ref_tag">I</span></a>.</p>
+</div>
+<figure id="S6.T1" class="ltx_table">
+<table id="S6.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S6.T1.1.1.1" class="ltx_tr">
+<th id="S6.T1.1.1.1.1" class="ltx_td ltx_align_center ltx_th ltx_th_column">in mm</th>
+<th id="S6.T1.1.1.1.2" class="ltx_td ltx_align_center ltx_th ltx_th_column">mean</th>
+<th id="S6.T1.1.1.1.3" class="ltx_td ltx_align_center ltx_th ltx_th_column">std</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S6.T1.1.2.1" class="ltx_tr">
+<td id="S6.T1.1.2.1.1" class="ltx_td ltx_align_center ltx_border_t">T1</td>
+<td id="S6.T1.1.2.1.2" class="ltx_td ltx_align_center ltx_border_t">1.7</td>
+<td id="S6.T1.1.2.1.3" class="ltx_td ltx_align_center ltx_border_t">0.9</td>
+</tr>
+<tr id="S6.T1.1.3.2" class="ltx_tr">
+<td id="S6.T1.1.3.2.1" class="ltx_td ltx_align_center">T2</td>
+<td id="S6.T1.1.3.2.2" class="ltx_td ltx_align_center">1.6</td>
+<td id="S6.T1.1.3.2.3" class="ltx_td ltx_align_center">1.0</td>
+</tr>
+<tr id="S6.T1.1.4.3" class="ltx_tr">
+<td id="S6.T1.1.4.3.1" class="ltx_td ltx_align_center">T3</td>
+<td id="S6.T1.1.4.3.2" class="ltx_td ltx_align_center">1.4</td>
+<td id="S6.T1.1.4.3.3" class="ltx_td ltx_align_center">0.8</td>
+</tr>
+<tr id="S6.T1.1.5.4" class="ltx_tr">
+<td id="S6.T1.1.5.4.1" class="ltx_td ltx_align_center ltx_border_b">T4</td>
+<td id="S6.T1.1.5.4.2" class="ltx_td ltx_align_center ltx_border_b">1.4</td>
+<td id="S6.T1.1.5.4.3" class="ltx_td ltx_align_center ltx_border_b">0.7</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Mean and standard deviation of pose error per teat</figcaption>
+</figure>
+</section>
+<section id="S6.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span id="S6.SS3.4.1.1" class="ltx_text">VI-C</span> </span><span id="S6.SS3.5.2" class="ltx_text ltx_font_italic">Pose Estimation Rate</span>
+</h3>
+
+<div id="S6.SS3.p1" class="ltx_para">
+<p id="S6.SS3.p1.1" class="ltx_p">Both the Detectron and Matterport implementation of MaskRCNN achieve a similar inference time (on 640x480 images) of roughly 150 ms on a Tesla T4 GPU on a remote server. We are confident that further engineering of the implementation could sensibly reduce it.
+Inference performance could be trivially increased by reducing processed image resolution (at the cost of lower mask precision).
+We still need to evaluate performance of the network on embedded GPU boards such as the Nvidia Jetson.
+Adding an estimated latency of 50ms per submitted image over a remote connection (e.g., with 5G) even with this initial setup would yield a processing rate of 5 FPS which is sufficient for limited teat movement.</p>
+</div>
+<div id="S6.SS3.p2" class="ltx_para">
+<p id="S6.SS3.p2.1" class="ltx_p">The weakest part of our current algorithm implementation is in the transformation from the 2D teat masks to the corresponding 3D points in the point cloud. The current (trivial) implementation converts each point in the contour of a mask into a 3D ray to build a (pixel-precision) frustum. This operation, calculated for each point, is currently executed sequentially resulting in an average execution time of up to 50 ms. Reducing the number of considered contour points (e.g., sampling every ten pixels) can sensibly speed up the process with limited effect on the frustum precision.</p>
+</div>
+<div id="S6.SS3.p3" class="ltx_para">
+<p id="S6.SS3.p3.1" class="ltx_p">A video of the overall system prototype in operation is visible online<span id="footnote7" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">7</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">7</sup><span class="ltx_tag ltx_tag_note">7</span><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://www.youtube.com/watch?v=-7NiKSdA4AM</span></span></span></span>.</p>
+</div>
+</section>
+</section>
+<section id="S7" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VII </span><span id="S7.1.1" class="ltx_text ltx_font_smallcaps">Conclusions and future work</span>
+</h2>
+
+<div id="S7.p1" class="ltx_para">
+<p id="S7.p1.1" class="ltx_p">This paper relates the initial work concerning the 3D sensor evaluation and teat pose estimation activities of a research project to build a next generation milking robot for the Swiss market.
+The current prototype already demonstrated sub-centimeter precision in teat pose estimation (albeit on a synthetic cow).
+The presented results are preliminary and will require further engineering and validation in real environments in subsequent steps of this and following projects.</p>
+</div>
+<div id="S7.p2" class="ltx_para">
+<p id="S7.p2.1" class="ltx_p">There are several directions for the extension of this work. To improve the detection rate a faster segmentation network could significantly reduce the prediction time on RGB images.</p>
+</div>
+<div id="S7.p3" class="ltx_para">
+<p id="S7.p3.1" class="ltx_p">Rather than relying on a sequence of arm movements based on estimated teat poses to approach the teats, an active vision system could take into account occlusions, and learn the optimal sequence of positions to perform teat pose estimation for any shape of udder. We started working on such an “embodied AI” approach already in <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite> and more work is ongoing.</p>
+</div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+B. R., K. S. R., and H. H., “The profitability of automatic milking on dutch
+dairy farms,” <em id="bib.bib1.1.1" class="ltx_emph ltx_font_italic">Journal of Dairy Science</em>, vol. 90, no. 1, 2007.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+K. W., H. A., and F. R., “Design of the robot arm of the austronaut a3 milking
+system,” <em id="bib.bib2.1.1" class="ltx_emph ltx_font_italic">5th Int. Fluid Power Conference, Aachen</em>, pp. 353–364, 2006.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+H. T., A. H., and B. E., “Zur ansetzgenauigkeit des melkzeuges bei ams,”
+<em id="bib.bib3.1.1" class="ltx_emph ltx_font_italic">LANDTECHNIK</em>, vol. 3, 1999.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+A. Pal, A. Rastogi, S. Myongseok, and B. S. Ryuh, “Algorithm design for teat
+detection system methodology using tof, rgbd and thermal imaging in next
+generation milking robot system,” in <em id="bib.bib4.1.1" class="ltx_emph ltx_font_italic">2017 14th International
+Conference on Ubiquitous Robots and Ambient Intelligence (URAI)</em>.   IEEE, 2017, pp. 895–896.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+M. Akhloufi, “3d vision system for intelligent milking robot automation,” in
+<em id="bib.bib5.1.1" class="ltx_emph ltx_font_italic">Intelligent Robots and Computer Vision XXXI: Algorithms and
+Techniques</em>, vol. 9025.   International
+Society for Optics and Photonics, 2014, p. 90250N.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+A. Rastogi and B. S. Ryuh, “Teat detection algorithm: Yolo vs. haar-cascade,”
+<em id="bib.bib6.1.1" class="ltx_emph ltx_font_italic">Journal of Mechanical Science and Technology</em>, vol. 33, no. 4, pp.
+1869–1874, 2019.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+M. van der Zwan and A. Telea, “Robust and fast
+teat detection and tracking in low-resolution videos for automatic milking
+devices,” in <em id="bib.bib7.1.1" class="ltx_emph ltx_font_italic">Proceedings of the 10th
+International Conference on Computer Vision Theory and Applications
+(VISAPP)</em>, vol. 3.   SciTePress, 2015,
+pp. 520–530.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+N. O’Mahony, S. Campbell, A. Carvalho, L. Krpalkova, D. Riordan, and J. Walsh,
+“3D Vision for Precision Dairy Farming,” <em id="bib.bib8.1.1" class="ltx_emph ltx_font_italic">IFAC-PapersOnLine</em>,
+vol. 52, no. 30, pp. 312–317, 2019.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+A. Dorokhov, V. Kirsanov, D. Pavkin, S. Yurochka, and F. Vladimirov,
+“Recognition of Cow Teats Using the 3D-ToF Camera When Milking in the
+“Herringbone” Milking Parlor,” <em id="bib.bib9.1.1" class="ltx_emph ltx_font_italic">Advances in Intelligent Systems
+and Computing</em>, vol. 1072, pp. 128–137, 2020.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+G. Singh, S. Miao, S. Shi, and P. Chiang, “Fotonnet: A hw-efficient object
+detection system using 3d-depth segmentation and 2d-dnn classifier,”
+<em id="bib.bib10.1.1" class="ltx_emph ltx_font_italic">arXiv preprint arXiv:1811.07493</em>, 2018.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+A. Krizhevsky, I. Sutskever, and G. E. Hinton, “Imagenet classification with
+deep convolutional neural networks,” <em id="bib.bib11.1.1" class="ltx_emph ltx_font_italic">Communications of the ACM</em>,
+vol. 60, no. 6, pp. 84–90, 2017.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+X. Han, H. Laga, and M. Bennamoun, “Image-based 3d object reconstruction:
+State-of-the-art and trends in the deep learning era,” <em id="bib.bib12.1.1" class="ltx_emph ltx_font_italic">IEEE
+transactions on pattern analysis and machine intelligence</em>, 2019.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+M. Ciocarlie, K. Hsiao, E. G. Jones, S. Chitta, R. B. Rusu, and I. A.
+Şucan, “Towards reliable grasping and manipulation in household
+environments,” in <em id="bib.bib13.1.1" class="ltx_emph ltx_font_italic">Experimental Robotics</em>.   Springer, 2014, pp. 241–252.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+J. Mahler, J. Liang, S. Niyaz, M. Laskey, R. Doan, X. Liu, J. A. Ojea, and
+K. Goldberg, “Dex-net 2.0: Deep learning to plan robust grasps with
+synthetic point clouds and analytic grasp metrics,” <em id="bib.bib14.1.1" class="ltx_emph ltx_font_italic">arXiv preprint
+arXiv:1703.09312</em>, 2017.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+A. ten Pas, M. Gualtieri, K. Saenko, and R. P. Jr., “Grasp pose detection in
+point clouds,” <em id="bib.bib15.1.1" class="ltx_emph ltx_font_italic">CoRR</em>, vol. abs/1706.09911, 2017. [Online]. Available:
+<span class="ltx_ref ltx_nolink ltx_url ltx_ref_self">http://arxiv.org/abs/1706.09911</span>
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+L. Manuelli, W. Gao, P. Florence, and R. Tedrake, “kpam: Keypoint affordances
+for category-level robotic manipulation,” <em id="bib.bib16.1.1" class="ltx_emph ltx_font_italic">arXiv preprint
+arXiv:1903.06684</em>, 2019.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+C. R. Qi, W. Liu, C. Wu, H. Su, and L. J. Guibas, “Frustum PointNets for 3D
+Object Detection from RGB-D Data,” <em id="bib.bib17.1.1" class="ltx_emph ltx_font_italic">Proceedings of the IEEE Computer
+Society Conference on Computer Vision and Pattern Recognition</em>, pp. 918–927,
+2018.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+S. Cortesi, “Evaluation von 3d kameras,” Insitut für Mechatronische Systeme
+(IMS), Tech. Rep., 06 2019.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+D. Roost, R. Meier, G. Toffetti Carughi, and T. Stadelmann, “Combining
+reinforcement learning with supervised deep learning for neural active scene
+understanding,” in <em id="bib.bib19.1.1" class="ltx_emph ltx_font_italic">Active Vision and Perception in Human (-Robot)
+Collaboration Workshop at IEEE RO-MAN 2020 (AVHRC’20)</em>.   University of Essex, 2020.
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2105.09842" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2105.09843" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2105.09843">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2105.09843" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2105.09844" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Mon Mar 18 19:37:48 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>

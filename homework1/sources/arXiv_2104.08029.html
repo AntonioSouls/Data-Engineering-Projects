@@ -1,0 +1,1572 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>[2104.08029] T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information</title><meta property="og:description" content="As herd size on dairy farms continues to increase, automatic health monitoring of cows is gaining in interest.
+Lameness, a prevalent health disorder in dairy cows, is commonly detected by analyzing the gait of cows.
+A …">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information">
+<meta name="twitter:image:src" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta name="twitter:image:alt" content="ar5iv logo">
+<meta property="og:title" content="T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information">
+<meta property="og:site_name" content="ar5iv">
+<meta property="og:image" content="https://ar5iv.labs.arxiv.org/assets/ar5iv_card.png">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://ar5iv.labs.arxiv.org/html/2104.08029">
+
+<!--Generated on Sat Mar  2 06:17:38 2024 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<script>
+  function detectColorScheme(){
+    var theme="light";
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if(current_theme){
+      if(current_theme == "dark"){
+        theme = "dark";
+      } }
+    else if(!window.matchMedia) { return false; }
+    else if(window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      theme = "dark"; }
+    if (theme=="dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light"); } }
+
+  detectColorScheme();
+
+  function toggleColorScheme(){
+    var current_theme = localStorage.getItem("ar5iv_theme");
+    if (current_theme) {
+      if (current_theme == "light") {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+      else {
+        localStorage.setItem("ar5iv_theme", "light"); } }
+    else {
+        localStorage.setItem("ar5iv_theme", "dark"); }
+    detectColorScheme(); }
+</script>
+<link media="all" rel="stylesheet" href="/assets/ar5iv-fonts.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv.0.8.0.min.css"><link media="all" rel="stylesheet" href="/assets/ar5iv-site.0.2.2.css">
+</head>
+<body>
+<div class="ltx_page_main">
+<div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Helena Russello
+<br class="ltx_break">Farm Technology Group
+<br class="ltx_break">Wageningen University &amp; Research
+<br class="ltx_break">Wageningen, The Netherlands
+<br class="ltx_break"><span id="id1.1.id1" class="ltx_text ltx_font_typewriter">helena@russello.dev</span> 
+<br class="ltx_break">&amp;Rik van der Tol
+<br class="ltx_break">Farm Technology Group
+<br class="ltx_break">Wageningen University &amp; Research
+<br class="ltx_break">Wageningen, The Netherlands
+<br class="ltx_break"><span id="id2.2.id2" class="ltx_text ltx_font_typewriter">rik.vandertol@wur.nl</span> 
+<br class="ltx_break">&amp;Gert Kootstra
+<br class="ltx_break">Farm Technology Group
+<br class="ltx_break">Wageningen University &amp; Research
+<br class="ltx_break">Wageningen, The Netherlands
+<br class="ltx_break"><span id="id3.3.id3" class="ltx_text ltx_font_typewriter">gert.kootstra@wur.nl</span> 
+<br class="ltx_break">
+</span></span>
+</div>
+
+<div class="ltx_abstract">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p id="id4.id1" class="ltx_p">As herd size on dairy farms continues to increase, automatic health monitoring of cows is gaining in interest.
+Lameness, a prevalent health disorder in dairy cows, is commonly detected by analyzing the gait of cows.
+A cow’s gait can be tracked in videos using pose estimation models because models learn to automatically localize anatomical landmarks in images and videos.
+Most animal pose estimation models are static, that is, videos are processed frame by frame and do not use any temporal information.
+In this work, a static deep-learning model for animal-pose-estimation was extended to a temporal model that includes information from past frames.
+We compared the performance of the static and temporal pose estimation models.
+The data consisted of 1059 samples of 4 consecutive frames extracted from videos (30 fps) of 30 different dairy cows walking through an outdoor passageway.
+As farm environments are prone to occlusions, we tested the robustness of the static and temporal models by adding artificial occlusions to the videos.
+The experiments showed that, on non-occluded data, both static and temporal approaches achieved a Percentage of Correct Keypoints (PCKh@0.2) of 99%.
+On occluded data, our temporal approach outperformed the static one by up to 32.9%, suggesting that using temporal data was beneficial for pose estimation in environments prone to occlusions, such as dairy farms.
+The generalization capabilities of the temporal model was evaluated by testing it on data containing unknown cows (cows not present in the training set).
+The results showed that the average PCKh@0.2 was of 93.8% on known cows and 87.6% on unknown cows, indicating that the model was capable of generalizing well to new cows and that they could be easily fine-tuned to new herds.
+Finally, we showed that with harder tasks, such as occlusions and unknown cows, a deeper architecture was more beneficial.</p>
+</div>
+<section id="S1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Introduction</h2>
+
+<div id="S1.p1" class="ltx_para ltx_noindent">
+<p id="S1.p1.1" class="ltx_p">According to the U.S. Department of Agriculture<span id="footnote1" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>https://www.progressivedairy.com/stats</span></span></span>, the average herd size on U.S. dairy farms was 297 in 2020, an increase of 42% in 10 years.
+In eight states, the average herd size was even more than 1000 dairy cows. With such large herds, farmers need to rely on computer monitoring to maintain welfare and production levels.
+Lameness is a significant welfare issue in dairy farms and is often characterized by an abnormal gait of the cow.
+In bio-mechanical research, the gait is typically assessed by analyzing the kinematics of markers placed at anatomical landmarks <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.
+However, physical markers are prone to dirt and don’t scale well with large herds.
+As an alternative, deep-learning based pose-estimation models can track markerless anatomical landmarks in images and videos (Figure  <a href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>).</p>
+</div>
+<figure id="S1.F1" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S1.F1.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2104.08029/assets/images/example-pose-ours.png" id="S1.F1.sf1.g1" class="ltx_graphics ltx_img_square" width="198" height="198" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(a) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S1.F1.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2104.08029/assets/images/example-pose-li.jpg" id="S1.F1.sf2.g1" class="ltx_graphics ltx_img_square" width="198" height="198" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(b) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S1.F1.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2104.08029/assets/images/example-pose-liu.jpg" id="S1.F1.sf3.g1" class="ltx_graphics ltx_img_square" width="198" height="198" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(c) </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Example of pose estimation on cows, from this work (left), <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> (center) and <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> (right).
+</figcaption>
+</figure>
+<div id="S1.p2" class="ltx_para ltx_noindent">
+<p id="S1.p2.1" class="ltx_p">Recently, a considerable body of literature has grown around the theme of markerless animal-pose-estimation.
+Pose-estimation on laboratory animals were tested on fruit flies <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib6" title="" class="ltx_ref">6</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>, mice <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>, <a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite>, locusts <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite> and C. elegans <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib9" title="" class="ltx_ref">9</a>, <a href="#bib.bib10" title="" class="ltx_ref">10</a>]</cite> recorded in controlled environments.
+As pose estimation datasets for animals are often limited or non-existent, studies used transfer learning <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>, cross-domain adaptation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib12" title="" class="ltx_ref">12</a>]</cite> or synthetic data <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib10" title="" class="ltx_ref">10</a>, <a href="#bib.bib13" title="" class="ltx_ref">13</a>]</cite> to estimate the pose of animals where little data was available.
+Several studies applied existing human-pose-estimation models to quadrupeds such as pigs <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib14" title="" class="ltx_ref">14</a>]</cite>, dogs <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib15" title="" class="ltx_ref">15</a>]</cite> and cattle <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>.
+Lastly, <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> proposed a video analytic system based on DeepLabCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> to detect the shape of the cows’ body as well as the legs and hoofs.</p>
+</div>
+<div id="S1.p3" class="ltx_para ltx_noindent">
+<p id="S1.p3.1" class="ltx_p">Most animal-pose-estimation models are static.
+That is, they consider the frames from videos as independent images and do not explicitly leverage the temporal information that is inherent to videos.
+Some impose temporal constraints <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib8" title="" class="ltx_ref">8</a>, <a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> or hand-craft temporal features <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite>, but they do not learn spatio-temporal features in an end-to-end fashion.
+Moreover, animal-pose-estimation models are often evaluated with data recorded in controlled environments, such as laboratories.
+Farms, however, are highly uncontrolled environments, with varying light conditions and non-uniform background.
+Additionally, the animals that need to be observed by video are frequently occluded by objects on the farm or by other animals.
+These occlusions often lead to inaccurate pose estimations as existing static models solely rely on the current spatial information.
+Temporal models, however, also include information from the past frames and therefore have the potential to generate more accurate pose estimations when occlusions occur.
+Until the work of <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite>, animal-pose-estimation studies did not directly address out-of-domain robustness, that is, the ability to generalize to new (previously unseen) individuals and environments.
+Instead, only the within-domain robustness was addressed, that is, the performance on known individuals and backgrounds.
+In the case of dairy farms, out-of-domain robustness is crucial as pose-estimation models need to be able to generalize to new cows and new farms.
+In fact, it would be time consuming and expensive to have to label data for each cow on each farm.</p>
+</div>
+<div id="S1.p4" class="ltx_para ltx_noindent">
+<p id="S1.p4.1" class="ltx_p">In this study, we focus on the pose estimation of cows in outdoor conditions.
+To deal with the complexity of the scenes, we propose two extensions to the <span title="" class="ltx_glossaryref">LEAP Estimates Animal Poses (LEAP)</span> <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> animal-pose-estimation neural network: (1) a deeper architecture to handle the increased complexity of the data, and (2) a temporal architecture to leverage the temporal information of the videos to better deal with occlusions.
+We perform three experiments on the proposed pose estimation models.
+First, we compare the performance of the static and temporal models by testing them on non-altered video frames and on video frames altered with artificial occlusions that simulate a more challenging environment.
+Second, we evaluate how well the proposed temporal model can generalise to new/unknown cows by testing the temporal pose estimation model on videos frames of known and unknown cows.
+Third, we run the occlusion and generalisation experiments on a shallower architecture (the original depth of LEAP) and compare the performance with our deeper version.</p>
+</div>
+</section>
+<section id="S2" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Materials and Methods</h2>
+
+<div id="S2.p1" class="ltx_para ltx_noindent">
+<p id="S2.p1.1" class="ltx_p">This section describes the materials and methods.
+Section <a href="#S2.SS1" title="2.1 Data acquisition ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2.1</span></a> details the data acquisition.
+To meet different purposes, the collected data were allocated to two datasets, CoWalk-10 and CoWalk-30 as described in Section <a href="#S2.SS2" title="2.2 Datasets ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2.2</span></a>.
+The data pre-processing is described in Section <a href="#S2.SS3" title="2.3 Data pre-processing ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2.3</span></a>.
+The deep neural networks for pose estimation are presented in Section <a href="#S2.SS4" title="2.4 Pose-estimation models ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2.4</span></a>. Finally, Section <a href="#S2.SS5" title="2.5 Experiments and evaluation ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2.5</span></a> describes the experiments and evaluation methods.</p>
+</div>
+<section id="S2.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>Data acquisition</h3>
+
+<div id="S2.SS1.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS1.p1.1" class="ltx_p">The data consist of videos of walking Holstein-Frisian cows.
+The data were collected at a commercial dairy farm in Tilburg, The Netherlands, between 9 am and 4 pm,
+on the 22nd and 27th of May and on the 3rd and 4th of June 2019.
+Seventy black-and-white and red-and-white Holstein-Friesian cows were filmed from the side with a ZED RGB-D stereo camera<span id="footnote2" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span><a target="_blank" href="https://www.stereolabs.com/zed/" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://www.stereolabs.com/zed/</a></span></span></span> (only RGB used), while walking from the barn to the pasture through a passageway (Figure <a href="#S2.F2" title="Figure 2 ‣ 2.1 Data acquisition ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>).
+The camera was placed 2 meters above the ground at 4.5 meters from the fence of walkway.
+The videos were filmed with a resolution of <math id="S2.SS1.p1.1.m1.1" class="ltx_Math" alttext="1920\times 1080" display="inline"><semantics id="S2.SS1.p1.1.m1.1a"><mrow id="S2.SS1.p1.1.m1.1.1" xref="S2.SS1.p1.1.m1.1.1.cmml"><mn id="S2.SS1.p1.1.m1.1.1.2" xref="S2.SS1.p1.1.m1.1.1.2.cmml">1920</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS1.p1.1.m1.1.1.1" xref="S2.SS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S2.SS1.p1.1.m1.1.1.3" xref="S2.SS1.p1.1.m1.1.1.3.cmml">1080</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS1.p1.1.m1.1b"><apply id="S2.SS1.p1.1.m1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1"><times id="S2.SS1.p1.1.m1.1.1.1.cmml" xref="S2.SS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S2.SS1.p1.1.m1.1.1.2.cmml" xref="S2.SS1.p1.1.m1.1.1.2">1920</cn><cn type="integer" id="S2.SS1.p1.1.m1.1.1.3.cmml" xref="S2.SS1.p1.1.m1.1.1.3">1080</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p1.1.m1.1c">1920\times 1080</annotation></semantics></math> pixels at 30 frames per second, with a spatial resolution in the field of view of approximately 0.2 pixels/mm.
+The 622 videos contained 226 frames on average. Hence, the videos were about 7.5 seconds long, which was the average time a cow needed to walk the visible part of passageway (9.5 meter).
+For creating the dataset, thirty videos of thirty different cows were selected according to the following criteria: a single cow was present in the passageway, the cow walked from the left to the right in the field-of-view and the cows walked without hesitance.
+The frames in which the body was not entirely visible were discarded.
+In the selected videos, 20 cows were black-and-white and 10 were red-and-white (Figure <a href="#S2.F2" title="Figure 2 ‣ 2.1 Data acquisition ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">2</span></a>).</p>
+</div>
+<figure id="S2.F2" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S2.F2.sf1" class="ltx_figure ltx_figure_panel"><img src="/html/2104.08029/assets/images/0522091637.png" id="S2.F2.sf1.g1" class="ltx_graphics ltx_img_landscape" width="598" height="113" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(a) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S2.F2.sf2" class="ltx_figure ltx_figure_panel"><img src="/html/2104.08029/assets/images/0522094458.png" id="S2.F2.sf2.g1" class="ltx_graphics ltx_img_landscape" width="598" height="113" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(b) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S2.F2.sf3" class="ltx_figure ltx_figure_panel"><img src="/html/2104.08029/assets/images/0522112713.png" id="S2.F2.sf3.g1" class="ltx_graphics ltx_img_landscape" width="598" height="113" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(c) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S2.F2.sf4" class="ltx_figure ltx_figure_panel"><img src="/html/2104.08029/assets/images/0522125015.png" id="S2.F2.sf4.g1" class="ltx_graphics ltx_img_landscape" width="598" height="113" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(d) </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Example frames extracted from videos with different cows and weather conditions.</figcaption>
+</figure>
+<div id="S2.SS1.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS1.p2.1" class="ltx_p">The free and open-source Computer Vision Annotation Tool (CVAT)<span id="footnote3" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">3</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">3</sup><span class="ltx_tag ltx_tag_note">3</span><a target="_blank" href="https://github.com/opencv/cvat" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/opencv/cvat</a></span></span></span> was used to annotate the videos.
+In total, 4275 frames were annotated by one person, with an average of 138(<math id="S2.SS1.p2.1.m1.1" class="ltx_Math" alttext="\pm" display="inline"><semantics id="S2.SS1.p2.1.m1.1a"><mo id="S2.SS1.p2.1.m1.1.1" xref="S2.SS1.p2.1.m1.1.1.cmml">±</mo><annotation-xml encoding="MathML-Content" id="S2.SS1.p2.1.m1.1b"><csymbol cd="latexml" id="S2.SS1.p2.1.m1.1.1.cmml" xref="S2.SS1.p2.1.m1.1.1">plus-or-minus</csymbol></annotation-xml><annotation encoding="application/x-tex" id="S2.SS1.p2.1.m1.1c">\pm</annotation></semantics></math>30) frames per video.
+Seventeen anatomical landmarks on the cow’s body were annotated (Figure <a href="#S2.F3" title="Figure 3 ‣ 2.1 Data acquisition ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">3</span></a>).
+On the legs, the carpal or tarsal joints, fetlock joints and hoofs were labeled.
+On the back, the withers, caudal thoracic vertebrae and the sacrum were labeled.
+On the head the forehead and the nose were labeled.
+These anatomical landmarks were selected in consultation with experts in precision livestock farming. The localisation of these landmarks in the images is further referred to as keypoints.</p>
+</div>
+<figure id="S2.F3" class="ltx_figure"><img src="/html/2104.08029/assets/images/example-labels.png" id="S2.F3.g1" class="ltx_graphics ltx_centering ltx_img_square" width="299" height="300" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Anatomical landmarks as labeled in the CoWalk dataset. The keypoints are named as follows:
+1) LF hoof, 2) LF fetlock, 3) LF carpal,
+4) RF hoof, 5) RF fetlock, 6) RF carpal,
+7) LH hoof, 8) LH fetlock, 9) LH carpal,
+10) RH hoof, 11) RH fetlock, 12) RH carpal,
+13) Nose, 14) Forehead, 15) Withers, 16) Sacrum,
+17) Caudal thoracic vertebrae. LF stands for Left-Fore, RF for Right-Fore, LH for Left-Hind and RH for Right-Hind.</figcaption>
+</figure>
+</section>
+<section id="S2.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>Datasets</h3>
+
+<div id="S2.SS2.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS2.p1.1" class="ltx_p">The annotated videos were split into samples of 4 consecutive frames with no overlap, resulting in 1059 samples.
+Using these samples, two datasets were created: <span id="S2.SS2.p1.1.1" class="ltx_text ltx_font_italic">CoWalk-10</span>, containing training samples of 10 cows, and <span id="S2.SS2.p1.1.2" class="ltx_text ltx_font_italic">CoWalk-30</span>, containing training samples of 30 cows.
+The datasets are described hereafter and their number of samples is listed in Table <a href="#S2.T1" title="Table 1 ‣ 2.2 Datasets ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<figure id="S2.T1" class="ltx_table">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Number of samples in the training and test sets for of the CoWalk-10 and CoWalk-30 datasets.</figcaption>
+<table id="S2.T1.1" class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle">
+<thead class="ltx_thead">
+<tr id="S2.T1.1.1.1" class="ltx_tr">
+<th id="S2.T1.1.1.1.1" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt"><span id="S2.T1.1.1.1.1.1" class="ltx_text ltx_font_bold">Dataset</span></th>
+<th id="S2.T1.1.1.1.2" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt"><span id="S2.T1.1.1.1.2.1" class="ltx_text ltx_font_bold">Train</span></th>
+<th id="S2.T1.1.1.1.3" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">
+<span id="S2.T1.1.1.1.3.1" class="ltx_text ltx_font_bold">Test</span> (known cows)</th>
+<th id="S2.T1.1.1.1.4" class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt">
+<span id="S2.T1.1.1.1.4.1" class="ltx_text ltx_font_bold">Test</span> (unknown cows)</th>
+<th id="S2.T1.1.1.1.5" class="ltx_td ltx_nopad_r ltx_align_left ltx_th ltx_th_column ltx_border_tt"><span id="S2.T1.1.1.1.5.1" class="ltx_text ltx_font_bold">Total</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr id="S2.T1.1.2.1" class="ltx_tr">
+<td id="S2.T1.1.2.1.1" class="ltx_td ltx_align_left ltx_border_t">CoWalk-10</td>
+<td id="S2.T1.1.2.1.2" class="ltx_td ltx_align_left ltx_border_t">168</td>
+<td id="S2.T1.1.2.1.3" class="ltx_td ltx_align_left ltx_border_t">172</td>
+<td id="S2.T1.1.2.1.4" class="ltx_td ltx_align_left ltx_border_t">719</td>
+<td id="S2.T1.1.2.1.5" class="ltx_td ltx_nopad_r ltx_align_left ltx_border_t">1059</td>
+</tr>
+<tr id="S2.T1.1.3.2" class="ltx_tr">
+<td id="S2.T1.1.3.2.1" class="ltx_td ltx_align_left ltx_border_bb">CoWalk-30</td>
+<td id="S2.T1.1.3.2.2" class="ltx_td ltx_align_left ltx_border_bb">847</td>
+<td id="S2.T1.1.3.2.3" class="ltx_td ltx_align_left ltx_border_bb">212</td>
+<td id="S2.T1.1.3.2.4" class="ltx_td ltx_align_left ltx_border_bb">N.A.</td>
+<td id="S2.T1.1.3.2.5" class="ltx_td ltx_nopad_r ltx_align_left ltx_border_bb">1059</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div id="S2.SS2.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS2.p2.1" class="ltx_p">The <span id="S2.SS2.p2.1.1" class="ltx_text ltx_font_italic">CoWalk-10</span> dataset was used to evaluate our pose estimation methods’ generalisation capacity to new individuals. To do so, we evaluated the methods’ performance on known cows but unseen video frames and on unknown cows and unseen video frames.
+Following the same procedure as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib11" title="" class="ltx_ref">11</a>]</cite> we created a training set and two test sets: known-cows and unknown-cows test sets.
+Out of the 30 videos, 10 videos were randomly selected for training.
+From the 10 training cows, a random subset with 50% of the samples was placed in the training set and the remaining 50% in the known-cows test set.
+From the 20 remaining cows, all the samples were placed in the unknown-cows test set.</p>
+</div>
+<div id="S2.SS2.p3" class="ltx_para ltx_noindent">
+<p id="S2.SS2.p3.1" class="ltx_p">The <span id="S2.SS2.p3.1.1" class="ltx_text ltx_font_italic">CoWalk-30</span> dataset was used to compare the performance of the static and temporal pose estimation methods.
+As the number of samples of the cowalk-10 training set was rather small, and as the generalisation to new cows was already tested with the cowalk-10 dataset, a dataset with more training samples and all 30 cows was created: the <span id="S2.SS2.p3.1.2" class="ltx_text ltx_font_italic">CoWalk-30</span> dataset.
+The dataset was divided following common practices in machine learning: a random subset of 80% of the samples was placed in the training set and the remaining 20% in the test set.
+Note that here, the same cows appear in the training and test sets.</p>
+</div>
+</section>
+<section id="S2.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Data pre-processing</h3>
+
+<section id="S2.SS3.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.3.1 </span>Preparing the image data</h4>
+
+<div id="S2.SS3.SSS1.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS3.SSS1.p1.1" class="ltx_p">To speed up the training process, we followed a similar procedure as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> and cropped images around the cow’s body before down-scaling them.
+Our procedure is detailed bellow and pictured in Figure <a href="#S2.F4" title="Figure 4 ‣ 2.3.1 Preparing the image data ‣ 2.3 Data pre-processing ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">4</span></a>.
+The samples consist of sequences of 4 consecutive frames.
+The first frame of each sequence was cropped by placing a square bounding-box centered on the cow’s body.
+The location of the cow’s body was retrieved using the location of annotated keypoints.
+The bounding box was extended by adding a 100-pixels margin to the front and hind side of the body, allowing the body of the cow to stay fully-visible throughout all frames of the sequence. As the bounding box was square, the height of the bounding box was equal to its width.
+The remaining frames of the sequence were cropped using the bounding box of the first frame.
+The size of frames was then reduced to <math id="S2.SS3.SSS1.p1.1.m1.1" class="ltx_Math" alttext="200\times 200" display="inline"><semantics id="S2.SS3.SSS1.p1.1.m1.1a"><mrow id="S2.SS3.SSS1.p1.1.m1.1.1" xref="S2.SS3.SSS1.p1.1.m1.1.1.cmml"><mn id="S2.SS3.SSS1.p1.1.m1.1.1.2" xref="S2.SS3.SSS1.p1.1.m1.1.1.2.cmml">200</mn><mo lspace="0.222em" rspace="0.222em" id="S2.SS3.SSS1.p1.1.m1.1.1.1" xref="S2.SS3.SSS1.p1.1.m1.1.1.1.cmml">×</mo><mn id="S2.SS3.SSS1.p1.1.m1.1.1.3" xref="S2.SS3.SSS1.p1.1.m1.1.1.3.cmml">200</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS3.SSS1.p1.1.m1.1b"><apply id="S2.SS3.SSS1.p1.1.m1.1.1.cmml" xref="S2.SS3.SSS1.p1.1.m1.1.1"><times id="S2.SS3.SSS1.p1.1.m1.1.1.1.cmml" xref="S2.SS3.SSS1.p1.1.m1.1.1.1"></times><cn type="integer" id="S2.SS3.SSS1.p1.1.m1.1.1.2.cmml" xref="S2.SS3.SSS1.p1.1.m1.1.1.2">200</cn><cn type="integer" id="S2.SS3.SSS1.p1.1.m1.1.1.3.cmml" xref="S2.SS3.SSS1.p1.1.m1.1.1.3">200</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS3.SSS1.p1.1.m1.1c">200\times 200</annotation></semantics></math> pixels, that is 3.5 times smaller on average.</p>
+</div>
+<figure id="S2.F4" class="ltx_figure"><img src="/html/2104.08029/assets/x1.png" id="S2.F4.g1" class="ltx_graphics ltx_img_square" width="462" height="480" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Workflow of the cropping and size reduction of a sample sequence. The bounding box is set on the first frame of the sequence (<math id="S2.F4.2.m1.1" class="ltx_Math" alttext="T-3" display="inline"><semantics id="S2.F4.2.m1.1b"><mrow id="S2.F4.2.m1.1.1" xref="S2.F4.2.m1.1.1.cmml"><mi id="S2.F4.2.m1.1.1.2" xref="S2.F4.2.m1.1.1.2.cmml">T</mi><mo id="S2.F4.2.m1.1.1.1" xref="S2.F4.2.m1.1.1.1.cmml">−</mo><mn id="S2.F4.2.m1.1.1.3" xref="S2.F4.2.m1.1.1.3.cmml">3</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.F4.2.m1.1c"><apply id="S2.F4.2.m1.1.1.cmml" xref="S2.F4.2.m1.1.1"><minus id="S2.F4.2.m1.1.1.1.cmml" xref="S2.F4.2.m1.1.1.1"></minus><ci id="S2.F4.2.m1.1.1.2.cmml" xref="S2.F4.2.m1.1.1.2">𝑇</ci><cn type="integer" id="S2.F4.2.m1.1.1.3.cmml" xref="S2.F4.2.m1.1.1.3">3</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.F4.2.m1.1d">T-3</annotation></semantics></math>) and used for the rest of the sequence.</figcaption>
+</figure>
+<div id="S2.SS3.SSS1.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS3.SSS1.p2.3" class="ltx_p">To train the network more robustly and prevent over-fitting <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib16" title="" class="ltx_ref">16</a>]</cite>, the number of training samples was artificially increased at each training epoch by performing rotation, brightness and contrast data augmentations using the <span id="S2.SS3.SSS1.p2.3.1" class="ltx_text ltx_font_italic">OpenCV<span id="footnote4" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">4</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">4</sup><span class="ltx_tag ltx_tag_note"><span id="footnote4.1.1.1" class="ltx_text ltx_font_upright">4</span></span><a target="_blank" href="https://opencv.org/" title="" class="ltx_ref ltx_url ltx_font_typewriter ltx_font_upright">https://opencv.org/</a></span></span></span></span> python library.
+The rotation angle was between <math id="S2.SS3.SSS1.p2.1.m1.2" class="ltx_Math" alttext="[-10,10]" display="inline"><semantics id="S2.SS3.SSS1.p2.1.m1.2a"><mrow id="S2.SS3.SSS1.p2.1.m1.2.2.1" xref="S2.SS3.SSS1.p2.1.m1.2.2.2.cmml"><mo stretchy="false" id="S2.SS3.SSS1.p2.1.m1.2.2.1.2" xref="S2.SS3.SSS1.p2.1.m1.2.2.2.cmml">[</mo><mrow id="S2.SS3.SSS1.p2.1.m1.2.2.1.1" xref="S2.SS3.SSS1.p2.1.m1.2.2.1.1.cmml"><mo id="S2.SS3.SSS1.p2.1.m1.2.2.1.1a" xref="S2.SS3.SSS1.p2.1.m1.2.2.1.1.cmml">−</mo><mn id="S2.SS3.SSS1.p2.1.m1.2.2.1.1.2" xref="S2.SS3.SSS1.p2.1.m1.2.2.1.1.2.cmml">10</mn></mrow><mo id="S2.SS3.SSS1.p2.1.m1.2.2.1.3" xref="S2.SS3.SSS1.p2.1.m1.2.2.2.cmml">,</mo><mn id="S2.SS3.SSS1.p2.1.m1.1.1" xref="S2.SS3.SSS1.p2.1.m1.1.1.cmml">10</mn><mo stretchy="false" id="S2.SS3.SSS1.p2.1.m1.2.2.1.4" xref="S2.SS3.SSS1.p2.1.m1.2.2.2.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.SS3.SSS1.p2.1.m1.2b"><interval closure="closed" id="S2.SS3.SSS1.p2.1.m1.2.2.2.cmml" xref="S2.SS3.SSS1.p2.1.m1.2.2.1"><apply id="S2.SS3.SSS1.p2.1.m1.2.2.1.1.cmml" xref="S2.SS3.SSS1.p2.1.m1.2.2.1.1"><minus id="S2.SS3.SSS1.p2.1.m1.2.2.1.1.1.cmml" xref="S2.SS3.SSS1.p2.1.m1.2.2.1.1"></minus><cn type="integer" id="S2.SS3.SSS1.p2.1.m1.2.2.1.1.2.cmml" xref="S2.SS3.SSS1.p2.1.m1.2.2.1.1.2">10</cn></apply><cn type="integer" id="S2.SS3.SSS1.p2.1.m1.1.1.cmml" xref="S2.SS3.SSS1.p2.1.m1.1.1">10</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S2.SS3.SSS1.p2.1.m1.2c">[-10,10]</annotation></semantics></math> degrees, the brightness noise was between <math id="S2.SS3.SSS1.p2.2.m2.2" class="ltx_Math" alttext="[-100,100]" display="inline"><semantics id="S2.SS3.SSS1.p2.2.m2.2a"><mrow id="S2.SS3.SSS1.p2.2.m2.2.2.1" xref="S2.SS3.SSS1.p2.2.m2.2.2.2.cmml"><mo stretchy="false" id="S2.SS3.SSS1.p2.2.m2.2.2.1.2" xref="S2.SS3.SSS1.p2.2.m2.2.2.2.cmml">[</mo><mrow id="S2.SS3.SSS1.p2.2.m2.2.2.1.1" xref="S2.SS3.SSS1.p2.2.m2.2.2.1.1.cmml"><mo id="S2.SS3.SSS1.p2.2.m2.2.2.1.1a" xref="S2.SS3.SSS1.p2.2.m2.2.2.1.1.cmml">−</mo><mn id="S2.SS3.SSS1.p2.2.m2.2.2.1.1.2" xref="S2.SS3.SSS1.p2.2.m2.2.2.1.1.2.cmml">100</mn></mrow><mo id="S2.SS3.SSS1.p2.2.m2.2.2.1.3" xref="S2.SS3.SSS1.p2.2.m2.2.2.2.cmml">,</mo><mn id="S2.SS3.SSS1.p2.2.m2.1.1" xref="S2.SS3.SSS1.p2.2.m2.1.1.cmml">100</mn><mo stretchy="false" id="S2.SS3.SSS1.p2.2.m2.2.2.1.4" xref="S2.SS3.SSS1.p2.2.m2.2.2.2.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.SS3.SSS1.p2.2.m2.2b"><interval closure="closed" id="S2.SS3.SSS1.p2.2.m2.2.2.2.cmml" xref="S2.SS3.SSS1.p2.2.m2.2.2.1"><apply id="S2.SS3.SSS1.p2.2.m2.2.2.1.1.cmml" xref="S2.SS3.SSS1.p2.2.m2.2.2.1.1"><minus id="S2.SS3.SSS1.p2.2.m2.2.2.1.1.1.cmml" xref="S2.SS3.SSS1.p2.2.m2.2.2.1.1"></minus><cn type="integer" id="S2.SS3.SSS1.p2.2.m2.2.2.1.1.2.cmml" xref="S2.SS3.SSS1.p2.2.m2.2.2.1.1.2">100</cn></apply><cn type="integer" id="S2.SS3.SSS1.p2.2.m2.1.1.cmml" xref="S2.SS3.SSS1.p2.2.m2.1.1">100</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S2.SS3.SSS1.p2.2.m2.2c">[-100,100]</annotation></semantics></math> and the contrast gain was between <math id="S2.SS3.SSS1.p2.3.m3.2" class="ltx_Math" alttext="[-3.0,3.0]" display="inline"><semantics id="S2.SS3.SSS1.p2.3.m3.2a"><mrow id="S2.SS3.SSS1.p2.3.m3.2.2.1" xref="S2.SS3.SSS1.p2.3.m3.2.2.2.cmml"><mo stretchy="false" id="S2.SS3.SSS1.p2.3.m3.2.2.1.2" xref="S2.SS3.SSS1.p2.3.m3.2.2.2.cmml">[</mo><mrow id="S2.SS3.SSS1.p2.3.m3.2.2.1.1" xref="S2.SS3.SSS1.p2.3.m3.2.2.1.1.cmml"><mo id="S2.SS3.SSS1.p2.3.m3.2.2.1.1a" xref="S2.SS3.SSS1.p2.3.m3.2.2.1.1.cmml">−</mo><mn id="S2.SS3.SSS1.p2.3.m3.2.2.1.1.2" xref="S2.SS3.SSS1.p2.3.m3.2.2.1.1.2.cmml">3.0</mn></mrow><mo id="S2.SS3.SSS1.p2.3.m3.2.2.1.3" xref="S2.SS3.SSS1.p2.3.m3.2.2.2.cmml">,</mo><mn id="S2.SS3.SSS1.p2.3.m3.1.1" xref="S2.SS3.SSS1.p2.3.m3.1.1.cmml">3.0</mn><mo stretchy="false" id="S2.SS3.SSS1.p2.3.m3.2.2.1.4" xref="S2.SS3.SSS1.p2.3.m3.2.2.2.cmml">]</mo></mrow><annotation-xml encoding="MathML-Content" id="S2.SS3.SSS1.p2.3.m3.2b"><interval closure="closed" id="S2.SS3.SSS1.p2.3.m3.2.2.2.cmml" xref="S2.SS3.SSS1.p2.3.m3.2.2.1"><apply id="S2.SS3.SSS1.p2.3.m3.2.2.1.1.cmml" xref="S2.SS3.SSS1.p2.3.m3.2.2.1.1"><minus id="S2.SS3.SSS1.p2.3.m3.2.2.1.1.1.cmml" xref="S2.SS3.SSS1.p2.3.m3.2.2.1.1"></minus><cn type="float" id="S2.SS3.SSS1.p2.3.m3.2.2.1.1.2.cmml" xref="S2.SS3.SSS1.p2.3.m3.2.2.1.1.2">3.0</cn></apply><cn type="float" id="S2.SS3.SSS1.p2.3.m3.1.1.cmml" xref="S2.SS3.SSS1.p2.3.m3.1.1">3.0</cn></interval></annotation-xml><annotation encoding="application/x-tex" id="S2.SS3.SSS1.p2.3.m3.2c">[-3.0,3.0]</annotation></semantics></math>.
+The parameters for the rotation, brightness and contrast transformations were, for each sample, sampled randomly from a uniform distribution and were different at each epoch.
+Note that no data augmentation was performed on the test set.</p>
+</div>
+</section>
+<section id="S2.SS3.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.3.2 </span>Artificial occlusions</h4>
+
+<div id="S2.SS3.SSS2.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS3.SSS2.p1.1" class="ltx_p">The samples of the CoWalk-30 test set were used to create four occlusion test sets in order to evaluate the pose-estimation methods in scenes where the cows’ bodies were partially occluded.
+The occlusions consisted of grey vertical bars of 10 pixels width and were placed on all the frames, so that they were present during the whole sequence, simulating the presence of objects in the scene.
+The occlusions were placed in the video frames in four different ways: (a) around the hind legs, (b) around the front legs, (c) around the hind and front legs, and (d) around the hind legs, front legs and the head (Figure <a href="#S2.F5" title="Figure 5 ‣ 2.3.2 Artificial occlusions ‣ 2.3 Data pre-processing ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">5</span></a>).
+The position of the occlusions was the same in all the video frames, and was determined by the mean position of the body part across all samples.</p>
+</div>
+<figure id="S2.F5" class="ltx_figure">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S2.F5.sf1" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2104.08029/assets/images/occlusions/H50.png" id="S2.F5.sf1.g1" class="ltx_graphics ltx_img_square" width="144" height="144" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(a) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S2.F5.sf2" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2104.08029/assets/images/occlusions/F50.png" id="S2.F5.sf2.g1" class="ltx_graphics ltx_img_square" width="144" height="144" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(b) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S2.F5.sf3" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2104.08029/assets/images/occlusions/HF50.png" id="S2.F5.sf3.g1" class="ltx_graphics ltx_img_square" width="144" height="144" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(c) </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure id="S2.F5.sf4" class="ltx_figure ltx_figure_panel ltx_align_center"><img src="/html/2104.08029/assets/images/occlusions/HFH50.png" id="S2.F5.sf4.g1" class="ltx_graphics ltx_img_square" width="144" height="144" alt="Refer to caption">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(d) </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Examples of occluded samples on the four occlusion test sets.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S2.SS4" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.4 </span>Pose-estimation models</h3>
+
+<div id="S2.SS4.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS4.p1.1" class="ltx_p">In this study, we adapted the LEAP model <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite>, a popular animal-pose-estimation model.
+The model attracted our attention because its neural-network architecture was smaller than other animal-pose-estimation models such as <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>, <a href="#bib.bib8" title="" class="ltx_ref">8</a>]</cite>, and provided a good trade-off between computational complexity and accuracy. Despite its smaller architecture, the authors of LEAP reported a good accuracy (<math id="S2.SS4.p1.1.m1.1" class="ltx_Math" alttext="&lt;2\%" display="inline"><semantics id="S2.SS4.p1.1.m1.1a"><mrow id="S2.SS4.p1.1.m1.1.1" xref="S2.SS4.p1.1.m1.1.1.cmml"><mi id="S2.SS4.p1.1.m1.1.1.2" xref="S2.SS4.p1.1.m1.1.1.2.cmml"></mi><mo id="S2.SS4.p1.1.m1.1.1.1" xref="S2.SS4.p1.1.m1.1.1.1.cmml">&lt;</mo><mrow id="S2.SS4.p1.1.m1.1.1.3" xref="S2.SS4.p1.1.m1.1.1.3.cmml"><mn id="S2.SS4.p1.1.m1.1.1.3.2" xref="S2.SS4.p1.1.m1.1.1.3.2.cmml">2</mn><mo id="S2.SS4.p1.1.m1.1.1.3.1" xref="S2.SS4.p1.1.m1.1.1.3.1.cmml">%</mo></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.p1.1.m1.1b"><apply id="S2.SS4.p1.1.m1.1.1.cmml" xref="S2.SS4.p1.1.m1.1.1"><lt id="S2.SS4.p1.1.m1.1.1.1.cmml" xref="S2.SS4.p1.1.m1.1.1.1"></lt><csymbol cd="latexml" id="S2.SS4.p1.1.m1.1.1.2.cmml" xref="S2.SS4.p1.1.m1.1.1.2">absent</csymbol><apply id="S2.SS4.p1.1.m1.1.1.3.cmml" xref="S2.SS4.p1.1.m1.1.1.3"><csymbol cd="latexml" id="S2.SS4.p1.1.m1.1.1.3.1.cmml" xref="S2.SS4.p1.1.m1.1.1.3.1">percent</csymbol><cn type="integer" id="S2.SS4.p1.1.m1.1.1.3.2.cmml" xref="S2.SS4.p1.1.m1.1.1.3.2">2</cn></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.p1.1.m1.1c">&lt;2\%</annotation></semantics></math> error rate) on two animal-pose-estimation datasets recorded in laboratory settings, that is, recorded with controlled light and uniform background.
+Additionally, the simpler architecture of LEAP allowed more straightforward modifications to include temporal information.</p>
+</div>
+<div id="S2.SS4.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS4.p2.1" class="ltx_p">We proposed two main modifications to LEAP: (1) the addition of convolutional layers to increase the receptive field and include more image context and (2) the modification of the LEAP model to a temporal model to estimate poses from sequences of images instead of single frames, further referred to as <span title="" class="ltx_glossaryref">Temporal LEAP</span>  (<span title="" class="ltx_glossaryref">T-LEAP</span>).
+Both models are detailed hereafter<span id="footnote5" class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">5</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">5</sup><span class="ltx_tag ltx_tag_note">5</span>Code available at <a target="_blank" href="https://github.com/hrussel/t-leap" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://github.com/hrussel/t-leap</a></span></span></span>.</p>
+</div>
+<section id="S2.SS4.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.4.1 </span>LEAP</h4>
+
+<div id="S2.SS4.SSS1.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS4.SSS1.p1.1" class="ltx_p">As shown in Figure <a href="#S2.F6" title="Figure 6 ‣ 2.4.1 LEAP ‣ 2.4 Pose-estimation models ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">6</span></a>, LEAP takes an RGB image as input, and outputs one confidence map per keypoint.
+A confidence map expresses, for each image coordinate, the probability that the given keypoint is located at that coordinate.
+Hence, the location of a keypoint is determined by the highest value in its confidence map.
+During training, the ground truth confidence-maps are generated per keypoint and per image. The generated confidence-maps consist of a 2D-Gaussian distribution centered around the ground-truth coordinates of the keypoint and <math id="S2.SS4.SSS1.p1.1.m1.1" class="ltx_Math" alttext="\sigma=5" display="inline"><semantics id="S2.SS4.SSS1.p1.1.m1.1a"><mrow id="S2.SS4.SSS1.p1.1.m1.1.1" xref="S2.SS4.SSS1.p1.1.m1.1.1.cmml"><mi id="S2.SS4.SSS1.p1.1.m1.1.1.2" xref="S2.SS4.SSS1.p1.1.m1.1.1.2.cmml">σ</mi><mo id="S2.SS4.SSS1.p1.1.m1.1.1.1" xref="S2.SS4.SSS1.p1.1.m1.1.1.1.cmml">=</mo><mn id="S2.SS4.SSS1.p1.1.m1.1.1.3" xref="S2.SS4.SSS1.p1.1.m1.1.1.3.cmml">5</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.SSS1.p1.1.m1.1b"><apply id="S2.SS4.SSS1.p1.1.m1.1.1.cmml" xref="S2.SS4.SSS1.p1.1.m1.1.1"><eq id="S2.SS4.SSS1.p1.1.m1.1.1.1.cmml" xref="S2.SS4.SSS1.p1.1.m1.1.1.1"></eq><ci id="S2.SS4.SSS1.p1.1.m1.1.1.2.cmml" xref="S2.SS4.SSS1.p1.1.m1.1.1.2">𝜎</ci><cn type="integer" id="S2.SS4.SSS1.p1.1.m1.1.1.3.cmml" xref="S2.SS4.SSS1.p1.1.m1.1.1.3">5</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.SSS1.p1.1.m1.1c">\sigma=5</annotation></semantics></math>.</p>
+</div>
+<figure id="S2.F6" class="ltx_figure"><img src="/html/2104.08029/assets/x2.png" id="S2.F6.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="120" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Workflow of the LEAP pose estimation.</figcaption>
+</figure>
+<div id="S2.SS4.SSS1.p2" class="ltx_para ltx_noindent">
+<p id="S2.SS4.SSS1.p2.1" class="ltx_p">LEAP is a fully convolutional neural network and consists of an encoder and decoder part (detailed architecture in Figure <a href="#S2.F7" title="Figure 7 ‣ 2.4.1 LEAP ‣ 2.4 Pose-estimation models ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">7</span></a>). The encoder extracts features from the images and the decoder up-samples the feature maps and outputs confidence maps of the same spatial dimension as the input.
+LEAP was initially designed to work with data recorded in a controlled environment with uniform background. As opposed, our data were recorded outdoor, with varying daylight conditions and a non-uniform background. To make up for the added complexity of the data, and to increase the size of the receptive field in order to capture more image context, we increased the depth of the LEAP neural network by adding one convolutional group in the encoder and in the decoder.
+The encoder now consists of 4 groups of 3 convolutional layers.
+Between each group, a max-pooling layer reduces the size of the feature maps by half by using a kernel of size 2 with stride of 2 and no padding.
+Each convolutional layer uses ReLU activation and batch-normalisation, and has a kernel of size 3 with stride of 1 and padding of 1.
+The decoder consists of 2 groups of 2 convolutional layers.
+Before each group, a transposed-convolution layer doubles the size of the feature maps.
+As in the encoder, the convolutional layers use ReLU activation and batch-normalisation.
+The 2 transposed-convolution layers use a ReLU activation, and have a kernel of size 3 with stride of 2 and padding of 1.
+The last convolutional layer of the decoder is followed by a transposed-convolutional layer that uses a linear activation followed by a Softmax transformation, resulting in an output of 17 confidence maps, one per keypoint.</p>
+</div>
+<figure id="S2.F7" class="ltx_figure"><img src="/html/2104.08029/assets/x3.png" id="S2.F7.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="81" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Architecture of the proposed LEAP model.
+In each box, the text from top to bottom correspond to the output channels, operation, kernel size and stride.
+The red rectangle indicates the layers that were added to the original architecture.
+Note that in the encoder, the convolutional blocks (in blue) consist of 3 convolutional layers, and in the decoder they consist of 2 convolutional layers.
+</figcaption>
+</figure>
+</section>
+<section id="S2.SS4.SSS2" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.4.2 </span>Temporal LEAP</h4>
+
+<div id="S2.SS4.SSS2.p1" class="ltx_para">
+<p id="S2.SS4.SSS2.p1.2" class="ltx_p">In order to leverage the temporal information in videos, we proposed a temporal variant of the LEAP model that we called T-LEAP.
+The input did not consist of single frames anymore, but of a sequence of frames of length <math id="S2.SS4.SSS2.p1.1.m1.1" class="ltx_Math" alttext="T" display="inline"><semantics id="S2.SS4.SSS2.p1.1.m1.1a"><mi id="S2.SS4.SSS2.p1.1.m1.1.1" xref="S2.SS4.SSS2.p1.1.m1.1.1.cmml">T</mi><annotation-xml encoding="MathML-Content" id="S2.SS4.SSS2.p1.1.m1.1b"><ci id="S2.SS4.SSS2.p1.1.m1.1.1.cmml" xref="S2.SS4.SSS2.p1.1.m1.1.1">𝑇</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.SSS2.p1.1.m1.1c">T</annotation></semantics></math>.
+The output, however, remained a single frame, and consisted of the confidence maps linked to the last frame <math id="S2.SS4.SSS2.p1.2.m2.1" class="ltx_Math" alttext="t=T" display="inline"><semantics id="S2.SS4.SSS2.p1.2.m2.1a"><mrow id="S2.SS4.SSS2.p1.2.m2.1.1" xref="S2.SS4.SSS2.p1.2.m2.1.1.cmml"><mi id="S2.SS4.SSS2.p1.2.m2.1.1.2" xref="S2.SS4.SSS2.p1.2.m2.1.1.2.cmml">t</mi><mo id="S2.SS4.SSS2.p1.2.m2.1.1.1" xref="S2.SS4.SSS2.p1.2.m2.1.1.1.cmml">=</mo><mi id="S2.SS4.SSS2.p1.2.m2.1.1.3" xref="S2.SS4.SSS2.p1.2.m2.1.1.3.cmml">T</mi></mrow><annotation-xml encoding="MathML-Content" id="S2.SS4.SSS2.p1.2.m2.1b"><apply id="S2.SS4.SSS2.p1.2.m2.1.1.cmml" xref="S2.SS4.SSS2.p1.2.m2.1.1"><eq id="S2.SS4.SSS2.p1.2.m2.1.1.1.cmml" xref="S2.SS4.SSS2.p1.2.m2.1.1.1"></eq><ci id="S2.SS4.SSS2.p1.2.m2.1.1.2.cmml" xref="S2.SS4.SSS2.p1.2.m2.1.1.2">𝑡</ci><ci id="S2.SS4.SSS2.p1.2.m2.1.1.3.cmml" xref="S2.SS4.SSS2.p1.2.m2.1.1.3">𝑇</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS4.SSS2.p1.2.m2.1c">t=T</annotation></semantics></math>.
+We kept the same architecture as the deeper LEAP, but modified all the convolution, pooling and transposed-convolution operations from 2D to 3D.
+With a 3D convolution <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib17" title="" class="ltx_ref">17</a>]</cite>, the convolution operation was not only applied to the spatial dimension of the input, but also to the temporal dimension, allowing to learn spatio-temporal patterns from the data.
+As the output concerned a single frame (the last frame in the sequence), the features of the temporal signal were aggregated during the max-pooling operation, and after the second max-pooling layer, the temporal signal was reduced to one.
+The detailed architecture is shown in Figure <a href="#S2.F8" title="Figure 8 ‣ 2.4.2 Temporal LEAP ‣ 2.4 Pose-estimation models ‣ 2 Materials and Methods ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">8</span></a>.</p>
+</div>
+<figure id="S2.F8" class="ltx_figure"><img src="/html/2104.08029/assets/x4.png" id="S2.F8.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="69" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>Architecture of the T-LEAP model.
+In each box, the text from top to bottom correspond to the output channels, operation, kernel size and stride.
+</figcaption>
+</figure>
+</section>
+<section id="S2.SS4.SSS3" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.4.3 </span>Training procedure</h4>
+
+<div id="S2.SS4.SSS3.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS4.SSS3.p1.1" class="ltx_p">The models were implemented using the PyTorch <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib18" title="" class="ltx_ref">18</a>]</cite> deep-learning framework (version 1.6.0). The experiments were run on a high-performance computing cluster equipped with a Nvidia V100 GPU and the training progress was tracked with the <span id="S2.SS4.SSS3.p1.1.1" class="ltx_text ltx_font_italic">Weights and Biases (W&amp;B)</span> platform <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib19" title="" class="ltx_ref">19</a>]</cite>.
+The best hyper-parameters were found by performing a grid search using the sweep tool of W&amp;B.
+These optimized hyper-parameters consist of a batch size of 8, the AMSGrad optimizer <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib20" title="" class="ltx_ref">20</a>]</cite> with an initial learning rate of 0.001, and a learning-rate decay of 0.1 every 10 epochs.
+The models were trained for 50 epochs, and were found to converge after 40 epochs.
+The loss function calculated the <span title="" class="ltx_glossaryref">Mean Squared Error</span>  (<span title="" class="ltx_glossaryref">MSE</span>)per pixel per map between the predicted confidence maps and the ground-truth confidence maps from the samples in the batch.</p>
+</div>
+</section>
+</section>
+<section id="S2.SS5" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.5 </span>Experiments and evaluation</h3>
+
+<div id="S2.SS5.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS5.p1.1" class="ltx_p">In this study, we ran three experiments:</p>
+<ol id="S2.I1" class="ltx_enumerate">
+<li id="S2.I1.i1" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span> 
+<div id="S2.I1.i1.p1" class="ltx_para ltx_noindent">
+<p id="S2.I1.i1.p1.1" class="ltx_p">The static and temporal models’ performances was compared in their ability to deal with occlusion.
+LEAP was trained with single video frames (T=1) and T-LEAP with sequences of 2 (T=2) and 4 (T=4) consecutive video frames. Both models were trained on the CoWalk-30 dataset and then tested on the non-occluded and occluded test data. The non-occluded data consisted of the unaltered CoWalk-30 test set. The occluded data consisted of artificial occlusions added to the CoWalk-30 test set.</p>
+</div>
+</li>
+<li id="S2.I1.i2" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span> 
+<div id="S2.I1.i2.p1" class="ltx_para ltx_noindent">
+<p id="S2.I1.i2.p1.1" class="ltx_p">The level of generalization of the T-LEAP model was studied.
+The T-LEAP model was trained on the CoWalk-10 dataset with samples of 2 consecutive frames (T=2) and the performance was evaluated on known and unknown cows.
+By comparing the performance on a test set of known cows and a test set of unknown cows, we can test if the pose estimation model has learned a general representation of the posture of the cows, or if it over-fitted and learned a one-to-one mapping of the keypoints to the training cows.</p>
+</div>
+</li>
+<li id="S2.I1.i3" class="ltx_item" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span> 
+<div id="S2.I1.i3.p1" class="ltx_para ltx_noindent">
+<p id="S2.I1.i3.p1.1" class="ltx_p">The influence of a deeper neural network on the pose-estimation performance was investigated. To do so, the performance of T-LEAP with the same depth as the original LEAP architecture was compared against our proposed deeper T-LEAP architecture on the experiments of the CoWalk-30 and CoWalk-10 datasets.
+For CoWalk-30, both models were trained on the CoWalk-30 dataset and tested on frame sequences without occlusions and with 3 occlusions (Front legs, Hind legs and Head).
+For CoWalk-10, both models were trained on the CoWalk-10 dataset and tested on frames sequences of known and unknown-cows.</p>
+</div>
+</li>
+</ol>
+</div>
+<section id="S2.SS5.SSS1" class="ltx_subsubsection">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.5.1 </span>Evaluation metric</h4>
+
+<div id="S2.SS5.SSS1.p1" class="ltx_para ltx_noindent">
+<p id="S2.SS5.SSS1.p1.5" class="ltx_p">To evaluate the performance of the models, we used the <span title="" class="ltx_glossaryref">Percentage of Correct Keypoints normalized to the head length</span>  (<span title="" class="ltx_glossaryref">PCKh</span>) <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib21" title="" class="ltx_ref">21</a>]</cite>.
+The PCKh metric is commonly used in pose estimation <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>, <a href="#bib.bib22" title="" class="ltx_ref">22</a>, <a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite> and expresses the percentage of correct keypoints, where a predicted keypoint is considered correct if its distance to the ground-truth keypoint is smaller than a fraction of the head length. For instance, PCKh@0.5 is the percentage of keypoints within the threshold of half the head length. Let <math id="S2.SS5.SSS1.p1.1.m1.1" class="ltx_Math" alttext="h_{i}" display="inline"><semantics id="S2.SS5.SSS1.p1.1.m1.1a"><msub id="S2.SS5.SSS1.p1.1.m1.1.1" xref="S2.SS5.SSS1.p1.1.m1.1.1.cmml"><mi id="S2.SS5.SSS1.p1.1.m1.1.1.2" xref="S2.SS5.SSS1.p1.1.m1.1.1.2.cmml">h</mi><mi id="S2.SS5.SSS1.p1.1.m1.1.1.3" xref="S2.SS5.SSS1.p1.1.m1.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.1.m1.1b"><apply id="S2.SS5.SSS1.p1.1.m1.1.1.cmml" xref="S2.SS5.SSS1.p1.1.m1.1.1"><csymbol cd="ambiguous" id="S2.SS5.SSS1.p1.1.m1.1.1.1.cmml" xref="S2.SS5.SSS1.p1.1.m1.1.1">subscript</csymbol><ci id="S2.SS5.SSS1.p1.1.m1.1.1.2.cmml" xref="S2.SS5.SSS1.p1.1.m1.1.1.2">ℎ</ci><ci id="S2.SS5.SSS1.p1.1.m1.1.1.3.cmml" xref="S2.SS5.SSS1.p1.1.m1.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.1.m1.1c">h_{i}</annotation></semantics></math> be the length of the head (calculated from the ground-truth) for data <math id="S2.SS5.SSS1.p1.2.m2.1" class="ltx_Math" alttext="i" display="inline"><semantics id="S2.SS5.SSS1.p1.2.m2.1a"><mi id="S2.SS5.SSS1.p1.2.m2.1.1" xref="S2.SS5.SSS1.p1.2.m2.1.1.cmml">i</mi><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.2.m2.1b"><ci id="S2.SS5.SSS1.p1.2.m2.1.1.cmml" xref="S2.SS5.SSS1.p1.2.m2.1.1">𝑖</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.2.m2.1c">i</annotation></semantics></math>, <math id="S2.SS5.SSS1.p1.3.m3.1" class="ltx_Math" alttext="\mathbf{p}_{i}" display="inline"><semantics id="S2.SS5.SSS1.p1.3.m3.1a"><msub id="S2.SS5.SSS1.p1.3.m3.1.1" xref="S2.SS5.SSS1.p1.3.m3.1.1.cmml"><mi id="S2.SS5.SSS1.p1.3.m3.1.1.2" xref="S2.SS5.SSS1.p1.3.m3.1.1.2.cmml">𝐩</mi><mi id="S2.SS5.SSS1.p1.3.m3.1.1.3" xref="S2.SS5.SSS1.p1.3.m3.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.3.m3.1b"><apply id="S2.SS5.SSS1.p1.3.m3.1.1.cmml" xref="S2.SS5.SSS1.p1.3.m3.1.1"><csymbol cd="ambiguous" id="S2.SS5.SSS1.p1.3.m3.1.1.1.cmml" xref="S2.SS5.SSS1.p1.3.m3.1.1">subscript</csymbol><ci id="S2.SS5.SSS1.p1.3.m3.1.1.2.cmml" xref="S2.SS5.SSS1.p1.3.m3.1.1.2">𝐩</ci><ci id="S2.SS5.SSS1.p1.3.m3.1.1.3.cmml" xref="S2.SS5.SSS1.p1.3.m3.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.3.m3.1c">\mathbf{p}_{i}</annotation></semantics></math> the predicted position of the keypoint, <math id="S2.SS5.SSS1.p1.4.m4.1" class="ltx_Math" alttext="\mathbf{t}_{i}" display="inline"><semantics id="S2.SS5.SSS1.p1.4.m4.1a"><msub id="S2.SS5.SSS1.p1.4.m4.1.1" xref="S2.SS5.SSS1.p1.4.m4.1.1.cmml"><mi id="S2.SS5.SSS1.p1.4.m4.1.1.2" xref="S2.SS5.SSS1.p1.4.m4.1.1.2.cmml">𝐭</mi><mi id="S2.SS5.SSS1.p1.4.m4.1.1.3" xref="S2.SS5.SSS1.p1.4.m4.1.1.3.cmml">i</mi></msub><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.4.m4.1b"><apply id="S2.SS5.SSS1.p1.4.m4.1.1.cmml" xref="S2.SS5.SSS1.p1.4.m4.1.1"><csymbol cd="ambiguous" id="S2.SS5.SSS1.p1.4.m4.1.1.1.cmml" xref="S2.SS5.SSS1.p1.4.m4.1.1">subscript</csymbol><ci id="S2.SS5.SSS1.p1.4.m4.1.1.2.cmml" xref="S2.SS5.SSS1.p1.4.m4.1.1.2">𝐭</ci><ci id="S2.SS5.SSS1.p1.4.m4.1.1.3.cmml" xref="S2.SS5.SSS1.p1.4.m4.1.1.3">𝑖</ci></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.4.m4.1c">\mathbf{t}_{i}</annotation></semantics></math> the ground-truth position of the keypoint and <math id="S2.SS5.SSS1.p1.5.m5.1" class="ltx_Math" alttext="\theta" display="inline"><semantics id="S2.SS5.SSS1.p1.5.m5.1a"><mi id="S2.SS5.SSS1.p1.5.m5.1.1" xref="S2.SS5.SSS1.p1.5.m5.1.1.cmml">θ</mi><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.5.m5.1b"><ci id="S2.SS5.SSS1.p1.5.m5.1.1.cmml" xref="S2.SS5.SSS1.p1.5.m5.1.1">𝜃</ci></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.5.m5.1c">\theta</annotation></semantics></math> the proportional threshold, then the PCKh is defined as:</p>
+<table id="S2.Ex1" class="ltx_equation ltx_eqn_table">
+
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math id="S2.Ex1.m1.1" class="ltx_Math" alttext="\text{PCKh@}\theta=\frac{1}{N}\sum_{i=1}^{N}\sigma(||\mathbf{p}_{i}-\mathbf{t}_{i}||-h_{i}*\theta)" display="block"><semantics id="S2.Ex1.m1.1a"><mrow id="S2.Ex1.m1.1.1" xref="S2.Ex1.m1.1.1.cmml"><mrow id="S2.Ex1.m1.1.1.3" xref="S2.Ex1.m1.1.1.3.cmml"><mtext id="S2.Ex1.m1.1.1.3.2" xref="S2.Ex1.m1.1.1.3.2a.cmml">PCKh@</mtext><mo lspace="0em" rspace="0em" id="S2.Ex1.m1.1.1.3.1" xref="S2.Ex1.m1.1.1.3.1.cmml">​</mo><mi id="S2.Ex1.m1.1.1.3.3" xref="S2.Ex1.m1.1.1.3.3.cmml">θ</mi></mrow><mo id="S2.Ex1.m1.1.1.2" xref="S2.Ex1.m1.1.1.2.cmml">=</mo><mrow id="S2.Ex1.m1.1.1.1" xref="S2.Ex1.m1.1.1.1.cmml"><mfrac id="S2.Ex1.m1.1.1.1.3" xref="S2.Ex1.m1.1.1.1.3.cmml"><mn id="S2.Ex1.m1.1.1.1.3.2" xref="S2.Ex1.m1.1.1.1.3.2.cmml">1</mn><mi id="S2.Ex1.m1.1.1.1.3.3" xref="S2.Ex1.m1.1.1.1.3.3.cmml">N</mi></mfrac><mo lspace="0em" rspace="0em" id="S2.Ex1.m1.1.1.1.2" xref="S2.Ex1.m1.1.1.1.2.cmml">​</mo><mrow id="S2.Ex1.m1.1.1.1.1" xref="S2.Ex1.m1.1.1.1.1.cmml"><munderover id="S2.Ex1.m1.1.1.1.1.2" xref="S2.Ex1.m1.1.1.1.1.2.cmml"><mo movablelimits="false" id="S2.Ex1.m1.1.1.1.1.2.2.2" xref="S2.Ex1.m1.1.1.1.1.2.2.2.cmml">∑</mo><mrow id="S2.Ex1.m1.1.1.1.1.2.2.3" xref="S2.Ex1.m1.1.1.1.1.2.2.3.cmml"><mi id="S2.Ex1.m1.1.1.1.1.2.2.3.2" xref="S2.Ex1.m1.1.1.1.1.2.2.3.2.cmml">i</mi><mo id="S2.Ex1.m1.1.1.1.1.2.2.3.1" xref="S2.Ex1.m1.1.1.1.1.2.2.3.1.cmml">=</mo><mn id="S2.Ex1.m1.1.1.1.1.2.2.3.3" xref="S2.Ex1.m1.1.1.1.1.2.2.3.3.cmml">1</mn></mrow><mi id="S2.Ex1.m1.1.1.1.1.2.3" xref="S2.Ex1.m1.1.1.1.1.2.3.cmml">N</mi></munderover><mrow id="S2.Ex1.m1.1.1.1.1.1" xref="S2.Ex1.m1.1.1.1.1.1.cmml"><mi id="S2.Ex1.m1.1.1.1.1.1.3" xref="S2.Ex1.m1.1.1.1.1.1.3.cmml">σ</mi><mo lspace="0em" rspace="0em" id="S2.Ex1.m1.1.1.1.1.1.2" xref="S2.Ex1.m1.1.1.1.1.1.2.cmml">​</mo><mrow id="S2.Ex1.m1.1.1.1.1.1.1.1" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.cmml"><mo stretchy="false" id="S2.Ex1.m1.1.1.1.1.1.1.1.2" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.cmml">(</mo><mrow id="S2.Ex1.m1.1.1.1.1.1.1.1.1" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.cmml"><mrow id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.2.cmml"><mo stretchy="false" id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.2" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.2.1.cmml">‖</mo><mrow id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.cmml"><msub id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.cmml"><mi id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.2" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml">𝐩</mi><mi id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.3" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml">i</mi></msub><mo id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.1" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml">−</mo><msub id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.cmml"><mi id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.2" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.2.cmml">𝐭</mi><mi id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.3" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.3.cmml">i</mi></msub></mrow><mo stretchy="false" id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.3" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.2.1.cmml">‖</mo></mrow><mo id="S2.Ex1.m1.1.1.1.1.1.1.1.1.2" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.2.cmml">−</mo><mrow id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.cmml"><msub id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.cmml"><mi id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.2" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.2.cmml">h</mi><mi id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.3" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.3.cmml">i</mi></msub><mo lspace="0.222em" rspace="0.222em" id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.1" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.1.cmml">∗</mo><mi id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.3" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.3.cmml">θ</mi></mrow></mrow><mo stretchy="false" id="S2.Ex1.m1.1.1.1.1.1.1.1.3" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.cmml">)</mo></mrow></mrow></mrow></mrow></mrow><annotation-xml encoding="MathML-Content" id="S2.Ex1.m1.1b"><apply id="S2.Ex1.m1.1.1.cmml" xref="S2.Ex1.m1.1.1"><eq id="S2.Ex1.m1.1.1.2.cmml" xref="S2.Ex1.m1.1.1.2"></eq><apply id="S2.Ex1.m1.1.1.3.cmml" xref="S2.Ex1.m1.1.1.3"><times id="S2.Ex1.m1.1.1.3.1.cmml" xref="S2.Ex1.m1.1.1.3.1"></times><ci id="S2.Ex1.m1.1.1.3.2a.cmml" xref="S2.Ex1.m1.1.1.3.2"><mtext id="S2.Ex1.m1.1.1.3.2.cmml" xref="S2.Ex1.m1.1.1.3.2">PCKh@</mtext></ci><ci id="S2.Ex1.m1.1.1.3.3.cmml" xref="S2.Ex1.m1.1.1.3.3">𝜃</ci></apply><apply id="S2.Ex1.m1.1.1.1.cmml" xref="S2.Ex1.m1.1.1.1"><times id="S2.Ex1.m1.1.1.1.2.cmml" xref="S2.Ex1.m1.1.1.1.2"></times><apply id="S2.Ex1.m1.1.1.1.3.cmml" xref="S2.Ex1.m1.1.1.1.3"><divide id="S2.Ex1.m1.1.1.1.3.1.cmml" xref="S2.Ex1.m1.1.1.1.3"></divide><cn type="integer" id="S2.Ex1.m1.1.1.1.3.2.cmml" xref="S2.Ex1.m1.1.1.1.3.2">1</cn><ci id="S2.Ex1.m1.1.1.1.3.3.cmml" xref="S2.Ex1.m1.1.1.1.3.3">𝑁</ci></apply><apply id="S2.Ex1.m1.1.1.1.1.cmml" xref="S2.Ex1.m1.1.1.1.1"><apply id="S2.Ex1.m1.1.1.1.1.2.cmml" xref="S2.Ex1.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S2.Ex1.m1.1.1.1.1.2.1.cmml" xref="S2.Ex1.m1.1.1.1.1.2">superscript</csymbol><apply id="S2.Ex1.m1.1.1.1.1.2.2.cmml" xref="S2.Ex1.m1.1.1.1.1.2"><csymbol cd="ambiguous" id="S2.Ex1.m1.1.1.1.1.2.2.1.cmml" xref="S2.Ex1.m1.1.1.1.1.2">subscript</csymbol><sum id="S2.Ex1.m1.1.1.1.1.2.2.2.cmml" xref="S2.Ex1.m1.1.1.1.1.2.2.2"></sum><apply id="S2.Ex1.m1.1.1.1.1.2.2.3.cmml" xref="S2.Ex1.m1.1.1.1.1.2.2.3"><eq id="S2.Ex1.m1.1.1.1.1.2.2.3.1.cmml" xref="S2.Ex1.m1.1.1.1.1.2.2.3.1"></eq><ci id="S2.Ex1.m1.1.1.1.1.2.2.3.2.cmml" xref="S2.Ex1.m1.1.1.1.1.2.2.3.2">𝑖</ci><cn type="integer" id="S2.Ex1.m1.1.1.1.1.2.2.3.3.cmml" xref="S2.Ex1.m1.1.1.1.1.2.2.3.3">1</cn></apply></apply><ci id="S2.Ex1.m1.1.1.1.1.2.3.cmml" xref="S2.Ex1.m1.1.1.1.1.2.3">𝑁</ci></apply><apply id="S2.Ex1.m1.1.1.1.1.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1"><times id="S2.Ex1.m1.1.1.1.1.1.2.cmml" xref="S2.Ex1.m1.1.1.1.1.1.2"></times><ci id="S2.Ex1.m1.1.1.1.1.1.3.cmml" xref="S2.Ex1.m1.1.1.1.1.1.3">𝜎</ci><apply id="S2.Ex1.m1.1.1.1.1.1.1.1.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1"><minus id="S2.Ex1.m1.1.1.1.1.1.1.1.1.2.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.2"></minus><apply id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1"><csymbol cd="latexml" id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.2">norm</csymbol><apply id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1"><minus id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.1"></minus><apply id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2"><csymbol cd="ambiguous" id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2">subscript</csymbol><ci id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.2.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.2">𝐩</ci><ci id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.3.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.2.3">𝑖</ci></apply><apply id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3"><csymbol cd="ambiguous" id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3">subscript</csymbol><ci id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.2">𝐭</ci><ci id="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.1.1.1.3.3">𝑖</ci></apply></apply></apply><apply id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3"><times id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.1"></times><apply id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2"><csymbol cd="ambiguous" id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.1.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2">subscript</csymbol><ci id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.2.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.2">ℎ</ci><ci id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.3.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.2.3">𝑖</ci></apply><ci id="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.3.cmml" xref="S2.Ex1.m1.1.1.1.1.1.1.1.1.3.3">𝜃</ci></apply></apply></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.Ex1.m1.1c">\text{PCKh@}\theta=\frac{1}{N}\sum_{i=1}^{N}\sigma(||\mathbf{p}_{i}-\mathbf{t}_{i}||-h_{i}*\theta)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p id="S2.SS5.SSS1.p1.10" class="ltx_p">where <math id="S2.SS5.SSS1.p1.6.m1.1" class="ltx_Math" alttext="\sigma(x)=1" display="inline"><semantics id="S2.SS5.SSS1.p1.6.m1.1a"><mrow id="S2.SS5.SSS1.p1.6.m1.1.2" xref="S2.SS5.SSS1.p1.6.m1.1.2.cmml"><mrow id="S2.SS5.SSS1.p1.6.m1.1.2.2" xref="S2.SS5.SSS1.p1.6.m1.1.2.2.cmml"><mi id="S2.SS5.SSS1.p1.6.m1.1.2.2.2" xref="S2.SS5.SSS1.p1.6.m1.1.2.2.2.cmml">σ</mi><mo lspace="0em" rspace="0em" id="S2.SS5.SSS1.p1.6.m1.1.2.2.1" xref="S2.SS5.SSS1.p1.6.m1.1.2.2.1.cmml">​</mo><mrow id="S2.SS5.SSS1.p1.6.m1.1.2.2.3.2" xref="S2.SS5.SSS1.p1.6.m1.1.2.2.cmml"><mo stretchy="false" id="S2.SS5.SSS1.p1.6.m1.1.2.2.3.2.1" xref="S2.SS5.SSS1.p1.6.m1.1.2.2.cmml">(</mo><mi id="S2.SS5.SSS1.p1.6.m1.1.1" xref="S2.SS5.SSS1.p1.6.m1.1.1.cmml">x</mi><mo stretchy="false" id="S2.SS5.SSS1.p1.6.m1.1.2.2.3.2.2" xref="S2.SS5.SSS1.p1.6.m1.1.2.2.cmml">)</mo></mrow></mrow><mo id="S2.SS5.SSS1.p1.6.m1.1.2.1" xref="S2.SS5.SSS1.p1.6.m1.1.2.1.cmml">=</mo><mn id="S2.SS5.SSS1.p1.6.m1.1.2.3" xref="S2.SS5.SSS1.p1.6.m1.1.2.3.cmml">1</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.6.m1.1b"><apply id="S2.SS5.SSS1.p1.6.m1.1.2.cmml" xref="S2.SS5.SSS1.p1.6.m1.1.2"><eq id="S2.SS5.SSS1.p1.6.m1.1.2.1.cmml" xref="S2.SS5.SSS1.p1.6.m1.1.2.1"></eq><apply id="S2.SS5.SSS1.p1.6.m1.1.2.2.cmml" xref="S2.SS5.SSS1.p1.6.m1.1.2.2"><times id="S2.SS5.SSS1.p1.6.m1.1.2.2.1.cmml" xref="S2.SS5.SSS1.p1.6.m1.1.2.2.1"></times><ci id="S2.SS5.SSS1.p1.6.m1.1.2.2.2.cmml" xref="S2.SS5.SSS1.p1.6.m1.1.2.2.2">𝜎</ci><ci id="S2.SS5.SSS1.p1.6.m1.1.1.cmml" xref="S2.SS5.SSS1.p1.6.m1.1.1">𝑥</ci></apply><cn type="integer" id="S2.SS5.SSS1.p1.6.m1.1.2.3.cmml" xref="S2.SS5.SSS1.p1.6.m1.1.2.3">1</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.6.m1.1c">\sigma(x)=1</annotation></semantics></math> when <math id="S2.SS5.SSS1.p1.7.m2.1" class="ltx_Math" alttext="x\leq 0" display="inline"><semantics id="S2.SS5.SSS1.p1.7.m2.1a"><mrow id="S2.SS5.SSS1.p1.7.m2.1.1" xref="S2.SS5.SSS1.p1.7.m2.1.1.cmml"><mi id="S2.SS5.SSS1.p1.7.m2.1.1.2" xref="S2.SS5.SSS1.p1.7.m2.1.1.2.cmml">x</mi><mo id="S2.SS5.SSS1.p1.7.m2.1.1.1" xref="S2.SS5.SSS1.p1.7.m2.1.1.1.cmml">≤</mo><mn id="S2.SS5.SSS1.p1.7.m2.1.1.3" xref="S2.SS5.SSS1.p1.7.m2.1.1.3.cmml">0</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.7.m2.1b"><apply id="S2.SS5.SSS1.p1.7.m2.1.1.cmml" xref="S2.SS5.SSS1.p1.7.m2.1.1"><leq id="S2.SS5.SSS1.p1.7.m2.1.1.1.cmml" xref="S2.SS5.SSS1.p1.7.m2.1.1.1"></leq><ci id="S2.SS5.SSS1.p1.7.m2.1.1.2.cmml" xref="S2.SS5.SSS1.p1.7.m2.1.1.2">𝑥</ci><cn type="integer" id="S2.SS5.SSS1.p1.7.m2.1.1.3.cmml" xref="S2.SS5.SSS1.p1.7.m2.1.1.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.7.m2.1c">x\leq 0</annotation></semantics></math> and <math id="S2.SS5.SSS1.p1.8.m3.1" class="ltx_Math" alttext="\sigma(x)=0" display="inline"><semantics id="S2.SS5.SSS1.p1.8.m3.1a"><mrow id="S2.SS5.SSS1.p1.8.m3.1.2" xref="S2.SS5.SSS1.p1.8.m3.1.2.cmml"><mrow id="S2.SS5.SSS1.p1.8.m3.1.2.2" xref="S2.SS5.SSS1.p1.8.m3.1.2.2.cmml"><mi id="S2.SS5.SSS1.p1.8.m3.1.2.2.2" xref="S2.SS5.SSS1.p1.8.m3.1.2.2.2.cmml">σ</mi><mo lspace="0em" rspace="0em" id="S2.SS5.SSS1.p1.8.m3.1.2.2.1" xref="S2.SS5.SSS1.p1.8.m3.1.2.2.1.cmml">​</mo><mrow id="S2.SS5.SSS1.p1.8.m3.1.2.2.3.2" xref="S2.SS5.SSS1.p1.8.m3.1.2.2.cmml"><mo stretchy="false" id="S2.SS5.SSS1.p1.8.m3.1.2.2.3.2.1" xref="S2.SS5.SSS1.p1.8.m3.1.2.2.cmml">(</mo><mi id="S2.SS5.SSS1.p1.8.m3.1.1" xref="S2.SS5.SSS1.p1.8.m3.1.1.cmml">x</mi><mo stretchy="false" id="S2.SS5.SSS1.p1.8.m3.1.2.2.3.2.2" xref="S2.SS5.SSS1.p1.8.m3.1.2.2.cmml">)</mo></mrow></mrow><mo id="S2.SS5.SSS1.p1.8.m3.1.2.1" xref="S2.SS5.SSS1.p1.8.m3.1.2.1.cmml">=</mo><mn id="S2.SS5.SSS1.p1.8.m3.1.2.3" xref="S2.SS5.SSS1.p1.8.m3.1.2.3.cmml">0</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.8.m3.1b"><apply id="S2.SS5.SSS1.p1.8.m3.1.2.cmml" xref="S2.SS5.SSS1.p1.8.m3.1.2"><eq id="S2.SS5.SSS1.p1.8.m3.1.2.1.cmml" xref="S2.SS5.SSS1.p1.8.m3.1.2.1"></eq><apply id="S2.SS5.SSS1.p1.8.m3.1.2.2.cmml" xref="S2.SS5.SSS1.p1.8.m3.1.2.2"><times id="S2.SS5.SSS1.p1.8.m3.1.2.2.1.cmml" xref="S2.SS5.SSS1.p1.8.m3.1.2.2.1"></times><ci id="S2.SS5.SSS1.p1.8.m3.1.2.2.2.cmml" xref="S2.SS5.SSS1.p1.8.m3.1.2.2.2">𝜎</ci><ci id="S2.SS5.SSS1.p1.8.m3.1.1.cmml" xref="S2.SS5.SSS1.p1.8.m3.1.1">𝑥</ci></apply><cn type="integer" id="S2.SS5.SSS1.p1.8.m3.1.2.3.cmml" xref="S2.SS5.SSS1.p1.8.m3.1.2.3">0</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.8.m3.1c">\sigma(x)=0</annotation></semantics></math> otherwise.
+By using the head length as a threshold, the PCKh metric is independent of the size of the inputs and of the body of each animal.
+Selecting the right threshold depends on the application of the pose estimation.
+Using a threshold of 0.5 would be too forgiving on the keypoints located on the leg. For instance, a right tarsal keypoint that is predicted on the left leg could be considered correct with a threshold of 0.5.
+On the other hand, using a threshold of 0.1 or even 0 would be too restrictive and would consider too many keypoints incorrect. In fact, the task at hand is to estimate the location of keypoints, not to find its exact location at a pixel level.
+Hence, we consider the head threshold at 0.2 a good measure of accuracy for our application and it corresponds to <math id="S2.SS5.SSS1.p1.9.m4.1" class="ltx_Math" alttext="\sim 10" display="inline"><semantics id="S2.SS5.SSS1.p1.9.m4.1a"><mrow id="S2.SS5.SSS1.p1.9.m4.1.1" xref="S2.SS5.SSS1.p1.9.m4.1.1.cmml"><mi id="S2.SS5.SSS1.p1.9.m4.1.1.2" xref="S2.SS5.SSS1.p1.9.m4.1.1.2.cmml"></mi><mo id="S2.SS5.SSS1.p1.9.m4.1.1.1" xref="S2.SS5.SSS1.p1.9.m4.1.1.1.cmml">∼</mo><mn id="S2.SS5.SSS1.p1.9.m4.1.1.3" xref="S2.SS5.SSS1.p1.9.m4.1.1.3.cmml">10</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.9.m4.1b"><apply id="S2.SS5.SSS1.p1.9.m4.1.1.cmml" xref="S2.SS5.SSS1.p1.9.m4.1.1"><csymbol cd="latexml" id="S2.SS5.SSS1.p1.9.m4.1.1.1.cmml" xref="S2.SS5.SSS1.p1.9.m4.1.1.1">similar-to</csymbol><csymbol cd="latexml" id="S2.SS5.SSS1.p1.9.m4.1.1.2.cmml" xref="S2.SS5.SSS1.p1.9.m4.1.1.2">absent</csymbol><cn type="integer" id="S2.SS5.SSS1.p1.9.m4.1.1.3.cmml" xref="S2.SS5.SSS1.p1.9.m4.1.1.3">10</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.9.m4.1c">\sim 10</annotation></semantics></math>cm.
+To test the statistical significance of differences in performance, the Wilcoxon signed-rank test was used. As a level of significance, <math id="S2.SS5.SSS1.p1.10.m5.1" class="ltx_Math" alttext="p&lt;0.05" display="inline"><semantics id="S2.SS5.SSS1.p1.10.m5.1a"><mrow id="S2.SS5.SSS1.p1.10.m5.1.1" xref="S2.SS5.SSS1.p1.10.m5.1.1.cmml"><mi id="S2.SS5.SSS1.p1.10.m5.1.1.2" xref="S2.SS5.SSS1.p1.10.m5.1.1.2.cmml">p</mi><mo id="S2.SS5.SSS1.p1.10.m5.1.1.1" xref="S2.SS5.SSS1.p1.10.m5.1.1.1.cmml">&lt;</mo><mn id="S2.SS5.SSS1.p1.10.m5.1.1.3" xref="S2.SS5.SSS1.p1.10.m5.1.1.3.cmml">0.05</mn></mrow><annotation-xml encoding="MathML-Content" id="S2.SS5.SSS1.p1.10.m5.1b"><apply id="S2.SS5.SSS1.p1.10.m5.1.1.cmml" xref="S2.SS5.SSS1.p1.10.m5.1.1"><lt id="S2.SS5.SSS1.p1.10.m5.1.1.1.cmml" xref="S2.SS5.SSS1.p1.10.m5.1.1.1"></lt><ci id="S2.SS5.SSS1.p1.10.m5.1.1.2.cmml" xref="S2.SS5.SSS1.p1.10.m5.1.1.2">𝑝</ci><cn type="float" id="S2.SS5.SSS1.p1.10.m5.1.1.3.cmml" xref="S2.SS5.SSS1.p1.10.m5.1.1.3">0.05</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S2.SS5.SSS1.p1.10.m5.1c">p&lt;0.05</annotation></semantics></math> was used.</p>
+</div>
+</section>
+</section>
+</section>
+<section id="S3" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Results</h2>
+
+<div id="S3.p1" class="ltx_para ltx_noindent">
+<p id="S3.p1.1" class="ltx_p">The results of the experiments on occlusions, generalization and depth of the network are presented in the following subsection.</p>
+</div>
+<section id="S3.SS1" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span>Dealing with occlusions: Static vs. Temporal (Experiment 1)</h3>
+
+<div id="S3.SS1.p1" class="ltx_para ltx_noindent">
+<p id="S3.SS1.p1.4" class="ltx_p">The results presented in Figure <a href="#S3.F9" title="Figure 9 ‣ 3.1 Dealing with occlusions: Static vs. Temporal (Experiment 1) ‣ 3 Results ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">9</span></a> show the PCKh@0.2 of LEAP and T-LEAP on the non-occluded data and on the artificially occluded data as well as the p-value ranges of the statistical tests.
+On the non-occluded data, all models achieved similar performance and could accurately detect keypoints with a mean PCKh@0.2 of 99% for LEAP and T-LEAP. The differences between LEAP and T-LEAP with sequences of 2 frames (T=2), and between LEAP and T-LEAP with sequences of 4 frames (T=4) were not statistically significant (<math id="S3.SS1.p1.1.m1.1" class="ltx_Math" alttext="p=0.356" display="inline"><semantics id="S3.SS1.p1.1.m1.1a"><mrow id="S3.SS1.p1.1.m1.1.1" xref="S3.SS1.p1.1.m1.1.1.cmml"><mi id="S3.SS1.p1.1.m1.1.1.2" xref="S3.SS1.p1.1.m1.1.1.2.cmml">p</mi><mo id="S3.SS1.p1.1.m1.1.1.1" xref="S3.SS1.p1.1.m1.1.1.1.cmml">=</mo><mn id="S3.SS1.p1.1.m1.1.1.3" xref="S3.SS1.p1.1.m1.1.1.3.cmml">0.356</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.1.m1.1b"><apply id="S3.SS1.p1.1.m1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1"><eq id="S3.SS1.p1.1.m1.1.1.1.cmml" xref="S3.SS1.p1.1.m1.1.1.1"></eq><ci id="S3.SS1.p1.1.m1.1.1.2.cmml" xref="S3.SS1.p1.1.m1.1.1.2">𝑝</ci><cn type="float" id="S3.SS1.p1.1.m1.1.1.3.cmml" xref="S3.SS1.p1.1.m1.1.1.3">0.356</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.1.m1.1c">p=0.356</annotation></semantics></math> and <math id="S3.SS1.p1.2.m2.1" class="ltx_Math" alttext="p=0.711" display="inline"><semantics id="S3.SS1.p1.2.m2.1a"><mrow id="S3.SS1.p1.2.m2.1.1" xref="S3.SS1.p1.2.m2.1.1.cmml"><mi id="S3.SS1.p1.2.m2.1.1.2" xref="S3.SS1.p1.2.m2.1.1.2.cmml">p</mi><mo id="S3.SS1.p1.2.m2.1.1.1" xref="S3.SS1.p1.2.m2.1.1.1.cmml">=</mo><mn id="S3.SS1.p1.2.m2.1.1.3" xref="S3.SS1.p1.2.m2.1.1.3.cmml">0.711</mn></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.2.m2.1b"><apply id="S3.SS1.p1.2.m2.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1"><eq id="S3.SS1.p1.2.m2.1.1.1.cmml" xref="S3.SS1.p1.2.m2.1.1.1"></eq><ci id="S3.SS1.p1.2.m2.1.1.2.cmml" xref="S3.SS1.p1.2.m2.1.1.2">𝑝</ci><cn type="float" id="S3.SS1.p1.2.m2.1.1.3.cmml" xref="S3.SS1.p1.2.m2.1.1.3">0.711</cn></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.2.m2.1c">p=0.711</annotation></semantics></math>, respectively).
+On the artificially occluded data, our temporal T-LEAP model outperformed the static LEAP model on all occlusions.
+The PCKh@0.2 was significantly higher for T-LEAP than for LEAP (<math id="S3.SS1.p1.3.m3.1" class="ltx_Math" alttext="p=1\times 10^{-20}" display="inline"><semantics id="S3.SS1.p1.3.m3.1a"><mrow id="S3.SS1.p1.3.m3.1.1" xref="S3.SS1.p1.3.m3.1.1.cmml"><mi id="S3.SS1.p1.3.m3.1.1.2" xref="S3.SS1.p1.3.m3.1.1.2.cmml">p</mi><mo id="S3.SS1.p1.3.m3.1.1.1" xref="S3.SS1.p1.3.m3.1.1.1.cmml">=</mo><mrow id="S3.SS1.p1.3.m3.1.1.3" xref="S3.SS1.p1.3.m3.1.1.3.cmml"><mn id="S3.SS1.p1.3.m3.1.1.3.2" xref="S3.SS1.p1.3.m3.1.1.3.2.cmml">1</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.3.m3.1.1.3.1" xref="S3.SS1.p1.3.m3.1.1.3.1.cmml">×</mo><msup id="S3.SS1.p1.3.m3.1.1.3.3" xref="S3.SS1.p1.3.m3.1.1.3.3.cmml"><mn id="S3.SS1.p1.3.m3.1.1.3.3.2" xref="S3.SS1.p1.3.m3.1.1.3.3.2.cmml">10</mn><mrow id="S3.SS1.p1.3.m3.1.1.3.3.3" xref="S3.SS1.p1.3.m3.1.1.3.3.3.cmml"><mo id="S3.SS1.p1.3.m3.1.1.3.3.3a" xref="S3.SS1.p1.3.m3.1.1.3.3.3.cmml">−</mo><mn id="S3.SS1.p1.3.m3.1.1.3.3.3.2" xref="S3.SS1.p1.3.m3.1.1.3.3.3.2.cmml">20</mn></mrow></msup></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.3.m3.1b"><apply id="S3.SS1.p1.3.m3.1.1.cmml" xref="S3.SS1.p1.3.m3.1.1"><eq id="S3.SS1.p1.3.m3.1.1.1.cmml" xref="S3.SS1.p1.3.m3.1.1.1"></eq><ci id="S3.SS1.p1.3.m3.1.1.2.cmml" xref="S3.SS1.p1.3.m3.1.1.2">𝑝</ci><apply id="S3.SS1.p1.3.m3.1.1.3.cmml" xref="S3.SS1.p1.3.m3.1.1.3"><times id="S3.SS1.p1.3.m3.1.1.3.1.cmml" xref="S3.SS1.p1.3.m3.1.1.3.1"></times><cn type="integer" id="S3.SS1.p1.3.m3.1.1.3.2.cmml" xref="S3.SS1.p1.3.m3.1.1.3.2">1</cn><apply id="S3.SS1.p1.3.m3.1.1.3.3.cmml" xref="S3.SS1.p1.3.m3.1.1.3.3"><csymbol cd="ambiguous" id="S3.SS1.p1.3.m3.1.1.3.3.1.cmml" xref="S3.SS1.p1.3.m3.1.1.3.3">superscript</csymbol><cn type="integer" id="S3.SS1.p1.3.m3.1.1.3.3.2.cmml" xref="S3.SS1.p1.3.m3.1.1.3.3.2">10</cn><apply id="S3.SS1.p1.3.m3.1.1.3.3.3.cmml" xref="S3.SS1.p1.3.m3.1.1.3.3.3"><minus id="S3.SS1.p1.3.m3.1.1.3.3.3.1.cmml" xref="S3.SS1.p1.3.m3.1.1.3.3.3"></minus><cn type="integer" id="S3.SS1.p1.3.m3.1.1.3.3.3.2.cmml" xref="S3.SS1.p1.3.m3.1.1.3.3.3.2">20</cn></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.3.m3.1c">p=1\times 10^{-20}</annotation></semantics></math>), and the gap became larger when more body parts were occluded.
+When adding occlusions to the hind legs, front legs, and the head, T-LEAP (T=2) maintained a PCKh@0.2 of 88.4%, while LEAP only correctly detected 59.4% of the keypoints.
+Visual examples in Figure <a href="#S3.F10" title="Figure 10 ‣ 3.1 Dealing with occlusions: Static vs. Temporal (Experiment 1) ‣ 3 Results ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">10</span></a> further support that the temporal model could localise the occluded keypoints better.
+In terms of sequence length, the occluded poses were significantly better detected with sequences of 2 frames than with sequences of 4 frames (<math id="S3.SS1.p1.4.m4.1" class="ltx_Math" alttext="p=5.42\times 10^{-4}" display="inline"><semantics id="S3.SS1.p1.4.m4.1a"><mrow id="S3.SS1.p1.4.m4.1.1" xref="S3.SS1.p1.4.m4.1.1.cmml"><mi id="S3.SS1.p1.4.m4.1.1.2" xref="S3.SS1.p1.4.m4.1.1.2.cmml">p</mi><mo id="S3.SS1.p1.4.m4.1.1.1" xref="S3.SS1.p1.4.m4.1.1.1.cmml">=</mo><mrow id="S3.SS1.p1.4.m4.1.1.3" xref="S3.SS1.p1.4.m4.1.1.3.cmml"><mn id="S3.SS1.p1.4.m4.1.1.3.2" xref="S3.SS1.p1.4.m4.1.1.3.2.cmml">5.42</mn><mo lspace="0.222em" rspace="0.222em" id="S3.SS1.p1.4.m4.1.1.3.1" xref="S3.SS1.p1.4.m4.1.1.3.1.cmml">×</mo><msup id="S3.SS1.p1.4.m4.1.1.3.3" xref="S3.SS1.p1.4.m4.1.1.3.3.cmml"><mn id="S3.SS1.p1.4.m4.1.1.3.3.2" xref="S3.SS1.p1.4.m4.1.1.3.3.2.cmml">10</mn><mrow id="S3.SS1.p1.4.m4.1.1.3.3.3" xref="S3.SS1.p1.4.m4.1.1.3.3.3.cmml"><mo id="S3.SS1.p1.4.m4.1.1.3.3.3a" xref="S3.SS1.p1.4.m4.1.1.3.3.3.cmml">−</mo><mn id="S3.SS1.p1.4.m4.1.1.3.3.3.2" xref="S3.SS1.p1.4.m4.1.1.3.3.3.2.cmml">4</mn></mrow></msup></mrow></mrow><annotation-xml encoding="MathML-Content" id="S3.SS1.p1.4.m4.1b"><apply id="S3.SS1.p1.4.m4.1.1.cmml" xref="S3.SS1.p1.4.m4.1.1"><eq id="S3.SS1.p1.4.m4.1.1.1.cmml" xref="S3.SS1.p1.4.m4.1.1.1"></eq><ci id="S3.SS1.p1.4.m4.1.1.2.cmml" xref="S3.SS1.p1.4.m4.1.1.2">𝑝</ci><apply id="S3.SS1.p1.4.m4.1.1.3.cmml" xref="S3.SS1.p1.4.m4.1.1.3"><times id="S3.SS1.p1.4.m4.1.1.3.1.cmml" xref="S3.SS1.p1.4.m4.1.1.3.1"></times><cn type="float" id="S3.SS1.p1.4.m4.1.1.3.2.cmml" xref="S3.SS1.p1.4.m4.1.1.3.2">5.42</cn><apply id="S3.SS1.p1.4.m4.1.1.3.3.cmml" xref="S3.SS1.p1.4.m4.1.1.3.3"><csymbol cd="ambiguous" id="S3.SS1.p1.4.m4.1.1.3.3.1.cmml" xref="S3.SS1.p1.4.m4.1.1.3.3">superscript</csymbol><cn type="integer" id="S3.SS1.p1.4.m4.1.1.3.3.2.cmml" xref="S3.SS1.p1.4.m4.1.1.3.3.2">10</cn><apply id="S3.SS1.p1.4.m4.1.1.3.3.3.cmml" xref="S3.SS1.p1.4.m4.1.1.3.3.3"><minus id="S3.SS1.p1.4.m4.1.1.3.3.3.1.cmml" xref="S3.SS1.p1.4.m4.1.1.3.3.3"></minus><cn type="integer" id="S3.SS1.p1.4.m4.1.1.3.3.3.2.cmml" xref="S3.SS1.p1.4.m4.1.1.3.3.3.2">4</cn></apply></apply></apply></apply></annotation-xml><annotation encoding="application/x-tex" id="S3.SS1.p1.4.m4.1c">p=5.42\times 10^{-4}</annotation></semantics></math>).</p>
+</div>
+<figure id="S3.F9" class="ltx_figure"><img src="/html/2104.08029/assets/x5.png" id="S3.F9.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="215" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>PCKh@0.2 of LEAP (T=1) and T-LEAP (T=2, T=4) on the CoWalk-30 test data with and without artificial occlusions. The occlusions were placed around the hind legs, fore legs and/or head.</figcaption>
+</figure>
+<figure id="S3.F10" class="ltx_figure">
+<table id="S3.F10.15" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.F10.15.16.1" class="ltx_tr">
+<td id="S3.F10.15.16.1.1" class="ltx_td" style="padding-left:2.0pt;padding-right:2.0pt;"></td>
+<td id="S3.F10.15.16.1.2" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.15.16.1.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F10.15.16.1.2.1.1" class="ltx_p">LEAP (T=1)</span>
+</span>
+</td>
+<td id="S3.F10.15.16.1.3" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.15.16.1.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F10.15.16.1.3.1.1" class="ltx_p">T-LEAP (T=2)</span>
+</span>
+</td>
+<td id="S3.F10.15.16.1.4" class="ltx_td ltx_nopad_r ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.15.16.1.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F10.15.16.1.4.1.1" class="ltx_p">T-LEAP (T=4)</span>
+</span>
+</td>
+</tr>
+<tr id="S3.F10.3.3" class="ltx_tr">
+<td id="S3.F10.3.3.4" class="ltx_td ltx_align_center" style="padding-left:2.0pt;padding-right:2.0pt;">
+<div id="S3.F10.3.3.4.1" class="ltx_inline-block ltx_transformed_outer" style="width:6.9pt;height:55.6pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="width:55.6pt;transform:translate(-24.33pt,-24.33pt) rotate(-90deg) ;">
+<p id="S3.F10.3.3.4.1.1" class="ltx_p">No occlusion</p>
+</span></div>
+</td>
+<td id="S3.F10.1.1.1" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.1.1.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S1_NO_occ_test_26.png" id="S3.F10.1.1.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.2.2.2" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.2.2.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S2_NO_occ_test_26.png" id="S3.F10.2.2.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.3.3.3" class="ltx_td ltx_nopad_r ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.3.3.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S4_NO_occ_test_26.png" id="S3.F10.3.3.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F10.6.6" class="ltx_tr">
+<td id="S3.F10.6.6.4" class="ltx_td ltx_align_center" style="padding-left:2.0pt;padding-right:2.0pt;">
+<div id="S3.F10.6.6.4.1" class="ltx_inline-block ltx_transformed_outer" style="width:8.9pt;height:40.9pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="width:40.9pt;transform:translate(-16pt,-15.03pt) rotate(-90deg) ;">
+<p id="S3.F10.6.6.4.1.1" class="ltx_p">Hind legs</p>
+</span></div>
+</td>
+<td id="S3.F10.4.4.1" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.4.4.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S1_H_occ_test_26.png" id="S3.F10.4.4.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.5.5.2" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.5.5.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S2_H_occ_test_26.png" id="S3.F10.5.5.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.6.6.3" class="ltx_td ltx_nopad_r ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.6.6.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S4_H_occ_test_26.png" id="S3.F10.6.6.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F10.9.9" class="ltx_tr">
+<td id="S3.F10.9.9.4" class="ltx_td ltx_align_center" style="padding-left:2.0pt;padding-right:2.0pt;">
+<div id="S3.F10.9.9.4.1" class="ltx_inline-block ltx_transformed_outer" style="width:8.9pt;height:38.6pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="width:38.6pt;transform:translate(-14.83pt,-13.86pt) rotate(-90deg) ;">
+<p id="S3.F10.9.9.4.1.1" class="ltx_p">Fore legs</p>
+</span></div>
+</td>
+<td id="S3.F10.7.7.1" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.7.7.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S1_F_occ_test_26.png" id="S3.F10.7.7.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.8.8.2" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.8.8.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S2_F_occ_test_26.png" id="S3.F10.8.8.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.9.9.3" class="ltx_td ltx_nopad_r ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.9.9.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S4_F_occ_test_26.png" id="S3.F10.9.9.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F10.12.12" class="ltx_tr">
+<td id="S3.F10.12.12.4" class="ltx_td ltx_align_center" style="padding-left:2.0pt;padding-right:2.0pt;">
+<div id="S3.F10.12.12.4.1" class="ltx_inline-block ltx_transformed_outer" style="width:8.9pt;height:46.6pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="width:46.6pt;transform:translate(-18.83pt,-17.86pt) rotate(-90deg) ;">
+<p id="S3.F10.12.12.4.1.1" class="ltx_p">Fore, Hind</p>
+</span></div>
+</td>
+<td id="S3.F10.10.10.1" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.10.10.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S1_HF_occ_test_26.png" id="S3.F10.10.10.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.11.11.2" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.11.11.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S2_HF_occ_test_26.png" id="S3.F10.11.11.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.12.12.3" class="ltx_td ltx_nopad_r ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.12.12.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S4_HF_occ_test_26.png" id="S3.F10.12.12.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F10.15.15" class="ltx_tr">
+<td id="S3.F10.15.15.4" class="ltx_td ltx_align_center" style="padding-left:2.0pt;padding-right:2.0pt;">
+<div id="S3.F10.15.15.4.1" class="ltx_inline-block ltx_transformed_outer" style="width:8.9pt;height:75.2pt;vertical-align:-0.0pt;"><span class="ltx_transformed_inner" style="width:75.2pt;transform:translate(-33.14pt,-32.17pt) rotate(-90deg) ;">
+<p id="S3.F10.15.15.4.1.1" class="ltx_p">Fore, Hind, Head</p>
+</span></div>
+</td>
+<td id="S3.F10.13.13.1" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.13.13.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S1_HFH_occ_test_26.png" id="S3.F10.13.13.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.14.14.2" class="ltx_td ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.14.14.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S2_HFH_occ_test_26.png" id="S3.F10.14.14.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F10.15.15.3" class="ltx_td ltx_nopad_r ltx_align_justify" style="padding-left:2.0pt;padding-right:2.0pt;">
+<span id="S3.F10.15.15.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk30/S4_HFH_occ_test_26.png" id="S3.F10.15.15.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 10: </span>Examples of the keypoints detection with LEAP and T-LEAP on one frame of the CoWalk-30 test data with and without artificial occlusions.</figcaption>
+</figure>
+</section>
+<section id="S3.SS2" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span>Generalization: Known-cows vs. Unknown-cows (Experiment 2)</h3>
+
+<div id="S3.SS2.p1" class="ltx_para ltx_noindent">
+<p id="S3.SS2.p1.1" class="ltx_p">The PCKh@0.2 scores of the T-LEAP (T=2) model on the known and unknown cows test sets are shown in Figure <a href="#S3.F11" title="Figure 11 ‣ 3.2 Generalization: Known-cows vs. Unknown-cows (Experiment 2) ‣ 3 Results ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">11</span></a>. Taking all body parts into account, the PCKh@0.2 drops from 93.8% on known cows to 87.6% on unknown cows.
+This 7% performance decrease is the generalization gap, i.e., the difference between the performance of the model on training cows and its performance on unseen cows.
+The head has a large PCKh@0.2, with 99.7% on known cows and 98% on unknown cows.
+The keypoints on the spine, however, have a large PCKh@0.2 on known cows (99.2%), but this drops to 84.7% for the unknown cows.
+The PCKh@0.2 of the keypoints on the legs drop from 92.6% on known cows to 87.4% on unknown cows for the carpal/tarsal keypoints, from 92% to 88% for the fetlock keypoints, and from 90% to 84.1% for the hoof keypoints.</p>
+</div>
+<figure id="S3.F11" class="ltx_figure"><img src="" id="S3.F11.g1" class="ltx_graphics ltx_centering ltx_missing ltx_missing_image" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 11: </span>PCKh@0.2 per group of anatomical landmarks for T-LEAP (T=2) trained on CoWalk-10 and tested on the known-cows unknown-cows test sets.</figcaption>
+</figure>
+<div id="S3.SS2.p2" class="ltx_para">
+<p id="S3.SS2.p2.1" class="ltx_p">Additionally, the test results were visually analysed, and a few examples of the known-cows and unknown-cows results are shown in Figure <a href="#S3.F12" title="Figure 12 ‣ 3.2 Generalization: Known-cows vs. Unknown-cows (Experiment 2) ‣ 3 Results ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">12</span></a>.
+For the unknown-cows results, the visual analysis showed that the keypoints were well localized for the cows that had a coat pattern similar to that of the known cows (Figure <a href="#S3.F12" title="Figure 12 ‣ 3.2 Generalization: Known-cows vs. Unknown-cows (Experiment 2) ‣ 3 Results ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">12</span></a>:(11)-(15)). However, for cows with a coat pattern deviating from all known-cows, the keypoints on the mid-spine and the lower legs were not well localized (Figure <a href="#S3.F12" title="Figure 12 ‣ 3.2 Generalization: Known-cows vs. Unknown-cows (Experiment 2) ‣ 3 Results ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">12</span></a>:(20),(23),(25)).</p>
+</div>
+<figure id="S3.F12" class="ltx_figure">
+<table id="S3.F12.30" class="ltx_tabular ltx_align_middle">
+<tbody class="ltx_tbody">
+<tr id="S3.F12.30.31.1" class="ltx_tr">
+<td id="S3.F12.30.31.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;"></td>
+<td id="S3.F12.30.31.1.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;"></td>
+<td id="S3.F12.30.31.1.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.31.1.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.31.1.3.1.1" class="ltx_p">Known cows</span>
+</span>
+</td>
+<td id="S3.F12.30.31.1.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;"></td>
+<td id="S3.F12.30.31.1.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;"></td>
+</tr>
+<tr id="S3.F12.5.5" class="ltx_tr">
+<td id="S3.F12.1.1.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.1.1.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0522091730_rgb_test_6.png" id="S3.F12.1.1.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.2.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.2.2.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0522093847_rgb_test_26.png" id="S3.F12.2.2.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.3.3.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.3.3.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0522113034_rgb_test_41.png" id="S3.F12.3.3.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.4.4.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.4.4.4.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0522135046_rgb_test_58.png" id="S3.F12.4.4.4.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.5.5.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.5.5.5.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0527095845_rgb_test_70.png" id="S3.F12.5.5.5.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F12.30.32.2" class="ltx_tr">
+<td id="S3.F12.30.32.2.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.32.2.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.32.2.1.1.1" class="ltx_p">(1)</span>
+</span>
+</td>
+<td id="S3.F12.30.32.2.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.32.2.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.32.2.2.1.1" class="ltx_p">(2)</span>
+</span>
+</td>
+<td id="S3.F12.30.32.2.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.32.2.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.32.2.3.1.1" class="ltx_p">(3)</span>
+</span>
+</td>
+<td id="S3.F12.30.32.2.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.32.2.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.32.2.4.1.1" class="ltx_p">(4)</span>
+</span>
+</td>
+<td id="S3.F12.30.32.2.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.32.2.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.32.2.5.1.1" class="ltx_p">(5)</span>
+</span>
+</td>
+</tr>
+<tr id="S3.F12.10.10" class="ltx_tr">
+<td id="S3.F12.6.6.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.6.6.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0527105542_rgb_test_88.png" id="S3.F12.6.6.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.7.7.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.7.7.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0527105843_rgb_test_103.png" id="S3.F12.7.7.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.8.8.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.8.8.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0527110531_rgb_test_119.png" id="S3.F12.8.8.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.9.9.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.9.9.4.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0603094445_rgb_test_141.png" id="S3.F12.9.9.4.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.10.10.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.10.10.5.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/wd/0604164833_rgb_test_155.png" id="S3.F12.10.10.5.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F12.30.33.3" class="ltx_tr">
+<td id="S3.F12.30.33.3.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.33.3.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.33.3.1.1.1" class="ltx_p">(6)</span>
+</span>
+</td>
+<td id="S3.F12.30.33.3.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.33.3.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.33.3.2.1.1" class="ltx_p">(7)</span>
+</span>
+</td>
+<td id="S3.F12.30.33.3.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.33.3.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.33.3.3.1.1" class="ltx_p">(8)</span>
+</span>
+</td>
+<td id="S3.F12.30.33.3.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.33.3.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.33.3.4.1.1" class="ltx_p">(9)</span>
+</span>
+</td>
+<td id="S3.F12.30.33.3.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.33.3.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.33.3.5.1.1" class="ltx_p">(10)</span>
+</span>
+</td>
+</tr>
+<tr id="S3.F12.30.34.4" class="ltx_tr">
+<td id="S3.F12.30.34.4.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;"></td>
+<td id="S3.F12.30.34.4.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;"></td>
+<td id="S3.F12.30.34.4.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.34.4.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.34.4.3.1.1" class="ltx_p">Unknown cows</span>
+</span>
+</td>
+<td id="S3.F12.30.34.4.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;"></td>
+<td id="S3.F12.30.34.4.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;"></td>
+</tr>
+<tr id="S3.F12.15.15" class="ltx_tr">
+<td id="S3.F12.11.11.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.11.11.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522091637_rgb_ood_test_18.png" id="S3.F12.11.11.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.12.12.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.12.12.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522092810_rgb_ood_test_18.png" id="S3.F12.12.12.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.13.13.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.13.13.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522093645_rgb_ood_test_18.png" id="S3.F12.13.13.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.14.14.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.14.14.4.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522094622_rgb_ood_test_18.png" id="S3.F12.14.14.4.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.15.15.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.15.15.5.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522100602_rgb_ood_test_18.png" id="S3.F12.15.15.5.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F12.30.35.5" class="ltx_tr">
+<td id="S3.F12.30.35.5.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.35.5.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.35.5.1.1.1" class="ltx_p">(11)</span>
+</span>
+</td>
+<td id="S3.F12.30.35.5.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.35.5.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.35.5.2.1.1" class="ltx_p">(12)</span>
+</span>
+</td>
+<td id="S3.F12.30.35.5.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.35.5.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.35.5.3.1.1" class="ltx_p">(13)</span>
+</span>
+</td>
+<td id="S3.F12.30.35.5.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.35.5.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.35.5.4.1.1" class="ltx_p">(14)</span>
+</span>
+</td>
+<td id="S3.F12.30.35.5.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.35.5.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.35.5.5.1.1" class="ltx_p">(15)</span>
+</span>
+</td>
+</tr>
+<tr id="S3.F12.20.20" class="ltx_tr">
+<td id="S3.F12.16.16.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.16.16.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522102231_rgb_ood_test_18.png" id="S3.F12.16.16.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.17.17.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.17.17.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522103726_rgb_ood_test_18.png" id="S3.F12.17.17.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.18.18.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.18.18.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522112713_rgb_ood_test_18.png" id="S3.F12.18.18.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.19.19.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.19.19.4.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522114400_rgb_ood_test_18.png" id="S3.F12.19.19.4.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.20.20.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.20.20.5.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522120801_rgb_ood_test_24.png" id="S3.F12.20.20.5.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F12.30.36.6" class="ltx_tr">
+<td id="S3.F12.30.36.6.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.36.6.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.36.6.1.1.1" class="ltx_p">(16)</span>
+</span>
+</td>
+<td id="S3.F12.30.36.6.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.36.6.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.36.6.2.1.1" class="ltx_p">(17)</span>
+</span>
+</td>
+<td id="S3.F12.30.36.6.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.36.6.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.36.6.3.1.1" class="ltx_p">(18)</span>
+</span>
+</td>
+<td id="S3.F12.30.36.6.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.36.6.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.36.6.4.1.1" class="ltx_p">(19)</span>
+</span>
+</td>
+<td id="S3.F12.30.36.6.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.36.6.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.36.6.5.1.1" class="ltx_p">(20)</span>
+</span>
+</td>
+</tr>
+<tr id="S3.F12.25.25" class="ltx_tr">
+<td id="S3.F12.21.21.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.21.21.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522125015_rgb_ood_test_18.png" id="S3.F12.21.21.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.22.22.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.22.22.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522125906_rgb_ood_test_19.png" id="S3.F12.22.22.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.23.23.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.23.23.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522150125_rgb_ood_test_18.png" id="S3.F12.23.23.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.24.24.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.24.24.4.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0522154834_rgb_ood_test_17.png" id="S3.F12.24.24.4.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.25.25.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.25.25.5.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0527105052_rgb_ood_test_21.png" id="S3.F12.25.25.5.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F12.30.37.7" class="ltx_tr">
+<td id="S3.F12.30.37.7.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.37.7.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.37.7.1.1.1" class="ltx_p">(21)</span>
+</span>
+</td>
+<td id="S3.F12.30.37.7.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.37.7.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.37.7.2.1.1" class="ltx_p">(22)</span>
+</span>
+</td>
+<td id="S3.F12.30.37.7.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.37.7.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.37.7.3.1.1" class="ltx_p">(23)</span>
+</span>
+</td>
+<td id="S3.F12.30.37.7.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.37.7.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.37.7.4.1.1" class="ltx_p">(24)</span>
+</span>
+</td>
+<td id="S3.F12.30.37.7.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.37.7.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.37.7.5.1.1" class="ltx_p">(25)</span>
+</span>
+</td>
+</tr>
+<tr id="S3.F12.30.30" class="ltx_tr">
+<td id="S3.F12.26.26.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.26.26.1.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0603090304_rgb_ood_test_18.png" id="S3.F12.26.26.1.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.27.27.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.27.27.2.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0603100617_rgb_ood_test_18.png" id="S3.F12.27.27.2.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.28.28.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.28.28.3.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0603161514_rgb_ood_test_18.png" id="S3.F12.28.28.3.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.29.29.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.29.29.4.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0604092321_rgb_ood_test_18.png" id="S3.F12.29.29.4.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+<td id="S3.F12.30.30.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.30.5.1" class="ltx_inline-block ltx_align_top"><img src="/html/2104.08029/assets/images/cowalk10/ood/0604164541_rgb_ood_test_18.png" id="S3.F12.30.30.5.1.g1" class="ltx_graphics ltx_img_square" width="598" height="598" alt="Refer to caption">
+</span>
+</td>
+</tr>
+<tr id="S3.F12.30.38.8" class="ltx_tr">
+<td id="S3.F12.30.38.8.1" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.38.8.1.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.38.8.1.1.1" class="ltx_p">(26)</span>
+</span>
+</td>
+<td id="S3.F12.30.38.8.2" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.38.8.2.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.38.8.2.1.1" class="ltx_p">(27)</span>
+</span>
+</td>
+<td id="S3.F12.30.38.8.3" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.38.8.3.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.38.8.3.1.1" class="ltx_p">(28)</span>
+</span>
+</td>
+<td id="S3.F12.30.38.8.4" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.38.8.4.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.38.8.4.1.1" class="ltx_p">(29)</span>
+</span>
+</td>
+<td id="S3.F12.30.38.8.5" class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_justify" style="padding-left:1.0pt;padding-right:1.0pt;">
+<span id="S3.F12.30.38.8.5.1" class="ltx_inline-block ltx_align_top">
+<span id="S3.F12.30.38.8.5.1.1" class="ltx_p">(30)</span>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 12: </span>Visual comparison of the results of T-LEAP (T=2) on known and unknown cows.</figcaption>
+</figure>
+</section>
+<section id="S3.SS3" class="ltx_subsection">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span>Depth of the network: Original vs. Deeper LEAP (Experiment 3)</h3>
+
+<div id="S3.SS3.p1" class="ltx_para ltx_noindent">
+<p id="S3.SS3.p1.1" class="ltx_p">The results of the comparison between the T-LEAP (T=2) with the same depth as the original LEAP architecture, and our proposed deeper version are displayed in Figure <a href="#S3.F13" title="Figure 13 ‣ 3.3 Depth of the network: Original vs. Deeper LEAP (Experiment 3) ‣ 3 Results ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">13</span></a>.
+On both experiments with CoWalk-30 and with CoWalk-10, our deeper T-LEAP architecture performed significantly better.
+On experiments with CoWalk-30, using a deeper architecture improved the PCKh@0.2 by 1.3% on data without occlusions, and improved by 11.7% on data with three occlusions (Hind legs, Front legs and Head).
+On experiments with CoWalk-10, the deeper architecture improved the PCKh@0.2 by 3.7% on known-cows and by 9.8% on unknown-cows.</p>
+</div>
+<figure id="S3.F13" class="ltx_figure"><img src="/html/2104.08029/assets/x7.png" id="S3.F13.g1" class="ltx_graphics ltx_centering ltx_img_landscape" width="461" height="201" alt="Refer to caption">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 13: </span>PCKh@0.2 of T-LEAP with original depth vs. our proposed deeper T-LEAP model on the most challenging experiments.</figcaption>
+</figure>
+</section>
+</section>
+<section id="S4" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Discussion</h2>
+
+<div id="S4.p1" class="ltx_para ltx_noindent">
+<p id="S4.p1.1" class="ltx_p">In the previous section, we performed three experiments on occlusion robustness (Experiment 1), generalisation to unknown-cows (Experiment 2) and depth of the network (Experiment 3) and presented the results. These results are discussed hereafter.</p>
+</div>
+<div id="S4.p2" class="ltx_para ltx_noindent">
+<p id="S4.p2.1" class="ltx_p">In Experiment 1, the comparison of the static and temporal models on non-occluded and occluded data shows significant improvements of the temporal models on occlusions.
+These results indicate that the temporal model successfully learned spatio-temporal patterns from the data, which allows the model to provide more accurate pose estimation in the presence of occlusions.
+A smaller temporal window of two consecutive video-frames is the most beneficial, suggesting that enough information is found in the immediate previous frame, and that longer-temporal patterns do not increase the PCKh of occluded poses for this data.
+However, the needed temporal window probably relates to the size and severity of the occlusions. More specifically, the method may benefit from a longer temporal window in the presence of larger occlusions, as the body parts may be occluded during more frames.
+The influence of the size of the occlusions on the temporal window should be investigated in future work.</p>
+</div>
+<div id="S4.p3" class="ltx_para ltx_noindent">
+<p id="S4.p3.1" class="ltx_p">An additional investigation could be to combine past and future frames to interpolate the location of keypoints in the current frame, instead of only using past frames to extrapolate the location of keypoints.
+This could give an advantage over only using two consecutive video-frames, as the future frame would provide more information on the occluded keypoints. Moreover, such an approach could also be more beneficial than using several past frames, as the data would be exactly one frame away from the analysed frame.</p>
+</div>
+<div id="S4.p4" class="ltx_para ltx_noindent">
+<p id="S4.p4.1" class="ltx_p">Experiment 2, the generalization experiment, showed that the performance of the pose-estimation model is high for known cows and for most unknown cows.
+However, the performance drops for unknown cows with a distinct coat pattern that was not represented in the training set, as seen with cows that have a mostly-white coat (Figure <a href="#S3.F12" title="Figure 12 ‣ 3.2 Generalization: Known-cows vs. Unknown-cows (Experiment 2) ‣ 3 Results ‣ T-LEAP: Occlusion-robust pose estimation of walking cows using temporal information" class="ltx_ref"><span class="ltx_text ltx_ref_tag">12</span></a>:(20),(23),(25)).
+These observations indicate the model is capable of generalizing to new cows if their coats are similar to the known cows.
+As such, we expect the model to generalize well to breeds that have uniform coats, such as Jersey cows.
+For more heterogeneous breeds, a representative sample of the coat patterns should be present in the training set to allow for good generalization within and across herds.</p>
+</div>
+<div id="S4.p5" class="ltx_para ltx_noindent">
+<p id="S4.p5.1" class="ltx_p">In this experiment, only 10 cows were used for training out of the 30 annotated videos.
+Adding more cows to the dataset would likely increase the robustness of the model on unseen coat colors and patterns, albeit increasing the annotation costs.</p>
+</div>
+<div id="S4.p6" class="ltx_para ltx_noindent">
+<p id="S4.p6.1" class="ltx_p">Future work could also investigate the use of a <span title="" class="ltx_glossaryref">Generative Adversarial Neural network</span>  (<span title="" class="ltx_glossaryref">GAN</span>), such as Cycle GAN <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib24" title="" class="ltx_ref">24</a>]</cite>, to automatically generate new coat patterns and train the pose-estimation model to be more robust to differences in coat patterns.</p>
+</div>
+<div id="S4.p7" class="ltx_para ltx_noindent">
+<p id="S4.p7.1" class="ltx_p">In Experiment 3, all tests showed a significantly improved PCKh of our proposed deeper T-LEAP compared to the original architecture depth, and the improvement gap was especially larger for the tests with most challenging conditions including occlusions or unknown cows.
+This indicates that the additional model parameters in the deeper architecture allow the network to deal with more complex data, whereas the shallower network was only able to deal with the less complex conditions.
+The increased depth might help the pose estimation in two ways: (1) through the additional convolutional and pooling layers, neurons in the final layer of the encoder have a larger receptive field allowing to capture more spatial context, and (2) the additional layers allow the extraction of more complex spatio-temporal features.</p>
+</div>
+<div id="S4.p8" class="ltx_para ltx_noindent">
+<p id="S4.p8.1" class="ltx_p">The data used in this study were recorded in realistic outdoor conditions, that is, with varying light, complex background and a fence partially occluding the cows. Moreover, we included artificial occlusions to resemble more challenging real-world situations.
+However, the postures were standardized as the cows walked in a straight line, and we selected videos containing only single cows.
+To allow the use of pose estimation in less constrained situations with cameras at different positions in the barn or in the field, future work should focus on even more challenging conditions including, for instance, different postures, multiple cows, and various barn elements.
+Such added complexity might require more complex model architecture exploiting temporal and spatial information to a larger extend.</p>
+</div>
+<div id="S4.p9" class="ltx_para ltx_noindent">
+<p id="S4.p9.1" class="ltx_p"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> applied pose estimation on images of dairy and beef cattle.
+Using their dataset, they trained three human-pose-estimation neural networks, namely Stacked-hourglass <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib23" title="" class="ltx_ref">23</a>]</cite>, Convolutional-pose-machines <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib22" title="" class="ltx_ref">22</a>]</cite> and Convolutional-heatmap-regression <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib25" title="" class="ltx_ref">25</a>]</cite> to estimate the pose of cows.
+A direct comparison of their performance against ours is not straightforward, as their data consisted of independent images of dairy and beef cattle in various postures taken from multiple viewpoints, whereas ours consisted of videos of only dairy cattle in standardized postures taken from a single viewpoint (side view), which is common in kinematic analysis <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>.
+Their best model, the Stacked hourglass network, achieved a mean PCKh@0.5 of 90.39%. The best detected body part was the head with a PCKh@0.5 of 97.15%, and the hardest was the hoofs with a PCKh@0.5 of 83.90%.
+This is on par with our findings in Experiment 2, as we showed that for known cows, the head was the best detected, with a PCKh@0.2 of 99.7%, and that the hoofs had the lowest PCKh@0.2 of 90%.
+Note that <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite> allowed a more lenient evaluation metric, as they set the threshold of the PCKh to 0.5, where we set it to 0.2.
+For reference, on Holstein-Frisian cows, a threshold of 0.2 of the head-size corresponds to approximately 10cm in real-world coordinates, whereas a threshold of 0.5 corresponds to approximately 25cm.
+A larger threshold may be suitable for applications such as activity recognition, where the activity of the subject is inferred from the pose (e.g. standing or lying), but will not be suitable for gait analysis, where the movement of the different body parts need to be analyzed in detail.</p>
+</div>
+<div id="S4.p10" class="ltx_para ltx_noindent">
+<p id="S4.p10.1" class="ltx_p"><cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib4" title="" class="ltx_ref">4</a>]</cite> proposed a system based on DeepLabCut <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib7" title="" class="ltx_ref">7</a>]</cite> to extract the body shape and legs location of cows in videos.
+They trained one DeepLabCut neural networks on RGB images, and another one on ”temporal difference”, that is, the pixel-value difference between two consecutive frames.
+In a post-processing step, physical constraints were applied, as well as a temporal median filter to smooth the predictions.
+In accordance with this study and with <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib3" title="" class="ltx_ref">3</a>]</cite>, they found that the keypoints on the legs and hoofs were the hardest to detect.
+Further studies should therefore focus on improving the detection accuracy of leg keypoints.
+Their data consisted of videos of cows walking laterally through a pathway inside the barn. The fences of the pathway created challenging partial occlusions, but the effect to the occlusions was not explicitly studied.
+Hand-crafted temporal features were included with the ”temporal difference” and the median filter, however the approach did not seem to benefit from the ”temporal difference” as that model was less temporally-consistent than the one trained with only (static) RGB data.
+Furthermore, their approach relied on hand-crafted pre- and post-processing steps, and separate training of two neural networks, whereas our approach could be fully-trained end-to-end and was not limited to a sequence length.
+Their post-processing module added physical constraints to the keypoints and can estimate the pose of multiple animals in the image.
+This post-processing approach could potentially be applied to any pose estimation models, and in combination with our T-LEAP, this could provide even better keypoint estimates.</p>
+</div>
+<div id="S4.p11" class="ltx_para ltx_noindent">
+<p id="S4.p11.1" class="ltx_p">To the best of our knowledge, our proposed model is the first animal-pose-estimation model to learn spatio-temporal features in an ”end-to-end” fashion.
+Although other existing animal-pose-estimation models have different neural-network architectures, they all consist of 2D convolutional neural networks.
+Therefore, our approach to use 3D convolutions could be applied to other pose-estimation models to compute spatio-temporal features. It is expected that by doing so, other animal-pose-estimation models will also benefit from temporal information when performing video-analysis of motion of body parts in occluded and challenging situations.</p>
+</div>
+<div id="S4.p12" class="ltx_para ltx_noindent">
+<p id="S4.p12.1" class="ltx_p">The proposed pose-estimation methods form an important foundation for automatic gait analysis.
+In future work, the pose estimation should be connected to biomechanical methods or morphometrics to compute gait features such as stride length, step symmetry and velocity (relative to body dimensions) to perform a kinematic analysis <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib1" title="" class="ltx_ref">1</a>, <a href="#bib.bib2" title="" class="ltx_ref">2</a>]</cite>, or to provide a gait score <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib26" title="" class="ltx_ref">26</a>, <a href="#bib.bib27" title="" class="ltx_ref">27</a>]</cite>.</p>
+</div>
+</section>
+<section id="S5" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span>Conclusion</h2>
+
+<div id="S5.p1" class="ltx_para ltx_noindent">
+<p id="S5.p1.1" class="ltx_p">In this study, we built upon the LEAP <cite class="ltx_cite ltx_citemacro_cite">[<a href="#bib.bib5" title="" class="ltx_ref">5</a>]</cite> model and implemented a (deeper) static and a temporal neural network for pose estimation of walking cows in videos.
+The comparison of the static and temporal models on non-occluded and occluded data showed that the temporal models performed up to 32.8% better than the static approach in presence of occlusions, and that a smaller temporal window of 2 consecutive video-frames was the most beneficial.
+The appropriate size of the temporal window, however, most likely depends on the severity of the occlusions.
+The temporal model generalised well to unknown cows that were not seen in the training set with a generalisation gap of only 7%.
+For unknown cows that had a distinct coat pattern, the detection of the spine and hoof keypoints dropped, stressing the importance of a diverse training set.
+Finally, we showed that pose estimation on the most challenging conditions such as occlusions or unknown cows benefited the most from the additional parameters of the deeper architecture.
+Further investigation is required to evaluate the benefits and limitations of temporal pose estimation on dairy cows in challenging barn conditions by, for instance, including more complex postures and multiple animals in the field of view.
+Another direction for future research might explore the use of the trajectories of anatomical landmarks detected with pose estimation to analyse the gait of dairy cows.</p>
+</div>
+</section>
+<section id="Sx1" class="ltx_section">
+<h2 class="ltx_title ltx_title_section">Acknowledgements</h2>
+
+<div id="Sx1.p1" class="ltx_para ltx_noindent">
+<p id="Sx1.p1.1" class="ltx_p">This publication is part of the project Deep Learning for Human and Animal Health (with project number EDL P16-25-P5) of the research program Efficient Deep Learning (<a target="_blank" href="https://efficientdeeplearning.nl" title="" class="ltx_ref ltx_url ltx_font_typewriter">https://efficientdeeplearning.nl</a>) which is (partly) financed by the Dutch Research Council (NWO).</p>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+<section id="bib" class="ltx_bibliography">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+
+<ul class="ltx_biblist">
+<li id="bib.bib1" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+FC Flower, DJ Sanderson, and DM Weary.
+
+</span>
+<span class="ltx_bibblock">Hoof pathologies influence kinematic measures of dairy cow gait.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib1.1.1" class="ltx_text ltx_font_italic">Journal of dairy science</span>, 88(9):3166–3173, 2005.
+
+</span>
+</li>
+<li id="bib.bib2" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+N Blackie, ECL Bleach, JR Amory, and JR Scaife.
+
+</span>
+<span class="ltx_bibblock">Associations between locomotion score and kinematic measures in dairy
+cows with varying hoof lesion types.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib2.1.1" class="ltx_text ltx_font_italic">Journal of Dairy Science</span>, 96(6):3564–3572, 2013.
+
+</span>
+</li>
+<li id="bib.bib3" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Xiangyuan Li, Cheng Cai, Ruifei Zhang, Lie Ju, and Jinrong He.
+
+</span>
+<span class="ltx_bibblock">Deep cascaded convolutional models for cattle pose estimation.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib3.1.1" class="ltx_text ltx_font_italic">Computers and Electronics in Agriculture</span>, 164:104885, 2019.
+
+</span>
+</li>
+<li id="bib.bib4" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+He Liu, Amy R Reibman, and Jacquelyn P Boerman.
+
+</span>
+<span class="ltx_bibblock">Video analytic system for detecting cow structure.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib4.1.1" class="ltx_text ltx_font_italic">Computers and Electronics in Agriculture</span>, 178:105761, 2020.
+
+</span>
+</li>
+<li id="bib.bib5" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Talmo D Pereira, Diego E Aldarondo, Lindsay Willmore, Mikhail Kislin, Samuel
+S-H Wang, Mala Murthy, and Joshua W Shaevitz.
+
+</span>
+<span class="ltx_bibblock">Fast animal pose estimation using deep neural networks.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib5.1.1" class="ltx_text ltx_font_italic">Nature methods</span>, 16(1):117–125, 2019.
+
+</span>
+</li>
+<li id="bib.bib6" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Semih Günel, Helge Rhodin, Daniel Morales, João Campagnolo, Pavan
+Ramdya, and Pascal Fua.
+
+</span>
+<span class="ltx_bibblock">Deepfly3d, a deep learning-based approach for 3d limb and appendage
+tracking in tethered, adult drosophila.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib6.1.1" class="ltx_text ltx_font_italic">Elife</span>, 8:e48571, 2019.
+
+</span>
+</li>
+<li id="bib.bib7" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Alexander Mathis, Pranav Mamidanna, Kevin M Cury, Taiga Abe, Venkatesh N
+Murthy, Mackenzie Weygandt Mathis, and Matthias Bethge.
+
+</span>
+<span class="ltx_bibblock">Deeplabcut: markerless pose estimation of user-defined body parts
+with deep learning.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib7.1.1" class="ltx_text ltx_font_italic">Nature neuroscience</span>, 21(9):1281, 2018.
+
+</span>
+</li>
+<li id="bib.bib8" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Jacob M Graving, Daniel Chae, Hemal Naik, Liang Li, Benjamin Koger, Blair R
+Costelloe, and Iain D Couzin.
+
+</span>
+<span class="ltx_bibblock">Deepposekit, a software toolkit for fast and robust animal pose
+estimation using deep learning.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib8.1.1" class="ltx_text ltx_font_italic">eLife</span>, 8:e47994, 2019.
+
+</span>
+</li>
+<li id="bib.bib9" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Laetitia Hebert, Tosif Ahamed, Antonio C Costa, Liam O’shaughnessy, and Greg J
+Stephens.
+
+</span>
+<span class="ltx_bibblock">Wormpose: Image synthesis and convolutional networks for pose
+estimation in c. elegans.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib9.1.1" class="ltx_text ltx_font_italic">BioRxiv</span>, 2020.
+
+</span>
+</li>
+<li id="bib.bib10" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Siyuan Li, Semih Gunel, Mirela Ostrek, Pavan Ramdya, Pascal Fua, and Helge
+Rhodin.
+
+</span>
+<span class="ltx_bibblock">Deformation-aware unpaired image translation for pose estimation on
+laboratory animals.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib10.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition</span>, pages 13158–13168, 2020.
+
+</span>
+</li>
+<li id="bib.bib11" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Alexander Mathis, Thomas Biasi, Y Mert, Byron Rogers, Matthias Bethge, and
+Mackenzie Weygandt Mathis.
+
+</span>
+<span class="ltx_bibblock">Imagenet performance correlates with pose estimation robustness and
+generalization on out-of-domain data.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib11.1.1" class="ltx_text ltx_font_italic">International Conference on Machine Learning 2020 Workshop on
+Uncertainty and Robustness in Deep Learning</span>. ICML, 2020.
+
+</span>
+</li>
+<li id="bib.bib12" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Jinkun Cao, Hongyang Tang, Hao-Shu Fang, Xiaoyong Shen, Cewu Lu, and Yu-Wing
+Tai.
+
+</span>
+<span class="ltx_bibblock">Cross-domain adaptation for animal pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib12.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE/CVF International Conference on
+Computer Vision</span>, pages 9498–9507, 2019.
+
+</span>
+</li>
+<li id="bib.bib13" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+Abassin Sourou Fangbemi, Yi Fei Lu, Mao Yuan Xu, Xiao Wu Luo, Alexis Rolland,
+and Chedy Raissi.
+
+</span>
+<span class="ltx_bibblock">Zoobuilder: 2d and 3d pose estimation for quadrupeds using synthetic
+data.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib13.1.1" class="ltx_text ltx_font_italic">arXiv preprint arXiv:2009.05389</span>, 2020.
+
+</span>
+</li>
+<li id="bib.bib14" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Akif Quddus Khan, Salman Khan, Mohib Ullah, and Faouzi Alaya Cheikh.
+
+</span>
+<span class="ltx_bibblock">A bottom-up approach for pig skeleton extraction using rgb data.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib14.1.1" class="ltx_text ltx_font_italic">International Conference on Image and Signal Processing</span>,
+pages 54–61. Springer, 2020.
+
+</span>
+</li>
+<li id="bib.bib15" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Sinead Kearney, Wenbin Li, Martin Parsons, Kwang In Kim, and Darren Cosker.
+
+</span>
+<span class="ltx_bibblock">Rgbd-dog: Predicting canine pose from rgbd sensors.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib15.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE/CVF Conference on Computer Vision and
+Pattern Recognition</span>, pages 8336–8345, 2020.
+
+</span>
+</li>
+<li id="bib.bib16" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Karen Simonyan and Andrew Zisserman.
+
+</span>
+<span class="ltx_bibblock">Very deep convolutional networks for large-scale image recognition.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib16.1.1" class="ltx_text ltx_font_italic">arXiv preprint arXiv:1409.1556</span>, 2014.
+
+</span>
+</li>
+<li id="bib.bib17" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Du Tran, Lubomir Bourdev, Rob Fergus, Lorenzo Torresani, and Manohar Paluri.
+
+</span>
+<span class="ltx_bibblock">Learning spatiotemporal features with 3d convolutional networks.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib17.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE international conference on computer
+vision</span>, pages 4489–4497, 2015.
+
+</span>
+</li>
+<li id="bib.bib18" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Adam Paszke, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory
+Chanan, Trevor Killeen, Zeming Lin, Natalia Gimelshein, Luca Antiga, Alban
+Desmaison, Andreas Kopf, Edward Yang, Zachary DeVito, Martin Raison, Alykhan
+Tejani, Sasank Chilamkurthy, Benoit Steiner, Lu Fang, Junjie Bai, and Soumith
+Chintala.
+
+</span>
+<span class="ltx_bibblock">Pytorch: An imperative style, high-performance deep learning library.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib18.1.1" class="ltx_text ltx_font_italic">Advances in Neural Information Processing Systems 32</span>, pages
+8024–8035. Curran Associates, Inc., 2019.
+
+</span>
+</li>
+<li id="bib.bib19" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Lukas Biewald.
+
+</span>
+<span class="ltx_bibblock">Experiment tracking with weights and biases, 2020.
+
+</span>
+<span class="ltx_bibblock">Software available from wandb.com.
+
+</span>
+</li>
+<li id="bib.bib20" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Sashank J. Reddi, Satyen Kale, and Sanjiv Kumar.
+
+</span>
+<span class="ltx_bibblock">On the convergence of adam and beyond.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib20.1.1" class="ltx_text ltx_font_italic">International Conference on Learning Representations</span>, 2018.
+
+</span>
+</li>
+<li id="bib.bib21" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+Mykhaylo Andriluka, Leonid Pishchulin, Peter Gehler, and Bernt Schiele.
+
+</span>
+<span class="ltx_bibblock">2d human pose estimation: New benchmark and state of the art
+analysis.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib21.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on computer Vision and
+Pattern Recognition</span>, pages 3686–3693, 2014.
+
+</span>
+</li>
+<li id="bib.bib22" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Shih-En Wei, Varun Ramakrishna, Takeo Kanade, and Yaser Sheikh.
+
+</span>
+<span class="ltx_bibblock">Convolutional pose machines.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib22.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition</span>, pages 4724–4732, 2016.
+
+</span>
+</li>
+<li id="bib.bib23" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+Alejandro Newell, Kaiyu Yang, and Jia Deng.
+
+</span>
+<span class="ltx_bibblock">Stacked hourglass networks for human pose estimation.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib23.1.1" class="ltx_text ltx_font_italic">European conference on computer vision</span>, pages 483–499.
+Springer, 2016.
+
+</span>
+</li>
+<li id="bib.bib24" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Jun-Yan Zhu, Taesung Park, Phillip Isola, and Alexei A Efros.
+
+</span>
+<span class="ltx_bibblock">Unpaired image-to-image translation using cycle-consistent
+adversarial networks.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib24.1.1" class="ltx_text ltx_font_italic">Proceedings of the IEEE international conference on computer
+vision</span>, pages 2223–2232, 2017.
+
+</span>
+</li>
+<li id="bib.bib25" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+Adrian Bulat and Georgios Tzimiropoulos.
+
+</span>
+<span class="ltx_bibblock">Human pose estimation via convolutional part heatmap regression.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib25.1.1" class="ltx_text ltx_font_italic">European Conference on Computer Vision</span>, pages 717–732.
+Springer, 2016.
+
+</span>
+</li>
+<li id="bib.bib26" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+Dihua Wu, Qian Wu, Xuqiang Yin, Bo Jiang, Han Wang, Dongjian He, and Huaibo
+Song.
+
+</span>
+<span class="ltx_bibblock">Lameness detection of dairy cows based on the yolov3 deep learning
+algorithm and a relative step size characteristic vector.
+
+</span>
+<span class="ltx_bibblock"><span id="bib.bib26.1.1" class="ltx_text ltx_font_italic">Biosystems Engineering</span>, 189:150–163, 2020.
+
+</span>
+</li>
+<li id="bib.bib27" class="ltx_bibitem">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+John Gardenier, James Underwood, and Cameron Clark.
+
+</span>
+<span class="ltx_bibblock">Object detection for cattle gait tracking.
+
+</span>
+<span class="ltx_bibblock">In <span id="bib.bib27.1.1" class="ltx_text ltx_font_italic">2018 IEEE International Conference on Robotics and Automation
+(ICRA)</span>, pages 2206–2213. IEEE, 2018.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+<div class="ar5iv-footer"><a href="/html/2104.08028" class="ar5iv-nav-button ar5iv-nav-button-prev">◄</a>
+    <a class="ar5iv-home-button" href="/"><img height="40" alt="ar5iv homepage" src="/assets/ar5iv.png"></a>
+    <a href="/feeling_lucky" class="ar5iv-text-button">Feeling<br>lucky?</a>
+    <a href="/log/2104.08029" class="ar5iv-text-button ar5iv-severity-warning">Conversion<br>report</a>
+    <a class="ar5iv-text-button" target="_blank" href="https://github.com/dginev/ar5iv/issues/new?template=improve-article--arxiv-id-.md&title=Improve+article+2104.08029">Report<br>an issue</a>
+    <a href="https://arxiv.org/abs/2104.08029" class="ar5iv-text-button arxiv-ui-theme">View&nbsp;original<br>on&nbsp;arXiv</a><a href="/html/2104.08030" class="ar5iv-nav-button ar5iv-nav-button-next">►</a>
+</div><footer class="ltx_page_footer">
+<a class="ar5iv-toggle-color-scheme" href="javascript:toggleColorScheme()" title="Toggle ar5iv color scheme"><span class="color-scheme-icon"></span></a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/license" target="_blank">Copyright</a>
+<a class="ar5iv-footer-button" href="https://arxiv.org/help/policies/privacy_policy" target="_blank">Privacy Policy</a>
+
+<div class="ltx_page_logo">Generated  on Sat Mar  2 06:17:38 2024 by <a target="_blank" href="http://dlmf.nist.gov/LaTeXML/" class="ltx_LaTeXML_logo"><span style="letter-spacing:-0.2em; margin-right:0.1em;">L<span class="ltx_font_smallcaps" style="position:relative; bottom:2.2pt;">a</span>T<span class="ltx_font_smallcaps" style="font-size:120%;position:relative; bottom:-0.2ex;">e</span></span><span style="font-size:90%; position:relative; bottom:-0.2ex;">XML</span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg==" alt="Mascot Sammy"></a>
+</div></footer>
+</div>
+
+    <script>
+      var canMathML = typeof(MathMLElement) == "function";
+      if (!canMathML) {
+        var body = document.querySelector("body");
+        body.firstElementChild.setAttribute('style', 'opacity: 0;');
+        var loading = document.createElement("div");
+        loading.setAttribute("id", "mathjax-loading-spinner");
+        var message = document.createElement("div");
+        message.setAttribute("id", "mathjax-loading-message");
+        message.innerText = "Typesetting Equations...";
+        body.prepend(loading);
+        body.prepend(message);
+
+        var el = document.createElement("script");
+        el.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js";
+        document.querySelector("head").appendChild(el);
+
+        window.MathJax = {
+          startup: {
+            pageReady: () => {
+              return MathJax.startup.defaultPageReady().then(() => {
+                body.removeChild(loading);
+                body.removeChild(message);
+                body.firstElementChild.removeAttribute('style');
+              }); } } };
+      }
+    </script>
+    <script>
+    // Auxiliary function, building the preview feature when
+    // an inline citation is clicked
+    function clicked_cite(e) {
+      e.preventDefault();
+      let cite = this.closest('.ltx_cite');
+      let next = cite.nextSibling;
+      if (next && next.nodeType == Node.ELEMENT_NODE && next.getAttribute('class') == "ar5iv-bibitem-preview") {
+        next.remove();
+        return; }
+      // Before adding a preview modal,
+      // cleanup older previews, in case they're still open
+      document.querySelectorAll('span.ar5iv-bibitem-preview').forEach(function(node) {
+        node.remove();
+      })
+
+      // Create the preview
+      preview = document.createElement('span');
+      preview.setAttribute('class','ar5iv-bibitem-preview');
+      let target = document.getElementById(this.getAttribute('href').slice(1));
+      target.childNodes.forEach(function (child) {
+        preview.append(child.cloneNode(true));
+      });
+      let close_x = document.createElement('button');
+      close_x.setAttribute("aria-label","Close modal for bibliography item preview");
+      close_x.textContent = "×";
+      close_x.setAttribute('class', 'ar5iv-button-close-preview');
+      close_x.setAttribute('onclick','this.parentNode.remove()');
+      preview.append(close_x);
+      preview.querySelectorAll('.ltx_tag_bibitem').forEach(function(node) {
+        node.remove();
+      });
+      cite.parentNode.insertBefore(preview, cite.nextSibling);
+      return;
+    }
+    // Global Document initialization:
+    // - assign the preview feature to all inline citation links
+    document.querySelectorAll(".ltx_cite .ltx_ref").forEach(function (link) {
+      link.addEventListener("click", clicked_cite);
+    });
+    </script>
+    </body>
+</html>
