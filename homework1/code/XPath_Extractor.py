@@ -16,19 +16,25 @@ def extract_information(HTML_file_path):
             table_id = f"id_table_{i}"
             caption = figure.xpath("string(figcaption)")
             tables = figure.xpath(".//table[contains(@class, 'ltx_tabular')]")
-            reference = tree.xpath(f"//p[contains(text(), 'Table {i}')]")
+            reference_paragraphs = tree.xpath(f"//a[contains(@title, 'Table {i}')]/ancestor::p")
             # footnotes = table.xpath("./following-sibling::footnote/text()")
 
 
             table_data = []
             for table in tables:
                 table_data.append(etree.tostring(table, pretty_print=True).decode())
+            
+            references_data = []
+            for reference in reference_paragraphs:
+                paragraph_text = reference.xpath("string()").strip()
+                references_data.append(paragraph_text)
+            
 
             data[table_id] = {
                 "caption": caption,
                 "table": table_data,
                 # "footnotes": footnotes,
-                # "references": [etree.tostring(ref, pretty_print=True).decode() for ref in references]
+                "references": references_data
             }
         return data
 
