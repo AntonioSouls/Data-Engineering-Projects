@@ -17,7 +17,8 @@ def extract_information(HTML_file_path):
             caption = figure.xpath("./figcaption/text()")
             tables = figure.xpath(".//table[contains(@class, 'ltx_tabular')]")
             # footnotes = table.xpath("./following-sibling::footnote/text()")
-            # references = tree.xpath(f"//p[contains(text(), 'Table {i}')]")
+            id_href = figure.xpath(".//table[contains(@class, 'ltx_tabular')]")
+            references = tree.xpath(f"//p[contains(text(), 'Table {i}')]")
             
             table_data = []
             for table in tables:
