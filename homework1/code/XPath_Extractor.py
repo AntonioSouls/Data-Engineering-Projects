@@ -4,14 +4,18 @@ from lxml import html
 from lxml import etree
 
 
-
+# Funzione per estrarre i dati in formato JSON da un documento HTML. I dati in formato JSON vengono poi mandati
+# alla funzione principale che si occupa di salvarli in un file opportuno
 def extract_information(HTML_file_path):
     elenco_figure = []
     data = {}
+
+    # Apro il file HTML ricevuto come parametro e ci estraggo l'HTML TREE
     with open(HTML_file_path, "r", encoding="utf-8") as file:
         tree = html.fromstring(file.read())
-        elenco_figure = tree.xpath("//figure[contains(@class,'ltx_table')]")
+        elenco_figure = tree.xpath("//figure[contains(@class,'ltx_table')]")       # Trovo tutti i tag <figure> nell'HTML
 
+        # Per ogni tag <figure> estraggo le informazioni che mi servono per costruire il JSON
         for i, figure in enumerate(elenco_figure, start=1):
             table_id = f"id_table_{i}"
             caption = figure.xpath("string(figcaption)")
@@ -30,6 +34,8 @@ def extract_information(HTML_file_path):
                 references_data.append(paragraph_text)
             
 
+            # Strutturo le informazioni raccolte in un formato JSON compatibile, per poi passare tale formato alla funzione principale
+            # che si occupa di salvarlo in un opportuno file JSON
             data[table_id] = {
                 "caption": caption,
                 "table": table_data,
@@ -56,8 +62,7 @@ def main():
         with open(JSON_file_path, 'w', encoding="utf-8") as output_file:
             json.dump(information, output_file, ensure_ascii=False, indent=4)  # DA RIVEDERE
         print(f"Created: {JSON_file_name}\n")
-        break
-    
+        
     print(f"SUCCESS: All JSONs are been created")
 
 # Starter dello script
