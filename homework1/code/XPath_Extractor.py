@@ -15,13 +15,17 @@ def extract_information(HTML_file_path):
         for i, figure in enumerate(elenco_figure, start=1):
             table_id = f"id_table_{i}"
             caption = figure.xpath("./figcaption/text()")
-            table = figure.xpath(".//table[contains(@class, 'ltx_tabular')]")
+            tables = figure.xpath(".//table[contains(@class, 'ltx_tabular')]")
             # footnotes = table.xpath("./following-sibling::footnote/text()")
             # references = tree.xpath(f"//p[contains(text(), 'Table {i}')]")
+            
+            table_data = []
+            for table in tables:
+                table_data.append(etree.tostring(table, pretty_print=True).decode())
 
             data[table_id] = {
                 "caption": caption[0] if caption else "",
-                "table": etree.tostring(table, pretty_print=True).decode(),
+                "table": table_data,
                 # "footnotes": footnotes,
                 # "references": [etree.tostring(ref, pretty_print=True).decode() for ref in references]
             }
