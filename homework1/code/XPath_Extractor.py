@@ -11,7 +11,20 @@ def extract_information(HTML_file_path):
         tree = html.fromstring(file.read())
         elenco_tabelle = tree.xpath("//table[contains(@class,'ltx_tabular')]")
 
+        for i, table in enumerate(elenco_tabelle, start=1):
+        table_id = f"id_table_{i}"
+        caption = table.xpath("./caption/text()")
+        footnotes = table.xpath("./following-sibling::footnote/text()")
+        references = tree.xpath(f"//p[contains(text(), 'Table {i}')]")
+
+        data[table_id] = {
+        "caption": caption[0] if caption else "",
+        "table": etree.tostring(table, pretty_print=True).decode(),
+        "footnotes": footnotes,
+        "references": [etree.tostring(ref, pretty_print=True).decode() for ref in references]
+        }
     return elenco_tabelle
+
 
 
 # Funzione principale per costruire i JSON corrispondenti agli HTML della directory 'source'
