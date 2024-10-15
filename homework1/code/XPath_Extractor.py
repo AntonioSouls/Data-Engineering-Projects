@@ -35,11 +35,11 @@ def extract_information(HTML_file_path):
             footnotes_data = []
             for footnote in footnotes:
                 footnote_text = footnote.xpath("string()").strip()
-                # Find the corresponding bibliography entry
+                # Trova l'entry della bibliografia corrispondente
                 hrefs = footnote.xpath(".//a/@href")
                 if hrefs:
                     href = hrefs[0]
-                    bib_entry = tree.xpath(f"//li[@id='{href[1:]}']")  # Remove the '#' from href
+                    bib_entry = tree.xpath(f"//li[@id='{href[1:]}']")  # Rimuovi il '#' da href
                     if bib_entry:
                         bib_text = bib_entry[0].xpath("string()").strip()
                         footnote_text += f" {bib_text}"
