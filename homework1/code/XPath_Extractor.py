@@ -21,7 +21,7 @@ def extract_information(HTML_file_path):
             caption = figure.xpath("string(figcaption)")
             tables = figure.xpath(".//table[contains(@class, 'ltx_tabular')]")
             reference_paragraphs = tree.xpath(f"//a[contains(@title, 'Table {i}')]/ancestor::p")
-            # footnotes = table.xpath("./following-sibling::footnote/text()")
+            footnotes = figure.xpath(".//cite[contains(@class, 'ltx_cite')]")  # Extract footnotes
 
             table_data = []
             for table in tables:
@@ -32,12 +32,25 @@ def extract_information(HTML_file_path):
                 paragraph_text = reference.xpath("string()").strip()
                 references_data.append(paragraph_text)
 
+            footnotes_data = []
+            for footnote in footnotes:
+                footnote_text = footnote.xpath("string()").strip()
+                # Find the corresponding bibliography entry
+                hrefs = footnote.xpath(".//a/@href")
+                if hrefs:
+                    href = hrefs[0]
+                    bib_entry = tree.xpath(f"//li[@id='{href[1:]}']")  # Remove the '#' from href
+                    if bib_entry:
+                        bib_text = bib_entry[0].xpath("string()").strip()
+                        footnote_text += f" {bib_text}"
+                footnotes_data.append(footnote_text)
+
             # Strutturo le informazioni raccolte in un formato JSON compatibile, per poi passare tale formato alla funzione principale
             # che si occupa di salvarlo in un opportuno file JSON
             data[table_id] = {
                 "caption": caption,
                 "table": table_data,
-                # "footnotes": footnotes,
+                "footnotes": footnotes_data,
                 "references": references_data
             }
         return data
@@ -58,7 +71,7 @@ def main():
         with open(JSON_file_path, 'w', encoding="utf-8") as output_file:
             json.dump(information, output_file, ensure_ascii=False, indent=4)
         print(f"Created: {JSON_file_name}\n")
-
+        
     print(f"SUCCESS: All JSONs have been created")
 
 # Starter dello script
