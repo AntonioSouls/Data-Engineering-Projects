@@ -10,7 +10,7 @@ def extract_information(HTML_file_path):
     data = {}
 
     # Apro il file HTML ricevuto come parametro e ci estraggo l'HTML TREE
-    with open(HTML_file_path, "rb") as file:  # Open the file in binary mode
+    with open(HTML_file_path, "rb") as file:  # Apri i file in binary mode
         html_bytes = file.read()
         tree = html.fromstring(html_bytes)
         elenco_figure = tree.xpath("//figure[contains(@class,'ltx_table')]")  # Trovo tutti i tag <figure> nell'HTML
@@ -21,7 +21,7 @@ def extract_information(HTML_file_path):
             caption = figure.xpath("string(figcaption)")
             tables = figure.xpath(".//table[contains(@class, 'ltx_tabular')]")
             reference_paragraphs = tree.xpath(f"//a[contains(@title, 'Table {i}')]/ancestor::p")
-            footnotes = figure.xpath(".//cite[contains(@class, 'ltx_cite')]")  # Extract footnotes
+            footnotes = figure.xpath(".//cite[contains(@class, 'ltx_cite')]")  # Estrai i footnotes
 
             table_data = []
             for table in tables:
