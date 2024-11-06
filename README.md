@@ -11,7 +11,7 @@ The purpose of this repository is to show the solutions that my colleague [@dani
   
 ## How the repository is structured
 - [HOMEWORK 1](./homework1/README.md)
-- [HOMEWORK 2]()
+- [HOMEWORK 2](./homework2/README.md)
 - [HOMEWORK 3]()
 - [HOMEWORK 4]()
 - [HOMEWORK 5]()
