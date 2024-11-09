@@ -1,4 +1,4 @@
-# Data-Engineering-Projects
+# <div align="center"> Data-Engineering-Projects </div>
 This repository is a set of all the homework, including the final project, carried out during the master's course in Data Engineering at the University of Roma Tre.  
 It is divided into various folders, each of which represents a homework carried out during the course. The last folder is particularly interesting because represents the final project brought as discussion for the exam and combines the topics of the various homeworks.
 
