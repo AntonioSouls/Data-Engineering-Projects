@@ -1,5 +1,5 @@
 # <div align="center"> HOMEWORK 1: HTML DATA PARSING WITH XPath </div>
-## - Homework Goals
+
 The goal of this `homework` is to have us develop the ability to capture data from the Web, understand it semantically, and extract relevant information from it. This operation is definitely relevant in the Data Science world as it is useful for several purposes. 
 This test aims to increase our ability to reason and evaluate proposed solutions to the problems just mentioned
 
