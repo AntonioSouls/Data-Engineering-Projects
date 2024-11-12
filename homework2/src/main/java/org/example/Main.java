@@ -45,6 +45,7 @@ public class Main {
             }
             System.out.println("\n\n");
         }
+        scanner.close();
 
 
 
