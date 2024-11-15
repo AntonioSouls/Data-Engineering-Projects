@@ -1,5 +1,6 @@
 # <div align="center"> HOMEWORK 2: CREATING A SEARCH ENGINE VIA A Lucene INDEX </div>
 
+
 The aim of this homework is to help us understand how to speed up the search for information within a large data set. Through the challenges presented here, it was possible to understand how the Lucene library works and
 how it can be exploited to index a large dataset. This is a widely used methodology in Data Science to speed up the search for information within a large dataset.
 ## - Homework Requirements
