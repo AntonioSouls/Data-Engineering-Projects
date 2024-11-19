@@ -1,4 +1,4 @@
-package org.example;
+package idd.indexing_phase;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilterFactory;

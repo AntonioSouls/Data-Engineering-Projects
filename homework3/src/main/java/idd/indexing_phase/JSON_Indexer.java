@@ -1,5 +1,6 @@
-package org.example;
+package idd.indexing_phase;
 
+import org.json.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -16,6 +17,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -35,43 +37,31 @@ public class JSON_Indexer {
         IndexWriter writer = new IndexWriter(directory, config);
         writer.deleteAll();
 
-        // Inizio la procedura per aggiungere i vari file all'indice
+        // Inizio la procedura per aggiungere le varie tabelle all'indice
         File jsonDirectory = new File("target/all_tables");
         File[] jsonFiles = jsonDirectory.listFiles();
 
         if (jsonFiles != null) {
             int totalFiles = jsonFiles.length;
-            int processedFiles = 0;
+            int processedFiles = 1;
 
             for (File jsonFile : jsonFiles) {
-                Document documentoJSOUP = Jsoup.parse(jsonFile, "UTF-8");
+                System.out.println(processedFiles + "/" + totalFiles);
 
-                String title = documentoJSOUP.title();                 // Seleziono il titolo del documento
-                if (title.isEmpty()) {
-                    title = documentoJSOUP.select("h1.ltx_title").text();
+                // Estraggo le tabelle dal file
+                List<Map<String, String>> tables = TableExtractor.extractor(jsonFile);
+
+                // Per ogni tabella estratta, creo il documento per l'indice e aggiungo i vari campi
+                for (Map<String, String> table : tables){
+                    org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
+                    doc.add(new TextField("table_id", table.get("table_id"), Field.Store.YES));
+                    doc.add(new TextField("table_content", table.get("table_content"), Field.Store.YES));
+                    doc.add(new TextField("table_caption", table.get("table_caption"), Field.Store.YES));
+                    writer.addDocument(doc);
                 }
-                String content = documentoJSOUP.body().text();         // Seleziono il contenuto del documento
-                String abstractContent = documentoJSOUP.select("div.ltx_abstract").text();  // Seleziono l'abstract del documento
-
-                // Seleziono tutti gli autori del documento
-                List<String> authors = new ArrayList<>();
-                Elements authorsSpan = documentoJSOUP.select("div.ltx_authors span.ltx_personname");
-                for (Element author : authorsSpan) {
-                    authors.add(author.text());
-                }
-                String oneStringAuthors = String.join(", ", authors);
-
-                // Creo il documento per l'indice e aggiungo i vari campi
-                org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
-                doc.add(new TextField("title", title, Field.Store.YES));
-                doc.add(new TextField("content", content, Field.Store.YES));
-                doc.add(new TextField("authors", oneStringAuthors, Field.Store.YES));
-                doc.add(new TextField("abstract", abstractContent, Field.Store.YES));
-                writer.addDocument(doc);
 
                 // Aggiorna la barra di avanzamento
                 processedFiles++;
-                printProgress(processedFiles, totalFiles);
             }
         }
 
@@ -79,7 +69,7 @@ public class JSON_Indexer {
         writer.close();
     }
 
-    // Funzione che crea e restituisce un PerFieldAnalyzer
+    /*// Funzione che crea e restituisce un PerFieldAnalyzer
     public static Analyzer getPerFieldAnalyzer () throws Exception {
         Analyzer defaultAnalyzer = new StandardAnalyzer();
 
@@ -89,8 +79,10 @@ public class JSON_Indexer {
         perFieldAnalyzers.put("authors", PersonalAnalyzer.getAuthorsAnalyzer());
         perFieldAnalyzers.put("abstract", PersonalAnalyzer.getAbstractAnalyzer());
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, perFieldAnalyzers);
-    }
+    }*/
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Metodo per stampare la barra di avanzamento
     private void printProgress(int processedFiles, int totalFiles) {
