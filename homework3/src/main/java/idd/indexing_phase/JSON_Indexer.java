@@ -24,7 +24,8 @@ import java.util.*;
 
 public class JSON_Indexer {
 
-    /* Funzione che crea effettivamente l'indice sui documenti */
+    // Funzione che crea effettivamente l'indice sui documenti
+
     public void indexDocs(Directory directory) throws Exception {
 
         // Istanzio il nostro analyzer personalizzato da passare all'indice
@@ -69,7 +70,8 @@ public class JSON_Indexer {
         writer.close();
     }
 
-    /*// Funzione che crea e restituisce un PerFieldAnalyzer
+
+    // Funzione che crea e restituisce un PerFieldAnalyzer
     public static Analyzer getPerFieldAnalyzer () throws Exception {
         Analyzer defaultAnalyzer = new StandardAnalyzer();
 
@@ -79,7 +81,8 @@ public class JSON_Indexer {
         perFieldAnalyzers.put("authors", PersonalAnalyzer.getAuthorsAnalyzer());
         perFieldAnalyzers.put("abstract", PersonalAnalyzer.getAbstractAnalyzer());
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, perFieldAnalyzers);
-    }*/
+    }
+
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +110,8 @@ public class JSON_Indexer {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    /* Funzione principale che consente l'avvio della creazione di un indice per i documenti */
+    // Funzione principale che consente l'avvio della creazione di un indice per i documenti
+
     public static void main(String[] args) throws Exception {
         long startTime = System.currentTimeMillis();
         Path path = Paths.get("target/indexDocuments");
