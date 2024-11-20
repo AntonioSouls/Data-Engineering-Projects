@@ -1,6 +1,5 @@
 package idd.indexing_phase;
 
-import org.json.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -11,13 +10,8 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -26,7 +20,7 @@ public class JSON_Indexer {
 
     // Funzione che crea effettivamente l'indice sui documenti
 
-    public void indexDocs(Directory directory) throws Exception {
+    public static void indexDocs(Directory directory) throws Exception {
 
         // Istanzio il nostro analyzer personalizzato da passare all'indice
         Analyzer analyzer = getPerFieldAnalyzer();
@@ -76,10 +70,9 @@ public class JSON_Indexer {
         Analyzer defaultAnalyzer = new StandardAnalyzer();
 
         Map<String, Analyzer> perFieldAnalyzers = new HashMap<>();
-        perFieldAnalyzers.put("title", PersonalAnalyzer.getTitleAnalyzer());
-        perFieldAnalyzers.put("content", PersonalAnalyzer.getContentAnalyzer());
-        perFieldAnalyzers.put("authors", PersonalAnalyzer.getAuthorsAnalyzer());
-        perFieldAnalyzers.put("abstract", PersonalAnalyzer.getAbstractAnalyzer());
+        perFieldAnalyzers.put("table_id", PersonalAnalyzer.getTableIdAnalyzer());
+        perFieldAnalyzers.put("table_content", PersonalAnalyzer.getTableContentAnalyzer());
+        perFieldAnalyzers.put("table_caption", PersonalAnalyzer.getTableCaptionAnalyzer());
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, perFieldAnalyzers);
     }
 
@@ -113,14 +106,13 @@ public class JSON_Indexer {
     // Funzione principale che consente l'avvio della creazione di un indice per i documenti
 
     public static void main(String[] args) throws Exception {
-        long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();                                                                  // Avvio la misurazione del tempo necessario per la costruzione dell'indice
         Path path = Paths.get("target/indexDocuments");
         try (Directory directory = FSDirectory.open(path)) {
-            JSON_Indexer indexer = new JSON_Indexer();
-            indexer.indexDocs(directory);
+            JSON_Indexer.indexDocs(directory);
             directory.close();
-            long endTime = System.currentTimeMillis();
-            long totalTime = endTime - startTime;
+            long endTime = System.currentTimeMillis();                                                                // Termino la misurazione del tempo necessario per la costruzione dell'indice
+            long totalTime = endTime - startTime;                                                                     // Calcolo il tempo impiegato
             totalTime /= 1000;
             System.out.println("\nSUCCESS: Indicizzazione Terminata in " + totalTime + "s!\n");
         }

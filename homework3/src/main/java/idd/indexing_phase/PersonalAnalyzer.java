@@ -16,7 +16,7 @@ import java.io.IOException;
 public class PersonalAnalyzer {
 
     //Metodo per personalizzare l'Analyzer da usare per il titolo
-    public static Analyzer getTitleAnalyzer() {
+    public static Analyzer getTableIdAnalyzer() {
         try {
             return CustomAnalyzer.builder()
                     .withTokenizer(WhitespaceTokenizerFactory.class)              // Tokenizzazione su spazi bianchi
@@ -33,7 +33,7 @@ public class PersonalAnalyzer {
     }
 
     //Metodo per personalizzare l'Analyzer da usare per il contenuto
-    public static Analyzer getContentAnalyzer() {
+    public static Analyzer getTableContentAnalyzer() {
         try {
             return CustomAnalyzer.builder()
                     .withTokenizer(StandardTokenizerFactory.class)                 // Tokenizzazione avanzata su punteggiatura e spazi
@@ -50,29 +50,12 @@ public class PersonalAnalyzer {
     }
 
     //Metodo per personalizzare l'Analyzer da usare per gli autori
-    public static Analyzer getAuthorsAnalyzer() {
+    public static Analyzer getTableCaptionAnalyzer() {
         try {
             return CustomAnalyzer.builder()
                     .withTokenizer(WhitespaceTokenizerFactory.class)             // Tokenizza su spazi bianchi
                     .addCharFilter(PatternReplaceCharFilterFactory.class,"pattern", ",", "replacement", " ")                           // Sostituisce le virgole con spazi per uniformare la separazione dei nomi
                     .addTokenFilter(LowerCaseFilterFactory.class)                // Converte i token in minuscolo per uniformità
-                    .build();
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    //Metodo per personalizzare l'Analyzer da usare per l'abstract
-    public static Analyzer getAbstractAnalyzer() {
-        try {
-            return CustomAnalyzer.builder()
-                    .withTokenizer(StandardTokenizerFactory.class)                 // Tokenizzazione avanzata su punteggiatura e spazi
-                    .addCharFilter(HTMLStripCharFilterFactory.class)              // Rimuove i tag HTML
-                    .addTokenFilter(LowerCaseFilterFactory.class)                 // Converte tutto in minuscolo
-                    .addTokenFilter(WordDelimiterGraphFilterFactory.class)        // Gestisce i delimitatori come `-`, `_`, camel case
-                    .addTokenFilter(EnglishPossessiveFilterFactory.class)         // Gestisce possessivi inglesi (es. "John's" → "John")
-                    .addTokenFilter(PorterStemFilterFactory.class)                // Stemming per normalizzare suffissi
                     .build();
         }
         catch (IOException e) {
