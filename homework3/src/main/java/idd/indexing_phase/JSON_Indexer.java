@@ -20,7 +20,7 @@ public class JSON_Indexer {
 
     // Funzione che crea effettivamente l'indice sui documenti
 
-    public static void indexDocs(Directory directory) throws Exception {
+    public void indexDocs(Directory directory) throws Exception {
 
         // Istanzio il nostro analyzer personalizzato da passare all'indice
         Analyzer analyzer = getPerFieldAnalyzer();
@@ -38,10 +38,9 @@ public class JSON_Indexer {
 
         if (jsonFiles != null) {
             int totalFiles = jsonFiles.length;
-            int processedFiles = 1;
+            int processedFiles = 0;
 
             for (File jsonFile : jsonFiles) {
-                System.out.println(processedFiles + "/" + totalFiles);
 
                 // Estraggo le tabelle dal file
                 List<Map<String, String>> tables = TableExtractor.extractor(jsonFile);
@@ -57,6 +56,7 @@ public class JSON_Indexer {
 
                 // Aggiorna la barra di avanzamento
                 processedFiles++;
+                printProgress(processedFiles, totalFiles);
             }
         }
 
@@ -71,7 +71,7 @@ public class JSON_Indexer {
 
         Map<String, Analyzer> perFieldAnalyzers = new HashMap<>();
         perFieldAnalyzers.put("table_id", PersonalAnalyzer.getTableIdAnalyzer());
-        perFieldAnalyzers.put("table_content", PersonalAnalyzer.getTableContentAnalyzer());
+        perFieldAnalyzers.put("table_content", defaultAnalyzer/*PersonalAnalyzer.getTableContentAnalyzer()*/);
         perFieldAnalyzers.put("table_caption", PersonalAnalyzer.getTableCaptionAnalyzer());
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, perFieldAnalyzers);
     }
@@ -109,7 +109,8 @@ public class JSON_Indexer {
         long startTime = System.currentTimeMillis();                                                                  // Avvio la misurazione del tempo necessario per la costruzione dell'indice
         Path path = Paths.get("target/indexDocuments");
         try (Directory directory = FSDirectory.open(path)) {
-            JSON_Indexer.indexDocs(directory);
+            JSON_Indexer JSONIndexer = new JSON_Indexer();
+            JSONIndexer.indexDocs(directory);
             directory.close();
             long endTime = System.currentTimeMillis();                                                                // Termino la misurazione del tempo necessario per la costruzione dell'indice
             long totalTime = endTime - startTime;                                                                     // Calcolo il tempo impiegato
