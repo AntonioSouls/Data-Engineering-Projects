@@ -66,7 +66,7 @@ public class JSON_Indexer {
 
 
     // Funzione che crea e restituisce un PerFieldAnalyzer
-    public static Analyzer getPerFieldAnalyzer () throws Exception {
+    public static Analyzer getPerFieldAnalyzer () {
         Analyzer defaultAnalyzer = new StandardAnalyzer();
 
         Map<String, Analyzer> perFieldAnalyzers = new HashMap<>();
