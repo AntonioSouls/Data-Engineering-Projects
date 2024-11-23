@@ -1,7 +1,6 @@
 package idd.indexing_phase;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.charfilter.HTMLStripCharFilterFactory;
 import org.apache.lucene.analysis.core.KeywordTokenizerFactory;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.apache.lucene.analysis.core.WhitespaceTokenizerFactory;
@@ -10,8 +9,6 @@ import org.apache.lucene.analysis.en.EnglishPossessiveFilterFactory;
 import org.apache.lucene.analysis.en.PorterStemFilterFactory;
 import org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilterFactory;
 import org.apache.lucene.analysis.pattern.PatternReplaceCharFilterFactory;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.analysis.standard.StandardTokenizerFactory;
 
 import java.io.IOException;
 
@@ -33,14 +30,31 @@ public class PersonalAnalyzer {
     }
 
 
-    /*public static Analyzer getTableContentAnalyzer() {
+
+
+    public static Analyzer getTableColumnsAnalyzer(){
         try {
-            return CustomAnalyzer.builder().build();
+            return CustomAnalyzer.builder()
+                    .withTokenizer(KeywordTokenizerFactory.class)
+                    .addTokenFilter(LowerCaseFilterFactory.class)
+                    .build();
         }
-        catch (IOException e){
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }*/
+    }
+
+    public static Analyzer getTableRowsAnalyzer(){
+        try {
+            return CustomAnalyzer.builder()
+                    .withTokenizer(KeywordTokenizerFactory.class)
+                    .addTokenFilter(LowerCaseFilterFactory.class)
+                    .build();
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
     public static Analyzer getTableCaptionAnalyzer() {

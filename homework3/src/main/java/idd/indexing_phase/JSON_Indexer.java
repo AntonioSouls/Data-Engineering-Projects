@@ -1,5 +1,6 @@
 package idd.indexing_phase;
 
+import idd.application.AppendOperationResults;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -50,6 +51,8 @@ public class JSON_Indexer {
                     org.apache.lucene.document.Document doc = new org.apache.lucene.document.Document();
                     doc.add(new TextField("table_id", table.get("table_id"), Field.Store.YES));
                     doc.add(new TextField("table_content", table.get("table_content"), Field.Store.YES));
+                    doc.add(new TextField("table_columns", table.get("table_columns"), Field.Store.YES));
+                    doc.add(new TextField("table_rows", table.get("table_rows"), Field.Store.YES));
                     doc.add(new TextField("table_caption", table.get("table_caption"), Field.Store.YES));
                     writer.addDocument(doc);
                 }
@@ -71,7 +74,8 @@ public class JSON_Indexer {
 
         Map<String, Analyzer> perFieldAnalyzers = new HashMap<>();
         perFieldAnalyzers.put("table_id", PersonalAnalyzer.getTableIdAnalyzer());
-        perFieldAnalyzers.put("table_content", defaultAnalyzer/*PersonalAnalyzer.getTableContentAnalyzer()*/);
+        perFieldAnalyzers.put("table_columns", PersonalAnalyzer.getTableColumnsAnalyzer());
+        perFieldAnalyzers.put("table_rows", PersonalAnalyzer.getTableRowsAnalyzer());
         perFieldAnalyzers.put("table_caption", PersonalAnalyzer.getTableCaptionAnalyzer());
         return new PerFieldAnalyzerWrapper(defaultAnalyzer, perFieldAnalyzers);
     }
@@ -116,6 +120,7 @@ public class JSON_Indexer {
             long totalTime = endTime - startTime;                                                                     // Calcolo il tempo impiegato
             totalTime /= 1000;
             System.out.println("\nSUCCESS: Indicizzazione Terminata in " + totalTime + "s!\n");
+            AppendOperationResults.appendToFile("SUCCESS: Indicizzazione Terminata in " + totalTime + "s!");
         }
 
     }

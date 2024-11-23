@@ -32,9 +32,18 @@ public class TableExtractor {
                 JSONObject tableObj = jsonObj.getJSONObject(tableId);                        // Estraggo tutte le tabelle JSON
                 String tableContent = tableObj.optString("table", "");         // Delle tabelle mi memorizzo solo il contenuto, l'id e le caption
                 String tableCaption = tableObj.optString("caption", "");
+                String tableColumns = String.join(", ", extractColumnKeywords(tableContent));
+                String tableRows = String.join(", ", extractRowKeywords(tableContent));
+
+                // Limita la lunghezza a 100 caratteri
+                tableColumns = tableColumns.length() > 100 ? tableColumns.substring(0, 100) : tableColumns;
+                tableRows = tableRows.length() > 100 ? tableRows.substring(0, 100) : tableRows;
+
                 Map<String, String> table = new HashMap<>();
                 table.put("table_id", tableId);
                 table.put("table_content", tableContent);
+                table.put("table_columns", tableColumns);
+                table.put("table_rows", tableRows);
                 table.put("table_caption", tableCaption);
                 tables.add(table);
             }
@@ -44,6 +53,39 @@ public class TableExtractor {
         }
 
         return tables;
+    }
+
+
+
+
+    public static List<String> extractColumnKeywords(String htmlTable) {
+        List<String> columnKeywords = new ArrayList<>();
+        if (htmlTable == null || htmlTable.trim().isEmpty()){
+            return columnKeywords;
+        }
+        org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(htmlTable);
+        org.jsoup.nodes.Element firstRow = doc.select("tr").first();
+        if (firstRow != null) {
+            for (org.jsoup.nodes.Element cell : firstRow.select("th")) {
+                columnKeywords.add(cell.text());
+            }
+        }
+        return columnKeywords;
+    }
+
+    public static List<String> extractRowKeywords(String htmlTable) {
+        List<String> rowKeywords = new ArrayList<>();
+        if (htmlTable == null || htmlTable.trim().isEmpty()){
+            return rowKeywords;
+        }
+        org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(htmlTable);
+        for (org.jsoup.nodes.Element row : doc.select("tr")) {
+            org.jsoup.nodes.Element firstCell = row.select("th").first();
+            if (firstCell != null) {
+                rowKeywords.add(firstCell.text());
+            }
+        }
+        return rowKeywords;
     }
 
 }

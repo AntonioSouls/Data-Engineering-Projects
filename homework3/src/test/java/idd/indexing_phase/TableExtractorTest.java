@@ -1,5 +1,6 @@
 package idd.indexing_phase;
 
+import idd.application.AppendOperationResults;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
@@ -57,6 +58,7 @@ public class TableExtractorTest {
                 }
             }
             System.out.println("Totale Tabelle Non Estratte: " + TotaleTabelleNonEstratte + "/" + TotaleTabelle);
+            AppendOperationResults.appendToFile("Totale Tabelle Non Estratte: " + TotaleTabelleNonEstratte + "/" + TotaleTabelle);
         }
     }
 

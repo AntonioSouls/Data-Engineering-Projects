@@ -1,10 +1,9 @@
 package idd.indexing_phase;
-import org.apache.lucene.document.Document;
+import idd.application.AppendOperationResults;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -24,6 +23,7 @@ public class JSONIndexerTest {
             try (IndexReader reader = DirectoryReader.open(directory)) {
                 IndexSearcher searcher = new IndexSearcher(reader);
                 int IndexedTables = runAllDocsQuery(searcher,query);
+                AppendOperationResults.appendToFile("Totale Tabelle Indicizzate:" + IndexedTables);
                 assertEquals(IndexedTables, 44470);                                                              // Ho messo 44470 perchè in TableExtractorTest scopro che il totale di tabelle è 49538 ma di queste 5068 vengono scartate perchè non sono tabelle reali
                                                                                                                         // Con questo test mi assicuro che tutte e 44470 tabelle che devono essere indicizzate, vengano effettivamente indicizzate
             }
