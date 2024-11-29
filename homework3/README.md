@@ -21,4 +21,15 @@ The project assignment was based on two requests:
 the tabular result;
 - Test the program's performances with a set of 10 queries;
 - Analysing the programme using specific metrics that can validate how well the programme performs on a large scale
+
+
 ## - Description of Our Solution
+Our solution starts with the creation of the index. This, first of all, takes care of extracting tables from the corpus of
+JSON documents provided and stores the information useful for searching. In particular, the index stores the TABLE_ID,
+the TABLE_CAPTION and the TABLE_CONTENT. The latter was obtained by extracting only the row and column header fields,
+which are the only fields that are really relevant for a table search.  
+Having done this, the index is created and stored in an appropriate directory.  
+The search programme, on the other hand, takes care of reading the console queries, querying the index and printing the results
+sorted in the order of relevance that the index prioritises.  
+Finally, the programme was tested through metrics such as MRR and NDCG, which allow us to assess the effectiveness and accuracy
+of our solution in terms of search and result ranking.
